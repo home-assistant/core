@@ -13,13 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import (
-    CONF_METER,
-    CONF_SOURCE_SENSOR,
-    CONF_TARIFFS,
-    DATA_UTILITY,
-    TARIFF_ICON,
-)
+from .const import CONF_METER, CONF_SOURCE_SENSOR, CONF_TARIFFS, DATA_UTILITY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -100,6 +94,8 @@ async def async_setup_platform(
 class TariffSelect(SelectEntity, RestoreEntity):
     """Representation of a Tariff selector."""
 
+    _attr_translation_key = "tariff"
+
     def __init__(
         self,
         name,
@@ -113,7 +109,6 @@ class TariffSelect(SelectEntity, RestoreEntity):
         self._attr_device_info = device_info
         self._current_tariff: str | None = None
         self._tariffs = tariffs
-        self._attr_icon = TARIFF_ICON
         self._attr_should_poll = False
 
     @property

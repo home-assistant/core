@@ -310,7 +310,7 @@ async def test_update_entity_ha_not_running(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test update occurs only after HA is running."""
-    await hass.async_stop()
+    hass.set_state(CoreState.not_running)
 
     client.async_send_command.return_value = {"updates": []}
 
@@ -327,14 +327,14 @@ async def test_update_entity_ha_not_running(
     assert len(client.async_send_command.call_args_list) == 1
 
     # Update should be delayed by a day because HA is not running
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
     await hass.async_block_till_done()
 
     assert len(client.async_send_command.call_args_list) == 1
 
-    hass.state = CoreState.running
+    hass.set_state(CoreState.running)
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
     await hass.async_block_till_done()
@@ -632,7 +632,7 @@ async def test_update_entity_delay(
     """Test update occurs on a delay after HA starts."""
     client.async_send_command.reset_mock()
     client.async_send_command.return_value = {"updates": []}
-    await hass.async_stop()
+    hass.set_state(CoreState.not_running)
 
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)

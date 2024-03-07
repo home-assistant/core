@@ -1,7 +1,6 @@
 """Component to embed Aqualink devices."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 from datetime import datetime
 from functools import wraps
@@ -79,7 +78,7 @@ async def async_setup_entry(  # noqa: C901
         _LOGGER.error("Failed to login: %s", login_exception)
         await aqualink.close()
         return False
-    except (asyncio.TimeoutError, httpx.HTTPError) as aio_exception:
+    except (TimeoutError, httpx.HTTPError) as aio_exception:
         await aqualink.close()
         raise ConfigEntryNotReady(
             f"Error while attempting login: {aio_exception}"

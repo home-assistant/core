@@ -93,6 +93,50 @@ WAVE_SERVICE_INFO = BluetoothServiceInfoBleak(
     time=0,
 )
 
+VIEW_PLUS_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="cc-cc-cc-cc-cc-cc",
+    address="cc:cc:cc:cc:cc:cc",
+    device=generate_ble_device(
+        address="cc:cc:cc:cc:cc:cc",
+        name="Airthings View Plus",
+    ),
+    rssi=-61,
+    manufacturer_data={820: b"\xe4/\xa5\xae\t\x00"},
+    service_data={
+        "b42eb4a6-ade7-11e4-89d3-123b93f75cba": bytearray(
+            b"\x01\x02\x03\x04\x00\x05\x00\x06\x00\x07\x00\x08\x00\x09\x00\x0A"
+        ),
+        # Manufacturer
+        "00002a29-0000-1000-8000-00805f9b34fb": bytearray(b"Airthings AS"),
+        # Model
+        "00002a24-0000-1000-8000-00805f9b34fb": bytearray(b"2960"),
+        # Identifier
+        "00002a25-0000-1000-8000-00805f9b34fb": bytearray(b"123456"),
+        # SW Version
+        "00002a26-0000-1000-8000-00805f9b34fb": bytearray(b"A-BLE-1.12.1-master+0"),
+        # HW Version
+        "00002a27-0000-1000-8000-00805f9b34fb": bytearray(b"REV 1,0"),
+    },
+    service_uuids=[
+        "b42eb4a6-ade7-11e4-89d3-123b93f75cba",
+        "b42e90a2-ade7-11e4-89d3-123b93f75cba",
+        "b42e2a68-ade7-11e4-89d3-123b93f75cba",
+        "00002a29-0000-1000-8000-00805f9b34fb",
+        "00002a24-0000-1000-8000-00805f9b34fb",
+        "00002a25-0000-1000-8000-00805f9b34fb",
+        "00002a26-0000-1000-8000-00805f9b34fb",
+        "00002a27-0000-1000-8000-00805f9b34fb",
+        "b42e2d06-ade7-11e4-89d3-123b93f75cba",
+    ],
+    source="local",
+    advertisement=generate_advertisement_data(
+        manufacturer_data={820: b"\xe4/\xa5\xae\t\x00"},
+        service_uuids=["b42e90a2-ade7-11e4-89d3-123b93f75cba"],
+    ),
+    connectable=True,
+    time=0,
+)
+
 UNKNOWN_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="unknown",
     address="00:cc:cc:cc:cc:cc",

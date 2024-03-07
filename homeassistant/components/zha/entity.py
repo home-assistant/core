@@ -7,7 +7,9 @@ import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
 
-from homeassistant.const import ATTR_NAME
+from zigpy.quirks.v2 import EntityMetadata, EntityType
+
+from homeassistant.const import ATTR_NAME, EntityCategory
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.debounce import Debouncer
@@ -175,6 +177,31 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
         """
         return cls(unique_id, zha_device, cluster_handlers, **kwargs)
 
+    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
+        """Init this entity from the quirks metadata."""
+        if entity_metadata.initially_disabled:
+            self._attr_entity_registry_enabled_default = False
+
+        if entity_metadata.translation_key:
+            self._attr_translation_key = entity_metadata.translation_key
+
+        if hasattr(entity_metadata.entity_metadata, "attribute_name"):
+            if not entity_metadata.translation_key:
+                self._attr_translation_key = (
+                    entity_metadata.entity_metadata.attribute_name
+                )
+            self._unique_id_suffix = entity_metadata.entity_metadata.attribute_name
+        elif hasattr(entity_metadata.entity_metadata, "command_name"):
+            if not entity_metadata.translation_key:
+                self._attr_translation_key = (
+                    entity_metadata.entity_metadata.command_name
+                )
+            self._unique_id_suffix = entity_metadata.entity_metadata.command_name
+        if entity_metadata.entity_type is EntityType.CONFIG:
+            self._attr_entity_category = EntityCategory.CONFIG
+        elif entity_metadata.entity_type is EntityType.DIAGNOSTIC:
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
+
     @property
     def available(self) -> bool:
         """Return entity availability."""
@@ -324,7 +351,7 @@ class ZhaGroupEntity(BaseZhaEntity):
         """Handle child updates."""
         # Delay to ensure that we get updates from all members before updating the group
         assert self._change_listener_debouncer
-        self.hass.create_task(self._change_listener_debouncer.async_call())
+        self._change_listener_debouncer.async_schedule_call()
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle removal from Home Assistant."""

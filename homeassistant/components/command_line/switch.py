@@ -20,12 +20,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.trigger_template_entity import ManualTriggerEntity
+from homeassistant.helpers.trigger_template_entity import (
+    CONF_AVAILABILITY,
+    ManualTriggerEntity,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util, slugify
 
 from .const import CONF_COMMAND_TIMEOUT, LOGGER
-from .utils import call_shell_with_timeout, check_output_or_log
+from .utils import async_call_shell_with_timeout, async_check_output_or_log
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -48,6 +51,7 @@ async def async_setup_platform(
             CONF_UNIQUE_ID: device_config.get(CONF_UNIQUE_ID),
             CONF_NAME: Template(device_config.get(CONF_NAME, object_id), hass),
             CONF_ICON: device_config.get(CONF_ICON),
+            CONF_AVAILABILITY: device_config.get(CONF_AVAILABILITY),
         }
 
         value_template: Template | None = device_config.get(CONF_VALUE_TEMPLATE)
@@ -117,28 +121,26 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
         """Execute the actual commands."""
         LOGGER.info("Running command: %s", command)
 
-        success = (
-            await self.hass.async_add_executor_job(
-                call_shell_with_timeout, command, self._timeout
-            )
-            == 0
-        )
+        success = await async_call_shell_with_timeout(command, self._timeout) == 0
 
         if not success:
             LOGGER.error("Command failed: %s", command)
 
         return success
 
-    def _query_state_value(self, command: str) -> str | None:
+    async def _async_query_state_value(self, command: str) -> str | None:
         """Execute state command for return value."""
         LOGGER.info("Running state value command: %s", command)
-        return check_output_or_log(command, self._timeout)
+        return await async_check_output_or_log(command, self._timeout)
 
-    def _query_state_code(self, command: str) -> bool:
+    async def _async_query_state_code(self, command: str) -> bool:
         """Execute state command for return code."""
         LOGGER.info("Running state code command: %s", command)
         return (
-            call_shell_with_timeout(command, self._timeout, log_return_code=False) == 0
+            await async_call_shell_with_timeout(
+                command, self._timeout, log_return_code=False
+            )
+            == 0
         )
 
     @property
@@ -146,12 +148,12 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
         """Return true if we do optimistic updates."""
         return self._command_state is None
 
-    def _query_state(self) -> str | int | None:
+    async def _async_query_state(self) -> str | int | None:
         """Query for state."""
         if self._command_state:
             if self._value_template:
-                return self._query_state_value(self._command_state)
-            return self._query_state_code(self._command_state)
+                return await self._async_query_state_value(self._command_state)
+            return await self._async_query_state_code(self._command_state)
         if TYPE_CHECKING:
             return None
 
@@ -173,7 +175,7 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
     async def _async_update(self) -> None:
         """Update device state."""
         if self._command_state:
-            payload = str(await self.hass.async_add_executor_job(self._query_state))
+            payload = str(await self._async_query_state())
             value = None
             if self._value_template:
                 value = self._value_template.async_render_with_possible_json_value(

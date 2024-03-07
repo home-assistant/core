@@ -2,12 +2,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import sys
 
-if sys.version_info < (3, 12):
-    from datapoint.Forecast import Forecast
-    from datapoint.Site import Site
-    from datapoint.Timestep import Timestep
+from datapoint.Forecast import Forecast
+from datapoint.Site import Site
+from datapoint.Timestep import Timestep
 
 
 @dataclass

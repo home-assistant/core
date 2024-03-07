@@ -2,8 +2,8 @@
 from unittest.mock import patch
 
 from httpcore import ConnectError
-from wolf_smartset.models import Device
-from wolf_smartset.token_auth import InvalidAuth
+from wolf_comm.models import Device
+from wolf_comm.token_auth import InvalidAuth
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.wolflink.const import (

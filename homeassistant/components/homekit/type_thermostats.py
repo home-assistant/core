@@ -839,8 +839,7 @@ def _get_temperature_range_from_state(
     # the max to appears to work, but less than 0 causes
     # a crash on the home app
     min_temp = max(min_temp, 0)
-    if min_temp > max_temp:
-        max_temp = min_temp
+    max_temp = max(max_temp, min_temp)
 
     return min_temp, max_temp
 

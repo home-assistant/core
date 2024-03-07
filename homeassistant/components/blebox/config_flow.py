@@ -14,10 +14,9 @@ from blebox_uniapi.error import (
 from blebox_uniapi.session import ApiHost
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import get_maybe_authenticated_session
@@ -65,7 +64,7 @@ LOG_MSG = {
 }
 
 
-class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for BleBox devices."""
 
     VERSION = 1
@@ -89,7 +88,7 @@ class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         hass = self.hass
         ipaddress = (discovery_info.host, discovery_info.port)
@@ -126,7 +125,7 @@ class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm_discovery(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle discovery confirmation."""
         if user_input is not None:
             return self.async_create_entry(

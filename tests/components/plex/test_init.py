@@ -76,7 +76,8 @@ async def test_setup_with_insecure_config_entry(
     """Test setup component with config."""
     INSECURE_DATA = copy.deepcopy(DEFAULT_DATA)
     INSECURE_DATA[const.PLEX_SERVER_CONFIG][CONF_VERIFY_SSL] = False
-    entry.data = INSECURE_DATA
+    entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(entry, data=INSECURE_DATA)
 
     await setup_plex_server(config_entry=entry)
 
@@ -268,11 +269,12 @@ async def test_setup_when_certificate_changed(
     assert old_entry.data[const.PLEX_SERVER_CONFIG][CONF_URL] == new_url
 
 
-async def test_tokenless_server(entry, setup_plex_server) -> None:
+async def test_tokenless_server(hass, entry, setup_plex_server) -> None:
     """Test setup with a server with token auth disabled."""
     TOKENLESS_DATA = copy.deepcopy(DEFAULT_DATA)
     TOKENLESS_DATA[const.PLEX_SERVER_CONFIG].pop(CONF_TOKEN, None)
-    entry.data = TOKENLESS_DATA
+    entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(entry, data=TOKENLESS_DATA)
 
     await setup_plex_server(config_entry=entry)
     assert entry.state is ConfigEntryState.LOADED

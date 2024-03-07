@@ -123,9 +123,6 @@ class RuntimeEntryData:
     entity_info_callbacks: dict[
         type[EntityInfo], list[Callable[[list[EntityInfo]], None]]
     ] = field(default_factory=dict)
-    entity_info_key_remove_callbacks: dict[
-        tuple[type[EntityInfo], int], list[Callable[[], Coroutine[Any, Any, None]]]
-    ] = field(default_factory=dict)
     entity_info_key_updated_callbacks: dict[
         tuple[type[EntityInfo], int], list[Callable[[EntityInfo], None]]
     ] = field(default_factory=dict)
@@ -176,18 +173,6 @@ class RuntimeEntryData:
     ) -> None:
         """Unsubscribe to when static info is registered."""
         callbacks.remove(callback_)
-
-    @callback
-    def async_register_key_static_info_remove_callback(
-        self,
-        static_info: EntityInfo,
-        callback_: Callable[[], Coroutine[Any, Any, None]],
-    ) -> CALLBACK_TYPE:
-        """Register to receive callbacks when static info is removed for a specific key."""
-        callback_key = (type(static_info), static_info.key)
-        callbacks = self.entity_info_key_remove_callbacks.setdefault(callback_key, [])
-        callbacks.append(callback_)
-        return partial(self._async_unsubscribe_static_key_remove, callbacks, callback_)
 
     @callback
     def _async_unsubscribe_static_key_remove(
@@ -243,15 +228,18 @@ class RuntimeEntryData:
         """Unsubscribe to assist pipeline updates."""
         self.assist_pipeline_update_callbacks.remove(update_callback)
 
-    async def async_remove_entities(self, static_infos: Iterable[EntityInfo]) -> None:
+    @callback
+    def async_remove_entities(
+        self, hass: HomeAssistant, static_infos: Iterable[EntityInfo], mac: str
+    ) -> None:
         """Schedule the removal of an entity."""
-        callbacks: list[Coroutine[Any, Any, None]] = []
-        for static_info in static_infos:
-            callback_key = (type(static_info), static_info.key)
-            if key_callbacks := self.entity_info_key_remove_callbacks.get(callback_key):
-                callbacks.extend([callback_() for callback_ in key_callbacks])
-        if callbacks:
-            await asyncio.gather(*callbacks)
+        # Remove from entity registry first so the entity is fully removed
+        ent_reg = er.async_get(hass)
+        for info in static_infos:
+            if entry := ent_reg.async_get_entity_id(
+                INFO_TYPE_TO_PLATFORM[type(info)], DOMAIN, build_unique_id(mac, info)
+            ):
+                ent_reg.async_remove(entry)
 
     @callback
     def async_update_entity_infos(self, static_infos: Iterable[EntityInfo]) -> None:
@@ -396,7 +384,7 @@ class RuntimeEntryData:
         ]
         return infos, services
 
-    async def async_save_to_store(self) -> None:
+    def async_save_to_store(self) -> None:
         """Generate dynamic data to store and save it to the filesystem."""
         if TYPE_CHECKING:
             assert self.device_info is not None

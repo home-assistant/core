@@ -8,8 +8,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import bluetooth
-from homeassistant.config_entries import ConfigFlow
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
 from .const import DOMAIN
 from .coordinator import async_last_service_info
@@ -50,7 +49,7 @@ class BLEDeviceTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Set up by user."""
         errors: dict[str, str] = {}
 

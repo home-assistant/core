@@ -44,7 +44,7 @@ class StarlineDeviceTracker(StarlineEntity, TrackerEntity, RestoreEntity):
     @property
     def location_accuracy(self):
         """Return the gps accuracy of the device."""
-        return self._device.position["r"] if "r" in self._device.position else 0
+        return self._device.position.get("r", 0)
 
     @property
     def latitude(self):
@@ -60,8 +60,3 @@ class StarlineDeviceTracker(StarlineEntity, TrackerEntity, RestoreEntity):
     def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
         return SourceType.GPS
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return "mdi:map-marker-outline"

@@ -177,9 +177,10 @@ async def mock_dashboard(hass):
 class MockESPHomeDevice:
     """Mock an esphome device."""
 
-    def __init__(self, entry: MockConfigEntry) -> None:
+    def __init__(self, entry: MockConfigEntry, client: APIClient) -> None:
         """Init the mock."""
         self.entry = entry
+        self.client = client
         self.state_callback: Callable[[EntityState], None]
         self.service_call_callback: Callable[[HomeassistantServiceCall], None]
         self.on_disconnect: Callable[[bool], None]
@@ -258,7 +259,7 @@ async def _mock_generic_device_entry(
         )
         entry.add_to_hass(hass)
 
-    mock_device = MockESPHomeDevice(entry)
+    mock_device = MockESPHomeDevice(entry, mock_client)
 
     default_device_info = {
         "name": "test",
@@ -268,26 +269,26 @@ async def _mock_generic_device_entry(
     }
     device_info = DeviceInfo(**(default_device_info | mock_device_info))
 
-    async def _subscribe_states(callback: Callable[[EntityState], None]) -> None:
+    def _subscribe_states(callback: Callable[[EntityState], None]) -> None:
         """Subscribe to state."""
         mock_device.set_state_callback(callback)
         for state in states:
             callback(state)
 
-    async def _subscribe_service_calls(
+    def _subscribe_service_calls(
         callback: Callable[[HomeassistantServiceCall], None],
     ) -> None:
         """Subscribe to service calls."""
         mock_device.set_service_call_callback(callback)
 
-    async def _subscribe_home_assistant_states(
+    def _subscribe_home_assistant_states(
         on_state_sub: Callable[[str, str | None], None],
     ) -> None:
         """Subscribe to home assistant states."""
         mock_device.set_home_assistant_state_subscription_callback(on_state_sub)
 
     mock_client.device_info = AsyncMock(return_value=device_info)
-    mock_client.subscribe_voice_assistant = AsyncMock(return_value=Mock())
+    mock_client.subscribe_voice_assistant = Mock()
     mock_client.list_entities_services = AsyncMock(
         return_value=mock_list_entities_services
     )

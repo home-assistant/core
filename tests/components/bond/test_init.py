@@ -1,5 +1,4 @@
 """Tests for the Bond module."""
-import asyncio
 from unittest.mock import MagicMock, Mock
 
 from aiohttp import ClientConnectionError, ClientResponseError
@@ -45,7 +44,7 @@ async def test_async_setup_no_domain_config(hass: HomeAssistant) -> None:
     [
         ClientConnectionError,
         ClientResponseError(MagicMock(), MagicMock(), status=404),
-        asyncio.TimeoutError,
+        TimeoutError,
         OSError,
     ],
 )

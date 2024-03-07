@@ -1,5 +1,4 @@
 """Tests for Philips Hue config flow."""
-import asyncio
 from ipaddress import ip_address
 from unittest.mock import Mock, patch
 
@@ -254,7 +253,7 @@ async def test_flow_timeout_discovery(hass: HomeAssistant) -> None:
     """Test config flow ."""
     with patch(
         "homeassistant.components.hue.config_flow.discover_nupnp",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN, context={"source": config_entries.SOURCE_USER}

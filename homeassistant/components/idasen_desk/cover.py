@@ -12,7 +12,6 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -39,13 +38,15 @@ class IdasenDeskCover(CoordinatorEntity[IdasenDeskCoordinator], CoverEntity):
     """Representation of Idasen Desk device."""
 
     _attr_device_class = CoverDeviceClass.DAMPER
-    _attr_icon = "mdi:desk"
     _attr_supported_features = (
         CoverEntityFeature.OPEN
         | CoverEntityFeature.CLOSE
         | CoverEntityFeature.STOP
         | CoverEntityFeature.SET_POSITION
     )
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_translation_key = "desk"
 
     def __init__(
         self,
@@ -56,7 +57,6 @@ class IdasenDeskCover(CoordinatorEntity[IdasenDeskCoordinator], CoverEntity):
         """Initialize an Idasen Desk cover."""
         super().__init__(coordinator)
         self._desk = coordinator.desk
-        self._attr_name = device_info[ATTR_NAME]
         self._attr_unique_id = address
         self._attr_device_info = device_info
 

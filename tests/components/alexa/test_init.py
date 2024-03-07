@@ -11,6 +11,7 @@ async def test_humanify_alexa_event(hass: HomeAssistant) -> None:
     hass.config.components.add("recorder")
     await async_setup_component(hass, "alexa", {})
     await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
     hass.states.async_set("light.kitchen", "on", {"friendly_name": "Kitchen Light"})
 
     results = mock_humanify(

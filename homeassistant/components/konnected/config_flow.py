@@ -11,11 +11,16 @@ from urllib.parse import urlparse
 
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     BinarySensorDeviceClass,
+)
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
 )
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
@@ -33,7 +38,6 @@ from homeassistant.const import (
     CONF_ZONE,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -166,7 +170,7 @@ CONFIG_ENTRY_SCHEMA = vol.Schema(
 )
 
 
-class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class KonnectedFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Konnected Panels."""
 
     VERSION = 1
@@ -244,7 +248,9 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
         return await self.async_step_user()
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
+    async def async_step_ssdp(
+        self, discovery_info: ssdp.SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a discovered konnected panel.
 
         This flow is triggered by the SSDP component. It will check if the
@@ -376,16 +382,16 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Return the Options Flow."""
         return OptionsFlowHandler(config_entry)
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlow):
     """Handle a option flow for a Konnected Panel."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.entry = config_entry
         self.model = self.entry.data[CONF_MODEL]

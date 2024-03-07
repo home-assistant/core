@@ -9,7 +9,7 @@ from email.header import decode_header, make_header
 from email.message import Message
 from email.utils import parseaddr, parsedate_to_datetime
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aioimaplib import AUTH, IMAP4_SSL, NONAUTH, SELECTED, AioImapException
 
@@ -30,6 +30,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 from homeassistant.util.ssl import (
     SSLCipherList,
     client_context,
@@ -56,6 +57,8 @@ BACKOFF_TIME = 10
 EVENT_IMAP = "imap_content"
 MAX_ERRORS = 3
 MAX_EVENT_DATA_BYTES = 32168
+
+DIAGNOSTICS_ATTRIBUTES = ["date", "initial"]
 
 
 async def connect_to_server(data: Mapping[str, Any]) -> IMAP4_SSL:
@@ -97,10 +100,26 @@ async def connect_to_server(data: Mapping[str, Any]) -> IMAP4_SSL:
 class ImapMessage:
     """Class to parse an RFC822 email message."""
 
-    def __init__(self, raw_message: bytes, charset: str = "utf-8") -> None:
+    def __init__(self, raw_message: bytes) -> None:
         """Initialize IMAP message."""
-        self._charset = charset
         self.email_message = email.message_from_bytes(raw_message)
+
+    @staticmethod
+    def _decode_payload(part: Message) -> str:
+        """Try to decode text payloads.
+
+        Common text encodings are quoted-printable or base64.
+        Falls back to the raw content part if decoding fails.
+        """
+        try:
+            decoded_payload: Any = part.get_payload(decode=True)
+            if TYPE_CHECKING:
+                assert isinstance(decoded_payload, bytes)
+            content_charset = part.get_content_charset() or "utf-8"
+            return decoded_payload.decode(content_charset)
+        except ValueError:
+            # return undecoded payload
+            return str(part.get_payload())
 
     @property
     def headers(self) -> dict[str, tuple[str,]]:
@@ -153,31 +172,20 @@ class ImapMessage:
     def text(self) -> str:
         """Get the message text from the email.
 
-        Will look for text/plain or use text/html if not found.
+        Will look for text/plain or use/ text/html if not found.
         """
         message_text: str | None = None
         message_html: str | None = None
         message_untyped_text: str | None = None
 
-        def _decode_payload(part: Message) -> str:
-            """Try to decode text payloads.
-
-            Common text encodings are quoted-printable or base64.
-            Falls back to the raw content part if decoding fails.
-            """
-            try:
-                return str(part.get_payload(decode=True).decode(self._charset))
-            except ValueError:
-                return str(part.get_payload())
-
         part: Message
         for part in self.email_message.walk():
             if part.get_content_type() == CONTENT_TYPE_TEXT_PLAIN:
                 if message_text is None:
-                    message_text = _decode_payload(part)
+                    message_text = self._decode_payload(part)
             elif part.get_content_type() == "text/html":
                 if message_html is None:
-                    message_html = _decode_payload(part)
+                    message_html = self._decode_payload(part)
             elif (
                 part.get_content_type().startswith("text")
                 and message_untyped_text is None
@@ -215,6 +223,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
         self._last_message_uid: str | None = None
         self._last_message_id: str | None = None
         self.custom_event_template = None
+        self._diagnostics_data: dict[str, Any] = {}
         _custom_event_template = entry.data.get(CONF_CUSTOM_EVENT_DATA_TEMPLATE)
         if _custom_event_template is not None:
             self.custom_event_template = Template(_custom_event_template, hass=hass)
@@ -237,9 +246,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
         """Send a event for the last message if the last message was changed."""
         response = await self.imap_client.fetch(last_message_uid, "BODY.PEEK[]")
         if response.result == "OK":
-            message = ImapMessage(
-                response.lines[1], charset=self.config_entry.data[CONF_CHARSET]
-            )
+            message = ImapMessage(response.lines[1])
             # Set `initial` to `False` if the last message is triggered again
             initial: bool = True
             if (message_id := message.message_id) == self._last_message_id:
@@ -284,6 +291,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                     CONF_MAX_MESSAGE_SIZE, DEFAULT_MAX_MESSAGE_SIZE
                 )
             ]
+            self._update_diagnostics(data)
             if (size := len(json_bytes(data))) > MAX_EVENT_DATA_BYTES:
                 _LOGGER.warning(
                     "Custom imap_content event skipped, size (%s) exceeds "
@@ -344,7 +352,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                 await self.imap_client.stop_wait_server_push()
                 await self.imap_client.close()
                 await self.imap_client.logout()
-            except (AioImapException, asyncio.TimeoutError):
+            except (AioImapException, TimeoutError):
                 if log_error:
                     _LOGGER.debug("Error while cleaning up imap connection")
             finally:
@@ -353,6 +361,23 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
     async def shutdown(self, *_: Any) -> None:
         """Close resources."""
         await self._cleanup(log_error=True)
+
+    def _update_diagnostics(self, data: dict[str, Any]) -> None:
+        """Update the diagnostics."""
+        self._diagnostics_data.update(
+            {key: value for key, value in data.items() if key in DIAGNOSTICS_ATTRIBUTES}
+        )
+        custom: Any | None = data.get("custom")
+        self._diagnostics_data["custom_template_data_type"] = str(type(custom))
+        self._diagnostics_data["custom_template_result_length"] = (
+            None if custom is None else len(f"{custom}")
+        )
+        self._diagnostics_data["event_time"] = dt_util.now().isoformat()
+
+    @property
+    def diagnostics_data(self) -> dict[str, Any]:
+        """Return diagnostics info."""
+        return self._diagnostics_data
 
 
 class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
@@ -376,7 +401,7 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
         except (
             AioImapException,
             UpdateFailed,
-            asyncio.TimeoutError,
+            TimeoutError,
         ) as ex:
             await self._cleanup()
             self.async_set_update_error(ex)
@@ -448,7 +473,7 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
             except (
                 UpdateFailed,
                 AioImapException,
-                asyncio.TimeoutError,
+                TimeoutError,
             ) as ex:
                 await self._cleanup()
                 self.async_set_update_error(ex)
@@ -464,8 +489,7 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                 async with asyncio.timeout(10):
                     await idle
 
-            # From python 3.11 asyncio.TimeoutError is an alias of TimeoutError
-            except (AioImapException, asyncio.TimeoutError):
+            except (AioImapException, TimeoutError):
                 _LOGGER.debug(
                     "Lost %s (will attempt to reconnect after %s s)",
                     self.config_entry.data[CONF_SERVER],

@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from homeassistant.components.cloud import CloudNotAvailable
 from homeassistant.components.mobile_app.const import (
     ATTR_DEVICE_NAME,
     CONF_CLOUDHOOK_URL,
@@ -114,6 +115,32 @@ async def test_create_cloud_hook_on_setup(
         mock_create_cloudhook.assert_called_once_with(
             hass, config_entry.data[CONF_WEBHOOK_ID]
         )
+
+    await _test_create_cloud_hook(hass, hass_admin_user, {}, True, additional_steps)
+
+
+@pytest.mark.parametrize("exception", (CloudNotAvailable, ValueError))
+async def test_remove_cloudhook(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    caplog: pytest.LogCaptureFixture,
+    exception: Exception,
+) -> None:
+    """Test removing a cloud hook when config entry is removed."""
+
+    async def additional_steps(
+        config_entry: ConfigEntry, mock_create_cloudhook: Mock, cloud_hook: str
+    ) -> None:
+        webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+        assert config_entry.data[CONF_CLOUDHOOK_URL] == cloud_hook
+        with patch(
+            "homeassistant.components.cloud.async_delete_cloudhook",
+            side_effect=exception,
+        ) as delete_cloudhook:
+            await hass.config_entries.async_remove(config_entry.entry_id)
+            await hass.async_block_till_done()
+            delete_cloudhook.assert_called_once_with(hass, webhook_id)
+            assert str(exception) not in caplog.text
 
     await _test_create_cloud_hook(hass, hass_admin_user, {}, True, additional_steps)
 

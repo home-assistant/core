@@ -11,7 +11,9 @@ from .const import DEFAULT_PORT, DOMAIN
 from .coordinator import ComelitBaseCoordinator, ComelitSerialBridge, ComelitVedoSystem
 
 BRIDGE_PLATFORMS = [
+    Platform.CLIMATE,
     Platform.COVER,
+    Platform.HUMIDIFIER,
     Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,

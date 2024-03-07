@@ -1,4 +1,4 @@
-"""Support for Google Calendar event device sensors."""
+"""Support for Calendar event device sensors."""
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable

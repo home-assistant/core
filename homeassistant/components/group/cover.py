@@ -97,7 +97,7 @@ async def async_setup_entry(
 
 @callback
 def async_create_preview_cover(
-    name: str, validated_config: dict[str, Any]
+    hass: HomeAssistant, name: str, validated_config: dict[str, Any]
 ) -> CoverGroup:
     """Create a preview sensor."""
     return CoverGroup(

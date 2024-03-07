@@ -28,6 +28,7 @@ from .core.const import (
     UNKNOWN,
 )
 from .core.device import ZHADevice
+from .core.gateway import ZHAGateway
 from .core.helpers import async_get_zha_device, get_zha_data, get_zha_gateway
 
 KEYS_TO_REDACT = {
@@ -63,7 +64,8 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     zha_data = get_zha_data(hass)
-    app = get_zha_gateway(hass).application_controller
+    gateway: ZHAGateway = get_zha_gateway(hass)
+    app = gateway.application_controller
 
     energy_scan = await app.energy_scan(
         channels=Channels.ALL_CHANNELS, duration_exp=4, count=1
@@ -86,6 +88,14 @@ async def async_get_config_entry_diagnostics(
                 "zigpy_zigate": version("zigpy-zigate"),
                 "zhaquirks": version("zha-quirks"),
             },
+            "devices": [
+                {
+                    "manufacturer": device.manufacturer,
+                    "model": device.model,
+                    "logical_type": device.device_type,
+                }
+                for device in gateway.devices.values()
+            ],
         },
         KEYS_TO_REDACT,
     )

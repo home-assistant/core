@@ -3,7 +3,8 @@
   "name": "SNMP",
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/snmp",
+  "import_executor": true,
   "iot_class": "local_polling",
   "loggers": ["pyasn1", "pysmi", "pysnmp"],
-  "requirements": ["pysnmp-lextudio==5.0.31"]
+  "requirements": ["pysnmp-lextudio==6.0.2"]
 }

@@ -104,7 +104,11 @@ class GeoJsonLocationEvent(GeolocationEvent):
 
     def _update_from_feed(self, feed_entry: GenericFeedEntry) -> None:
         """Update the internal state from the provided feed entry."""
-        self._attr_name = feed_entry.title
+        if feed_entry.properties and "name" in feed_entry.properties:
+            # The entry name's type can vary, but our own name must be a string
+            self._attr_name = str(feed_entry.properties["name"])
+        else:
+            self._attr_name = feed_entry.title
         self._attr_distance = feed_entry.distance_to_home
         self._attr_latitude = feed_entry.coordinates[0]
         self._attr_longitude = feed_entry.coordinates[1]

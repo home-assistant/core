@@ -40,7 +40,11 @@ def get_supervisor_network_url(
     hass: HomeAssistant, *, allow_ssl: bool = False
 ) -> str | None:
     """Get URL for home assistant within supervisor network."""
-    if hass.config.api is None or not hass.components.hassio.is_hassio():
+    # Local import to avoid circular dependencies
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant.components.hassio import is_hassio
+
+    if hass.config.api is None or not is_hassio(hass):
         return None
 
     scheme = "http"
@@ -170,14 +174,17 @@ def get_url(
         and request_host is not None
         and hass.config.api is not None
     ):
+        # Local import to avoid circular dependencies
+        # pylint: disable-next=import-outside-toplevel
+        from homeassistant.components.hassio import get_host_info, is_hassio
+
         scheme = "https" if hass.config.api.use_ssl else "http"
         current_url = yarl.URL.build(
             scheme=scheme, host=request_host, port=hass.config.api.port
         )
 
         known_hostnames = ["localhost"]
-        if hass.components.hassio.is_hassio():
-            host_info = hass.components.hassio.get_host_info()
+        if is_hassio(hass) and (host_info := get_host_info(hass)):
             known_hostnames.extend(
                 [host_info["hostname"], f"{host_info['hostname']}.local"]
             )

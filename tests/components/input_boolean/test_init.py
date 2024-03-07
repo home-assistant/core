@@ -133,7 +133,7 @@ async def test_restore_state(hass: HomeAssistant) -> None:
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     mock_component(hass, "recorder")
 
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"b1": None, "b2": None}})
@@ -153,7 +153,7 @@ async def test_initial_state_overrules_restore_state(hass: HomeAssistant) -> Non
         hass, (State("input_boolean.b1", "on"), State("input_boolean.b2", "off"))
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass,

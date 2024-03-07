@@ -7,10 +7,9 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any, Generic, TypeVar, cast
 
-import aioshelly
 from aioshelly.ble import async_ensure_ble_enabled, async_stop_scanner
 from aioshelly.block_device import BlockDevice, BlockUpdateType
-from aioshelly.const import MODEL_VALVE
+from aioshelly.const import MODEL_NAMES, MODEL_VALVE
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 from aioshelly.rpc_device import RpcDevice, RpcUpdateType
 
@@ -137,7 +136,7 @@ class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
             name=self.name,
             connections={(CONNECTION_NETWORK_MAC, self.mac)},
             manufacturer="Shelly",
-            model=aioshelly.const.MODEL_NAMES.get(self.model, self.model),
+            model=MODEL_NAMES.get(self.model, self.model),
             sw_version=self.sw_version,
             hw_version=f"gen{get_device_entry_gen(self.entry)} ({self.model})",
             configuration_url=f"http://{self.entry.data[CONF_HOST]}",
@@ -280,7 +279,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
                 self.name,
                 ENTRY_RELOAD_COOLDOWN,
             )
-            self.hass.async_create_task(self._debounced_reload.async_call())
+            self._debounced_reload.async_schedule_call()
         self._last_cfg_changed = cfg_changed
 
     async def _async_update_data(self) -> None:
@@ -497,7 +496,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
                     self.name,
                     ENTRY_RELOAD_COOLDOWN,
                 )
-                self.hass.async_create_task(self._debounced_reload.async_call())
+                self._debounced_reload.async_schedule_call()
             elif event_type in RPC_INPUTS_EVENTS_TYPES:
                 for event_callback in self._input_event_listeners:
                     event_callback(event)
@@ -603,10 +602,10 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
     ) -> None:
         """Handle device update."""
         if update_type is RpcUpdateType.INITIALIZED:
-            self.hass.async_create_task(self._async_connected())
+            self.hass.async_create_task(self._async_connected(), eager_start=True)
             self.async_set_updated_data(None)
         elif update_type is RpcUpdateType.DISCONNECTED:
-            self.hass.async_create_task(self._async_disconnected())
+            self.hass.async_create_task(self._async_disconnected(), eager_start=True)
         elif update_type is RpcUpdateType.STATUS:
             self.async_set_updated_data(None)
             if self.sleep_period:
@@ -620,7 +619,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self.device.subscribe_updates(self._async_handle_update)
         if self.device.initialized:
             # If we are already initialized, we are connected
-            self.hass.async_create_task(self._async_connected())
+            self.hass.async_create_task(self._async_connected(), eager_start=True)
 
     async def shutdown(self) -> None:
         """Shutdown the coordinator."""
@@ -702,4 +701,4 @@ async def async_reconnect_soon(hass: HomeAssistant, entry: ConfigEntry) -> None:
         and (entry_data := get_entry_data(hass).get(entry.entry_id))
         and (coordinator := entry_data.rpc)
     ):
-        hass.async_create_task(coordinator.async_request_refresh())
+        hass.async_create_task(coordinator.async_request_refresh(), eager_start=True)

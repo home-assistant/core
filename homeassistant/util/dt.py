@@ -393,7 +393,8 @@ def find_next_time_expression_time(
             next_second = seconds[0]
             result += dt.timedelta(minutes=1)
 
-        result = result.replace(second=next_second)
+        if result.second != next_second:
+            result = result.replace(second=next_second)
 
         # Match next minute
         next_minute = _lower_bound(minutes, result.minute)
@@ -406,7 +407,8 @@ def find_next_time_expression_time(
             next_minute = minutes[0]
             result += dt.timedelta(hours=1)
 
-        result = result.replace(minute=next_minute)
+        if result.minute != next_minute:
+            result = result.replace(minute=next_minute)
 
         # Match next hour
         next_hour = _lower_bound(hours, result.hour)
@@ -419,7 +421,8 @@ def find_next_time_expression_time(
             next_hour = hours[0]
             result += dt.timedelta(days=1)
 
-        result = result.replace(hour=next_hour)
+        if result.hour != next_hour:
+            result = result.replace(hour=next_hour)
 
         if result.tzinfo in (None, UTC):
             # Using UTC, no DST checking needed

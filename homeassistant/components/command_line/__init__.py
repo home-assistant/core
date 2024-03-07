@@ -55,6 +55,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.trigger_template_entity import CONF_AVAILABILITY
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN
@@ -90,6 +91,7 @@ BINARY_SENSOR_SCHEMA = vol.Schema(
         vol.Optional(
             CONF_SCAN_INTERVAL, default=BINARY_SENSOR_DEFAULT_SCAN_INTERVAL
         ): vol.All(cv.time_period, cv.positive_timedelta),
+        vol.Optional(CONF_AVAILABILITY): cv.template,
     }
 )
 COVER_SCHEMA = vol.Schema(
@@ -105,6 +107,7 @@ COVER_SCHEMA = vol.Schema(
         vol.Optional(CONF_SCAN_INTERVAL, default=COVER_DEFAULT_SCAN_INTERVAL): vol.All(
             cv.time_period, cv.positive_timedelta
         ),
+        vol.Optional(CONF_AVAILABILITY): cv.template,
     }
 )
 NOTIFY_SCHEMA = vol.Schema(
@@ -129,6 +132,7 @@ SENSOR_SCHEMA = vol.Schema(
         vol.Optional(CONF_SCAN_INTERVAL, default=SENSOR_DEFAULT_SCAN_INTERVAL): vol.All(
             cv.time_period, cv.positive_timedelta
         ),
+        vol.Optional(CONF_AVAILABILITY): cv.template,
     }
 )
 SWITCH_SCHEMA = vol.Schema(
@@ -144,6 +148,7 @@ SWITCH_SCHEMA = vol.Schema(
         vol.Optional(CONF_SCAN_INTERVAL, default=SWITCH_DEFAULT_SCAN_INTERVAL): vol.All(
             cv.time_period, cv.positive_timedelta
         ),
+        vol.Optional(CONF_AVAILABILITY): cv.template,
     }
 )
 COMBINED_SCHEMA = vol.Schema(

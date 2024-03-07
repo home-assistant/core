@@ -83,7 +83,7 @@ class HueBridge:
             create_config_flow(self.hass, self.host)
             return False
         except (
-            asyncio.TimeoutError,
+            TimeoutError,
             client_exceptions.ClientOSError,
             client_exceptions.ServerDisconnectedError,
             client_exceptions.ContentTypeError,

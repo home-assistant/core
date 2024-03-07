@@ -30,14 +30,19 @@ async def async_setup_entry(
         async_add_entities([BroadlinkThermostat(device)])
 
 
-class BroadlinkThermostat(ClimateEntity, BroadlinkEntity):
+class BroadlinkThermostat(BroadlinkEntity, ClimateEntity):
     """Representation of a Broadlink Hysen climate entity."""
 
     _attr_has_entity_name = True
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF, HVACMode.AUTO]
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
     _attr_target_temperature_step = PRECISION_HALVES
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, device: BroadlinkDevice) -> None:
         """Initialize the climate entity."""

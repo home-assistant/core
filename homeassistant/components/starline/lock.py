@@ -63,13 +63,6 @@ class StarlineLock(StarlineEntity, LockEntity):
         return self._device.alarm_state
 
     @property
-    def icon(self) -> str:
-        """Icon to use in the frontend, if any."""
-        return (
-            "mdi:shield-check-outline" if self.is_locked else "mdi:shield-alert-outline"
-        )
-
-    @property
     def is_locked(self) -> bool | None:
         """Return true if lock is locked."""
         return self._device.car_state.get("arm")

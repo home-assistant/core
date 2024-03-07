@@ -16,10 +16,14 @@ from aioshelly.rpc_device import RpcDevice
 import voluptuous as vol
 
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
@@ -117,7 +121,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -166,7 +170,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_credentials(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the credentials step."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -201,12 +205,18 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if get_info_gen(self.info) in RPC_GENERATIONS:
             schema = {
-                vol.Required(CONF_PASSWORD, default=user_input.get(CONF_PASSWORD)): str,
+                vol.Required(
+                    CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
+                ): str,
             }
         else:
             schema = {
-                vol.Required(CONF_USERNAME, default=user_input.get(CONF_USERNAME)): str,
-                vol.Required(CONF_PASSWORD, default=user_input.get(CONF_PASSWORD)): str,
+                vol.Required(
+                    CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
+                ): str,
+                vol.Required(
+                    CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
+                ): str,
             }
 
         return self.async_show_form(
@@ -233,7 +243,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         host = discovery_info.host
         # First try to get the mac address from the name
@@ -274,7 +284,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm_discovery(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle discovery confirm."""
         errors: dict[str, str] = {}
 
@@ -304,14 +314,16 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         errors: dict[str, str] = {}
         assert self.entry is not None
@@ -330,11 +342,9 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             except (DeviceConnectionError, InvalidAuthError, FirmwareUnsupported):
                 return self.async_abort(reason="reauth_unsuccessful")
 
-            self.hass.config_entries.async_update_entry(
+            return self.async_update_reload_and_abort(
                 self.entry, data={**self.entry.data, **user_input}
             )
-            await self.hass.config_entries.async_reload(self.entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
 
         if get_device_entry_gen(self.entry) in BLOCK_GENERATIONS:
             schema = {
@@ -380,7 +390,7 @@ class OptionsFlowHandler(OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle options flow."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

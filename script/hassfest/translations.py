@@ -311,6 +311,12 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 },
                 slug_validator=vol.Any("_", cv.slug),
             ),
+            vol.Optional("device"): cv.schema_with_slug_keys(
+                {
+                    vol.Optional("name"): translation_value_validator,
+                },
+                slug_validator=translation_key_validator,
+            ),
             vol.Optional("entity"): cv.schema_with_slug_keys(
                 cv.schema_with_slug_keys(
                     {

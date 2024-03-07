@@ -4,6 +4,8 @@ import logging
 from typing import Any
 
 import requests
+from ring_doorbell import RingStickUpCam
+from ring_doorbell.generic import RingGeneric
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
@@ -11,8 +13,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN, RING_DEVICES
-from .entity import RingEntityMixin
+from .const import DOMAIN, RING_DEVICES, RING_DEVICES_COORDINATOR
+from .coordinator import RingDataCoordinator
+from .entity import RingEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,38 +38,42 @@ async def async_setup_entry(
 ) -> None:
     """Create the lights for the Ring devices."""
     devices = hass.data[DOMAIN][config_entry.entry_id][RING_DEVICES]
-
+    devices_coordinator: RingDataCoordinator = hass.data[DOMAIN][config_entry.entry_id][
+        RING_DEVICES_COORDINATOR
+    ]
     lights = []
 
     for device in devices["stickup_cams"]:
         if device.has_capability("light"):
-            lights.append(RingLight(config_entry.entry_id, device))
+            lights.append(RingLight(device, devices_coordinator))
 
     async_add_entities(lights)
 
 
-class RingLight(RingEntityMixin, LightEntity):
+class RingLight(RingEntity, LightEntity):
     """Creates a switch to turn the ring cameras light on and off."""
 
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
     _attr_translation_key = "light"
 
-    def __init__(self, config_entry_id, device):
+    def __init__(self, device: RingGeneric, coordinator) -> None:
         """Initialize the light."""
-        super().__init__(config_entry_id, device)
+        super().__init__(device, coordinator)
         self._attr_unique_id = device.id
         self._attr_is_on = device.lights == ON_STATE
         self._no_updates_until = dt_util.utcnow()
 
     @callback
-    def _update_callback(self):
+    def _handle_coordinator_update(self):
         """Call update method."""
         if self._no_updates_until > dt_util.utcnow():
             return
-
-        self._attr_is_on = self._device.lights == ON_STATE
-        self.async_write_ha_state()
+        if (device := self._get_coordinator_device()) and isinstance(
+            device, RingStickUpCam
+        ):
+            self._attr_is_on = device.lights == ON_STATE
+        super()._handle_coordinator_update()
 
     def _set_light(self, new_state):
         """Update light state, and causes Home Assistant to correctly update."""
@@ -78,7 +85,7 @@ class RingLight(RingEntityMixin, LightEntity):
 
         self._attr_is_on = new_state == ON_STATE
         self._no_updates_until = dt_util.utcnow() + SKIP_UPDATES_DELAY
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on for 30 seconds."""

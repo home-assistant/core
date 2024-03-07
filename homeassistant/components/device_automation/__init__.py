@@ -172,7 +172,7 @@ async def async_get_device_automation_platform(
     platform_name = automation_type.value.section
     try:
         integration = await async_get_integration_with_requirements(hass, domain)
-        platform = integration.get_platform(platform_name)
+        platform = await integration.async_get_platform(platform_name)
     except IntegrationNotFound as err:
         raise InvalidDeviceAutomationConfig(
             f"Integration '{domain}' not found"
@@ -247,9 +247,9 @@ async def async_get_device_automations(
     match_device_ids = set(device_ids or device_registry.devices)
     combined_results: dict[str, list[dict[str, Any]]] = {}
 
-    for entry in entity_registry.entities.values():
-        if not entry.disabled_by and entry.device_id in match_device_ids:
-            device_entities_domains.setdefault(entry.device_id, set()).add(entry.domain)
+    for device_id in match_device_ids:
+        for entry in entity_registry.entities.get_entries_for_device_id(device_id):
+            device_entities_domains.setdefault(device_id, set()).add(entry.domain)
 
     for device_id in match_device_ids:
         combined_results[device_id] = []

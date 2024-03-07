@@ -103,7 +103,13 @@ def test_all() -> None:
         ],
         "VOLUME_",
     )
-    + _create_tuples(const.UnitOfVolumeFlowRate, "VOLUME_FLOW_RATE_")
+    + _create_tuples(
+        [
+            const.UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+            const.UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+        ],
+        "VOLUME_FLOW_RATE_",
+    )
     + _create_tuples(
         [
             const.UnitOfMass.GRAMS,
@@ -125,7 +131,16 @@ def test_all() -> None:
         ],
         "PRECIPITATION_",
     )
-    + _create_tuples(const.UnitOfSpeed, "SPEED_")
+    + _create_tuples(
+        [
+            const.UnitOfSpeed.FEET_PER_SECOND,
+            const.UnitOfSpeed.METERS_PER_SECOND,
+            const.UnitOfSpeed.KILOMETERS_PER_HOUR,
+            const.UnitOfSpeed.KNOTS,
+            const.UnitOfSpeed.MILES_PER_HOUR,
+        ],
+        "SPEED_",
+    )
     + _create_tuples(
         [
             const.UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,

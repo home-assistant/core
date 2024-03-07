@@ -1,0 +1,32 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:fan",
+      "state": {
+        "off": "mdi:fan-off"
+      },
+      "state_attributes": {
+        "direction": {
+          "default": "mdi:rotate-right",
+          "state": {
+            "reverse": "mdi:rotate-left"
+          }
+        },
+        "preset_mode": {
+          "default": "mdi:circle-medium",
+          "state": {}
+        }
+      }
+    }
+  },
+  "services": {
+    "decrease_speed": "mdi:fan-minus",
+    "increase_speed": "mdi:fan-plus",
+    "oscillate": "mdi:arrow-oscillating",
+    "set_percentage": "mdi:fan",
+    "set_preset_mode": "mdi:fan-auto",
+    "toggle": "mdi:fan",
+    "turn_off": "mdi:fan-off",
+    "turn_on": "mdi:fan"
+  }
+}

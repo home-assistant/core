@@ -187,7 +187,7 @@ async def async_aiohttp_proxy_web(
         # The user cancelled the request
         return None
 
-    except asyncio.TimeoutError as err:
+    except TimeoutError as err:
         # Timeout trying to start the web request
         raise HTTPGatewayTimeout() from err
 
@@ -219,7 +219,7 @@ async def async_aiohttp_proxy_stream(
     await response.prepare(request)
 
     # Suppressing something went wrong fetching data, closed connection
-    with suppress(asyncio.TimeoutError, aiohttp.ClientError):
+    with suppress(TimeoutError, aiohttp.ClientError):
         while hass.is_running:
             async with asyncio.timeout(timeout):
                 data = await stream.read(buffer_size)

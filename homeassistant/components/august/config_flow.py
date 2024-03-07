@@ -9,10 +9,9 @@ import voluptuous as vol
 from yalexs.authenticator import ValidationResult
 from yalexs.const import BRANDS, DEFAULT_BRAND
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONF_ACCESS_TOKEN_CACHE_FILE,
@@ -75,7 +74,7 @@ class ValidateResult:
     description_placeholders: dict[str, str]
 
 
-class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class AugustConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for August."""
 
     VERSION = 1
@@ -91,13 +90,13 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         return await self.async_step_user_validate()
 
     async def async_step_user_validate(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle authentication."""
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
@@ -137,7 +136,7 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_validation(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle validation (2fa) step."""
         if user_input:
             if self._mode == "reauth":
@@ -174,7 +173,9 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._aiohttp_session.detach()
         self._august_gateway = None
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         self._user_auth_details = dict(entry_data)
         self._mode = "reauth"
@@ -183,7 +184,7 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_validate(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle reauth and validation."""
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
@@ -261,7 +262,9 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             validation_required, info, errors, description_placeholders
         )
 
-    async def _async_update_or_create_entry(self, info: dict[str, Any]) -> FlowResult:
+    async def _async_update_or_create_entry(
+        self, info: dict[str, Any]
+    ) -> ConfigFlowResult:
         """Update existing entry or create a new one."""
         self._async_shutdown_gateway()
 
@@ -271,6 +274,4 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not existing_entry:
             return self.async_create_entry(title=info["title"], data=info["data"])
 
-        self.hass.config_entries.async_update_entry(existing_entry, data=info["data"])
-        await self.hass.config_entries.async_reload(existing_entry.entry_id)
-        return self.async_abort(reason="reauth_successful")
+        return self.async_update_reload_and_abort(existing_entry, data=info["data"])

@@ -12,8 +12,9 @@
   "config_flow": true,
   "dependencies": ["bluetooth_adapters", "zeroconf"],
   "documentation": "https://www.home-assistant.io/integrations/homekit_controller",
+  "import_executor": true,
   "iot_class": "local_push",
   "loggers": ["aiohomekit", "commentjson"],
-  "requirements": ["aiohomekit==3.1.2"],
+  "requirements": ["aiohomekit==3.1.5"],
   "zeroconf": ["_hap._tcp.local.", "_hap._udp.local."]
 }

@@ -79,7 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         async with asyncio.timeout(DEVICE_TIMEOUT):
             await startup_event.wait()
-    except asyncio.TimeoutError as ex:
+    except TimeoutError as ex:
         raise ConfigEntryNotReady(
             "Unable to communicate with the device; "
             f"Try moving the Bluetooth adapter closer to {led_ble.name}"

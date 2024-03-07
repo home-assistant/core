@@ -47,7 +47,7 @@ class NanoleafLight(NanoleafEntity, LightEntity):
     _attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
     _attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
     _attr_name = None
-    _attr_icon = "mdi:triangle-outline"
+    _attr_translation_key = "light"
 
     def __init__(
         self, nanoleaf: Nanoleaf, coordinator: DataUpdateCoordinator[None]

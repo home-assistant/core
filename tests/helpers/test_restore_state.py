@@ -210,7 +210,7 @@ async def test_save_persistent_states(hass: HomeAssistant) -> None:
 
 async def test_hass_starting(hass: HomeAssistant) -> None:
     """Test that we cache data."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     now = dt_util.utcnow()
     stored_states = [
@@ -224,7 +224,7 @@ async def test_hass_starting(hass: HomeAssistant) -> None:
     await data.store.async_save([state.as_dict() for state in stored_states])
 
     # Emulate a fresh load
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     hass.data.pop(DATA_RESTORE_STATE)
     await async_load(hass)
     data = async_get(hass)

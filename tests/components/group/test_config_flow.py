@@ -479,7 +479,7 @@ LIGHT_ATTRS = [
         "supported_color_modes": ["onoff"],
         "supported_features": 0,
     },
-    {"color_mode": "onoff"},
+    {"color_mode": "unknown"},
 ]
 LOCK_ATTRS = [{"supported_features": 1}, {}]
 MEDIA_PLAYER_ATTRS = [{"supported_features": 0}, {}]

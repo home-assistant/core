@@ -1,10 +1,10 @@
 """The tests for Home Assistant frontend."""
-from datetime import timedelta
 from http import HTTPStatus
 import re
 from typing import Any
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.frontend import (
@@ -20,10 +20,9 @@ from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 
 from tests.common import MockUser, async_capture_events, async_fire_time_changed
-from tests.typing import WebSocketGenerator
+from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 MOCK_THEMES = {
     "happy": {"primary-color": "red", "app-header-background-color": "blue"},
@@ -220,7 +219,10 @@ async def test_themes_persist(
 
 
 async def test_themes_save_storage(
-    hass: HomeAssistant, hass_storage: dict[str, Any], frontend_themes
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    frontend_themes,
 ) -> None:
     """Test that theme settings are restores after restart."""
 
@@ -233,7 +235,8 @@ async def test_themes_save_storage(
     )
 
     # To trigger the call_later
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+    freezer.tick(60.0)
+    async_fire_time_changed(hass)
     # To execute the save
     await hass.async_block_till_done()
 
@@ -664,3 +667,76 @@ async def test_static_path_cache(hass: HomeAssistant, mock_http_client) -> None:
     # and again to make sure the cache works
     resp = await mock_http_client.get("/static/does-not-exist", allow_redirects=False)
     assert resp.status == 404
+
+
+async def test_get_icons(hass: HomeAssistant, ws_client: MockHAClientWebSocket) -> None:
+    """Test get_icons command."""
+    with patch(
+        "homeassistant.components.frontend.async_get_icons",
+        side_effect=lambda hass, category, integrations: {},
+    ):
+        await ws_client.send_json(
+            {
+                "id": 5,
+                "type": "frontend/get_icons",
+                "category": "entity_component",
+            }
+        )
+        msg = await ws_client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == {"resources": {}}
+
+
+async def test_get_icons_for_integrations(
+    hass: HomeAssistant, ws_client: MockHAClientWebSocket
+) -> None:
+    """Test get_icons for integrations command."""
+    with patch(
+        "homeassistant.components.frontend.async_get_icons",
+        side_effect=lambda hass, category, integrations: {
+            integration: {} for integration in integrations
+        },
+    ):
+        await ws_client.send_json(
+            {
+                "id": 5,
+                "type": "frontend/get_icons",
+                "integration": ["frontend", "http"],
+                "category": "entity",
+            }
+        )
+        msg = await ws_client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert set(msg["result"]["resources"]) == {"frontend", "http"}
+
+
+async def test_get_icons_for_single_integration(
+    hass: HomeAssistant, ws_client: MockHAClientWebSocket
+) -> None:
+    """Test get_icons for integration command."""
+    with patch(
+        "homeassistant.components.frontend.async_get_icons",
+        side_effect=lambda hass, category, integrations: {
+            integration: {} for integration in integrations
+        },
+    ):
+        await ws_client.send_json(
+            {
+                "id": 5,
+                "type": "frontend/get_icons",
+                "integration": "http",
+                "category": "entity",
+            }
+        )
+        msg = await ws_client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == {"resources": {"http": {}}}

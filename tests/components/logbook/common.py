@@ -77,6 +77,7 @@ def mock_humanify(hass_, rows):
     context_augmenter = processor.ContextAugmenter(logbook_run)
     return list(
         processor._humanify(
+            hass_,
             rows,
             ent_reg,
             logbook_run,

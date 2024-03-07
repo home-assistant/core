@@ -53,20 +53,10 @@ class LutronOccupancySensor(LutronDevice, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
 
     @property
-    def is_on(self) -> bool:
-        """Return true if the binary sensor is on."""
-        # Error cases will end up treated as unoccupied.
-        return self._lutron_device.state == OccupancyGroup.State.OCCUPIED
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        # The default LutronDevice naming would create 'Kitchen Occ Kitchen',
-        # but since there can only be one OccupancyGroup per area we go
-        # with something shorter.
-        return f"{self._area_name} Occupancy"
-
-    @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         return {"lutron_integration_id": self._lutron_device.id}
+
+    def _update_attrs(self) -> None:
+        """Update the state attributes."""
+        self._attr_is_on = self._lutron_device.state == OccupancyGroup.State.OCCUPIED

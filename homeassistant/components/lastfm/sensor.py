@@ -43,7 +43,7 @@ class LastFmSensor(CoordinatorEntity[LastFMDataUpdateCoordinator], SensorEntity)
     """A class for the Last.fm account."""
 
     _attr_attribution = "Data provided by Last.fm"
-    _attr_icon = "mdi:radio-fm"
+    _attr_translation_key = "lastfm"
     _attr_has_entity_name = True
     _attr_name = None
 

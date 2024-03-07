@@ -32,7 +32,6 @@ class CoolmasterResetFilter(CoolmasterEntity, ButtonEntity):
         key="reset_filter",
         translation_key="reset_filter",
         entity_category=EntityCategory.CONFIG,
-        icon="mdi:air-filter",
     )
 
     async def async_press(self) -> None:

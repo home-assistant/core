@@ -5,8 +5,9 @@
   "codeowners": ["@home-assistant/cloud"],
   "dependencies": ["http", "webhook"],
   "documentation": "https://www.home-assistant.io/integrations/cloud",
+  "import_executor": true,
   "integration_type": "system",
   "iot_class": "cloud_push",
   "loggers": ["hass_nabucasa"],
-  "requirements": ["hass-nabucasa==0.75.1"]
+  "requirements": ["hass-nabucasa==0.78.0"]
 }
