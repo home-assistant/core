@@ -7,6 +7,8 @@ import pytest
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import frame
 
+from tests.common import extract_stack_to_frame
+
 
 async def test_extract_frame_integration(
     caplog: pytest.LogCaptureFixture, mock_integration_frame: Mock
@@ -68,25 +70,27 @@ async def test_extract_frame_integration_with_excluded_integration(
         line="self.light.is_on",
     )
     with patch(
-        "homeassistant.helpers.frame.extract_stack",
-        return_value=[
-            Mock(
-                filename="/home/dev/homeassistant/core.py",
-                lineno="23",
-                line="do_something()",
-            ),
-            correct_frame,
-            Mock(
-                filename="/home/dev/homeassistant/components/zeroconf/usage.py",
-                lineno="23",
-                line="self.light.is_on",
-            ),
-            Mock(
-                filename="/home/dev/mdns/lights.py",
-                lineno="2",
-                line="something()",
-            ),
-        ],
+        "homeassistant.helpers.frame.get_current_frame",
+        return_value=extract_stack_to_frame(
+            [
+                Mock(
+                    filename="/home/dev/homeassistant/core.py",
+                    lineno="23",
+                    line="do_something()",
+                ),
+                correct_frame,
+                Mock(
+                    filename="/home/dev/homeassistant/components/zeroconf/usage.py",
+                    lineno="23",
+                    line="self.light.is_on",
+                ),
+                Mock(
+                    filename="/home/dev/mdns/lights.py",
+                    lineno="2",
+                    line="something()",
+                ),
+            ]
+        ),
     ):
         integration_frame = frame.get_integration_frame(
             exclude_integrations={"zeroconf"}
@@ -104,19 +108,21 @@ async def test_extract_frame_integration_with_excluded_integration(
 async def test_extract_frame_no_integration(caplog: pytest.LogCaptureFixture) -> None:
     """Test extracting the current frame without integration context."""
     with patch(
-        "homeassistant.helpers.frame.extract_stack",
-        return_value=[
-            Mock(
-                filename="/home/paulus/homeassistant/core.py",
-                lineno="23",
-                line="do_something()",
-            ),
-            Mock(
-                filename="/home/paulus/aiohue/lights.py",
-                lineno="2",
-                line="something()",
-            ),
-        ],
+        "homeassistant.helpers.frame.get_current_frame",
+        return_value=extract_stack_to_frame(
+            [
+                Mock(
+                    filename="/home/paulus/homeassistant/core.py",
+                    lineno="23",
+                    line="do_something()",
+                ),
+                Mock(
+                    filename="/home/paulus/aiohue/lights.py",
+                    lineno="2",
+                    line="something()",
+                ),
+            ]
+        ),
     ), pytest.raises(frame.MissingIntegrationFrame):
         frame.get_integration_frame()
 
@@ -126,19 +132,21 @@ async def test_get_integration_logger_no_integration(
 ) -> None:
     """Test getting fallback logger without integration context."""
     with patch(
-        "homeassistant.helpers.frame.extract_stack",
-        return_value=[
-            Mock(
-                filename="/home/paulus/homeassistant/core.py",
-                lineno="23",
-                line="do_something()",
-            ),
-            Mock(
-                filename="/home/paulus/aiohue/lights.py",
-                lineno="2",
-                line="something()",
-            ),
-        ],
+        "homeassistant.helpers.frame.get_current_frame",
+        return_value=extract_stack_to_frame(
+            [
+                Mock(
+                    filename="/home/paulus/homeassistant/core.py",
+                    lineno="23",
+                    line="do_something()",
+                ),
+                Mock(
+                    filename="/home/paulus/aiohue/lights.py",
+                    lineno="2",
+                    line="something()",
+                ),
+            ]
+        ),
     ):
         logger = frame.get_integration_logger(__name__)
 

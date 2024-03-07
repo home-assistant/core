@@ -8,7 +8,7 @@ from dataclasses import dataclass
 import functools
 import logging
 import sys
-from traceback import FrameSummary, extract_stack
+from types import FrameType
 from typing import Any, TypeVar, cast
 
 from homeassistant.core import HomeAssistant, async_get_hass
@@ -28,7 +28,7 @@ class IntegrationFrame:
     """Integration frame container."""
 
     custom_integration: bool
-    frame: FrameSummary
+    frame: FrameType
     integration: str
     module: str | None
     relative_filename: str
@@ -54,19 +54,27 @@ def get_integration_logger(fallback_name: str) -> logging.Logger:
     return logging.getLogger(logger_name)
 
 
+def get_current_frame() -> FrameType:
+    """Return the current frame."""
+    return sys._getframe(1)  # pylint: disable=protected-access
+
+
 def get_integration_frame(exclude_integrations: set | None = None) -> IntegrationFrame:
     """Return the frame, integration and integration path of the current stack frame."""
     found_frame = None
     if not exclude_integrations:
         exclude_integrations = set()
 
-    for frame in reversed(extract_stack()):
+    frame: FrameType | None = get_current_frame()
+    while frame is not None:
+        filename = frame.f_code.co_filename
+
         for path in ("custom_components/", "homeassistant/components/"):
             try:
-                index = frame.filename.index(path)
+                index = filename.index(path)
                 start = index + len(path)
-                end = frame.filename.index("/", start)
-                integration = frame.filename[start:end]
+                end = filename.index("/", start)
+                integration = filename[start:end]
                 if integration not in exclude_integrations:
                     found_frame = frame
 
@@ -77,6 +85,8 @@ def get_integration_frame(exclude_integrations: set | None = None) -> Integratio
         if found_frame is not None:
             break
 
+        frame = frame.f_back
+
     if found_frame is None:
         raise MissingIntegrationFrame
 
@@ -84,7 +94,7 @@ def get_integration_frame(exclude_integrations: set | None = None) -> Integratio
     for module, module_obj in dict(sys.modules).items():
         if not hasattr(module_obj, "__file__"):
             continue
-        if module_obj.__file__ == found_frame.filename:
+        if module_obj.__file__ == found_frame.f_code.co_filename:
             found_module = module
             break
 
@@ -93,7 +103,7 @@ def get_integration_frame(exclude_integrations: set | None = None) -> Integratio
         frame=found_frame,
         integration=integration,
         module=found_module,
-        relative_filename=found_frame.filename[index:],
+        relative_filename=found_frame.f_code.co_filename[index:],
     )
 
 
@@ -139,7 +149,7 @@ def _report_integration(
     """
     found_frame = integration_frame.frame
     # Keep track of integrations already reported to prevent flooding
-    key = f"{found_frame.filename}:{found_frame.lineno}"
+    key = f"{found_frame.f_code.co_filename}:{found_frame.f_code.co_firstlineno}"
     if key in _REPORTED_INTEGRATIONS:
         return
     _REPORTED_INTEGRATIONS.add(key)
@@ -160,8 +170,8 @@ def _report_integration(
         integration_frame.integration,
         what,
         integration_frame.relative_filename,
-        found_frame.lineno,
-        (found_frame.line or "?").strip(),
+        found_frame.f_code.co_firstlineno,
+        (str(found_frame) or "?").strip(),
         report_issue,
     )
 
