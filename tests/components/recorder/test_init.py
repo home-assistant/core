@@ -2492,11 +2492,30 @@ async def test_events_are_recorded_until_final_write(
 
 
 async def test_commit_before_commits_pending_writes(
-    recorder_mock: Recorder, hass: HomeAssistant, recorder_db_url: str
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
+    recorder_db_url: str,
+    tmp_path: Path,
 ) -> None:
-    """Test commit_before commits pending writes."""
+    """Test commit_before with a non-zero commit interval.
 
+    All of our test run with a commit interval of 0 by
+    default, so we need to test this with a non-zero commit
+    """
+    if recorder_db_url == "sqlite://":
+        # On-disk database because this test does not play nice with the
+        # MutexPool
+        recorder_db_url = "sqlite:///" + str(tmp_path / "pytest.db")
+    config = {
+        recorder.CONF_DB_URL: recorder_db_url,
+        recorder.CONF_COMMIT_INTERVAL: 60,
+    }
+
+    recorder_helper.async_initialize_recorder(hass)
+    hass.create_task(async_setup_recorder_instance(hass, config))
+    await recorder_helper.async_wait_recorder(hass)
     instance = get_instance(hass)
+    assert instance.commit_interval == 60
     verify_states_in_queue_future = hass.loop.create_future()
     verify_session_commit_future = hass.loop.create_future()
 
