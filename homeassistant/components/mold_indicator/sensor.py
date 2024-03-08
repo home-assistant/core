@@ -1,4 +1,5 @@
 """Calculates mold growth indication from temperature and humidity."""
+
 from __future__ import annotations
 
 import logging
