@@ -24,14 +24,14 @@ from .const import (
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class VilfoRequiredKeysMixin:
     """Mixin for required keys."""
 
     api_key: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class VilfoSensorEntityDescription(SensorEntityDescription, VilfoRequiredKeysMixin):
     """Describes Vilfo sensor entity."""
 
@@ -41,13 +41,11 @@ SENSOR_TYPES: tuple[VilfoSensorEntityDescription, ...] = (
         key=ATTR_LOAD,
         translation_key=ATTR_LOAD,
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:memory",
         api_key=ATTR_API_DATA_FIELD_LOAD,
     ),
     VilfoSensorEntityDescription(
         key=ATTR_BOOT_TIME,
         translation_key=ATTR_BOOT_TIME,
-        icon="mdi:timer-outline",
         api_key=ATTR_API_DATA_FIELD_BOOT_TIME,
         device_class=SensorDeviceClass.TIMESTAMP,
     ),

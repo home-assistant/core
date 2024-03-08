@@ -98,6 +98,7 @@ async def test_migrate_config_entry(hass: HomeAssistant) -> None:
         CONF_BASE_PATH: "/base/",
     }
     entry = MockConfigEntry(domain=DOMAIN, data=legacy_config)
+    entry.add_to_hass(hass)
 
     assert entry.data == legacy_config
     assert entry.version == 1

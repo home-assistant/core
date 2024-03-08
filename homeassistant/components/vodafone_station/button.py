@@ -20,7 +20,7 @@ from .const import _LOGGER, DOMAIN
 from .coordinator import VodafoneStationRouter
 
 
-@dataclass
+@dataclass(frozen=True)
 class VodafoneStationBaseEntityDescriptionMixin:
     """Mixin to describe a Button entity."""
 
@@ -28,7 +28,7 @@ class VodafoneStationBaseEntityDescriptionMixin:
     is_suitable: Callable[[dict], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class VodafoneStationEntityDescription(
     ButtonEntityDescription, VodafoneStationBaseEntityDescriptionMixin
 ):

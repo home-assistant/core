@@ -31,7 +31,7 @@ from .entity import ISYAuxControlEntity, ISYNodeEntity, ISYProgramEntity
 from .models import IsyData
 
 
-@dataclass
+@dataclass(frozen=True)
 class ISYSwitchEntityDescription(SwitchEntityDescription):
     """Describes IST switch."""
 

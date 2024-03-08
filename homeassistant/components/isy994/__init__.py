@@ -102,7 +102,7 @@ async def async_setup_entry(
     try:
         async with asyncio.timeout(60):
             await isy.initialize()
-    except asyncio.TimeoutError as err:
+    except TimeoutError as err:
         raise ConfigEntryNotReady(
             "Timed out initializing the ISY; device may be busy, trying again later:"
             f" {err}"

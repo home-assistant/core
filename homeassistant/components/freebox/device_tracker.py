@@ -103,7 +103,7 @@ class FreeboxDevice(ScannerEntity):
         return SourceType.ROUTER
 
     @callback
-    def async_on_demand_update(self):
+    def async_on_demand_update(self) -> None:
         """Update state."""
         self.async_update_state()
         self.async_write_ha_state()
@@ -120,6 +120,6 @@ class FreeboxDevice(ScannerEntity):
         )
 
 
-def icon_for_freebox_device(device) -> str:
+def icon_for_freebox_device(device: dict[str, Any]) -> str:
     """Return a device icon from its type."""
     return DEVICE_ICONS.get(device["host_type"], "mdi:help-network")

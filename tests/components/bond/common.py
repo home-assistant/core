@@ -1,7 +1,6 @@
 """Common methods used across tests for Bond."""
 from __future__ import annotations
 
-from asyncio import TimeoutError as AsyncIOTimeoutError
 from contextlib import nullcontext
 from datetime import timedelta
 from typing import Any
@@ -67,13 +66,9 @@ async def setup_bond_entity(
         enabled=patch_token
     ), patch_bond_version(enabled=patch_version), patch_bond_device_ids(
         enabled=patch_device_ids
-    ), patch_setup_entry(
-        "cover", enabled=patch_platforms
-    ), patch_setup_entry(
+    ), patch_setup_entry("cover", enabled=patch_platforms), patch_setup_entry(
         "fan", enabled=patch_platforms
-    ), patch_setup_entry(
-        "light", enabled=patch_platforms
-    ), patch_setup_entry(
+    ), patch_setup_entry("light", enabled=patch_platforms), patch_setup_entry(
         "switch", enabled=patch_platforms
     ):
         return await hass.config_entries.async_setup(config_entry.entry_id)
@@ -102,15 +97,11 @@ async def setup_platform(
         "homeassistant.components.bond.PLATFORMS", [platform]
     ), patch_bond_version(return_value=bond_version), patch_bond_bridge(
         return_value=bridge
-    ), patch_bond_token(
-        return_value=token
-    ), patch_bond_device_ids(
+    ), patch_bond_token(return_value=token), patch_bond_device_ids(
         return_value=[bond_device_id]
     ), patch_start_bpup(), patch_bond_device(
         return_value=discovered_device
-    ), patch_bond_device_properties(
-        return_value=props
-    ), patch_bond_device_state(
+    ), patch_bond_device_properties(return_value=props), patch_bond_device_state(
         return_value=state
     ):
         assert await async_setup_component(hass, BOND_DOMAIN, {})
@@ -256,7 +247,7 @@ async def help_test_entity_available(
 
     assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
 
-    with patch_bond_device_state(side_effect=AsyncIOTimeoutError()):
+    with patch_bond_device_state(side_effect=TimeoutError()):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE

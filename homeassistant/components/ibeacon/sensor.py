@@ -23,14 +23,14 @@ from .coordinator import IBeaconCoordinator
 from .entity import IBeaconEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class IBeaconRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[iBeaconAdvertisement], str | int | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class IBeaconSensorEntityDescription(SensorEntityDescription, IBeaconRequiredKeysMixin):
     """Describes iBeacon sensor entity."""
 
@@ -56,7 +56,6 @@ SENSOR_DESCRIPTIONS = (
     IBeaconSensorEntityDescription(
         key="estimated_distance",
         translation_key="estimated_distance",
-        icon="mdi:signal-distance-variant",
         native_unit_of_measurement=UnitOfLength.METERS,
         value_fn=lambda ibeacon_advertisement: ibeacon_advertisement.distance,
         state_class=SensorStateClass.MEASUREMENT,

@@ -88,7 +88,7 @@ async def test_if_fires_on_state_change(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": entry.device_id,
                         "entity_id": entry.id,
                         "type": "turn_on",
                     },
@@ -105,7 +105,7 @@ async def test_if_fires_on_state_change(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": entry.device_id,
                         "entity_id": entry.id,
                         "type": "turn_off",
                     },
@@ -161,7 +161,7 @@ async def test_if_fires_on_state_change_legacy(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": entry.device_id,
                         "entity_id": entry.entity_id,
                         "type": "turn_on",
                     },

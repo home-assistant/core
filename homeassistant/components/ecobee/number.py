@@ -18,19 +18,12 @@ from .entity import EcobeeBaseEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class EcobeeNumberEntityDescriptionBase:
-    """Required values when describing Ecobee number entities."""
+@dataclass(frozen=True, kw_only=True)
+class EcobeeNumberEntityDescription(NumberEntityDescription):
+    """Class describing Ecobee number entities."""
 
     ecobee_setting_key: str
     set_fn: Callable[[EcobeeData, int, int], Awaitable]
-
-
-@dataclass
-class EcobeeNumberEntityDescription(
-    NumberEntityDescription, EcobeeNumberEntityDescriptionBase
-):
-    """Class describing Ecobee number entities."""
 
 
 VENTILATOR_NUMBERS = (

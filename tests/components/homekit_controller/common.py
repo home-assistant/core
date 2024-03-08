@@ -155,6 +155,13 @@ class Helper:
         assert state is not None
         return state
 
+    async def async_set_aid_iid_status(
+        self, aid_iid_status: list[tuple[int, int, int]]
+    ) -> None:
+        """Set the status of a set of aid/iid pairs."""
+        self.pairing.testing.set_aid_iid_status(aid_iid_status)
+        await self.hass.async_block_till_done()
+
     @callback
     def async_assert_service_values(
         self, service: str, characteristics: dict[str, Any]

@@ -6,7 +6,7 @@ from collections.abc import Coroutine, Mapping
 from functools import partial
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -18,6 +18,7 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     MediaType,
 )
+from homeassistant.config import config_per_platform
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DESCRIPTION,
@@ -25,12 +26,12 @@ from homeassistant.const import (
     CONF_PLATFORM,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import config_per_platform, discovery
+from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_prepare_setup_platform
-from homeassistant.util.yaml import load_yaml
+from homeassistant.util.yaml import load_yaml_dict
 
 from .const import (
     ATTR_CACHE,
@@ -103,8 +104,8 @@ async def async_setup_legacy(
 
     # Load service descriptions from tts/services.yaml
     services_yaml = Path(__file__).parent / "services.yaml"
-    services_dict = cast(
-        dict, await hass.async_add_executor_job(load_yaml, str(services_yaml))
+    services_dict = await hass.async_add_executor_job(
+        load_yaml_dict, str(services_yaml)
     )
 
     async def async_setup_platform(

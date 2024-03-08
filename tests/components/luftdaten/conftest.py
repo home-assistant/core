@@ -34,23 +34,15 @@ def mock_setup_entry() -> Generator[None, None, None]:
 
 
 @pytest.fixture
-def mock_luftdaten_config_flow() -> Generator[None, MagicMock, None]:
-    """Return a mocked Luftdaten client."""
-    with patch(
-        "homeassistant.components.luftdaten.config_flow.Luftdaten", autospec=True
-    ) as luftdaten_mock:
-        luftdaten = luftdaten_mock.return_value
-        luftdaten.validate_sensor.return_value = True
-        yield luftdaten
-
-
-@pytest.fixture
 def mock_luftdaten() -> Generator[None, MagicMock, None]:
     """Return a mocked Luftdaten client."""
     with patch(
         "homeassistant.components.luftdaten.Luftdaten", autospec=True
-    ) as luftdaten_mock:
+    ) as luftdaten_mock, patch(
+        "homeassistant.components.luftdaten.config_flow.Luftdaten", new=luftdaten_mock
+    ):
         luftdaten = luftdaten_mock.return_value
+        luftdaten.validate_sensor.return_value = True
         luftdaten.sensor_id = 12345
         luftdaten.meta = {
             "altitude": 123.456,

@@ -70,8 +70,8 @@ class CrownstoneEntity(CrownstoneBaseEntity, LightEntity):
     Light platform is used to support dimming.
     """
 
-    _attr_icon = "mdi:power-socket-de"
     _attr_name = None
+    _attr_translation_key = "german_power_outlet"
 
     def __init__(
         self, crownstone_data: Crownstone, usb: CrownstoneUart | None = None

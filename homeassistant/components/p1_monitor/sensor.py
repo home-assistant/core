@@ -88,7 +88,6 @@ SENSORS_SMARTMETER: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="energy_tariff_period",
         translation_key="energy_tariff_period",
-        icon="mdi:calendar-clock",
     ),
 )
 
@@ -321,4 +320,4 @@ class P1MonitorSensorEntity(
         )
         if isinstance(value, str):
             return value.lower()
-        return value
+        return value  # type: ignore[no-any-return]

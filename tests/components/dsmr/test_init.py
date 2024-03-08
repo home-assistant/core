@@ -85,6 +85,7 @@ from tests.common import MockConfigEntry
 )
 async def test_migrate_unique_id(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
     dsmr_version: str,
     old_unique_id: str,
@@ -97,8 +98,6 @@ async def test_migrate_unique_id(
         data={
             "port": "/dev/ttyUSB0",
             "dsmr_version": dsmr_version,
-            "precision": 4,
-            "reconnect_interval": 30,
             "serial_id": "1234",
             "serial_id_gas": "5678",
         },
@@ -109,7 +108,6 @@ async def test_migrate_unique_id(
 
     mock_entry.add_to_hass(hass)
 
-    entity_registry = er.async_get(hass)
     entity: er.RegistryEntry = entity_registry.async_get_or_create(
         suggested_object_id="my_sensor",
         disabled_by=None,

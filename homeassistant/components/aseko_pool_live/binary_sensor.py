@@ -20,25 +20,17 @@ from .coordinator import AsekoDataUpdateCoordinator
 from .entity import AsekoEntity
 
 
-@dataclass
-class AsekoBinarySensorDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class AsekoBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes an Aseko binary sensor entity."""
 
     value_fn: Callable[[Unit], bool]
-
-
-@dataclass
-class AsekoBinarySensorEntityDescription(
-    BinarySensorEntityDescription, AsekoBinarySensorDescriptionMixin
-):
-    """Describes an Aseko binary sensor entity."""
 
 
 UNIT_BINARY_SENSORS: tuple[AsekoBinarySensorEntityDescription, ...] = (
     AsekoBinarySensorEntityDescription(
         key="water_flow",
         translation_key="water_flow",
-        icon="mdi:waves-arrow-right",
         value_fn=lambda unit: unit.water_flow,
     ),
     AsekoBinarySensorEntityDescription(

@@ -5,9 +5,8 @@ import logging
 from py_nextbus import NextBusClient
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.const import CONF_NAME
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_NAME, CONF_STOP
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -15,7 +14,8 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_AGENCY, CONF_ROUTE, CONF_STOP, DOMAIN
+from .const import CONF_AGENCY, CONF_ROUTE, DOMAIN
+from .util import listify
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ def _get_stop_tags(
     title_counts = Counter(tags.values())
 
     stop_directions: dict[str, str] = {}
-    for direction in route_config["route"]["direction"]:
+    for direction in listify(route_config["route"]["direction"]):
         for stop in direction["stop"]:
             stop_directions[stop["tag"]] = direction["name"]
 
@@ -88,7 +88,7 @@ def _unique_id_from_data(data: dict[str, str]) -> str:
     return f"{data[CONF_AGENCY]}_{data[CONF_ROUTE]}_{data[CONF_STOP]}"
 
 
-class NextBusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class NextBusFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle Nextbus configuration."""
 
     VERSION = 1
@@ -103,7 +103,7 @@ class NextBusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._client = NextBusClient(output_format="json")
         _LOGGER.info("Init new config flow")
 
-    async def async_step_import(self, config_input: dict[str, str]) -> FlowResult:
+    async def async_step_import(self, config_input: dict[str, str]) -> ConfigFlowResult:
         """Handle import of config."""
         agency_tag = config_input[CONF_AGENCY]
         route_tag = config_input[CONF_ROUTE]
@@ -140,14 +140,14 @@ class NextBusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self,
         user_input: dict[str, str] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         return await self.async_step_agency(user_input)
 
     async def async_step_agency(
         self,
         user_input: dict[str, str] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Select agency."""
         if user_input is not None:
             self.data[CONF_AGENCY] = user_input[CONF_AGENCY]
@@ -172,7 +172,7 @@ class NextBusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_route(
         self,
         user_input: dict[str, str] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Select route."""
         if user_input is not None:
             self.data[CONF_ROUTE] = user_input[CONF_ROUTE]
@@ -197,7 +197,7 @@ class NextBusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_stop(
         self,
         user_input: dict[str, str] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Select stop."""
 
         if user_input is not None:

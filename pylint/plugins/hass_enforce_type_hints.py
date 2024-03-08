@@ -55,11 +55,12 @@ class TypeHintMatch:
         )
 
 
-@dataclass
+@dataclass(kw_only=True)
 class ClassTypeHintMatch:
     """Class for pattern matching."""
 
     base_class: str
+    exclude_base_classes: set[str] | None = None
     matches: list[TypeHintMatch]
 
 
@@ -481,6 +482,7 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
     "config_flow": [
         ClassTypeHintMatch(
             base_class="FlowHandler",
+            exclude_base_classes={"ConfigEntryBaseFlow"},
             matches=[
                 TypeHintMatch(
                     function_name="async_step_*",
@@ -504,56 +506,71 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     arg_types={
                         1: "DhcpServiceInfo",
                     },
-                    return_type="FlowResult",
+                    return_type="ConfigFlowResult",
                 ),
                 TypeHintMatch(
                     function_name="async_step_hassio",
                     arg_types={
                         1: "HassioServiceInfo",
                     },
-                    return_type="FlowResult",
+                    return_type="ConfigFlowResult",
                 ),
                 TypeHintMatch(
                     function_name="async_step_homekit",
                     arg_types={
                         1: "ZeroconfServiceInfo",
                     },
-                    return_type="FlowResult",
+                    return_type="ConfigFlowResult",
                 ),
                 TypeHintMatch(
                     function_name="async_step_mqtt",
                     arg_types={
                         1: "MqttServiceInfo",
                     },
-                    return_type="FlowResult",
+                    return_type="ConfigFlowResult",
                 ),
                 TypeHintMatch(
                     function_name="async_step_reauth",
                     arg_types={
                         1: "Mapping[str, Any]",
                     },
-                    return_type="FlowResult",
+                    return_type="ConfigFlowResult",
                 ),
                 TypeHintMatch(
                     function_name="async_step_ssdp",
                     arg_types={
                         1: "SsdpServiceInfo",
                     },
-                    return_type="FlowResult",
+                    return_type="ConfigFlowResult",
                 ),
                 TypeHintMatch(
                     function_name="async_step_usb",
                     arg_types={
                         1: "UsbServiceInfo",
                     },
-                    return_type="FlowResult",
+                    return_type="ConfigFlowResult",
                 ),
                 TypeHintMatch(
                     function_name="async_step_zeroconf",
                     arg_types={
                         1: "ZeroconfServiceInfo",
                     },
-                    return_type="FlowResult",
+                    return_type="ConfigFlowResult",
+                ),
+                TypeHintMatch(
+                    function_name="async_step_*",
+                    arg_types={},
+                    return_type="ConfigFlowResult",
+                ),
+            ],
+        ),
+        ClassTypeHintMatch(
+            base_class="OptionsFlow",
+            matches=[
+                TypeHintMatch(
+                    function_name="async_step_*",
+                    arg_types={},
+                    return_type="ConfigFlowResult",
                 ),
             ],
         ),
@@ -586,10 +603,6 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="state_attributes",
         return_type=["dict[str, Any]", None],
-    ),
-    TypeHintMatch(
-        function_name="device_state_attributes",
-        return_type=["Mapping[str, Any]", None],
     ),
     TypeHintMatch(
         function_name="extra_state_attributes",
@@ -630,10 +643,6 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="supported_features",
         return_type=["int", None],
-    ),
-    TypeHintMatch(
-        function_name="context_recent_time",
-        return_type="timedelta",
     ),
     TypeHintMatch(
         function_name="entity_registry_enabled_default",
@@ -2428,6 +2437,54 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
+    "todo": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="TodoListEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="todo_items",
+                    return_type=["list[TodoItem]", None],
+                ),
+                TypeHintMatch(
+                    function_name="async_create_todo_item",
+                    arg_types={
+                        1: "TodoItem",
+                    },
+                    return_type="None",
+                ),
+                TypeHintMatch(
+                    function_name="async_update_todo_item",
+                    arg_types={
+                        1: "TodoItem",
+                    },
+                    return_type="None",
+                ),
+                TypeHintMatch(
+                    function_name="async_delete_todo_items",
+                    arg_types={
+                        1: "list[str]",
+                    },
+                    return_type="None",
+                ),
+                TypeHintMatch(
+                    function_name="async_move_todo_item",
+                    arg_types={
+                        1: "str",
+                        2: "str | None",
+                    },
+                    return_type="None",
+                ),
+            ],
+        ),
+    ],
     "tts": [
         ClassTypeHintMatch(
             base_class="Provider",
@@ -3086,11 +3143,19 @@ class HassTypeHintChecker(BaseChecker):
         ancestor: nodes.ClassDef
         checked_class_methods: set[str] = set()
         ancestors = list(node.ancestors())  # cache result for inside loop
-        for class_matches in self._class_matchers:
+        for class_matcher in self._class_matchers:
+            skip_matcher = False
+            if exclude_base_classes := class_matcher.exclude_base_classes:
+                for ancestor in ancestors:
+                    if ancestor.name in exclude_base_classes:
+                        skip_matcher = True
+                        break
+            if skip_matcher:
+                continue
             for ancestor in ancestors:
-                if ancestor.name == class_matches.base_class:
+                if ancestor.name == class_matcher.base_class:
                     self._visit_class_functions(
-                        node, class_matches.matches, checked_class_methods
+                        node, class_matcher.matches, checked_class_methods
                     )
 
     def _visit_class_functions(

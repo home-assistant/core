@@ -43,13 +43,15 @@ SERVICE_CHARGE_SET_SCHEDULE_SCHEMA = vol.Schema(
     {
         vol.Required("id"): cv.positive_int,
         vol.Optional("activated"): cv.boolean,
-        vol.Optional("monday"): vol.Schema(SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("tuesday"): vol.Schema(SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("wednesday"): vol.Schema(SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("thursday"): vol.Schema(SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("friday"): vol.Schema(SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("saturday"): vol.Schema(SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("sunday"): vol.Schema(SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("monday"): vol.Any(None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("tuesday"): vol.Any(None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("wednesday"): vol.Any(
+            None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA
+        ),
+        vol.Optional("thursday"): vol.Any(None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("friday"): vol.Any(None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("saturday"): vol.Any(None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("sunday"): vol.Any(None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
     }
 )
 SERVICE_CHARGE_SET_SCHEDULES_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(

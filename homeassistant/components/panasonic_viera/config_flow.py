@@ -6,7 +6,7 @@ from urllib.error import URLError
 from panasonic_viera import TV_TYPE_ENCRYPTED, RemoteControl, SOAPError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_PORT
 
 from .const import (
@@ -25,7 +25,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for Panasonic Viera."""
 
     VERSION = 1
@@ -159,12 +159,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Load the data."""
         self._data = config
 
-        self._data[CONF_PORT] = (
-            self._data[CONF_PORT] if CONF_PORT in self._data else DEFAULT_PORT
-        )
-        self._data[CONF_ON_ACTION] = (
-            self._data[CONF_ON_ACTION] if CONF_ON_ACTION in self._data else None
-        )
+        self._data[CONF_PORT] = self._data.get(CONF_PORT, DEFAULT_PORT)
+        self._data[CONF_ON_ACTION] = self._data.get(CONF_ON_ACTION)
 
         await self.async_set_unique_id(self._data[CONF_HOST])
         self._abort_if_unique_id_configured()

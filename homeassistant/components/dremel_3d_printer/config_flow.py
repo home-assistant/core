@@ -8,9 +8,8 @@ from dremel3dpy import Dremel3DPrinter
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
-from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN, LOGGER
@@ -20,14 +19,14 @@ def _schema_with_defaults(host: str = "") -> vol.Schema:
     return vol.Schema({vol.Required(CONF_HOST, default=host): cv.string})
 
 
-class Dremel3DPrinterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class Dremel3DPrinterConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Dremel 3D Printer."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
 

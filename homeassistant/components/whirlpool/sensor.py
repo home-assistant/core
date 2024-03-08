@@ -89,14 +89,14 @@ def washer_state(washer: WasherDryer) -> str | None:
     return MACHINE_STATE.get(machine_state, None)
 
 
-@dataclass
+@dataclass(frozen=True)
 class WhirlpoolSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
     value_fn: Callable
 
 
-@dataclass
+@dataclass(frozen=True)
 class WhirlpoolSensorEntityDescription(
     SensorEntityDescription, WhirlpoolSensorEntityDescriptionMixin
 ):

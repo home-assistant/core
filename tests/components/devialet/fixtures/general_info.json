@@ -1,0 +1,18 @@
+{
+  "deviceId": "1abcdef2-3456-67g8-9h0i-1jk23456lm78",
+  "deviceName": "Livingroom",
+  "firmwareFamily": "DOS",
+  "groupId": "12345678-901a-2b3c-def4-567g89h0i12j",
+  "ipControlVersion": "1",
+  "model": "Phantom I Silver",
+  "release": {
+    "buildType": "release",
+    "canonicalVersion": "2.16.1.49152",
+    "version": "2.16.1"
+  },
+  "role": "FrontLeft",
+  "serial": "L00P00000AB11",
+  "standbyEntryDelay": 0,
+  "standbyState": "Unknown",
+  "systemId": "a12b345c-67d8-90e1-12f4-g5hij67890kl"
+}

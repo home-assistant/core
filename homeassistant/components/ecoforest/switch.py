@@ -17,19 +17,12 @@ from .coordinator import EcoforestCoordinator
 from .entity import EcoforestEntity
 
 
-@dataclass
-class EcoforestSwitchRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EcoforestSwitchEntityDescription(SwitchEntityDescription):
+    """Describes an Ecoforest switch entity."""
 
     value_fn: Callable[[Device], bool]
     switch_fn: Callable[[EcoforestApi, bool], Awaitable[Device]]
-
-
-@dataclass
-class EcoforestSwitchEntityDescription(
-    SwitchEntityDescription, EcoforestSwitchRequiredKeysMixin
-):
-    """Describes an Ecoforest switch entity."""
 
 
 SWITCH_TYPES: tuple[EcoforestSwitchEntityDescription, ...] = (

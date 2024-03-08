@@ -21,14 +21,14 @@ from . import PiHoleEntity
 from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN as PIHOLE_DOMAIN
 
 
-@dataclass
+@dataclass(frozen=True)
 class RequiredPiHoleBinaryDescription:
     """Represent the required attributes of the PiHole binary description."""
 
     state_value: Callable[[Hole], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class PiHoleBinarySensorEntityDescription(
     BinarySensorEntityDescription, RequiredPiHoleBinaryDescription
 ):
@@ -41,7 +41,6 @@ BINARY_SENSOR_TYPES: tuple[PiHoleBinarySensorEntityDescription, ...] = (
     PiHoleBinarySensorEntityDescription(
         key="status",
         translation_key="status",
-        icon="mdi:pi-hole",
         state_value=lambda api: bool(api.data.get("status") == "enabled"),
     ),
 )

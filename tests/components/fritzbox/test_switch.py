@@ -31,7 +31,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
-from . import FritzDeviceSwitchMock, setup_config_entry
+from . import FritzDeviceSwitchMock, set_devices, setup_config_entry
 from .const import CONF_FAKE_NAME, MOCK_CONFIG
 
 from tests.common import async_fire_time_changed
@@ -39,7 +39,9 @@ from tests.common import async_fire_time_changed
 ENTITY_ID = f"{DOMAIN}.{CONF_FAKE_NAME}"
 
 
-async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
+async def test_setup(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, fritz: Mock
+) -> None:
     """Test setup of platform."""
     device = FritzDeviceSwitchMock()
     assert await setup_config_entry(
@@ -98,7 +100,6 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
         ],
     )
 
-    entity_registry = er.async_get(hass)
     for sensor in sensors:
         state = hass.states.get(sensor[0])
         assert state
@@ -186,3 +187,26 @@ async def test_assume_device_unavailable(hass: HomeAssistant, fritz: Mock) -> No
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
+    """Test adding new discovered devices during runtime."""
+    device = FritzDeviceSwitchMock()
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+
+    new_device = FritzDeviceSwitchMock()
+    new_device.ain = "7890 1234"
+    new_device.name = "new_switch"
+    set_devices(fritz, devices=[device, new_device])
+
+    next_update = dt_util.utcnow() + timedelta(seconds=200)
+    async_fire_time_changed(hass, next_update)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{DOMAIN}.new_switch")
+    assert state

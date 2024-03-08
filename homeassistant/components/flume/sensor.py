@@ -12,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import (
     DEVICE_SCAN_INTERVAL,
@@ -36,6 +37,7 @@ FLUME_QUERIES_SENSOR: tuple[SensorEntityDescription, ...] = (
         translation_key="current_interval",
         suggested_display_precision=2,
         native_unit_of_measurement=f"{UnitOfVolume.GALLONS}/m",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="month_to_date",
@@ -139,7 +141,7 @@ class FlumeSensor(FlumeEntity[FlumeDeviceDataUpdateCoordinator], SensorEntity):
     """Representation of the Flume sensor."""
 
     @property
-    def native_value(self):
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         sensor_key = self.entity_description.key
         if sensor_key not in self.coordinator.flume_device.values:

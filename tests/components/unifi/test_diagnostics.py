@@ -7,7 +7,7 @@ from homeassistant.components.unifi.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .test_controller import setup_unifi_integration
+from .test_hub import setup_unifi_integration
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -129,6 +129,7 @@ async def test_entry_diagnostics(
             "disabled_by": None,
             "domain": "unifi",
             "entry_id": "1",
+            "minor_version": 1,
             "options": {
                 "allow_bandwidth_sensors": True,
                 "allow_uptime_sensors": True,

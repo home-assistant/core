@@ -267,10 +267,11 @@ class RMVDepartureData:
                 if not dest_found:
                     continue
 
-            elif self._lines and journey["number"] not in self._lines:
-                continue
-
-            elif journey["minutes"] < self._time_offset:
+            elif (
+                self._lines
+                and journey["number"] not in self._lines
+                or journey["minutes"] < self._time_offset
+            ):
                 continue
 
             for attr in ("direction", "departure_time", "product", "minutes"):

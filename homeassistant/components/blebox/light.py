@@ -62,7 +62,6 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
     def __init__(self, feature: blebox_uniapi.light.Light) -> None:
         """Initialize a BleBox light."""
         super().__init__(feature)
-        self._attr_supported_color_modes = {self.color_mode}
         if feature.effect_list:
             self._attr_supported_features = LightEntityFeature.EFFECT
 
@@ -93,6 +92,11 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
             self._attr_max_mireds = 255
 
         return color_mode_tmp
+
+    @property
+    def supported_color_modes(self):
+        """Return supported color modes."""
+        return {self.color_mode}
 
     @property
     def effect_list(self) -> list[str]:

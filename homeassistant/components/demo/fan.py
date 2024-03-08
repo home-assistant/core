@@ -90,6 +90,7 @@ class BaseDemoFan(FanEntity):
     """A demonstration fan component that uses legacy fan speeds."""
 
     _attr_should_poll = False
+    _attr_translation_key = "demo"
 
     def __init__(
         self,
@@ -161,12 +162,9 @@ class DemoPercentageFan(BaseDemoFan, FanEntity):
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if self.preset_modes and preset_mode in self.preset_modes:
-            self._preset_mode = preset_mode
-            self._percentage = None
-            self.schedule_update_ha_state()
-        else:
-            raise ValueError(f"Invalid preset mode: {preset_mode}")
+        self._preset_mode = preset_mode
+        self._percentage = None
+        self.schedule_update_ha_state()
 
     def turn_on(
         self,
@@ -230,10 +228,6 @@ class AsyncDemoPercentageFan(BaseDemoFan, FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if self.preset_modes is None or preset_mode not in self.preset_modes:
-            raise ValueError(
-                f"{preset_mode} is not a valid preset_mode: {self.preset_modes}"
-            )
         self._preset_mode = preset_mode
         self._percentage = None
         self.async_write_ha_state()

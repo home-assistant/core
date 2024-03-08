@@ -49,8 +49,8 @@ class EsphomeSwitch(EsphomeEntity[SwitchInfo, SwitchState], SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await self._client.switch_command(self._key, True)
+        self._client.switch_command(self._key, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self._client.switch_command(self._key, False)
+        self._client.switch_command(self._key, False)

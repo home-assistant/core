@@ -6,12 +6,8 @@ import aiohttp
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.environment_canada.const import (
-    CONF_LANGUAGE,
-    CONF_STATION,
-    DOMAIN,
-)
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.components.environment_canada.const import CONF_STATION, DOMAIN
+from homeassistant.const import CONF_LANGUAGE, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry

@@ -32,7 +32,7 @@ PLATFORMS = [Platform.SENSOR]
 BUILDS_QUERY: Final = "?queryOrder=queueTimeDescending&maxBuildsPerDefinition=1"
 
 
-@dataclass
+@dataclass(frozen=True)
 class AzureDevOpsEntityDescription(EntityDescription):
     """Class describing Azure DevOps entities."""
 
@@ -97,6 +97,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 class AzureDevOpsEntity(CoordinatorEntity[DataUpdateCoordinator[list[DevOpsBuild]]]):
     """Defines a base Azure DevOps entity."""
+
+    _attr_has_entity_name = True
 
     entity_description: AzureDevOpsEntityDescription
 

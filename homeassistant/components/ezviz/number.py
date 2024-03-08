@@ -30,7 +30,7 @@ PARALLEL_UPDATES = 0
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class EzvizNumberEntityDescriptionMixin:
     """Mixin values for EZVIZ Number entities."""
 
@@ -38,7 +38,7 @@ class EzvizNumberEntityDescriptionMixin:
     supported_ext_value: list
 
 
-@dataclass
+@dataclass(frozen=True)
 class EzvizNumberEntityDescription(
     NumberEntityDescription, EzvizNumberEntityDescriptionMixin
 ):
@@ -48,7 +48,6 @@ class EzvizNumberEntityDescription(
 NUMBER_TYPE = EzvizNumberEntityDescription(
     key="detection_sensibility",
     translation_key="detection_sensibility",
-    icon="mdi:eye",
     entity_category=EntityCategory.CONFIG,
     native_min_value=0,
     native_step=1,
@@ -68,8 +67,8 @@ async def async_setup_entry(
     async_add_entities(
         EzvizNumber(coordinator, camera, value, entry.entry_id)
         for camera in coordinator.data
-        for capibility, value in coordinator.data[camera]["supportExt"].items()
-        if capibility == NUMBER_TYPE.supported_ext
+        for capability, value in coordinator.data[camera]["supportExt"].items()
+        if capability == NUMBER_TYPE.supported_ext
         if value in NUMBER_TYPE.supported_ext_value
     )
 

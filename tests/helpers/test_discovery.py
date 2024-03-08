@@ -9,12 +9,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from tests.common import (
-    MockModule,
-    MockPlatform,
-    mock_entity_platform,
-    mock_integration,
-)
+from tests.common import MockModule, MockPlatform, mock_integration, mock_platform
 
 
 @pytest.fixture
@@ -136,7 +131,7 @@ async def test_circular_import(hass: HomeAssistant) -> None:
     # dependencies are only set in component level
     # since we are using manifest to hold them
     mock_integration(hass, MockModule("test_circular", dependencies=["test_component"]))
-    mock_entity_platform(hass, "switch.test_circular", MockPlatform(setup_platform))
+    mock_platform(hass, "test_circular.switch", MockPlatform(setup_platform))
 
     await setup.async_setup_component(
         hass,

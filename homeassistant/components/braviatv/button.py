@@ -19,18 +19,11 @@ from .coordinator import BraviaTVCoordinator
 from .entity import BraviaTVEntity
 
 
-@dataclass
-class BraviaTVButtonDescriptionMixin:
-    """Mixin to describe a Bravia TV Button entity."""
+@dataclass(frozen=True, kw_only=True)
+class BraviaTVButtonDescription(ButtonEntityDescription):
+    """Bravia TV Button description."""
 
     press_action: Callable[[BraviaTVCoordinator], Coroutine]
-
-
-@dataclass
-class BraviaTVButtonDescription(
-    ButtonEntityDescription, BraviaTVButtonDescriptionMixin
-):
-    """Bravia TV Button description."""
 
 
 BUTTONS: tuple[BraviaTVButtonDescription, ...] = (

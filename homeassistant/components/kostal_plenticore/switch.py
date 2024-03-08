@@ -20,7 +20,7 @@ from .helper import SettingDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class PlenticoreRequiredKeysMixin:
     """A class that describes required properties for plenticore switch entities."""
 
@@ -32,7 +32,7 @@ class PlenticoreRequiredKeysMixin:
     off_label: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class PlenticoreSwitchEntityDescription(
     SwitchEntityDescription, PlenticoreRequiredKeysMixin
 ):

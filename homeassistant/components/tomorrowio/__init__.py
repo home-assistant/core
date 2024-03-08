@@ -163,7 +163,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return unload_ok
 
 
-class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):  # pylint: disable=hass-enforce-coordinator-module
     """Define an object to hold Tomorrow.io data."""
 
     def __init__(self, hass: HomeAssistant, api: TomorrowioV4) -> None:
@@ -327,6 +327,7 @@ class TomorrowioEntity(CoordinatorEntity[TomorrowioDataUpdateCoordinator]):
     """Base Tomorrow.io Entity."""
 
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -340,7 +341,6 @@ class TomorrowioEntity(CoordinatorEntity[TomorrowioDataUpdateCoordinator]):
         self._config_entry = config_entry
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._config_entry.data[CONF_API_KEY])},
-            name=INTEGRATION_NAME,
             manufacturer=INTEGRATION_NAME,
             sw_version=f"v{self.api_version}",
             entry_type=DeviceEntryType.SERVICE,

@@ -51,14 +51,14 @@ from .const import (
 _DataT = TypeVar("_DataT", bound=Rain | Forecast | CurrentPhenomenons)
 
 
-@dataclass
+@dataclass(frozen=True)
 class MeteoFranceRequiredKeysMixin:
     """Mixin for required keys."""
 
     data_path: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class MeteoFranceSensorEntityDescription(
     SensorEntityDescription, MeteoFranceRequiredKeysMixin
 ):
@@ -303,7 +303,7 @@ class MeteoFranceRainSensor(MeteoFranceSensor[Rain]):
         return dt_util.utc_from_timestamp(next_rain["dt"]) if next_rain else None
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         reference_dt = self.coordinator.data.forecast[0]["dt"]
         return {
@@ -330,7 +330,7 @@ class MeteoFranceAlertSensor(MeteoFranceSensor[CurrentPhenomenons]):
         self._attr_unique_id = self._attr_name
 
     @property
-    def native_value(self):
+    def native_value(self) -> str | None:
         """Return the state."""
         return get_warning_text_status_from_indice_color(
             self.coordinator.data.get_domain_max_color()

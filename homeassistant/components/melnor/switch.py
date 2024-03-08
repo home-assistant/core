@@ -25,7 +25,7 @@ from .models import (
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class MelnorSwitchEntityDescriptionMixin:
     """Mixin for required keys."""
 
@@ -33,7 +33,7 @@ class MelnorSwitchEntityDescriptionMixin:
     state_fn: Callable[[Valve], Any]
 
 
-@dataclass
+@dataclass(frozen=True)
 class MelnorSwitchEntityDescription(
     SwitchEntityDescription, MelnorSwitchEntityDescriptionMixin
 ):
@@ -43,15 +43,14 @@ class MelnorSwitchEntityDescription(
 ZONE_ENTITY_DESCRIPTIONS = [
     MelnorSwitchEntityDescription(
         device_class=SwitchDeviceClass.SWITCH,
-        icon="mdi:sprinkler",
         key="manual",
+        translation_key="manual",
         name=None,
         on_off_fn=lambda valve, bool: valve.set_is_watering(bool),
         state_fn=lambda valve: valve.is_watering,
     ),
     MelnorSwitchEntityDescription(
         device_class=SwitchDeviceClass.SWITCH,
-        icon="mdi:calendar-sync-outline",
         key="frequency",
         translation_key="frequency",
         on_off_fn=lambda valve, bool: valve.set_frequency_enabled(bool),

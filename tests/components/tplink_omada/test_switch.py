@@ -2,9 +2,9 @@
 from unittest.mock import MagicMock
 
 from syrupy.assertion import SnapshotAssertion
+from tplink_omada_client import SwitchPortOverrides
 from tplink_omada_client.definitions import PoEMode
 from tplink_omada_client.devices import OmadaSwitch, OmadaSwitchPortDetails
-from tplink_omada_client.omadasiteclient import SwitchPortOverrides
 
 from homeassistant.components import switch
 from homeassistant.const import ATTR_ENTITY_ID

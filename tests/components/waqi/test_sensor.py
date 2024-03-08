@@ -3,6 +3,7 @@ import json
 from unittest.mock import patch
 
 from aiowaqi import WAQIAirQuality, WAQIError, WAQISearchResult
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -115,12 +116,13 @@ async def test_sensor_id_migration(
     entities = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
-    assert len(entities) == 11
+    assert len(entities) == 12
     assert hass.states.get("sensor.waqi_4584")
     assert hass.states.get("sensor.de_jongweg_utrecht_air_quality_index") is None
     assert entities[0].unique_id == "4584_air_quality"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, snapshot: SnapshotAssertion
 ) -> None:

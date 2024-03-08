@@ -4,7 +4,7 @@ import logging
 
 from tests.common import load_json_object_fixture
 
-MOCK_ADAPTER_NAME = "Pentair DD-EE-FF"
+MOCK_ADAPTER_NAME = "Pentair: DD-EE-FF"
 MOCK_ADAPTER_MAC = "aa:bb:cc:dd:ee:ff"
 MOCK_ADAPTER_IP = "127.0.0.1"
 MOCK_ADAPTER_PORT = 80

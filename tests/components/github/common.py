@@ -18,6 +18,7 @@ async def setup_github_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
+    add_entry_to_hass: bool = True,
 ) -> None:
     """Mock setting up the integration."""
     headers = json.loads(load_fixture("base_headers.json", DOMAIN))
@@ -41,7 +42,8 @@ async def setup_github_integration(
         json=json.loads(load_fixture("graphql.json", DOMAIN)),
         headers=headers,
     )
-    mock_config_entry.add_to_hass(hass)
+    if add_entry_to_hass:
+        mock_config_entry.add_to_hass(hass)
 
     setup_result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

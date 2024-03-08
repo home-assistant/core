@@ -18,7 +18,7 @@ class ClimateExtraAttributes(TypedDict, total=False):
     window_open: bool
 
 
-@dataclass
+@dataclass(frozen=True)
 class FritzEntityDescriptionMixinBase:
     """Bases description mixin for Fritz!Smarthome entities."""
 

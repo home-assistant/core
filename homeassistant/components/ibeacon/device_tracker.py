@@ -49,6 +49,7 @@ class IBeaconTrackerEntity(IBeaconEntity, BaseTrackerEntity):
     """An iBeacon Tracker entity."""
 
     _attr_name = None
+    _attr_translation_key = "device_tracker"
 
     def __init__(
         self,
@@ -73,11 +74,6 @@ class IBeaconTrackerEntity(IBeaconEntity, BaseTrackerEntity):
     def source_type(self) -> SourceType:
         """Return tracker source type."""
         return SourceType.BLUETOOTH_LE
-
-    @property
-    def icon(self) -> str:
-        """Return device icon."""
-        return "mdi:bluetooth-connect" if self._active else "mdi:bluetooth-off"
 
     @callback
     def _async_seen(

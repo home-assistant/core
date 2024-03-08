@@ -83,7 +83,7 @@ class FreeboxHomeBinarySensor(FreeboxHomeEntity, BinarySensorEntity):
         )
         self._attr_is_on = self._edit_state(self.get_value("signal", self._sensor_name))
 
-    async def async_update_signal(self):
+    async def async_update_signal(self) -> None:
         """Update name & state."""
         self._attr_is_on = self._edit_state(
             await self.get_home_endpoint_value(self._command_id)
@@ -167,7 +167,7 @@ class FreeboxRaidDegradedSensor(BinarySensorEntity):
         return self._raid["degraded"]
 
     @callback
-    def async_on_demand_update(self):
+    def async_on_demand_update(self) -> None:
         """Update state."""
         self.async_update_state()
         self.async_write_ha_state()

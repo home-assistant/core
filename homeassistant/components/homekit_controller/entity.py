@@ -1,16 +1,16 @@
 """Homekit Controller entities."""
 from __future__ import annotations
 
+import contextlib
 from typing import Any
 
-from aiohomekit.model import Service, Services
 from aiohomekit.model.characteristics import (
     EVENT_CHARACTERISTICS,
     Characteristic,
     CharacteristicPermissions,
     CharacteristicsTypes,
 )
-from aiohomekit.model.services import ServicesTypes
+from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -21,14 +21,6 @@ from .connection import HKDevice, valid_serial_number
 from .utils import folded_name
 
 
-def _get_service_by_iid_or_none(services: Services, iid: int) -> Service | None:
-    """Return a service by iid or None."""
-    try:
-        return services.iid(iid)
-    except KeyError:
-        return None
-
-
 class HomeKitEntity(Entity):
     """Representation of a Home Assistant HomeKit device."""
 
@@ -36,6 +28,7 @@ class HomeKitEntity(Entity):
     pollable_characteristics: list[tuple[int, int]]
     watchable_characteristics: list[tuple[int, int]]
     all_characteristics: set[tuple[int, int]]
+    all_iids: set[int]
     accessory_info: Service
 
     def __init__(self, accessory: HKDevice, devinfo: ConfigType) -> None:
@@ -51,6 +44,7 @@ class HomeKitEntity(Entity):
         self._char_name: str | None = None
         self._char_subscription: CALLBACK_TYPE | None = None
         self.async_setup()
+        self._attr_unique_id = f"{accessory.unique_id}_{self._aid}_{self._iid}"
         super().__init__()
 
     @callback
@@ -68,9 +62,9 @@ class HomeKitEntity(Entity):
     def _async_remove_entity_if_accessory_or_service_disappeared(self) -> bool:
         """Handle accessory or service disappearance."""
         entity_map = self._accessory.entity_map
-        if not entity_map.has_aid(self._aid) or not _get_service_by_iid_or_none(
-            entity_map.aid(self._aid).services, self._iid
-        ):
+        if not (
+            accessory := entity_map.aid_or_none(self._aid)
+        ) or not accessory.services.iid_or_none(self._iid):
             self._async_handle_entity_removed()
             return True
         return False
@@ -80,6 +74,16 @@ class HomeKitEntity(Entity):
         """Handle accessory discovery changes."""
         if not self._async_remove_entity_if_accessory_or_service_disappeared():
             self._async_reconfigure()
+
+    @callback
+    def _async_clear_property_cache(self, properties: tuple[str, ...]) -> None:
+        """Clear the cache of properties."""
+        for prop in properties:
+            # suppress is slower than try-except-pass, but
+            # we do not expect to have many properties to clear
+            # or this to be called often.
+            with contextlib.suppress(AttributeError):
+                delattr(self, prop)
 
     @callback
     def _async_reconfigure(self) -> None:
@@ -105,7 +109,7 @@ class HomeKitEntity(Entity):
         self._accessory.async_entity_key_removed(self._entity_key)
 
     @callback
-    def _async_unsubscribe_chars(self):
+    def _async_unsubscribe_chars(self) -> None:
         """Handle unsubscribing from characteristics."""
         if self._char_subscription:
             self._char_subscription()
@@ -114,7 +118,7 @@ class HomeKitEntity(Entity):
         self._accessory.remove_watchable_characteristics(self.watchable_characteristics)
 
     @callback
-    def _async_subscribe_chars(self):
+    def _async_subscribe_chars(self) -> None:
         """Handle registering characteristics to watch and subscribe."""
         self._accessory.add_pollable_characteristics(self.pollable_characteristics)
         self._accessory.add_watchable_characteristics(self.watchable_characteristics)
@@ -157,6 +161,7 @@ class HomeKitEntity(Entity):
         self.pollable_characteristics = []
         self.watchable_characteristics = []
         self.all_characteristics = set()
+        self.all_iids = set()
 
         char_types = self.get_characteristic_types()
 
@@ -172,6 +177,7 @@ class HomeKitEntity(Entity):
 
         self.all_characteristics.update(self.pollable_characteristics)
         self.all_characteristics.update(self.watchable_characteristics)
+        self.all_iids = {iid for _, iid in self.all_characteristics}
 
     def _setup_characteristic(self, char: Characteristic) -> None:
         """Configure an entity based on a HomeKit characteristics metadata."""
@@ -200,11 +206,6 @@ class HomeKitEntity(Entity):
         return f"homekit-{self._accessory.unique_id}-{self._aid}-{self._iid}"
 
     @property
-    def unique_id(self) -> str:
-        """Return the ID of this device."""
-        return f"{self._accessory.unique_id}_{self._aid}_{self._iid}"
-
-    @property
     def default_name(self) -> str | None:
         """Return the default name of the device."""
         return None
@@ -215,10 +216,9 @@ class HomeKitEntity(Entity):
         accessory_name = self.accessory.name
         # If the service has a name char, use that, if not
         # fallback to the default name provided by the subclass
-        device_name = self._char_name or self.default_name
-        folded_device_name = folded_name(device_name or "")
-        folded_accessory_name = folded_name(accessory_name)
-        if device_name:
+        if device_name := self._char_name or self.default_name:
+            folded_device_name = folded_name(device_name)
+            folded_accessory_name = folded_name(accessory_name)
             # Sometimes the device name includes the accessory
             # name already like My ecobee Occupancy / My ecobee
             if folded_device_name.startswith(folded_accessory_name):
@@ -233,7 +233,11 @@ class HomeKitEntity(Entity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._accessory.available and self.service.available
+        all_iids = self.all_iids
+        for char in self.service.characteristics:
+            if char.iid in all_iids and not char.available:
+                return False
+        return self._accessory.available
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -252,16 +256,16 @@ class HomeKitEntity(Entity):
 class AccessoryEntity(HomeKitEntity):
     """A HomeKit entity that is related to an entire accessory rather than a specific service or characteristic."""
 
+    def __init__(self, accessory: HKDevice, devinfo: ConfigType) -> None:
+        """Initialise a generic HomeKit accessory."""
+        super().__init__(accessory, devinfo)
+        self._attr_unique_id = f"{accessory.unique_id}_{self._aid}"
+
     @property
     def old_unique_id(self) -> str:
         """Return the old ID of this device."""
         serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)
         return f"homekit-{serial}-aid:{self._aid}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return the ID of this device."""
-        return f"{self._accessory.unique_id}_{self._aid}"
 
 
 class BaseCharacteristicEntity(HomeKitEntity):
@@ -308,13 +312,17 @@ class CharacteristicEntity(BaseCharacteristicEntity):
     the service entity.
     """
 
+    def __init__(
+        self, accessory: HKDevice, devinfo: ConfigType, char: Characteristic
+    ) -> None:
+        """Initialise a generic single characteristic HomeKit entity."""
+        super().__init__(accessory, devinfo, char)
+        self._attr_unique_id = (
+            f"{accessory.unique_id}_{self._aid}_{char.service.iid}_{char.iid}"
+        )
+
     @property
     def old_unique_id(self) -> str:
         """Return the old ID of this device."""
         serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)
         return f"homekit-{serial}-aid:{self._aid}-sid:{self._char.service.iid}-cid:{self._char.iid}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return the ID of this device."""
-        return f"{self._accessory.unique_id}_{self._aid}_{self._char.service.iid}_{self._char.iid}"

@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 MOCK_DHCP_DATA = dhcp.DhcpServiceInfo(
-    ip="127.0.0.2", macaddress="00:11:22:33:44:55", hostname="mock_hostname"
+    ip="127.0.0.2", macaddress="001122334455", hostname="mock_hostname"
 )
 
 

@@ -4,10 +4,7 @@ from __future__ import annotations
 import datetime as dt
 from typing import Final
 
-from systembridgeconnector.models.media_control import (
-    Action as MediaAction,
-    MediaControl,
-)
+from systembridgemodels.media_control import MediaAction, MediaControl
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -22,9 +19,10 @@ from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SystemBridgeEntity
 from .const import DOMAIN
-from .coordinator import SystemBridgeCoordinatorData, SystemBridgeDataUpdateCoordinator
+from .coordinator import SystemBridgeDataUpdateCoordinator
+from .data import SystemBridgeData
+from .entity import SystemBridgeEntity
 
 STATUS_CHANGING: Final[str] = "CHANGING"
 STATUS_STOPPED: Final[str] = "STOPPED"
@@ -121,17 +119,15 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
             features |= MediaPlayerEntityFeature.PREVIOUS_TRACK
         if data.media.is_next_enabled:
             features |= MediaPlayerEntityFeature.NEXT_TRACK
-        if data.media.is_pause_enabled:
-            features |= MediaPlayerEntityFeature.PAUSE
-        if data.media.is_play_enabled:
-            features |= MediaPlayerEntityFeature.PLAY
+        if data.media.is_pause_enabled or data.media.is_play_enabled:
+            features |= MediaPlayerEntityFeature.PAUSE | MediaPlayerEntityFeature.PLAY
         if data.media.is_stop_enabled:
             features |= MediaPlayerEntityFeature.STOP
 
         return features
 
     @property
-    def _systembridge_data(self) -> SystemBridgeCoordinatorData:
+    def _systembridge_data(self) -> SystemBridgeData:
         """Return data for the entity."""
         return self.coordinator.data
 
@@ -207,7 +203,7 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
         """Send play command."""
         await self.coordinator.websocket_client.media_control(
             MediaControl(
-                action=MediaAction.play,
+                action=MediaAction.PLAY.value,
             )
         )
 
@@ -215,7 +211,7 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
         """Send pause command."""
         await self.coordinator.websocket_client.media_control(
             MediaControl(
-                action=MediaAction.pause,
+                action=MediaAction.PAUSE.value,
             )
         )
 
@@ -223,7 +219,7 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
         """Send stop command."""
         await self.coordinator.websocket_client.media_control(
             MediaControl(
-                action=MediaAction.stop,
+                action=MediaAction.STOP.value,
             )
         )
 
@@ -231,7 +227,7 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
         """Send previous track command."""
         await self.coordinator.websocket_client.media_control(
             MediaControl(
-                action=MediaAction.previous,
+                action=MediaAction.PREVIOUS.value,
             )
         )
 
@@ -239,7 +235,7 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
         """Send next track command."""
         await self.coordinator.websocket_client.media_control(
             MediaControl(
-                action=MediaAction.next,
+                action=MediaAction.NEXT.value,
             )
         )
 
@@ -250,7 +246,7 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
         """Enable/disable shuffle mode."""
         await self.coordinator.websocket_client.media_control(
             MediaControl(
-                action=MediaAction.shuffle,
+                action=MediaAction.SHUFFLE.value,
                 value=shuffle,
             )
         )
@@ -262,7 +258,7 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
         """Set repeat mode."""
         await self.coordinator.websocket_client.media_control(
             MediaControl(
-                action=MediaAction.repeat,
+                action=MediaAction.REPEAT.value,
                 value=MEDIA_SET_REPEAT_MAP.get(repeat),
             )
         )

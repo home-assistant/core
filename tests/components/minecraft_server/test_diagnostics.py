@@ -42,9 +42,14 @@ async def test_config_entry_diagnostics(
     mock_config_entry = request.getfixturevalue(mock_config_entry)
     mock_config_entry.add_to_hass(hass)
 
+    if server.__name__ == "JavaServer":
+        lookup_function_name = "async_lookup"
+    else:
+        lookup_function_name = "lookup"
+
     # Setup mock entry.
     with patch(
-        f"mcstatus.server.{server.__name__}.lookup",
+        f"mcstatus.server.{server.__name__}.{lookup_function_name}",
         return_value=server(host=TEST_HOST, port=TEST_PORT),
     ), patch(
         f"mcstatus.server.{server.__name__}.async_status",

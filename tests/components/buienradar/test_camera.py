@@ -6,8 +6,8 @@ from http import HTTPStatus
 
 from aiohttp.client_exceptions import ClientResponseError
 
-from homeassistant.components.buienradar.const import CONF_COUNTRY, CONF_DELTA, DOMAIN
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.components.buienradar.const import CONF_DELTA, DOMAIN
+from homeassistant.const import CONF_COUNTRY_CODE, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import async_get
 from homeassistant.util import dt as dt_util
@@ -144,7 +144,7 @@ async def test_belgium_country(
     aioclient_mock.get(radar_map_url(country_code="BE"), text="hello world")
 
     data = copy.deepcopy(TEST_CFG_DATA)
-    data[CONF_COUNTRY] = "BE"
+    data[CONF_COUNTRY_CODE] = "BE"
 
     mock_entry = MockConfigEntry(domain=DOMAIN, unique_id="TEST_ID", data=data)
 

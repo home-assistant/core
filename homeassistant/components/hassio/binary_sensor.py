@@ -12,12 +12,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ADDONS_COORDINATOR
-from .const import ATTR_STARTED, ATTR_STATE, DATA_KEY_ADDONS
+from .const import ADDONS_COORDINATOR, ATTR_STARTED, ATTR_STATE, DATA_KEY_ADDONS
 from .entity import HassioAddonEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class HassioBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Hassio binary sensor entity description."""
 

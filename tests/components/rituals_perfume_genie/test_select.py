@@ -10,11 +10,11 @@ from homeassistant.components.select import (
 from homeassistant.const import (
     AREA_SQUARE_METERS,
     ATTR_ENTITY_ID,
-    ATTR_ICON,
     SERVICE_SELECT_OPTION,
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -32,7 +32,6 @@ async def test_select_entity(
     state = hass.states.get("select.genie_room_size")
     assert state
     assert state.state == str(diffuser.room_size_square_meter)
-    assert state.attributes[ATTR_ICON] == "mdi:ruler-square"
     assert state.attributes[ATTR_OPTIONS] == ["15", "30", "60", "100"]
 
     entry = entity_registry.async_get("select.genie_room_size")
@@ -84,7 +83,7 @@ async def test_select_invalid_option(hass: HomeAssistant) -> None:
     assert state
     assert state.state == "60"
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,

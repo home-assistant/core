@@ -18,10 +18,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Captur ii',
       'name': 'REG-NUMBER',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': 'XJB1SU',
       'via_device_id': None,
@@ -55,10 +58,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Captur ii',
       'name': 'REG-NUMBER',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': 'XJB1SU',
       'via_device_id': None,
@@ -89,11 +95,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:calendar-remove',
+      'original_icon': None,
       'original_name': 'Charge mode',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -109,7 +117,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Charge mode',
-        'icon': 'mdi:calendar-remove',
         'options': list([
           'always',
           'always_charging',
@@ -143,10 +150,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Zoe',
       'name': 'REG-NUMBER',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': 'X101VE',
       'via_device_id': None,
@@ -177,11 +187,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:calendar-remove',
+      'original_icon': None,
       'original_name': 'Charge mode',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -197,7 +209,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Charge mode',
-        'icon': 'mdi:calendar-remove',
         'options': list([
           'always',
           'always_charging',
@@ -231,10 +242,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Zoe',
       'name': 'REG-NUMBER',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': 'X102VE',
       'via_device_id': None,
@@ -265,11 +279,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:calendar-remove',
+      'original_icon': None,
       'original_name': 'Charge mode',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -285,7 +301,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Charge mode',
-        'icon': 'mdi:calendar-remove',
         'options': list([
           'always',
           'always_charging',
@@ -319,10 +334,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Captur ii',
       'name': 'REG-NUMBER',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': 'XJB1SU',
       'via_device_id': None,
@@ -356,10 +374,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Captur ii',
       'name': 'REG-NUMBER',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': 'XJB1SU',
       'via_device_id': None,
@@ -390,11 +411,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:calendar-remove',
+      'original_icon': None,
       'original_name': 'Charge mode',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -410,7 +433,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Charge mode',
-        'icon': 'mdi:calendar-remove',
         'options': list([
           'always',
           'always_charging',
@@ -444,10 +466,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Zoe',
       'name': 'REG-NUMBER',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': 'X101VE',
       'via_device_id': None,
@@ -478,11 +503,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:calendar-remove',
+      'original_icon': None,
       'original_name': 'Charge mode',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -498,7 +525,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Charge mode',
-        'icon': 'mdi:calendar-remove',
         'options': list([
           'always',
           'always_charging',
@@ -532,10 +558,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Zoe',
       'name': 'REG-NUMBER',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': 'X102VE',
       'via_device_id': None,
@@ -566,11 +595,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:calendar-clock',
+      'original_icon': None,
       'original_name': 'Charge mode',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -586,7 +617,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Charge mode',
-        'icon': 'mdi:calendar-clock',
         'options': list([
           'always',
           'always_charging',

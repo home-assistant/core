@@ -43,7 +43,7 @@ class RuntimeConfig:
     config_dir: str
     skip_pip: bool = False
     skip_pip_packages: list[str] = dataclasses.field(default_factory=list)
-    safe_mode: bool = False
+    recovery_mode: bool = False
 
     verbose: bool = False
 
@@ -53,6 +53,8 @@ class RuntimeConfig:
 
     debug: bool = False
     open_ui: bool = False
+
+    safe_mode: bool = False
 
 
 def can_use_pidfd() -> bool:

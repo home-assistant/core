@@ -64,7 +64,7 @@ async def async_unload_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     return unload_ok
 
 
-class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator[None]):
+class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching Venstar data."""
 
     def __init__(

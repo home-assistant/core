@@ -90,6 +90,9 @@ API_THERMOSTAT_PRESETS = {climate.PRESET_ECO: "ECO"}
 # we add PRESET_MODE_NA if a fan / humidifier has only one preset_mode
 PRESET_MODE_NA = "-"
 
+STORAGE_ACCESS_TOKEN = "access_token"
+STORAGE_REFRESH_TOKEN = "refresh_token"
+
 
 class Cause:
     """Possible causes for property changes.

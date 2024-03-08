@@ -16,7 +16,7 @@ async def test_filters(
 ) -> None:
     """Test spa filters."""
     for num in (1, 2):
-        sensor = f"{ENTITY_BINARY_SENSOR}filter{num}"
+        sensor = f"{ENTITY_BINARY_SENSOR}filter_cycle_{num}"
 
         state = hass.states.get(sensor)
         assert state.state == STATE_OFF
@@ -33,7 +33,7 @@ async def test_circ_pump(
     hass: HomeAssistant, client: MagicMock, integration: MockConfigEntry
 ) -> None:
     """Test spa circ pump."""
-    sensor = f"{ENTITY_BINARY_SENSOR}circ_pump"
+    sensor = f"{ENTITY_BINARY_SENSOR}circulation_pump"
 
     state = hass.states.get(sensor)
     assert state.state == STATE_OFF
