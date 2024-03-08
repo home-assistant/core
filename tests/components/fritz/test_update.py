@@ -124,4 +124,4 @@ async def test_available_update_can_be_installed(
             {"entity_id": "update.mock_title_fritz_os"},
             blocking=True,
         )
-        assert mocked_update_call.assert_called_once
+        mocked_update_call.assert_called_once()
