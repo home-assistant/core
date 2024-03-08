@@ -1,4 +1,5 @@
 """Support for package tracking sensors from 17track.net."""
+
 from __future__ import annotations
 
 from datetime import timedelta

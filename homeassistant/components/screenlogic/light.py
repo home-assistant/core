@@ -1,4 +1,5 @@
 """Support for a ScreenLogic light 'circuit' switch."""
+
 from dataclasses import dataclass
 import logging
 

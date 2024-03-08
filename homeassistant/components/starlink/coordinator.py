@@ -1,4 +1,5 @@
 """Contains the shared Coordinator for Starlink systems."""
+
 from __future__ import annotations
 
 import asyncio

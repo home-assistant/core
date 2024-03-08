@@ -1,4 +1,5 @@
 """Support for interacting with Spotify Connect."""
+
 from __future__ import annotations
 
 from asyncio import run_coroutine_threadsafe
