@@ -78,6 +78,7 @@ light:
   brightness: true
   brightness_scale: 99
 """
+
 import copy
 from typing import Any
 from unittest.mock import call, patch

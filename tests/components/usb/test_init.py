@@ -1,4 +1,5 @@
 """Tests for the USB Discovery integration."""
+
 import os
 import sys
 from unittest.mock import MagicMock, Mock, call, patch, sentinel

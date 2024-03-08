@@ -1,4 +1,5 @@
 """The tests for Humidifier device triggers."""
+
 import datetime
 
 import pytest
