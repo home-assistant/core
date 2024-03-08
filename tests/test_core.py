@@ -57,6 +57,7 @@ from homeassistant.exceptions import (
     ServiceNotFound,
 )
 from homeassistant.helpers.json import json_dumps
+from homeassistant.util.async_ import create_eager_task
 import homeassistant.util.dt as dt_util
 from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.unit_system import METRIC_SYSTEM
@@ -110,6 +111,19 @@ async def test_async_add_hass_job_coro_named(hass: HomeAssistant) -> None:
     assert "named coro" in str(task)
 
 
+async def test_async_add_hass_job_eager_start(hass: HomeAssistant) -> None:
+    """Test eager_start with async_add_hass_job."""
+
+    async def mycoro():
+        pass
+
+    job = ha.HassJob(mycoro, "named coro")
+    assert "named coro" in str(job)
+    assert job.name == "named coro"
+    task = ha.HomeAssistant.async_add_hass_job(hass, job, eager_start=True)
+    assert "named coro" in str(task)
+
+
 async def test_async_add_hass_job_schedule_partial_callback() -> None:
     """Test that we schedule partial coros and add jobs to the job pool."""
     hass = MagicMock()
@@ -133,6 +147,24 @@ async def test_async_add_hass_job_schedule_coroutinefunction() -> None:
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 1
     assert len(hass.add_job.mock_calls) == 0
+
+
+async def test_async_add_hass_job_schedule_corofunction_eager_start() -> None:
+    """Test that we schedule coroutines and add jobs to the job pool."""
+    hass = MagicMock(loop=MagicMock(wraps=asyncio.get_running_loop()))
+
+    async def job():
+        pass
+
+    with patch(
+        "homeassistant.core.create_eager_task", wraps=create_eager_task
+    ) as mock_create_eager_task:
+        hass_job = ha.HassJob(job)
+        task = ha.HomeAssistant.async_add_hass_job(hass, hass_job, eager_start=True)
+        assert len(hass.loop.call_soon.mock_calls) == 0
+        assert len(hass.add_job.mock_calls) == 0
+        assert mock_create_eager_task.mock_calls
+        await task
 
 
 async def test_async_add_hass_job_schedule_partial_coroutinefunction() -> None:
