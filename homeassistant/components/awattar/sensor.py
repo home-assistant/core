@@ -28,7 +28,6 @@ class AwattarSensorEntityDescription(SensorEntityDescription):
     """Describes a aWATTar sensor entity."""
 
     value_fn: Callable[[AwattarData], float | datetime | None]
-    service_type: str = "energy"
 
 
 SENSORS: tuple[AwattarSensorEntityDescription, ...] = (
@@ -171,7 +170,6 @@ class AwattarSensorEntity(
 
     def __init__(
         self,
-        *,
         coordinator: AwattarDataUpdateCoordinator,
         description: AwattarSensorEntityDescription,
     ) -> None:
