@@ -1,0 +1,40 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Please enter your [Sinch Service API]({token_url}) details that has been created per the [instructions]({component_url}).",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "service_plan_id": "Service plan ID"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Please enter some defaults for your Sinch SMS notification service.",
+        "data": {
+          "sender": "Sender",
+          "default_recipients": "Default recipient(s)"
+        },
+        "data_description": {
+          "sender": "May be a valid MSISDN number, or a short string (max 11 characters).",
+          "default_recipients": "One or multiple valid MSISDN numbers. Use a comma or newline to separate entries."
+        }
+      }
+    },
+    "error": {
+      "invalid_sender": "Invalid sender."
+    }
+  }
+}

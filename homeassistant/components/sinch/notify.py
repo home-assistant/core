@@ -25,17 +25,19 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-DOMAIN = "sinch"
-
-CONF_SERVICE_PLAN_ID = "service_plan_id"
-CONF_DEFAULT_RECIPIENTS = "default_recipients"
+from .const import (
+    ATTR_OPTIONS,
+    CONF_DEFAULT_RECIPIENTS,
+    CONF_SERVICE_PLAN_ID,
+    DEFAULT_SENDER,
+)
 
 ATTR_SENDER = CONF_SENDER
 
-DEFAULT_SENDER = "Home Assistant"
-
 _LOGGER = logging.getLogger(__name__)
 
+
+# Deprecated in Home Assistant 2024.4
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
@@ -52,18 +54,21 @@ def get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> SinchNotificationService:
+) -> SinchNotificationService | None:
     """Get the Sinch notification service."""
-    return SinchNotificationService(config)
+    if discovery_info is None:
+        return None
+    options = discovery_info.pop(ATTR_OPTIONS, {})
+    return SinchNotificationService(discovery_info, options)
 
 
 class SinchNotificationService(BaseNotificationService):
     """Send Notifications to Sinch SMS recipients."""
 
-    def __init__(self, config):
+    def __init__(self, config, options):
         """Initialize the service."""
-        self.default_recipients = config[CONF_DEFAULT_RECIPIENTS]
-        self.sender = config[CONF_SENDER]
+        self.default_recipients = options.get(CONF_DEFAULT_RECIPIENTS, [])
+        self.sender = options.get(CONF_SENDER, DEFAULT_SENDER)
         self.client = Client(config[CONF_SERVICE_PLAN_ID], config[CONF_API_KEY])
 
     def send_message(self, message="", **kwargs):

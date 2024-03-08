@@ -1199,7 +1199,8 @@ omit =
     homeassistant/components/simplisafe/button.py
     homeassistant/components/simplisafe/lock.py
     homeassistant/components/simplisafe/sensor.py
-    homeassistant/components/sinch/*
+    homeassistant/components/sinch/__init__.py
+    homeassistant/components/sinch/notify.py
     homeassistant/components/sisyphus/*
     homeassistant/components/sky_hub/*
     homeassistant/components/skybeacon/sensor.py
