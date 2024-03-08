@@ -947,7 +947,7 @@ def filter_unique_constraint_integrity_error(
         if ignore:
             _LOGGER.warning(
                 (
-                    "Blocked attempt to insert %s duplicated rows, please report"
+                    "Blocked attempt to insert duplicated %s rows, please report"
                     " at %s"
                 ),
                 row_type,
