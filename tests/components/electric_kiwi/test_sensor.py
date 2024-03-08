@@ -1,6 +1,5 @@
 """The tests for Electric Kiwi sensors."""
 
-
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, Mock
 

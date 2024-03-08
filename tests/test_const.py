@@ -1,6 +1,5 @@
 """Test const module."""
 
-
 from enum import Enum
 
 import pytest
