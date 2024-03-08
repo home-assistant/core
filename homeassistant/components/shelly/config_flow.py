@@ -137,8 +137,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            host, port = await parse_host(user_input[CONF_HOST])
             try:
+                host, port = await parse_host(user_input[CONF_HOST])
                 self.info = await self._async_get_info(host, port)
             except DeviceConnectionError:
                 errors["base"] = "cannot_connect"
