@@ -14,6 +14,7 @@ from .normalized_name_base_registry import (
     NormalizedNameBaseRegistryItems,
     normalize_name,
 )
+from .registry import BaseRegistry
 from .storage import Store
 from .typing import UNDEFINED, EventType, UndefinedType
 
@@ -21,7 +22,6 @@ DATA_REGISTRY = "floor_registry"
 EVENT_FLOOR_REGISTRY_UPDATED = "floor_registry_updated"
 STORAGE_KEY = "core.floor_registry"
 STORAGE_VERSION_MAJOR = 1
-SAVE_DELAY = 10
 
 
 class EventFloorRegistryUpdatedData(TypedDict):
@@ -44,7 +44,7 @@ class FloorEntry(NormalizedNameBaseRegistryEntry):
     level: int = 0
 
 
-class FloorRegistry:
+class FloorRegistry(BaseRegistry):
     """Class to hold a registry of floors."""
 
     floors: NormalizedNameBaseRegistryItems[FloorEntry]
@@ -208,11 +208,6 @@ class FloorRegistry:
 
         self.floors = floors
         self._floor_data = floors.data
-
-    @callback
-    def async_schedule_save(self) -> None:
-        """Schedule saving the floor registry."""
-        self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
     @callback
     def _data_to_save(self) -> dict[str, list[dict[str, str | int | list[str] | None]]]:
