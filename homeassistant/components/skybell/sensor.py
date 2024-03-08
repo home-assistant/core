@@ -1,4 +1,5 @@
 """Sensor support for Skybell Doorbells."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
