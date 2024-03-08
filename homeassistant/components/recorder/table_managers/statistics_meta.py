@@ -310,6 +310,8 @@ class StatisticsMetaManager:
         if self.get(session, new_statistic_id):
             _LOGGER.error(
                 "Cannot rename statistic_id `%s` to `%s` because the new statistic_id is already in use",
+                old_statistic_id,
+                new_statistic_id,
             )
             return
         session.query(StatisticsMeta).filter(
