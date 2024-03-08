@@ -170,7 +170,10 @@ async def _async_get_component_strings(
 
         for comp in components:
             domain, _, platform = comp.partition(".")
-            if not (integration := integrations.get(domain)):
+            if (
+                not (integration := integrations.get(domain))
+                or not integration.has_translations
+            ):
                 continue
 
             if platform and integration.is_built_in:
