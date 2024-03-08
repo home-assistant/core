@@ -46,6 +46,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     CALLBACK_TYPE,
     Context,
+    Event,
     HassJobType,
     HomeAssistant,
     callback,
@@ -1518,7 +1519,7 @@ class Entity(
 
     @callback
     def _async_device_registry_updated(
-        self, event: EventType[EventDeviceRegistryUpdatedData]
+        self, event: Event[EventDeviceRegistryUpdatedData]
     ) -> None:
         """Handle device registry update."""
         data = event.data
