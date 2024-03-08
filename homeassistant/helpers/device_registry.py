@@ -1141,8 +1141,8 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
 
     hass.bus.async_listen(
         event_type=lr.EVENT_LABEL_REGISTRY_UPDATED,
-        event_filter=_label_removed_from_registry_filter,  # type: ignore[arg-type]
-        listener=_handle_label_registry_update,  # type: ignore[arg-type]
+        event_filter=_label_removed_from_registry_filter,
+        listener=_handle_label_registry_update,
     )
 
     @callback

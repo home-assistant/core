@@ -32,7 +32,10 @@ if TYPE_CHECKING:
 DATA_CONNECTOR = "aiohttp_connector"
 DATA_CLIENTSESSION = "aiohttp_clientsession"
 
-SERVER_SOFTWARE = f"{APPLICATION_NAME}/{__version__} aiohttp/{aiohttp.__version__} Python/{sys.version_info[0]}.{sys.version_info[1]}"
+SERVER_SOFTWARE = (
+    f"{APPLICATION_NAME}/{__version__} "
+    f"aiohttp/{aiohttp.__version__} Python/{sys.version_info[0]}.{sys.version_info[1]}"
+)
 
 ENABLE_CLEANUP_CLOSED = not (3, 11, 1) <= sys.version_info < (3, 11, 4)
 # Enabling cleanup closed on python 3.11.1+ leaks memory relatively quickly

@@ -36,7 +36,6 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
 )
 from homeassistant.helpers.json import json_bytes
-from homeassistant.helpers.typing import EventType
 import homeassistant.util.dt as dt_util
 
 from .const import EVENT_COALESCE_TIME, MAX_PENDING_HISTORY_STATES
@@ -373,7 +372,7 @@ def _async_subscribe_events(
     assert is_callback(target), "target must be a callback"
 
     @callback
-    def _forward_state_events_filtered(event: EventType[EventStateChangedData]) -> None:
+    def _forward_state_events_filtered(event: Event[EventStateChangedData]) -> None:
         """Filter state events and forward them."""
         if (new_state := event.data["new_state"]) is None or (
             old_state := event.data["old_state"]
