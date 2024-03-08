@@ -1,4 +1,5 @@
 """Tests for the registry."""
+
 from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
