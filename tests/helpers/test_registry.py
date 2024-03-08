@@ -35,14 +35,17 @@ async def test_async_schedule_save(
     registry.async_schedule_save()
     freezer.tick(SAVE_DELAY)
     async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     assert registry.save_calls == 0
 
     freezer.tick(SAVE_DELAY_STARTING)
     async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     assert registry.save_calls == 1
 
     hass.set_state(CoreState.running)
     registry.async_schedule_save()
     freezer.tick(SAVE_DELAY)
     async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     assert registry.save_calls == 2
