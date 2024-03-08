@@ -372,7 +372,7 @@ def check_config(config: dict) -> dict:
             continue
         minimum_scan_interval = 9999
         no_entities = True
-        for _component, conf_key in PLATFORMS:
+        for component, conf_key in PLATFORMS:
             if conf_key not in hub:
                 continue
             no_entities = False
