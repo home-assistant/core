@@ -99,67 +99,66 @@ def test_validate_or_move_away_sqlite_database(
 
 
 async def test_last_run_was_recently_clean(
-    event_loop, async_setup_recorder_instance: RecorderInstanceGenerator, tmp_path: Path
+    async_setup_recorder_instance: RecorderInstanceGenerator, tmp_path: Path
 ) -> None:
     """Test we can check if the last recorder run was recently clean."""
     config = {
         recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db"),
         recorder.CONF_COMMIT_INTERVAL: 1,
     }
-    hass = await async_test_home_assistant(None)
+    async with async_test_home_assistant() as hass:
+        return_values = []
+        real_last_run_was_recently_clean = util.last_run_was_recently_clean
 
-    return_values = []
-    real_last_run_was_recently_clean = util.last_run_was_recently_clean
+        def _last_run_was_recently_clean(cursor):
+            return_values.append(real_last_run_was_recently_clean(cursor))
+            return return_values[-1]
 
-    def _last_run_was_recently_clean(cursor):
-        return_values.append(real_last_run_was_recently_clean(cursor))
-        return return_values[-1]
+        # Test last_run_was_recently_clean is not called on new DB
+        with patch(
+            "homeassistant.components.recorder.util.last_run_was_recently_clean",
+            wraps=_last_run_was_recently_clean,
+        ) as last_run_was_recently_clean_mock:
+            await async_setup_recorder_instance(hass, config)
+            await hass.async_block_till_done()
+            last_run_was_recently_clean_mock.assert_not_called()
 
-    # Test last_run_was_recently_clean is not called on new DB
-    with patch(
-        "homeassistant.components.recorder.util.last_run_was_recently_clean",
-        wraps=_last_run_was_recently_clean,
-    ) as last_run_was_recently_clean_mock:
-        await async_setup_recorder_instance(hass, config)
+        # Restart HA, last_run_was_recently_clean should return True
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
-        last_run_was_recently_clean_mock.assert_not_called()
+        await hass.async_stop()
 
-    # Restart HA, last_run_was_recently_clean should return True
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    await hass.async_block_till_done()
-    await hass.async_stop()
+    async with async_test_home_assistant() as hass:
+        with patch(
+            "homeassistant.components.recorder.util.last_run_was_recently_clean",
+            wraps=_last_run_was_recently_clean,
+        ) as last_run_was_recently_clean_mock:
+            await async_setup_recorder_instance(hass, config)
+            last_run_was_recently_clean_mock.assert_called_once()
+            assert return_values[-1] is True
 
-    with patch(
-        "homeassistant.components.recorder.util.last_run_was_recently_clean",
-        wraps=_last_run_was_recently_clean,
-    ) as last_run_was_recently_clean_mock:
-        hass = await async_test_home_assistant(None)
-        await async_setup_recorder_instance(hass, config)
-        last_run_was_recently_clean_mock.assert_called_once()
-        assert return_values[-1] is True
-
-    # Restart HA with a long downtime, last_run_was_recently_clean should return False
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    await hass.async_block_till_done()
-    await hass.async_stop()
+        # Restart HA with a long downtime, last_run_was_recently_clean should return False
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+        await hass.async_stop()
 
     thirty_min_future_time = dt_util.utcnow() + timedelta(minutes=30)
 
-    with patch(
-        "homeassistant.components.recorder.util.last_run_was_recently_clean",
-        wraps=_last_run_was_recently_clean,
-    ) as last_run_was_recently_clean_mock, patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow",
-        return_value=thirty_min_future_time,
-    ):
-        hass = await async_test_home_assistant(None)
-        await async_setup_recorder_instance(hass, config)
-        last_run_was_recently_clean_mock.assert_called_once()
-        assert return_values[-1] is False
+    async with async_test_home_assistant() as hass:
+        with patch(
+            "homeassistant.components.recorder.util.last_run_was_recently_clean",
+            wraps=_last_run_was_recently_clean,
+        ) as last_run_was_recently_clean_mock, patch(
+            "homeassistant.components.recorder.core.dt_util.utcnow",
+            return_value=thirty_min_future_time,
+        ):
+            await async_setup_recorder_instance(hass, config)
+            last_run_was_recently_clean_mock.assert_called_once()
+            assert return_values[-1] is False
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    await hass.async_block_till_done()
-    await hass.async_stop()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+        await hass.async_stop()
 
 
 @pytest.mark.parametrize(

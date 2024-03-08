@@ -51,6 +51,7 @@ from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_ssdp, bind_hass
+from homeassistant.util.async_ import create_eager_task
 
 DOMAIN = "ssdp"
 SSDP_SCANNER = "scanner"
@@ -335,7 +336,10 @@ class Scanner:
     async def _async_stop_ssdp_listeners(self) -> None:
         """Stop the SSDP listeners."""
         await asyncio.gather(
-            *(listener.async_stop() for listener in self._ssdp_listeners),
+            *(
+                create_eager_task(listener.async_stop())
+                for listener in self._ssdp_listeners
+            ),
             return_exceptions=True,
         )
 
@@ -399,7 +403,10 @@ class Scanner:
                 )
             )
         results = await asyncio.gather(
-            *(listener.async_start() for listener in self._ssdp_listeners),
+            *(
+                create_eager_task(listener.async_start())
+                for listener in self._ssdp_listeners
+            ),
             return_exceptions=True,
         )
         failed_listeners = []
@@ -446,7 +453,8 @@ class Scanner:
             self.hass.async_create_task(
                 self._ssdp_listener_process_callback_with_lookup(
                     ssdp_device, dst, source
-                )
+                ),
+                eager_start=True,
             )
             return
 
@@ -501,7 +509,8 @@ class Scanner:
         if callbacks:
             ssdp_change = SSDP_SOURCE_SSDP_CHANGE_MAPPING[source]
             self.hass.async_create_task(
-                _async_process_callbacks(callbacks, discovery_info, ssdp_change)
+                _async_process_callbacks(callbacks, discovery_info, ssdp_change),
+                eager_start=True,
             )
 
         # Config flows should only be created for alive/update messages from alive devices

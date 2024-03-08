@@ -10,7 +10,6 @@ from datetime import (
     timedelta,
 )
 from enum import Enum, StrEnum
-import inspect
 import logging
 from numbers import Number
 import os
@@ -67,6 +66,7 @@ from homeassistant.const import (
     CONF_SERVICE_DATA,
     CONF_SERVICE_DATA_TEMPLATE,
     CONF_SERVICE_TEMPLATE,
+    CONF_SET_CONVERSATION_RESPONSE,
     CONF_STATE,
     CONF_STOP,
     CONF_TARGET,
@@ -102,6 +102,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.util.yaml.objects import NodeStrClass
 
 from . import script_variables as script_variables_helper, template as template_helper
+from .frame import get_integration_logger
 
 TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'"
 
@@ -363,6 +364,7 @@ def domain_key(config_key: Any) -> str:
     'hue  1' returns 'hue'
     'hue ' raises
     'hue  ' raises
+
     """
     if not isinstance(config_key, str):
         raise vol.Invalid("invalid domain", path=[config_key])
@@ -427,6 +429,19 @@ def icon(value: Any) -> str:
         return str_value
 
     raise vol.Invalid('Icons should be specified in the form "prefix:name"')
+
+
+_COLOR_HEX = re.compile(r"^#[0-9A-F]{6}$", re.IGNORECASE)
+
+
+def color_hex(value: Any) -> str:
+    """Validate a hex color code."""
+    str_value = str(value)
+
+    if not _COLOR_HEX.match(str_value):
+        raise vol.Invalid("Color should be in the format #RRGGBB")
+
+    return str_value
 
 
 _TIME_PERIOD_DICT_KEYS = ("days", "hours", "minutes", "seconds", "milliseconds")
@@ -875,24 +890,17 @@ def _deprecated_or_removed(
         - No warning if neither key nor replacement_key are provided
             - Adds replacement_key with default value in this case
     """
-    module = inspect.getmodule(inspect.stack(context=0)[2].frame)
-    if module is not None:
-        module_name = module.__name__
-    else:
-        # If Python is unable to access the sources files, the call stack frame
-        # will be missing information, so let's guard.
-        # https://github.com/home-assistant/core/issues/24982
-        module_name = __name__
-    if option_removed:
-        logger_func = logging.getLogger(module_name).error
-        option_status = "has been removed"
-    else:
-        logger_func = logging.getLogger(module_name).warning
-        option_status = "is deprecated"
 
     def validator(config: dict) -> dict:
         """Check if key is in config and log warning or error."""
         if key in config:
+            if option_removed:
+                level = logging.ERROR
+                option_status = "has been removed"
+            else:
+                level = logging.WARNING
+                option_status = "is deprecated"
+
             try:
                 near = (
                     f"near {config.__config_file__}"  # type: ignore[attr-defined]
@@ -913,7 +921,7 @@ def _deprecated_or_removed(
             if raise_if_present:
                 raise vol.Invalid(warning % arguments)
 
-            logger_func(warning, *arguments)
+            get_integration_logger(__name__).log(level, warning, *arguments)
             value = config[key]
             if replacement_key or option_removed:
                 config.pop(key)
@@ -1097,19 +1105,9 @@ def expand_condition_shorthand(value: Any | None) -> Any:
 def empty_config_schema(domain: str) -> Callable[[dict], dict]:
     """Return a config schema which logs if there are configuration parameters."""
 
-    module = inspect.getmodule(inspect.stack(context=0)[2].frame)
-    if module is not None:
-        module_name = module.__name__
-    else:
-        # If Python is unable to access the sources files, the call stack frame
-        # will be missing information, so let's guard.
-        # https://github.com/home-assistant/core/issues/24982
-        module_name = __name__
-    logger_func = logging.getLogger(module_name).error
-
     def validator(config: dict) -> dict:
         if domain in config and config[domain]:
-            logger_func(
+            get_integration_logger(__name__).error(
                 (
                     "The %s integration does not support any configuration parameters, "
                     "got %s. Please remove the configuration parameters from your "
@@ -1131,16 +1129,6 @@ def _no_yaml_config_schema(
 ) -> Callable[[dict], dict]:
     """Return a config schema which logs if attempted to setup from YAML."""
 
-    module = inspect.getmodule(inspect.stack(context=0)[2].frame)
-    if module is not None:
-        module_name = module.__name__
-    else:
-        # If Python is unable to access the sources files, the call stack frame
-        # will be missing information, so let's guard.
-        # https://github.com/home-assistant/core/issues/24982
-        module_name = __name__
-    logger_func = logging.getLogger(module_name).error
-
     def raise_issue() -> None:
         # pylint: disable-next=import-outside-toplevel
         from .issue_registry import IssueSeverity, async_create_issue
@@ -1161,7 +1149,7 @@ def _no_yaml_config_schema(
 
     def validator(config: dict) -> dict:
         if domain in config:
-            logger_func(
+            get_integration_logger(__name__).error(
                 (
                     "The %s integration does not support YAML setup, please remove it "
                     "from your configuration file"
@@ -1247,9 +1235,7 @@ TARGET_SERVICE_FIELDS = {
 }
 
 
-def make_entity_service_schema(
-    schema: dict, *, extra: int = vol.PREVENT_EXTRA
-) -> vol.Schema:
+def _make_entity_service_schema(schema: dict, extra: int) -> vol.Schema:
     """Create an entity service schema."""
     return vol.Schema(
         vol.All(
@@ -1265,6 +1251,24 @@ def make_entity_service_schema(
             has_at_least_one_key(*ENTITY_SERVICE_FIELDS),
         )
     )
+
+
+BASE_ENTITY_SCHEMA = _make_entity_service_schema({}, vol.PREVENT_EXTRA)
+
+
+def make_entity_service_schema(
+    schema: dict, *, extra: int = vol.PREVENT_EXTRA
+) -> vol.Schema:
+    """Create an entity service schema."""
+    if not schema and extra == vol.PREVENT_EXTRA:
+        # If the schema is empty and we don't allow extra keys, we can return
+        # the base schema and avoid compiling a new schema which is the case
+        # for ~50% of services.
+        return BASE_ENTITY_SCHEMA
+    return _make_entity_service_schema(schema, extra)
+
+
+SCRIPT_CONVERSATION_RESPONSE_SCHEMA = vol.Any(template, None)
 
 
 SCRIPT_VARIABLES_SCHEMA = vol.All(
@@ -1742,6 +1746,15 @@ _SCRIPT_SET_SCHEMA = vol.Schema(
     }
 )
 
+_SCRIPT_SET_CONVERSATION_RESPONSE_SCHEMA = vol.Schema(
+    {
+        **SCRIPT_ACTION_BASE_SCHEMA,
+        vol.Required(
+            CONF_SET_CONVERSATION_RESPONSE
+        ): SCRIPT_CONVERSATION_RESPONSE_SCHEMA,
+    }
+)
+
 _SCRIPT_STOP_SCHEMA = vol.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
@@ -1780,20 +1793,21 @@ _SCRIPT_PARALLEL_SCHEMA = vol.Schema(
 )
 
 
-SCRIPT_ACTION_DELAY = "delay"
-SCRIPT_ACTION_WAIT_TEMPLATE = "wait_template"
-SCRIPT_ACTION_CHECK_CONDITION = "condition"
-SCRIPT_ACTION_FIRE_EVENT = "event"
-SCRIPT_ACTION_CALL_SERVICE = "call_service"
-SCRIPT_ACTION_DEVICE_AUTOMATION = "device"
 SCRIPT_ACTION_ACTIVATE_SCENE = "scene"
-SCRIPT_ACTION_REPEAT = "repeat"
+SCRIPT_ACTION_CALL_SERVICE = "call_service"
+SCRIPT_ACTION_CHECK_CONDITION = "condition"
 SCRIPT_ACTION_CHOOSE = "choose"
-SCRIPT_ACTION_WAIT_FOR_TRIGGER = "wait_for_trigger"
-SCRIPT_ACTION_VARIABLES = "variables"
-SCRIPT_ACTION_STOP = "stop"
+SCRIPT_ACTION_DELAY = "delay"
+SCRIPT_ACTION_DEVICE_AUTOMATION = "device"
+SCRIPT_ACTION_FIRE_EVENT = "event"
 SCRIPT_ACTION_IF = "if"
 SCRIPT_ACTION_PARALLEL = "parallel"
+SCRIPT_ACTION_REPEAT = "repeat"
+SCRIPT_ACTION_SET_CONVERSATION_RESPONSE = "set_conversation_response"
+SCRIPT_ACTION_STOP = "stop"
+SCRIPT_ACTION_VARIABLES = "variables"
+SCRIPT_ACTION_WAIT_FOR_TRIGGER = "wait_for_trigger"
+SCRIPT_ACTION_WAIT_TEMPLATE = "wait_template"
 
 
 def determine_script_action(action: dict[str, Any]) -> str:
@@ -1840,24 +1854,28 @@ def determine_script_action(action: dict[str, Any]) -> str:
     if CONF_PARALLEL in action:
         return SCRIPT_ACTION_PARALLEL
 
+    if CONF_SET_CONVERSATION_RESPONSE in action:
+        return SCRIPT_ACTION_SET_CONVERSATION_RESPONSE
+
     raise ValueError("Unable to determine action")
 
 
 ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
-    SCRIPT_ACTION_CALL_SERVICE: SERVICE_SCHEMA,
-    SCRIPT_ACTION_DELAY: _SCRIPT_DELAY_SCHEMA,
-    SCRIPT_ACTION_WAIT_TEMPLATE: _SCRIPT_WAIT_TEMPLATE_SCHEMA,
-    SCRIPT_ACTION_FIRE_EVENT: EVENT_SCHEMA,
-    SCRIPT_ACTION_CHECK_CONDITION: CONDITION_ACTION_SCHEMA,
-    SCRIPT_ACTION_DEVICE_AUTOMATION: DEVICE_ACTION_SCHEMA,
     SCRIPT_ACTION_ACTIVATE_SCENE: _SCRIPT_SCENE_SCHEMA,
-    SCRIPT_ACTION_REPEAT: _SCRIPT_REPEAT_SCHEMA,
+    SCRIPT_ACTION_CALL_SERVICE: SERVICE_SCHEMA,
+    SCRIPT_ACTION_CHECK_CONDITION: CONDITION_ACTION_SCHEMA,
     SCRIPT_ACTION_CHOOSE: _SCRIPT_CHOOSE_SCHEMA,
-    SCRIPT_ACTION_WAIT_FOR_TRIGGER: _SCRIPT_WAIT_FOR_TRIGGER_SCHEMA,
-    SCRIPT_ACTION_VARIABLES: _SCRIPT_SET_SCHEMA,
-    SCRIPT_ACTION_STOP: _SCRIPT_STOP_SCHEMA,
+    SCRIPT_ACTION_DELAY: _SCRIPT_DELAY_SCHEMA,
+    SCRIPT_ACTION_DEVICE_AUTOMATION: DEVICE_ACTION_SCHEMA,
+    SCRIPT_ACTION_FIRE_EVENT: EVENT_SCHEMA,
     SCRIPT_ACTION_IF: _SCRIPT_IF_SCHEMA,
     SCRIPT_ACTION_PARALLEL: _SCRIPT_PARALLEL_SCHEMA,
+    SCRIPT_ACTION_REPEAT: _SCRIPT_REPEAT_SCHEMA,
+    SCRIPT_ACTION_SET_CONVERSATION_RESPONSE: _SCRIPT_SET_CONVERSATION_RESPONSE_SCHEMA,
+    SCRIPT_ACTION_STOP: _SCRIPT_STOP_SCHEMA,
+    SCRIPT_ACTION_VARIABLES: _SCRIPT_SET_SCHEMA,
+    SCRIPT_ACTION_WAIT_FOR_TRIGGER: _SCRIPT_WAIT_FOR_TRIGGER_SCHEMA,
+    SCRIPT_ACTION_WAIT_TEMPLATE: _SCRIPT_WAIT_TEMPLATE_SCHEMA,
 }
 
 

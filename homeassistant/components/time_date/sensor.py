@@ -1,12 +1,19 @@
 """Support for showing the date and the time."""
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
 import logging
+from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    ENTITY_ID_FORMAT,
+    PLATFORM_SCHEMA,
+    SensorEntity,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DISPLAY_OPTIONS, EVENT_CORE_CONFIG_UPDATE
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -16,22 +23,12 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN
+from .const import DOMAIN, OPTION_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
 TIME_STR_FORMAT = "%H:%M"
 
-OPTION_TYPES = {
-    "time": "Time",
-    "date": "Date",
-    "date_time": "Date & Time",
-    "date_time_utc": "Date & Time (UTC)",
-    "date_time_iso": "Date & Time (ISO)",
-    "time_date": "Time & Date",
-    "beat": "Internet Time",
-    "time_utc": "Time (UTC)",
-}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -71,7 +68,17 @@ async def async_setup_platform(
         _LOGGER.warning("'beat': is deprecated and will be removed in version 2024.7")
 
     async_add_entities(
-        [TimeDateSensor(hass, variable) for variable in config[CONF_DISPLAY_OPTIONS]]
+        [TimeDateSensor(variable) for variable in config[CONF_DISPLAY_OPTIONS]]
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the Time & Date sensor."""
+
+    async_add_entities(
+        [TimeDateSensor(entry.options[CONF_DISPLAY_OPTIONS], entry.entry_id)]
     )
 
 
@@ -79,19 +86,19 @@ class TimeDateSensor(SensorEntity):
     """Implementation of a Time and Date sensor."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
+    _state: str | None = None
+    unsub: CALLBACK_TYPE | None = None
 
-    def __init__(self, hass: HomeAssistant, option_type: str) -> None:
+    def __init__(self, option_type: str, entry_id: str | None = None) -> None:
         """Initialize the sensor."""
-        self._name = OPTION_TYPES[option_type]
+        self._attr_translation_key = option_type
         self.type = option_type
-        self._state: str | None = None
-        self.hass = hass
-        self.unsub: CALLBACK_TYPE | None = None
+        object_id = "internet_time" if option_type == "beat" else option_type
+        self.entity_id = ENTITY_ID_FORMAT.format(object_id)
+        self._attr_unique_id = option_type if entry_id else None
 
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._name
+        self._update_internal_state(dt_util.utcnow())
 
     @property
     def native_value(self) -> str | None:
@@ -106,6 +113,35 @@ class TimeDateSensor(SensorEntity):
         if "date" in self.type:
             return "mdi:calendar"
         return "mdi:clock"
+
+    @callback
+    def async_start_preview(
+        self,
+        preview_callback: Callable[[str, Mapping[str, Any]], None],
+    ) -> CALLBACK_TYPE:
+        """Render a preview."""
+
+        @callback
+        def point_in_time_listener(time_date: datetime | None) -> None:
+            """Update preview."""
+
+            now = dt_util.utcnow()
+            self._update_internal_state(now)
+            self.unsub = async_track_point_in_utc_time(
+                self.hass, point_in_time_listener, self.get_next_interval(now)
+            )
+            calculated_state = self._async_calculate_state()
+            preview_callback(calculated_state.state, calculated_state.attributes)
+
+        @callback
+        def async_stop_preview() -> None:
+            """Stop preview."""
+            if self.unsub:
+                self.unsub()
+                self.unsub = None
+
+        point_in_time_listener(None)
+        return async_stop_preview
 
     async def async_added_to_hass(self) -> None:
         """Set up first update."""

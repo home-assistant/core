@@ -1,5 +1,4 @@
 """Test deCONZ gateway."""
-import asyncio
 from copy import deepcopy
 from unittest.mock import patch
 
@@ -297,7 +296,7 @@ async def test_get_deconz_session(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("side_effect", "raised_exception"),
     [
-        (asyncio.TimeoutError, CannotConnect),
+        (TimeoutError, CannotConnect),
         (pydeconz.RequestError, CannotConnect),
         (pydeconz.ResponseError, CannotConnect),
         (pydeconz.Unauthorized, AuthenticationRequired),

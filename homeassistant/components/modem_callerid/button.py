@@ -32,7 +32,6 @@ async def async_setup_entry(
 class PhoneModemButton(ButtonEntity):
     """Implementation of USB modem caller ID button."""
 
-    _attr_icon = "mdi:phone-hangup"
     _attr_translation_key = "phone_modem_reject"
     _attr_has_entity_name = True
 

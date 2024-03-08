@@ -54,6 +54,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
+    all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
@@ -123,10 +124,6 @@ _DEPRECATED_SUPPORT_STREAM: Final = DeprecatedConstantEnum(
     CameraEntityFeature.STREAM, "2025.1"
 )
 
-# Both can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
-
 RTSP_PREFIXES = {"rtsp://", "rtsps://", "rtmp://"}
 
 DEFAULT_CONTENT_TYPE: Final = "image/jpeg"
@@ -184,7 +181,7 @@ async def _async_get_image(
     that we can scale, however the majority of cases
     are handled.
     """
-    with suppress(asyncio.CancelledError, asyncio.TimeoutError):
+    with suppress(asyncio.CancelledError, TimeoutError):
         async with asyncio.timeout(timeout):
             image_bytes = (
                 await _async_get_stream_image(
@@ -303,8 +300,12 @@ async def async_get_still_stream(
         if img_bytes != last_image:
             await write_to_mjpeg_stream(img_bytes)
 
-            # Chrome seems to always ignore first picture,
-            # print it twice.
+            # Chrome always shows the n-1 frame:
+            # https://issues.chromium.org/issues/41199053
+            # https://issues.chromium.org/issues/40791855
+            # We send the first frame twice to ensure it shows
+            # Subsequent frames are not a concern at reasonable frame rates
+            # (even 1/10 FPS is about the latency of HLS)
             if last_image is None:
                 await write_to_mjpeg_stream(img_bytes)
             last_image = img_bytes
@@ -390,6 +391,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     prefs = CameraPreferences(hass)
+    await prefs.async_load()
     hass.data[DATA_CAMERA_PREFS] = prefs
 
     hass.http.register_view(CameraImageView(component))
@@ -729,17 +731,17 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the camera state attributes."""
         attrs = {"access_token": self.access_tokens[-1]}
 
-        if self.model:
-            attrs["model_name"] = self.model
+        if model := self.model:
+            attrs["model_name"] = model
 
-        if self.brand:
-            attrs["brand"] = self.brand
+        if brand := self.brand:
+            attrs["brand"] = brand
 
-        if self.motion_detection_enabled:
-            attrs["motion_detection"] = self.motion_detection_enabled
+        if motion_detection_enabled := self.motion_detection_enabled:
+            attrs["motion_detection"] = motion_detection_enabled
 
-        if self.frontend_stream_type:
-            attrs["frontend_stream_type"] = self.frontend_stream_type
+        if frontend_stream_type := self.frontend_stream_type:
+            attrs["frontend_stream_type"] = frontend_stream_type
 
         return attrs
 
@@ -894,7 +896,7 @@ async def ws_camera_stream(
     except HomeAssistantError as ex:
         _LOGGER.error("Error requesting stream: %s", ex)
         connection.send_error(msg["id"], "start_stream_failed", str(ex))
-    except asyncio.TimeoutError:
+    except TimeoutError:
         _LOGGER.error("Timeout getting stream source")
         connection.send_error(
             msg["id"], "start_stream_failed", "Timeout getting stream source"
@@ -939,7 +941,7 @@ async def ws_camera_web_rtc_offer(
     except (HomeAssistantError, ValueError) as ex:
         _LOGGER.error("Error handling WebRTC offer: %s", ex)
         connection.send_error(msg["id"], "web_rtc_offer_failed", str(ex))
-    except asyncio.TimeoutError:
+    except TimeoutError:
         _LOGGER.error("Timeout handling WebRTC offer")
         connection.send_error(
             msg["id"], "web_rtc_offer_failed", "Timeout handling WebRTC offer"
@@ -1082,3 +1084,11 @@ async def async_handle_record_service(
         duration=service_call.data[CONF_DURATION],
         lookback=service_call.data[CONF_LOOKBACK],
     )
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

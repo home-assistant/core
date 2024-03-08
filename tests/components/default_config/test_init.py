@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant import bootstrap
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import async_setup_component
@@ -34,4 +35,9 @@ async def test_setup(
 ) -> None:
     """Test setup."""
     recorder_helper.async_initialize_recorder(hass)
+    # default_config needs the homeassistant integration, assert it will be
+    # automatically setup by bootstrap and set it up manually for this test
+    assert "homeassistant" in bootstrap.CORE_INTEGRATIONS
+    assert await async_setup_component(hass, "homeassistant", {"foo": "bar"})
+
     assert await async_setup_component(hass, "default_config", {"foo": "bar"})

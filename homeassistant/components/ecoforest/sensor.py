@@ -33,18 +33,11 @@ STATUS_TYPE = [s.value for s in State]
 ALARM_TYPE = [a.value for a in Alarm] + ["none"]
 
 
-@dataclass(frozen=True)
-class EcoforestRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EcoforestSensorEntityDescription(SensorEntityDescription):
+    """Describes Ecoforest sensor entity."""
 
     value_fn: Callable[[Device], StateType]
-
-
-@dataclass(frozen=True)
-class EcoforestSensorEntityDescription(
-    SensorEntityDescription, EcoforestRequiredKeysMixin
-):
-    """Describes Ecoforest sensor entity."""
 
 
 SENSOR_TYPES: tuple[EcoforestSensorEntityDescription, ...] = (
@@ -90,7 +83,6 @@ SENSOR_TYPES: tuple[EcoforestSensorEntityDescription, ...] = (
         translation_key="alarm",
         device_class=SensorDeviceClass.ENUM,
         options=ALARM_TYPE,
-        icon="mdi:alert",
         value_fn=lambda data: data.alarm.value if data.alarm else "none",
     ),
     EcoforestSensorEntityDescription(

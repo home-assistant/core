@@ -23,7 +23,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up harmony activity switches."""
-    data = hass.data[DOMAIN][entry.entry_id][HARMONY_DATA]
+    data: HarmonyData = hass.data[DOMAIN][entry.entry_id][HARMONY_DATA]
     activities = data.activities
 
     switches = []
@@ -49,7 +49,7 @@ class HarmonyActivitySwitch(HarmonyEntity, SwitchEntity):
         self._attr_device_info = self._data.device_info(DOMAIN)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return if the current activity is the one for this switch."""
         _, activity_name = self._data.current_activity
         return activity_name == self._activity_name
@@ -111,5 +111,5 @@ class HarmonyActivitySwitch(HarmonyEntity, SwitchEntity):
             )
 
     @callback
-    def _async_activity_update(self, activity_info: tuple):
+    def _async_activity_update(self, activity_info: tuple) -> None:
         self.async_write_ha_state()

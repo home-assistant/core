@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Generator, Iterable
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import Any, cast
 
@@ -27,6 +27,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
+    AUTH_RETRIES,
     CONF_DISABLE_RTSP,
     CONF_MAX_MEDIA,
     DEFAULT_MAX_MEDIA,
@@ -133,7 +134,7 @@ class ProtectData:
         try:
             updates = await self.api.update(force=force)
         except NotAuthorized:
-            if self._auth_failures < 10:
+            if self._auth_failures < AUTH_RETRIES:
                 _LOGGER.exception("Auth error while updating")
                 self._auth_failures += 1
             else:
@@ -192,7 +193,7 @@ class ProtectData:
     ) -> None:
         self._async_signal_device_update(device)
         if (
-            device.model == ModelType.CAMERA
+            device.model is ModelType.CAMERA
             and device.id in self._pending_camera_ids
             and "channels" in changed_data
         ):
@@ -249,7 +250,7 @@ class ProtectData:
                             obj.id,
                         )
 
-            if obj.type == EventType.DEVICE_ADOPTED:
+            if obj.type is EventType.DEVICE_ADOPTED:
                 if obj.metadata is not None and obj.metadata.device_id is not None:
                     device = self.api.bootstrap.get_device_from_id(
                         obj.metadata.device_id
@@ -282,13 +283,23 @@ class ProtectData:
             self._async_signal_device_update(device)
 
     @callback
+    def _async_poll(self, now: datetime) -> None:
+        """Poll the Protect API.
+
+        If the websocket is connected, most of the time
+        this will be a no-op. If the websocket is disconnected,
+        this will trigger a reconnect and refresh.
+        """
+        self._hass.async_create_task(self.async_refresh(), eager_start=True)
+
+    @callback
     def async_subscribe_device_id(
         self, mac: str, update_callback: Callable[[ProtectDeviceType], None]
     ) -> CALLBACK_TYPE:
         """Add an callback subscriber."""
         if not self._subscriptions:
             self._unsub_interval = async_track_time_interval(
-                self._hass, self.async_refresh, self._update_interval
+                self._hass, self._async_poll, self._update_interval
             )
         self._subscriptions.setdefault(mac, []).append(update_callback)
 

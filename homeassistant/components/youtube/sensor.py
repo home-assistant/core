@@ -45,7 +45,6 @@ SENSOR_TYPES = [
     YouTubeSensorEntityDescription(
         key="latest_upload",
         translation_key="latest_upload",
-        icon="mdi:youtube",
         available_fn=lambda channel: channel[ATTR_LATEST_VIDEO] is not None,
         value_fn=lambda channel: channel[ATTR_LATEST_VIDEO][ATTR_TITLE],
         entity_picture_fn=lambda channel: channel[ATTR_LATEST_VIDEO][ATTR_THUMBNAIL],
@@ -57,7 +56,6 @@ SENSOR_TYPES = [
     YouTubeSensorEntityDescription(
         key="subscribers",
         translation_key="subscribers",
-        icon="mdi:youtube-subscription",
         native_unit_of_measurement="subscribers",
         available_fn=lambda _: True,
         value_fn=lambda channel: channel[ATTR_SUBSCRIBER_COUNT],

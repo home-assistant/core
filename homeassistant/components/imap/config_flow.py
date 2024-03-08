@@ -1,7 +1,6 @@
 """Config flow for imap integration."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 import ssl
 from typing import Any
@@ -9,10 +8,15 @@ from typing import Any
 from aioimaplib import AioImapException
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithConfigEntry,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -108,7 +112,7 @@ async def validate_input(
         # See https://github.com/bamthomas/aioimaplib/issues/91
         # This handler is added to be able to supply a better error message
         errors["base"] = "ssl_error"
-    except (asyncio.TimeoutError, AioImapException, ConnectionRefusedError):
+    except (TimeoutError, AioImapException, ConnectionRefusedError):
         errors["base"] = "cannot_connect"
     else:
         if result != "OK":
@@ -120,15 +124,15 @@ async def validate_input(
     return errors
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class IMAPConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for imap."""
 
     VERSION = 1
-    _reauth_entry: config_entries.ConfigEntry | None
+    _reauth_entry: ConfigEntry | None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
 
         schema = CONFIG_SCHEMA
@@ -153,7 +157,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         schema = self.add_suggested_values_to_schema(schema, user_input)
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -162,18 +168,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         errors = {}
         assert self._reauth_entry
         if user_input is not None:
             user_input = {**self._reauth_entry.data, **user_input}
             if not (errors := await validate_input(self.hass, user_input)):
-                self.hass.config_entries.async_update_entry(
+                return self.async_update_reload_and_abort(
                     self._reauth_entry, data=user_input
                 )
-                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             description_placeholders={
@@ -191,18 +195,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> OptionsFlow:
         """Get the options flow for this handler."""
         return OptionsFlow(config_entry)
 
 
-class OptionsFlow(config_entries.OptionsFlowWithConfigEntry):
+class OptionsFlow(OptionsFlowWithConfigEntry):
     """Option flow handler."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         errors: dict[str, str] | None = None
         entry_data: dict[str, Any] = dict(self._config_entry.data)

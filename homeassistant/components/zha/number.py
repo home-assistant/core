@@ -5,6 +5,9 @@ import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
 
+from zigpy.quirks.v2 import EntityMetadata, NumberMetadata
+from zigpy.zcl.clusters.hvac import Thermostat
+
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform, UnitOfMass, UnitOfTemperature
@@ -20,7 +23,9 @@ from .core.const import (
     CLUSTER_HANDLER_COLOR,
     CLUSTER_HANDLER_INOVELLI,
     CLUSTER_HANDLER_LEVEL,
+    CLUSTER_HANDLER_OCCUPANCY,
     CLUSTER_HANDLER_THERMOSTAT,
+    QUIRK_METADATA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
@@ -397,7 +402,7 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
         Return entity if it is a supported configuration, otherwise return None
         """
         cluster_handler = cluster_handlers[0]
-        if (
+        if QUIRK_METADATA not in kwargs and (
             cls._attribute_name in cluster_handler.cluster.unsupported_attributes
             or cls._attribute_name not in cluster_handler.cluster.attributes_by_name
             or cluster_handler.cluster.get(cls._attribute_name) is None
@@ -420,7 +425,26 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
     ) -> None:
         """Init this number configuration entity."""
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
+        if QUIRK_METADATA in kwargs:
+            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA])
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
+
+    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
+        """Init this entity from the quirks metadata."""
+        super()._init_from_quirks_metadata(entity_metadata)
+        number_metadata: NumberMetadata = entity_metadata.entity_metadata
+        self._attribute_name = number_metadata.attribute_name
+
+        if number_metadata.min is not None:
+            self._attr_native_min_value = number_metadata.min
+        if number_metadata.max is not None:
+            self._attr_native_max_value = number_metadata.max
+        if number_metadata.step is not None:
+            self._attr_native_step = number_metadata.step
+        if number_metadata.unit is not None:
+            self._attr_native_unit_of_measurement = number_metadata.unit
+        if number_metadata.multiplier is not None:
+            self._attr_multiplier = number_metadata.multiplier
 
     @property
     def native_value(self) -> float:
@@ -950,7 +974,10 @@ class AqaraThermostatAwayTemp(ZHANumberConfigurationEntity):
     _attr_icon: str = ICONS[0]
 
 
-@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    stop_on_match_group=CLUSTER_HANDLER_THERMOSTAT,
+)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class ThermostatLocalTempCalibration(ZHANumberConfigurationEntity):
     """Local temperature calibration."""
@@ -966,3 +993,101 @@ class ThermostatLocalTempCalibration(ZHANumberConfigurationEntity):
     _attr_mode: NumberMode = NumberMode.SLIDER
     _attr_native_unit_of_measurement: str = UnitOfTemperature.CELSIUS
     _attr_icon: str = ICONS[0]
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    models={"TRVZB"},
+    stop_on_match_group=CLUSTER_HANDLER_THERMOSTAT,
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class SonoffThermostatLocalTempCalibration(ThermostatLocalTempCalibration):
+    """Local temperature calibration for the Sonoff TRVZB."""
+
+    _attr_native_min_value: float = -7
+    _attr_native_max_value: float = 7
+    _attr_native_step: float = 0.2
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_OCCUPANCY, models={"SNZB-06P"}
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class SonoffPresenceSenorTimeout(ZHANumberConfigurationEntity):
+    """Configuration of Sonoff sensor presence detection timeout."""
+
+    _unique_id_suffix = "presence_detection_timeout"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_native_min_value: int = 15
+    _attr_native_max_value: int = 60
+    _attribute_name = "ultrasonic_o_to_u_delay"
+    _attr_translation_key: str = "presence_detection_timeout"
+
+    _attr_mode: NumberMode = NumberMode.BOX
+    _attr_icon: str = "mdi:timer-edit"
+
+
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class ZCLTemperatureEntity(ZHANumberConfigurationEntity):
+    """Common entity class for ZCL temperature input."""
+
+    _attr_native_unit_of_measurement: str = UnitOfTemperature.CELSIUS
+    _attr_mode: NumberMode = NumberMode.BOX
+    _attr_native_step: float = 0.01
+    _attr_multiplier: float = 0.01
+
+
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class ZCLHeatSetpointLimitEntity(ZCLTemperatureEntity):
+    """Min or max heat setpoint setting on thermostats."""
+
+    _attr_icon: str = "mdi:thermostat"
+    _attr_native_step: float = 0.5
+
+    _min_source = Thermostat.AttributeDefs.abs_min_heat_setpoint_limit.name
+    _max_source = Thermostat.AttributeDefs.abs_max_heat_setpoint_limit.name
+
+    @property
+    def native_min_value(self) -> float:
+        """Return the minimum value."""
+        # The spec says 0x954D, which is a signed integer, therefore the value is in decimals
+        min_present_value = self._cluster_handler.cluster.get(self._min_source, -27315)
+        return min_present_value * self._attr_multiplier
+
+    @property
+    def native_max_value(self) -> float:
+        """Return the maximum value."""
+        max_present_value = self._cluster_handler.cluster.get(self._max_source, 0x7FFF)
+        return max_present_value * self._attr_multiplier
+
+
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class MaxHeatSetpointLimit(ZCLHeatSetpointLimitEntity):
+    """Max heat setpoint setting on thermostats.
+
+    Optional thermostat attribute.
+    """
+
+    _unique_id_suffix = "max_heat_setpoint_limit"
+    _attribute_name: str = "max_heat_setpoint_limit"
+    _attr_translation_key: str = "max_heat_setpoint_limit"
+    _attr_entity_category = EntityCategory.CONFIG
+
+    _min_source = Thermostat.AttributeDefs.min_heat_setpoint_limit.name
+
+
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class MinHeatSetpointLimit(ZCLHeatSetpointLimitEntity):
+    """Min heat setpoint setting on thermostats.
+
+    Optional thermostat attribute.
+    """
+
+    _unique_id_suffix = "min_heat_setpoint_limit"
+    _attribute_name: str = "min_heat_setpoint_limit"
+    _attr_translation_key: str = "min_heat_setpoint_limit"
+    _attr_entity_category = EntityCategory.CONFIG
+
+    _max_source = Thermostat.AttributeDefs.max_heat_setpoint_limit.name

@@ -108,6 +108,26 @@
         "type": 169,
         "unit": 0,
         "value": 100
+      },
+      {
+        "type": 198,
+        "unit": 0,
+        "value": 102
+      },
+      {
+        "type": 197,
+        "unit": 0,
+        "value": 102
+      },
+      {
+        "type": 196,
+        "unit": 0,
+        "value": 102
+      },
+      {
+        "type": 170,
+        "unit": 0,
+        "value": 102
       }
     ],
     "modelid": 45,

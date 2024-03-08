@@ -11,6 +11,7 @@ from pyhap.camera import (
     Camera as PyhapCamera,
 )
 from pyhap.const import CATEGORY_CAMERA
+from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components import camera
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
@@ -251,7 +252,9 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
 
                 self._async_update_doorbell_state(state)
 
-    async def run(self) -> None:
+    @pyhap_callback  # type: ignore[misc]
+    @callback
+    def run(self) -> None:
         """Handle accessory driver started event.
 
         Run inside the Home Assistant event loop.
@@ -276,7 +279,7 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
                 )
             )
 
-        await super().run()
+        super().run()
 
     @callback
     def _async_update_motion_state_event(

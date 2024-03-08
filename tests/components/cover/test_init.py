@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import import_and_test_deprecated_constant_enum
+from tests.common import help_test_all, import_and_test_deprecated_constant_enum
 
 
 async def test_services(hass: HomeAssistant, enable_custom_integrations: None) -> None:
@@ -34,7 +34,8 @@ async def test_services(hass: HomeAssistant, enable_custom_integrations: None) -
     # ent3 = cover with simple tilt functions and no position
     # ent4 = cover with all tilt functions but no position
     # ent5 = cover with all functions
-    ent1, ent2, ent3, ent4, ent5 = platform.ENTITIES
+    # ent6 = cover with only open/close, but also reports opening/closing
+    ent1, ent2, ent3, ent4, ent5, ent6 = platform.ENTITIES
 
     # Test init all covers should be open
     assert is_open(hass, ent1)
@@ -42,6 +43,7 @@ async def test_services(hass: HomeAssistant, enable_custom_integrations: None) -
     assert is_open(hass, ent3)
     assert is_open(hass, ent4)
     assert is_open(hass, ent5)
+    assert is_open(hass, ent6)
 
     # call basic toggle services
     await call_service(hass, SERVICE_TOGGLE, ent1)
@@ -49,13 +51,15 @@ async def test_services(hass: HomeAssistant, enable_custom_integrations: None) -
     await call_service(hass, SERVICE_TOGGLE, ent3)
     await call_service(hass, SERVICE_TOGGLE, ent4)
     await call_service(hass, SERVICE_TOGGLE, ent5)
+    await call_service(hass, SERVICE_TOGGLE, ent6)
 
-    # entities without stop should be closed and with stop should be closing
+    # entities should be either closed or closing, depending on if they report transitional states
     assert is_closed(hass, ent1)
     assert is_closing(hass, ent2)
     assert is_closed(hass, ent3)
     assert is_closed(hass, ent4)
     assert is_closing(hass, ent5)
+    assert is_closing(hass, ent6)
 
     # call basic toggle services and set different cover position states
     await call_service(hass, SERVICE_TOGGLE, ent1)
@@ -65,6 +69,7 @@ async def test_services(hass: HomeAssistant, enable_custom_integrations: None) -
     await call_service(hass, SERVICE_TOGGLE, ent4)
     set_cover_position(ent5, 15)
     await call_service(hass, SERVICE_TOGGLE, ent5)
+    await call_service(hass, SERVICE_TOGGLE, ent6)
 
     # entities should be in correct state depending on the SUPPORT_STOP feature and cover position
     assert is_open(hass, ent1)
@@ -72,6 +77,7 @@ async def test_services(hass: HomeAssistant, enable_custom_integrations: None) -
     assert is_open(hass, ent3)
     assert is_open(hass, ent4)
     assert is_open(hass, ent5)
+    assert is_opening(hass, ent6)
 
     # call basic toggle services
     await call_service(hass, SERVICE_TOGGLE, ent1)
@@ -79,6 +85,7 @@ async def test_services(hass: HomeAssistant, enable_custom_integrations: None) -
     await call_service(hass, SERVICE_TOGGLE, ent3)
     await call_service(hass, SERVICE_TOGGLE, ent4)
     await call_service(hass, SERVICE_TOGGLE, ent5)
+    await call_service(hass, SERVICE_TOGGLE, ent6)
 
     # entities should be in correct state depending on the SUPPORT_STOP feature and cover position
     assert is_closed(hass, ent1)
@@ -86,6 +93,12 @@ async def test_services(hass: HomeAssistant, enable_custom_integrations: None) -
     assert is_closed(hass, ent3)
     assert is_closed(hass, ent4)
     assert is_opening(hass, ent5)
+    assert is_closing(hass, ent6)
+
+    # Without STOP but still reports opening/closing has a 4th possible toggle state
+    set_state(ent6, STATE_CLOSED)
+    await call_service(hass, SERVICE_TOGGLE, ent6)
+    assert is_opening(hass, ent6)
 
 
 def call_service(hass, service, ent):
@@ -98,6 +111,11 @@ def call_service(hass, service, ent):
 def set_cover_position(ent, position) -> None:
     """Set a position value to a cover."""
     ent._values["current_cover_position"] = position
+
+
+def set_state(ent, state) -> None:
+    """Set the state of a cover."""
+    ent._values["state"] = state
 
 
 def is_open(hass, ent):
@@ -125,6 +143,11 @@ def _create_tuples(enum: Enum, constant_prefix: str) -> list[tuple[Enum, str]]:
     for enum in enum:
         result.append((enum, constant_prefix))
     return result
+
+
+def test_all() -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(cover)
 
 
 @pytest.mark.parametrize(

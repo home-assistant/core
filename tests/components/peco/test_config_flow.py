@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from peco import HttpError, IncompatibleMeterError, UnresponsiveMeterError
 import pytest
-from voluptuous.error import MultipleInvalid
+from voluptuous.error import Invalid
 
 from homeassistant import config_entries
 from homeassistant.components.peco.const import DOMAIN
@@ -51,7 +51,7 @@ async def test_invalid_county(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.peco.async_setup_entry",
         return_value=True,
-    ), pytest.raises(MultipleInvalid):
+    ), pytest.raises(Invalid):
         await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

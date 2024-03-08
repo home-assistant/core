@@ -1,6 +1,5 @@
 # flake8: noqa pylint: skip-file
 """Tests for the TelldusLive config flow."""
-import asyncio
 from unittest.mock import Mock, patch
 
 import pytest
@@ -224,7 +223,7 @@ async def test_abort_if_timeout_generating_auth_url(
     hass: HomeAssistant, mock_tellduslive
 ) -> None:
     """Test abort if generating authorize url timeout."""
-    flow = init_config_flow(hass, side_effect=asyncio.TimeoutError)
+    flow = init_config_flow(hass, side_effect=TimeoutError)
 
     result = await flow.async_step_user()
     assert result["type"] == data_entry_flow.FlowResultType.ABORT

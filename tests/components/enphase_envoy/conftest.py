@@ -9,6 +9,15 @@ from pyenphase import (
     EnvoySystemProduction,
     EnvoyTokenAuth,
 )
+from pyenphase.const import PhaseNames, SupportedFeatures
+from pyenphase.models.meters import (
+    CtMeterStatus,
+    CtState,
+    CtStatusFlags,
+    CtType,
+    EnvoyMeterData,
+    EnvoyPhaseMode,
+)
 import pytest
 
 from homeassistant.components.enphase_envoy import DOMAIN
@@ -50,9 +59,27 @@ def mock_envoy_fixture(serial_number, mock_authenticate, mock_setup, mock_auth):
     mock_envoy = Mock(spec=Envoy)
     mock_envoy.serial_number = serial_number
     mock_envoy.firmware = "7.1.2"
+    mock_envoy.part_number = "123456789"
+    mock_envoy.envoy_model = (
+        "Envoy, phases: 3, phase mode: three, net-consumption CT, production CT"
+    )
     mock_envoy.authenticate = mock_authenticate
     mock_envoy.setup = mock_setup
     mock_envoy.auth = mock_auth
+    mock_envoy.supported_features = SupportedFeatures(
+        SupportedFeatures.INVERTERS
+        | SupportedFeatures.PRODUCTION
+        | SupportedFeatures.PRODUCTION
+        | SupportedFeatures.METERING
+        | SupportedFeatures.THREEPHASE
+        | SupportedFeatures.CTMETERS
+    )
+    mock_envoy.phase_mode = EnvoyPhaseMode.THREE
+    mock_envoy.phase_count = 3
+    mock_envoy.active_phase_count = 3
+    mock_envoy.ct_meter_count = 2
+    mock_envoy.consumption_meter_type = CtType.NET_CONSUMPTION
+    mock_envoy.production_meter_type = CtType.PRODUCTION
     mock_envoy.data = EnvoyData(
         system_consumption=EnvoySystemConsumption(
             watt_hours_last_7_days=1234,
@@ -66,6 +93,173 @@ def mock_envoy_fixture(serial_number, mock_authenticate, mock_setup, mock_auth):
             watt_hours_today=1234,
             watts_now=1234,
         ),
+        system_consumption_phases={
+            PhaseNames.PHASE_1: EnvoySystemConsumption(
+                watt_hours_last_7_days=1321,
+                watt_hours_lifetime=1322,
+                watt_hours_today=1323,
+                watts_now=1324,
+            ),
+            PhaseNames.PHASE_2: EnvoySystemConsumption(
+                watt_hours_last_7_days=2321,
+                watt_hours_lifetime=2322,
+                watt_hours_today=2323,
+                watts_now=2324,
+            ),
+            PhaseNames.PHASE_3: EnvoySystemConsumption(
+                watt_hours_last_7_days=3321,
+                watt_hours_lifetime=3322,
+                watt_hours_today=3323,
+                watts_now=3324,
+            ),
+        },
+        system_production_phases={
+            PhaseNames.PHASE_1: EnvoySystemProduction(
+                watt_hours_last_7_days=1231,
+                watt_hours_lifetime=1232,
+                watt_hours_today=1233,
+                watts_now=1234,
+            ),
+            PhaseNames.PHASE_2: EnvoySystemProduction(
+                watt_hours_last_7_days=2231,
+                watt_hours_lifetime=2232,
+                watt_hours_today=2233,
+                watts_now=2234,
+            ),
+            PhaseNames.PHASE_3: EnvoySystemProduction(
+                watt_hours_last_7_days=3231,
+                watt_hours_lifetime=3232,
+                watt_hours_today=3233,
+                watts_now=3234,
+            ),
+        },
+        ctmeter_production=EnvoyMeterData(
+            eid="100000010",
+            timestamp=1708006110,
+            energy_delivered=11234,
+            energy_received=12345,
+            active_power=100,
+            power_factor=0.11,
+            voltage=111,
+            current=0.2,
+            frequency=50.1,
+            state=CtState.ENABLED,
+            measurement_type=CtType.PRODUCTION,
+            metering_status=CtMeterStatus.NORMAL,
+            status_flags=[
+                CtStatusFlags.PODUCTION_IMBALANCE,
+                CtStatusFlags.POWER_ON_UNUSED_PHASE,
+            ],
+        ),
+        ctmeter_consumption=EnvoyMeterData(
+            eid="100000020",
+            timestamp=1708006120,
+            energy_delivered=21234,
+            energy_received=22345,
+            active_power=101,
+            power_factor=0.21,
+            voltage=112,
+            current=0.3,
+            frequency=50.2,
+            state=CtState.ENABLED,
+            measurement_type=CtType.NET_CONSUMPTION,
+            metering_status=CtMeterStatus.NORMAL,
+            status_flags=[],
+        ),
+        ctmeter_production_phases={
+            PhaseNames.PHASE_1: EnvoyMeterData(
+                eid="100000011",
+                timestamp=1708006111,
+                energy_delivered=112341,
+                energy_received=123451,
+                active_power=20,
+                power_factor=0.12,
+                voltage=111,
+                current=0.2,
+                frequency=50.1,
+                state=CtState.ENABLED,
+                measurement_type=CtType.PRODUCTION,
+                metering_status=CtMeterStatus.NORMAL,
+                status_flags=[CtStatusFlags.PODUCTION_IMBALANCE],
+            ),
+            PhaseNames.PHASE_2: EnvoyMeterData(
+                eid="100000012",
+                timestamp=1708006112,
+                energy_delivered=112342,
+                energy_received=123452,
+                active_power=30,
+                power_factor=0.13,
+                voltage=111,
+                current=0.2,
+                frequency=50.1,
+                state=CtState.ENABLED,
+                measurement_type=CtType.PRODUCTION,
+                metering_status=CtMeterStatus.NORMAL,
+                status_flags=[CtStatusFlags.POWER_ON_UNUSED_PHASE],
+            ),
+            PhaseNames.PHASE_3: EnvoyMeterData(
+                eid="100000013",
+                timestamp=1708006113,
+                energy_delivered=112343,
+                energy_received=123453,
+                active_power=50,
+                power_factor=0.14,
+                voltage=111,
+                current=0.2,
+                frequency=50.1,
+                state=CtState.ENABLED,
+                measurement_type=CtType.PRODUCTION,
+                metering_status=CtMeterStatus.NORMAL,
+                status_flags=[],
+            ),
+        },
+        ctmeter_consumption_phases={
+            PhaseNames.PHASE_1: EnvoyMeterData(
+                eid="100000021",
+                timestamp=1708006121,
+                energy_delivered=212341,
+                energy_received=223451,
+                active_power=21,
+                power_factor=0.22,
+                voltage=112,
+                current=0.3,
+                frequency=50.2,
+                state=CtState.ENABLED,
+                measurement_type=CtType.NET_CONSUMPTION,
+                metering_status=CtMeterStatus.NORMAL,
+                status_flags=[],
+            ),
+            PhaseNames.PHASE_2: EnvoyMeterData(
+                eid="100000022",
+                timestamp=1708006122,
+                energy_delivered=212342,
+                energy_received=223452,
+                active_power=31,
+                power_factor=0.23,
+                voltage=112,
+                current=0.3,
+                frequency=50.2,
+                state=CtState.ENABLED,
+                measurement_type=CtType.NET_CONSUMPTION,
+                metering_status=CtMeterStatus.NORMAL,
+                status_flags=[],
+            ),
+            PhaseNames.PHASE_3: EnvoyMeterData(
+                eid="100000023",
+                timestamp=1708006123,
+                energy_delivered=212343,
+                energy_received=223453,
+                active_power=51,
+                power_factor=0.24,
+                voltage=112,
+                current=0.3,
+                frequency=50.2,
+                state=CtState.ENABLED,
+                measurement_type=CtType.NET_CONSUMPTION,
+                metering_status=CtMeterStatus.NORMAL,
+                status_flags=[],
+            ),
+        },
         inverters={
             "1": EnvoyInverter(
                 serial_number="1",
@@ -89,9 +283,6 @@ async def setup_enphase_envoy_fixture(hass, config, mock_envoy):
     ), patch(
         "homeassistant.components.enphase_envoy.Envoy",
         return_value=mock_envoy,
-    ), patch(
-        "homeassistant.components.enphase_envoy.PLATFORMS",
-        [],
     ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()

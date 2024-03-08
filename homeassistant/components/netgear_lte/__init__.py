@@ -161,7 +161,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_HOST]
     password = entry.data[CONF_PASSWORD]
 
-    if not (data := hass.data.setdefault(DOMAIN, {})):
+    if not (data := hass.data.get(DOMAIN)) or data.websession.closed:
         websession = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
         data[DATA_SESSION] = websession
     modem = eternalegypt.Modem(hostname=host, websession=data[DATA_SESSION])
@@ -208,7 +208,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if entry.state == ConfigEntryState.LOADED
     ]
     if len(loaded_entries) == 1:
-        hass.data.pop(DOMAIN)
+        hass.data.pop(DOMAIN, None)
         for service_name in hass.services.async_services()[DOMAIN]:
             hass.services.async_remove(DOMAIN, service_name)
 

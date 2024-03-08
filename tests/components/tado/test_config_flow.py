@@ -3,6 +3,7 @@ from http import HTTPStatus
 from ipaddress import ip_address
 from unittest.mock import MagicMock, patch
 
+import PyTado
 import pytest
 import requests
 
@@ -344,6 +345,27 @@ async def test_import_step_validation_failed(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "import_failed"
+
+
+async def test_import_step_device_authentication_failed(hass: HomeAssistant) -> None:
+    """Test import step with device tracker authentication failed."""
+    with patch(
+        "homeassistant.components.tado.config_flow.Tado",
+        side_effect=PyTado.exceptions.TadoWrongCredentialsException,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                "username": "test-username",
+                "password": "test-password",
+                "home_id": 1,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "import_failed_invalid_auth"
 
 
 async def test_import_step_unique_id_configured(hass: HomeAssistant) -> None:

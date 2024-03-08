@@ -1,4 +1,6 @@
 """The Risco integration."""
+from __future__ import annotations
+
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import timedelta
@@ -195,7 +197,7 @@ async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-class RiscoDataUpdateCoordinator(DataUpdateCoordinator[Alarm]):
+class RiscoDataUpdateCoordinator(DataUpdateCoordinator[Alarm]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching risco data."""
 
     def __init__(
@@ -219,7 +221,7 @@ class RiscoDataUpdateCoordinator(DataUpdateCoordinator[Alarm]):
             raise UpdateFailed(error) from error
 
 
-class RiscoEventsDataUpdateCoordinator(DataUpdateCoordinator[list[Event]]):
+class RiscoEventsDataUpdateCoordinator(DataUpdateCoordinator[list[Event]]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching risco data."""
 
     def __init__(

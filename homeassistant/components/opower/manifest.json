@@ -5,7 +5,8 @@
   "config_flow": true,
   "dependencies": ["recorder"],
   "documentation": "https://www.home-assistant.io/integrations/opower",
+  "import_executor": true,
   "iot_class": "cloud_polling",
   "loggers": ["opower"],
-  "requirements": ["opower==0.1.0"]
+  "requirements": ["opower==0.3.1"]
 }

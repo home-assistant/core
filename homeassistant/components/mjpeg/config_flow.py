@@ -10,7 +10,12 @@ from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from requests.exceptions import HTTPError, Timeout
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_NAME,
@@ -21,7 +26,6 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, DOMAIN, LOGGER
@@ -54,7 +58,7 @@ def async_get_schema(
 
     if show_name:
         schema = {
-            vol.Optional(CONF_NAME, default=defaults.get(CONF_NAME)): str,
+            vol.Required(CONF_NAME, default=defaults.get(CONF_NAME)): str,
             **schema,
         }
 
@@ -140,7 +144,7 @@ class MJPEGFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors: dict[str, str] = {}
 
@@ -184,7 +188,7 @@ class MJPEGOptionsFlowHandler(OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage MJPEG IP Camera options."""
         errors: dict[str, str] = {}
 

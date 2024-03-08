@@ -25,6 +25,7 @@ import zigpy.zdo.types as zdo_t
 
 import homeassistant.components.zha.core.const as zha_const
 import homeassistant.components.zha.core.device as zha_core_device
+from homeassistant.components.zha.core.gateway import ZHAGateway
 from homeassistant.components.zha.core.helpers import get_zha_gateway
 from homeassistant.helpers import restore_state
 from homeassistant.setup import async_setup_component
@@ -37,6 +38,7 @@ from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 FIXTURE_GRP_ID = 0x1001
 FIXTURE_GRP_NAME = "fixture group"
+COUNTER_NAMES = ["counter_1", "counter_2", "counter_3"]
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -135,7 +137,7 @@ def _wrap_mock_instance(obj: Any) -> MagicMock:
         real_attr = getattr(obj, attr_name)
         mock_attr = getattr(mock, attr_name)
 
-        if callable(real_attr):
+        if callable(real_attr) and not hasattr(real_attr, "__aenter__"):
             mock_attr.side_effect = real_attr
         else:
             setattr(mock, attr_name, real_attr)
@@ -153,6 +155,9 @@ async def zigpy_app_controller():
             zigpy.config.CONF_STARTUP_ENERGY_SCAN: False,
             zigpy.config.CONF_NWK_BACKUP_ENABLED: False,
             zigpy.config.CONF_TOPO_SCAN_ENABLED: False,
+            zigpy.config.CONF_OTA: {
+                zigpy.config.CONF_OTA_ENABLED: False,
+            },
         }
     )
 
@@ -164,6 +169,10 @@ async def zigpy_app_controller():
     app.state.network_info.extended_pan_id = app.state.node_info.ieee
     app.state.network_info.channel = 15
     app.state.network_info.network_key.key = zigpy.types.KeyData(range(16))
+    app.state.counters = zigpy.state.CounterGroups()
+    app.state.counters["ezsp_counters"] = zigpy.state.CounterGroup("ezsp_counters")
+    for name in COUNTER_NAMES:
+        app.state.counters["ezsp_counters"][name].increment()
 
     # Create a fake coordinator device
     dev = app.add_device(nwk=app.state.node_info.nwk, ieee=app.state.node_info.ieee)
@@ -381,7 +390,7 @@ def zha_device_joined_restored(request):
 
 @pytest.fixture
 def zha_device_mock(
-    hass, zigpy_device_mock
+    hass, config_entry, zigpy_device_mock
 ) -> Callable[..., zha_core_device.ZHADevice]:
     """Return a ZHA Device factory."""
 
@@ -409,7 +418,11 @@ def zha_device_mock(
         zigpy_device = zigpy_device_mock(
             endpoints, ieee, manufacturer, model, node_desc, patch_cluster=patch_cluster
         )
-        zha_device = zha_core_device.ZHADevice(hass, zigpy_device, MagicMock())
+        zha_device = zha_core_device.ZHADevice(
+            hass,
+            zigpy_device,
+            ZHAGateway(hass, {}, config_entry),
+        )
         return zha_device
 
     return _zha_device

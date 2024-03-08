@@ -3,6 +3,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
+from pytedee_async import TedeeLock
 from pytedee_async.exception import (
     TedeeClientException,
     TedeeDataUpdateException,
@@ -24,7 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
@@ -207,3 +208,61 @@ async def test_update_failed(
     state = hass.states.get("lock.lock_1a2b")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_cleanup_removed_locks(
+    hass: HomeAssistant,
+    mock_tedee: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Ensure removed locks are cleaned up."""
+
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+
+    locks = [device.name for device in devices]
+    assert "Lock-1A2B" in locks
+
+    # remove a lock and wait for coordinator
+    mock_tedee.locks_dict.pop(12345)
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+
+    locks = [device.name for device in devices]
+    assert "Lock-1A2B" not in locks
+
+
+async def test_new_lock(
+    hass: HomeAssistant,
+    mock_tedee: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Ensure new lock is added automatically."""
+
+    state = hass.states.get("lock.lock_4e5f")
+    assert state is None
+
+    mock_tedee.locks_dict[666666] = TedeeLock("Lock-4E5F", 666666, 2)
+    mock_tedee.locks_dict[777777] = TedeeLock(
+        "Lock-6G7H",
+        777777,
+        4,
+        is_enabled_pullspring=True,
+    )
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("lock.lock_4e5f")
+    assert state
+    state = hass.states.get("lock.lock_6g7h")
+    assert state

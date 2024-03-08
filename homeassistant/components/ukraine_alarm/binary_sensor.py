@@ -36,31 +36,26 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
         key=ALERT_TYPE_AIR,
         translation_key="air",
         device_class=BinarySensorDeviceClass.SAFETY,
-        icon="mdi:cloud",
     ),
     BinarySensorEntityDescription(
         key=ALERT_TYPE_URBAN_FIGHTS,
         translation_key="urban_fights",
         device_class=BinarySensorDeviceClass.SAFETY,
-        icon="mdi:pistol",
     ),
     BinarySensorEntityDescription(
         key=ALERT_TYPE_ARTILLERY,
         translation_key="artillery",
         device_class=BinarySensorDeviceClass.SAFETY,
-        icon="mdi:tank",
     ),
     BinarySensorEntityDescription(
         key=ALERT_TYPE_CHEMICAL,
         translation_key="chemical",
         device_class=BinarySensorDeviceClass.SAFETY,
-        icon="mdi:chemical-weapon",
     ),
     BinarySensorEntityDescription(
         key=ALERT_TYPE_NUCLEAR,
         translation_key="nuclear",
         device_class=BinarySensorDeviceClass.SAFETY,
-        icon="mdi:nuke",
     ),
 )
 

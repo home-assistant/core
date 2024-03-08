@@ -180,13 +180,11 @@ SENSORS: tuple[NAMSensorEntityDescription, ...] = (
     NAMSensorEntityDescription(
         key=ATTR_PMSX003_CAQI,
         translation_key="pmsx003_caqi",
-        icon="mdi:air-filter",
         value=lambda sensors: sensors.pms_caqi,
     ),
     NAMSensorEntityDescription(
         key=ATTR_PMSX003_CAQI_LEVEL,
         translation_key="pmsx003_caqi_level",
-        icon="mdi:air-filter",
         device_class=SensorDeviceClass.ENUM,
         options=["very_low", "low", "medium", "high", "very_high"],
         value=lambda sensors: sensors.pms_caqi_level,
@@ -221,13 +219,11 @@ SENSORS: tuple[NAMSensorEntityDescription, ...] = (
     NAMSensorEntityDescription(
         key=ATTR_SDS011_CAQI,
         translation_key="sds011_caqi",
-        icon="mdi:air-filter",
         value=lambda sensors: sensors.sds011_caqi,
     ),
     NAMSensorEntityDescription(
         key=ATTR_SDS011_CAQI_LEVEL,
         translation_key="sds011_caqi_level",
-        icon="mdi:air-filter",
         device_class=SensorDeviceClass.ENUM,
         options=["very_low", "low", "medium", "high", "very_high"],
         value=lambda sensors: sensors.sds011_caqi_level,
@@ -271,13 +267,11 @@ SENSORS: tuple[NAMSensorEntityDescription, ...] = (
     NAMSensorEntityDescription(
         key=ATTR_SPS30_CAQI,
         translation_key="sps30_caqi",
-        icon="mdi:air-filter",
         value=lambda sensors: sensors.sps30_caqi,
     ),
     NAMSensorEntityDescription(
         key=ATTR_SPS30_CAQI_LEVEL,
         translation_key="sps30_caqi_level",
-        icon="mdi:air-filter",
         device_class=SensorDeviceClass.ENUM,
         options=["very_low", "low", "medium", "high", "very_high"],
         value=lambda sensors: sensors.sps30_caqi_level,
@@ -314,7 +308,6 @@ SENSORS: tuple[NAMSensorEntityDescription, ...] = (
         translation_key="sps30_pm4",
         suggested_display_precision=0,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        icon="mdi:molecule",
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda sensors: sensors.sps30_p4,
     ),

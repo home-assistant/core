@@ -44,7 +44,6 @@ from .mixins import (
     MqttAvailability,
     MqttEntity,
     async_setup_entity_entry_helper,
-    validate_sensor_entity_category,
     write_state_on_attr_change,
 )
 from .models import (
@@ -88,7 +87,6 @@ PLATFORM_SCHEMA_MODERN = vol.All(
     # Deprecated in HA Core 2021.11.0 https://github.com/home-assistant/core/pull/54840
     # Removed in HA Core 2023.6.0
     cv.removed(CONF_LAST_RESET_TOPIC),
-    validate_sensor_entity_category(sensor.DOMAIN, discovery=False),
     _PLATFORM_SCHEMA_BASE,
 )
 
@@ -96,7 +94,6 @@ DISCOVERY_SCHEMA = vol.All(
     # Deprecated in HA Core 2021.11.0 https://github.com/home-assistant/core/pull/54840
     # Removed in HA Core 2023.6.0
     cv.removed(CONF_LAST_RESET_TOPIC),
-    validate_sensor_entity_category(sensor.DOMAIN, discovery=True),
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
 )
 

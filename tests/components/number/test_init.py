@@ -32,6 +32,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_PLATFORM,
     UnitOfTemperature,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
@@ -685,6 +686,22 @@ async def test_restore_number_restore_state(
             UnitOfTemperature.CELSIUS,
             100,
             38.0,
+        ),
+        (
+            NumberDeviceClass.VOLUME_FLOW_RATE,
+            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+            UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+            UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+            50.0,
+            "13.2",
+        ),
+        (
+            NumberDeviceClass.VOLUME_FLOW_RATE,
+            UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+            13.0,
+            "49.2",
         ),
     ],
 )

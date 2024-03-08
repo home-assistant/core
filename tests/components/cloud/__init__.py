@@ -7,6 +7,54 @@ from homeassistant.components import cloud
 from homeassistant.components.cloud import const, prefs as cloud_prefs
 from homeassistant.setup import async_setup_component
 
+PIPELINE_DATA = {
+    "items": [
+        {
+            "conversation_engine": "conversation_engine_1",
+            "conversation_language": "language_1",
+            "id": "01GX8ZWBAQYWNB1XV3EXEZ75DY",
+            "language": "language_1",
+            "name": "Home Assistant Cloud",
+            "stt_engine": "cloud",
+            "stt_language": "language_1",
+            "tts_engine": "cloud",
+            "tts_language": "language_1",
+            "tts_voice": "Arnold Schwarzenegger",
+            "wake_word_entity": None,
+            "wake_word_id": None,
+        },
+        {
+            "conversation_engine": "conversation_engine_2",
+            "conversation_language": "language_2",
+            "id": "01GX8ZWBAQTKFQNK4W7Q4CTRCX",
+            "language": "language_2",
+            "name": "name_2",
+            "stt_engine": "stt_engine_2",
+            "stt_language": "language_2",
+            "tts_engine": "tts_engine_2",
+            "tts_language": "language_2",
+            "tts_voice": "The Voice",
+            "wake_word_entity": None,
+            "wake_word_id": None,
+        },
+        {
+            "conversation_engine": "conversation_engine_3",
+            "conversation_language": "language_3",
+            "id": "01GX8ZWBAQSV1HP3WGJPFWEJ8J",
+            "language": "language_3",
+            "name": "name_3",
+            "stt_engine": None,
+            "stt_language": None,
+            "tts_engine": None,
+            "tts_language": None,
+            "tts_voice": None,
+            "wake_word_entity": None,
+            "wake_word_id": None,
+        },
+    ],
+    "preferred_item": "01GX8ZWBAQYWNB1XV3EXEZ75DY",
+}
+
 
 async def mock_cloud(hass, config=None):
     """Mock cloud."""

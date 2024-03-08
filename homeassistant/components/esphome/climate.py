@@ -137,6 +137,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "climate"
+    _enable_turn_on_off_backwards_compatibility = False
 
     @callback
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
@@ -167,11 +168,11 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         self._attr_min_humidity = round(static_info.visual_min_humidity)
         self._attr_max_humidity = round(static_info.visual_max_humidity)
         features = ClimateEntityFeature(0)
-        if self._static_info.supports_two_point_target_temperature:
+        if static_info.supports_two_point_target_temperature:
             features |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         else:
             features |= ClimateEntityFeature.TARGET_TEMPERATURE
-        if self._static_info.supports_target_humidity:
+        if static_info.supports_target_humidity:
             features |= ClimateEntityFeature.TARGET_HUMIDITY
         if self.preset_modes:
             features |= ClimateEntityFeature.PRESET_MODE
@@ -179,6 +180,8 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             features |= ClimateEntityFeature.FAN_MODE
         if self.swing_modes:
             features |= ClimateEntityFeature.SWING_MODE
+        if len(self.hvac_modes) > 1 and HVACMode.OFF in self.hvac_modes:
+            features |= ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
         self._attr_supported_features = features
 
     def _get_precision(self) -> float:
@@ -283,15 +286,15 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             data["target_temperature_low"] = kwargs[ATTR_TARGET_TEMP_LOW]
         if ATTR_TARGET_TEMP_HIGH in kwargs:
             data["target_temperature_high"] = kwargs[ATTR_TARGET_TEMP_HIGH]
-        await self._client.climate_command(**data)
+        self._client.climate_command(**data)
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
-        await self._client.climate_command(key=self._key, target_humidity=humidity)
+        self._client.climate_command(key=self._key, target_humidity=humidity)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
-        await self._client.climate_command(
+        self._client.climate_command(
             key=self._key, mode=_CLIMATE_MODES.from_hass(hvac_mode)
         )
 
@@ -302,7 +305,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             kwargs["custom_preset"] = preset_mode
         else:
             kwargs["preset"] = _PRESETS.from_hass(preset_mode)
-        await self._client.climate_command(**kwargs)
+        self._client.climate_command(**kwargs)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
@@ -311,10 +314,10 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             kwargs["custom_fan_mode"] = fan_mode
         else:
             kwargs["fan_mode"] = _FAN_MODES.from_hass(fan_mode)
-        await self._client.climate_command(**kwargs)
+        self._client.climate_command(**kwargs)
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new swing mode."""
-        await self._client.climate_command(
+        self._client.climate_command(
             key=self._key, swing_mode=_SWING_MODES.from_hass(swing_mode)
         )

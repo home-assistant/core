@@ -7,10 +7,14 @@ from prayer_times_calculator import InvalidResponseError, PrayerTimesCalculator
 from requests.exceptions import ConnectionError as ConnError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
     LocationSelector,
     SelectSelector,
@@ -39,7 +43,7 @@ from .const import (
 
 
 async def async_validate_location(
-    hass: HomeAssistant, lon: float, lat: float
+    hass: HomeAssistant, lat: float, lon: float
 ) -> dict[str, str]:
     """Check if the selected location is valid."""
     errors = {}
@@ -58,7 +62,7 @@ async def async_validate_location(
     return errors
 
 
-class IslamicPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class IslamicPrayerFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle the Islamic Prayer config flow."""
 
     VERSION = 1
@@ -67,14 +71,14 @@ class IslamicPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> IslamicPrayerOptionsFlowHandler:
         """Get the options flow for this handler."""
         return IslamicPrayerOptionsFlowHandler(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
 
@@ -111,16 +115,16 @@ class IslamicPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class IslamicPrayerOptionsFlowHandler(config_entries.OptionsFlow):
+class IslamicPrayerOptionsFlowHandler(OptionsFlow):
     """Handle Islamic Prayer client options."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

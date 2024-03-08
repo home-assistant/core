@@ -40,7 +40,7 @@ APP_REDIRECT_URL = "urn:ietf:wg:oauth:2.0:oob"
 
 
 FAKE_DHCP_DATA = dhcp.DhcpServiceInfo(
-    ip="127.0.0.2", macaddress="00:11:22:33:44:55", hostname="fake_hostname"
+    ip="127.0.0.2", macaddress="001122334455", hostname="fake_hostname"
 )
 
 

@@ -655,9 +655,7 @@ async def test_set_context_expired(hass: HomeAssistant) -> None:
     """Test setting context."""
     context = Context()
 
-    with patch(
-        "homeassistant.helpers.entity.CONTEXT_RECENT_TIME", timedelta(seconds=-5)
-    ):
+    with patch("homeassistant.helpers.entity.CONTEXT_RECENT_TIME_SECONDS", -5):
         ent = entity.Entity()
         ent.hass = hass
         ent.entity_id = "hello.world"
@@ -1138,6 +1136,203 @@ async def test_friendly_name_description_device_class_name(
 
 
 @pytest.mark.parametrize(
+    (
+        "has_entity_name",
+        "translation_key",
+        "translations",
+        "placeholders",
+        "expected_friendly_name",
+    ),
+    (
+        (False, None, None, None, "Entity Blu"),
+        (True, None, None, None, "Device Bla Entity Blu"),
+        (
+            True,
+            "test_entity",
+            {
+                "en": {
+                    "component.test.entity.test_domain.test_entity.name": "English ent"
+                },
+            },
+            None,
+            "Device Bla English ent",
+        ),
+        (
+            True,
+            "test_entity",
+            {
+                "en": {
+                    "component.test.entity.test_domain.test_entity.name": "{placeholder} English ent"
+                },
+            },
+            {"placeholder": "special"},
+            "Device Bla special English ent",
+        ),
+        (
+            True,
+            "test_entity",
+            {
+                "en": {
+                    "component.test.entity.test_domain.test_entity.name": "English ent {placeholder}"
+                },
+            },
+            {"placeholder": "special"},
+            "Device Bla English ent special",
+        ),
+    ),
+)
+async def test_entity_name_translation_placeholders(
+    hass: HomeAssistant,
+    has_entity_name: bool,
+    translation_key: str | None,
+    translations: dict[str, str] | None,
+    placeholders: dict[str, str] | None,
+    expected_friendly_name: str | None,
+) -> None:
+    """Test friendly name when the entity name translation has placeholders."""
+
+    async def async_get_translations(
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Iterable[str] | None = None,
+        config_flow: bool | None = None,
+    ) -> dict[str, Any]:
+        """Return all backend translations."""
+        return translations[language]
+
+    ent = MockEntity(
+        unique_id="qwer",
+        device_info={
+            "identifiers": {("hue", "1234")},
+            "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
+            "name": "Device Bla",
+        },
+    )
+    ent.entity_description = entity.EntityDescription(
+        "test",
+        has_entity_name=has_entity_name,
+        translation_key=translation_key,
+        name="Entity Blu",
+    )
+    if placeholders is not None:
+        ent._attr_translation_placeholders = placeholders
+    with patch(
+        "homeassistant.helpers.entity_platform.translation.async_get_translations",
+        side_effect=async_get_translations,
+    ):
+        await _test_friendly_name(hass, ent, expected_friendly_name)
+
+
+@pytest.mark.parametrize(
+    (
+        "translation_key",
+        "translations",
+        "placeholders",
+        "release_channel",
+        "expected_error",
+    ),
+    (
+        (
+            "test_entity",
+            {
+                "en": {
+                    "component.test.entity.test_domain.test_entity.name": "{placeholder} English ent {2ndplaceholder}"
+                },
+            },
+            {"placeholder": "special"},
+            "stable",
+            (
+                "has translation placeholders '{'placeholder': 'special'}' which do "
+                "not match the name '{placeholder} English ent {2ndplaceholder}'"
+            ),
+        ),
+        (
+            "test_entity",
+            {
+                "en": {
+                    "component.test.entity.test_domain.test_entity.name": "{placeholder} English ent {2ndplaceholder}"
+                },
+            },
+            {"placeholder": "special"},
+            "beta",
+            "HomeAssistantError: Missing placeholder '2ndplaceholder'",
+        ),
+        (
+            "test_entity",
+            {
+                "en": {
+                    "component.test.entity.test_domain.test_entity.name": "{placeholder} English ent"
+                },
+            },
+            None,
+            "stable",
+            (
+                "has translation placeholders '{}' which do "
+                "not match the name '{placeholder} English ent'"
+            ),
+        ),
+    ),
+)
+async def test_entity_name_translation_placeholder_errors(
+    hass: HomeAssistant,
+    translation_key: str | None,
+    translations: dict[str, str] | None,
+    placeholders: dict[str, str] | None,
+    release_channel: str,
+    expected_error: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test entity name translation has placeholder issues."""
+
+    async def async_get_translations(
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Iterable[str] | None = None,
+        config_flow: bool | None = None,
+    ) -> dict[str, Any]:
+        """Return all backend translations."""
+        return translations[language]
+
+    async def async_setup_entry(hass, config_entry, async_add_entities):
+        """Mock setup entry method."""
+        async_add_entities([ent])
+        return True
+
+    ent = MockEntity(
+        unique_id="qwer",
+    )
+    ent.entity_description = entity.EntityDescription(
+        "test",
+        has_entity_name=True,
+        translation_key=translation_key,
+        name="Entity Blu",
+    )
+    if placeholders is not None:
+        ent._attr_translation_placeholders = placeholders
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    caplog.clear()
+
+    with patch(
+        "homeassistant.helpers.entity_platform.translation.async_get_translations",
+        side_effect=async_get_translations,
+    ), patch(
+        "homeassistant.helpers.entity.get_release_channel", return_value=release_channel
+    ):
+        await entity_platform.async_setup_entry(config_entry)
+
+    assert expected_error in caplog.text
+
+
+@pytest.mark.parametrize(
     ("has_entity_name", "entity_name", "expected_friendly_name"),
     (
         (False, "Entity Blu", "Entity Blu"),
@@ -1552,22 +1747,26 @@ async def test_suggest_report_issue_custom_component(
     assert suggestion == "create a bug report at https://some_url"
 
 
-async def test_reuse_entity_object_after_abort(hass: HomeAssistant) -> None:
+async def test_reuse_entity_object_after_abort(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test reuse entity object."""
     platform = MockEntityPlatform(hass, domain="test")
     ent = entity.Entity()
     ent.entity_id = "invalid"
-    with pytest.raises(HomeAssistantError, match="Invalid entity ID: invalid"):
-        await platform.async_add_entities([ent])
-    with pytest.raises(
-        HomeAssistantError,
-        match="Entity 'invalid' cannot be added a second time to an entity platform",
-    ):
-        await platform.async_add_entities([ent])
+    await platform.async_add_entities([ent])
+    assert "Invalid entity ID: invalid" in caplog.text
+    await platform.async_add_entities([ent])
+    assert (
+        "Entity 'invalid' cannot be added a second time to an entity platform"
+        in caplog.text
+    )
 
 
 async def test_reuse_entity_object_after_entity_registry_remove(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test reuse entity object."""
     entry = entity_registry.async_get_or_create("test", "test", "5678")
@@ -1582,15 +1781,15 @@ async def test_reuse_entity_object_after_entity_registry_remove(
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids()) == 0
 
-    with pytest.raises(
-        HomeAssistantError,
-        match="Entity 'test.test_5678' cannot be added a second time",
-    ):
-        await platform.async_add_entities([ent])
+    await platform.async_add_entities([ent])
+    assert "Entity 'test.test_5678' cannot be added a second time" in caplog.text
+    assert len(hass.states.async_entity_ids()) == 0
 
 
 async def test_reuse_entity_object_after_entity_registry_disabled(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test reuse entity object."""
     entry = entity_registry.async_get_or_create("test", "test", "5678")
@@ -1607,11 +1806,9 @@ async def test_reuse_entity_object_after_entity_registry_disabled(
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids()) == 0
 
-    with pytest.raises(
-        HomeAssistantError,
-        match="Entity 'test.test_5678' cannot be added a second time",
-    ):
-        await platform.async_add_entities([ent])
+    await platform.async_add_entities([ent])
+    assert len(hass.states.async_entity_ids()) == 0
+    assert "Entity 'test.test_5678' cannot be added a second time" in caplog.text
 
 
 async def test_change_entity_id(
@@ -2209,6 +2406,47 @@ async def test_cached_entity_property_class_attribute(hass: HomeAssistant) -> No
         assert getattr(ent[1], property) == values[0]
 
 
+async def test_cached_entity_property_override(hass: HomeAssistant) -> None:
+    """Test overriding cached _attr_ raises."""
+
+    class EntityWithClassAttribute1(entity.Entity):
+        """A derived class which overrides an _attr_ from a parent."""
+
+        _attr_attribution: str
+
+    class EntityWithClassAttribute2(entity.Entity):
+        """A derived class which overrides an _attr_ from a parent."""
+
+        _attr_attribution = "blabla"
+
+    class EntityWithClassAttribute3(entity.Entity):
+        """A derived class which overrides an _attr_ from a parent."""
+
+        _attr_attribution: str = "blabla"
+
+    class EntityWithClassAttribute4(entity.Entity):
+        @property
+        def _attr_not_cached(self):
+            return "blabla"
+
+    class EntityWithClassAttribute5(entity.Entity):
+        def _attr_not_cached(self):
+            return "blabla"
+
+    with pytest.raises(TypeError):
+
+        class EntityWithClassAttribute6(entity.Entity):
+            @property
+            def _attr_attribution(self):
+                return "🤡"
+
+    with pytest.raises(TypeError):
+
+        class EntityWithClassAttribute7(entity.Entity):
+            def _attr_attribution(self):
+                return "🤡"
+
+
 async def test_entity_report_deprecated_supported_features_values(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -2232,3 +2470,91 @@ async def test_entity_report_deprecated_supported_features_values(
         "is using deprecated supported features values which will be removed"
         not in caplog.text
     )
+
+
+async def test_remove_entity_registry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test removing an entity from the registry."""
+    result = []
+
+    entry = entity_registry.async_get_or_create(
+        "test", "test_platform", "5678", suggested_object_id="test"
+    )
+    assert entry.entity_id == "test.test"
+
+    class MockEntity(entity.Entity):
+        _attr_unique_id = "5678"
+
+        def __init__(self) -> None:
+            self.added_calls = []
+            self.remove_calls = []
+
+        async def async_added_to_hass(self):
+            self.added_calls.append(None)
+            self.async_on_remove(lambda: result.append(1))
+
+        async def async_will_remove_from_hass(self):
+            self.remove_calls.append(None)
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntity()
+    await platform.async_add_entities([ent])
+    assert hass.states.get("test.test").state == STATE_UNKNOWN
+    assert len(ent.added_calls) == 1
+
+    entry = entity_registry.async_remove(entry.entity_id)
+    await hass.async_block_till_done()
+
+    assert len(result) == 1
+    assert len(ent.added_calls) == 1
+    assert len(ent.remove_calls) == 1
+
+    assert hass.states.get("test.test") is None
+
+
+async def test_reset_right_after_remove_entity_registry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test resetting the platform right after removing an entity from the registry.
+
+    A reset commonly happens during a reload.
+    """
+    result = []
+
+    entry = entity_registry.async_get_or_create(
+        "test", "test_platform", "5678", suggested_object_id="test"
+    )
+    assert entry.entity_id == "test.test"
+
+    class MockEntity(entity.Entity):
+        _attr_unique_id = "5678"
+
+        def __init__(self) -> None:
+            self.added_calls = []
+            self.remove_calls = []
+
+        async def async_added_to_hass(self):
+            self.added_calls.append(None)
+            self.async_on_remove(lambda: result.append(1))
+
+        async def async_will_remove_from_hass(self):
+            self.remove_calls.append(None)
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntity()
+    await platform.async_add_entities([ent])
+    assert hass.states.get("test.test").state == STATE_UNKNOWN
+    assert len(ent.added_calls) == 1
+
+    entry = entity_registry.async_remove(entry.entity_id)
+
+    # Reset the platform immediately after removing the entity from the registry
+    await platform.async_reset()
+    await hass.async_block_till_done()
+
+    assert len(result) == 1
+    assert len(ent.added_calls) == 1
+    assert len(ent.remove_calls) == 1
+
+    assert hass.states.get("test.test") is None

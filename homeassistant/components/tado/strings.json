@@ -122,6 +122,20 @@
           "description": "Offset you would like (depending on your device)."
         }
       }
+    },
+    "add_meter_reading": {
+      "name": "Add meter readings",
+      "description": "Add meter readings to Tado Energy IQ.",
+      "fields": {
+        "config_entry": {
+          "name": "Config Entry",
+          "description": "Config entry to add meter readings to."
+        },
+        "reading": {
+          "name": "Reading",
+          "description": "Reading in m³ or kWh without decimals."
+        }
+      }
     }
   },
   "issues": {
@@ -133,9 +147,13 @@
       "title": "Import aborted",
       "description": "Configuring the Tado Device Tracker using YAML is being removed.\n The import was aborted, due to an existing config entry being the same as the data being imported in the YAML. Remove the YAML device tracker configuration and restart Home Assistant. Please use the UI to configure Tado."
     },
-    "failed_to_import": {
+    "import_failed": {
       "title": "Failed to import",
       "description": "Failed to import the configuration for the Tado Device Tracker. Please use the UI to configure Tado. Don't forget to delete the YAML configuration."
+    },
+    "import_failed_invalid_auth": {
+      "title": "Failed to import, invalid credentials",
+      "description": "Failed to import the configuration for the Tado Device Tracker, due to invalid credentials. Please fix the YAML configuration and restart Home Assistant. Alternatively you can use the UI to configure Tado. Don't forget to delete the YAML configuration, once the import is successful."
     }
   }
 }

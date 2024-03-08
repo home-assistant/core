@@ -11,6 +11,7 @@ from tessie_api import (
 )
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
@@ -45,7 +46,10 @@ class TessieClimateEntity(TessieEntity, ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = [HVACMode.HEAT_COOL, HVACMode.OFF]
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        ClimateEntityFeature.TURN_ON
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
     )
     _attr_preset_modes: list = [
         TessieClimateKeeper.OFF,
@@ -53,6 +57,7 @@ class TessieClimateEntity(TessieEntity, ClimateEntity):
         TessieClimateKeeper.DOG,
         TessieClimateKeeper.CAMP,
     ]
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -108,9 +113,12 @@ class TessieClimateEntity(TessieEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the climate temperature."""
-        temp = kwargs[ATTR_TEMPERATURE]
-        await self.run(set_temperature, temperature=temp)
-        self.set(("climate_state_driver_temp_setting", temp))
+        if mode := kwargs.get(ATTR_HVAC_MODE):
+            await self.async_set_hvac_mode(mode)
+
+        if temp := kwargs.get(ATTR_TEMPERATURE):
+            await self.run(set_temperature, temperature=temp)
+            self.set(("climate_state_driver_temp_setting", temp))
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the climate mode and state."""

@@ -28,7 +28,7 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
 
-from . import init_integration
+from . import client_update, init_integration
 
 from tests.common import MockConfigEntry
 from tests.components.climate import common
@@ -51,7 +51,10 @@ async def test_spa_defaults(
     assert state
     assert (
         state.attributes["supported_features"]
-        == ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        == ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_MIN_TEMP] == 10.0
@@ -71,7 +74,10 @@ async def test_spa_defaults_fake_tscale(
     assert state
     assert (
         state.attributes["supported_features"]
-        == ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        == ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_MIN_TEMP] == 10.0
@@ -143,7 +149,7 @@ async def test_spa_preset_modes(
         client.heat_mode.state = HeatMode[mode.upper()]
         await common.async_set_preset_mode(hass, mode, ENTITY_CLIMATE)
 
-        state = await _client_update(hass, client)
+        state = await client_update(hass, client, ENTITY_CLIMATE)
         assert state
         assert state.attributes[ATTR_PRESET_MODE] == mode
 
@@ -152,7 +158,7 @@ async def test_spa_preset_modes(
 
     # put it in RNR and test assertion
     client.heat_mode.state = HeatMode.READY_IN_REST
-    state = await _client_update(hass, client)
+    state = await client_update(hass, client, ENTITY_CLIMATE)
     assert state
     assert state.attributes[ATTR_PRESET_MODE] == "ready_in_rest"
 
@@ -174,6 +180,8 @@ async def test_spa_with_blower(hass: HomeAssistant, client: MagicMock) -> None:
         == ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_MIN_TEMP] == 10.0
@@ -191,19 +199,13 @@ async def test_spa_with_blower(hass: HomeAssistant, client: MagicMock) -> None:
 
 
 # Helpers
-async def _client_update(hass: HomeAssistant, client: MagicMock) -> State:
-    """Update the client."""
-    client.emit("")
-    await hass.async_block_till_done()
-    assert (state := hass.states.get(ENTITY_CLIMATE)) is not None
-    return state
 
 
 async def _patch_blower(hass: HomeAssistant, client: MagicMock, fan_mode: str) -> State:
     """Patch the blower state."""
     client.blowers[0].state = OffLowMediumHighState[fan_mode.upper()]
     await common.async_set_fan_mode(hass, fan_mode)
-    return await _client_update(hass, client)
+    return await client_update(hass, client, ENTITY_CLIMATE)
 
 
 async def _patch_spa_settemp(
@@ -215,7 +217,7 @@ async def _patch_spa_settemp(
     await common.async_set_temperature(
         hass, temperature=settemp, entity_id=ENTITY_CLIMATE
     )
-    return await _client_update(hass, client)
+    return await client_update(hass, client, ENTITY_CLIMATE)
 
 
 async def _patch_spa_heatmode(
@@ -224,7 +226,7 @@ async def _patch_spa_heatmode(
     """Patch the heatmode."""
     client.heat_mode.state = heat_mode
     await common.async_set_hvac_mode(hass, HVAC_SETTINGS[heat_mode], ENTITY_CLIMATE)
-    return await _client_update(hass, client)
+    return await client_update(hass, client, ENTITY_CLIMATE)
 
 
 async def _patch_spa_heatstate(
@@ -233,4 +235,4 @@ async def _patch_spa_heatstate(
     """Patch the heatmode."""
     client.heat_state = heat_state
     await common.async_set_hvac_mode(hass, HVAC_SETTINGS[heat_state], ENTITY_CLIMATE)
-    return await _client_update(hass, client)
+    return await client_update(hass, client, ENTITY_CLIMATE)

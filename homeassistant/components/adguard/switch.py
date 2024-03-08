@@ -34,7 +34,6 @@ SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
     AdGuardHomeSwitchEntityDescription(
         key="protection",
         translation_key="protection",
-        icon="mdi:shield-check",
         is_on_fn=lambda adguard: adguard.protection_enabled,
         turn_on_fn=lambda adguard: adguard.enable_protection,
         turn_off_fn=lambda adguard: adguard.disable_protection,
@@ -42,7 +41,6 @@ SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
     AdGuardHomeSwitchEntityDescription(
         key="parental",
         translation_key="parental",
-        icon="mdi:shield-check",
         is_on_fn=lambda adguard: adguard.parental.enabled,
         turn_on_fn=lambda adguard: adguard.parental.enable,
         turn_off_fn=lambda adguard: adguard.parental.disable,
@@ -50,7 +48,6 @@ SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
     AdGuardHomeSwitchEntityDescription(
         key="safesearch",
         translation_key="safe_search",
-        icon="mdi:shield-check",
         is_on_fn=lambda adguard: adguard.safesearch.enabled,
         turn_on_fn=lambda adguard: adguard.safesearch.enable,
         turn_off_fn=lambda adguard: adguard.safesearch.disable,
@@ -58,7 +55,6 @@ SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
     AdGuardHomeSwitchEntityDescription(
         key="safebrowsing",
         translation_key="safe_browsing",
-        icon="mdi:shield-check",
         is_on_fn=lambda adguard: adguard.safebrowsing.enabled,
         turn_on_fn=lambda adguard: adguard.safebrowsing.enable,
         turn_off_fn=lambda adguard: adguard.safebrowsing.disable,
@@ -66,7 +62,6 @@ SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
     AdGuardHomeSwitchEntityDescription(
         key="filtering",
         translation_key="filtering",
-        icon="mdi:shield-check",
         is_on_fn=lambda adguard: adguard.filtering.enabled,
         turn_on_fn=lambda adguard: adguard.filtering.enable,
         turn_off_fn=lambda adguard: adguard.filtering.disable,
@@ -74,7 +69,6 @@ SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
     AdGuardHomeSwitchEntityDescription(
         key="querylog",
         translation_key="query_log",
-        icon="mdi:shield-check",
         is_on_fn=lambda adguard: adguard.querylog.enabled,
         turn_on_fn=lambda adguard: adguard.querylog.enable,
         turn_off_fn=lambda adguard: adguard.querylog.disable,

@@ -82,7 +82,7 @@ async def _async_mock_logbook_platform_with_broken_describe(
 
             async_describe_event("test", "mock_event", async_describe_test_event)
 
-    await logbook._process_logbook_platform(hass, "test", MockLogbookPlatform)
+    logbook._process_logbook_platform(hass, "test", MockLogbookPlatform)
 
 
 async def _async_mock_logbook_platform(hass: HomeAssistant) -> None:
@@ -108,7 +108,7 @@ async def _async_mock_logbook_platform(hass: HomeAssistant) -> None:
 
             async_describe_event("test", "mock_event", async_describe_test_event)
 
-    await logbook._process_logbook_platform(hass, "test", MockLogbookPlatform)
+    logbook._process_logbook_platform(hass, "test", MockLogbookPlatform)
 
 
 async def _async_mock_entity_with_broken_logbook_platform(

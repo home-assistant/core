@@ -73,5 +73,5 @@ class ProwlNotificationService(BaseNotificationService):
                     response.status,
                     result,
                 )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.error("Timeout accessing Prowl at %s", url)

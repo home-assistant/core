@@ -209,6 +209,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name=f"Nuki Bridge {bridge_id}",
         model="Hardware Bridge",
         sw_version=info["versions"]["firmwareVersion"],
+        serial_number=parse_id(info["ids"]["hardwareId"]),
     )
 
     try:
@@ -279,7 +280,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class NukiCoordinator(DataUpdateCoordinator[None]):
+class NukiCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module
     """Data Update Coordinator for the Nuki integration."""
 
     def __init__(self, hass, bridge, locks, openers):
@@ -304,7 +305,7 @@ class NukiCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Fetch data from Nuki bridge."""
         try:
-            # Note: asyncio.TimeoutError and aiohttp.ClientError are already
+            # Note: TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
             async with asyncio.timeout(10):
                 events = await self.hass.async_add_executor_job(
@@ -332,6 +333,7 @@ class NukiCoordinator(DataUpdateCoordinator[None]):
 
         Returns:
             A dict with the events to be fired. The event type is the key and the device ids are the value
+
         """
 
         events: dict[str, set[str]] = defaultdict(set)
@@ -383,4 +385,5 @@ class NukiEntity(CoordinatorEntity[NukiCoordinator], Generic[_NukiDeviceT]):
             model=self._nuki_device.device_model_str.capitalize(),
             sw_version=self._nuki_device.firmware_version,
             via_device=(DOMAIN, self.coordinator.bridge_id),
+            serial_number=parse_id(self._nuki_device.nuki_id),
         )

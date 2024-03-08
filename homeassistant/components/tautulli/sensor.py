@@ -59,14 +59,12 @@ class TautulliSensorEntityDescription(
 
 SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
     TautulliSensorEntityDescription(
-        icon="mdi:plex",
         key="watching_count",
         translation_key="watching_count",
         native_unit_of_measurement="Watching",
         value_fn=lambda home_stats, activity, _: cast(int, activity.stream_count),
     ),
     TautulliSensorEntityDescription(
-        icon="mdi:plex",
         key="stream_count_direct_play",
         translation_key="stream_count_direct_play",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -77,7 +75,6 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
         ),
     ),
     TautulliSensorEntityDescription(
-        icon="mdi:plex",
         key="stream_count_direct_stream",
         translation_key="stream_count_direct_stream",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -88,7 +85,6 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
         ),
     ),
     TautulliSensorEntityDescription(
-        icon="mdi:plex",
         key="stream_count_transcode",
         translation_key="stream_count_transcode",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -128,21 +124,18 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
         value_fn=lambda home_stats, activity, _: cast(int, activity.wan_bandwidth),
     ),
     TautulliSensorEntityDescription(
-        icon="mdi:movie-open",
         key="top_movies",
         translation_key="top_movies",
         entity_registry_enabled_default=False,
         value_fn=get_top_stats,
     ),
     TautulliSensorEntityDescription(
-        icon="mdi:television",
         key="top_tv",
         translation_key="top_tv",
         entity_registry_enabled_default=False,
         value_fn=get_top_stats,
     ),
     TautulliSensorEntityDescription(
-        icon="mdi:walk",
         key=ATTR_TOP_USER,
         translation_key="top_user",
         entity_registry_enabled_default=False,
@@ -167,7 +160,6 @@ class TautulliSessionSensorEntityDescription(
 
 SESSION_SENSOR_TYPES: tuple[TautulliSessionSensorEntityDescription, ...] = (
     TautulliSessionSensorEntityDescription(
-        icon="mdi:plex",
         key="state",
         translation_key="state",
         value_fn=lambda session: cast(str, session.state),
@@ -179,7 +171,6 @@ SESSION_SENSOR_TYPES: tuple[TautulliSessionSensorEntityDescription, ...] = (
         value_fn=lambda session: cast(str, session.full_title),
     ),
     TautulliSessionSensorEntityDescription(
-        icon="mdi:progress-clock",
         key="progress",
         translation_key="progress",
         native_unit_of_measurement=PERCENTAGE,
@@ -194,7 +185,6 @@ SESSION_SENSOR_TYPES: tuple[TautulliSessionSensorEntityDescription, ...] = (
         value_fn=lambda session: cast(str, session.stream_video_resolution),
     ),
     TautulliSessionSensorEntityDescription(
-        icon="mdi:plex",
         key="transcode_decision",
         translation_key="transcode_decision",
         entity_category=EntityCategory.DIAGNOSTIC,

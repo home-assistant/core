@@ -11,11 +11,11 @@ import voluptuous as vol
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
+    ConfigFlowResult,
     OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     ObjectSelector,
@@ -81,7 +81,7 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
         self,
         user_input: dict[str, Any] | None = None,
         error: str | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Show the setup form to the user."""
         host = user_input.get(CONF_HOST, "") if user_input else ""
         data_schema = vol.Schema(
@@ -144,7 +144,7 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         error = None
 
@@ -199,7 +199,7 @@ class OptionsFlowHandler(OptionsFlowWithConfigEntry):
         self._conf_rule_id: str | None = None
 
     @callback
-    def _save_config(self, data: dict[str, Any]) -> FlowResult:
+    def _save_config(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Save the updated options."""
         new_data = {
             k: v
@@ -215,7 +215,7 @@ class OptionsFlowHandler(OptionsFlowWithConfigEntry):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle options flow."""
         if user_input is not None:
             if sel_app := user_input.get(CONF_APPS):
@@ -227,7 +227,7 @@ class OptionsFlowHandler(OptionsFlowWithConfigEntry):
         return self._async_init_form()
 
     @callback
-    def _async_init_form(self) -> FlowResult:
+    def _async_init_form(self) -> ConfigFlowResult:
         """Return initial configuration form."""
 
         apps_list = {k: f"{v} ({k})" if v else k for k, v in self._apps.items()}
@@ -280,7 +280,7 @@ class OptionsFlowHandler(OptionsFlowWithConfigEntry):
 
     async def async_step_apps(
         self, user_input: dict[str, Any] | None = None, app_id: str | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle options flow for apps list."""
         if app_id is not None:
             self._conf_app_id = app_id if app_id != APPS_NEW_ID else None
@@ -297,7 +297,7 @@ class OptionsFlowHandler(OptionsFlowWithConfigEntry):
         return await self.async_step_init()
 
     @callback
-    def _async_apps_form(self, app_id: str) -> FlowResult:
+    def _async_apps_form(self, app_id: str) -> ConfigFlowResult:
         """Return configuration form for apps."""
         app_schema = {
             vol.Optional(
@@ -322,7 +322,7 @@ class OptionsFlowHandler(OptionsFlowWithConfigEntry):
 
     async def async_step_rules(
         self, user_input: dict[str, Any] | None = None, rule_id: str | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle options flow for detection rules."""
         if rule_id is not None:
             self._conf_rule_id = rule_id if rule_id != RULES_NEW_ID else None
@@ -348,7 +348,7 @@ class OptionsFlowHandler(OptionsFlowWithConfigEntry):
     @callback
     def _async_rules_form(
         self, rule_id: str, default_id: str = "", errors: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Return configuration form for detection rules."""
         rule_schema = {
             vol.Optional(

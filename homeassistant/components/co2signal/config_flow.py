@@ -4,19 +4,21 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from aioelectricitymaps import ElectricityMaps
-from aioelectricitymaps.exceptions import ElectricityMapsError, InvalidToken
+from aioelectricitymaps import (
+    ElectricityMaps,
+    ElectricityMapsError,
+    ElectricityMapsInvalidTokenError,
+    ElectricityMapsNoDataError,
+)
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_COUNTRY_CODE,
     CONF_LATITUDE,
     CONF_LONGITUDE,
 )
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import (
@@ -34,7 +36,7 @@ TYPE_SPECIFY_COORDINATES = "specify_coordinates"
 TYPE_SPECIFY_COUNTRY = "specify_country_code"
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Co2signal."""
 
     VERSION = 1
@@ -43,7 +45,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         data_schema = vol.Schema(
             {
@@ -82,7 +84,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_coordinates(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Validate coordinates."""
         data_schema = vol.Schema(
             {
@@ -105,7 +107,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_country(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Validate country."""
         data_schema = vol.Schema(
             {
@@ -121,7 +123,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             "country", data_schema, {**self._data, **user_input}
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle the reauth step."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -136,7 +140,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _validate_and_create(
         self, step_id: str, data_schema: vol.Schema, data: Mapping[str, Any]
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Validate data and show form if it is invalid."""
         errors: dict[str, str] = {}
 
@@ -146,22 +150,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await fetch_latest_carbon_intensity(self.hass, em, data)
-            except InvalidToken:
+            except ElectricityMapsInvalidTokenError:
                 errors["base"] = "invalid_auth"
+            except ElectricityMapsNoDataError:
+                errors["base"] = "no_data"
             except ElectricityMapsError:
                 errors["base"] = "unknown"
             else:
                 if self._reauth_entry:
-                    self.hass.config_entries.async_update_entry(
+                    return self.async_update_reload_and_abort(
                         self._reauth_entry,
                         data={
                             CONF_API_KEY: data[CONF_API_KEY],
                         },
                     )
-                    await self.hass.config_entries.async_reload(
-                        self._reauth_entry.entry_id
-                    )
-                    return self.async_abort(reason="reauth_successful")
 
                 return self.async_create_entry(
                     title=get_extra_name(data) or "CO2 Signal",

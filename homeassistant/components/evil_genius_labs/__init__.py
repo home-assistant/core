@@ -50,7 +50,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class EvilGeniusUpdateCoordinator(DataUpdateCoordinator[dict]):
+class EvilGeniusUpdateCoordinator(DataUpdateCoordinator[dict]):  # pylint: disable=hass-enforce-coordinator-module
     """Update coordinator for Evil Genius data."""
 
     info: dict

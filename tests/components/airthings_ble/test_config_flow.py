@@ -12,6 +12,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     UNKNOWN_SERVICE_INFO,
+    VIEW_PLUS_SERVICE_INFO,
     WAVE_DEVICE_INFO,
     WAVE_SERVICE_INFO,
     patch_airthings_ble,
@@ -204,3 +205,16 @@ async def test_user_setup_unable_to_connect(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
+
+
+async def test_unsupported_device(hass: HomeAssistant) -> None:
+    """Test the user initiated form with an unsupported device."""
+    with patch(
+        "homeassistant.components.airthings_ble.config_flow.async_discovered_service_info",
+        return_value=[UNKNOWN_SERVICE_INFO, VIEW_PLUS_SERVICE_INFO],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"

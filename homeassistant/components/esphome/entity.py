@@ -37,6 +37,49 @@ _EntityT = TypeVar("_EntityT", bound="EsphomeEntity[Any,Any]")
 _StateT = TypeVar("_StateT", bound=EntityState)
 
 
+@callback
+def async_static_info_updated(
+    hass: HomeAssistant,
+    entry_data: RuntimeEntryData,
+    platform: entity_platform.EntityPlatform,
+    async_add_entities: AddEntitiesCallback,
+    info_type: type[_InfoT],
+    entity_type: type[_EntityT],
+    state_type: type[_StateT],
+    infos: list[EntityInfo],
+) -> None:
+    """Update entities of this platform when entities are listed."""
+    current_infos = entry_data.info[info_type]
+    new_infos: dict[int, EntityInfo] = {}
+    add_entities: list[_EntityT] = []
+
+    for info in infos:
+        if not current_infos.pop(info.key, None):
+            # Create new entity
+            entity = entity_type(entry_data, platform.domain, info, state_type)
+            add_entities.append(entity)
+        new_infos[info.key] = info
+
+    # Anything still in current_infos is now gone
+    if current_infos:
+        device_info = entry_data.device_info
+        if TYPE_CHECKING:
+            assert device_info is not None
+        entry_data.async_remove_entities(
+            hass, current_infos.values(), device_info.mac_address
+        )
+
+    # Then update the actual info
+    entry_data.info[info_type] = new_infos
+
+    if new_infos:
+        entry_data.async_update_entity_infos(new_infos.values())
+
+    if add_entities:
+        # Add entities to Home Assistant
+        async_add_entities(add_entities)
+
+
 async def platform_async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -55,39 +98,21 @@ async def platform_async_setup_entry(
     entry_data.info[info_type] = {}
     entry_data.state.setdefault(state_type, {})
     platform = entity_platform.async_get_current_platform()
-
-    @callback
-    def async_list_entities(infos: list[EntityInfo]) -> None:
-        """Update entities of this platform when entities are listed."""
-        current_infos = entry_data.info[info_type]
-        new_infos: dict[int, EntityInfo] = {}
-        add_entities: list[_EntityT] = []
-
-        for info in infos:
-            if not current_infos.pop(info.key, None):
-                # Create new entity
-                entity = entity_type(entry_data, platform.domain, info, state_type)
-                add_entities.append(entity)
-            new_infos[info.key] = info
-
-        # Anything still in current_infos is now gone
-        if current_infos:
-            hass.async_create_task(
-                entry_data.async_remove_entities(current_infos.values())
-            )
-
-        # Then update the actual info
-        entry_data.info[info_type] = new_infos
-
-        if new_infos:
-            entry_data.async_update_entity_infos(new_infos.values())
-
-        if add_entities:
-            # Add entities to Home Assistant
-            async_add_entities(add_entities)
-
+    on_static_info_update = functools.partial(
+        async_static_info_updated,
+        hass,
+        entry_data,
+        platform,
+        async_add_entities,
+        info_type,
+        entity_type,
+        state_type,
+    )
     entry_data.cleanup_callbacks.append(
-        entry_data.async_register_static_info_callback(info_type, async_list_entities)
+        entry_data.async_register_static_info_callback(
+            info_type,
+            on_static_info_update,
+        )
     )
 
 
@@ -145,7 +170,6 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         state_type: type[_StateT],
     ) -> None:
         """Initialize."""
-
         self._entry_data = entry_data
         self._on_entry_data_changed()
         self._key = entity_info.key
@@ -157,7 +181,6 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
         )
-        self._entry_id = entry_data.entry_id
         #
         # If `friendly_name` is set, we use the Friendly naming rules, if
         # `friendly_name` is not set we make an exception to the naming rules for
@@ -183,13 +206,8 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         entry_data = self._entry_data
         hass = self.hass
         key = self._key
+        static_info = self._static_info
 
-        self.async_on_remove(
-            entry_data.async_register_key_static_info_remove_callback(
-                self._static_info,
-                functools.partial(self.async_remove, force_remove=True),
-            )
-        )
         self.async_on_remove(
             async_dispatcher_connect(
                 hass,
@@ -204,7 +222,7 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         )
         self.async_on_remove(
             entry_data.async_register_key_static_info_updated_callback(
-                self._static_info, self._on_static_info_update
+                static_info, self._on_static_info_update
             )
         )
         self._update_state_from_entry_data()
@@ -236,12 +254,10 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     @callback
     def _update_state_from_entry_data(self) -> None:
         """Update state from entry data."""
-
         state = self._entry_data.state
         key = self._key
         state_type = self._state_type
-        has_state = key in state[state_type]
-        if has_state:
+        if has_state := key in state[state_type]:
             self._state = cast(_StateT, state[state_type][key])
         self._has_state = has_state
 
@@ -301,13 +317,11 @@ class EsphomeAssistEntity(Entity):
             connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
         )
 
-    @callback
-    def _update(self) -> None:
-        self.async_write_ha_state()
-
     async def async_added_to_hass(self) -> None:
         """Register update callback."""
         await super().async_added_to_hass()
         self.async_on_remove(
-            self._entry_data.async_subscribe_assist_pipeline_update(self._update)
+            self._entry_data.async_subscribe_assist_pipeline_update(
+                self.async_write_ha_state
+            )
         )

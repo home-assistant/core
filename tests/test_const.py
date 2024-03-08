@@ -9,6 +9,7 @@ from homeassistant import const
 from homeassistant.components import sensor
 
 from tests.common import (
+    help_test_all,
     import_and_test_deprecated_constant,
     import_and_test_deprecated_constant_enum,
 )
@@ -21,6 +22,11 @@ def _create_tuples(
     for enum in value:
         result.append((enum, constant_prefix))
     return result
+
+
+def test_all() -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(const)
 
 
 @pytest.mark.parametrize(
@@ -97,7 +103,13 @@ def _create_tuples(
         ],
         "VOLUME_",
     )
-    + _create_tuples(const.UnitOfVolumeFlowRate, "VOLUME_FLOW_RATE_")
+    + _create_tuples(
+        [
+            const.UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+            const.UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+        ],
+        "VOLUME_FLOW_RATE_",
+    )
     + _create_tuples(
         [
             const.UnitOfMass.GRAMS,
@@ -119,7 +131,16 @@ def _create_tuples(
         ],
         "PRECIPITATION_",
     )
-    + _create_tuples(const.UnitOfSpeed, "SPEED_")
+    + _create_tuples(
+        [
+            const.UnitOfSpeed.FEET_PER_SECOND,
+            const.UnitOfSpeed.METERS_PER_SECOND,
+            const.UnitOfSpeed.KILOMETERS_PER_HOUR,
+            const.UnitOfSpeed.KNOTS,
+            const.UnitOfSpeed.MILES_PER_HOUR,
+        ],
+        "SPEED_",
+    )
     + _create_tuples(
         [
             const.UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,

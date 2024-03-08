@@ -35,7 +35,6 @@ SENSOR_VEDO_TYPES: Final = (
         translation_key="zone_status",
         name=None,
         device_class=SensorDeviceClass.ENUM,
-        icon="mdi:shield-check",
         options=[zone_state.value for zone_state in AlarmZoneState],
     ),
 )

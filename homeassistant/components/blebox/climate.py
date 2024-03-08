@@ -53,8 +53,13 @@ async def async_setup_entry(
 class BleBoxClimateEntity(BleBoxEntity[blebox_uniapi.climate.Climate], ClimateEntity):
     """Representation of a BleBox climate feature (saunaBox)."""
 
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def hvac_modes(self):

@@ -90,7 +90,7 @@ async def async_setup_entry(
 
 @callback
 def async_create_preview_event(
-    name: str, validated_config: dict[str, Any]
+    hass: HomeAssistant, name: str, validated_config: dict[str, Any]
 ) -> EventGroup:
     """Create a preview sensor."""
     return EventGroup(

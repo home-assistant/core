@@ -163,8 +163,8 @@ class RestoredTrace(BaseTrace):
 
     def as_extended_dict(self) -> dict[str, Any]:
         """Return an extended dictionary version of this RestoredTrace."""
-        return self._dict
+        return self._dict  # type: ignore[no-any-return]
 
     def as_short_dict(self) -> dict[str, Any]:
         """Return a brief dictionary version of this RestoredTrace."""
-        return self._short_dict
+        return self._short_dict  # type: ignore[no-any-return]

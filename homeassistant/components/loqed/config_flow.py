@@ -9,12 +9,11 @@ import aiohttp
 from loqedAPI import cloud_loqed, loqed
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import webhook
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN, CONF_NAME, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -23,7 +22,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Loqed."""
 
     VERSION = 1
@@ -83,7 +82,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         host = discovery_info.host
         self._host = host
@@ -101,7 +100,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Show userform to user."""
         user_data_schema = (
             vol.Schema(

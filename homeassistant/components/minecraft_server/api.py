@@ -89,7 +89,7 @@ class MinecraftServer:
         self._server.timeout = DATA_UPDATE_TIMEOUT
 
         _LOGGER.debug(
-            "%s server instance created with address '%s'",
+            "Initialized %s server instance with address '%s'",
             self._server_type,
             self._address,
         )
@@ -98,7 +98,15 @@ class MinecraftServer:
         """Check if the server is online, supporting both Java and Bedrock Edition servers."""
         try:
             await self.async_get_data()
-        except (MinecraftServerConnectionError, MinecraftServerNotInitializedError):
+        except (
+            MinecraftServerConnectionError,
+            MinecraftServerNotInitializedError,
+        ) as error:
+            _LOGGER.debug(
+                "Connection check of %s server failed: %s",
+                self._server_type,
+                self._get_error_message(error),
+            )
             return False
 
         return True
@@ -108,7 +116,9 @@ class MinecraftServer:
         status_response: BedrockStatusResponse | JavaStatusResponse
 
         if self._server is None:
-            raise MinecraftServerNotInitializedError()
+            raise MinecraftServerNotInitializedError(
+                f"Server instance with address '{self._address}' is not initialized"
+            )
 
         try:
             status_response = await self._server.async_status(tries=DATA_UPDATE_RETRIES)
@@ -128,7 +138,7 @@ class MinecraftServer:
         self, status_response: JavaStatusResponse
     ) -> MinecraftServerData:
         """Extract Java Edition server data out of status response."""
-        players_list = []
+        players_list: list[str] = []
 
         if players := status_response.players.sample:
             for player in players:

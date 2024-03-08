@@ -50,7 +50,7 @@ async def _trigger_repair_issue(
     return node
 
 
-async def test_device_config_file_changed(
+async def test_device_config_file_changed_confirm_step(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
@@ -58,7 +58,7 @@ async def test_device_config_file_changed(
     multisensor_6_state,
     integration,
 ) -> None:
-    """Test the device_config_file_changed issue."""
+    """Test the device_config_file_changed issue confirm step."""
     dev_reg = dr.async_get(hass)
     node = await _trigger_repair_issue(hass, client, multisensor_6_state)
 
@@ -87,12 +87,21 @@ async def test_device_config_file_changed(
     data = await resp.json()
 
     flow_id = data["flow_id"]
-    assert data["step_id"] == "confirm"
+    assert data["step_id"] == "init"
     assert data["description_placeholders"] == {"device_name": device.name}
 
-    # Apply fix
     url = RepairsFlowResourceView.url.format(flow_id=flow_id)
+
+    # Show menu
     resp = await http_client.post(url)
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data["type"] == "menu"
+
+    # Apply fix
+    resp = await http_client.post(url, json={"next_step_id": "confirm"})
 
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
@@ -112,6 +121,78 @@ async def test_device_config_file_changed(
     msg = await ws_client.receive_json()
     assert msg["success"]
     assert len(msg["result"]["issues"]) == 0
+
+
+async def test_device_config_file_changed_ignore_step(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+    client,
+    multisensor_6_state,
+    integration,
+) -> None:
+    """Test the device_config_file_changed issue ignore step."""
+    dev_reg = dr.async_get(hass)
+    node = await _trigger_repair_issue(hass, client, multisensor_6_state)
+
+    client.async_send_command_no_wait.reset_mock()
+
+    device = dev_reg.async_get_device(identifiers={get_device_id(client.driver, node)})
+    assert device
+    issue_id = f"device_config_file_changed.{device.id}"
+
+    await async_process_repairs_platforms(hass)
+    ws_client = await hass_ws_client(hass)
+    http_client = await hass_client()
+
+    # Assert the issue is present
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    issue = msg["result"]["issues"][0]
+    assert issue["issue_id"] == issue_id
+    assert issue["translation_placeholders"] == {"device_name": device.name}
+
+    url = RepairsFlowIndexView.url
+    resp = await http_client.post(url, json={"handler": DOMAIN, "issue_id": issue_id})
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data["flow_id"]
+    assert data["step_id"] == "init"
+    assert data["description_placeholders"] == {"device_name": device.name}
+
+    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
+
+    # Show menu
+    resp = await http_client.post(url)
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data["type"] == "menu"
+
+    # Ignore the issue
+    resp = await http_client.post(url, json={"next_step_id": "ignore"})
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data["type"] == "abort"
+    assert data["reason"] == "issue_ignored"
+    assert data["description_placeholders"] == {"device_name": device.name}
+
+    await hass.async_block_till_done()
+
+    assert len(client.async_send_command_no_wait.call_args_list) == 0
+
+    # Assert the issue still exists but is ignored
+    await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    assert msg["result"]["issues"][0].get("dismissed_version") is not None
 
 
 async def test_invalid_issue(
@@ -196,14 +277,14 @@ async def test_abort_confirm(
     data = await resp.json()
 
     flow_id = data["flow_id"]
-    assert data["step_id"] == "confirm"
+    assert data["step_id"] == "init"
 
     # Unload config entry so we can't connect to the node
     await hass.config_entries.async_unload(integration.entry_id)
 
     # Apply fix
     url = RepairsFlowResourceView.url.format(flow_id=flow_id)
-    resp = await http_client.post(url)
+    resp = await http_client.post(url, json={"next_step_id": "confirm"})
 
     assert resp.status == HTTPStatus.OK
     data = await resp.json()

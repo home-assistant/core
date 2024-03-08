@@ -120,7 +120,7 @@ async def test_unload_config_entry(hass: HomeAssistant) -> None:
 
 async def test_delay_load_during_startup(hass: HomeAssistant) -> None:
     """Test delayed loading of a config entry during startup."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: HOST, CONF_PORT: PORT})
     entry.add_to_hass(hass)

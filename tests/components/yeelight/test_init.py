@@ -1,5 +1,4 @@
 """Test Yeelight."""
-import asyncio
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
@@ -368,14 +367,14 @@ async def test_async_listen_error_late_discovery(
     with _patch_discovery(), patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
+        await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
     await hass.async_block_till_done()
     assert "Waiting for 0x15243f to be discovered" in caplog.text
 
     with _patch_discovery(), patch(f"{MODULE}.AsyncBulb", return_value=_mocked_bulb()):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
-        await hass.async_block_till_done()
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
         await hass.async_block_till_done()
 
@@ -399,14 +398,14 @@ async def test_fail_to_fetch_initial_state(
     with _patch_discovery(), patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
+        await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
     await hass.async_block_till_done()
     assert "Could not fetch initial state; try power cycling the device" in caplog.text
 
     with _patch_discovery(), patch(f"{MODULE}.AsyncBulb", return_value=_mocked_bulb()):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
-        await hass.async_block_till_done()
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
         await hass.async_block_till_done()
 
@@ -484,11 +483,13 @@ async def test_async_setup_with_missing_id(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         assert config_entry.state is ConfigEntryState.SETUP_RETRY
         assert config_entry.data[CONF_ID] == ID
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=2))
+        await hass.async_block_till_done()
 
     with _patch_discovery(), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
         f"{MODULE}.AsyncBulb", return_value=_mocked_bulb()
     ):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=2))
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=4))
         await hass.async_block_till_done()
         assert config_entry.state is ConfigEntryState.LOADED
 
@@ -509,11 +510,13 @@ async def test_async_setup_with_missing_unique_id(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         assert config_entry.state is ConfigEntryState.SETUP_RETRY
         assert config_entry.unique_id == ID
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=2))
+        await hass.async_block_till_done()
 
     with _patch_discovery(), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
         f"{MODULE}.AsyncBulb", return_value=_mocked_bulb()
     ):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=2))
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=4))
         await hass.async_block_till_done()
         assert config_entry.state is ConfigEntryState.LOADED
 
@@ -571,7 +574,7 @@ async def test_oserror_on_first_update_results_in_unavailable(
     assert hass.states.get("light.test_name").state == STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("exception", [BulbException, asyncio.TimeoutError])
+@pytest.mark.parametrize("exception", [BulbException, TimeoutError])
 async def test_non_oserror_exception_on_first_update(
     hass: HomeAssistant, exception: Exception
 ) -> None:

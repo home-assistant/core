@@ -25,7 +25,7 @@ def mock_dev_track(mock_device_tracker_conf):
 
 
 @pytest.fixture(name="client")
-async def traccar_client(event_loop, hass, hass_client_no_auth):
+async def traccar_client(hass, hass_client_no_auth):
     """Mock client for Traccar (unauthenticated)."""
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -37,7 +37,7 @@ async def traccar_client(event_loop, hass, hass_client_no_auth):
 
 
 @pytest.fixture(autouse=True)
-async def setup_zones(event_loop, hass):
+async def setup_zones(hass):
     """Set up Zone config in HA."""
     assert await async_setup_component(
         hass,

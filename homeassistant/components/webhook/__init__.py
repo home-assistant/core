@@ -14,7 +14,7 @@ from aiohttp.web import Request, Response
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.network import get_url, is_cloud_connection
@@ -174,7 +174,7 @@ async def async_handle_webhook(
                 )
 
     try:
-        response = await webhook["handler"](hass, webhook_id, request)
+        response: Response | None = await webhook["handler"](hass, webhook_id, request)
         if response is None:
             response = Response(status=HTTPStatus.OK)
         return response
@@ -202,7 +202,7 @@ class WebhookView(HomeAssistantView):
     async def _handle(self, request: Request, webhook_id: str) -> Response:
         """Handle webhook call."""
         _LOGGER.debug("Handling webhook %s payload for %s", request.method, webhook_id)
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
         return await async_handle_webhook(hass, webhook_id, request)
 
     get = _handle

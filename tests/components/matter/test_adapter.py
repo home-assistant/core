@@ -144,10 +144,10 @@ async def test_node_added_subscription(
     integration: MagicMock,
 ) -> None:
     """Test subscription to new devices work."""
-    assert matter_client.subscribe_events.call_count == 4
+    assert matter_client.subscribe_events.call_count == 5
     assert (
         matter_client.subscribe_events.call_args.kwargs["event_filter"]
-        == EventType.NODE_ADDED
+        == EventType.NODE_UPDATED
     )
 
     node_added_callback = matter_client.subscribe_events.call_args.kwargs["callback"]

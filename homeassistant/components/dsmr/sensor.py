@@ -106,7 +106,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         device_class=SensorDeviceClass.ENUM,
         options=["low", "normal"],
-        icon="mdi:flash",
     ),
     DSMRSensorEntityDescription(
         key="electricity_used_tariff_1",
@@ -194,7 +193,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference=obis_references.SHORT_POWER_FAILURE_COUNT,
         dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
-        icon="mdi:flash-off",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
@@ -203,7 +201,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference=obis_references.LONG_POWER_FAILURE_COUNT,
         dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
-        icon="mdi:flash-off",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
@@ -236,7 +233,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference=obis_references.VOLTAGE_SWELL_L1_COUNT,
         dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
-        icon="mdi:pulse",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
@@ -245,7 +241,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference=obis_references.VOLTAGE_SWELL_L2_COUNT,
         dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
-        icon="mdi:pulse",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
@@ -254,7 +249,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference=obis_references.VOLTAGE_SWELL_L3_COUNT,
         dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
-        icon="mdi:pulse",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
@@ -353,6 +347,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference=obis_references.BELGIUM_CURRENT_AVERAGE_DEMAND,
         dsmr_versions={"5B"},
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRSensorEntityDescription(
         key="belgium_maximum_demand_current_month",
@@ -360,6 +355,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference=obis_references.BELGIUM_MAXIMUM_DEMAND_MONTH,
         dsmr_versions={"5B"},
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRSensorEntityDescription(
         key="hourly_gas_meter_reading",
@@ -614,7 +610,7 @@ async def async_setup_entry(
         transport = None
         protocol = None
 
-        while hass.state == CoreState.not_running or hass.is_running:
+        while hass.state is CoreState.not_running or hass.is_running:
             # Start DSMR asyncio.Protocol reader
 
             # Reflect connected state in devices state by setting an
@@ -641,7 +637,7 @@ async def async_setup_entry(
                     await protocol.wait_closed()
 
                     # Unexpected disconnect
-                    if hass.state == CoreState.not_running or hass.is_running:
+                    if hass.state is CoreState.not_running or hass.is_running:
                         stop_listener()
 
                 transport = None
@@ -673,7 +669,7 @@ async def async_setup_entry(
                 update_entities_telegram(None)
 
                 if stop_listener and (
-                    hass.state == CoreState.not_running or hass.is_running
+                    hass.state is CoreState.not_running or hass.is_running
                 ):
                     stop_listener()
 

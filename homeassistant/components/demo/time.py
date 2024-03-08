@@ -18,7 +18,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the demo time platform."""
-    async_add_entities([DemoTime("time", "Time", time(12, 0, 0), "mdi:clock", False)])
+    async_add_entities([DemoTime("time", "Time", time(12, 0, 0), False)])
 
 
 class DemoTime(TimeEntity):
@@ -33,12 +33,10 @@ class DemoTime(TimeEntity):
         unique_id: str,
         device_name: str,
         state: time,
-        icon: str,
         assumed_state: bool,
     ) -> None:
         """Initialize the Demo time entity."""
         self._attr_assumed_state = assumed_state
-        self._attr_icon = icon
         self._attr_native_value = state
         self._attr_unique_id = unique_id
 

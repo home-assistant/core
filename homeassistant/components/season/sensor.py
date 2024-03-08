@@ -32,13 +32,6 @@ HEMISPHERE_SEASON_SWAP = {
     STATE_SUMMER: STATE_WINTER,
 }
 
-SEASON_ICONS = {
-    STATE_SPRING: "mdi:flower",
-    STATE_SUMMER: "mdi:sunglasses",
-    STATE_AUTUMN: "mdi:leaf",
-    STATE_WINTER: "mdi:snowflake",
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -113,7 +106,3 @@ class SeasonSensorEntity(SensorEntity):
         self._attr_native_value = get_season(
             utcnow().replace(tzinfo=None), self.hemisphere, self.type
         )
-
-        self._attr_icon = "mdi:cloud"
-        if self._attr_native_value:
-            self._attr_icon = SEASON_ICONS[self._attr_native_value]

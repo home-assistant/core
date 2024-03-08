@@ -28,7 +28,6 @@ async def async_setup_entry(
     description = NumberEntityDescription(
         key="flame_control",
         translation_key="flame_control",
-        icon="mdi:arrow-expand-vertical",
     )
 
     async_add_entities(
@@ -69,7 +68,7 @@ class IntellifireFlameControlEntity(IntellifireEntity, NumberEntity):
         value_to_send: int = int(value) - 1
         LOGGER.debug(
             "%s set flame height to %d with raw value %s",
-            self._attr_name,
+            self.name,
             value,
             value_to_send,
         )
