@@ -585,7 +585,7 @@ def _async_when_setup(
 
     listeners: list[CALLBACK_TYPE] = []
 
-    async def _matched_event(event: Event) -> None:
+    async def _matched_event(event: Event[Any]) -> None:
         """Call the callback when we matched an event."""
         for listener in listeners:
             listener()
