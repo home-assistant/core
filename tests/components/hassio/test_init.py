@@ -1,4 +1,5 @@
 """The tests for the hassio component."""
+
 from datetime import timedelta
 import os
 from typing import Any

@@ -1,4 +1,5 @@
 """Test the HERE Travel Time config flow."""
+
 from unittest.mock import patch
 
 from here_routing import HERERoutingError, HERERoutingUnauthorizedError

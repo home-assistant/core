@@ -1,4 +1,5 @@
 """Test config flow."""
+
 from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, patch
 

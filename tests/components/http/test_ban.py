@@ -1,4 +1,5 @@
 """The tests for the Home Assistant HTTP component."""
+
 from http import HTTPStatus
 from ipaddress import ip_address
 import os

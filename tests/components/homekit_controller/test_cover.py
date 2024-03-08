@@ -1,4 +1,5 @@
 """Basic checks for HomeKitalarm_control_panel."""
+
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
