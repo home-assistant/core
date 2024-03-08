@@ -20,6 +20,7 @@ def test_child_import(mock_collector) -> None:
     mock_collector.visit(
         ast.parse(
             """
+
 from homeassistant.components import child_import
 """
         )
@@ -32,6 +33,7 @@ def test_subimport(mock_collector) -> None:
     mock_collector.visit(
         ast.parse(
             """
+
 from homeassistant.components.subimport.smart_home import EVENT_ALEXA_SMART_HOME
 """
         )
@@ -44,6 +46,7 @@ def test_child_import_field(mock_collector) -> None:
     mock_collector.visit(
         ast.parse(
             """
+
 from homeassistant.components.child_import_field import bla
 """
         )
@@ -95,6 +98,7 @@ def test_all_imports(mock_collector) -> None:
     mock_collector.visit(
         ast.parse(
             """
+
 from homeassistant.components import child_import
 
 from homeassistant.components.subimport.smart_home import EVENT_ALEXA_SMART_HOME
