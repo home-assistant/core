@@ -1,4 +1,5 @@
 """Support for getting status from a Pi-hole system."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

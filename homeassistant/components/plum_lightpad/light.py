@@ -1,4 +1,5 @@
 """Support for Plum Lightpad lights."""
+
 from __future__ import annotations
 
 from typing import Any
