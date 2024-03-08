@@ -58,22 +58,15 @@ AIR_CLEANING_STATUS_MAP = {
 FAN_STATUS_MAP = {0: "Off", 1: "On"}
 
 
-@dataclass(frozen=True)
-class AprilaireSensorDescriptionMixin:
-    """Mixin for Aprilaire sensor."""
+@dataclass(frozen=True, kw_only=True)
+class AprilaireSensorDescription(SensorEntityDescription):
+    """Class describing Aprilaire sensor entities."""
 
     status_key: str | None
     status_sensor_available_value: int | None
     status_sensor_exists_values: list[int] | None
     value_key: str
     value_fn: Callable[[Any, Any], Any] | None
-
-
-@dataclass(frozen=True)
-class AprilaireSensorDescription(
-    SensorEntityDescription, AprilaireSensorDescriptionMixin
-):
-    """Class describing Aprilaire sensor entities."""
 
 
 SENSOR_TYPES: tuple[AprilaireSensorDescription, ...] = (
