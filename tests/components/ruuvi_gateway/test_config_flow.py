@@ -1,4 +1,5 @@
 """Test the Ruuvi Gateway config flow."""
+
 from unittest.mock import patch
 
 from aioruuvigateway.excs import CannotConnect, InvalidAuth

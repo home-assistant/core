@@ -1,4 +1,5 @@
 """Tests for Shelly diagnostics platform."""
+
 from unittest.mock import ANY, Mock
 
 from aioshelly.ble.const import BLE_SCAN_RESULT_EVENT
