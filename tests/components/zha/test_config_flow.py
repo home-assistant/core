@@ -509,7 +509,7 @@ async def test_discovery_via_usb_already_setup(hass: HomeAssistant) -> None:
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 async def test_discovery_via_usb_path_does_not_change(hass: HomeAssistant) -> None:
-    """Test usb flow already setup and the path changes."""
+    """Test usb flow already set up and the path does not change."""
 
     entry = MockConfigEntry(
         domain=DOMAIN,
