@@ -98,6 +98,38 @@ async def test_async_add_hass_job_schedule_callback() -> None:
     assert len(hass.add_job.mock_calls) == 0
 
 
+async def test_async_add_hass_job_eager_start_coro_suspends(
+    hass: HomeAssistant,
+) -> None:
+    """Test scheduling a coro as a task that will suspend with eager_start."""
+
+    async def job_that_suspends():
+        await asyncio.sleep(0)
+
+    task = hass.async_add_hass_job(
+        ha.HassJob(ha.callback(job_that_suspends)), eager_start=True
+    )
+    assert not task.done()
+    assert task in hass._tasks
+    await task
+    assert task not in hass._tasks
+
+
+async def test_async_add_hass_job_background(hass: HomeAssistant) -> None:
+    """Test scheduling a coro as a background task."""
+
+    async def job_that_suspends():
+        await asyncio.sleep(0)
+
+    task = hass.async_add_hass_job(
+        ha.HassJob(ha.callback(job_that_suspends)), background=True
+    )
+    assert not task.done()
+    assert task in hass._background_tasks
+    await task
+    assert task not in hass._background_tasks
+
+
 async def test_async_add_hass_job_coro_named(hass: HomeAssistant) -> None:
     """Test that we schedule coroutines and add jobs to the job pool with a name."""
 
