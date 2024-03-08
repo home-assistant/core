@@ -22,7 +22,7 @@ from homeassistant.core import Event, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA, EntityFilter
 from homeassistant.helpers.event import EventStateChangedData
-from homeassistant.helpers.typing import ConfigType, EventType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import ssl as ssl_util
 
 DOMAIN = "apache_kafka"
@@ -116,7 +116,7 @@ class KafkaManager:
         )
         self._topic = topic
 
-    def _encode_event(self, event: EventType[EventStateChangedData]) -> bytes | None:
+    def _encode_event(self, event: Event[EventStateChangedData]) -> bytes | None:
         """Translate events into a binary JSON payload."""
         state = event.data["new_state"]
         if (
@@ -139,7 +139,7 @@ class KafkaManager:
         """Shut the manager down."""
         await self._producer.stop()
 
-    async def write(self, event: EventType[EventStateChangedData]) -> None:
+    async def write(self, event: Event[EventStateChangedData]) -> None:
         """Write a binary payload to Kafka."""
         payload = self._encode_event(event)
 

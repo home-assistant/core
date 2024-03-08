@@ -53,7 +53,7 @@ from homeassistant.helpers.event import (
     async_track_state_added_domain,
     async_track_time_interval,
 )
-from homeassistant.helpers.typing import ConfigType, EventType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import DHCPMatcher, async_get_dhcp
 
 from .const import DOMAIN
@@ -345,9 +345,7 @@ class DeviceTrackerWatcher(WatcherBase):
             self._async_process_device_state(state)
 
     @callback
-    def _async_process_device_event(
-        self, event: EventType[EventStateChangedData]
-    ) -> None:
+    def _async_process_device_event(self, event: Event[EventStateChangedData]) -> None:
         """Process a device tracker state change event."""
         self._async_process_device_state(event.data["new_state"])
 
