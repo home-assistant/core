@@ -299,6 +299,7 @@ def async_track_state_change_event(
     hass: HomeAssistant,
     entity_ids: str | Iterable[str],
     action: Callable[[EventType[EventStateChangedData]], Any],
+    job_type: HassJobType | None = None,
 ) -> CALLBACK_TYPE:
     """Track specific state change events indexed by entity_id.
 
@@ -313,7 +314,7 @@ def async_track_state_change_event(
     """
     if not (entity_ids := _async_string_to_lower_list(entity_ids)):
         return _remove_empty_listener
-    return _async_track_state_change_event(hass, entity_ids, action)
+    return _async_track_state_change_event(hass, entity_ids, action, job_type)
 
 
 @callback
@@ -361,9 +362,12 @@ def _async_track_state_change_event(
     hass: HomeAssistant,
     entity_ids: str | Iterable[str],
     action: Callable[[EventType[EventStateChangedData]], Any],
+    job_type: HassJobType | None,
 ) -> CALLBACK_TYPE:
     """async_track_state_change_event without lowercasing."""
-    return _async_track_event(_KEYED_TRACK_STATE_CHANGE, hass, entity_ids, action)
+    return _async_track_event(
+        _KEYED_TRACK_STATE_CHANGE, hass, entity_ids, action, job_type
+    )
 
 
 @callback
@@ -397,6 +401,7 @@ def _async_track_event(
     hass: HomeAssistant,
     keys: str | Iterable[str],
     action: Callable[[EventType[_TypedDictT]], None],
+    job_type: HassJobType | None,
 ) -> CALLBACK_TYPE:
     """Track an event by a specific key.
 
@@ -429,7 +434,7 @@ def _async_track_event(
             run_immediately=tracker.run_immediately,
         )
 
-    job = HassJob(action, f"track {tracker.event_type} event {keys}")
+    job = HassJob(action, f"track {tracker.event_type} event {keys}", job_type=job_type)
 
     for key in keys:
         if callback_list := callbacks.get(key):
@@ -494,6 +499,7 @@ def async_track_entity_registry_updated_event(
     hass: HomeAssistant,
     entity_ids: str | Iterable[str],
     action: Callable[[EventType[EventEntityRegistryUpdatedData]], Any],
+    job_type: HassJobType | None = None,
 ) -> CALLBACK_TYPE:
     """Track specific entity registry updated events indexed by entity_id.
 
@@ -502,10 +508,7 @@ def async_track_entity_registry_updated_event(
     Similar to async_track_state_change_event.
     """
     return _async_track_event(
-        _KEYED_TRACK_ENTITY_REGISTRY_UPDATED,
-        hass,
-        entity_ids,
-        action,
+        _KEYED_TRACK_ENTITY_REGISTRY_UPDATED, hass, entity_ids, action, job_type
     )
 
 
@@ -558,16 +561,14 @@ def async_track_device_registry_updated_event(
     hass: HomeAssistant,
     device_ids: str | Iterable[str],
     action: Callable[[EventType[EventDeviceRegistryUpdatedData]], Any],
+    job_type: HassJobType | None = None,
 ) -> CALLBACK_TYPE:
     """Track specific device registry updated events indexed by device_id.
 
     Similar to async_track_entity_registry_updated_event.
     """
     return _async_track_event(
-        _KEYED_TRACK_DEVICE_REGISTRY_UPDATED,
-        hass,
-        device_ids,
-        action,
+        _KEYED_TRACK_DEVICE_REGISTRY_UPDATED, hass, device_ids, action, job_type
     )
 
 
@@ -606,11 +607,12 @@ def async_track_state_added_domain(
     hass: HomeAssistant,
     domains: str | Iterable[str],
     action: Callable[[EventType[EventStateChangedData]], Any],
+    job_type: HassJobType | None = None,
 ) -> CALLBACK_TYPE:
     """Track state change events when an entity is added to domains."""
     if not (domains := _async_string_to_lower_list(domains)):
         return _remove_empty_listener
-    return _async_track_state_added_domain(hass, domains, action)
+    return _async_track_state_added_domain(hass, domains, action, job_type)
 
 
 _KEYED_TRACK_STATE_ADDED_DOMAIN = _KeyedEventTracker(
@@ -628,9 +630,12 @@ def _async_track_state_added_domain(
     hass: HomeAssistant,
     domains: str | Iterable[str],
     action: Callable[[EventType[EventStateChangedData]], Any],
+    job_type: HassJobType | None,
 ) -> CALLBACK_TYPE:
     """Track state change events when an entity is added to domains."""
-    return _async_track_event(_KEYED_TRACK_STATE_ADDED_DOMAIN, hass, domains, action)
+    return _async_track_event(
+        _KEYED_TRACK_STATE_ADDED_DOMAIN, hass, domains, action, job_type
+    )
 
 
 @callback
@@ -661,9 +666,12 @@ def async_track_state_removed_domain(
     hass: HomeAssistant,
     domains: str | Iterable[str],
     action: Callable[[EventType[EventStateChangedData]], Any],
+    job_type: HassJobType | None = None,
 ) -> CALLBACK_TYPE:
     """Track state change events when an entity is removed from domains."""
-    return _async_track_event(_KEYED_TRACK_STATE_REMOVED_DOMAIN, hass, domains, action)
+    return _async_track_event(
+        _KEYED_TRACK_STATE_REMOVED_DOMAIN, hass, domains, action, job_type
+    )
 
 
 @callback
@@ -781,7 +789,7 @@ class _TrackStateChangeFiltered:
             return
 
         self._listeners[_ENTITIES_LISTENER] = _async_track_state_change_event(
-            self.hass, entities, self._action
+            self.hass, entities, self._action, self._action_as_hassjob.job_type
         )
 
     @callback
@@ -798,7 +806,7 @@ class _TrackStateChangeFiltered:
             return
 
         self._listeners[_DOMAINS_LISTENER] = _async_track_state_added_domain(
-            self.hass, domains, self._state_added
+            self.hass, domains, self._state_added, HassJobType.Callback
         )
 
     @callback
@@ -1601,7 +1609,7 @@ class _TrackTimeInterval:
             self._track_job,
             hass.loop.time() + self.seconds,
         )
-        hass.async_run_hass_job(self._run_job, now)
+        hass.async_run_periodic_hass_job(self._run_job, now)
 
     @callback
     def async_cancel(self) -> None:
@@ -1686,7 +1694,7 @@ class SunListener:
         """Handle solar event."""
         self._unsub_sun = None
         self._listen_next_sun_event()
-        self.hass.async_run_hass_job(self.job)
+        self.hass.async_run_periodic_hass_job(self.job)
 
     @callback
     def _handle_config_event(self, _event: Any) -> None:
@@ -1772,7 +1780,7 @@ class _TrackUTCTimeChange:
         # time when the timer was scheduled
         utc_now = time_tracker_utcnow()
         localized_now = dt_util.as_local(utc_now) if self.local else utc_now
-        hass.async_run_hass_job(self.job, localized_now)
+        hass.async_run_periodic_hass_job(self.job, localized_now)
         if TYPE_CHECKING:
             assert self._pattern_time_change_listener_job is not None
         self._cancel_callback = async_track_point_in_utc_time(

@@ -6,11 +6,13 @@ from dataclasses import dataclass
 from datetime import timedelta
 import enum
 import functools
+import logging
 import numbers
 import random
 from typing import TYPE_CHECKING, Any, Self
 
 from zigpy import types
+from zigpy.quirks.v2 import EntityMetadata, ZCLEnumMetadata, ZCLSensorMetadata
 from zigpy.state import Counter, State
 from zigpy.zcl.clusters.closures import WindowCovering
 from zigpy.zcl.clusters.general import Basic
@@ -68,6 +70,7 @@ from .core.const import (
     CLUSTER_HANDLER_TEMPERATURE,
     CLUSTER_HANDLER_THERMOSTAT,
     DATA_ZHA,
+    QUIRK_METADATA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
@@ -94,6 +97,8 @@ BATTERY_SIZES = {
     11: "CR1632",
     255: "Unknown",
 }
+
+_LOGGER = logging.getLogger(__name__)
 
 CLUSTER_HANDLER_ST_HUMIDITY_CLUSTER = (
     f"cluster_handler_0x{SMARTTHINGS_HUMIDITY_CLUSTER:04x}"
@@ -135,17 +140,6 @@ class Sensor(ZhaEntity, SensorEntity):
     _divisor: int = 1
     _multiplier: int | float = 1
 
-    def __init__(
-        self,
-        unique_id: str,
-        zha_device: ZHADevice,
-        cluster_handlers: list[ClusterHandler],
-        **kwargs: Any,
-    ) -> None:
-        """Init this sensor."""
-        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
-        self._cluster_handler: ClusterHandler = cluster_handlers[0]
-
     @classmethod
     def create_entity(
         cls,
@@ -159,13 +153,43 @@ class Sensor(ZhaEntity, SensorEntity):
         Return entity if it is a supported configuration, otherwise return None
         """
         cluster_handler = cluster_handlers[0]
-        if (
+        if QUIRK_METADATA not in kwargs and (
             cls._attribute_name in cluster_handler.cluster.unsupported_attributes
             or cls._attribute_name not in cluster_handler.cluster.attributes_by_name
         ):
+            _LOGGER.debug(
+                "%s is not supported - skipping %s entity creation",
+                cls._attribute_name,
+                cls.__name__,
+            )
             return None
 
         return cls(unique_id, zha_device, cluster_handlers, **kwargs)
+
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZHADevice,
+        cluster_handlers: list[ClusterHandler],
+        **kwargs: Any,
+    ) -> None:
+        """Init this sensor."""
+        self._cluster_handler: ClusterHandler = cluster_handlers[0]
+        if QUIRK_METADATA in kwargs:
+            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA])
+        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
+
+    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
+        """Init this entity from the quirks metadata."""
+        super()._init_from_quirks_metadata(entity_metadata)
+        sensor_metadata: ZCLSensorMetadata = entity_metadata.entity_metadata
+        self._attribute_name = sensor_metadata.attribute_name
+        if sensor_metadata.divisor is not None:
+            self._divisor = sensor_metadata.divisor
+        if sensor_metadata.multiplier is not None:
+            self._multiplier = sensor_metadata.multiplier
+        if sensor_metadata.unit is not None:
+            self._attr_native_unit_of_measurement = sensor_metadata.unit
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
@@ -329,6 +353,13 @@ class EnumSensor(Sensor):
 
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.ENUM
     _enum: type[enum.Enum]
+
+    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
+        """Init this entity from the quirks metadata."""
+        ZhaEntity._init_from_quirks_metadata(self, entity_metadata)  # pylint: disable=protected-access
+        sensor_metadata: ZCLEnumMetadata = entity_metadata.entity_metadata
+        self._attribute_name = sensor_metadata.attribute_name
+        self._enum = sensor_metadata.enum
 
     def formatter(self, value: int) -> str | None:
         """Use name of enum."""

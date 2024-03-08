@@ -24,14 +24,19 @@ from homeassistant.util import dt as dt_util
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
-from .const import CONF_ENCODING, CONF_QOS, TEMPLATE_ERRORS
+from .const import CONF_ENCODING, CONF_QOS
 from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
     async_setup_entity_entry_helper,
 )
-from .models import MessageCallbackType, MqttValueTemplate, ReceiveMessage
+from .models import (
+    MessageCallbackType,
+    MqttValueTemplate,
+    MqttValueTemplateException,
+    ReceiveMessage,
+)
 from .util import get_mqtt_data, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
@@ -191,7 +196,8 @@ class MqttImage(MqttEntity, ImageEntity):
             try:
                 url = cv.url(self._url_template(msg.payload))
                 self._attr_image_url = url
-            except TEMPLATE_ERRORS:
+            except MqttValueTemplateException as exc:
+                _LOGGER.warning(exc)
                 return
             except vol.Invalid:
                 _LOGGER.error(

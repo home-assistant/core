@@ -20,7 +20,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import HiveEntity
 from .const import DOMAIN
 
-ICON = "mdi:security"
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
 HIVETOHA = {
@@ -46,7 +45,6 @@ async def async_setup_entry(
 class HiveAlarmControlPanelEntity(HiveEntity, AlarmControlPanelEntity):
     """Representation of a Hive alarm."""
 
-    _attr_icon = ICON
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_NIGHT
         | AlarmControlPanelEntityFeature.ARM_AWAY

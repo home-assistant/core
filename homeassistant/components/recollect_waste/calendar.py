@@ -47,8 +47,8 @@ async def async_setup_entry(
 class ReCollectWasteCalendar(ReCollectWasteEntity, CalendarEntity):
     """Define a ReCollect Waste calendar."""
 
-    _attr_icon = "mdi:delete-empty"
     _attr_name = None
+    _attr_translation_key = "calendar"
 
     def __init__(
         self,

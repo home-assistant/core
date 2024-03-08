@@ -17,7 +17,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STARTED,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
@@ -52,17 +51,13 @@ async def test_configuring_tplink_causes_discovery(hass: HomeAssistant) -> None:
         call_count = len(discover.mock_calls)
         assert discover.mock_calls
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=15))
         await hass.async_block_till_done()
         assert len(discover.mock_calls) == call_count * 2
 
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=15))
-        await hass.async_block_till_done()
-        assert len(discover.mock_calls) == call_count * 3
-
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=30))
         await hass.async_block_till_done()
-        assert len(discover.mock_calls) == call_count * 4
+        assert len(discover.mock_calls) == call_count * 3
 
 
 async def test_config_entry_reload(hass: HomeAssistant) -> None:

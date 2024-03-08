@@ -223,6 +223,36 @@ class MqttCommandTemplate:
             ) from exc
 
 
+class MqttValueTemplateException(TemplateError):
+    """Handle MqttValueTemplate exceptions."""
+
+    def __init__(
+        self,
+        *args: object,
+        base_exception: Exception,
+        value_template: str,
+        default: ReceivePayloadType | PayloadSentinel,
+        payload: ReceivePayloadType,
+        entity_id: str | None = None,
+    ) -> None:
+        """Initialize exception."""
+        super().__init__(base_exception, *args)
+        entity_id_log = "" if entity_id is None else f" for entity '{entity_id}'"
+        default_log = str(default)
+        default_payload_log = (
+            "" if default is PayloadSentinel.NONE else f", default value: {default_log}"
+        )
+        payload_log = str(payload)
+        self._message = (
+            f"{type(base_exception).__name__}: {base_exception} rendering template{entity_id_log}"
+            f", template: '{value_template}'{default_payload_log} and payload: {payload_log}"
+        )
+
+    def __str__(self) -> str:
+        """Return exception message string."""
+        return self._message
+
+
 class MqttValueTemplate:
     """Class for rendering MQTT value template with possible json values."""
 
@@ -291,14 +321,13 @@ class MqttValueTemplate:
                     )
                 )
             except TEMPLATE_ERRORS as exc:
-                _LOGGER.error(
-                    "%s: %s rendering template for entity '%s', template: '%s'",
-                    type(exc).__name__,
-                    exc,
-                    self._entity.entity_id if self._entity else "n/a",
-                    self._value_template.template,
-                )
-                raise
+                raise MqttValueTemplateException(
+                    base_exception=exc,
+                    value_template=self._value_template.template,
+                    default=default,
+                    payload=payload,
+                    entity_id=self._entity.entity_id if self._entity else None,
+                ) from exc
             return rendered_payload
 
         _LOGGER.debug(
@@ -318,17 +347,13 @@ class MqttValueTemplate:
                 )
             )
         except TEMPLATE_ERRORS as exc:
-            _LOGGER.error(
-                "%s: %s rendering template for entity '%s', template: "
-                "'%s', default value: %s and payload: %s",
-                type(exc).__name__,
-                exc,
-                self._entity.entity_id if self._entity else "n/a",
-                self._value_template.template,
-                default,
-                payload,
-            )
-            raise
+            raise MqttValueTemplateException(
+                base_exception=exc,
+                value_template=self._value_template.template,
+                default=default,
+                payload=payload,
+                entity_id=self._entity.entity_id if self._entity else None,
+            ) from exc
         return rendered_payload
 
 

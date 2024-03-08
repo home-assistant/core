@@ -10,10 +10,9 @@ from linear_garage_door import Linear
 from linear_garage_door.errors import InvalidLoginError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -63,7 +62,7 @@ async def validate_input(
     return info
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class LinearGarageDoorConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Linear Garage Door."""
 
     VERSION = 1
@@ -71,11 +70,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.data: dict[str, Sequence[Collection[str]]] = {}
-        self._reauth_entry: config_entries.ConfigEntry | None = None
+        self._reauth_entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         data_schema = STEP_USER_DATA_SCHEMA
 
@@ -115,7 +114,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_site(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the site step."""
 
         if isinstance(self.data["sites"], list):
@@ -150,7 +149,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Reauth in case of a password change or other error."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]

@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Final, final
 from aiohttp import hdrs, web
 import httpx
 
-from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
+from homeassistant.components.http import KEY_AUTHENTICATED, KEY_HASS, HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONTENT_TYPE_MULTIPART, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
@@ -345,7 +345,7 @@ async def async_get_still_stream(
         """Write image to stream."""
         event.set()
 
-    hass: HomeAssistant = request.app["hass"]
+    hass = request.app[KEY_HASS]
     remove = async_track_state_change_event(
         hass,
         image_entity.entity_id,

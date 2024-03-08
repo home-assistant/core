@@ -28,7 +28,6 @@ SENSOR_DESCRIPTIONS = (
     NotionSensorDescription(
         key=SENSOR_MOLD,
         translation_key="mold_risk",
-        icon="mdi:liquid-spot",
         listener_kind=ListenerKind.MOLD,
     ),
     NotionSensorDescription(

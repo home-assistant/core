@@ -5,9 +5,8 @@ import logging
 from py_nextbus import NextBusClient
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME, CONF_STOP
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -89,7 +88,7 @@ def _unique_id_from_data(data: dict[str, str]) -> str:
     return f"{data[CONF_AGENCY]}_{data[CONF_ROUTE]}_{data[CONF_STOP]}"
 
 
-class NextBusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class NextBusFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle Nextbus configuration."""
 
     VERSION = 1
@@ -104,7 +103,7 @@ class NextBusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._client = NextBusClient(output_format="json")
         _LOGGER.info("Init new config flow")
 
-    async def async_step_import(self, config_input: dict[str, str]) -> FlowResult:
+    async def async_step_import(self, config_input: dict[str, str]) -> ConfigFlowResult:
         """Handle import of config."""
         agency_tag = config_input[CONF_AGENCY]
         route_tag = config_input[CONF_ROUTE]
@@ -141,14 +140,14 @@ class NextBusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self,
         user_input: dict[str, str] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         return await self.async_step_agency(user_input)
 
     async def async_step_agency(
         self,
         user_input: dict[str, str] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Select agency."""
         if user_input is not None:
             self.data[CONF_AGENCY] = user_input[CONF_AGENCY]
@@ -173,7 +172,7 @@ class NextBusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_route(
         self,
         user_input: dict[str, str] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Select route."""
         if user_input is not None:
             self.data[CONF_ROUTE] = user_input[CONF_ROUTE]
@@ -198,7 +197,7 @@ class NextBusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_stop(
         self,
         user_input: dict[str, str] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Select stop."""
 
         if user_input is not None:

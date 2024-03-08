@@ -48,7 +48,6 @@ THERMOSTAT_BUTTONS = [
     SwitcherThermostatButtonEntityDescription(
         key="assume_on",
         translation_key="assume_on",
-        icon="mdi:fan",
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda api, remote: api.control_breeze_device(
             remote, state=DeviceState.ON, update_state=True
@@ -58,7 +57,6 @@ THERMOSTAT_BUTTONS = [
     SwitcherThermostatButtonEntityDescription(
         key="assume_off",
         translation_key="assume_off",
-        icon="mdi:fan-off",
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda api, remote: api.control_breeze_device(
             remote, state=DeviceState.OFF, update_state=True
@@ -68,7 +66,6 @@ THERMOSTAT_BUTTONS = [
     SwitcherThermostatButtonEntityDescription(
         key="vertical_swing_on",
         translation_key="vertical_swing_on",
-        icon="mdi:autorenew",
         press_fn=lambda api, remote: api.control_breeze_device(
             remote, swing=ThermostatSwing.ON
         ),
@@ -77,7 +74,6 @@ THERMOSTAT_BUTTONS = [
     SwitcherThermostatButtonEntityDescription(
         key="vertical_swing_off",
         translation_key="vertical_swing_off",
-        icon="mdi:autorenew-off",
         press_fn=lambda api, remote: api.control_breeze_device(
             remote, swing=ThermostatSwing.OFF
         ),

@@ -180,8 +180,8 @@ class LogEntry:
             self.exception = "".join(traceback.format_exception(*record.exc_info))
             _, _, tb = record.exc_info
             # Last line of traceback contains the root cause of the exception
-            if traceback.extract_tb(tb):
-                self.root_cause = str(traceback.extract_tb(tb)[-1])
+            if extracted := traceback.extract_tb(tb):
+                self.root_cause = str(extracted[-1])
         self.source = source
         self.count = 1
         self.key = (self.name, source, self.root_cause)

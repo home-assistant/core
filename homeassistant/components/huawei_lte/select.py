@@ -50,7 +50,6 @@ async def async_setup_entry(
     desc = HuaweiSelectEntityDescription(
         key=KEY_NET_NET_MODE,
         entity_category=EntityCategory.CONFIG,
-        icon="mdi:transmission-tower",
         name="Preferred network mode",
         translation_key="preferred_network_mode",
         options=[

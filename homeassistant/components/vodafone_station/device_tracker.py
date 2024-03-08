@@ -61,6 +61,8 @@ def async_add_new_tracked_entities(
 class VodafoneStationTracker(CoordinatorEntity[VodafoneStationRouter], ScannerEntity):
     """Representation of a Vodafone Station device."""
 
+    _attr_translation_key = "device_tracker"
+
     def __init__(
         self, coordinator: VodafoneStationRouter, device_info: VodafoneStationDeviceInfo
     ) -> None:
@@ -97,11 +99,6 @@ class VodafoneStationTracker(CoordinatorEntity[VodafoneStationRouter], ScannerEn
     def hostname(self) -> str | None:
         """Return the hostname of device."""
         return self._attr_name
-
-    @property
-    def icon(self) -> str:
-        """Return device icon."""
-        return "mdi:lan-connect" if self._device.connected else "mdi:lan-disconnect"
 
     @property
     def ip_address(self) -> str | None:
