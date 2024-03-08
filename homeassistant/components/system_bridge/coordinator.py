@@ -56,6 +56,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
             entry.data[CONF_HOST],
             entry.data[CONF_PORT],
             entry.data[CONF_TOKEN],
+            session=async_get_clientsession(hass),
         )
 
         super().__init__(
@@ -107,7 +108,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
         self,
         base: str,
         path: str,
-    ) -> MediaFile:
+    ) -> MediaFile | None:
         """Get media file."""
         return await self.websocket_client.get_file(
             MediaGetFile(
@@ -169,9 +170,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
         """Use WebSocket for updates."""
         try:
             async with asyncio.timeout(20):
-                await self.websocket_client.connect(
-                    session=async_get_clientsession(self.hass),
-                )
+                await self.websocket_client.connect()
 
             self.hass.async_create_background_task(
                 self._listen_for_data(),
