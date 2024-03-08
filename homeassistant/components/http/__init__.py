@@ -33,6 +33,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import storage
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.http import (
+    KEY_ALLOW_CONFIGRED_CORS,
     KEY_AUTHENTICATED,  # noqa: F401
     KEY_HASS,
     HomeAssistantView,
@@ -389,7 +390,7 @@ class HomeAssistantHTTP:
             # Should be instance of aiohttp.web_exceptions._HTTPMove.
             raise redirect_exc(redirect_to)  # type: ignore[arg-type,misc]
 
-        self.app["allow_configured_cors"](
+        self.app[KEY_ALLOW_CONFIGRED_CORS](
             self.app.router.add_route("GET", url, redirect)
         )
 
@@ -405,7 +406,7 @@ class HomeAssistantHTTP:
             else:
                 resource = web.StaticResource(url_path, path)
             self.app.router.register_resource(resource)
-            self.app["allow_configured_cors"](resource)
+            self.app[KEY_ALLOW_CONFIGRED_CORS](resource)
             return
 
         async def serve_file(request: web.Request) -> web.FileResponse:
@@ -414,7 +415,7 @@ class HomeAssistantHTTP:
                 return web.FileResponse(path, headers=CACHE_HEADERS)
             return web.FileResponse(path)
 
-        self.app["allow_configured_cors"](
+        self.app[KEY_ALLOW_CONFIGRED_CORS](
             self.app.router.add_route("GET", url_path, serve_file)
         )
 
