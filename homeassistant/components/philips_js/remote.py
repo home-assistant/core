@@ -1,4 +1,5 @@
 """Remote control support for Apple TV."""
+
 from __future__ import annotations
 
 import asyncio

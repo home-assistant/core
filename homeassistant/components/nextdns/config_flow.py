@@ -1,4 +1,5 @@
 """Adds config flow for NextDNS."""
+
 from __future__ import annotations
 
 import asyncio
