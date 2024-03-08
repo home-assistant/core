@@ -1,4 +1,5 @@
 """SmartApp functionality to receive cloud-push notifications."""
+
 import asyncio
 import functools
 import logging

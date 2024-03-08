@@ -1,4 +1,5 @@
 """The ONVIF integration."""
+
 import asyncio
 from contextlib import suppress
 from http import HTTPStatus
