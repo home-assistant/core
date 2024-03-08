@@ -1,4 +1,5 @@
 """Test ZHA firmware updates."""
+
 from unittest.mock import AsyncMock, call, patch
 
 import pytest

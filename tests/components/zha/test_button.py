@@ -1,4 +1,5 @@
 """Test ZHA button."""
+
 from typing import Final
 from unittest.mock import call, patch
 

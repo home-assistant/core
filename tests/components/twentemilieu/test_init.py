@@ -1,4 +1,5 @@
 """Tests for the Twente Milieu integration."""
+
 from unittest.mock import MagicMock, patch
 
 import pytest

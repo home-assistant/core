@@ -1,4 +1,5 @@
 """The tests for the Template Weather platform."""
+
 from typing import Any
 
 import pytest
