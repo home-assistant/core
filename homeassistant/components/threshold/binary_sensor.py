@@ -1,4 +1,5 @@
 """Support for monitoring if a sensor value is below/above a threshold."""
+
 from __future__ import annotations
 
 import logging

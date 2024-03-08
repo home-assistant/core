@@ -1,4 +1,5 @@
 """Binary sensor platform for Trafikverket Camera integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
