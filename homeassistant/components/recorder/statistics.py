@@ -454,7 +454,9 @@ def compile_missing_statistics(instance: Recorder) -> bool:
 
     with session_scope(
         session=instance.get_session(),
-        exception_filter=filter_unique_constraint_integrity_error(instance),
+        exception_filter=filter_unique_constraint_integrity_error(
+            instance, "statistic"
+        ),
     ) as session:
         # Find the newest statistics run, if any
         if last_run := session.query(func.max(StatisticsRuns.start)).scalar():
@@ -486,7 +488,9 @@ def compile_statistics(instance: Recorder, start: datetime, fire_events: bool) -
     # Return if we already have 5-minute statistics for the requested period
     with session_scope(
         session=instance.get_session(),
-        exception_filter=filter_unique_constraint_integrity_error(instance),
+        exception_filter=filter_unique_constraint_integrity_error(
+            instance, "statistic"
+        ),
     ) as session:
         modified_statistic_ids = _compile_statistics(
             instance, session, start, fire_events
@@ -737,7 +741,9 @@ def update_statistics_metadata(
     if new_statistic_id is not UNDEFINED and new_statistic_id is not None:
         with session_scope(
             session=instance.get_session(),
-            exception_filter=filter_unique_constraint_integrity_error(instance),
+            exception_filter=filter_unique_constraint_integrity_error(
+                instance, "statistic"
+            ),
         ) as session:
             statistics_meta_manager.update_statistic_id(
                 session, DOMAIN, statistic_id, new_statistic_id
@@ -2349,7 +2355,9 @@ def import_statistics(
 
     with session_scope(
         session=instance.get_session(),
-        exception_filter=filter_unique_constraint_integrity_error(instance),
+        exception_filter=filter_unique_constraint_integrity_error(
+            instance, "statistic"
+        ),
     ) as session:
         return _import_statistics_with_session(
             instance, session, metadata, statistics, table

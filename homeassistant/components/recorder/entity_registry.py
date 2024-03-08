@@ -63,7 +63,7 @@ def update_states_metadata(
 
     with session_scope(
         session=instance.get_session(),
-        exception_filter=filter_unique_constraint_integrity_error(instance),
+        exception_filter=filter_unique_constraint_integrity_error(instance, "state"),
     ) as session:
         if not states_meta_manager.update_metadata(session, entity_id, new_entity_id):
             _LOGGER.warning(
