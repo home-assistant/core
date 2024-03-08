@@ -2265,8 +2265,7 @@ async def test_connect_args_priority(hass: HomeAssistant, config_url) -> None:
         __bases__ = []
         _has_events = False
 
-        def __init__(*args, **kwargs):
-            ...
+        def __init__(*args, **kwargs): ...
 
         @property
         def is_async(self):
@@ -2285,27 +2284,22 @@ async def test_connect_args_priority(hass: HomeAssistant, config_url) -> None:
             return "mysql"
 
         @classmethod
-        def import_dbapi(cls):
-            ...
+        def import_dbapi(cls): ...
 
-        def engine_created(*args):
-            ...
+        def engine_created(*args): ...
 
         def get_dialect_pool_class(self, *args):
             return pool.RecorderPool
 
-        def initialize(*args):
-            ...
+        def initialize(*args): ...
 
         def on_connect_url(self, url):
             return False
 
-        def _builtin_onconnect(self):
-            ...
+        def _builtin_onconnect(self): ...
 
     class MockEntrypoint:
-        def engine_created(*_):
-            ...
+        def engine_created(*_): ...
 
         def get_dialect_cls(*_):
             return MockDialect

@@ -517,9 +517,9 @@ class TestSecrets(unittest.TestCase):
 
     def test_secrets_are_not_dict(self):
         """Did secrets handle non-dict file."""
-        FILES[
-            self._secret_path
-        ] = "- http_pw: pwhttp\n  comp1_un: un1\n  comp1_pw: pw1\n"
+        FILES[self._secret_path] = (
+            "- http_pw: pwhttp\n  comp1_un: un1\n  comp1_pw: pw1\n"
+        )
         with pytest.raises(HomeAssistantError):
             load_yaml(
                 self._yaml_path,

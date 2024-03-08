@@ -335,9 +335,9 @@ class ClusterHandler(LogMixin):
             return
 
         for record in res:
-            event_data[self.cluster.find_attribute(record.attrid).name][
-                "status"
-            ] = record.status.name
+            event_data[self.cluster.find_attribute(record.attrid).name]["status"] = (
+                record.status.name
+            )
         failed = [
             self.cluster.find_attribute(record.attrid).name
             for record in res

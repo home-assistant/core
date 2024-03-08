@@ -129,9 +129,9 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
     """Generic bluetooth data."""
 
     devices: dict[str | None, DeviceInfo] = dataclasses.field(default_factory=dict)
-    entity_descriptions: dict[
-        PassiveBluetoothEntityKey, EntityDescription
-    ] = dataclasses.field(default_factory=dict)
+    entity_descriptions: dict[PassiveBluetoothEntityKey, EntityDescription] = (
+        dataclasses.field(default_factory=dict)
+    )
     entity_names: dict[PassiveBluetoothEntityKey, str | None] = dataclasses.field(
         default_factory=dict
     )

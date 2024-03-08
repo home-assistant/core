@@ -1561,9 +1561,9 @@ def migrate_event_type_ids(instance: Recorder) -> bool:
                     assert (
                         db_event_type.event_type is not None
                     ), "event_type should never be None"
-                    event_type_to_id[
-                        db_event_type.event_type
-                    ] = db_event_type.event_type_id
+                    event_type_to_id[db_event_type.event_type] = (
+                        db_event_type.event_type_id
+                    )
                     event_type_manager.clear_non_existent(db_event_type.event_type)
 
             session.execute(
@@ -1633,9 +1633,9 @@ def migrate_entity_ids(instance: Recorder) -> bool:
                     assert (
                         db_states_metadata.entity_id is not None
                     ), "entity_id should never be None"
-                    entity_id_to_metadata_id[
-                        db_states_metadata.entity_id
-                    ] = db_states_metadata.metadata_id
+                    entity_id_to_metadata_id[db_states_metadata.entity_id] = (
+                        db_states_metadata.metadata_id
+                    )
 
             session.execute(
                 update(States),

@@ -122,9 +122,9 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
         for flow in self._async_in_progress():
             if flow["context"]["source"] == SOURCE_ZEROCONF:
                 info = flow["context"]["title_placeholders"]
-                entries[
-                    flow["context"]["host"]
-                ] = f"{info['model']} ({info['device_id']})"
+                entries[flow["context"]["host"]] = (
+                    f"{info['model']} ({info['device_id']})"
+                )
         return entries
 
     async def async_step_local(

@@ -252,12 +252,12 @@ async def async_setup_entry(
             ]
         )
 
-    hass.data[
-        DATA_REMOVE_DISCOVER_COMPONENT.format(sensor.DOMAIN)
-    ] = async_dispatcher_connect(
-        hass,
-        TASMOTA_DISCOVERY_ENTITY_NEW.format(sensor.DOMAIN),
-        async_discover,
+    hass.data[DATA_REMOVE_DISCOVER_COMPONENT.format(sensor.DOMAIN)] = (
+        async_dispatcher_connect(
+            hass,
+            TASMOTA_DISCOVERY_ENTITY_NEW.format(sensor.DOMAIN),
+            async_discover,
+        )
     )
 
 

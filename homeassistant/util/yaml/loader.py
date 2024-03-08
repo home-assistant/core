@@ -293,8 +293,7 @@ def _add_reference(
     obj: list | NodeListClass,
     loader: LoaderType,
     node: yaml.nodes.Node,
-) -> NodeListClass:
-    ...
+) -> NodeListClass: ...
 
 
 @overload
@@ -302,13 +301,13 @@ def _add_reference(
     obj: str | NodeStrClass,
     loader: LoaderType,
     node: yaml.nodes.Node,
-) -> NodeStrClass:
-    ...
+) -> NodeStrClass: ...
 
 
 @overload
-def _add_reference(obj: _DictT, loader: LoaderType, node: yaml.nodes.Node) -> _DictT:
-    ...
+def _add_reference(
+    obj: _DictT, loader: LoaderType, node: yaml.nodes.Node
+) -> _DictT: ...
 
 
 def _add_reference(  # type: ignore[no-untyped-def]

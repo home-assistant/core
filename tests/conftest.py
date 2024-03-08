@@ -161,9 +161,9 @@ def pytest_runtest_setup() -> None:
     except ImportError:
         pass
     else:
-        MySQLdb_converters.conversions[
-            HAFakeDatetime
-        ] = MySQLdb_converters.DateTime2literal
+        MySQLdb_converters.conversions[HAFakeDatetime] = (
+            MySQLdb_converters.DateTime2literal
+        )
 
 
 def ha_datetime_to_fakedatetime(datetime) -> freezegun.api.FakeDatetime:  # type: ignore[name-defined]

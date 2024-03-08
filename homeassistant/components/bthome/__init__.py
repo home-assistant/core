@@ -129,20 +129,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     data = BTHomeBluetoothDeviceData(**kwargs)
 
     device_registry = async_get(hass)
-    coordinator = hass.data.setdefault(DOMAIN, {})[
-        entry.entry_id
-    ] = BTHomePassiveBluetoothProcessorCoordinator(
-        hass,
-        _LOGGER,
-        address=address,
-        mode=BluetoothScanningMode.PASSIVE,
-        update_method=lambda service_info: process_service_info(
-            hass, entry, data, service_info, device_registry
-        ),
-        device_data=data,
-        discovered_event_classes=set(entry.data.get(CONF_DISCOVERED_EVENT_CLASSES, [])),
-        connectable=False,
-        entry=entry,
+    coordinator = hass.data.setdefault(DOMAIN, {})[entry.entry_id] = (
+        BTHomePassiveBluetoothProcessorCoordinator(
+            hass,
+            _LOGGER,
+            address=address,
+            mode=BluetoothScanningMode.PASSIVE,
+            update_method=lambda service_info: process_service_info(
+                hass, entry, data, service_info, device_registry
+            ),
+            device_data=data,
+            discovered_event_classes=set(
+                entry.data.get(CONF_DISCOVERED_EVENT_CLASSES, [])
+            ),
+            connectable=False,
+            entry=entry,
+        )
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

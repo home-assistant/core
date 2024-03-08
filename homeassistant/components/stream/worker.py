@@ -68,9 +68,9 @@ class StreamState:
         """Initialize StreamState."""
         self._stream_id: int = 0
         self.hass = hass
-        self._outputs_callback: Callable[
-            [], Mapping[str, StreamOutput]
-        ] = outputs_callback
+        self._outputs_callback: Callable[[], Mapping[str, StreamOutput]] = (
+            outputs_callback
+        )
         # sequence gets incremented before the first segment so the first segment
         # has a sequence number of 0.
         self._sequence = -1

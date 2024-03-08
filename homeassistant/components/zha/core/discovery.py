@@ -293,9 +293,9 @@ class ProbeEndpoint:
                     not in cluster_handler.ZCL_INIT_ATTRS
                 ):
                     init_attrs = cluster_handler.ZCL_INIT_ATTRS.copy()
-                    init_attrs[
-                        quirk_metadata.entity_metadata.attribute_name
-                    ] = quirk_metadata.attribute_initialized_from_cache
+                    init_attrs[quirk_metadata.entity_metadata.attribute_name] = (
+                        quirk_metadata.attribute_initialized_from_cache
+                    )
                     cluster_handler.__dict__[zha_const.ZCL_INIT_ATTRS] = init_attrs
 
                 endpoint.async_new_entity(

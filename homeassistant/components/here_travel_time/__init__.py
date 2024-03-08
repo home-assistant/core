@@ -50,20 +50,20 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
 
     if config_entry.data[CONF_MODE] in {TRAVEL_MODE_PUBLIC, "publicTransportTimeTable"}:
-        hass.data.setdefault(DOMAIN, {})[
-            config_entry.entry_id
-        ] = HERETransitDataUpdateCoordinator(
-            hass,
-            api_key,
-            here_travel_time_config,
+        hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = (
+            HERETransitDataUpdateCoordinator(
+                hass,
+                api_key,
+                here_travel_time_config,
+            )
         )
     else:
-        hass.data.setdefault(DOMAIN, {})[
-            config_entry.entry_id
-        ] = HERERoutingDataUpdateCoordinator(
-            hass,
-            api_key,
-            here_travel_time_config,
+        hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = (
+            HERERoutingDataUpdateCoordinator(
+                hass,
+                api_key,
+                here_travel_time_config,
+            )
         )
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 

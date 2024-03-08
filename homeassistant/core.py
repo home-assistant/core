@@ -543,22 +543,19 @@ class HomeAssistant:
     @callback
     def async_add_job(
         self, target: Callable[..., Coroutine[Any, Any, _R]], *args: Any
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @overload
     @callback
     def async_add_job(
         self, target: Callable[..., Coroutine[Any, Any, _R] | _R], *args: Any
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @overload
     @callback
     def async_add_job(
         self, target: Coroutine[Any, Any, _R], *args: Any
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @callback
     def async_add_job(
@@ -594,15 +591,13 @@ class HomeAssistant:
     @callback
     def async_add_hass_job(
         self, hassjob: HassJob[..., Coroutine[Any, Any, _R]], *args: Any
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @overload
     @callback
     def async_add_hass_job(
         self, hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R], *args: Any
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @callback
     def async_add_hass_job(
@@ -646,15 +641,13 @@ class HomeAssistant:
     @callback
     def async_run_periodic_hass_job(
         self, hassjob: HassJob[..., Coroutine[Any, Any, _R]], *args: Any
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @overload
     @callback
     def async_run_periodic_hass_job(
         self, hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R], *args: Any
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @callback
     def async_run_periodic_hass_job(
@@ -815,15 +808,13 @@ class HomeAssistant:
     @callback
     def async_run_hass_job(
         self, hassjob: HassJob[..., Coroutine[Any, Any, _R]], *args: Any
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @overload
     @callback
     def async_run_hass_job(
         self, hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R], *args: Any
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @callback
     def async_run_hass_job(
@@ -852,22 +843,19 @@ class HomeAssistant:
     @callback
     def async_run_job(
         self, target: Callable[..., Coroutine[Any, Any, _R]], *args: Any
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @overload
     @callback
     def async_run_job(
         self, target: Callable[..., Coroutine[Any, Any, _R] | _R], *args: Any
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @overload
     @callback
     def async_run_job(
         self, target: Coroutine[Any, Any, _R], *args: Any
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @callback
     def async_run_job(
@@ -948,15 +936,13 @@ class HomeAssistant:
     @callback
     def async_add_shutdown_job(
         self, hassjob: HassJob[..., Coroutine[Any, Any, Any]], *args: Any
-    ) -> CALLBACK_TYPE:
-        ...
+    ) -> CALLBACK_TYPE: ...
 
     @overload
     @callback
     def async_add_shutdown_job(
         self, hassjob: HassJob[..., Coroutine[Any, Any, Any] | Any], *args: Any
-    ) -> CALLBACK_TYPE:
-        ...
+    ) -> CALLBACK_TYPE: ...
 
     @callback
     def async_add_shutdown_job(
@@ -1705,9 +1691,9 @@ class State:
             COMPRESSED_STATE_LAST_CHANGED: self.last_changed_timestamp,
         }
         if self.last_changed != self.last_updated:
-            compressed_state[
-                COMPRESSED_STATE_LAST_UPDATED
-            ] = self.last_updated_timestamp
+            compressed_state[COMPRESSED_STATE_LAST_UPDATED] = (
+                self.last_updated_timestamp
+            )
         return compressed_state
 
     @cached_property

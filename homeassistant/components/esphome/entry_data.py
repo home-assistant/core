@@ -110,9 +110,9 @@ class RuntimeEntryData:
     api_version: APIVersion = field(default_factory=APIVersion)
     cleanup_callbacks: list[Callable[[], None]] = field(default_factory=list)
     disconnect_callbacks: set[Callable[[], None]] = field(default_factory=set)
-    state_subscriptions: dict[
-        tuple[type[EntityState], int], Callable[[], None]
-    ] = field(default_factory=dict)
+    state_subscriptions: dict[tuple[type[EntityState], int], Callable[[], None]] = (
+        field(default_factory=dict)
+    )
     loaded_platforms: set[Platform] = field(default_factory=set)
     platform_load_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     _storage_contents: StoreData | None = None

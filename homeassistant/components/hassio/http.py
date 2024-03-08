@@ -148,9 +148,9 @@ class HassIOView(HomeAssistantView):
                 return web.Response(status=HTTPStatus.UNAUTHORIZED)
 
             if authorized:
-                headers[
-                    AUTHORIZATION
-                ] = f"Bearer {os.environ.get('SUPERVISOR_TOKEN', '')}"
+                headers[AUTHORIZATION] = (
+                    f"Bearer {os.environ.get('SUPERVISOR_TOKEN', '')}"
+                )
 
             if request.method == "POST":
                 headers[CONTENT_TYPE] = request.content_type
