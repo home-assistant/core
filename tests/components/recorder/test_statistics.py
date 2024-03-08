@@ -620,7 +620,7 @@ def test_rename_entity_collision_states_meta_check_disabled(
 
     instance = recorder.get_instance(hass)
     # Patch out the safeguard in the states meta manager
-    # so that we hit the filter_unique_constraint_integrity_error safeguard in the statistics manager
+    # so that we hit the filter_unique_constraint_integrity_error safeguard in the statistics
     with patch.object(instance.statistics_meta_manager, "get", return_value=None):
         # Rename entity sensor.test1 to sensor.test99
         @callback
