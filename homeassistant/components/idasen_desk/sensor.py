@@ -1,4 +1,5 @@
 """Representation of Idasen Desk sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -41,7 +42,6 @@ SENSORS = (
     IdasenDeskSensorDescription(
         key="height",
         translation_key="height",
-        icon="mdi:arrow-up-down",
         native_unit_of_measurement=UnitOfLength.METERS,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,

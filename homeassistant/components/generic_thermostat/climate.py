@@ -1,4 +1,5 @@
 """Adds support for generic thermostat units."""
+
 from __future__ import annotations
 
 import asyncio

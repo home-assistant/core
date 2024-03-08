@@ -1,4 +1,5 @@
 """The test for device automation toggle entity helpers."""
+
 from datetime import timedelta
 
 import pytest

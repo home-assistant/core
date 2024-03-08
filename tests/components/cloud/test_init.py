@@ -1,4 +1,5 @@
 """Test the cloud component."""
+
 from collections.abc import Callable, Coroutine
 from typing import Any
 from unittest.mock import MagicMock, patch

@@ -1,4 +1,5 @@
 """The tests for the Command line Binary sensor platform."""
+
 from __future__ import annotations
 
 import asyncio
@@ -20,6 +21,8 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVA
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
+
+from . import mock_asyncio_subprocess_run
 
 from tests.common import async_fire_time_changed
 
@@ -329,10 +332,7 @@ async def test_availability(
 
     hass.states.async_set("sensor.input1", "off")
     await hass.async_block_till_done()
-    with patch(
-        "homeassistant.components.command_line.utils.subprocess.check_output",
-        return_value=b"0",
-    ):
+    with mock_asyncio_subprocess_run(b"0"):
         freezer.tick(timedelta(minutes=1))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()

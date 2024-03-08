@@ -1,4 +1,5 @@
 """The enphase_envoy component."""
+
 from __future__ import annotations
 
 import contextlib

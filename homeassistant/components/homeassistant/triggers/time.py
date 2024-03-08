@@ -1,4 +1,5 @@
 """Offer time listening automation rules."""
+
 from datetime import datetime
 from functools import partial
 

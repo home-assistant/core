@@ -1,4 +1,5 @@
 """Support for IPP sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -70,7 +71,6 @@ PRINTER_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
         key="printer",
         name=None,
         translation_key="printer",
-        icon="mdi:printer",
         device_class=SensorDeviceClass.ENUM,
         options=["idle", "printing", "stopped"],
         attributes_fn=lambda printer: {
@@ -87,7 +87,6 @@ PRINTER_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
     IPPSensorEntityDescription(
         key="uptime",
         translation_key="uptime",
-        icon="mdi:clock-outline",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -118,7 +117,7 @@ async def async_setup_entry(
                 IPPSensorEntityDescription(
                     key=f"marker_{index}",
                     name=marker.name,
-                    icon="mdi:water",
+                    translation_key="marker",
                     native_unit_of_measurement=PERCENTAGE,
                     state_class=SensorStateClass.MEASUREMENT,
                     attributes_fn=_get_marker_attributes_fn(

@@ -1,4 +1,5 @@
 """The UptimeRobot integration."""
+
 from __future__ import annotations
 
 from pyuptimerobot import UptimeRobot

@@ -1,4 +1,5 @@
 """Test init of ecovacs."""
+
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -121,6 +122,7 @@ async def test_devices_in_dr(
     ("device_fixture", "entities"),
     [
         ("yna5x1", 25),
+        ("5xu9h3", 19),
     ],
 )
 async def test_all_entities_loaded(

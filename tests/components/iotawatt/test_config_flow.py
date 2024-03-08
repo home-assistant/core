@@ -1,4 +1,5 @@
 """Test the IoTawatt config flow."""
+
 from unittest.mock import patch
 
 import httpx

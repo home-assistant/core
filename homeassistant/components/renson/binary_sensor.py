@@ -1,4 +1,5 @@
 """Binary sensors for renson."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

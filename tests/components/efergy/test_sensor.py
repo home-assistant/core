@@ -1,4 +1,5 @@
 """The tests for Efergy sensor platform."""
+
 from datetime import timedelta
 
 import pytest

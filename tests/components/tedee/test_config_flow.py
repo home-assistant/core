@@ -1,4 +1,5 @@
 """Test the Tedee config flow."""
+
 from unittest.mock import MagicMock
 
 from pytedee_async import (

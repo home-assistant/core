@@ -1,14 +1,11 @@
 """Representation of Idasen Desk buttons."""
+
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
 from typing import Any, Final
 
-from homeassistant.components.button import (
-    ButtonDeviceClass,
-    ButtonEntity,
-    ButtonEntityDescription,
-)
+from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -40,17 +37,13 @@ class IdasenDeskButtonDescription(
 BUTTONS: Final = [
     IdasenDeskButtonDescription(
         key="connect",
-        name="Connect",
-        icon="mdi:bluetooth-connect",
-        device_class=ButtonDeviceClass.RESTART,
+        translation_key="connect",
         entity_category=EntityCategory.CONFIG,
         press_action=lambda coordinator: coordinator.async_connect,
     ),
     IdasenDeskButtonDescription(
         key="disconnect",
-        name="Disconnect",
-        icon="mdi:bluetooth-off",
-        device_class=ButtonDeviceClass.RESTART,
+        translation_key="disconnect",
         entity_category=EntityCategory.CONFIG,
         press_action=lambda coordinator: coordinator.async_disconnect,
     ),
@@ -86,7 +79,7 @@ class IdasenDeskButton(ButtonEntity):
         """Initialize the IdasenDesk button entity."""
         self.entity_description = description
 
-        self._attr_unique_id = f"{self.entity_description.key}-{address}"
+        self._attr_unique_id = f"{description.key}-{address}"
         self._attr_device_info = device_info
         self._address = address
         self._coordinator = coordinator

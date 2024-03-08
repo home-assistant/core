@@ -1,4 +1,5 @@
 """Support for MQTT events."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -29,7 +30,6 @@ from .const import (
     CONF_STATE_TOPIC,
     PAYLOAD_EMPTY_JSON,
     PAYLOAD_NONE,
-    TEMPLATE_ERRORS,
 )
 from .debug_info import log_messages
 from .mixins import (
@@ -39,6 +39,7 @@ from .mixins import (
 )
 from .models import (
     MqttValueTemplate,
+    MqttValueTemplateException,
     PayloadSentinel,
     ReceiveMessage,
     ReceivePayloadType,
@@ -134,7 +135,8 @@ class MqttEvent(MqttEntity, EventEntity):
             event_type: str
             try:
                 payload = self._template(msg.payload, PayloadSentinel.DEFAULT)
-            except TEMPLATE_ERRORS:
+            except MqttValueTemplateException as exc:
+                _LOGGER.warning(exc)
                 return
             if (
                 not payload

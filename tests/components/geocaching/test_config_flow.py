@@ -1,4 +1,5 @@
 """Test the Geocaching config flow."""
+
 from http import HTTPStatus
 from unittest.mock import MagicMock
 

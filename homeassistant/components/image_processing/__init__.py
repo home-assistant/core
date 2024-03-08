@@ -1,4 +1,5 @@
 """Provides functionality to interact with image processing services."""
+
 from __future__ import annotations
 
 import asyncio
@@ -179,7 +180,7 @@ class ImageProcessingEntity(Entity):
 
         try:
             image: Image = await camera.async_get_image(
-                self.hass, self.camera_entity, timeout=self.timeout
+                self.camera_entity, timeout=self.timeout
             )
 
         except HomeAssistantError as err:

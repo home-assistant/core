@@ -1,4 +1,5 @@
 """Collection of test helpers."""
+
 from fractions import Fraction
 import functools
 from functools import partial

@@ -1,4 +1,5 @@
 """Test the PECO Outage Counter config flow."""
+
 from unittest.mock import patch
 
 from peco import HttpError, IncompatibleMeterError, UnresponsiveMeterError

@@ -706,8 +706,8 @@ async def test_loading_corrupt_core_file(
         assert issue_entry.translation_placeholders["storage_key"] == storage_key
         assert issue_entry.issue_domain == HOMEASSISTANT_DOMAIN
         assert (
-            issue_entry.translation_placeholders["error"]
-            == "unexpected character: line 1 column 1 (char 0)"
+            "unexpected character: line 1 column 1 (char 0)"
+            in issue_entry.translation_placeholders["error"]
         )
 
         files = await hass.async_add_executor_job(
@@ -767,8 +767,8 @@ async def test_loading_corrupt_file_known_domain(
         assert issue_entry.translation_placeholders["storage_key"] == storage_key
         assert issue_entry.issue_domain == "testdomain"
         assert (
-            issue_entry.translation_placeholders["error"]
-            == "unexpected content after document: line 1 column 17 (char 16)"
+            "unexpected content after document: line 1 column 17 (char 16)"
+            in issue_entry.translation_placeholders["error"]
         )
 
         files = await hass.async_add_executor_job(

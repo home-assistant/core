@@ -1,4 +1,5 @@
 """Support for interface with a Bose SoundTouch."""
+
 from __future__ import annotations
 
 from functools import partial

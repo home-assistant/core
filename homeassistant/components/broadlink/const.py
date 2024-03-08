@@ -1,4 +1,5 @@
 """Constants."""
+
 from homeassistant.const import Platform
 
 DOMAIN = "broadlink"

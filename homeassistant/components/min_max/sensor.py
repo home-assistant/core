@@ -1,4 +1,5 @@
 """Support for displaying minimal, maximal, mean or median values."""
+
 from __future__ import annotations
 
 from datetime import datetime

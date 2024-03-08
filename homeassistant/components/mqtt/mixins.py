@@ -1,4 +1,5 @@
 """MQTT component mixins and helpers."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -94,7 +95,6 @@ from .const import (
     DOMAIN,
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
-    TEMPLATE_ERRORS,
 )
 from .debug_info import log_message, log_messages
 from .discovery import (
@@ -109,6 +109,7 @@ from .discovery import (
 from .models import (
     MessageCallbackType,
     MqttValueTemplate,
+    MqttValueTemplateException,
     PublishPayloadType,
     ReceiveMessage,
 )
@@ -482,7 +483,8 @@ def write_state_on_attr_change(
             }
             try:
                 msg_callback(msg)
-            except TEMPLATE_ERRORS:
+            except MqttValueTemplateException as exc:
+                _LOGGER.warning(exc)
                 return
             if not _attrs_have_changed(tracked_attrs):
                 return

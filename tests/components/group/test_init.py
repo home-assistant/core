@@ -1,4 +1,5 @@
 """The tests for the Group components."""
+
 from __future__ import annotations
 
 from collections import OrderedDict
@@ -553,6 +554,7 @@ async def test_group_updated_after_device_tracker_zone_change(
 
     assert await async_setup_component(hass, "group", {})
     assert await async_setup_component(hass, "device_tracker", {})
+    await hass.async_block_till_done()
 
     await group.Group.async_create_group(
         hass,
@@ -758,6 +760,7 @@ async def test_service_group_services_add_remove_entities(hass: HomeAssistant) -
     assert await async_setup_component(hass, "person", {})
     with assert_setup_component(0, "group"):
         await async_setup_component(hass, "group", {"group": {}})
+    await hass.async_block_till_done()
 
     assert hass.services.has_service("group", group.SERVICE_SET)
 

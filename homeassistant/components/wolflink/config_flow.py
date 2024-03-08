@@ -6,7 +6,7 @@ import voluptuous as vol
 from wolf_comm.token_auth import InvalidAuth
 from wolf_comm.wolf_client import WolfClient
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import DEVICE_GATEWAY, DEVICE_ID, DEVICE_NAME, DOMAIN
@@ -18,7 +18,7 @@ USER_SCHEMA = vol.Schema(
 )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class WolfLinkConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Wolf SmartSet Service."""
 
     VERSION = 1

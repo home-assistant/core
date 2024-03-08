@@ -1,4 +1,5 @@
 """Allow to set up simple automation rules via the config file."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

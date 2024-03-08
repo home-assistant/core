@@ -1,4 +1,5 @@
 """Offer sentence based automation rules."""
+
 from __future__ import annotations
 
 from typing import Any

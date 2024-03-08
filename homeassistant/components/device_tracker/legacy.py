@@ -1,4 +1,5 @@
 """Legacy device tracker classes."""
+
 from __future__ import annotations
 
 import asyncio

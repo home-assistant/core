@@ -1,4 +1,5 @@
 """Platform allowing several media players to be grouped into one media player."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping

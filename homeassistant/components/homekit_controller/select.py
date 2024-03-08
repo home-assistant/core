@@ -1,4 +1,5 @@
 """Support for Homekit select entities."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -43,7 +44,6 @@ SELECT_ENTITIES: dict[str, HomeKitSelectEntityDescription] = {
         key="temperature_display_units",
         translation_key="temperature_display_units",
         name="Temperature Display Units",
-        icon="mdi:thermometer",
         entity_category=EntityCategory.CONFIG,
         choices={
             "celsius": TemperatureDisplayUnits.CELSIUS,

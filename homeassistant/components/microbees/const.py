@@ -1,4 +1,5 @@
 """Constants for the microBees integration."""
+
 from homeassistant.const import Platform
 
 DOMAIN = "microbees"

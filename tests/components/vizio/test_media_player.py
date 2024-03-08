@@ -1,4 +1,5 @@
 """Tests for Vizio config flow."""
+
 from __future__ import annotations
 
 from contextlib import asynccontextmanager

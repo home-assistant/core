@@ -1,4 +1,5 @@
 """Tests for the Bluetooth integration ActiveBluetoothDataUpdateCoordinator."""
+
 from __future__ import annotations
 
 import asyncio

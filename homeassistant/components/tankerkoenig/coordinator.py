@@ -1,4 +1,5 @@
 """The Tankerkoenig update coordinator."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -62,8 +63,11 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator):
                 station = await self._tankerkoenig.station_details(station_id)
             except TankerkoenigInvalidKeyError as err:
                 raise ConfigEntryAuthFailed(err) from err
-            except (TankerkoenigError, TankerkoenigConnectionError) as err:
+            except TankerkoenigConnectionError as err:
                 raise ConfigEntryNotReady(err) from err
+            except TankerkoenigError as err:
+                _LOGGER.error("Error when adding station %s %s", station_id, err)
+                continue
 
             self.stations[station_id] = station
 
