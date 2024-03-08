@@ -1,4 +1,5 @@
 """Test Wyoming select."""
+
 from unittest.mock import Mock, patch
 
 from homeassistant.components import assist_pipeline
