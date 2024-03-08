@@ -1,4 +1,5 @@
 """Test issues from supervisor issues."""
+
 from __future__ import annotations
 
 import os

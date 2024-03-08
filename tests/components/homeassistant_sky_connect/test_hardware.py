@@ -1,4 +1,5 @@
 """Test the Home Assistant SkyConnect hardware platform."""
+
 from unittest.mock import patch
 
 from homeassistant.components.homeassistant_sky_connect.const import DOMAIN

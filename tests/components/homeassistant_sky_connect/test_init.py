@@ -1,4 +1,5 @@
 """Test the Home Assistant SkyConnect integration."""
+
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch

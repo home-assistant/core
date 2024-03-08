@@ -1,4 +1,5 @@
 """Test HomeKit initialization."""
+
 from unittest.mock import patch
 
 import pytest

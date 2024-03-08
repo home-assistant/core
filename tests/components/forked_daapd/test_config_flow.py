@@ -1,4 +1,5 @@
 """The config flow tests for the forked_daapd media player platform."""
+
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, patch
 

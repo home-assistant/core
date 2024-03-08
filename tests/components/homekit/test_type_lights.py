@@ -1,4 +1,5 @@
 """Test different accessory types: Lights."""
+
 from datetime import timedelta
 
 from pyhap.const import HAP_REPR_AID, HAP_REPR_CHARS, HAP_REPR_IID, HAP_REPR_VALUE
