@@ -1,4 +1,5 @@
 """Tests for the Twitch component."""
+
 import asyncio
 from collections.abc import AsyncGenerator, AsyncIterator
 from dataclasses import dataclass

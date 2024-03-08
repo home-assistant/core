@@ -1,4 +1,5 @@
 """Tests for the Screenlogic integration."""
+
 from collections.abc import Callable
 import logging
 

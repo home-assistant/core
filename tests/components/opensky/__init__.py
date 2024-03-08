@@ -1,4 +1,5 @@
 """Opensky tests."""
+
 from unittest.mock import patch
 
 from python_opensky import StatesResponse
