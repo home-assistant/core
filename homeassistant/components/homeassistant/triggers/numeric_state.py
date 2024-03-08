@@ -18,7 +18,14 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, State, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HassJob,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers import (
     condition,
     config_validation as cv,
@@ -31,7 +38,7 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
 )
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import ConfigType, EventType
+from homeassistant.helpers.typing import ConfigType
 
 _T = TypeVar("_T", bound=dict[str, Any])
 
@@ -151,7 +158,7 @@ async def async_attach_trigger(
             )
 
     @callback
-    def state_automation_listener(event: EventType[EventStateChangedData]) -> None:
+    def state_automation_listener(event: Event[EventStateChangedData]) -> None:
         """Listen for state changes and calls action."""
         entity_id = event.data["entity_id"]
         from_s = event.data["old_state"]

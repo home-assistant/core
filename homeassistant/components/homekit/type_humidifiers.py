@@ -24,12 +24,11 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import State, callback
+from homeassistant.core import Event, State, callback
 from homeassistant.helpers.event import (
     EventStateChangedData,
     async_track_state_change_event,
 )
-from homeassistant.helpers.typing import EventType
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -194,7 +193,7 @@ class HumidifierDehumidifier(HomeAccessory):
 
     @callback
     def async_update_current_humidity_event(
-        self, event: EventType[EventStateChangedData]
+        self, event: Event[EventStateChangedData]
     ) -> None:
         """Handle state change event listener callback."""
         self._async_update_current_humidity(event.data["new_state"])
