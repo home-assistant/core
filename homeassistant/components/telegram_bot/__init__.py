@@ -463,9 +463,14 @@ def initialize_bot(p_config):
     proxy_params = p_config.get(CONF_PROXY_PARAMS)
 
     if proxy_url is not None:
-        # These have been kept for backwards compatibility, they can actually be stuffed into the URL.
-        # Side note: In the future we should deprecate these and raise a repair issue if we find them here.
-        auth = proxy_params.pop("username"), proxy_params.pop("password")
+        auth = None
+        if proxy_params is None:
+            # CONF_PROXY_PARAMS has been kept for backwards compatibility.
+            proxy_params = {}
+        elif "username" in proxy_params and "password" in proxy_params:
+            # Auth can actually be stuffed into the URL, but the docs have previously
+            # indicated to put them here.
+            auth = proxy_params.pop("username"), proxy_params.pop("password")
         proxy = httpx.Proxy(proxy_url, auth=auth, **proxy_params)
         request = HTTPXRequest(connection_pool_size=8, proxy=proxy)
     else:
