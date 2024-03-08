@@ -132,4 +132,4 @@ async def test_discovery_happens_at_interval(hass: HomeAssistant) -> None:
 
         async_fire_time_changed(hass, utcnow() + steamist.DISCOVERY_INTERVAL)
         await hass.async_block_till_done(wait_background_tasks=True)
-        assert len(mock_aio_discovery.async_scan.mock_calls) == 3
+        assert len(mock_aio_discovery.async_scan.mock_calls) == 4
