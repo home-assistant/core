@@ -1,4 +1,5 @@
 """Tests for private bluetooth device config flow."""
+
 from unittest.mock import patch
 
 from homeassistant import config_entries
