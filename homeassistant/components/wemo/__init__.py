@@ -253,7 +253,7 @@ class WemoDiscovery:
         self._stop: CALLBACK_TYPE | None = None
         self._scan_delay = 0
         self._static_config = static_config
-        self._discover_job: HassJob[[datetime], Coroutine[Any, Any, None]] | None = None
+        self._discover_job: HassJob[[datetime], None] | None = None
         self._entry = entry
 
     async def async_discover_and_schedule(
@@ -275,7 +275,7 @@ class WemoDiscovery:
                 self.MAX_SECONDS_BETWEEN_SCANS,
             )
             if not self._discover_job:
-                self._discover_job = HassJob(self.async_discover_and_schedule)
+                self._discover_job = HassJob(self._async_schedule_discover_and_schedule)
             self._stop = async_call_later(
                 self._hass,
                 self._scan_delay,
@@ -283,10 +283,13 @@ class WemoDiscovery:
             )
 
     @callback
-    def async_periodic_discover_and_schedule(self, event: Event) -> None:
+    def _async_schedule_discover_and_schedule(self, event_time: datetime) -> None:
         """Run the periodic background scanning."""
         self._entry.async_create_background_task(
-            self._hass, self.async_discover_and_schedule(), name="wemo_discovery"
+            self._hass,
+            self.async_discover_and_schedule(),
+            name="wemo_discovery",
+            eager_start=True,
         )
 
     @callback
