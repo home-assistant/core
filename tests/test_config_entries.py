@@ -4329,10 +4329,10 @@ async def test_task_tracking(hass: HomeAssistant) -> None:
     entry.async_create_background_task(
         hass, test_task(), "background-task-name", eager_start=False
     )
-    entry.async_create_periodic_task(
+    entry.async_create_background_task(
         hass, test_task(), "periodic-task-name", eager_start=False
     )
-    entry.async_create_periodic_task(
+    entry.async_create_background_task(
         hass, test_task(), "periodic-task-name", eager_start=True
     )
     await asyncio.sleep(0)

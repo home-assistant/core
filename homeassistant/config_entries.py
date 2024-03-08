@@ -17,7 +17,6 @@ from contextvars import ContextVar
 from copy import deepcopy
 from enum import Enum, StrEnum
 import functools
-from itertools import chain
 import logging
 from random import randint
 from types import MappingProxyType
@@ -378,7 +377,6 @@ class ConfigEntry:
 
         self._tasks: set[asyncio.Future[Any]] = set()
         self._background_tasks: set[asyncio.Future[Any]] = set()
-        self._periodic_tasks: set[asyncio.Future[Any]] = set()
 
         self._integration_for_domain: loader.Integration | None = None
         self._tries = 0
@@ -856,15 +854,15 @@ class ConfigEntry:
                 if job := self._on_unload.pop()():
                     self.async_create_task(hass, job)
 
-        if not self._tasks and not self._background_tasks and not self._periodic_tasks:
+        if not self._tasks and not self._background_tasks:
             return
 
         cancel_message = f"Config entry {self.title} with {self.domain} unloading"
-        for task in chain(self._background_tasks, self._periodic_tasks):
+        for task in self._background_tasks:
             task.cancel(cancel_message)
 
         _, pending = await asyncio.wait(
-            [*self._tasks, *self._background_tasks, *self._periodic_tasks], timeout=10
+            [*self._tasks, *self._background_tasks], timeout=10
         )
 
         for task in pending:
@@ -1041,35 +1039,6 @@ class ConfigEntry:
             return task
         self._background_tasks.add(task)
         task.add_done_callback(self._background_tasks.remove)
-        return task
-
-    @callback
-    def async_create_periodic_task(
-        self,
-        hass: HomeAssistant,
-        target: Coroutine[Any, Any, _R],
-        name: str,
-        eager_start: bool = False,
-    ) -> asyncio.Task[_R]:
-        """Create a periodic task tied to the config entry lifecycle.
-
-        Periodic tasks are automatically canceled when config entry is unloaded.
-
-        This type of task is typically used for polling.
-
-        A periodic task is different from a normal task:
-
-          - Will not block startup
-          - Will be automatically cancelled on shutdown
-          - Calls to async_block_till_done will wait for completion by default
-
-        This method must be run in the event loop.
-        """
-        task = hass.async_create_periodic_task(target, name, eager_start)
-        if task.done():
-            return task
-        self._periodic_tasks.add(task)
-        task.add_done_callback(self._periodic_tasks.remove)
         return task
 
 
