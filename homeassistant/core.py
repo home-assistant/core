@@ -3,6 +3,7 @@
 Home Assistant is a Home Automation framework for observing the state
 of entities and react to changes.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -30,19 +31,10 @@ import re
 import threading
 import time
 from time import monotonic
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Generic,
-    Literal,
-    ParamSpec,
-    Self,
-    TypeVar,
-    cast,
-    overload,
-)
+from typing import TYPE_CHECKING, Any, Generic, Literal, ParamSpec, Self, cast, overload
 from urllib.parse import urlparse
 
+from typing_extensions import TypeVar
 import voluptuous as vol
 import yarl
 
@@ -133,6 +125,7 @@ _P = ParamSpec("_P")
 # Internal; not helpers.typing.UNDEFINED due to circular dependency
 _UNDEF: dict[Any, Any] = {}
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
+_DataT = TypeVar("_DataT", bound=Mapping[str, Any], default=dict[str, Any])
 CALLBACK_TYPE = Callable[[], None]
 
 CORE_STORAGE_KEY = "core.config"
@@ -1164,7 +1157,7 @@ class Context:
         self.id = id or ulid_now()
         self.user_id = user_id
         self.parent_id = parent_id
-        self.origin_event: Event | None = None
+        self.origin_event: Event[Any] | None = None
 
     def __eq__(self, other: Any) -> bool:
         """Compare contexts."""
@@ -1209,20 +1202,20 @@ class EventOrigin(enum.Enum):
         return self.value
 
 
-class Event:
+class Event(Generic[_DataT]):
     """Representation of an event within the bus."""
 
     def __init__(
         self,
         event_type: str,
-        data: Mapping[str, Any] | None = None,
+        data: _DataT | None = None,
         origin: EventOrigin = EventOrigin.local,
         time_fired: datetime.datetime | None = None,
         context: Context | None = None,
     ) -> None:
         """Initialize a new event."""
         self.event_type = event_type
-        self.data = data or {}
+        self.data: _DataT = data or {}  # type: ignore[assignment]
         self.origin = origin
         self.time_fired = time_fired or dt_util.utcnow()
         if not context:
@@ -1294,8 +1287,8 @@ class Event:
 
 
 _FilterableJobType = tuple[
-    HassJob[[Event], Coroutine[Any, Any, None] | None],  # job
-    Callable[[Event], bool] | None,  # event_filter
+    HassJob[[Event[_DataT]], Coroutine[Any, Any, None] | None],  # job
+    Callable[[Event[_DataT]], bool] | None,  # event_filter
     bool,  # run_immediately
 ]
 
@@ -1331,8 +1324,8 @@ class EventBus:
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a new event bus."""
-        self._listeners: dict[str, list[_FilterableJobType]] = {}
-        self._match_all_listeners: list[_FilterableJobType] = []
+        self._listeners: dict[str, list[_FilterableJobType[Any]]] = {}
+        self._match_all_listeners: list[_FilterableJobType[Any]] = []
         self._listeners[MATCH_ALL] = self._match_all_listeners
         self._hass = hass
 
@@ -1413,7 +1406,7 @@ class EventBus:
     def listen(
         self,
         event_type: str,
-        listener: Callable[[Event], Coroutine[Any, Any, None] | None],
+        listener: Callable[[Event[Any]], Coroutine[Any, Any, None] | None],
     ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
 
@@ -1434,8 +1427,8 @@ class EventBus:
     def async_listen(
         self,
         event_type: str,
-        listener: Callable[[Event], Coroutine[Any, Any, None] | None],
-        event_filter: Callable[[Event], bool] | None = None,
+        listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
+        event_filter: Callable[[Event[_DataT]], bool] | None = None,
         run_immediately: bool = False,
     ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
@@ -1471,7 +1464,7 @@ class EventBus:
 
     @callback
     def _async_listen_filterable_job(
-        self, event_type: str, filterable_job: _FilterableJobType
+        self, event_type: str, filterable_job: _FilterableJobType[Any]
     ) -> CALLBACK_TYPE:
         self._listeners.setdefault(event_type, []).append(filterable_job)
         return functools.partial(
@@ -1481,7 +1474,7 @@ class EventBus:
     def listen_once(
         self,
         event_type: str,
-        listener: Callable[[Event], Coroutine[Any, Any, None] | None],
+        listener: Callable[[Event[Any]], Coroutine[Any, Any, None] | None],
     ) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 
@@ -1504,7 +1497,7 @@ class EventBus:
     def async_listen_once(
         self,
         event_type: str,
-        listener: Callable[[Event], Coroutine[Any, Any, None] | None],
+        listener: Callable[[Event[Any]], Coroutine[Any, Any, None] | None],
     ) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 

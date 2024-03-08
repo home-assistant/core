@@ -1,4 +1,5 @@
 """Fixtures for Vogel's MotionMount integration tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 

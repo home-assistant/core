@@ -1,4 +1,5 @@
 """The Home Assistant alerts integration."""
+
 from __future__ import annotations
 
 import dataclasses

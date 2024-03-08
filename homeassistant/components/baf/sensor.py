@@ -1,4 +1,5 @@
 """Support for Big Ass Fans sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

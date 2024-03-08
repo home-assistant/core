@@ -1,4 +1,5 @@
 """The tests for the analytics ."""
+
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch

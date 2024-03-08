@@ -1,4 +1,5 @@
 """Tests for the seventeentrack sensor."""
+
 from __future__ import annotations
 
 import datetime

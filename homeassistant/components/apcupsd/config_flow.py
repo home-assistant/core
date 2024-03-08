@@ -1,4 +1,5 @@
 """Config flow for APCUPSd integration."""
+
 from __future__ import annotations
 
 import asyncio

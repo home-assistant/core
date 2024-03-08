@@ -1,4 +1,5 @@
 """Test SIP server."""
+
 import socket
 
 import pytest

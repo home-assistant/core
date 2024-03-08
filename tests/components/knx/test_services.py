@@ -1,4 +1,5 @@
 """Test KNX services."""
+
 from unittest.mock import patch
 
 import pytest

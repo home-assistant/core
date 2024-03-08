@@ -1,4 +1,5 @@
 """Test the GitHub init file."""
+
 import pytest
 
 from homeassistant.components.github import CONF_REPOSITORIES

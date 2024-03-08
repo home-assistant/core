@@ -1,4 +1,5 @@
 """Test the Z-Wave JS binary sensor platform."""
+
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 

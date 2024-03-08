@@ -1,4 +1,5 @@
 """Test the zerproc config flow."""
+
 from unittest.mock import patch
 
 import pyzerproc

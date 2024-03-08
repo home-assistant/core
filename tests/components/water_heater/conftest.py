@@ -1,4 +1,5 @@
 """Fixtures for water heater platform tests."""
+
 from collections.abc import Generator
 
 import pytest

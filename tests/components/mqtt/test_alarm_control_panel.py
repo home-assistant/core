@@ -1,4 +1,5 @@
 """The tests the MQTT alarm control panel component."""
+
 import copy
 import json
 from typing import Any

@@ -1,6 +1,5 @@
 """Alexa Resources and Assets."""
 
-
 from typing import Any
 
 

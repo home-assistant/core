@@ -1,4 +1,5 @@
 """Define tests for the AEMET OpenData coordinator."""
+
 from unittest.mock import patch
 
 from aemet_opendata.exceptions import AemetError

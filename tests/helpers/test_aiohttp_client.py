@@ -1,4 +1,5 @@
 """Test the aiohttp client helper."""
+
 from unittest.mock import Mock, patch
 
 import aiohttp

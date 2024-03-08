@@ -7,6 +7,7 @@ This configuration flow supports the following:
 NestFlowHandler is an implementation of AbstractOAuth2FlowHandler with
 some overrides to custom steps inserted in the middle of the flow.
 """
+
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping

@@ -1,4 +1,5 @@
 """The tests for mqtt number component."""
+
 import json
 from typing import Any
 from unittest.mock import patch

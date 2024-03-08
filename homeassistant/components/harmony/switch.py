@@ -1,4 +1,5 @@
 """Support for Harmony Hub activities."""
+
 import logging
 from typing import Any, cast
 

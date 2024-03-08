@@ -1,4 +1,5 @@
 """Test the switch entity for HomeWizard."""
+
 from unittest.mock import MagicMock
 
 from homewizard_energy import UnsupportedError

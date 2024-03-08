@@ -1,4 +1,5 @@
 """Config Flow for Flick Electric integration."""
+
 import asyncio
 import logging
 

@@ -1,4 +1,5 @@
 """The tests the for Locative device tracker platform."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 

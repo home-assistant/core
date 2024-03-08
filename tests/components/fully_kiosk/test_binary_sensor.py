@@ -1,4 +1,5 @@
 """Test the Fully Kiosk Browser binary sensors."""
+
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory

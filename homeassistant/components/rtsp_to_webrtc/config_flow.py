@@ -1,4 +1,5 @@
 """Config flow for RTSPtoWebRTC."""
+
 from __future__ import annotations
 
 import logging

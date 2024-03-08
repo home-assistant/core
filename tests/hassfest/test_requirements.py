@@ -1,4 +1,5 @@
 """Tests for hassfest requirements."""
+
 from pathlib import Path
 
 import pytest

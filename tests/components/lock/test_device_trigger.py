@@ -1,4 +1,5 @@
 """The tests for Lock device triggers."""
+
 from datetime import timedelta
 
 import pytest

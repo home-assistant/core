@@ -1,4 +1,5 @@
 """Support for Huawei LTE selects."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

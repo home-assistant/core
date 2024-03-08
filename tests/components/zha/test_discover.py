@@ -1,4 +1,5 @@
 """Test ZHA device discovery."""
+
 from collections.abc import Callable
 import re
 from typing import Any

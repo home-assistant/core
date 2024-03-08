@@ -1,4 +1,5 @@
 """Tests for the TP-Link component."""
+
 from __future__ import annotations
 
 import copy

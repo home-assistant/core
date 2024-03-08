@@ -1,4 +1,5 @@
 """Support for Google Actions Smart Home Control."""
+
 from __future__ import annotations
 
 from datetime import timedelta

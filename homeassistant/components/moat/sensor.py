@@ -1,4 +1,5 @@
 """Support for moat ble sensors."""
+
 from __future__ import annotations
 
 from moat_ble import DeviceClass, DeviceKey, SensorUpdate, Units
