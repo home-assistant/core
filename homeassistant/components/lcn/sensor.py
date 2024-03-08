@@ -1,4 +1,5 @@
 """Support for LCN sensors."""
+
 from __future__ import annotations
 
 from itertools import chain
