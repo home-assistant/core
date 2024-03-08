@@ -13,7 +13,8 @@ from typing import TYPE_CHECKING, Any, TypedDict
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError, TemplateError
 from homeassistant.helpers import template
@@ -392,6 +393,7 @@ class MqttData:
 
     client: MQTT
     config: list[ConfigType]
+    entry: ConfigEntry
     debug_info_entities: dict[str, EntityDebugInfo] = field(default_factory=dict)
     debug_info_triggers: dict[tuple[str, str], TriggerDebugInfo] = field(
         default_factory=dict
@@ -408,6 +410,7 @@ class MqttData:
     discovery_unsubscribe: list[CALLBACK_TYPE] = field(default_factory=list)
     integration_unsubscribe: dict[str, CALLBACK_TYPE] = field(default_factory=dict)
     last_discovery: float = 0.0
+    platforms_loaded: set[Platform | str] = field(default_factory=set)
     reload_dispatchers: list[CALLBACK_TYPE] = field(default_factory=list)
     reload_handlers: dict[str, CALLBACK_TYPE] = field(default_factory=dict)
     reload_schema: dict[str, vol.Schema] = field(default_factory=dict)
