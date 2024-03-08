@@ -61,11 +61,12 @@ async def _validate_input(
         data[CONF_HOST],
         data[CONF_PORT],
         data[CONF_TOKEN],
+        session=async_get_clientsession(hass),
     )
 
     try:
         async with asyncio.timeout(15):
-            await websocket_client.connect(session=async_get_clientsession(hass))
+            await websocket_client.connect()
             hass.async_create_task(
                 websocket_client.listen(callback=_async_handle_module)
             )
