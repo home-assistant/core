@@ -164,9 +164,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 )
             )
 
-            hass.data[DATA_UTILITY][meter][CONF_TARIFF_ENTITY] = "{}.{}".format(
-                SELECT_DOMAIN, meter
-            )
+            hass.data[DATA_UTILITY][meter][
+                CONF_TARIFF_ENTITY
+            ] = f"{SELECT_DOMAIN}.{meter}"
 
             # add one meter for each tariff
             tariff_confs = {}

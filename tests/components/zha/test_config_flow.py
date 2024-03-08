@@ -1,4 +1,5 @@
 """Tests for ZHA config flow."""
+
 import copy
 from datetime import timedelta
 from ipaddress import ip_address

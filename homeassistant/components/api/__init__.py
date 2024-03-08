@@ -1,4 +1,5 @@
 """Rest API for Home Assistant."""
+
 import asyncio
 from asyncio import shield, timeout
 from functools import lru_cache
@@ -48,7 +49,7 @@ from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.event import EventStateChangedData
 from homeassistant.helpers.json import json_dumps, json_fragment
 from homeassistant.helpers.service import async_get_all_descriptions
-from homeassistant.helpers.typing import ConfigType, EventType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import json_loads
 
 _LOGGER = logging.getLogger(__name__)
@@ -389,7 +390,7 @@ class APIDomainServicesView(HomeAssistantView):
 
         @ha.callback
         def _async_save_changed_entities(
-            event: EventType[EventStateChangedData],
+            event: Event[EventStateChangedData],
         ) -> None:
             if event.context == context and (state := event.data["new_state"]):
                 changed_states.append(state.json_fragment)

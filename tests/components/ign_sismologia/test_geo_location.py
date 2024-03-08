@@ -1,4 +1,5 @@
 """The tests for the IGN Sismologia (Earthquakes) Feed platform."""
+
 import datetime
 from unittest.mock import MagicMock, call, patch
 

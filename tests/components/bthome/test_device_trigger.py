@@ -1,4 +1,5 @@
 """Test BTHome BLE events."""
+
 import pytest
 
 from homeassistant.components import automation

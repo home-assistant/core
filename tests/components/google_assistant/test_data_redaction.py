@@ -1,4 +1,5 @@
 """Test data redaction helpers."""
+
 import json
 
 from homeassistant.components.google_assistant.data_redaction import async_redact_msg

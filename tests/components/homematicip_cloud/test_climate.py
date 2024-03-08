@@ -1,4 +1,5 @@
 """Tests for HomematicIP Cloud climate."""
+
 import datetime
 
 from homematicip.base.enums import AbsenceType

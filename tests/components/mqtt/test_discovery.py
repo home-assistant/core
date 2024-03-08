@@ -1,4 +1,5 @@
 """The tests for the MQTT discovery."""
+
 import asyncio
 import copy
 import json

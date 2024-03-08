@@ -1,4 +1,5 @@
 """The tests for the MQTT component."""
+
 import asyncio
 from collections.abc import Generator
 from datetime import datetime, timedelta

@@ -1,4 +1,5 @@
 """Test MQTT diagnostics."""
+
 import json
 from unittest.mock import ANY, patch
 

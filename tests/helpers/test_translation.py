@@ -1,4 +1,5 @@
 """Test the translation helper."""
+
 import asyncio
 from os import path
 import pathlib
