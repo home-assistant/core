@@ -7,6 +7,7 @@ from homeassistant.components.media_player import (
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_VOLUME_SET,
     intent as media_player_intent,
 )
@@ -171,6 +172,30 @@ async def test_next_media_player_intent(hass: HomeAssistant) -> None:
             {"name": {"value": "test media player"}},
         )
         await hass.async_block_till_done()
+
+
+async def test_previous_media_player_intent(hass: HomeAssistant) -> None:
+    """Test HassMediaPrevious intent for media players."""
+    await media_player_intent.async_setup_intents(hass)
+
+    entity_id = f"{DOMAIN}.test_media_player"
+    hass.states.async_set(entity_id, STATE_IDLE)
+    calls = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK)
+
+    response = await intent.async_handle(
+        hass,
+        "test",
+        media_player_intent.INTENT_MEDIA_PREVIOUS,
+        {"name": {"value": "test media player"}},
+    )
+    await hass.async_block_till_done()
+
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == DOMAIN
+    assert call.service == SERVICE_MEDIA_PREVIOUS_TRACK
+    assert call.data == {"entity_id": entity_id}
 
 
 async def test_volume_media_player_intent(hass: HomeAssistant) -> None:
