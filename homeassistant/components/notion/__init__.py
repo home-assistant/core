@@ -180,6 +180,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Create a callback to save the refresh token when it changes:
     entry.async_on_unload(client.add_refresh_token_callback(async_save_refresh_token))
 
+    # Save our current refresh token:
+    if client.refresh_token:
+        async_save_refresh_token(client.refresh_token)
+
     hass.config_entries.async_update_entry(entry, **entry_updates)
 
     async def async_update() -> NotionData:
