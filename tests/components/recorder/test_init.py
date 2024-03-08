@@ -2502,10 +2502,6 @@ async def test_commit_before_commits_pending_writes(
     All of our test run with a commit interval of 0 by
     default, so we need to test this with a non-zero commit
     """
-    if recorder_db_url == "sqlite://":
-        # On-disk database because this test does not play nice with the
-        # MutexPool
-        recorder_db_url = "sqlite:///" + str(tmp_path / "pytest.db")
     config = {
         recorder.CONF_DB_URL: recorder_db_url,
         recorder.CONF_COMMIT_INTERVAL: 60,
@@ -2520,6 +2516,11 @@ async def test_commit_before_commits_pending_writes(
     verify_session_commit_future = hass.loop.create_future()
 
     class VerifyCommitBeforeTask(recorder.tasks.RecorderTask):
+        """Task to verify that commit before ran.
+
+        If commit_before is true, we should have no pending writes.
+        """
+
         commit_before = True
 
         def run(self, instance: Recorder) -> None:
@@ -2534,6 +2535,8 @@ async def test_commit_before_commits_pending_writes(
             )
 
     class VerifyStatesInQueueTask(recorder.tasks.RecorderTask):
+        """Task to verify that states are in the queue."""
+
         commit_before = False
 
         def run(self, instance: Recorder) -> None:
@@ -2547,8 +2550,11 @@ async def test_commit_before_commits_pending_writes(
                 RuntimeError("Session has no pending write"),
             )
 
+    # First insert an event
     instance.queue_task(Event("fake_event"))
+    # Next verify that the event session has pending writes
     instance.queue_task(VerifyStatesInQueueTask())
+    # Finally, verify that the session was committed
     instance.queue_task(VerifyCommitBeforeTask())
 
     await verify_states_in_queue_future
