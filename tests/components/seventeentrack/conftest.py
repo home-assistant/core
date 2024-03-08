@@ -1,9 +1,50 @@
 """Configuration for 17Track tests."""
 
-from collections.abc import Generator
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+
+from homeassistant.components.seventeentrack.sensor import (
+    CONF_SHOW_ARCHIVED,
+    CONF_SHOW_DELIVERED,
+    DEFAULT_SCAN_INTERVAL,
+)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+
+from tests.common import async_fire_time_changed
+
+VALID_CONFIG_MINIMAL = {
+    "sensor": {
+        "platform": "seventeentrack",
+        CONF_USERNAME: "test",
+        CONF_PASSWORD: "test",
+    }
+}
+
+INVALID_CONFIG = {"sensor": {"platform": "seventeentrack", "boom": "test"}}
+
+VALID_CONFIG_FULL = {
+    "sensor": {
+        "platform": "seventeentrack",
+        CONF_USERNAME: "test",
+        CONF_PASSWORD: "test",
+        CONF_SHOW_ARCHIVED: True,
+        CONF_SHOW_DELIVERED: True,
+    }
+}
+
+VALID_CONFIG_FULL_NO_DELIVERED = {
+    "sensor": {
+        "platform": "seventeentrack",
+        CONF_USERNAME: "test",
+        CONF_PASSWORD: "test",
+        CONF_SHOW_ARCHIVED: False,
+        CONF_SHOW_DELIVERED: False,
+    }
+}
 
 DEFAULT_SUMMARY = {
     "Not Found": 0,
@@ -15,30 +56,24 @@ DEFAULT_SUMMARY = {
     "Returned": 0,
 }
 
-ACCOUNT_ID = "1234"
-
-
-@pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
-    """Override async_setup_entry."""
-    with patch(
-        "homeassistant.components.seventeentrack.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        yield mock_setup_entry
+NEW_SUMMARY_DATA = {
+    "Not Found": 1,
+    "In Transit": 1,
+    "Expired": 1,
+    "Ready to be Picked Up": 1,
+    "Undelivered": 1,
+    "Delivered": 1,
+    "Returned": 1,
+}
 
 
 @pytest.fixture
 def mock_seventeentrack():
     """Build a fixture for the 17Track API."""
-    mock_seventeentrack_profile = AsyncMock(account_id=ACCOUNT_ID)
-    mock_seventeentrack_api = AsyncMock(profile=mock_seventeentrack_profile)
+    mock_seventeentrack_api = AsyncMock()
     with (
         patch(
-            "homeassistant.components.seventeentrack.SeventeenTrackClient",
-            return_value=mock_seventeentrack_api,
-        ),
-        patch(
-            "homeassistant.components.seventeentrack.config_flow.SeventeenTrackClient",
+            "homeassistant.components.seventeentrack.sensor.SeventeenTrackClient",
             return_value=mock_seventeentrack_api,
         ) as mock_seventeentrack_api,
     ):
@@ -48,3 +83,11 @@ def mock_seventeentrack():
             DEFAULT_SUMMARY
         )
         yield mock_seventeentrack_api
+
+
+async def _goto_future(hass: HomeAssistant, freezer: FrozenDateTimeFactory):
+    """Move to future."""
+    for _ in range(2):
+        freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
