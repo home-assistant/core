@@ -1,4 +1,5 @@
 """The tests for the Queensland Bushfire Alert Feed platform."""
+
 import datetime
 from unittest.mock import MagicMock, call, patch
 

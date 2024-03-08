@@ -1,4 +1,5 @@
 """Tests for the Agent DVR config flow."""
+
 import pytest
 
 from homeassistant import data_entry_flow

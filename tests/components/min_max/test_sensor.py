@@ -1,4 +1,5 @@
 """The test for the min/max sensor platform."""
+
 import statistics
 from unittest.mock import patch
 
