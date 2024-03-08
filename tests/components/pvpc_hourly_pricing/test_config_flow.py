@@ -223,7 +223,7 @@ async def test_reauth(
     # check reauth trigger with bad-auth responses
     freezer.move_to(_MOCK_TIME_BAD_AUTH_RESPONSES)
     async_fire_time_changed(hass, _MOCK_TIME_BAD_AUTH_RESPONSES)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert pvpc_aioclient_mock.call_count == 6
 
     result = hass.config_entries.flow.async_progress_by_handler(DOMAIN)[0]
@@ -252,5 +252,5 @@ async def test_reauth(
     assert result["reason"] == "reauth_successful"
     assert pvpc_aioclient_mock.call_count == 8
 
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert pvpc_aioclient_mock.call_count == 10
