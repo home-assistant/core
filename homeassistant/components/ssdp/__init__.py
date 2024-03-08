@@ -450,10 +450,11 @@ class Scanner:
         _, info_desc = self._description_cache.peek_description_dict(location)
         if info_desc is None:
             # Fetch info desc in separate task and process from there.
-            self.hass.async_create_task(
+            self.hass.async_create_background_task(
                 self._ssdp_listener_process_callback_with_lookup(
                     ssdp_device, dst, source
                 ),
+                name=f"ssdp_info_desc_lookup_{location}",
                 eager_start=True,
             )
             return
@@ -508,8 +509,9 @@ class Scanner:
 
         if callbacks:
             ssdp_change = SSDP_SOURCE_SSDP_CHANGE_MAPPING[source]
-            self.hass.async_create_task(
+            self.hass.async_create_background_task(
                 _async_process_callbacks(callbacks, discovery_info, ssdp_change),
+                name=f"ssdp_callback_{ssdp_change.name}",
                 eager_start=True,
             )
 
