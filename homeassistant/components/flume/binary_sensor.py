@@ -40,18 +40,11 @@ BINARY_SENSOR_DESCRIPTION_CONNECTED = BinarySensorEntityDescription(
 )
 
 
-@dataclass(frozen=True)
-class FlumeBinarySensorRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class FlumeBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes a binary sensor entity."""
 
     event_rule: str
-
-
-@dataclass(frozen=True)
-class FlumeBinarySensorEntityDescription(
-    BinarySensorEntityDescription, FlumeBinarySensorRequiredKeysMixin
-):
-    """Describes a binary sensor entity."""
 
 
 FLUME_BINARY_NOTIFICATION_SENSORS: tuple[FlumeBinarySensorEntityDescription, ...] = (

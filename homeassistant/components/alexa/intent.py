@@ -1,4 +1,5 @@
 """Support for Alexa skill service end point."""
+
 import enum
 import logging
 from typing import Any

@@ -1406,7 +1406,7 @@ class EventBus:
     def listen(
         self,
         event_type: str,
-        listener: Callable[[Event], Coroutine[Any, Any, None] | None],
+        listener: Callable[[Event[Any]], Coroutine[Any, Any, None] | None],
     ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
 
@@ -1427,8 +1427,8 @@ class EventBus:
     def async_listen(
         self,
         event_type: str,
-        listener: Callable[[Event], Coroutine[Any, Any, None] | None],
-        event_filter: Callable[[Event], bool] | None = None,
+        listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
+        event_filter: Callable[[Event[_DataT]], bool] | None = None,
         run_immediately: bool = False,
     ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
@@ -1464,7 +1464,7 @@ class EventBus:
 
     @callback
     def _async_listen_filterable_job(
-        self, event_type: str, filterable_job: _FilterableJobType
+        self, event_type: str, filterable_job: _FilterableJobType[Any]
     ) -> CALLBACK_TYPE:
         self._listeners.setdefault(event_type, []).append(filterable_job)
         return functools.partial(
@@ -1474,7 +1474,7 @@ class EventBus:
     def listen_once(
         self,
         event_type: str,
-        listener: Callable[[Event], Coroutine[Any, Any, None] | None],
+        listener: Callable[[Event[Any]], Coroutine[Any, Any, None] | None],
     ) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 
@@ -1497,7 +1497,7 @@ class EventBus:
     def async_listen_once(
         self,
         event_type: str,
-        listener: Callable[[Event], Coroutine[Any, Any, None] | None],
+        listener: Callable[[Event[Any]], Coroutine[Any, Any, None] | None],
     ) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 

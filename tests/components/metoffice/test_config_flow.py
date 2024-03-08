@@ -1,4 +1,5 @@
 """Test the National Weather Service (NWS) config flow."""
+
 import json
 from unittest.mock import patch
 
