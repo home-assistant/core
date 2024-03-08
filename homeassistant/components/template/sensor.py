@@ -1,4 +1,5 @@
 """Allows the creation of a sensor that breaks out state_attributes."""
+
 from __future__ import annotations
 
 from datetime import date, datetime

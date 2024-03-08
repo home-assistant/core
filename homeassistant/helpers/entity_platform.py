@@ -1,4 +1,5 @@
 """Class to manage the entities for a single platform."""
+
 from __future__ import annotations
 
 import asyncio

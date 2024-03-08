@@ -1,4 +1,5 @@
 """Manage config entries in Home Assistant."""
+
 from __future__ import annotations
 
 import asyncio

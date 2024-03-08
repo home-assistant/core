@@ -3,6 +3,7 @@
 Home Assistant is a Home Automation framework for observing the state
 of entities and react to changes.
 """
+
 from __future__ import annotations
 
 import asyncio

@@ -1,4 +1,5 @@
 """Tests for the EntityPlatform helper."""
+
 import asyncio
 from collections.abc import Iterable
 from datetime import timedelta

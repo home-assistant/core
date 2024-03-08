@@ -1,4 +1,5 @@
 """Test to verify that we can load components."""
+
 import asyncio
 import os
 import sys

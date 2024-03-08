@@ -1,4 +1,5 @@
 """Helpers for data entry flows for config entries."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable

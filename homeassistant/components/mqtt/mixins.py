@@ -30,7 +30,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -873,7 +873,7 @@ class MqttDiscoveryDeviceUpdate(ABC):
             return
 
     async def _async_device_removed(
-        self, event: EventType[EventDeviceRegistryUpdatedData]
+        self, event: Event[EventDeviceRegistryUpdatedData]
     ) -> None:
         """Handle the manual removal of a device."""
         if self._skip_device_removal or not async_removed_from_device(
@@ -1344,7 +1344,7 @@ def update_device(
 @callback
 def async_removed_from_device(
     hass: HomeAssistant,
-    event: EventType[EventDeviceRegistryUpdatedData],
+    event: Event[EventDeviceRegistryUpdatedData],
     mqtt_device_id: str,
     config_entry_id: str,
 ) -> bool:

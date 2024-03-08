@@ -1,4 +1,5 @@
 """Test configuration and mocks for the SmartThings component."""
+
 import secrets
 from unittest.mock import Mock, patch
 from uuid import uuid4

@@ -1,4 +1,5 @@
 """Support for Xiaomi Gateways."""
+
 import asyncio
 from datetime import timedelta
 import logging

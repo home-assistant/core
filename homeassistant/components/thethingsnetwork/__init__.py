@@ -1,4 +1,5 @@
 """Support for The Things network."""
+
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant

@@ -1,6 +1,5 @@
 """Test the bang_olufsen config_flow."""
 
-
 from unittest.mock import Mock
 
 from aiohttp.client_exceptions import ClientConnectorError

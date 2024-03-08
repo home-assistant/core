@@ -1,4 +1,5 @@
 """Tests for the motionEye integration."""
+
 from __future__ import annotations
 
 from typing import Any

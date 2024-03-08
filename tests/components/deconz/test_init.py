@@ -1,4 +1,5 @@
 """Test deCONZ component setup process."""
+
 import asyncio
 from unittest.mock import patch
 
