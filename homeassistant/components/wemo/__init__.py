@@ -118,7 +118,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a wemo config entry."""
     wemo_data = async_wemo_data(hass)
     dispatcher = WemoDispatcher(entry)
-    discovery = WemoDiscovery(hass, dispatcher, wemo_data.static_config)
+    discovery = WemoDiscovery(hass, dispatcher, wemo_data.static_config, entry)
     wemo_data.config_entry_data = WemoConfigEntryData(
         device_coordinators={},
         discovery=discovery,
@@ -245,6 +245,7 @@ class WemoDiscovery:
         hass: HomeAssistant,
         wemo_dispatcher: WemoDispatcher,
         static_config: Sequence[HostPortTuple],
+        entry: ConfigEntry,
     ) -> None:
         """Initialize the WemoDiscovery."""
         self._hass = hass
@@ -253,6 +254,7 @@ class WemoDiscovery:
         self._scan_delay = 0
         self._static_config = static_config
         self._discover_job: HassJob[[datetime], Coroutine[Any, Any, None]] | None = None
+        self._entry = entry
 
     async def async_discover_and_schedule(
         self, event_time: datetime | None = None
@@ -279,6 +281,13 @@ class WemoDiscovery:
                 self._scan_delay,
                 self._discover_job,
             )
+
+    @callback
+    def async_periodic_discover_and_schedule(self, event: Event) -> None:
+        """Run the periodic background scanning."""
+        self._entry.async_create_background_task(
+            self._hass, self.async_discover_and_schedule(), name="wemo_discovery"
+        )
 
     @callback
     def async_stop_discovery(self) -> None:
