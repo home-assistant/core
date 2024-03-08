@@ -1,4 +1,5 @@
 """Tests for the Snooz component."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -99,11 +100,12 @@ async def create_mock_snooz_config_entry(
 ) -> MockConfigEntry:
     """Create a mock config entry."""
 
-    with patch(
-        "homeassistant.components.snooz.SnoozDevice", return_value=device
-    ), patch(
-        "homeassistant.components.snooz.async_ble_device_from_address",
-        return_value=generate_ble_device(device.address, device.name),
+    with (
+        patch("homeassistant.components.snooz.SnoozDevice", return_value=device),
+        patch(
+            "homeassistant.components.snooz.async_ble_device_from_address",
+            return_value=generate_ble_device(device.address, device.name),
+        ),
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,

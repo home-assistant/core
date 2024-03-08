@@ -1,4 +1,5 @@
 """The SSDP integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -235,9 +236,9 @@ class IntegrationMatchers:
 
     def __init__(self) -> None:
         """Init optimized integration matching."""
-        self._match_by_key: dict[
-            str, dict[str, list[tuple[str, dict[str, str]]]]
-        ] | None = None
+        self._match_by_key: (
+            dict[str, dict[str, list[tuple[str, dict[str, str]]]]] | None
+        ) = None
 
     @core_callback
     def async_setup(

@@ -1,4 +1,5 @@
 """Tests for the kraken sensor platform."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -31,12 +32,15 @@ async def test_sensor(
     entity_registry_enabled_by_default: None,
 ) -> None:
     """Test that sensor has a value."""
-    with patch(
-        "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
-        return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
-    ), patch(
-        "pykrakenapi.KrakenAPI.get_ticker_information",
-        return_value=TICKER_INFORMATION_RESPONSE,
+    with (
+        patch(
+            "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
+            return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
+        ),
+        patch(
+            "pykrakenapi.KrakenAPI.get_ticker_information",
+            return_value=TICKER_INFORMATION_RESPONSE,
+        ),
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,
@@ -139,12 +143,15 @@ async def test_sensors_available_after_restart(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that all sensors are added again after a restart."""
-    with patch(
-        "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
-        return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
-    ), patch(
-        "pykrakenapi.KrakenAPI.get_ticker_information",
-        return_value=TICKER_INFORMATION_RESPONSE,
+    with (
+        patch(
+            "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
+            return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
+        ),
+        patch(
+            "pykrakenapi.KrakenAPI.get_ticker_information",
+            return_value=TICKER_INFORMATION_RESPONSE,
+        ),
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,
@@ -178,12 +185,15 @@ async def test_sensors_added_after_config_update(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test that sensors are added when another tracked asset pair is added."""
-    with patch(
-        "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
-        return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
-    ), patch(
-        "pykrakenapi.KrakenAPI.get_ticker_information",
-        return_value=TICKER_INFORMATION_RESPONSE,
+    with (
+        patch(
+            "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
+            return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
+        ),
+        patch(
+            "pykrakenapi.KrakenAPI.get_ticker_information",
+            return_value=TICKER_INFORMATION_RESPONSE,
+        ),
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,
@@ -223,13 +233,16 @@ async def test_missing_pair_marks_sensor_unavailable(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test that a missing tradable asset pair marks the sensor unavailable."""
-    with patch(
-        "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
-        return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
-    ) as tradeable_asset_pairs_mock, patch(
-        "pykrakenapi.KrakenAPI.get_ticker_information",
-        return_value=TICKER_INFORMATION_RESPONSE,
-    ) as ticket_information_mock:
+    with (
+        patch(
+            "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
+            return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
+        ) as tradeable_asset_pairs_mock,
+        patch(
+            "pykrakenapi.KrakenAPI.get_ticker_information",
+            return_value=TICKER_INFORMATION_RESPONSE,
+        ) as ticket_information_mock,
+    ):
         entry = MockConfigEntry(
             domain=DOMAIN,
             options={

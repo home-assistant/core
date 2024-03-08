@@ -1,4 +1,5 @@
 """Support for Tuya buttons."""
+
 from __future__ import annotations
 
 from tuya_sharing import CustomerDevice, Manager

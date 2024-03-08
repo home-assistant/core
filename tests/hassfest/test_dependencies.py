@@ -1,4 +1,5 @@
 """Tests for hassfest dependency finder."""
+
 import ast
 
 import pytest

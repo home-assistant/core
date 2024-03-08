@@ -1,4 +1,5 @@
 """Mocks for the august component."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -73,8 +74,9 @@ async def _mock_setup_august(
         options={},
     )
     entry.add_to_hass(hass)
-    with patch("homeassistant.components.august.async_create_pubnub"), patch(
-        "homeassistant.components.august.AugustPubNub", return_value=pubnub_mock
+    with (
+        patch("homeassistant.components.august.async_create_pubnub"),
+        patch("homeassistant.components.august.AugustPubNub", return_value=pubnub_mock),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

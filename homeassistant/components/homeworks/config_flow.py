@@ -1,4 +1,5 @@
 """Lutron Homeworks Series 4 and 8 config flow."""
+
 from __future__ import annotations
 
 from functools import partial

@@ -1,4 +1,5 @@
 """Support for August doorbell camera."""
+
 from __future__ import annotations
 
 from aiohttp import ClientSession

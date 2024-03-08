@@ -389,9 +389,10 @@ async def test_platform_specific_config_validation(hass: HomeAssistant) -> None:
         MockPlatform(platform_schema=platform_schema, setup_platform=mock_setup),
     )
 
-    with assert_setup_component(0, "switch"), patch(
-        "homeassistant.setup.async_notify_setup_error"
-    ) as mock_notify:
+    with (
+        assert_setup_component(0, "switch"),
+        patch("homeassistant.setup.async_notify_setup_error") as mock_notify,
+    ):
         assert await setup.async_setup_component(
             hass,
             "switch",
@@ -404,9 +405,10 @@ async def test_platform_specific_config_validation(hass: HomeAssistant) -> None:
     hass.data.pop(setup.DATA_SETUP)
     hass.config.components.remove("switch")
 
-    with assert_setup_component(0), patch(
-        "homeassistant.setup.async_notify_setup_error"
-    ) as mock_notify:
+    with (
+        assert_setup_component(0),
+        patch("homeassistant.setup.async_notify_setup_error") as mock_notify,
+    ):
         assert await setup.async_setup_component(
             hass,
             "switch",
@@ -425,9 +427,10 @@ async def test_platform_specific_config_validation(hass: HomeAssistant) -> None:
     hass.data.pop(setup.DATA_SETUP)
     hass.config.components.remove("switch")
 
-    with assert_setup_component(1, "switch"), patch(
-        "homeassistant.setup.async_notify_setup_error"
-    ) as mock_notify:
+    with (
+        assert_setup_component(1, "switch"),
+        patch("homeassistant.setup.async_notify_setup_error") as mock_notify,
+    ):
         assert await setup.async_setup_component(
             hass,
             "switch",

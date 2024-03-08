@@ -1,4 +1,5 @@
 """Test ZHA analog output."""
+
 from unittest.mock import call, patch
 
 import pytest

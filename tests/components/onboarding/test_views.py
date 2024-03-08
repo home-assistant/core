@@ -1,4 +1,5 @@
 """Test the onboarding views."""
+
 import asyncio
 from http import HTTPStatus
 import os
@@ -79,30 +80,40 @@ async def mock_supervisor_fixture(hass, aioclient_mock):
             },
         },
     )
-    with patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}), patch(
-        "homeassistant.components.hassio.HassIO.is_connected",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_info",
-        return_value={},
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_host_info",
-        return_value={},
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_store",
-        return_value={},
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_supervisor_info",
-        return_value={"diagnostics": True},
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_os_info",
-        return_value={},
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_ingress_panels",
-        return_value={"panels": {}},
-    ), patch.dict(
-        os.environ,
-        {"SUPERVISOR_TOKEN": "123456"},
+    with (
+        patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}),
+        patch(
+            "homeassistant.components.hassio.HassIO.is_connected",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_info",
+            return_value={},
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_host_info",
+            return_value={},
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_store",
+            return_value={},
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_supervisor_info",
+            return_value={"diagnostics": True},
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_os_info",
+            return_value={},
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_ingress_panels",
+            return_value={"panels": {}},
+        ),
+        patch.dict(
+            os.environ,
+            {"SUPERVISOR_TOKEN": "123456"},
+        ),
     ):
         yield
 
@@ -110,16 +121,18 @@ async def mock_supervisor_fixture(hass, aioclient_mock):
 @pytest.fixture
 def mock_default_integrations():
     """Mock the default integrations set up during onboarding."""
-    with patch(
-        "homeassistant.components.rpi_power.config_flow.new_under_voltage"
-    ), patch(
-        "homeassistant.components.rpi_power.binary_sensor.new_under_voltage"
-    ), patch(
-        "homeassistant.components.met.async_setup_entry", return_value=True
-    ), patch(
-        "homeassistant.components.radio_browser.async_setup_entry", return_value=True
-    ), patch(
-        "homeassistant.components.shopping_list.async_setup_entry", return_value=True
+    with (
+        patch("homeassistant.components.rpi_power.config_flow.new_under_voltage"),
+        patch("homeassistant.components.rpi_power.binary_sensor.new_under_voltage"),
+        patch("homeassistant.components.met.async_setup_entry", return_value=True),
+        patch(
+            "homeassistant.components.radio_browser.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.shopping_list.async_setup_entry",
+            return_value=True,
+        ),
     ):
         yield
 

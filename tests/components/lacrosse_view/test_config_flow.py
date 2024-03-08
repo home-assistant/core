@@ -1,4 +1,5 @@
 """Test the LaCrosse View config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from lacrosse_view import Location, LoginError
@@ -22,12 +23,15 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch(
-        "lacrosse_view.LaCrosse.login",
-        return_value=True,
-    ), patch(
-        "lacrosse_view.LaCrosse.get_locations",
-        return_value=[Location(id=1, name="Test")],
+    with (
+        patch(
+            "lacrosse_view.LaCrosse.login",
+            return_value=True,
+        ),
+        patch(
+            "lacrosse_view.LaCrosse.get_locations",
+            return_value=[Location(id=1, name="Test")],
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -108,8 +112,9 @@ async def test_form_login_first(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("lacrosse_view.LaCrosse.login", return_value=True), patch(
-        "lacrosse_view.LaCrosse.get_locations", side_effect=LoginError
+    with (
+        patch("lacrosse_view.LaCrosse.login", return_value=True),
+        patch("lacrosse_view.LaCrosse.get_locations", side_effect=LoginError),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -129,9 +134,12 @@ async def test_form_no_locations(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("lacrosse_view.LaCrosse.login", return_value=True), patch(
-        "lacrosse_view.LaCrosse.get_locations",
-        return_value=None,
+    with (
+        patch("lacrosse_view.LaCrosse.login", return_value=True),
+        patch(
+            "lacrosse_view.LaCrosse.get_locations",
+            return_value=None,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -191,12 +199,15 @@ async def test_already_configured_device(
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch(
-        "lacrosse_view.LaCrosse.login",
-        return_value=True,
-    ), patch(
-        "lacrosse_view.LaCrosse.get_locations",
-        return_value=[Location(id=1, name="Test")],
+    with (
+        patch(
+            "lacrosse_view.LaCrosse.login",
+            return_value=True,
+        ),
+        patch(
+            "lacrosse_view.LaCrosse.get_locations",
+            return_value=[Location(id=1, name="Test")],
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -256,9 +267,12 @@ async def test_reauth(hass: HomeAssistant) -> None:
     new_username = "new-username"
     new_password = "new-password"
 
-    with patch("lacrosse_view.LaCrosse.login", return_value=True), patch(
-        "lacrosse_view.LaCrosse.get_locations",
-        return_value=[Location(id=1, name="Test")],
+    with (
+        patch("lacrosse_view.LaCrosse.login", return_value=True),
+        patch(
+            "lacrosse_view.LaCrosse.get_locations",
+            return_value=[Location(id=1, name="Test")],
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

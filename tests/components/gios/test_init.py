@@ -1,4 +1,5 @@
 """Test init of GIOS integration."""
+
 import json
 from unittest.mock import patch
 
@@ -74,15 +75,20 @@ async def test_migrate_device_and_config_entry(
     station = json.loads(load_fixture("gios/station.json"))
     sensors = json.loads(load_fixture("gios/sensors.json"))
 
-    with patch(
-        "homeassistant.components.gios.Gios._get_stations", return_value=STATIONS
-    ), patch(
-        "homeassistant.components.gios.Gios._get_station",
-        return_value=station,
-    ), patch(
-        "homeassistant.components.gios.Gios._get_all_sensors",
-        return_value=sensors,
-    ), patch("homeassistant.components.gios.Gios._get_indexes", return_value=indexes):
+    with (
+        patch(
+            "homeassistant.components.gios.Gios._get_stations", return_value=STATIONS
+        ),
+        patch(
+            "homeassistant.components.gios.Gios._get_station",
+            return_value=station,
+        ),
+        patch(
+            "homeassistant.components.gios.Gios._get_all_sensors",
+            return_value=sensors,
+        ),
+        patch("homeassistant.components.gios.Gios._get_indexes", return_value=indexes),
+    ):
         config_entry.add_to_hass(hass)
 
         device_entry = device_registry.async_get_or_create(

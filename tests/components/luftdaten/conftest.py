@@ -1,4 +1,5 @@
 """Fixtures for Luftdaten tests."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -36,10 +37,14 @@ def mock_setup_entry() -> Generator[None, None, None]:
 @pytest.fixture
 def mock_luftdaten() -> Generator[None, MagicMock, None]:
     """Return a mocked Luftdaten client."""
-    with patch(
-        "homeassistant.components.luftdaten.Luftdaten", autospec=True
-    ) as luftdaten_mock, patch(
-        "homeassistant.components.luftdaten.config_flow.Luftdaten", new=luftdaten_mock
+    with (
+        patch(
+            "homeassistant.components.luftdaten.Luftdaten", autospec=True
+        ) as luftdaten_mock,
+        patch(
+            "homeassistant.components.luftdaten.config_flow.Luftdaten",
+            new=luftdaten_mock,
+        ),
     ):
         luftdaten = luftdaten_mock.return_value
         luftdaten.validate_sensor.return_value = True

@@ -1,4 +1,5 @@
 """Media player entity for the Bang & Olufsen integration."""
+
 from __future__ import annotations
 
 import json

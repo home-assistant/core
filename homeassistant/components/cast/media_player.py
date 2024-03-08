@@ -1,4 +1,5 @@
 """Provide functionality to interact with Cast devices on the network."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

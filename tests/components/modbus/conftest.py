@@ -1,4 +1,5 @@
 """The tests for the Modbus sensor component."""
+
 import copy
 from dataclasses import dataclass
 from datetime import timedelta
@@ -43,18 +44,22 @@ class ReadResult:
 def mock_pymodbus_fixture():
     """Mock pymodbus."""
     mock_pb = mock.MagicMock()
-    with mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusTcpClient",
-        return_value=mock_pb,
-        autospec=True,
-    ), mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusSerialClient",
-        return_value=mock_pb,
-        autospec=True,
-    ), mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusUdpClient",
-        return_value=mock_pb,
-        autospec=True,
+    with (
+        mock.patch(
+            "homeassistant.components.modbus.modbus.ModbusTcpClient",
+            return_value=mock_pb,
+            autospec=True,
+        ),
+        mock.patch(
+            "homeassistant.components.modbus.modbus.ModbusSerialClient",
+            return_value=mock_pb,
+            autospec=True,
+        ),
+        mock.patch(
+            "homeassistant.components.modbus.modbus.ModbusUdpClient",
+            return_value=mock_pb,
+            autospec=True,
+        ),
     ):
         yield mock_pb
 

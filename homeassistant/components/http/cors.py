@@ -1,4 +1,5 @@
 """Provide CORS support for the HTTP component."""
+
 from __future__ import annotations
 
 from typing import Final

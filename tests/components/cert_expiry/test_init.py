@@ -1,4 +1,5 @@
 """Tests for Cert Expiry setup."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -41,11 +42,14 @@ async def test_setup_with_config(hass: HomeAssistant) -> None:
     next_update = dt_util.utcnow() + timedelta(seconds=20)
     async_fire_time_changed(hass, next_update)
 
-    with patch(
-        "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
-    ), patch(
-        "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
-        return_value=future_timestamp(1),
+    with (
+        patch(
+            "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
+        ),
+        patch(
+            "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
+            return_value=future_timestamp(1),
+        ),
     ):
         await hass.async_block_till_done()
 

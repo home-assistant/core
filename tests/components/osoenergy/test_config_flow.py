@@ -1,4 +1,5 @@
 """Test the OSO Energy config flow."""
+
 from unittest.mock import patch
 
 from apyosoenergyapi.helper import osoenergy_exceptions
@@ -25,12 +26,15 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.osoenergy.config_flow.OSOEnergy.get_user_email",
-        return_value=TEST_USER_EMAIL,
-    ), patch(
-        "homeassistant.components.osoenergy.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.osoenergy.config_flow.OSOEnergy.get_user_email",
+            return_value=TEST_USER_EMAIL,
+        ),
+        patch(
+            "homeassistant.components.osoenergy.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_API_KEY: SUBSCRIPTION_KEY},

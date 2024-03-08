@@ -1,4 +1,5 @@
 """Test sensor of GIOS integration."""
+
 from datetime import timedelta
 import json
 from unittest.mock import patch
@@ -289,12 +290,15 @@ async def test_availability(hass: HomeAssistant) -> None:
         assert state.state == STATE_UNAVAILABLE
 
     future = utcnow() + timedelta(minutes=120)
-    with patch(
-        "homeassistant.components.gios.Gios._get_all_sensors",
-        return_value=sensors,
-    ), patch(
-        "homeassistant.components.gios.Gios._get_indexes",
-        return_value={},
+    with (
+        patch(
+            "homeassistant.components.gios.Gios._get_all_sensors",
+            return_value=sensors,
+        ),
+        patch(
+            "homeassistant.components.gios.Gios._get_indexes",
+            return_value={},
+        ),
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
@@ -314,11 +318,14 @@ async def test_availability(hass: HomeAssistant) -> None:
         assert state.state == STATE_UNAVAILABLE
 
         future = utcnow() + timedelta(minutes=180)
-    with patch(
-        "homeassistant.components.gios.Gios._get_all_sensors", return_value=sensors
-    ), patch(
-        "homeassistant.components.gios.Gios._get_indexes",
-        return_value=indexes,
+    with (
+        patch(
+            "homeassistant.components.gios.Gios._get_all_sensors", return_value=sensors
+        ),
+        patch(
+            "homeassistant.components.gios.Gios._get_indexes",
+            return_value=indexes,
+        ),
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()

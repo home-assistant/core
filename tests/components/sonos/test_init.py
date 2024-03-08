@@ -1,4 +1,5 @@
 """Tests for the Sonos config flow."""
+
 import asyncio
 from datetime import timedelta
 import logging
@@ -95,21 +96,23 @@ async def test_async_poll_manual_hosts_warnings(
     await hass.async_block_till_done()
     manager: SonosDiscoveryManager = hass.data[DATA_SONOS_DISCOVERY_MANAGER]
     manager.hosts.add("10.10.10.10")
-    with caplog.at_level(logging.DEBUG), patch.object(
-        manager, "_async_handle_discovery_message"
-    ), patch(
-        "homeassistant.components.sonos.async_call_later"
-    ) as mock_async_call_later, patch(
-        "homeassistant.components.sonos.async_dispatcher_send"
-    ), patch(
-        "homeassistant.components.sonos.sync_get_visible_zones",
-        side_effect=[
-            OSError(),
-            OSError(),
-            [],
-            [],
-            OSError(),
-        ],
+    with (
+        caplog.at_level(logging.DEBUG),
+        patch.object(manager, "_async_handle_discovery_message"),
+        patch(
+            "homeassistant.components.sonos.async_call_later"
+        ) as mock_async_call_later,
+        patch("homeassistant.components.sonos.async_dispatcher_send"),
+        patch(
+            "homeassistant.components.sonos.sync_get_visible_zones",
+            side_effect=[
+                OSError(),
+                OSError(),
+                [],
+                [],
+                OSError(),
+            ],
+        ),
     ):
         # First call fails, it should be logged as a WARNING message
         caplog.clear()

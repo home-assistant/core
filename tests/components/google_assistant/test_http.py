@@ -1,4 +1,5 @@
 """Test Google http services."""
+
 from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
 import json
@@ -98,13 +99,17 @@ async def test_update_access_token(hass: HomeAssistant) -> None:
     await config.async_initialize()
 
     base_time = datetime(2019, 10, 14, tzinfo=UTC)
-    with patch(
-        "homeassistant.components.google_assistant.http._get_homegraph_token"
-    ) as mock_get_token, patch(
-        "homeassistant.components.google_assistant.http._get_homegraph_jwt"
-    ) as mock_get_jwt, patch(
-        "homeassistant.core.dt_util.utcnow",
-    ) as mock_utcnow:
+    with (
+        patch(
+            "homeassistant.components.google_assistant.http._get_homegraph_token"
+        ) as mock_get_token,
+        patch(
+            "homeassistant.components.google_assistant.http._get_homegraph_jwt"
+        ) as mock_get_jwt,
+        patch(
+            "homeassistant.core.dt_util.utcnow",
+        ) as mock_utcnow,
+    ):
         mock_utcnow.return_value = base_time
         mock_get_jwt.return_value = jwt
         mock_get_token.return_value = MOCK_TOKEN

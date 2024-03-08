@@ -1,4 +1,5 @@
 """Test the OVO Energy config flow."""
+
 from unittest.mock import patch
 
 import aiohttp
@@ -81,15 +82,19 @@ async def test_full_flow_implementation(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.ovo_energy.config_flow.OVOEnergy.authenticate",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.ovo_energy.config_flow.OVOEnergy.username",
-        "some_name",
-    ), patch(
-        "homeassistant.components.ovo_energy.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.ovo_energy.config_flow.OVOEnergy.authenticate",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.ovo_energy.config_flow.OVOEnergy.username",
+            "some_name",
+        ),
+        patch(
+            "homeassistant.components.ovo_energy.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -174,12 +179,15 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         assert result["step_id"] == "reauth"
         assert result["errors"] == {"base": "authorization_error"}
 
-    with patch(
-        "homeassistant.components.ovo_energy.config_flow.OVOEnergy.authenticate",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.ovo_energy.config_flow.OVOEnergy.username",
-        return_value=FIXTURE_USER_INPUT[CONF_USERNAME],
+    with (
+        patch(
+            "homeassistant.components.ovo_energy.config_flow.OVOEnergy.authenticate",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.ovo_energy.config_flow.OVOEnergy.username",
+            return_value=FIXTURE_USER_INPUT[CONF_USERNAME],
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

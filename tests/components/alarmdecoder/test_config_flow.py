@@ -1,4 +1,5 @@
 """Test the AlarmDecoder config flow."""
+
 from unittest.mock import patch
 
 from alarmdecoder.util import NoDeviceError
@@ -73,12 +74,14 @@ async def test_setups(hass: HomeAssistant, protocol, connection, title) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "protocol"
 
-    with patch("homeassistant.components.alarmdecoder.config_flow.AdExt.open"), patch(
-        "homeassistant.components.alarmdecoder.config_flow.AdExt.close"
-    ), patch(
-        "homeassistant.components.alarmdecoder.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch("homeassistant.components.alarmdecoder.config_flow.AdExt.open"),
+        patch("homeassistant.components.alarmdecoder.config_flow.AdExt.close"),
+        patch(
+            "homeassistant.components.alarmdecoder.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], connection
         )
@@ -116,20 +119,26 @@ async def test_setup_connection_error(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "protocol"
 
-    with patch(
-        "homeassistant.components.alarmdecoder.config_flow.AdExt.open",
-        side_effect=NoDeviceError,
-    ), patch("homeassistant.components.alarmdecoder.config_flow.AdExt.close"):
+    with (
+        patch(
+            "homeassistant.components.alarmdecoder.config_flow.AdExt.open",
+            side_effect=NoDeviceError,
+        ),
+        patch("homeassistant.components.alarmdecoder.config_flow.AdExt.close"),
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], connection_settings
         )
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"] == {"base": "cannot_connect"}
 
-    with patch(
-        "homeassistant.components.alarmdecoder.config_flow.AdExt.open",
-        side_effect=Exception,
-    ), patch("homeassistant.components.alarmdecoder.config_flow.AdExt.close"):
+    with (
+        patch(
+            "homeassistant.components.alarmdecoder.config_flow.AdExt.open",
+            side_effect=Exception,
+        ),
+        patch("homeassistant.components.alarmdecoder.config_flow.AdExt.close"),
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], connection_settings
         )

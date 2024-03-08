@@ -1,4 +1,5 @@
 """Test the Scrape config flow."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
@@ -330,9 +331,12 @@ async def test_options_add_remove_sensor_flow(
     assert result["step_id"] == "add_sensor"
 
     mocker = MockRestData("test_scrape_sensor2")
-    with patch("homeassistant.components.rest.RestData", return_value=mocker), patch(
-        "homeassistant.components.scrape.config_flow.uuid.uuid1",
-        return_value=uuid.UUID("3699ef88-69e6-11ed-a1eb-0242ac120003"),
+    with (
+        patch("homeassistant.components.rest.RestData", return_value=mocker),
+        patch(
+            "homeassistant.components.scrape.config_flow.uuid.uuid1",
+            return_value=uuid.UUID("3699ef88-69e6-11ed-a1eb-0242ac120003"),
+        ),
     ):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],

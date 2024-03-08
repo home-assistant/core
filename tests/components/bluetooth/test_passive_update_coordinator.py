@@ -1,4 +1,5 @@
 """Tests for the Bluetooth integration PassiveBluetoothDataUpdateCoordinator."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -143,7 +144,12 @@ async def test_unavailable_callbacks_mark_the_coordinator_unavailable(
     start_monotonic = time.monotonic()
     with patch(
         "bleak.BleakScanner.discovered_devices_and_advertisement_data",  # Must patch before we setup
-        {"44:44:33:11:23:45": (MagicMock(address="44:44:33:11:23:45"), MagicMock())},
+        {
+            "44:44:33:11:23:45": (
+                MagicMock(address="44:44:33:11:23:45"),
+                MagicMock(),
+            )
+        },
     ):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
@@ -163,8 +169,9 @@ async def test_unavailable_callbacks_mark_the_coordinator_unavailable(
 
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
 
-    with patch_bluetooth_time(monotonic_now), patch_all_discovered_devices(
-        [MagicMock(address="44:44:33:11:23:45")]
+    with (
+        patch_bluetooth_time(monotonic_now),
+        patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]),
     ):
         async_fire_time_changed(
             hass,
@@ -179,9 +186,12 @@ async def test_unavailable_callbacks_mark_the_coordinator_unavailable(
 
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 2
 
-    with patch_bluetooth_time(
-        monotonic_now,
-    ), patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]):
+    with (
+        patch_bluetooth_time(
+            monotonic_now,
+        ),
+        patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]),
+    ):
         async_fire_time_changed(
             hass,
             dt_util.utcnow()

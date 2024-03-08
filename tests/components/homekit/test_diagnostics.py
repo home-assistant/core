@@ -1,4 +1,5 @@
 """Test homekit diagnostics."""
+
 from unittest.mock import ANY, MagicMock, patch
 
 from homeassistant.components.homekit.const import (
@@ -142,9 +143,11 @@ async def test_config_entry_running(
         "status": 1,
     }
 
-    with patch("pyhap.accessory_driver.AccessoryDriver.async_start"), patch(
-        "homeassistant.components.homekit.HomeKit.async_stop"
-    ), patch("homeassistant.components.homekit.async_port_is_available"):
+    with (
+        patch("pyhap.accessory_driver.AccessoryDriver.async_start"),
+        patch("homeassistant.components.homekit.HomeKit.async_stop"),
+        patch("homeassistant.components.homekit.async_port_is_available"),
+    ):
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -301,9 +304,11 @@ async def test_config_entry_accessory(
         },
         "status": 1,
     }
-    with patch("pyhap.accessory_driver.AccessoryDriver.async_start"), patch(
-        "homeassistant.components.homekit.HomeKit.async_stop"
-    ), patch("homeassistant.components.homekit.async_port_is_available"):
+    with (
+        patch("pyhap.accessory_driver.AccessoryDriver.async_start"),
+        patch("homeassistant.components.homekit.HomeKit.async_stop"),
+        patch("homeassistant.components.homekit.async_port_is_available"),
+    ):
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -620,8 +625,10 @@ async def test_config_entry_with_trigger_accessory(
         "pairing_id": ANY,
         "status": 1,
     }
-    with patch("pyhap.accessory_driver.AccessoryDriver.async_start"), patch(
-        "homeassistant.components.homekit.HomeKit.async_stop"
-    ), patch("homeassistant.components.homekit.async_port_is_available"):
+    with (
+        patch("pyhap.accessory_driver.AccessoryDriver.async_start"),
+        patch("homeassistant.components.homekit.HomeKit.async_stop"),
+        patch("homeassistant.components.homekit.async_port_is_available"),
+    ):
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()

@@ -1,4 +1,5 @@
 """Tests for the devolo Home Network switch."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 

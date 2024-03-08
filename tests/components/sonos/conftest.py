@@ -1,4 +1,5 @@
 """Configuration for Sonos tests."""
+
 from copy import copy
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
@@ -208,9 +209,11 @@ def soco_factory(
     factory = SoCoMockFactory(
         music_library, speaker_info, current_track_info_empty, battery_info, alarm_clock
     )
-    with patch("homeassistant.components.sonos.SoCo", new=factory.get_mock), patch(
-        "socket.gethostbyname", side_effect=patch_gethostbyname
-    ), patch("homeassistant.components.sonos.ZGS_SUBSCRIPTION_TIMEOUT", 0):
+    with (
+        patch("homeassistant.components.sonos.SoCo", new=factory.get_mock),
+        patch("socket.gethostbyname", side_effect=patch_gethostbyname),
+        patch("homeassistant.components.sonos.ZGS_SUBSCRIPTION_TIMEOUT", 0),
+    ):
         yield factory
 
 
@@ -223,14 +226,16 @@ def soco_fixture(soco_factory):
 @pytest.fixture(autouse=True)
 async def silent_ssdp_scanner(hass):
     """Start SSDP component and get Scanner, prevent actual SSDP traffic."""
-    with patch(
-        "homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"
-    ), patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"), patch(
-        "homeassistant.components.ssdp.Scanner.async_scan"
-    ), patch(
-        "homeassistant.components.ssdp.Server._async_start_upnp_servers",
-    ), patch(
-        "homeassistant.components.ssdp.Server._async_stop_upnp_servers",
+    with (
+        patch("homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"),
+        patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"),
+        patch("homeassistant.components.ssdp.Scanner.async_scan"),
+        patch(
+            "homeassistant.components.ssdp.Server._async_start_upnp_servers",
+        ),
+        patch(
+            "homeassistant.components.ssdp.Server._async_stop_upnp_servers",
+        ),
     ):
         yield
 

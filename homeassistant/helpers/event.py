@@ -1,4 +1,5 @@
 """Helpers for listening to events."""
+
 from __future__ import annotations
 
 import asyncio

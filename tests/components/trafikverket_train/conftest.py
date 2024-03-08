@@ -1,4 +1,5 @@
 """Fixtures for Trafikverket Train integration tests."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -42,14 +43,18 @@ async def load_integration_from_entry(
     )
     config_entry2.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_next_train_stops",
-        return_value=get_trains,
-    ), patch(
-        "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_train_stop",
-        return_value=get_train_stop,
-    ), patch(
-        "homeassistant.components.trafikverket_train.TrafikverketTrain.async_get_train_station",
+    with (
+        patch(
+            "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_next_train_stops",
+            return_value=get_trains,
+        ),
+        patch(
+            "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_train_stop",
+            return_value=get_train_stop,
+        ),
+        patch(
+            "homeassistant.components.trafikverket_train.TrafikverketTrain.async_get_train_station",
+        ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

@@ -1,4 +1,5 @@
 """The tests for the GeoNet NZ Quakes Feed integration."""
+
 import datetime
 from unittest.mock import patch
 
@@ -182,8 +183,9 @@ async def test_setup_imperial(
 
     # Patching 'utcnow' to gain more control over the timed update.
     freezer.move_to(dt_util.utcnow())
-    with patch("aio_geojson_client.feed.GeoJsonFeed.update") as mock_feed_update, patch(
-        "aio_geojson_client.feed.GeoJsonFeed.last_timestamp", create=True
+    with (
+        patch("aio_geojson_client.feed.GeoJsonFeed.update") as mock_feed_update,
+        patch("aio_geojson_client.feed.GeoJsonFeed.last_timestamp", create=True),
     ):
         mock_feed_update.return_value = "OK", [mock_entry_1]
         assert await async_setup_component(hass, geonetnz_quakes.DOMAIN, CONFIG)

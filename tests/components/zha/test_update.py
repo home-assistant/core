@@ -1,4 +1,5 @@
 """Test ZHA firmware updates."""
+
 from unittest.mock import AsyncMock, call, patch
 
 import pytest
@@ -515,10 +516,13 @@ async def test_firmware_update_raises(
             blocking=True,
         )
 
-    with patch(
-        "zigpy.device.Device.update_firmware",
-        AsyncMock(side_effect=DeliveryError("failed to deliver")),
-    ), pytest.raises(HomeAssistantError):
+    with (
+        patch(
+            "zigpy.device.Device.update_firmware",
+            AsyncMock(side_effect=DeliveryError("failed to deliver")),
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,

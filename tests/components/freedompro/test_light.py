@@ -1,4 +1,5 @@
 """Tests for the Freedompro light."""
+
 from unittest.mock import patch
 
 import pytest

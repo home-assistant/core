@@ -1,4 +1,5 @@
 """Support for Aseko Pool Live binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

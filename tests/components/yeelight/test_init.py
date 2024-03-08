@@ -1,4 +1,5 @@
 """Test Yeelight."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
@@ -59,9 +60,10 @@ async def test_ip_changes_fallback_discovery(hass: HomeAssistant) -> None:
 
     mocked_fail_bulb = _mocked_bulb(cannot_connect=True)
     mocked_fail_bulb.bulb_type = BulbType.WhiteTempMood
-    with patch(
-        f"{MODULE}.AsyncBulb", return_value=mocked_fail_bulb
-    ), _patch_discovery():
+    with (
+        patch(f"{MODULE}.AsyncBulb", return_value=mocked_fail_bulb),
+        _patch_discovery(),
+    ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -161,11 +163,13 @@ async def test_setup_discovery_with_manually_configured_network_adapter(
     config_entry.add_to_hass(hass)
 
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(), patch(
-        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
-    ), patch(
-        "homeassistant.components.zeroconf.network.async_get_adapters",
-        return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
+    with (
+        _patch_discovery(),
+        patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb),
+        patch(
+            "homeassistant.components.zeroconf.network.async_get_adapters",
+            return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -217,11 +221,13 @@ async def test_setup_discovery_with_manually_configured_network_adapter_one_fail
     config_entry.add_to_hass(hass)
 
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(), patch(
-        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
-    ), patch(
-        "homeassistant.components.zeroconf.network.async_get_adapters",
-        return_value=_ADAPTERS_WITH_MANUAL_CONFIG_ONE_FAILING,
+    with (
+        _patch_discovery(),
+        patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb),
+        patch(
+            "homeassistant.components.zeroconf.network.async_get_adapters",
+            return_value=_ADAPTERS_WITH_MANUAL_CONFIG_ONE_FAILING,
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -338,17 +344,23 @@ async def test_bulb_off_while_adding_in_ha(hass: HomeAssistant) -> None:
     mocked_bulb = _mocked_bulb(cannot_connect=True)
     mocked_bulb.bulb_type = BulbType.WhiteTempMood
 
-    with patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb), _patch_discovery(
-        no_device=True
-    ), _patch_discovery_timeout(), _patch_discovery_interval():
+    with (
+        patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb),
+        _patch_discovery(no_device=True),
+        _patch_discovery_timeout(),
+        _patch_discovery_interval(),
+    ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
-    with patch(f"{MODULE}.AsyncBulb", return_value=_mocked_bulb()), _patch_discovery(
-        no_device=True
-    ), _patch_discovery_timeout(), _patch_discovery_interval():
+    with (
+        patch(f"{MODULE}.AsyncBulb", return_value=_mocked_bulb()),
+        _patch_discovery(no_device=True),
+        _patch_discovery_timeout(),
+        _patch_discovery_interval(),
+    ):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=2))
         await hass.async_block_till_done()
 
@@ -421,8 +433,9 @@ async def test_unload_before_discovery(
 
     mocked_bulb = _mocked_bulb(cannot_connect=True)
 
-    with _patch_discovery(no_device=True), patch(
-        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(no_device=True),
+        patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -441,10 +454,11 @@ async def test_async_listen_error_has_host_with_id(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with _patch_discovery(
-        no_device=True
-    ), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
-        f"{MODULE}.AsyncBulb", return_value=_mocked_bulb(cannot_connect=True)
+    with (
+        _patch_discovery(no_device=True),
+        _patch_discovery_timeout(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE}.AsyncBulb", return_value=_mocked_bulb(cannot_connect=True)),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
 
@@ -456,10 +470,11 @@ async def test_async_listen_error_has_host_without_id(hass: HomeAssistant) -> No
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "127.0.0.1"})
     config_entry.add_to_hass(hass)
 
-    with _patch_discovery(
-        no_device=True
-    ), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
-        f"{MODULE}.AsyncBulb", return_value=_mocked_bulb(cannot_connect=True)
+    with (
+        _patch_discovery(no_device=True),
+        _patch_discovery_timeout(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE}.AsyncBulb", return_value=_mocked_bulb(cannot_connect=True)),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
 
@@ -476,8 +491,11 @@ async def test_async_setup_with_missing_id(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with _patch_discovery(), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
-        f"{MODULE}.AsyncBulb", return_value=_mocked_bulb(cannot_connect=True)
+    with (
+        _patch_discovery(),
+        _patch_discovery_timeout(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE}.AsyncBulb", return_value=_mocked_bulb(cannot_connect=True)),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -486,8 +504,11 @@ async def test_async_setup_with_missing_id(hass: HomeAssistant) -> None:
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=2))
         await hass.async_block_till_done()
 
-    with _patch_discovery(), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
-        f"{MODULE}.AsyncBulb", return_value=_mocked_bulb()
+    with (
+        _patch_discovery(),
+        _patch_discovery_timeout(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE}.AsyncBulb", return_value=_mocked_bulb()),
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=4))
         await hass.async_block_till_done()
@@ -503,8 +524,11 @@ async def test_async_setup_with_missing_unique_id(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with _patch_discovery(), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
-        f"{MODULE}.AsyncBulb", return_value=_mocked_bulb(cannot_connect=True)
+    with (
+        _patch_discovery(),
+        _patch_discovery_timeout(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE}.AsyncBulb", return_value=_mocked_bulb(cannot_connect=True)),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -513,8 +537,11 @@ async def test_async_setup_with_missing_unique_id(hass: HomeAssistant) -> None:
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=2))
         await hass.async_block_till_done()
 
-    with _patch_discovery(), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
-        f"{MODULE}.AsyncBulb", return_value=_mocked_bulb()
+    with (
+        _patch_discovery(),
+        _patch_discovery_timeout(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE}.AsyncBulb", return_value=_mocked_bulb()),
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=4))
         await hass.async_block_till_done()
@@ -532,8 +559,11 @@ async def test_connection_dropped_resyncs_properties(hass: HomeAssistant) -> Non
     config_entry.add_to_hass(hass)
     mocked_bulb = _mocked_bulb()
 
-    with _patch_discovery(), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
-        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(),
+        _patch_discovery_timeout(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -565,8 +595,11 @@ async def test_oserror_on_first_update_results_in_unavailable(
     mocked_bulb = _mocked_bulb()
     mocked_bulb.async_get_properties = AsyncMock(side_effect=OSError)
 
-    with _patch_discovery(), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
-        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(),
+        _patch_discovery_timeout(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -592,8 +625,11 @@ async def test_non_oserror_exception_on_first_update(
     mocked_bulb = _mocked_bulb()
     mocked_bulb.async_get_properties = AsyncMock(side_effect=exception)
 
-    with _patch_discovery(), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
-        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(),
+        _patch_discovery_timeout(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -611,10 +647,11 @@ async def test_async_setup_with_discovery_not_working(hass: HomeAssistant) -> No
     )
     config_entry.add_to_hass(hass)
 
-    with _patch_discovery(
-        no_device=True
-    ), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
-        f"{MODULE}.AsyncBulb", return_value=_mocked_bulb()
+    with (
+        _patch_discovery(no_device=True),
+        _patch_discovery_timeout(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE}.AsyncBulb", return_value=_mocked_bulb()),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -635,8 +672,11 @@ async def test_async_setup_retries_with_wrong_device(
     )
     config_entry.add_to_hass(hass)
 
-    with _patch_discovery(), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
-        f"{MODULE}.AsyncBulb", return_value=_mocked_bulb()
+    with (
+        _patch_discovery(),
+        _patch_discovery_timeout(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE}.AsyncBulb", return_value=_mocked_bulb()),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

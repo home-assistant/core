@@ -1,4 +1,5 @@
 """Test ZHA sensor."""
+
 from datetime import timedelta
 import math
 from unittest.mock import MagicMock, patch

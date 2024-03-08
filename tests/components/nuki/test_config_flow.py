@@ -1,4 +1,5 @@
 """Test the nuki config flow."""
+
 from unittest.mock import patch
 
 from pynuki.bridge import InvalidCredentialsException
@@ -22,13 +23,16 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.nuki.config_flow.NukiBridge.info",
-        return_value=MOCK_INFO,
-    ), patch(
-        "homeassistant.components.nuki.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.nuki.config_flow.NukiBridge.info",
+            return_value=MOCK_INFO,
+        ),
+        patch(
+            "homeassistant.components.nuki.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -155,13 +159,16 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == config_entries.SOURCE_USER
 
-    with patch(
-        "homeassistant.components.nuki.config_flow.NukiBridge.info",
-        return_value=MOCK_INFO,
-    ), patch(
-        "homeassistant.components.nuki.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.nuki.config_flow.NukiBridge.info",
+            return_value=MOCK_INFO,
+        ),
+        patch(
+            "homeassistant.components.nuki.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -208,12 +215,15 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    with patch(
-        "homeassistant.components.nuki.config_flow.NukiBridge.info",
-        return_value=MOCK_INFO,
-    ), patch(
-        "homeassistant.components.nuki.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.nuki.config_flow.NukiBridge.info",
+            return_value=MOCK_INFO,
+        ),
+        patch(
+            "homeassistant.components.nuki.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

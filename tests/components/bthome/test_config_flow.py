@@ -1,4 +1,5 @@
 """Test the BTHome config flow."""
+
 from unittest.mock import patch
 
 from bthome_ble import BTHomeBluetoothDeviceData as DeviceData
@@ -40,12 +41,15 @@ async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
 
 async def test_async_step_bluetooth_during_onboarding(hass: HomeAssistant) -> None:
     """Test discovery via bluetooth during onboarding."""
-    with patch(
-        "homeassistant.components.bthome.async_setup_entry", return_value=True
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.onboarding.async_is_onboarded",
-        return_value=False,
-    ) as mock_onboarding:
+    with (
+        patch(
+            "homeassistant.components.bthome.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded",
+            return_value=False,
+        ) as mock_onboarding,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_BLUETOOTH},

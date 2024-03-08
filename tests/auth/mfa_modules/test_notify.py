@@ -1,4 +1,5 @@
 """Test the HMAC-based One Time Password (MFA) auth module."""
+
 import asyncio
 from unittest.mock import patch
 
@@ -182,8 +183,9 @@ async def test_login_flow_validates_mfa(hass: HomeAssistant) -> None:
     assert len(notify_calls) == 1
 
     # retry twice
-    with patch("pyotp.HOTP.verify", return_value=False), patch(
-        "pyotp.HOTP.at", return_value=MOCK_CODE_2
+    with (
+        patch("pyotp.HOTP.verify", return_value=False),
+        patch("pyotp.HOTP.at", return_value=MOCK_CODE_2),
     ):
         result = await hass.auth.login_flow.async_configure(
             result["flow_id"], {"code": "invalid-code"}

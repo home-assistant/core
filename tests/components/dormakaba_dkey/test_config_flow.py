@@ -1,4 +1,5 @@
 """Test the Dormakaba dKey config flow."""
+
 from unittest.mock import patch
 
 from bleak.exc import BleakError
@@ -164,13 +165,16 @@ async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
 async def _test_common_success(hass: HomeAssistant, result: FlowResult) -> None:
     """Test bluetooth and user flow success paths."""
 
-    with patch(
-        "homeassistant.components.dormakaba_dkey.config_flow.DKEYLock.associate",
-        return_value=AssociationData(b"1234", b"AABBCCDD"),
-    ) as mock_associate, patch(
-        "homeassistant.components.dormakaba_dkey.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.dormakaba_dkey.config_flow.DKEYLock.associate",
+            return_value=AssociationData(b"1234", b"AABBCCDD"),
+        ) as mock_associate,
+        patch(
+            "homeassistant.components.dormakaba_dkey.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"activation_code": "1234-1234"}
         )
@@ -342,12 +346,15 @@ async def test_reauth(hass: HomeAssistant) -> None:
     assert result["step_id"] == "associate"
     assert result["errors"] is None
 
-    with patch(
-        "homeassistant.components.dormakaba_dkey.config_flow.DKEYLock.associate",
-        return_value=AssociationData(b"1234", b"AABBCCDD"),
-    ) as mock_associate, patch(
-        "homeassistant.components.dormakaba_dkey.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.dormakaba_dkey.config_flow.DKEYLock.associate",
+            return_value=AssociationData(b"1234", b"AABBCCDD"),
+        ) as mock_associate,
+        patch(
+            "homeassistant.components.dormakaba_dkey.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"activation_code": "1234-1234"}

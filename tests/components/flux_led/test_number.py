@@ -1,6 +1,5 @@
 """Tests for the flux_led number platform."""
 
-
 from unittest.mock import patch
 
 from flux_led.const import COLOR_MODE_RGB as FLUX_COLOR_MODE_RGB
@@ -269,9 +268,11 @@ async def test_addressable_light_pixel_config(hass: HomeAssistant) -> None:
     )  # Original addressable model
     bulb.color_modes = {FLUX_COLOR_MODE_RGB}
     bulb.color_mode = FLUX_COLOR_MODE_RGB
-    with patch.object(
-        flux_number, "DEBOUNCE_TIME", 0
-    ), _patch_discovery(), _patch_wifibulb(device=bulb):
+    with (
+        patch.object(flux_number, "DEBOUNCE_TIME", 0),
+        _patch_discovery(),
+        _patch_wifibulb(device=bulb),
+    ):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -386,9 +387,11 @@ async def test_addressable_light_pixel_config_music_disabled(
     )  # Original addressable model
     bulb.color_modes = {FLUX_COLOR_MODE_RGB}
     bulb.color_mode = FLUX_COLOR_MODE_RGB
-    with patch.object(
-        flux_number, "DEBOUNCE_TIME", 0
-    ), _patch_discovery(), _patch_wifibulb(device=bulb):
+    with (
+        patch.object(flux_number, "DEBOUNCE_TIME", 0),
+        _patch_discovery(),
+        _patch_wifibulb(device=bulb),
+    ):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 

@@ -1,4 +1,5 @@
 """Test the Litter-Robot config flow."""
+
 from unittest.mock import patch
 
 from pylitterbot import Account
@@ -24,13 +25,16 @@ async def test_form(hass: HomeAssistant, mock_account) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.litterrobot.config_flow.Account.connect",
-        return_value=mock_account,
-    ), patch(
-        "homeassistant.components.litterrobot.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.litterrobot.config_flow.Account.connect",
+            return_value=mock_account,
+        ),
+        patch(
+            "homeassistant.components.litterrobot.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], CONFIG[DOMAIN]
         )
@@ -133,13 +137,16 @@ async def test_step_reauth(hass: HomeAssistant, mock_account: Account) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    with patch(
-        "homeassistant.components.litterrobot.config_flow.Account.connect",
-        return_value=mock_account,
-    ), patch(
-        "homeassistant.components.litterrobot.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.litterrobot.config_flow.Account.connect",
+            return_value=mock_account,
+        ),
+        patch(
+            "homeassistant.components.litterrobot.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_PASSWORD: CONFIG[litterrobot.DOMAIN][CONF_PASSWORD]},
@@ -182,13 +189,16 @@ async def test_step_reauth_failed(hass: HomeAssistant, mock_account: Account) ->
         assert result["type"] == FlowResultType.FORM
         assert result["errors"] == {"base": "invalid_auth"}
 
-    with patch(
-        "homeassistant.components.litterrobot.config_flow.Account.connect",
-        return_value=mock_account,
-    ), patch(
-        "homeassistant.components.litterrobot.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.litterrobot.config_flow.Account.connect",
+            return_value=mock_account,
+        ),
+        patch(
+            "homeassistant.components.litterrobot.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_PASSWORD: CONFIG[litterrobot.DOMAIN][CONF_PASSWORD]},

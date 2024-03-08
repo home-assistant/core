@@ -1,4 +1,5 @@
 """Test the Aseko Pool Live config flow."""
+
 from unittest.mock import patch
 
 from aioaseko import AccountInfo, APIUnavailable, InvalidAuthCredentials
@@ -28,13 +29,16 @@ async def test_async_step_user_success(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.aseko_pool_live.config_flow.WebAccount.login",
-        return_value=AccountInfo("aseko@example.com", "a_user_id", "any_language"),
-    ), patch(
-        "homeassistant.components.aseko_pool_live.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.aseko_pool_live.config_flow.WebAccount.login",
+            return_value=AccountInfo("aseko@example.com", "a_user_id", "any_language"),
+        ),
+        patch(
+            "homeassistant.components.aseko_pool_live.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

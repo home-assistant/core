@@ -1,4 +1,5 @@
 """Tests for the init module."""
+
 from unittest.mock import Mock, patch
 
 import pytest
@@ -27,13 +28,11 @@ async def test_async_setup_entry__not_login(
     """Test setup does not create config entry when not logged in."""
     manager.login = Mock(return_value=False)
 
-    with patch.object(
-        hass.config_entries, "async_forward_entry_setups"
-    ) as setups_mock, patch.object(
-        hass.config_entries, "async_forward_entry_setup"
-    ) as setup_mock, patch(
-        "homeassistant.components.vesync.async_process_devices"
-    ) as process_mock:
+    with (
+        patch.object(hass.config_entries, "async_forward_entry_setups") as setups_mock,
+        patch.object(hass.config_entries, "async_forward_entry_setup") as setup_mock,
+        patch("homeassistant.components.vesync.async_process_devices") as process_mock,
+    ):
         assert not await async_setup_entry(hass, config_entry)
         await hass.async_block_till_done()
         assert setups_mock.call_count == 0
@@ -49,11 +48,10 @@ async def test_async_setup_entry__no_devices(
     hass: HomeAssistant, config_entry: ConfigEntry, manager: VeSync
 ) -> None:
     """Test setup connects to vesync and creates empty config when no devices."""
-    with patch.object(
-        hass.config_entries, "async_forward_entry_setups"
-    ) as setups_mock, patch.object(
-        hass.config_entries, "async_forward_entry_setup"
-    ) as setup_mock:
+    with (
+        patch.object(hass.config_entries, "async_forward_entry_setups") as setups_mock,
+        patch.object(hass.config_entries, "async_forward_entry_setup") as setup_mock,
+    ):
         assert await async_setup_entry(hass, config_entry)
         # Assert platforms loaded
         await hass.async_block_till_done()
@@ -80,11 +78,10 @@ async def test_async_setup_entry__loads_fans(
         "fans": fans,
     }
 
-    with patch.object(
-        hass.config_entries, "async_forward_entry_setups"
-    ) as setups_mock, patch.object(
-        hass.config_entries, "async_forward_entry_setup"
-    ) as setup_mock:
+    with (
+        patch.object(hass.config_entries, "async_forward_entry_setups") as setups_mock,
+        patch.object(hass.config_entries, "async_forward_entry_setup") as setup_mock,
+    ):
         assert await async_setup_entry(hass, config_entry)
         # Assert platforms loaded
         await hass.async_block_till_done()

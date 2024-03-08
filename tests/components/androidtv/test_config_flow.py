@@ -1,4 +1,5 @@
 """Tests for the AndroidTV config flow."""
+
 from typing import Any
 from unittest.mock import patch
 
@@ -107,10 +108,13 @@ async def test_user(
     assert flow_result["step_id"] == "user"
 
     # test with all provided
-    with patch(
-        CONNECT_METHOD,
-        return_value=(MockConfigDevice(eth_mac, wifi_mac), None),
-    ), PATCH_SETUP_ENTRY as mock_setup_entry:
+    with (
+        patch(
+            CONNECT_METHOD,
+            return_value=(MockConfigDevice(eth_mac, wifi_mac), None),
+        ),
+        PATCH_SETUP_ENTRY as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             flow_result["flow_id"], user_input=config
         )
@@ -128,10 +132,15 @@ async def test_user_adbkey(hass: HomeAssistant) -> None:
     config_data = CONFIG_PYTHON_ADB.copy()
     config_data[CONF_ADBKEY] = ADBKEY
 
-    with patch(
-        CONNECT_METHOD,
-        return_value=(MockConfigDevice(), None),
-    ), PATCH_ISFILE, PATCH_ACCESS, PATCH_SETUP_ENTRY as mock_setup_entry:
+    with (
+        patch(
+            CONNECT_METHOD,
+            return_value=(MockConfigDevice(), None),
+        ),
+        PATCH_ISFILE,
+        PATCH_ACCESS,
+        PATCH_SETUP_ENTRY as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER, "show_advanced_options": True},
@@ -160,10 +169,13 @@ async def test_error_both_key_server(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {"base": "key_and_server"}
 
-    with patch(
-        CONNECT_METHOD,
-        return_value=(MockConfigDevice(), None),
-    ), PATCH_SETUP_ENTRY:
+    with (
+        patch(
+            CONNECT_METHOD,
+            return_value=(MockConfigDevice(), None),
+        ),
+        PATCH_SETUP_ENTRY,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=CONFIG_ADB_SERVER
         )
@@ -187,10 +199,13 @@ async def test_error_invalid_key(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {"base": "adbkey_not_file"}
 
-    with patch(
-        CONNECT_METHOD,
-        return_value=(MockConfigDevice(), None),
-    ), PATCH_SETUP_ENTRY:
+    with (
+        patch(
+            CONNECT_METHOD,
+            return_value=(MockConfigDevice(), None),
+        ),
+        PATCH_SETUP_ENTRY,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=CONFIG_ADB_SERVER
         )
@@ -298,10 +313,13 @@ async def test_on_connect_failed(hass: HomeAssistant) -> None:
         assert result2["type"] == data_entry_flow.FlowResultType.FORM
         assert result2["errors"] == {"base": "unknown"}
 
-    with patch(
-        CONNECT_METHOD,
-        return_value=(MockConfigDevice(), None),
-    ), PATCH_SETUP_ENTRY:
+    with (
+        patch(
+            CONNECT_METHOD,
+            return_value=(MockConfigDevice(), None),
+        ),
+        PATCH_SETUP_ENTRY,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"], user_input=CONFIG_ADB_SERVER
         )

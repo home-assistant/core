@@ -1,4 +1,5 @@
 """Typing Helpers for Home Assistant."""
+
 from collections.abc import Mapping
 from enum import Enum
 from typing import Any, Generic, TypeVar

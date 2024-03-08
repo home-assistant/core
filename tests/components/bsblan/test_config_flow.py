@@ -1,4 +1,5 @@
 """Tests for the BSBLan device config flow."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 from bsblan import BSBLANConnectionError

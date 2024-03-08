@@ -1,4 +1,5 @@
 """Common tests for HomematicIP devices."""
+
 from unittest.mock import patch
 
 from homematicip.base.enums import EventType
@@ -96,13 +97,16 @@ async def test_hmip_add_device(
     assert len(mock_hap.hmip_device_by_entity_id) == pre_mapping_count - 3
 
     reloaded_hap = HomematicipHAP(hass, hmip_config_entry)
-    with patch(
-        "homeassistant.components.homematicip_cloud.HomematicipHAP",
-        return_value=reloaded_hap,
-    ), patch.object(reloaded_hap, "async_connect"), patch.object(
-        reloaded_hap, "get_hap", return_value=mock_hap.home
-    ), patch(
-        "homeassistant.components.homematicip_cloud.hap.asyncio.sleep",
+    with (
+        patch(
+            "homeassistant.components.homematicip_cloud.HomematicipHAP",
+            return_value=reloaded_hap,
+        ),
+        patch.object(reloaded_hap, "async_connect"),
+        patch.object(reloaded_hap, "get_hap", return_value=mock_hap.home),
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.asyncio.sleep",
+        ),
     ):
         mock_hap.home.fire_create_event(event_type=EventType.DEVICE_ADDED)
         await hass.async_block_till_done()

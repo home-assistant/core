@@ -1,4 +1,5 @@
 """Test the dnsip config flow."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -35,13 +36,16 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["data_schema"] == DATA_SCHEMA
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.dnsip.config_flow.aiodns.DNSResolver",
-        return_value=RetrieveDNS(),
-    ), patch(
-        "homeassistant.components.dnsip.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.dnsip.config_flow.aiodns.DNSResolver",
+            return_value=RetrieveDNS(),
+        ),
+        patch(
+            "homeassistant.components.dnsip.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -75,13 +79,16 @@ async def test_form_adv(hass: HomeAssistant) -> None:
 
     assert result["data_schema"] == DATA_SCHEMA_ADV
 
-    with patch(
-        "homeassistant.components.dnsip.config_flow.aiodns.DNSResolver",
-        return_value=RetrieveDNS(),
-    ), patch(
-        "homeassistant.components.dnsip.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.dnsip.config_flow.aiodns.DNSResolver",
+            return_value=RetrieveDNS(),
+        ),
+        patch(
+            "homeassistant.components.dnsip.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -153,12 +160,15 @@ async def test_flow_already_exist(hass: HomeAssistant) -> None:
     )
 
     dns_mock = RetrieveDNS()
-    with patch(
-        "homeassistant.components.dnsip.async_setup_entry",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.dnsip.config_flow.aiodns.DNSResolver",
-        return_value=dns_mock,
+    with (
+        patch(
+            "homeassistant.components.dnsip.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.dnsip.config_flow.aiodns.DNSResolver",
+            return_value=dns_mock,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

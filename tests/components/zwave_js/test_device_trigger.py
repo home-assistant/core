@@ -1,4 +1,5 @@
 """The tests for Z-Wave JS device triggers."""
+
 from unittest.mock import patch
 
 import pytest
@@ -1570,12 +1571,15 @@ async def test_failure_scenarios(
             {},
         )
 
-    with patch(
-        "homeassistant.components.zwave_js.device_trigger.async_get_node_from_device_id",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.zwave_js.helpers.get_zwave_value_from_config",
-        return_value=None,
+    with (
+        patch(
+            "homeassistant.components.zwave_js.device_trigger.async_get_node_from_device_id",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.zwave_js.helpers.get_zwave_value_from_config",
+            return_value=None,
+        ),
     ):
         assert (
             await device_trigger.async_get_trigger_capabilities(

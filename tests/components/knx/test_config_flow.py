@@ -1,4 +1,5 @@
 """Test the KNX config flow."""
+
 from contextlib import contextmanager
 from unittest.mock import Mock, patch
 
@@ -61,26 +62,34 @@ GATEWAY_INDIVIDUAL_ADDRESS = IndividualAddress("1.0.0")
 @pytest.fixture(name="knx_setup")
 def fixture_knx_setup():
     """Mock KNX entry setup."""
-    with patch("homeassistant.components.knx.async_setup", return_value=True), patch(
-        "homeassistant.components.knx.async_setup_entry", return_value=True
-    ) as mock_async_setup_entry:
+    with (
+        patch("homeassistant.components.knx.async_setup", return_value=True),
+        patch(
+            "homeassistant.components.knx.async_setup_entry", return_value=True
+        ) as mock_async_setup_entry,
+    ):
         yield mock_async_setup_entry
 
 
 @contextmanager
 def patch_file_upload(return_value=FIXTURE_KEYRING, side_effect=None):
     """Patch file upload. Yields the Keyring instance (return_value)."""
-    with patch(
-        "homeassistant.components.knx.helpers.keyring.process_uploaded_file"
-    ) as file_upload_mock, patch(
-        "homeassistant.components.knx.helpers.keyring.sync_load_keyring",
-        return_value=return_value,
-        side_effect=side_effect,
-    ), patch(
-        "pathlib.Path.mkdir",
-    ) as mkdir_mock, patch(
-        "shutil.move",
-    ) as shutil_move_mock:
+    with (
+        patch(
+            "homeassistant.components.knx.helpers.keyring.process_uploaded_file"
+        ) as file_upload_mock,
+        patch(
+            "homeassistant.components.knx.helpers.keyring.sync_load_keyring",
+            return_value=return_value,
+            side_effect=side_effect,
+        ),
+        patch(
+            "pathlib.Path.mkdir",
+        ) as mkdir_mock,
+        patch(
+            "shutil.move",
+        ) as shutil_move_mock,
+    ):
         file_upload_mock.return_value.__enter__.return_value = Mock()
         yield return_value
         if side_effect:

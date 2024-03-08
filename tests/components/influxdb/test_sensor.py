@@ -1,4 +1,5 @@
 """The tests for the InfluxDB sensor."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -92,9 +93,10 @@ def mock_client_fixture(request):
 @pytest.fixture(autouse=True, scope="module")
 def mock_client_close():
     """Mock close method of clients at module scope."""
-    with patch(f"{INFLUXDB_CLIENT_PATH}.close") as close_v1, patch(
-        f"{INFLUXDB_CLIENT_PATH}V2.close"
-    ) as close_v2:
+    with (
+        patch(f"{INFLUXDB_CLIENT_PATH}.close") as close_v1,
+        patch(f"{INFLUXDB_CLIENT_PATH}V2.close") as close_v2,
+    ):
         yield (close_v1, close_v2)
 
 

@@ -1,4 +1,5 @@
 """Test the Kuler Sky config flow."""
+
 from unittest.mock import MagicMock, patch
 
 import pykulersky
@@ -20,13 +21,16 @@ async def test_flow_success(hass: HomeAssistant) -> None:
     light = MagicMock(spec=pykulersky.Light)
     light.address = "AA:BB:CC:11:22:33"
     light.name = "Bedroom"
-    with patch(
-        "homeassistant.components.kulersky.config_flow.pykulersky.discover",
-        return_value=[light],
-    ), patch(
-        "homeassistant.components.kulersky.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.kulersky.config_flow.pykulersky.discover",
+            return_value=[light],
+        ),
+        patch(
+            "homeassistant.components.kulersky.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},
@@ -49,13 +53,16 @@ async def test_flow_no_devices_found(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] is None
 
-    with patch(
-        "homeassistant.components.kulersky.config_flow.pykulersky.discover",
-        return_value=[],
-    ), patch(
-        "homeassistant.components.kulersky.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.kulersky.config_flow.pykulersky.discover",
+            return_value=[],
+        ),
+        patch(
+            "homeassistant.components.kulersky.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},
@@ -76,13 +83,16 @@ async def test_flow_exceptions_caught(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] is None
 
-    with patch(
-        "homeassistant.components.kulersky.config_flow.pykulersky.discover",
-        side_effect=pykulersky.PykulerskyException("TEST"),
-    ), patch(
-        "homeassistant.components.kulersky.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.kulersky.config_flow.pykulersky.discover",
+            side_effect=pykulersky.PykulerskyException("TEST"),
+        ),
+        patch(
+            "homeassistant.components.kulersky.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},

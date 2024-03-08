@@ -1,4 +1,5 @@
 """The tests for the MQTT discovery."""
+
 import asyncio
 import copy
 import json
@@ -1531,8 +1532,9 @@ async def test_mqtt_integration_discovery_subscribe_unsubscribe(
         wait_unsub.set()
         return (0, 0)
 
-    with mock_config_flow("comp", TestFlow), patch.object(
-        mqtt_client_mock, "unsubscribe", side_effect=_mock_unsubscribe
+    with (
+        mock_config_flow("comp", TestFlow),
+        patch.object(mqtt_client_mock, "unsubscribe", side_effect=_mock_unsubscribe),
     ):
         async_fire_mqtt_message(hass, "comp/discovery/bla/config", "")
         await wait_unsub.wait()

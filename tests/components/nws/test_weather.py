@@ -1,4 +1,5 @@
 """Tests for the NWS weather component."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -224,9 +225,10 @@ async def test_error_observation(
 ) -> None:
     """Test error during update observation."""
     utc_time = dt_util.utcnow()
-    with patch("homeassistant.components.nws.utcnow") as mock_utc, patch(
-        "homeassistant.components.nws.weather.utcnow"
-    ) as mock_utc_weather:
+    with (
+        patch("homeassistant.components.nws.utcnow") as mock_utc,
+        patch("homeassistant.components.nws.weather.utcnow") as mock_utc_weather,
+    ):
 
         def increment_time(time):
             mock_utc.return_value += time

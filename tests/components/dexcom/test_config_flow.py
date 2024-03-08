@@ -1,4 +1,5 @@
 """Test the Dexcom config flow."""
+
 from unittest.mock import patch
 
 from pydexcom import AccountError, SessionError
@@ -22,13 +23,16 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.dexcom.config_flow.Dexcom.create_session",
-        return_value="test_session_id",
-    ), patch(
-        "homeassistant.components.dexcom.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.dexcom.config_flow.Dexcom.create_session",
+            return_value="test_session_id",
+        ),
+        patch(
+            "homeassistant.components.dexcom.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             CONFIG,

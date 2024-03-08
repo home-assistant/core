@@ -1,4 +1,5 @@
 """Runtime entry data for ESPHome stored in hass.data."""
+
 from __future__ import annotations
 
 import asyncio

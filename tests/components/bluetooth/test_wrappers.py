@@ -1,4 +1,5 @@
 """Tests for the Bluetooth integration."""
+
 from __future__ import annotations
 
 from contextlib import contextmanager
@@ -206,11 +207,12 @@ async def test_test_switch_adapters_when_out_of_slots(
         hass
     )
     # hci0 has 2 slots, hci1 has 1 slot
-    with patch.object(
-        manager.slot_manager, "release_slot"
-    ) as release_slot_mock, patch.object(
-        manager.slot_manager, "allocate_slot", return_value=True
-    ) as allocate_slot_mock:
+    with (
+        patch.object(manager.slot_manager, "release_slot") as release_slot_mock,
+        patch.object(
+            manager.slot_manager, "allocate_slot", return_value=True
+        ) as allocate_slot_mock,
+    ):
         ble_device = hci0_device_advs["00:00:00:00:00:01"][0]
         client = bleak.BleakClient(ble_device)
         assert await client.connect() is True
@@ -218,11 +220,12 @@ async def test_test_switch_adapters_when_out_of_slots(
         assert release_slot_mock.call_count == 0
 
     # All adapters are out of slots
-    with patch.object(
-        manager.slot_manager, "release_slot"
-    ) as release_slot_mock, patch.object(
-        manager.slot_manager, "allocate_slot", return_value=False
-    ) as allocate_slot_mock:
+    with (
+        patch.object(manager.slot_manager, "release_slot") as release_slot_mock,
+        patch.object(
+            manager.slot_manager, "allocate_slot", return_value=False
+        ) as allocate_slot_mock,
+    ):
         ble_device = hci0_device_advs["00:00:00:00:00:02"][0]
         client = bleak.BleakClient(ble_device)
         with pytest.raises(bleak.exc.BleakError):
@@ -236,11 +239,12 @@ async def test_test_switch_adapters_when_out_of_slots(
             return True
         return False
 
-    with patch.object(
-        manager.slot_manager, "release_slot"
-    ) as release_slot_mock, patch.object(
-        manager.slot_manager, "allocate_slot", _allocate_slot_mock
-    ) as allocate_slot_mock:
+    with (
+        patch.object(manager.slot_manager, "release_slot") as release_slot_mock,
+        patch.object(
+            manager.slot_manager, "allocate_slot", _allocate_slot_mock
+        ) as allocate_slot_mock,
+    ):
         ble_device = hci0_device_advs["00:00:00:00:00:03"][0]
         client = bleak.BleakClient(ble_device)
         await client.connect() is True
@@ -263,11 +267,12 @@ async def test_release_slot_on_connect_failure(
         hass
     )
     # hci0 has 2 slots, hci1 has 1 slot
-    with patch.object(
-        manager.slot_manager, "release_slot"
-    ) as release_slot_mock, patch.object(
-        manager.slot_manager, "allocate_slot", return_value=True
-    ) as allocate_slot_mock:
+    with (
+        patch.object(manager.slot_manager, "release_slot") as release_slot_mock,
+        patch.object(
+            manager.slot_manager, "allocate_slot", return_value=True
+        ) as allocate_slot_mock,
+    ):
         ble_device = hci0_device_advs["00:00:00:00:00:01"][0]
         client = bleak.BleakClient(ble_device)
         assert await client.connect() is False
@@ -291,11 +296,12 @@ async def test_release_slot_on_connect_exception(
         hass
     )
     # hci0 has 2 slots, hci1 has 1 slot
-    with patch.object(
-        manager.slot_manager, "release_slot"
-    ) as release_slot_mock, patch.object(
-        manager.slot_manager, "allocate_slot", return_value=True
-    ) as allocate_slot_mock:
+    with (
+        patch.object(manager.slot_manager, "release_slot") as release_slot_mock,
+        patch.object(
+            manager.slot_manager, "allocate_slot", return_value=True
+        ) as allocate_slot_mock,
+    ):
         ble_device = hci0_device_advs["00:00:00:00:00:01"][0]
         client = bleak.BleakClient(ble_device)
         with pytest.raises(Exception):

@@ -1,4 +1,5 @@
 """Test the Smappee component config flow module."""
+
 from http import HTTPStatus
 from ipaddress import ip_address
 from unittest.mock import patch
@@ -117,8 +118,9 @@ async def test_show_zeroconf_connection_error_form_next_generation(
 
 async def test_connection_error(hass: HomeAssistant) -> None:
     """Test we show user form on Smappee connection error."""
-    with patch("pysmappee.api.SmappeeLocalApi.logon", return_value=None), patch(
-        "pysmappee.mqtt.SmappeeLocalMqtt.start_attempt", return_value=None
+    with (
+        patch("pysmappee.api.SmappeeLocalApi.logon", return_value=None),
+        patch("pysmappee.mqtt.SmappeeLocalMqtt.start_attempt", return_value=None),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -142,11 +144,13 @@ async def test_connection_error(hass: HomeAssistant) -> None:
 
 async def test_user_local_connection_error(hass: HomeAssistant) -> None:
     """Test we show user form on Smappee connection error in local next generation option."""
-    with patch("pysmappee.api.SmappeeLocalApi.logon", return_value=None), patch(
-        "pysmappee.mqtt.SmappeeLocalMqtt.start_attempt", return_value=True
-    ), patch("pysmappee.mqtt.SmappeeLocalMqtt.start", return_value=True), patch(
-        "pysmappee.mqtt.SmappeeLocalMqtt.stop", return_value=True
-    ), patch("pysmappee.mqtt.SmappeeLocalMqtt.is_config_ready", return_value=None):
+    with (
+        patch("pysmappee.api.SmappeeLocalApi.logon", return_value=None),
+        patch("pysmappee.mqtt.SmappeeLocalMqtt.start_attempt", return_value=True),
+        patch("pysmappee.mqtt.SmappeeLocalMqtt.start", return_value=True),
+        patch("pysmappee.mqtt.SmappeeLocalMqtt.stop", return_value=True),
+        patch("pysmappee.mqtt.SmappeeLocalMqtt.is_config_ready", return_value=None),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -189,14 +193,19 @@ async def test_zeroconf_wrong_mdns(hass: HomeAssistant) -> None:
 
 async def test_full_user_wrong_mdns(hass: HomeAssistant) -> None:
     """Test we abort user flow if unsupported mDNS name got resolved."""
-    with patch("pysmappee.api.SmappeeLocalApi.logon", return_value={}), patch(
-        "pysmappee.api.SmappeeLocalApi.load_advanced_config",
-        return_value=[{"key": "mdnsHostName", "value": "Smappee5100000001"}],
-    ), patch(
-        "pysmappee.api.SmappeeLocalApi.load_command_control_config", return_value=[]
-    ), patch(
-        "pysmappee.api.SmappeeLocalApi.load_instantaneous",
-        return_value=[{"key": "phase0ActivePower", "value": 0}],
+    with (
+        patch("pysmappee.api.SmappeeLocalApi.logon", return_value={}),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_advanced_config",
+            return_value=[{"key": "mdnsHostName", "value": "Smappee5100000001"}],
+        ),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_command_control_config", return_value=[]
+        ),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_instantaneous",
+            return_value=[{"key": "phase0ActivePower", "value": 0}],
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -220,14 +229,19 @@ async def test_full_user_wrong_mdns(hass: HomeAssistant) -> None:
 
 async def test_user_device_exists_abort(hass: HomeAssistant) -> None:
     """Test we abort user flow if Smappee device already configured."""
-    with patch("pysmappee.api.SmappeeLocalApi.logon", return_value={}), patch(
-        "pysmappee.api.SmappeeLocalApi.load_advanced_config",
-        return_value=[{"key": "mdnsHostName", "value": "Smappee1006000212"}],
-    ), patch(
-        "pysmappee.api.SmappeeLocalApi.load_command_control_config", return_value=[]
-    ), patch(
-        "pysmappee.api.SmappeeLocalApi.load_instantaneous",
-        return_value=[{"key": "phase0ActivePower", "value": 0}],
+    with (
+        patch("pysmappee.api.SmappeeLocalApi.logon", return_value={}),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_advanced_config",
+            return_value=[{"key": "mdnsHostName", "value": "Smappee1006000212"}],
+        ),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_command_control_config", return_value=[]
+        ),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_instantaneous",
+            return_value=[{"key": "phase0ActivePower", "value": 0}],
+        ),
     ):
         config_entry = MockConfigEntry(
             domain=DOMAIN,
@@ -261,14 +275,19 @@ async def test_user_device_exists_abort(hass: HomeAssistant) -> None:
 
 async def test_zeroconf_device_exists_abort(hass: HomeAssistant) -> None:
     """Test we abort zeroconf flow if Smappee device already configured."""
-    with patch("pysmappee.api.SmappeeLocalApi.logon", return_value={}), patch(
-        "pysmappee.api.SmappeeLocalApi.load_advanced_config",
-        return_value=[{"key": "mdnsHostName", "value": "Smappee1006000212"}],
-    ), patch(
-        "pysmappee.api.SmappeeLocalApi.load_command_control_config", return_value=[]
-    ), patch(
-        "pysmappee.api.SmappeeLocalApi.load_instantaneous",
-        return_value=[{"key": "phase0ActivePower", "value": 0}],
+    with (
+        patch("pysmappee.api.SmappeeLocalApi.logon", return_value={}),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_advanced_config",
+            return_value=[{"key": "mdnsHostName", "value": "Smappee1006000212"}],
+        ),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_command_control_config", return_value=[]
+        ),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_instantaneous",
+            return_value=[{"key": "phase0ActivePower", "value": 0}],
+        ),
     ):
         config_entry = MockConfigEntry(
             domain=DOMAIN,
@@ -464,15 +483,21 @@ async def test_full_user_flow(
 
 async def test_full_zeroconf_flow(hass: HomeAssistant) -> None:
     """Test the full zeroconf flow."""
-    with patch("pysmappee.api.SmappeeLocalApi.logon", return_value={}), patch(
-        "pysmappee.api.SmappeeLocalApi.load_advanced_config",
-        return_value=[{"key": "mdnsHostName", "value": "Smappee1006000212"}],
-    ), patch(
-        "pysmappee.api.SmappeeLocalApi.load_command_control_config", return_value=[]
-    ), patch(
-        "pysmappee.api.SmappeeLocalApi.load_instantaneous",
-        return_value=[{"key": "phase0ActivePower", "value": 0}],
-    ), patch("homeassistant.components.smappee.async_setup_entry", return_value=True):
+    with (
+        patch("pysmappee.api.SmappeeLocalApi.logon", return_value={}),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_advanced_config",
+            return_value=[{"key": "mdnsHostName", "value": "Smappee1006000212"}],
+        ),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_command_control_config", return_value=[]
+        ),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_instantaneous",
+            return_value=[{"key": "phase0ActivePower", "value": 0}],
+        ),
+        patch("homeassistant.components.smappee.async_setup_entry", return_value=True),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
@@ -504,15 +529,21 @@ async def test_full_zeroconf_flow(hass: HomeAssistant) -> None:
 
 async def test_full_user_local_flow(hass: HomeAssistant) -> None:
     """Test the full zeroconf flow."""
-    with patch("pysmappee.api.SmappeeLocalApi.logon", return_value={}), patch(
-        "pysmappee.api.SmappeeLocalApi.load_advanced_config",
-        return_value=[{"key": "mdnsHostName", "value": "Smappee1006000212"}],
-    ), patch(
-        "pysmappee.api.SmappeeLocalApi.load_command_control_config", return_value=[]
-    ), patch(
-        "pysmappee.api.SmappeeLocalApi.load_instantaneous",
-        return_value=[{"key": "phase0ActivePower", "value": 0}],
-    ), patch("homeassistant.components.smappee.async_setup_entry", return_value=True):
+    with (
+        patch("pysmappee.api.SmappeeLocalApi.logon", return_value={}),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_advanced_config",
+            return_value=[{"key": "mdnsHostName", "value": "Smappee1006000212"}],
+        ),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_command_control_config", return_value=[]
+        ),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_instantaneous",
+            return_value=[{"key": "phase0ActivePower", "value": 0}],
+        ),
+        patch("homeassistant.components.smappee.async_setup_entry", return_value=True),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -541,14 +572,16 @@ async def test_full_user_local_flow(hass: HomeAssistant) -> None:
 
 async def test_full_zeroconf_flow_next_generation(hass: HomeAssistant) -> None:
     """Test the full zeroconf flow."""
-    with patch(
-        "pysmappee.mqtt.SmappeeLocalMqtt.start_attempt", return_value=True
-    ), patch(
-        "pysmappee.mqtt.SmappeeLocalMqtt.start",
-        return_value=None,
-    ), patch(
-        "pysmappee.mqtt.SmappeeLocalMqtt.is_config_ready",
-        return_value=None,
+    with (
+        patch("pysmappee.mqtt.SmappeeLocalMqtt.start_attempt", return_value=True),
+        patch(
+            "pysmappee.mqtt.SmappeeLocalMqtt.start",
+            return_value=None,
+        ),
+        patch(
+            "pysmappee.mqtt.SmappeeLocalMqtt.is_config_ready",
+            return_value=None,
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

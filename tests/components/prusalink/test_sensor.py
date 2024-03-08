@@ -27,11 +27,12 @@ from homeassistant.setup import async_setup_component
 @pytest.fixture(autouse=True)
 def setup_sensor_platform_only():
     """Only setup sensor platform."""
-    with patch(
-        "homeassistant.components.prusalink.PLATFORMS", [Platform.SENSOR]
-    ), patch(
-        "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
-        PropertyMock(return_value=True),
+    with (
+        patch("homeassistant.components.prusalink.PLATFORMS", [Platform.SENSOR]),
+        patch(
+            "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
+            PropertyMock(return_value=True),
+        ),
     ):
         yield
 

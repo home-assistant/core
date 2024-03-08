@@ -1,4 +1,5 @@
 """Tests for the Anova integration."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -46,13 +47,15 @@ async def async_init_integration(
     error: str | None = None,
 ) -> ConfigEntry:
     """Set up the Anova integration in Home Assistant."""
-    with patch(
-        "homeassistant.components.anova.coordinator.AnovaPrecisionCooker.update"
-    ) as update_patch, patch(
-        "homeassistant.components.anova.AnovaApi.authenticate"
-    ), patch(
-        "homeassistant.components.anova.AnovaApi.get_devices",
-    ) as device_patch:
+    with (
+        patch(
+            "homeassistant.components.anova.coordinator.AnovaPrecisionCooker.update"
+        ) as update_patch,
+        patch("homeassistant.components.anova.AnovaApi.authenticate"),
+        patch(
+            "homeassistant.components.anova.AnovaApi.get_devices",
+        ) as device_patch,
+    ):
         update_patch.return_value = ONLINE_UPDATE
         device_patch.return_value = [
             AnovaPrecisionCooker(None, DEVICE_UNIQUE_ID, "type_sample", None)

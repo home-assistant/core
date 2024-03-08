@@ -1,4 +1,5 @@
 """Support for PlayStation 4 consoles."""
+
 from contextlib import suppress
 import logging
 from typing import Any, cast

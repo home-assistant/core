@@ -1,4 +1,5 @@
 """Test Websocket API http module."""
+
 import asyncio
 from datetime import timedelta
 from typing import Any, cast
@@ -370,10 +371,13 @@ async def test_prepare_fail(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test failing to prepare."""
-    with patch(
-        "homeassistant.components.websocket_api.http.web.WebSocketResponse.prepare",
-        side_effect=(TimeoutError, web.WebSocketResponse.prepare),
-    ), pytest.raises(ServerDisconnectedError):
+    with (
+        patch(
+            "homeassistant.components.websocket_api.http.web.WebSocketResponse.prepare",
+            side_effect=(TimeoutError, web.WebSocketResponse.prepare),
+        ),
+        pytest.raises(ServerDisconnectedError),
+    ):
         await hass_ws_client(hass)
 
     assert "Timeout preparing request" in caplog.text

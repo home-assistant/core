@@ -1,4 +1,5 @@
 """Test the Evil Genius Labs config flow."""
+
 from unittest.mock import patch
 
 import aiohttp
@@ -20,19 +21,24 @@ async def test_form(
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch(
-        "pyevilgenius.EvilGeniusDevice.get_all",
-        return_value=all_fixture,
-    ), patch(
-        "pyevilgenius.EvilGeniusDevice.get_info",
-        return_value=info_fixture,
-    ), patch(
-        "pyevilgenius.EvilGeniusDevice.get_product",
-        return_value=product_fixture,
-    ), patch(
-        "homeassistant.components.evil_genius_labs.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "pyevilgenius.EvilGeniusDevice.get_all",
+            return_value=all_fixture,
+        ),
+        patch(
+            "pyevilgenius.EvilGeniusDevice.get_info",
+            return_value=info_fixture,
+        ),
+        patch(
+            "pyevilgenius.EvilGeniusDevice.get_product",
+            return_value=product_fixture,
+        ),
+        patch(
+            "homeassistant.components.evil_genius_labs.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

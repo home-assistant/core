@@ -1,4 +1,5 @@
 """Tests for Tankerkoenig config flow."""
+
 from unittest.mock import patch
 
 from aiotankerkoenig.exceptions import TankerkoenigInvalidKeyError
@@ -58,11 +59,14 @@ async def test_user(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.tankerkoenig.async_setup_entry", return_value=True
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.tankerkoenig.config_flow.Tankerkoenig.nearby_stations",
-        return_value=NEARBY_STATIONS,
+    with (
+        patch(
+            "homeassistant.components.tankerkoenig.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.tankerkoenig.config_flow.Tankerkoenig.nearby_stations",
+            return_value=NEARBY_STATIONS,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_DATA
@@ -158,11 +162,14 @@ async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> Non
     """Test starting a flow by user to re-auth."""
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.tankerkoenig.async_setup_entry", return_value=True
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.tankerkoenig.config_flow.Tankerkoenig.nearby_stations",
-    ) as mock_nearby_stations:
+    with (
+        patch(
+            "homeassistant.components.tankerkoenig.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.tankerkoenig.config_flow.Tankerkoenig.nearby_stations",
+        ) as mock_nearby_stations,
+    ):
         # re-auth initialized
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

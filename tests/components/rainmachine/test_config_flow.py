@@ -1,4 +1,5 @@
 """Define tests for the OpenUV config flow."""
+
 from ipaddress import ip_address
 from unittest.mock import patch
 
@@ -81,10 +82,14 @@ async def test_migrate_1_2(
     assert entity_entry.entity_id == entity_id
     assert entity_entry.unique_id == old_unique_id
 
-    with patch(
-        "homeassistant.components.rainmachine.async_setup_entry", return_value=True
-    ), patch(
-        "homeassistant.components.rainmachine.config_flow.Client", return_value=client
+    with (
+        patch(
+            "homeassistant.components.rainmachine.async_setup_entry", return_value=True
+        ),
+        patch(
+            "homeassistant.components.rainmachine.config_flow.Client",
+            return_value=client,
+        ),
     ):
         await setup.async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
@@ -234,10 +239,14 @@ async def test_step_homekit_zeroconf_new_controller_when_some_exist(
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.rainmachine.async_setup_entry", return_value=True
-    ), patch(
-        "homeassistant.components.rainmachine.config_flow.Client", return_value=client
+    with (
+        patch(
+            "homeassistant.components.rainmachine.async_setup_entry", return_value=True
+        ),
+        patch(
+            "homeassistant.components.rainmachine.config_flow.Client",
+            return_value=client,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

@@ -1,6 +1,5 @@
 """Constants for tests imap integration."""
 
-
 DATE_HEADER1 = b"Date: Fri, 24 Mar 2023 13:52:00 +0100\r\n"
 DATE_HEADER2 = b"Date: Fri, 24 Mar 2023 13:52:00 +0100 (CET)\r\n"
 DATE_HEADER3 = b"Date: 24 Mar 2023 13:52:00 +0100\r\n"

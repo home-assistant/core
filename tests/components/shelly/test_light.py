@@ -1,4 +1,5 @@
 """Tests for Shelly light platform."""
+
 from unittest.mock import AsyncMock, Mock
 
 from aioshelly.const import (

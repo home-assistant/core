@@ -1,4 +1,5 @@
 """Support for statistics for sensor values."""
+
 from __future__ import annotations
 
 from collections import deque
@@ -203,8 +204,7 @@ def valid_state_characteristic_configuration(config: dict[str, Any]) -> dict[str
         not is_binary and characteristic not in STATS_NUMERIC_SUPPORT
     ):
         raise vol.ValueInvalid(
-            "The configured characteristic '{}' is not supported for the configured"
-            " source sensor".format(characteristic)
+            f"The configured characteristic '{characteristic}' is not supported for the configured source sensor"
         )
     return config
 

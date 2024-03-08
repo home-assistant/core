@@ -1,4 +1,5 @@
 """Support for Amcrest IP cameras."""
+
 from __future__ import annotations
 
 import asyncio
@@ -210,9 +211,10 @@ class AmcrestChecker(ApiWrapper):
         self, *args: Any, **kwargs: Any
     ) -> AsyncIterator[httpx.Response]:
         """amcrest.ApiWrapper.command wrapper to catch errors."""
-        async with self._async_command_wrapper(), super().async_stream_command(
-            *args, **kwargs
-        ) as ret:
+        async with (
+            self._async_command_wrapper(),
+            super().async_stream_command(*args, **kwargs) as ret,
+        ):
             yield ret
 
     @asynccontextmanager

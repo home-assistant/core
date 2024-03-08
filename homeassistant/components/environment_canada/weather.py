@@ -1,4 +1,5 @@
 """Platform for retrieving meteorological data from Environment Canada."""
+
 from __future__ import annotations
 
 import datetime

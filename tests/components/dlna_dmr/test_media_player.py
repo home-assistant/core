@@ -1,4 +1,5 @@
 """Tests for the DLNA DMR media_player module."""
+
 from __future__ import annotations
 
 import asyncio

@@ -1,4 +1,5 @@
 """The tests for the apprise notification platform."""
+
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -33,12 +34,15 @@ async def test_apprise_config_load_fail02(hass: HomeAssistant) -> None:
         BASE_COMPONENT: {"name": "test", "platform": "apprise", "config": "/path/"}
     }
 
-    with patch(
-        "homeassistant.components.apprise.notify.apprise.Apprise.add",
-        return_value=False,
-    ), patch(
-        "homeassistant.components.apprise.notify.apprise.AppriseConfig.add",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.apprise.notify.apprise.Apprise.add",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.apprise.notify.apprise.AppriseConfig.add",
+            return_value=True,
+        ),
     ):
         assert await async_setup_component(hass, BASE_COMPONENT, config)
         await hass.async_block_till_done()

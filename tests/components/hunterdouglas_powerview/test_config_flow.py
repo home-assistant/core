@@ -1,4 +1,5 @@
 """Test the Hunter Douglas Powerview config flow."""
+
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -241,12 +242,15 @@ async def test_form_no_data(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.hunterdouglas_powerview.Hub.request_raw_data",
-        return_value={},
-    ), patch(
-        "homeassistant.components.hunterdouglas_powerview.Hub.request_home_data",
-        return_value={},
+    with (
+        patch(
+            "homeassistant.components.hunterdouglas_powerview.Hub.request_raw_data",
+            return_value={},
+        ),
+        patch(
+            "homeassistant.components.hunterdouglas_powerview.Hub.request_home_data",
+            return_value={},
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

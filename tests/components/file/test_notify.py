@@ -1,4 +1,5 @@
 """The tests for the notify file platform."""
+
 import os
 from unittest.mock import call, mock_open, patch
 
@@ -53,9 +54,10 @@ async def test_notify_file(
     freezer.move_to(dt_util.utcnow())
 
     m_open = mock_open()
-    with patch("homeassistant.components.file.notify.open", m_open, create=True), patch(
-        "homeassistant.components.file.notify.os.stat"
-    ) as mock_st:
+    with (
+        patch("homeassistant.components.file.notify.open", m_open, create=True),
+        patch("homeassistant.components.file.notify.os.stat") as mock_st,
+    ):
         mock_st.return_value.st_size = 0
         title = (
             f"{ATTR_TITLE_DEFAULT} notifications "

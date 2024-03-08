@@ -1,4 +1,5 @@
 """Common test objects."""
+
 from collections.abc import Iterable
 from contextlib import suppress
 import copy
@@ -384,9 +385,10 @@ async def help_test_default_availability_list_single(
     ]
     config[mqtt.DOMAIN][domain]["availability_topic"] = "availability-topic"
 
-    with patch(
-        "homeassistant.config.load_yaml_config_file", return_value=config
-    ), suppress(vol.MultipleInvalid):
+    with (
+        patch("homeassistant.config.load_yaml_config_file", return_value=config),
+        suppress(vol.MultipleInvalid),
+    ):
         await mqtt_mock_entry()
 
     assert (

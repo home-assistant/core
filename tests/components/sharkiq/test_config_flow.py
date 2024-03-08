@@ -1,4 +1,5 @@
 """Test the Shark IQ config flow."""
+
 from unittest.mock import patch
 
 import aiohttp
@@ -43,10 +44,13 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch("sharkiq.AylaApi.async_sign_in", return_value=True), patch(
-        "homeassistant.components.sharkiq.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch("sharkiq.AylaApi.async_sign_in", return_value=True),
+        patch(
+            "homeassistant.components.sharkiq.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             CONFIG,

@@ -1,4 +1,5 @@
 """The tests for the TCP binary sensor platform."""
+
 from datetime import timedelta
 from unittest.mock import call, patch
 
@@ -21,11 +22,12 @@ TEST_ENTITY = "binary_sensor.test_name"
 @pytest.fixture(name="mock_socket")
 def mock_socket_fixture():
     """Mock the socket."""
-    with patch(
-        "homeassistant.components.tcp.common.socket.socket"
-    ) as mock_socket, patch(
-        "homeassistant.components.tcp.common.select.select",
-        return_value=(True, False, False),
+    with (
+        patch("homeassistant.components.tcp.common.socket.socket") as mock_socket,
+        patch(
+            "homeassistant.components.tcp.common.select.select",
+            return_value=(True, False, False),
+        ),
     ):
         # yield the return value of the socket context manager
         yield mock_socket.return_value.__enter__.return_value

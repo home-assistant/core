@@ -1,4 +1,5 @@
 """Test the IoTawatt config flow."""
+
 from unittest.mock import patch
 
 import httpx
@@ -18,13 +19,16 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == config_entries.SOURCE_USER
 
-    with patch(
-        "homeassistant.components.iotawatt.async_setup_entry",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.iotawatt.config_flow.Iotawatt.connect",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.iotawatt.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.iotawatt.config_flow.Iotawatt.connect",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -79,12 +83,15 @@ async def test_form_auth(hass: HomeAssistant) -> None:
     assert result3["step_id"] == "auth"
     assert result3["errors"] == {"base": "invalid_auth"}
 
-    with patch(
-        "homeassistant.components.iotawatt.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.iotawatt.config_flow.Iotawatt.connect",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.iotawatt.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.iotawatt.config_flow.Iotawatt.connect",
+            return_value=True,
+        ),
     ):
         result4 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

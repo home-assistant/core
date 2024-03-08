@@ -1,4 +1,5 @@
 """Config flow to add the integration via the UI."""
+
 import logging
 from typing import Any
 

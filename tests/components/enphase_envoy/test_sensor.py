@@ -1,4 +1,5 @@
 """Test Enphase Envoy sensors."""
+
 from unittest.mock import patch
 
 import pytest
@@ -16,15 +17,19 @@ from tests.common import MockConfigEntry
 @pytest.fixture(name="setup_enphase_envoy_sensor")
 async def setup_enphase_envoy_sensor_fixture(hass, config, mock_envoy):
     """Define a fixture to set up Enphase Envoy with sensor platform only."""
-    with patch(
-        "homeassistant.components.enphase_envoy.config_flow.Envoy",
-        return_value=mock_envoy,
-    ), patch(
-        "homeassistant.components.enphase_envoy.Envoy",
-        return_value=mock_envoy,
-    ), patch(
-        "homeassistant.components.enphase_envoy.PLATFORMS",
-        [Platform.SENSOR],
+    with (
+        patch(
+            "homeassistant.components.enphase_envoy.config_flow.Envoy",
+            return_value=mock_envoy,
+        ),
+        patch(
+            "homeassistant.components.enphase_envoy.Envoy",
+            return_value=mock_envoy,
+        ),
+        patch(
+            "homeassistant.components.enphase_envoy.PLATFORMS",
+            [Platform.SENSOR],
+        ),
     ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()

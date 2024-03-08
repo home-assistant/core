@@ -1,4 +1,5 @@
 """The tests for hls streams."""
+
 from datetime import timedelta
 from http import HTTPStatus
 import logging
@@ -307,10 +308,10 @@ async def test_stream_retries(
         cur_time += 40
         return cur_time
 
-    with patch("av.open") as av_open, patch(
-        "homeassistant.components.stream.time"
-    ) as mock_time, patch(
-        "homeassistant.components.stream.STREAM_RESTART_INCREMENT", 0
+    with (
+        patch("av.open") as av_open,
+        patch("homeassistant.components.stream.time") as mock_time,
+        patch("homeassistant.components.stream.STREAM_RESTART_INCREMENT", 0),
     ):
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
         mock_time.time.side_effect = time_side_effect

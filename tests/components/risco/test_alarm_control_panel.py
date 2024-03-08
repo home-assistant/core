@@ -1,4 +1,5 @@
 """Tests for the Risco alarm control panel device."""
+
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
@@ -91,17 +92,22 @@ def two_part_cloud_alarm():
     """Fixture to mock alarm with two partitions."""
     partition_mocks = {0: _partition_mock(), 1: _partition_mock()}
     alarm_mock = MagicMock()
-    with patch.object(
-        partition_mocks[0], "id", new_callable=PropertyMock(return_value=0)
-    ), patch.object(
-        partition_mocks[1], "id", new_callable=PropertyMock(return_value=1)
-    ), patch.object(
-        alarm_mock,
-        "partitions",
-        new_callable=PropertyMock(return_value=partition_mocks),
-    ), patch(
-        "homeassistant.components.risco.RiscoCloud.get_state",
-        return_value=alarm_mock,
+    with (
+        patch.object(
+            partition_mocks[0], "id", new_callable=PropertyMock(return_value=0)
+        ),
+        patch.object(
+            partition_mocks[1], "id", new_callable=PropertyMock(return_value=1)
+        ),
+        patch.object(
+            alarm_mock,
+            "partitions",
+            new_callable=PropertyMock(return_value=partition_mocks),
+        ),
+        patch(
+            "homeassistant.components.risco.RiscoCloud.get_state",
+            return_value=alarm_mock,
+        ),
     ):
         yield partition_mocks
 
@@ -110,20 +116,27 @@ def two_part_cloud_alarm():
 def two_part_local_alarm():
     """Fixture to mock alarm with two partitions."""
     partition_mocks = {0: _partition_mock(), 1: _partition_mock()}
-    with patch.object(
-        partition_mocks[0], "id", new_callable=PropertyMock(return_value=0)
-    ), patch.object(
-        partition_mocks[0], "name", new_callable=PropertyMock(return_value="Name 0")
-    ), patch.object(
-        partition_mocks[1], "id", new_callable=PropertyMock(return_value=1)
-    ), patch.object(
-        partition_mocks[1], "name", new_callable=PropertyMock(return_value="Name 1")
-    ), patch(
-        "homeassistant.components.risco.RiscoLocal.zones",
-        new_callable=PropertyMock(return_value={}),
-    ), patch(
-        "homeassistant.components.risco.RiscoLocal.partitions",
-        new_callable=PropertyMock(return_value=partition_mocks),
+    with (
+        patch.object(
+            partition_mocks[0], "id", new_callable=PropertyMock(return_value=0)
+        ),
+        patch.object(
+            partition_mocks[0], "name", new_callable=PropertyMock(return_value="Name 0")
+        ),
+        patch.object(
+            partition_mocks[1], "id", new_callable=PropertyMock(return_value=1)
+        ),
+        patch.object(
+            partition_mocks[1], "name", new_callable=PropertyMock(return_value="Name 1")
+        ),
+        patch(
+            "homeassistant.components.risco.RiscoLocal.zones",
+            new_callable=PropertyMock(return_value={}),
+        ),
+        patch(
+            "homeassistant.components.risco.RiscoLocal.partitions",
+            new_callable=PropertyMock(return_value=partition_mocks),
+        ),
     ):
         yield partition_mocks
 

@@ -1,4 +1,5 @@
 """Support for WeMo switches."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -89,7 +90,7 @@ class WemoSwitch(WemoBinaryStateEntity, SwitchEntity):
     def as_uptime(_seconds: int) -> str:
         """Format seconds into uptime string in the format: 00d 00h 00m 00s."""
         uptime = datetime(1, 1, 1) + timedelta(seconds=_seconds)
-        return "{:0>2d}d {:0>2d}h {:0>2d}m {:0>2d}s".format(
+        return "{:0>2d}d {:0>2d}h {:0>2d}m {:0>2d}s".format(  # noqa: UP032
             uptime.day - 1, uptime.hour, uptime.minute, uptime.second
         )
 

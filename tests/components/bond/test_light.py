@@ -1,4 +1,5 @@
 """Tests for the Bond light device."""
+
 from datetime import timedelta
 
 from bond_async import Action, DeviceType
@@ -329,9 +330,11 @@ async def test_light_set_brightness_belief_api_error(hass: HomeAssistant) -> Non
         bond_device_id="test-device-id",
     )
 
-    with pytest.raises(
-        HomeAssistantError
-    ), patch_bond_action_returns_clientresponseerror(), patch_bond_device_state():
+    with (
+        pytest.raises(HomeAssistantError),
+        patch_bond_action_returns_clientresponseerror(),
+        patch_bond_device_state(),
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
@@ -373,9 +376,11 @@ async def test_fp_light_set_brightness_belief_api_error(hass: HomeAssistant) -> 
         bond_device_id="test-device-id",
     )
 
-    with pytest.raises(
-        HomeAssistantError
-    ), patch_bond_action_returns_clientresponseerror(), patch_bond_device_state():
+    with (
+        pytest.raises(HomeAssistantError),
+        patch_bond_action_returns_clientresponseerror(),
+        patch_bond_device_state(),
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
@@ -484,9 +489,11 @@ async def test_light_set_power_belief_api_error(hass: HomeAssistant) -> None:
         bond_device_id="test-device-id",
     )
 
-    with pytest.raises(
-        HomeAssistantError
-    ), patch_bond_action_returns_clientresponseerror(), patch_bond_device_state():
+    with (
+        pytest.raises(HomeAssistantError),
+        patch_bond_action_returns_clientresponseerror(),
+        patch_bond_device_state(),
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
@@ -528,9 +535,11 @@ async def test_fp_light_set_power_belief_api_error(hass: HomeAssistant) -> None:
         bond_device_id="test-device-id",
     )
 
-    with pytest.raises(
-        HomeAssistantError
-    ), patch_bond_action_returns_clientresponseerror(), patch_bond_device_state():
+    with (
+        pytest.raises(HomeAssistantError),
+        patch_bond_action_returns_clientresponseerror(),
+        patch_bond_device_state(),
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_LIGHT_POWER_TRACKED_STATE,

@@ -1,4 +1,5 @@
 """Test Home Assistant logging util methods."""
+
 import asyncio
 from functools import partial
 import logging
@@ -26,8 +27,9 @@ async def test_logging_with_queue_handler() -> None:
 
     handler.emit(log_record)
 
-    with pytest.raises(asyncio.CancelledError), patch.object(
-        handler, "enqueue", side_effect=asyncio.CancelledError
+    with (
+        pytest.raises(asyncio.CancelledError),
+        patch.object(handler, "enqueue", side_effect=asyncio.CancelledError),
     ):
         handler.emit(log_record)
 
@@ -35,16 +37,18 @@ async def test_logging_with_queue_handler() -> None:
         handler.handle(log_record)
         emit_mock.assert_called_once()
 
-    with patch.object(handler, "filter") as filter_mock, patch.object(
-        handler, "emit"
-    ) as emit_mock:
+    with (
+        patch.object(handler, "filter") as filter_mock,
+        patch.object(handler, "emit") as emit_mock,
+    ):
         filter_mock.return_value = False
         handler.handle(log_record)
         emit_mock.assert_not_called()
 
-    with patch.object(handler, "enqueue", side_effect=OSError), patch.object(
-        handler, "handleError"
-    ) as mock_handle_error:
+    with (
+        patch.object(handler, "enqueue", side_effect=OSError),
+        patch.object(handler, "handleError") as mock_handle_error,
+    ):
         handler.emit(log_record)
         mock_handle_error.assert_called_once()
 

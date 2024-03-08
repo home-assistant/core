@@ -1,4 +1,5 @@
 """Support for Radarr."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -60,10 +61,13 @@ class RadarrSensorEntityDescription(
 ):
     """Class to describe a Radarr sensor."""
 
-    description_fn: Callable[
-        [RadarrSensorEntityDescription[T], RootFolder],
-        tuple[RadarrSensorEntityDescription[T], str] | None,
-    ] | None = None
+    description_fn: (
+        Callable[
+            [RadarrSensorEntityDescription[T], RootFolder],
+            tuple[RadarrSensorEntityDescription[T], str] | None,
+        ]
+        | None
+    ) = None
 
 
 SENSOR_TYPES: dict[str, RadarrSensorEntityDescription[Any]] = {

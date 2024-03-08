@@ -1,4 +1,5 @@
 """The tests for the Flux switch platform."""
+
 from unittest.mock import patch
 
 from freezegun import freeze_time
@@ -162,9 +163,12 @@ async def test_flux_when_switch_is_off(
             return sunrise_time
         return sunset_time
 
-    with freeze_time(test_time), patch(
-        "homeassistant.components.flux.switch.get_astral_event_date",
-        side_effect=event_date,
+    with (
+        freeze_time(test_time),
+        patch(
+            "homeassistant.components.flux.switch.get_astral_event_date",
+            side_effect=event_date,
+        ),
     ):
         turn_on_calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
         assert await async_setup_component(
@@ -214,9 +218,12 @@ async def test_flux_before_sunrise(
         return sunset_time
 
     await hass.async_block_till_done()
-    with freeze_time(test_time), patch(
-        "homeassistant.components.flux.switch.get_astral_event_date",
-        side_effect=event_date,
+    with (
+        freeze_time(test_time),
+        patch(
+            "homeassistant.components.flux.switch.get_astral_event_date",
+            side_effect=event_date,
+        ),
     ):
         assert await async_setup_component(
             hass,
@@ -330,9 +337,12 @@ async def test_flux_after_sunrise_before_sunset(
             return sunrise_time
         return sunset_time
 
-    with freeze_time(test_time), patch(
-        "homeassistant.components.flux.switch.get_astral_event_date",
-        side_effect=event_date,
+    with (
+        freeze_time(test_time),
+        patch(
+            "homeassistant.components.flux.switch.get_astral_event_date",
+            side_effect=event_date,
+        ),
     ):
         assert await async_setup_component(
             hass,
@@ -388,9 +398,12 @@ async def test_flux_after_sunset_before_stop(
             return sunrise_time
         return sunset_time
 
-    with freeze_time(test_time), patch(
-        "homeassistant.components.flux.switch.get_astral_event_date",
-        side_effect=event_date,
+    with (
+        freeze_time(test_time),
+        patch(
+            "homeassistant.components.flux.switch.get_astral_event_date",
+            side_effect=event_date,
+        ),
     ):
         assert await async_setup_component(
             hass,
@@ -447,9 +460,12 @@ async def test_flux_after_stop_before_sunrise(
             return sunrise_time
         return sunset_time
 
-    with freeze_time(test_time), patch(
-        "homeassistant.components.flux.switch.get_astral_event_date",
-        side_effect=event_date,
+    with (
+        freeze_time(test_time),
+        patch(
+            "homeassistant.components.flux.switch.get_astral_event_date",
+            side_effect=event_date,
+        ),
     ):
         assert await async_setup_component(
             hass,
@@ -505,9 +521,12 @@ async def test_flux_with_custom_start_stop_times(
             return sunrise_time
         return sunset_time
 
-    with freeze_time(test_time), patch(
-        "homeassistant.components.flux.switch.get_astral_event_date",
-        side_effect=event_date,
+    with (
+        freeze_time(test_time),
+        patch(
+            "homeassistant.components.flux.switch.get_astral_event_date",
+            side_effect=event_date,
+        ),
     ):
         assert await async_setup_component(
             hass,
@@ -568,9 +587,12 @@ async def test_flux_before_sunrise_stop_next_day(
             return sunrise_time
         return sunset_time
 
-    with freeze_time(test_time), patch(
-        "homeassistant.components.flux.switch.get_astral_event_date",
-        side_effect=event_date,
+    with (
+        freeze_time(test_time),
+        patch(
+            "homeassistant.components.flux.switch.get_astral_event_date",
+            side_effect=event_date,
+        ),
     ):
         assert await async_setup_component(
             hass,
@@ -630,9 +652,12 @@ async def test_flux_after_sunrise_before_sunset_stop_next_day(
             return sunrise_time
         return sunset_time
 
-    with freeze_time(test_time), patch(
-        "homeassistant.components.flux.switch.get_astral_event_date",
-        side_effect=event_date,
+    with (
+        freeze_time(test_time),
+        patch(
+            "homeassistant.components.flux.switch.get_astral_event_date",
+            side_effect=event_date,
+        ),
     ):
         assert await async_setup_component(
             hass,
@@ -693,9 +718,12 @@ async def test_flux_after_sunset_before_midnight_stop_next_day(
             return sunrise_time
         return sunset_time
 
-    with freeze_time(test_time), patch(
-        "homeassistant.components.flux.switch.get_astral_event_date",
-        side_effect=event_date,
+    with (
+        freeze_time(test_time),
+        patch(
+            "homeassistant.components.flux.switch.get_astral_event_date",
+            side_effect=event_date,
+        ),
     ):
         assert await async_setup_component(
             hass,
@@ -755,9 +783,12 @@ async def test_flux_after_sunset_after_midnight_stop_next_day(
             return sunrise_time
         return sunset_time
 
-    with freeze_time(test_time), patch(
-        "homeassistant.components.flux.switch.get_astral_event_date",
-        side_effect=event_date,
+    with (
+        freeze_time(test_time),
+        patch(
+            "homeassistant.components.flux.switch.get_astral_event_date",
+            side_effect=event_date,
+        ),
     ):
         assert await async_setup_component(
             hass,
@@ -817,9 +848,12 @@ async def test_flux_after_stop_before_sunrise_stop_next_day(
             return sunrise_time
         return sunset_time
 
-    with freeze_time(test_time), patch(
-        "homeassistant.components.flux.switch.get_astral_event_date",
-        side_effect=event_date,
+    with (
+        freeze_time(test_time),
+        patch(
+            "homeassistant.components.flux.switch.get_astral_event_date",
+            side_effect=event_date,
+        ),
     ):
         assert await async_setup_component(
             hass,
@@ -876,9 +910,12 @@ async def test_flux_with_custom_colortemps(
             return sunrise_time
         return sunset_time
 
-    with freeze_time(test_time), patch(
-        "homeassistant.components.flux.switch.get_astral_event_date",
-        side_effect=event_date,
+    with (
+        freeze_time(test_time),
+        patch(
+            "homeassistant.components.flux.switch.get_astral_event_date",
+            side_effect=event_date,
+        ),
     ):
         assert await async_setup_component(
             hass,
@@ -937,9 +974,12 @@ async def test_flux_with_custom_brightness(
             return sunrise_time
         return sunset_time
 
-    with freeze_time(test_time), patch(
-        "homeassistant.components.flux.switch.get_astral_event_date",
-        side_effect=event_date,
+    with (
+        freeze_time(test_time),
+        patch(
+            "homeassistant.components.flux.switch.get_astral_event_date",
+            side_effect=event_date,
+        ),
     ):
         assert await async_setup_component(
             hass,
@@ -1014,9 +1054,12 @@ async def test_flux_with_multiple_lights(
             return sunrise_time
         return sunset_time
 
-    with freeze_time(test_time), patch(
-        "homeassistant.components.flux.switch.get_astral_event_date",
-        side_effect=event_date,
+    with (
+        freeze_time(test_time),
+        patch(
+            "homeassistant.components.flux.switch.get_astral_event_date",
+            side_effect=event_date,
+        ),
     ):
         assert await async_setup_component(
             hass,
@@ -1077,9 +1120,12 @@ async def test_flux_with_mired(
             return sunrise_time
         return sunset_time
 
-    with freeze_time(test_time), patch(
-        "homeassistant.components.flux.switch.get_astral_event_date",
-        side_effect=event_date,
+    with (
+        freeze_time(test_time),
+        patch(
+            "homeassistant.components.flux.switch.get_astral_event_date",
+            side_effect=event_date,
+        ),
     ):
         assert await async_setup_component(
             hass,
@@ -1134,9 +1180,12 @@ async def test_flux_with_rgb(
             return sunrise_time
         return sunset_time
 
-    with freeze_time(test_time), patch(
-        "homeassistant.components.flux.switch.get_astral_event_date",
-        side_effect=event_date,
+    with (
+        freeze_time(test_time),
+        patch(
+            "homeassistant.components.flux.switch.get_astral_event_date",
+            side_effect=event_date,
+        ),
     ):
         assert await async_setup_component(
             hass,

@@ -1,4 +1,5 @@
 """Test init of Nut integration."""
+
 from unittest.mock import patch
 
 from homeassistant.components.nut.const import DOMAIN
@@ -53,12 +54,15 @@ async def test_config_not_ready(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.nut.PyNUTClient.list_ups",
-        return_value=["ups1"],
-    ), patch(
-        "homeassistant.components.nut.PyNUTClient.list_vars",
-        side_effect=ConnectionResetError,
+    with (
+        patch(
+            "homeassistant.components.nut.PyNUTClient.list_ups",
+            return_value=["ups1"],
+        ),
+        patch(
+            "homeassistant.components.nut.PyNUTClient.list_vars",
+            side_effect=ConnectionResetError,
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

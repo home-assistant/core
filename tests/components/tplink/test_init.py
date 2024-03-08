@@ -1,4 +1,5 @@
 """Tests for the TP-Link component."""
+
 from __future__ import annotations
 
 import copy
@@ -42,8 +43,9 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 async def test_configuring_tplink_causes_discovery(hass: HomeAssistant) -> None:
     """Test that specifying empty config does discovery."""
-    with patch("homeassistant.components.tplink.Discover.discover") as discover, patch(
-        "homeassistant.components.tplink.Discover.discover_single"
+    with (
+        patch("homeassistant.components.tplink.Discover.discover") as discover,
+        patch("homeassistant.components.tplink.Discover.discover_single"),
     ):
         discover.return_value = {MagicMock(): MagicMock()}
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
@@ -81,9 +83,11 @@ async def test_config_entry_retry(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
-    with _patch_discovery(no_device=True), _patch_single_discovery(
-        no_device=True
-    ), _patch_connect(no_device=True):
+    with (
+        _patch_discovery(no_device=True),
+        _patch_single_discovery(no_device=True),
+        _patch_connect(no_device=True),
+    ):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
         assert already_migrated_config_entry.state == ConfigEntryState.SETUP_RETRY
@@ -113,9 +117,11 @@ async def test_dimmer_switch_unique_id_fix_original_entity_still_exists(
         original_name="Rollout dimmer",
     )
 
-    with _patch_discovery(device=dimmer), _patch_single_discovery(
-        device=dimmer
-    ), _patch_connect(device=dimmer):
+    with (
+        _patch_discovery(device=dimmer),
+        _patch_single_discovery(device=dimmer),
+        _patch_connect(device=dimmer),
+    ):
         await setup.async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 

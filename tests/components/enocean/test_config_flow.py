@@ -1,4 +1,5 @@
 """Tests for EnOcean config flow."""
+
 from unittest.mock import Mock, patch
 
 from homeassistant import config_entries, data_entry_flow
@@ -74,8 +75,9 @@ async def test_detection_flow_with_custom_path(hass: HomeAssistant) -> None:
     USER_PROVIDED_PATH = EnOceanFlowHandler.MANUAL_PATH_VALUE
     FAKE_DONGLE_PATH = "/fake/dongle"
 
-    with patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)), patch(
-        DONGLE_DETECT_METHOD, Mock(return_value=[FAKE_DONGLE_PATH])
+    with (
+        patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)),
+        patch(DONGLE_DETECT_METHOD, Mock(return_value=[FAKE_DONGLE_PATH])),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -92,8 +94,9 @@ async def test_detection_flow_with_invalid_path(hass: HomeAssistant) -> None:
     USER_PROVIDED_PATH = "/invalid/path"
     FAKE_DONGLE_PATH = "/fake/dongle"
 
-    with patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=False)), patch(
-        DONGLE_DETECT_METHOD, Mock(return_value=[FAKE_DONGLE_PATH])
+    with (
+        patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=False)),
+        patch(DONGLE_DETECT_METHOD, Mock(return_value=[FAKE_DONGLE_PATH])),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

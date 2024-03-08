@@ -1,4 +1,5 @@
 """Test the SSDP integration."""
+
 from datetime import datetime
 from ipaddress import IPv4Address
 from unittest.mock import ANY, AsyncMock, patch
@@ -859,13 +860,14 @@ async def test_flow_dismiss_on_byebye(
 
     mock_ssdp_advertisement["nts"] = "ssdp:byebye"
     # ssdp:byebye advertisement should dismiss existing flows
-    with patch.object(
-        hass.config_entries.flow,
-        "async_progress_by_init_data_type",
-        return_value=[{"flow_id": "mock_flow_id"}],
-    ) as mock_async_progress_by_init_data_type, patch.object(
-        hass.config_entries.flow, "async_abort"
-    ) as mock_async_abort:
+    with (
+        patch.object(
+            hass.config_entries.flow,
+            "async_progress_by_init_data_type",
+            return_value=[{"flow_id": "mock_flow_id"}],
+        ) as mock_async_progress_by_init_data_type,
+        patch.object(hass.config_entries.flow, "async_abort") as mock_async_abort,
+    ):
         ssdp_listener._on_byebye(mock_ssdp_advertisement)
         await hass.async_block_till_done()
 

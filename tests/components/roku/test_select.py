@@ -1,4 +1,5 @@
 """Tests for the Roku select platform."""
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -54,7 +55,7 @@ async def test_application_state(
         "Home",
         "Amazon Video on Demand",
         "Free FrameChannel Service",
-        "MLB.TV" + "\u00AE",
+        "MLB.TV" + "\u00ae",
         "Mediafly",
         "Netflix",
         "Pandora",

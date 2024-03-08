@@ -1,4 +1,5 @@
 """Test the Xiaomi Miio config flow."""
+
 from ipaddress import ip_address
 from unittest.mock import Mock, patch
 
@@ -72,19 +73,25 @@ def xiaomi_miio_connect_fixture():
     """Mock miio connection and entry setup."""
     mock_info = get_mock_info()
 
-    with patch(
-        "homeassistant.components.xiaomi_miio.device.Device.info",
-        return_value=mock_info,
-    ), patch(
-        "homeassistant.components.xiaomi_miio.config_flow.MiCloud.login",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.xiaomi_miio.config_flow.MiCloud.get_devices",
-        return_value=TEST_CLOUD_DEVICES_1,
-    ), patch(
-        "homeassistant.components.xiaomi_miio.async_setup_entry", return_value=True
-    ), patch(
-        "homeassistant.components.xiaomi_miio.async_unload_entry", return_value=True
+    with (
+        patch(
+            "homeassistant.components.xiaomi_miio.device.Device.info",
+            return_value=mock_info,
+        ),
+        patch(
+            "homeassistant.components.xiaomi_miio.config_flow.MiCloud.login",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.xiaomi_miio.config_flow.MiCloud.get_devices",
+            return_value=TEST_CLOUD_DEVICES_1,
+        ),
+        patch(
+            "homeassistant.components.xiaomi_miio.async_setup_entry", return_value=True
+        ),
+        patch(
+            "homeassistant.components.xiaomi_miio.async_unload_entry", return_value=True
+        ),
     ):
         yield
 

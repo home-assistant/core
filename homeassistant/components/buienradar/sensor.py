@@ -1,4 +1,5 @@
 """Support for Buienradar.nl weather service."""
+
 from __future__ import annotations
 
 import logging
@@ -741,7 +742,7 @@ class BrSensor(SensorEntity):
         """Initialize the sensor."""
         self.entity_description = description
         self._measured = None
-        self._attr_unique_id = "{:2.6f}{:2.6f}{}".format(
+        self._attr_unique_id = "{:2.6f}{:2.6f}{}".format(  # noqa: UP032
             coordinates[CONF_LATITUDE], coordinates[CONF_LONGITUDE], description.key
         )
 

@@ -1,4 +1,5 @@
 """The tests for the demo platform."""
+
 from freezegun import freeze_time
 
 from homeassistant.components import geo_location

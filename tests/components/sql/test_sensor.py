@@ -1,4 +1,5 @@
 """The test for the sql sensor platform."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -152,9 +153,12 @@ async def test_query_mssql_no_result(
         "column": "value",
         "name": "count_tables",
     }
-    with patch("homeassistant.components.sql.sensor.sqlalchemy"), patch(
-        "homeassistant.components.sql.sensor.sqlalchemy.text",
-        return_value=sql_text("SELECT TOP 1 5 as value where 1=2"),
+    with (
+        patch("homeassistant.components.sql.sensor.sqlalchemy"),
+        patch(
+            "homeassistant.components.sql.sensor.sqlalchemy.text",
+            return_value=sql_text("SELECT TOP 1 5 as value where 1=2"),
+        ),
     ):
         await init_integration(hass, config)
 

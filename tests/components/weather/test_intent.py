@@ -1,4 +1,5 @@
 """Test weather intents."""
+
 from unittest.mock import patch
 
 import pytest
@@ -102,7 +103,8 @@ async def test_get_weather_no_state(hass: HomeAssistant) -> None:
     assert response.response_type == intent.IntentResponseType.QUERY_ANSWER
 
     # Failure without state
-    with patch("homeassistant.core.StateMachine.get", return_value=None), pytest.raises(
-        intent.IntentHandleError
+    with (
+        patch("homeassistant.core.StateMachine.get", return_value=None),
+        pytest.raises(intent.IntentHandleError),
     ):
         await intent.async_handle(hass, "test", weather_intent.INTENT_GET_WEATHER, {})

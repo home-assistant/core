@@ -1,4 +1,5 @@
 """Test deCONZ component setup process."""
+
 import asyncio
 from unittest.mock import patch
 
@@ -38,8 +39,9 @@ ENTRY2_UUID = "789ACE"
 
 async def setup_entry(hass, entry):
     """Test that setup entry works."""
-    with patch.object(DeconzGateway, "async_setup", return_value=True), patch.object(
-        DeconzGateway, "async_update_device_registry", return_value=True
+    with (
+        patch.object(DeconzGateway, "async_setup", return_value=True),
+        patch.object(DeconzGateway, "async_update_device_registry", return_value=True),
     ):
         assert await async_setup_entry(hass, entry) is True
 
@@ -68,10 +70,13 @@ async def test_setup_entry_fails_config_entry_not_ready(hass: HomeAssistant) -> 
 
 async def test_setup_entry_fails_trigger_reauth_flow(hass: HomeAssistant) -> None:
     """Failed authentication trigger a reauthentication flow."""
-    with patch(
-        "homeassistant.components.deconz.get_deconz_session",
-        side_effect=AuthenticationRequired,
-    ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
+    with (
+        patch(
+            "homeassistant.components.deconz.get_deconz_session",
+            side_effect=AuthenticationRequired,
+        ),
+        patch.object(hass.config_entries.flow, "async_init") as mock_flow_init,
+    ):
         await setup_deconz_integration(hass)
         mock_flow_init.assert_called_once()
 

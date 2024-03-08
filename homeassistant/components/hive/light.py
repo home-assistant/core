@@ -1,4 +1,5 @@
 """Support for Hive light devices."""
+
 from __future__ import annotations
 
 from datetime import timedelta

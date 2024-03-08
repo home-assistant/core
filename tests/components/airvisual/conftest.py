@@ -1,4 +1,5 @@
 """Define test fixtures for AirVisual."""
+
 from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, Mock, patch
@@ -112,18 +113,23 @@ def integration_type_fixture():
 @pytest.fixture(name="mock_pyairvisual")
 async def mock_pyairvisual_fixture(cloud_api, node_samba):
     """Define a fixture to patch pyairvisual."""
-    with patch(
-        "homeassistant.components.airvisual.CloudAPI",
-        return_value=cloud_api,
-    ), patch(
-        "homeassistant.components.airvisual.config_flow.CloudAPI",
-        return_value=cloud_api,
-    ), patch(
-        "homeassistant.components.airvisual_pro.NodeSamba",
-        return_value=node_samba,
-    ), patch(
-        "homeassistant.components.airvisual_pro.config_flow.NodeSamba",
-        return_value=node_samba,
+    with (
+        patch(
+            "homeassistant.components.airvisual.CloudAPI",
+            return_value=cloud_api,
+        ),
+        patch(
+            "homeassistant.components.airvisual.config_flow.CloudAPI",
+            return_value=cloud_api,
+        ),
+        patch(
+            "homeassistant.components.airvisual_pro.NodeSamba",
+            return_value=node_samba,
+        ),
+        patch(
+            "homeassistant.components.airvisual_pro.config_flow.NodeSamba",
+            return_value=node_samba,
+        ),
     ):
         yield
 

@@ -1,4 +1,5 @@
 """Philips Hue lights platform tests for V2 bridge/api."""
+
 from homeassistant.components.light import ColorMode
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er

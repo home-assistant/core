@@ -1,4 +1,5 @@
 """Test the NZBGet config flow."""
+
 from unittest.mock import patch
 
 from pynzbgetapi import NZBGetAPIException
@@ -31,9 +32,12 @@ async def test_async_setup_raises_entry_not_ready(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_CONFIG)
     config_entry.add_to_hass(hass)
 
-    with _patch_version(), patch(
-        "homeassistant.components.nzbget.coordinator.NZBGetAPI.status",
-        side_effect=NZBGetAPIException(),
+    with (
+        _patch_version(),
+        patch(
+            "homeassistant.components.nzbget.coordinator.NZBGetAPI.status",
+            side_effect=NZBGetAPIException(),
+        ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
 

@@ -1,4 +1,5 @@
 """HomeKit session fixtures."""
+
 from contextlib import suppress
 import os
 from unittest.mock import patch
@@ -26,12 +27,14 @@ def run_driver(hass, event_loop, iid_storage):
 
     This mock does not mock async_stop, so the driver will not be stopped
     """
-    with patch("pyhap.accessory_driver.AsyncZeroconf"), patch(
-        "pyhap.accessory_driver.AccessoryEncoder"
-    ), patch("pyhap.accessory_driver.HAPServer"), patch(
-        "pyhap.accessory_driver.AccessoryDriver.publish"
-    ), patch(
-        "pyhap.accessory_driver.AccessoryDriver.persist",
+    with (
+        patch("pyhap.accessory_driver.AsyncZeroconf"),
+        patch("pyhap.accessory_driver.AccessoryEncoder"),
+        patch("pyhap.accessory_driver.HAPServer"),
+        patch("pyhap.accessory_driver.AccessoryDriver.publish"),
+        patch(
+            "pyhap.accessory_driver.AccessoryDriver.persist",
+        ),
     ):
         yield HomeDriver(
             hass,
@@ -48,14 +51,17 @@ def run_driver(hass, event_loop, iid_storage):
 @pytest.fixture
 def hk_driver(hass, event_loop, iid_storage):
     """Return a custom AccessoryDriver instance for HomeKit accessory init."""
-    with patch("pyhap.accessory_driver.AsyncZeroconf"), patch(
-        "pyhap.accessory_driver.AccessoryEncoder"
-    ), patch("pyhap.accessory_driver.HAPServer.async_stop"), patch(
-        "pyhap.accessory_driver.HAPServer.async_start"
-    ), patch(
-        "pyhap.accessory_driver.AccessoryDriver.publish",
-    ), patch(
-        "pyhap.accessory_driver.AccessoryDriver.persist",
+    with (
+        patch("pyhap.accessory_driver.AsyncZeroconf"),
+        patch("pyhap.accessory_driver.AccessoryEncoder"),
+        patch("pyhap.accessory_driver.HAPServer.async_stop"),
+        patch("pyhap.accessory_driver.HAPServer.async_start"),
+        patch(
+            "pyhap.accessory_driver.AccessoryDriver.publish",
+        ),
+        patch(
+            "pyhap.accessory_driver.AccessoryDriver.persist",
+        ),
     ):
         yield HomeDriver(
             hass,
@@ -72,18 +78,23 @@ def hk_driver(hass, event_loop, iid_storage):
 @pytest.fixture
 def mock_hap(hass, event_loop, iid_storage, mock_zeroconf):
     """Return a custom AccessoryDriver instance for HomeKit accessory init."""
-    with patch("pyhap.accessory_driver.AsyncZeroconf"), patch(
-        "pyhap.accessory_driver.AccessoryEncoder"
-    ), patch("pyhap.accessory_driver.HAPServer.async_stop"), patch(
-        "pyhap.accessory_driver.HAPServer.async_start"
-    ), patch(
-        "pyhap.accessory_driver.AccessoryDriver.publish",
-    ), patch(
-        "pyhap.accessory_driver.AccessoryDriver.async_start",
-    ), patch(
-        "pyhap.accessory_driver.AccessoryDriver.async_stop",
-    ), patch(
-        "pyhap.accessory_driver.AccessoryDriver.persist",
+    with (
+        patch("pyhap.accessory_driver.AsyncZeroconf"),
+        patch("pyhap.accessory_driver.AccessoryEncoder"),
+        patch("pyhap.accessory_driver.HAPServer.async_stop"),
+        patch("pyhap.accessory_driver.HAPServer.async_start"),
+        patch(
+            "pyhap.accessory_driver.AccessoryDriver.publish",
+        ),
+        patch(
+            "pyhap.accessory_driver.AccessoryDriver.async_start",
+        ),
+        patch(
+            "pyhap.accessory_driver.AccessoryDriver.async_stop",
+        ),
+        patch(
+            "pyhap.accessory_driver.AccessoryDriver.persist",
+        ),
     ):
         yield HomeDriver(
             hass,

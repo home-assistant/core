@@ -1,4 +1,5 @@
 """Config flow to configure forked-daapd devices."""
+
 from contextlib import suppress
 import logging
 

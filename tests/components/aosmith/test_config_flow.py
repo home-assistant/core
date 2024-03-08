@@ -1,4 +1,5 @@
 """Test the A. O. Smith config flow."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -123,13 +124,17 @@ async def test_reauth_flow(
     assert len(flows) == 1
     assert flows[0]["step_id"] == "reauth_confirm"
 
-    with patch(
-        "homeassistant.components.aosmith.config_flow.AOSmithAPIClient.get_devices",
-        return_value=[],
-    ), patch(
-        "homeassistant.components.aosmith.config_flow.AOSmithAPIClient.get_energy_use_data",
-        return_value=[],
-    ), patch("homeassistant.components.aosmith.async_setup_entry", return_value=True):
+    with (
+        patch(
+            "homeassistant.components.aosmith.config_flow.AOSmithAPIClient.get_devices",
+            return_value=[],
+        ),
+        patch(
+            "homeassistant.components.aosmith.config_flow.AOSmithAPIClient.get_energy_use_data",
+            return_value=[],
+        ),
+        patch("homeassistant.components.aosmith.async_setup_entry", return_value=True),
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             flows[0]["flow_id"],
             {CONF_PASSWORD: FIXTURE_USER_INPUT[CONF_PASSWORD]},
@@ -177,10 +182,13 @@ async def test_reauth_flow_retry(
         assert result2["errors"] == {"base": "invalid_auth"}
 
     # Second attempt at reauth - authentication succeeds
-    with patch(
-        "homeassistant.components.aosmith.config_flow.AOSmithAPIClient.get_devices",
-        return_value=[],
-    ), patch("homeassistant.components.aosmith.async_setup_entry", return_value=True):
+    with (
+        patch(
+            "homeassistant.components.aosmith.config_flow.AOSmithAPIClient.get_devices",
+            return_value=[],
+        ),
+        patch("homeassistant.components.aosmith.async_setup_entry", return_value=True),
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             flows[0]["flow_id"],
             {CONF_PASSWORD: FIXTURE_USER_INPUT[CONF_PASSWORD]},

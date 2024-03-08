@@ -1,4 +1,5 @@
 """Test the lg_soundbar config flow."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -60,11 +61,14 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.lg_soundbar.config_flow.temescal"
-    ) as mock_temescal, patch(
-        "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.lg_soundbar.config_flow.temescal"
+        ) as mock_temescal,
+        patch(
+            "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
         setup_mock_temescal(
             hass=hass,
             mock_temescal=mock_temescal,
@@ -98,11 +102,14 @@ async def test_form_mac_info_response_empty(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.lg_soundbar.config_flow.temescal"
-    ) as mock_temescal, patch(
-        "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.lg_soundbar.config_flow.temescal"
+        ) as mock_temescal,
+        patch(
+            "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
         setup_mock_temescal(
             hass=hass,
             mock_temescal=mock_temescal,
@@ -141,11 +148,14 @@ async def test_form_uuid_present_in_both_functions_uuid_q_empty(
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.lg_soundbar.config_flow.temescal"
-    ) as mock_temescal, patch(
-        "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.lg_soundbar.config_flow.temescal"
+        ) as mock_temescal,
+        patch(
+            "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
         setup_mock_temescal(
             hass=hass,
             mock_temescal=mock_temescal,
@@ -186,14 +196,18 @@ async def test_form_uuid_present_in_both_functions_uuid_q_not_empty(
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.lg_soundbar.config_flow.QUEUE_TIMEOUT",
-        new=0.1,
-    ), patch(
-        "homeassistant.components.lg_soundbar.config_flow.temescal"
-    ) as mock_temescal, patch(
-        "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.lg_soundbar.config_flow.QUEUE_TIMEOUT",
+            new=0.1,
+        ),
+        patch(
+            "homeassistant.components.lg_soundbar.config_flow.temescal"
+        ) as mock_temescal,
+        patch(
+            "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
         setup_mock_temescal(
             hass=hass,
             mock_temescal=mock_temescal,
@@ -229,11 +243,14 @@ async def test_form_uuid_missing_from_mac_info(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.lg_soundbar.config_flow.temescal"
-    ) as mock_temescal, patch(
-        "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.lg_soundbar.config_flow.temescal"
+        ) as mock_temescal,
+        patch(
+            "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
         setup_mock_temescal(
             hass=hass,
             mock_temescal=mock_temescal,
@@ -268,14 +285,18 @@ async def test_form_uuid_not_provided_by_api(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.lg_soundbar.config_flow.QUEUE_TIMEOUT",
-        new=0.1,
-    ), patch(
-        "homeassistant.components.lg_soundbar.config_flow.temescal"
-    ) as mock_temescal, patch(
-        "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.lg_soundbar.config_flow.QUEUE_TIMEOUT",
+            new=0.1,
+        ),
+        patch(
+            "homeassistant.components.lg_soundbar.config_flow.temescal"
+        ) as mock_temescal,
+        patch(
+            "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
         setup_mock_temescal(
             hass=hass,
             mock_temescal=mock_temescal,
@@ -309,14 +330,18 @@ async def test_form_both_queues_empty(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.lg_soundbar.config_flow.QUEUE_TIMEOUT",
-        new=0.1,
-    ), patch(
-        "homeassistant.components.lg_soundbar.config_flow.temescal"
-    ) as mock_temescal, patch(
-        "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.lg_soundbar.config_flow.QUEUE_TIMEOUT",
+            new=0.1,
+        ),
+        patch(
+            "homeassistant.components.lg_soundbar.config_flow.temescal"
+        ) as mock_temescal,
+        patch(
+            "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
         setup_mock_temescal(hass=hass, mock_temescal=mock_temescal)
 
         result2 = await hass.config_entries.flow.async_configure(
@@ -351,12 +376,15 @@ async def test_no_uuid_host_already_configured(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.lg_soundbar.config_flow.QUEUE_TIMEOUT",
-        new=0.1,
-    ), patch(
-        "homeassistant.components.lg_soundbar.config_flow.temescal"
-    ) as mock_temescal:
+    with (
+        patch(
+            "homeassistant.components.lg_soundbar.config_flow.QUEUE_TIMEOUT",
+            new=0.1,
+        ),
+        patch(
+            "homeassistant.components.lg_soundbar.config_flow.temescal"
+        ) as mock_temescal,
+    ):
         setup_mock_temescal(
             hass=hass, mock_temescal=mock_temescal, info={"s_user_name": "name"}
         )

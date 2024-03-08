@@ -1,4 +1,5 @@
 """Support for Tibber."""
+
 import logging
 
 import aiohttp

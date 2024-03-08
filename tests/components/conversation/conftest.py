@@ -1,4 +1,5 @@
 """Conversation test helpers."""
+
 from unittest.mock import patch
 
 import pytest
@@ -35,8 +36,9 @@ def mock_agent_support_all(hass):
 @pytest.fixture(autouse=True)
 def mock_shopping_list_io():
     """Stub out the persistence."""
-    with patch("homeassistant.components.shopping_list.ShoppingData.save"), patch(
-        "homeassistant.components.shopping_list.ShoppingData.async_load"
+    with (
+        patch("homeassistant.components.shopping_list.ShoppingData.save"),
+        patch("homeassistant.components.shopping_list.ShoppingData.async_load"),
     ):
         yield
 

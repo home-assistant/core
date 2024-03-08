@@ -1,4 +1,5 @@
 """Fixtures for TechnoVE integration tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -50,10 +51,13 @@ def device_fixture() -> TechnoVEStation:
 @pytest.fixture
 def mock_technove(device_fixture: TechnoVEStation) -> Generator[MagicMock, None, None]:
     """Return a mocked TechnoVE client."""
-    with patch(
-        "homeassistant.components.technove.coordinator.TechnoVE", autospec=True
-    ) as technove_mock, patch(
-        "homeassistant.components.technove.config_flow.TechnoVE", new=technove_mock
+    with (
+        patch(
+            "homeassistant.components.technove.coordinator.TechnoVE", autospec=True
+        ) as technove_mock,
+        patch(
+            "homeassistant.components.technove.config_flow.TechnoVE", new=technove_mock
+        ),
     ):
         technove = technove_mock.return_value
         technove.update.return_value = device_fixture

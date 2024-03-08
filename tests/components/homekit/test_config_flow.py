@@ -1,4 +1,5 @@
 """Test the HomeKit config flow."""
+
 from unittest.mock import patch
 
 import pytest
@@ -59,15 +60,19 @@ async def test_setup_in_bridge_mode(hass: HomeAssistant, mock_get_source_ip) -> 
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["step_id"] == "pairing"
 
-    with patch(
-        "homeassistant.components.homekit.config_flow.async_find_next_available_port",
-        return_value=12345,
-    ), patch(
-        "homeassistant.components.homekit.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.homekit.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.homekit.config_flow.async_find_next_available_port",
+            return_value=12345,
+        ),
+        patch(
+            "homeassistant.components.homekit.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.homekit.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {},
@@ -117,15 +122,19 @@ async def test_setup_in_bridge_mode_name_taken(
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["step_id"] == "pairing"
 
-    with patch(
-        "homeassistant.components.homekit.config_flow.async_find_next_available_port",
-        return_value=12345,
-    ), patch(
-        "homeassistant.components.homekit.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.homekit.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.homekit.config_flow.async_find_next_available_port",
+            return_value=12345,
+        ),
+        patch(
+            "homeassistant.components.homekit.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.homekit.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {},
@@ -199,15 +208,19 @@ async def test_setup_creates_entries_for_accessory_mode_devices(
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["step_id"] == "pairing"
 
-    with patch(
-        "homeassistant.components.homekit.config_flow.async_find_next_available_port",
-        return_value=12345,
-    ), patch(
-        "homeassistant.components.homekit.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.homekit.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.homekit.config_flow.async_find_next_available_port",
+            return_value=12345,
+        ),
+        patch(
+            "homeassistant.components.homekit.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.homekit.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {},
@@ -262,12 +275,15 @@ async def test_import(hass: HomeAssistant, mock_get_source_ip) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "port_name_in_use"
 
-    with patch(
-        "homeassistant.components.homekit.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.homekit.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.homekit.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.homekit.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
@@ -1275,13 +1291,16 @@ async def test_converting_bridge_to_accessory_mode(
 
     # We need to actually setup the config entry or the data
     # will not get migrated to options
-    with patch(
-        "homeassistant.components.homekit.config_flow.async_find_next_available_port",
-        return_value=12345,
-    ), patch(
-        "homeassistant.components.homekit.HomeKit.async_start",
-        return_value=True,
-    ) as mock_async_start:
+    with (
+        patch(
+            "homeassistant.components.homekit.config_flow.async_find_next_available_port",
+            return_value=12345,
+        ),
+        patch(
+            "homeassistant.components.homekit.HomeKit.async_start",
+            return_value=True,
+        ) as mock_async_start,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {},
@@ -1337,11 +1356,12 @@ async def test_converting_bridge_to_accessory_mode(
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["step_id"] == "cameras"
 
-    with patch(
-        "homeassistant.components.homekit.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.homekit.async_port_is_available"
+    with (
+        patch(
+            "homeassistant.components.homekit.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch("homeassistant.components.homekit.async_port_is_available"),
     ):
         result3 = await hass.config_entries.options.async_configure(
             result2["flow_id"],

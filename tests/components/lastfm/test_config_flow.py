@@ -1,4 +1,5 @@
 """Test Lastfm config flow."""
+
 from unittest.mock import patch
 
 from pylast import WSError
@@ -140,9 +141,10 @@ async def test_flow_friends_no_friends(
     hass: HomeAssistant, default_user_no_friends: MockUser
 ) -> None:
     """Test options is empty when user has no friends."""
-    with patch(
-        "pylast.User", return_value=default_user_no_friends
-    ), patch_setup_entry():
+    with (
+        patch("pylast.User", return_value=default_user_no_friends),
+        patch_setup_entry(),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},

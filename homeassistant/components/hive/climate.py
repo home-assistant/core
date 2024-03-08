@@ -1,4 +1,5 @@
 """Support for the Hive climate devices."""
+
 from datetime import timedelta
 import logging
 from typing import Any

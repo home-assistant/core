@@ -1,4 +1,5 @@
 """Common methods used across tests for TotalConnect."""
+
 from unittest.mock import patch
 
 from total_connect_client import ArmingState, ResultCode, ZoneStatus, ZoneType
@@ -388,10 +389,13 @@ async def setup_platform(hass, platform):
         RESPONSE_DISARMED,
     ]
 
-    with patch("homeassistant.components.totalconnect.PLATFORMS", [platform]), patch(
-        TOTALCONNECT_REQUEST,
-        side_effect=responses,
-    ) as mock_request:
+    with (
+        patch("homeassistant.components.totalconnect.PLATFORMS", [platform]),
+        patch(
+            TOTALCONNECT_REQUEST,
+            side_effect=responses,
+        ) as mock_request,
+    ):
         assert await async_setup_component(hass, DOMAIN, {})
         assert mock_request.call_count == 5
     await hass.async_block_till_done()

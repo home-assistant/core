@@ -1,4 +1,5 @@
 """Define tests for the SimpliSafe config flow."""
+
 import logging
 from unittest.mock import patch
 
@@ -98,9 +99,12 @@ async def test_step_reauth(config_entry, hass: HomeAssistant, setup_simplisafe) 
     )
     assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.simplisafe.async_setup_entry", return_value=True
-    ), patch("homeassistant.config_entries.ConfigEntries.async_reload"):
+    with (
+        patch(
+            "homeassistant.components.simplisafe.async_setup_entry", return_value=True
+        ),
+        patch("homeassistant.config_entries.ConfigEntries.async_reload"),
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_AUTH_CODE: VALID_AUTH_CODE}
         )
@@ -124,9 +128,12 @@ async def test_step_reauth_wrong_account(
     )
     assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.simplisafe.async_setup_entry", return_value=True
-    ), patch("homeassistant.config_entries.ConfigEntries.async_reload"):
+    with (
+        patch(
+            "homeassistant.components.simplisafe.async_setup_entry", return_value=True
+        ),
+        patch("homeassistant.config_entries.ConfigEntries.async_reload"),
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_AUTH_CODE: VALID_AUTH_CODE}
         )
@@ -162,9 +169,12 @@ async def test_step_user(
     )
     assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.simplisafe.async_setup_entry", return_value=True
-    ), patch("homeassistant.config_entries.ConfigEntries.async_reload"):
+    with (
+        patch(
+            "homeassistant.components.simplisafe.async_setup_entry", return_value=True
+        ),
+        patch("homeassistant.config_entries.ConfigEntries.async_reload"),
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_AUTH_CODE: auth_code}
         )

@@ -1,4 +1,5 @@
 """Support for the Hive sensors."""
+
 from datetime import timedelta
 
 from homeassistant.components.sensor import (

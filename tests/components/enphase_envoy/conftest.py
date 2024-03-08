@@ -1,4 +1,5 @@
 """Define test fixtures for Enphase Envoy."""
+
 from unittest.mock import AsyncMock, Mock, patch
 
 from pyenphase import (
@@ -277,12 +278,15 @@ def mock_envoy_fixture(serial_number, mock_authenticate, mock_setup, mock_auth):
 @pytest.fixture(name="setup_enphase_envoy")
 async def setup_enphase_envoy_fixture(hass, config, mock_envoy):
     """Define a fixture to set up Enphase Envoy."""
-    with patch(
-        "homeassistant.components.enphase_envoy.config_flow.Envoy",
-        return_value=mock_envoy,
-    ), patch(
-        "homeassistant.components.enphase_envoy.Envoy",
-        return_value=mock_envoy,
+    with (
+        patch(
+            "homeassistant.components.enphase_envoy.config_flow.Envoy",
+            return_value=mock_envoy,
+        ),
+        patch(
+            "homeassistant.components.enphase_envoy.Envoy",
+            return_value=mock_envoy,
+        ),
     ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()

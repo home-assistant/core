@@ -1,4 +1,5 @@
 """Provide a way to connect devices to one physical location."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable

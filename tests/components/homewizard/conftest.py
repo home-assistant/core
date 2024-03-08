@@ -1,4 +1,5 @@
 """Fixtures for HomeWizard integration tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -24,12 +25,15 @@ def mock_homewizardenergy(
     device_fixture: str,
 ) -> MagicMock:
     """Return a mock bridge."""
-    with patch(
-        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
-        autospec=True,
-    ) as homewizard, patch(
-        "homeassistant.components.homewizard.config_flow.HomeWizardEnergy",
-        new=homewizard,
+    with (
+        patch(
+            "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
+            autospec=True,
+        ) as homewizard,
+        patch(
+            "homeassistant.components.homewizard.config_flow.HomeWizardEnergy",
+            new=homewizard,
+        ),
     ):
         client = homewizard.return_value
 

@@ -1,4 +1,5 @@
 """The tests for the Home Assistant HTTP component."""
+
 from http import HTTPStatus
 from ipaddress import ip_address
 import os
@@ -36,10 +37,14 @@ BANNED_IPS_WITH_SUPERVISOR = BANNED_IPS + [SUPERVISOR_IP]
 @pytest.fixture(name="hassio_env")
 def hassio_env_fixture():
     """Fixture to inject hassio env."""
-    with patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}), patch(
-        "homeassistant.components.hassio.HassIO.is_connected",
-        return_value={"result": "ok", "data": {}},
-    ), patch.dict(os.environ, {"SUPERVISOR_TOKEN": "123456"}):
+    with (
+        patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}),
+        patch(
+            "homeassistant.components.hassio.HassIO.is_connected",
+            return_value={"result": "ok", "data": {}},
+        ),
+        patch.dict(os.environ, {"SUPERVISOR_TOKEN": "123456"}),
+    ):
         yield
 
 
@@ -231,8 +236,9 @@ async def test_access_from_supervisor_ip(
 
     m_open = mock_open()
 
-    with patch.dict(os.environ, {"SUPERVISOR": SUPERVISOR_IP}), patch(
-        "homeassistant.components.http.ban.open", m_open, create=True
+    with (
+        patch.dict(os.environ, {"SUPERVISOR": SUPERVISOR_IP}),
+        patch("homeassistant.components.http.ban.open", m_open, create=True),
     ):
         resp = await client.get("/")
         assert resp.status == HTTPStatus.UNAUTHORIZED

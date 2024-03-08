@@ -1,4 +1,5 @@
 """Test Axis device."""
+
 from ipaddress import ip_address
 from unittest import mock
 from unittest.mock import Mock, patch
@@ -186,9 +187,12 @@ async def test_device_trigger_reauth_flow(
     hass: HomeAssistant, config_entry, setup_default_vapix_requests
 ) -> None:
     """Failed authentication trigger a reauthentication flow."""
-    with patch.object(
-        axis, "get_axis_api", side_effect=axis.errors.AuthenticationRequired
-    ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
+    with (
+        patch.object(
+            axis, "get_axis_api", side_effect=axis.errors.AuthenticationRequired
+        ),
+        patch.object(hass.config_entries.flow, "async_init") as mock_flow_init,
+    ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         mock_flow_init.assert_called_once()
@@ -220,23 +224,26 @@ async def test_shutdown(config) -> None:
 
 async def test_get_device_fails(hass: HomeAssistant, config) -> None:
     """Device unauthorized yields authentication required error."""
-    with patch(
-        "axis.vapix.vapix.Vapix.initialize", side_effect=axislib.Unauthorized
-    ), pytest.raises(axis.errors.AuthenticationRequired):
+    with (
+        patch("axis.vapix.vapix.Vapix.initialize", side_effect=axislib.Unauthorized),
+        pytest.raises(axis.errors.AuthenticationRequired),
+    ):
         await axis.hub.get_axis_api(hass, config)
 
 
 async def test_get_device_device_unavailable(hass: HomeAssistant, config) -> None:
     """Device unavailable yields cannot connect error."""
-    with patch(
-        "axis.vapix.vapix.Vapix.request", side_effect=axislib.RequestError
-    ), pytest.raises(axis.errors.CannotConnect):
+    with (
+        patch("axis.vapix.vapix.Vapix.request", side_effect=axislib.RequestError),
+        pytest.raises(axis.errors.CannotConnect),
+    ):
         await axis.hub.get_axis_api(hass, config)
 
 
 async def test_get_device_unknown_error(hass: HomeAssistant, config) -> None:
     """Device yield unknown error."""
-    with patch(
-        "axis.vapix.vapix.Vapix.request", side_effect=axislib.AxisException
-    ), pytest.raises(axis.errors.AuthenticationRequired):
+    with (
+        patch("axis.vapix.vapix.Vapix.request", side_effect=axislib.AxisException),
+        pytest.raises(axis.errors.AuthenticationRequired),
+    ):
         await axis.hub.get_axis_api(hass, config)

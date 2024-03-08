@@ -1,4 +1,5 @@
 """Test the World Air Quality Index (WAQI) sensor."""
+
 import json
 from unittest.mock import patch
 
@@ -42,13 +43,16 @@ async def test_legacy_migration(hass: HomeAssistant) -> None:
         WAQISearchResult.from_dict(search_result)
         for search_result in search_result_json
     ]
-    with patch(
-        "aiowaqi.WAQIClient.search",
-        return_value=search_results,
-    ), patch(
-        "aiowaqi.WAQIClient.get_by_station_number",
-        return_value=WAQIAirQuality.from_dict(
-            json.loads(load_fixture("waqi/air_quality_sensor.json"))
+    with (
+        patch(
+            "aiowaqi.WAQIClient.search",
+            return_value=search_results,
+        ),
+        patch(
+            "aiowaqi.WAQIClient.get_by_station_number",
+            return_value=WAQIAirQuality.from_dict(
+                json.loads(load_fixture("waqi/air_quality_sensor.json"))
+            ),
         ),
     ):
         assert await async_setup_component(hass, Platform.SENSOR, LEGACY_CONFIG)

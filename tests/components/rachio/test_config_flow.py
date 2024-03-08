@@ -1,4 +1,5 @@
 """Test the Rachio config flow."""
+
 from ipaddress import ip_address
 from unittest.mock import MagicMock, patch
 
@@ -38,12 +39,16 @@ async def test_form(hass: HomeAssistant) -> None:
         info=({"status": 200}, {"id": "myid"}),
     )
 
-    with patch(
-        "homeassistant.components.rachio.config_flow.Rachio", return_value=rachio_mock
-    ), patch(
-        "homeassistant.components.rachio.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.rachio.config_flow.Rachio",
+            return_value=rachio_mock,
+        ),
+        patch(
+            "homeassistant.components.rachio.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

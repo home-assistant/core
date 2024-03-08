@@ -93,9 +93,9 @@ def valid_topic(topic: Any) -> str:
         )
     if "\0" in validated_topic:
         raise vol.Invalid("MQTT topic name/filter must not contain null character.")
-    if any(char <= "\u001F" for char in validated_topic):
+    if any(char <= "\u001f" for char in validated_topic):
         raise vol.Invalid("MQTT topic name/filter must not contain control characters.")
-    if any("\u007f" <= char <= "\u009F" for char in validated_topic):
+    if any("\u007f" <= char <= "\u009f" for char in validated_topic):
         raise vol.Invalid("MQTT topic name/filter must not contain control characters.")
     if any("\ufdd0" <= char <= "\ufdef" for char in validated_topic):
         raise vol.Invalid("MQTT topic name/filter must not contain non-characters.")

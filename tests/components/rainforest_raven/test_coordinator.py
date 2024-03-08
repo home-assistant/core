@@ -1,4 +1,5 @@
 """Tests for the Rainforest RAVEn data coordinator."""
+
 from aioraven.device import RAVEnConnectionError
 import pytest
 

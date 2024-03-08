@@ -1,4 +1,5 @@
 """The test for the History Statistics sensor platform."""
+
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
@@ -610,10 +611,13 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_sin
             ]
         }
 
-    with patch(
-        "homeassistant.components.recorder.history.state_changes_during_period",
-        _fake_states,
-    ), freeze_time(start_time):
+    with (
+        patch(
+            "homeassistant.components.recorder.history.state_changes_during_period",
+            _fake_states,
+        ),
+        freeze_time(start_time),
+    ):
         await async_setup_component(
             hass,
             "sensor",
@@ -708,10 +712,13 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_sin
             ]
         }
 
-    with patch(
-        "homeassistant.components.recorder.history.state_changes_during_period",
-        _fake_states,
-    ), freeze_time(start_time):
+    with (
+        patch(
+            "homeassistant.components.recorder.history.state_changes_during_period",
+            _fake_states,
+        ),
+        freeze_time(start_time),
+    ):
         await async_setup_component(
             hass,
             "sensor",
@@ -822,10 +829,13 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
             ]
         }
 
-    with patch(
-        "homeassistant.components.recorder.history.state_changes_during_period",
-        _fake_states,
-    ), freeze_time(start_time):
+    with (
+        patch(
+            "homeassistant.components.recorder.history.state_changes_during_period",
+            _fake_states,
+        ),
+        freeze_time(start_time),
+    ):
         await async_setup_component(
             hass,
             "sensor",
@@ -1049,10 +1059,13 @@ async def test_does_not_work_into_the_future(
         assert hass.states.get("sensor.sensor2").state == "0.0833333333333333"
 
     past_the_window = start_time + timedelta(hours=25)
-    with patch(
-        "homeassistant.components.recorder.history.state_changes_during_period",
-        return_value=[],
-    ), freeze_time(past_the_window):
+    with (
+        patch(
+            "homeassistant.components.recorder.history.state_changes_during_period",
+            return_value=[],
+        ),
+        freeze_time(past_the_window),
+    ):
         async_fire_time_changed(hass, past_the_window)
         await hass.async_block_till_done()
 
@@ -1071,20 +1084,26 @@ async def test_does_not_work_into_the_future(
         }
 
     past_the_window_with_data = start_time + timedelta(hours=26)
-    with patch(
-        "homeassistant.components.recorder.history.state_changes_during_period",
-        _fake_off_states,
-    ), freeze_time(past_the_window_with_data):
+    with (
+        patch(
+            "homeassistant.components.recorder.history.state_changes_during_period",
+            _fake_off_states,
+        ),
+        freeze_time(past_the_window_with_data),
+    ):
         async_fire_time_changed(hass, past_the_window_with_data)
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.sensor1").state == STATE_UNKNOWN
 
     at_the_next_window_with_data = start_time + timedelta(days=1, hours=23)
-    with patch(
-        "homeassistant.components.recorder.history.state_changes_during_period",
-        _fake_off_states,
-    ), freeze_time(at_the_next_window_with_data):
+    with (
+        patch(
+            "homeassistant.components.recorder.history.state_changes_during_period",
+            _fake_off_states,
+        ),
+        freeze_time(at_the_next_window_with_data),
+    ):
         async_fire_time_changed(hass, at_the_next_window_with_data)
         await hass.async_block_till_done()
 
@@ -1203,10 +1222,13 @@ async def test_measure_sliding_window(
     )
     await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.recorder.history.state_changes_during_period",
-        _fake_states,
-    ), freeze_time(start_time):
+    with (
+        patch(
+            "homeassistant.components.recorder.history.state_changes_during_period",
+            _fake_states,
+        ),
+        freeze_time(start_time),
+    ):
         for i in range(1, 5):
             await async_update_entity(hass, f"sensor.sensor{i}")
         await hass.async_block_till_done()
@@ -1217,10 +1239,13 @@ async def test_measure_sliding_window(
     assert hass.states.get("sensor.sensor4").state == "41.7"
 
     past_next_update = start_time + timedelta(minutes=30)
-    with patch(
-        "homeassistant.components.recorder.history.state_changes_during_period",
-        _fake_states,
-    ), freeze_time(past_next_update):
+    with (
+        patch(
+            "homeassistant.components.recorder.history.state_changes_during_period",
+            _fake_states,
+        ),
+        freeze_time(past_next_update),
+    ):
         async_fire_time_changed(hass, past_next_update)
         await hass.async_block_till_done()
 
@@ -1252,10 +1277,13 @@ async def test_measure_from_end_going_backwards(
             ]
         }
 
-    with patch(
-        "homeassistant.components.recorder.history.state_changes_during_period",
-        _fake_states,
-    ), freeze_time(start_time):
+    with (
+        patch(
+            "homeassistant.components.recorder.history.state_changes_during_period",
+            _fake_states,
+        ),
+        freeze_time(start_time),
+    ):
         await async_setup_component(
             hass,
             "sensor",
@@ -1312,10 +1340,13 @@ async def test_measure_from_end_going_backwards(
     assert hass.states.get("sensor.sensor4").state == "83.3"
 
     past_next_update = start_time + timedelta(minutes=30)
-    with patch(
-        "homeassistant.components.recorder.history.state_changes_during_period",
-        _fake_states,
-    ), freeze_time(past_next_update):
+    with (
+        patch(
+            "homeassistant.components.recorder.history.state_changes_during_period",
+            _fake_states,
+        ),
+        freeze_time(past_next_update),
+    ):
         async_fire_time_changed(hass, past_next_update)
         await hass.async_block_till_done()
 
@@ -1445,9 +1476,12 @@ async def test_end_time_with_microseconds_zeroed(
             ]
         }
 
-    with freeze_time(time_200), patch(
-        "homeassistant.components.recorder.history.state_changes_during_period",
-        _fake_states,
+    with (
+        freeze_time(time_200),
+        patch(
+            "homeassistant.components.recorder.history.state_changes_during_period",
+            _fake_states,
+        ),
     ):
         await async_setup_component(
             hass,
@@ -1636,10 +1670,13 @@ async def test_history_stats_handles_floored_timestamps(
             ]
         }
 
-    with patch(
-        "homeassistant.components.recorder.history.state_changes_during_period",
-        _fake_states,
-    ), freeze_time(start_time):
+    with (
+        patch(
+            "homeassistant.components.recorder.history.state_changes_during_period",
+            _fake_states,
+        ),
+        freeze_time(start_time),
+    ):
         await async_setup_component(
             hass,
             "sensor",

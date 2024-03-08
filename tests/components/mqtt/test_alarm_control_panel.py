@@ -1,4 +1,5 @@
 """The tests the MQTT alarm control panel component."""
+
 import copy
 import json
 from typing import Any
@@ -1341,9 +1342,13 @@ async def test_reload_after_invalid_config(
                 },
             ]
         }
-        with patch(
-            "homeassistant.config.load_yaml_config_file", return_value=invalid_config
-        ), pytest.raises(HomeAssistantError):
+        with (
+            patch(
+                "homeassistant.config.load_yaml_config_file",
+                return_value=invalid_config,
+            ),
+            pytest.raises(HomeAssistantError),
+        ):
             await hass.services.async_call(
                 "mqtt",
                 SERVICE_RELOAD,

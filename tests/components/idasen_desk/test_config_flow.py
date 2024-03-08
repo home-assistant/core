@@ -1,4 +1,5 @@
 """Test the IKEA Idasen Desk config flow."""
+
 from unittest.mock import ANY, patch
 
 from bleak.exc import BleakError
@@ -29,12 +30,14 @@ async def test_user_step_success(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch("homeassistant.components.idasen_desk.config_flow.Desk.connect"), patch(
-        "homeassistant.components.idasen_desk.config_flow.Desk.disconnect"
-    ), patch(
-        "homeassistant.components.idasen_desk.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch("homeassistant.components.idasen_desk.config_flow.Desk.connect"),
+        patch("homeassistant.components.idasen_desk.config_flow.Desk.disconnect"),
+        patch(
+            "homeassistant.components.idasen_desk.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -102,10 +105,13 @@ async def test_user_step_cannot_connect(
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.idasen_desk.config_flow.Desk.connect",
-        side_effect=exception,
-    ), patch("homeassistant.components.idasen_desk.config_flow.Desk.disconnect"):
+    with (
+        patch(
+            "homeassistant.components.idasen_desk.config_flow.Desk.connect",
+            side_effect=exception,
+        ),
+        patch("homeassistant.components.idasen_desk.config_flow.Desk.disconnect"),
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -118,12 +124,14 @@ async def test_user_step_cannot_connect(
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "cannot_connect"}
 
-    with patch("homeassistant.components.idasen_desk.config_flow.Desk.connect"), patch(
-        "homeassistant.components.idasen_desk.config_flow.Desk.disconnect"
-    ), patch(
-        "homeassistant.components.idasen_desk.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch("homeassistant.components.idasen_desk.config_flow.Desk.connect"),
+        patch("homeassistant.components.idasen_desk.config_flow.Desk.disconnect"),
+        patch(
+            "homeassistant.components.idasen_desk.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
@@ -154,10 +162,13 @@ async def test_user_step_auth_failed(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.idasen_desk.config_flow.Desk.connect",
-        side_effect=AuthFailedError,
-    ), patch("homeassistant.components.idasen_desk.config_flow.Desk.disconnect"):
+    with (
+        patch(
+            "homeassistant.components.idasen_desk.config_flow.Desk.connect",
+            side_effect=AuthFailedError,
+        ),
+        patch("homeassistant.components.idasen_desk.config_flow.Desk.disconnect"),
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -170,12 +181,14 @@ async def test_user_step_auth_failed(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "auth_failed"}
 
-    with patch("homeassistant.components.idasen_desk.config_flow.Desk.connect"), patch(
-        "homeassistant.components.idasen_desk.config_flow.Desk.disconnect"
-    ), patch(
-        "homeassistant.components.idasen_desk.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch("homeassistant.components.idasen_desk.config_flow.Desk.connect"),
+        patch("homeassistant.components.idasen_desk.config_flow.Desk.disconnect"),
+        patch(
+            "homeassistant.components.idasen_desk.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
@@ -206,11 +219,14 @@ async def test_user_step_unknown_exception(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.idasen_desk.config_flow.Desk.connect",
-        side_effect=RuntimeError,
-    ), patch(
-        "homeassistant.components.idasen_desk.config_flow.Desk.disconnect",
+    with (
+        patch(
+            "homeassistant.components.idasen_desk.config_flow.Desk.connect",
+            side_effect=RuntimeError,
+        ),
+        patch(
+            "homeassistant.components.idasen_desk.config_flow.Desk.disconnect",
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -224,14 +240,18 @@ async def test_user_step_unknown_exception(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "unknown"}
 
-    with patch(
-        "homeassistant.components.idasen_desk.config_flow.Desk.connect",
-    ), patch(
-        "homeassistant.components.idasen_desk.config_flow.Desk.disconnect",
-    ), patch(
-        "homeassistant.components.idasen_desk.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.idasen_desk.config_flow.Desk.connect",
+        ),
+        patch(
+            "homeassistant.components.idasen_desk.config_flow.Desk.disconnect",
+        ),
+        patch(
+            "homeassistant.components.idasen_desk.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
@@ -260,14 +280,16 @@ async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.idasen_desk.config_flow.Desk.connect"
-    ) as desk_connect, patch(
-        "homeassistant.components.idasen_desk.config_flow.Desk.disconnect"
-    ), patch(
-        "homeassistant.components.idasen_desk.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.idasen_desk.config_flow.Desk.connect"
+        ) as desk_connect,
+        patch("homeassistant.components.idasen_desk.config_flow.Desk.disconnect"),
+        patch(
+            "homeassistant.components.idasen_desk.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

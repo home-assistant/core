@@ -1,4 +1,5 @@
 """Test system log component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -375,11 +376,14 @@ async def async_log_error_from_test_path(hass, path, watcher):
     call_path_frame = get_frame(call_path, path_frame)
     logger_frame = get_frame("venv_path/logging/log.py", call_path_frame)
 
-    with patch.object(
-        _LOGGER, "findCaller", MagicMock(return_value=(call_path, 0, None, None))
-    ), patch(
-        "homeassistant.components.system_log.sys._getframe",
-        return_value=logger_frame,
+    with (
+        patch.object(
+            _LOGGER, "findCaller", MagicMock(return_value=(call_path, 0, None, None))
+        ),
+        patch(
+            "homeassistant.components.system_log.sys._getframe",
+            return_value=logger_frame,
+        ),
     ):
         wait_empty = watcher.add_watcher("error message")
         _LOGGER.error("error message")

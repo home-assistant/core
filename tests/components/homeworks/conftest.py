@@ -1,4 +1,5 @@
 """Common fixtures for the Lutron Homeworks Series 4 and 8 tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -85,10 +86,14 @@ def mock_empty_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_homeworks() -> Generator[None, MagicMock, None]:
     """Return a mocked Homeworks client."""
-    with patch(
-        "homeassistant.components.homeworks.Homeworks", autospec=True
-    ) as homeworks_mock, patch(
-        "homeassistant.components.homeworks.config_flow.Homeworks", new=homeworks_mock
+    with (
+        patch(
+            "homeassistant.components.homeworks.Homeworks", autospec=True
+        ) as homeworks_mock,
+        patch(
+            "homeassistant.components.homeworks.config_flow.Homeworks",
+            new=homeworks_mock,
+        ),
     ):
         yield homeworks_mock
 

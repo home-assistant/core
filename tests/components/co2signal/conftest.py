@@ -1,4 +1,5 @@
 """Fixtures for Electricity maps integration tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -17,12 +18,15 @@ from tests.components.co2signal import VALID_RESPONSE
 def mock_electricity_maps() -> Generator[None, MagicMock, None]:
     """Mock the ElectricityMaps client."""
 
-    with patch(
-        "homeassistant.components.co2signal.ElectricityMaps",
-        autospec=True,
-    ) as electricity_maps, patch(
-        "homeassistant.components.co2signal.config_flow.ElectricityMaps",
-        new=electricity_maps,
+    with (
+        patch(
+            "homeassistant.components.co2signal.ElectricityMaps",
+            autospec=True,
+        ) as electricity_maps,
+        patch(
+            "homeassistant.components.co2signal.config_flow.ElectricityMaps",
+            new=electricity_maps,
+        ),
     ):
         client = electricity_maps.return_value
         client.latest_carbon_intensity_by_coordinates.return_value = VALID_RESPONSE

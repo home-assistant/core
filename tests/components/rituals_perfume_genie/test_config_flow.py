@@ -1,4 +1,5 @@
 """Test the Rituals Perfume Genie config flow."""
+
 from http import HTTPStatus
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -31,13 +32,16 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] is None
 
-    with patch(
-        "homeassistant.components.rituals_perfume_genie.config_flow.Account",
-        side_effect=_mock_account,
-    ), patch(
-        "homeassistant.components.rituals_perfume_genie.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.rituals_perfume_genie.config_flow.Account",
+            side_effect=_mock_account,
+        ),
+        patch(
+            "homeassistant.components.rituals_perfume_genie.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

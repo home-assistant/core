@@ -40,12 +40,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> N
                 hass, tasmota_automation, config_entry, discovery_hash
             )
 
-    hass.data[
-        DATA_REMOVE_DISCOVER_COMPONENT.format("device_automation")
-    ] = async_dispatcher_connect(
-        hass,
-        TASMOTA_DISCOVERY_ENTITY_NEW.format("device_automation"),
-        async_discover,
+    hass.data[DATA_REMOVE_DISCOVER_COMPONENT.format("device_automation")] = (
+        async_dispatcher_connect(
+            hass,
+            TASMOTA_DISCOVERY_ENTITY_NEW.format("device_automation"),
+            async_discover,
+        )
     )
     hass.data[DATA_UNSUB].append(
         hass.bus.async_listen(

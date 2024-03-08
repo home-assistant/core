@@ -1,4 +1,5 @@
 """Test the Balboa Spa Client config flow."""
+
 from unittest.mock import MagicMock, patch
 
 from pybalboa.exceptions import SpaConnectionError
@@ -25,13 +26,16 @@ async def test_form(hass: HomeAssistant, client: MagicMock) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.balboa.config_flow.SpaClient.__aenter__",
-        return_value=client,
-    ), patch(
-        "homeassistant.components.balboa.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.balboa.config_flow.SpaClient.__aenter__",
+            return_value=client,
+        ),
+        patch(
+            "homeassistant.components.balboa.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             TEST_DATA,
@@ -112,12 +116,15 @@ async def test_already_configured(hass: HomeAssistant, client: MagicMock) -> Non
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.balboa.config_flow.SpaClient.__aenter__",
-        return_value=client,
-    ), patch(
-        "homeassistant.components.balboa.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.balboa.config_flow.SpaClient.__aenter__",
+            return_value=client,
+        ),
+        patch(
+            "homeassistant.components.balboa.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

@@ -1,4 +1,5 @@
 """Test the helper method for writing tests."""
+
 from __future__ import annotations
 
 import asyncio
@@ -306,28 +307,35 @@ async def async_test_home_assistant(
         hass
     )
     if load_registries:
-        with patch.object(
-            StoreWithoutWriteLoad, "async_load", return_value=None
-        ), patch(
-            "homeassistant.helpers.area_registry.AreaRegistryStore",
-            StoreWithoutWriteLoad,
-        ), patch(
-            "homeassistant.helpers.device_registry.DeviceRegistryStore",
-            StoreWithoutWriteLoad,
-        ), patch(
-            "homeassistant.helpers.entity_registry.EntityRegistryStore",
-            StoreWithoutWriteLoad,
-        ), patch(
-            "homeassistant.helpers.storage.Store",  # Floor & label registry are different
-            StoreWithoutWriteLoad,
-        ), patch(
-            "homeassistant.helpers.issue_registry.IssueRegistryStore",
-            StoreWithoutWriteLoad,
-        ), patch(
-            "homeassistant.helpers.restore_state.RestoreStateData.async_setup_dump",
-            return_value=None,
-        ), patch(
-            "homeassistant.helpers.restore_state.start.async_at_start",
+        with (
+            patch.object(StoreWithoutWriteLoad, "async_load", return_value=None),
+            patch(
+                "homeassistant.helpers.area_registry.AreaRegistryStore",
+                StoreWithoutWriteLoad,
+            ),
+            patch(
+                "homeassistant.helpers.device_registry.DeviceRegistryStore",
+                StoreWithoutWriteLoad,
+            ),
+            patch(
+                "homeassistant.helpers.entity_registry.EntityRegistryStore",
+                StoreWithoutWriteLoad,
+            ),
+            patch(
+                "homeassistant.helpers.storage.Store",  # Floor & label registry are different
+                StoreWithoutWriteLoad,
+            ),
+            patch(
+                "homeassistant.helpers.issue_registry.IssueRegistryStore",
+                StoreWithoutWriteLoad,
+            ),
+            patch(
+                "homeassistant.helpers.restore_state.RestoreStateData.async_setup_dump",
+                return_value=None,
+            ),
+            patch(
+                "homeassistant.helpers.restore_state.start.async_at_start",
+            ),
         ):
             await ar.async_load(hass)
             await dr.async_load(hass)
@@ -509,12 +517,15 @@ def _async_fire_time_changed(
         future_seconds = task.when() - (hass.loop.time() + _MONOTONIC_RESOLUTION)
 
         if fire_all or mock_seconds_into_future >= future_seconds:
-            with patch(
-                "homeassistant.helpers.event.time_tracker_utcnow",
-                return_value=utc_datetime,
-            ), patch(
-                "homeassistant.helpers.event.time_tracker_timestamp",
-                return_value=timestamp,
+            with (
+                patch(
+                    "homeassistant.helpers.event.time_tracker_utcnow",
+                    return_value=utc_datetime,
+                ),
+                patch(
+                    "homeassistant.helpers.event.time_tracker_timestamp",
+                    return_value=timestamp,
+                ),
             ):
                 task._run()
                 task.cancel()
@@ -1074,9 +1085,9 @@ def assert_setup_component(count, domain=None):
         yield config
 
     if domain is None:
-        assert len(config) == 1, "assert_setup_component requires DOMAIN: {}".format(
-            list(config.keys())
-        )
+        assert (
+            len(config) == 1
+        ), f"assert_setup_component requires DOMAIN: {list(config.keys())}"
         domain = list(config.keys())[0]
 
     res = config.get(domain)
@@ -1342,18 +1353,22 @@ def mock_storage(
         """Remove data."""
         data.pop(store.key, None)
 
-    with patch(
-        "homeassistant.helpers.storage.Store._async_load",
-        side_effect=mock_async_load,
-        autospec=True,
-    ), patch(
-        "homeassistant.helpers.storage.Store._async_write_data",
-        side_effect=mock_write_data,
-        autospec=True,
-    ), patch(
-        "homeassistant.helpers.storage.Store.async_remove",
-        side_effect=mock_remove,
-        autospec=True,
+    with (
+        patch(
+            "homeassistant.helpers.storage.Store._async_load",
+            side_effect=mock_async_load,
+            autospec=True,
+        ),
+        patch(
+            "homeassistant.helpers.storage.Store._async_write_data",
+            side_effect=mock_write_data,
+            autospec=True,
+        ),
+        patch(
+            "homeassistant.helpers.storage.Store.async_remove",
+            side_effect=mock_remove,
+            autospec=True,
+        ),
     ):
         yield data
 

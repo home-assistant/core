@@ -1,4 +1,5 @@
 """Common functions needed to setup tests for Subaru component."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -111,46 +112,61 @@ async def setup_subaru_config_entry(
     fetch_effect=None,
 ):
     """Run async_setup with API mocks in place."""
-    with patch(
-        MOCK_API_CONNECT,
-        return_value=connect_effect is None,
-        side_effect=connect_effect,
-    ), patch(
-        MOCK_API_GET_VEHICLES,
-        return_value=vehicle_list,
-    ), patch(
-        MOCK_API_VIN_TO_NAME,
-        return_value=vehicle_data[VEHICLE_NAME],
-    ), patch(
-        MOCK_API_GET_API_GEN,
-        return_value=vehicle_data[VEHICLE_API_GEN],
-    ), patch(
-        MOCK_API_GET_MODEL_NAME,
-        return_value=vehicle_data[VEHICLE_MODEL_NAME],
-    ), patch(
-        MOCK_API_GET_MODEL_YEAR,
-        return_value=vehicle_data[VEHICLE_MODEL_YEAR],
-    ), patch(
-        MOCK_API_GET_EV_STATUS,
-        return_value=vehicle_data[VEHICLE_HAS_EV],
-    ), patch(
-        MOCK_API_GET_RES_STATUS,
-        return_value=vehicle_data[VEHICLE_HAS_REMOTE_START],
-    ), patch(
-        MOCK_API_GET_REMOTE_STATUS,
-        return_value=vehicle_data[VEHICLE_HAS_REMOTE_SERVICE],
-    ), patch(
-        MOCK_API_GET_SAFETY_STATUS,
-        return_value=vehicle_data[VEHICLE_HAS_SAFETY_SERVICE],
-    ), patch(
-        MOCK_API_GET_SUBSCRIPTION_STATUS,
-        return_value=True,
-    ), patch(
-        MOCK_API_GET_DATA,
-        return_value=vehicle_status,
-    ), patch(
-        MOCK_API_UPDATE,
-    ), patch(MOCK_API_FETCH, side_effect=fetch_effect):
+    with (
+        patch(
+            MOCK_API_CONNECT,
+            return_value=connect_effect is None,
+            side_effect=connect_effect,
+        ),
+        patch(
+            MOCK_API_GET_VEHICLES,
+            return_value=vehicle_list,
+        ),
+        patch(
+            MOCK_API_VIN_TO_NAME,
+            return_value=vehicle_data[VEHICLE_NAME],
+        ),
+        patch(
+            MOCK_API_GET_API_GEN,
+            return_value=vehicle_data[VEHICLE_API_GEN],
+        ),
+        patch(
+            MOCK_API_GET_MODEL_NAME,
+            return_value=vehicle_data[VEHICLE_MODEL_NAME],
+        ),
+        patch(
+            MOCK_API_GET_MODEL_YEAR,
+            return_value=vehicle_data[VEHICLE_MODEL_YEAR],
+        ),
+        patch(
+            MOCK_API_GET_EV_STATUS,
+            return_value=vehicle_data[VEHICLE_HAS_EV],
+        ),
+        patch(
+            MOCK_API_GET_RES_STATUS,
+            return_value=vehicle_data[VEHICLE_HAS_REMOTE_START],
+        ),
+        patch(
+            MOCK_API_GET_REMOTE_STATUS,
+            return_value=vehicle_data[VEHICLE_HAS_REMOTE_SERVICE],
+        ),
+        patch(
+            MOCK_API_GET_SAFETY_STATUS,
+            return_value=vehicle_data[VEHICLE_HAS_SAFETY_SERVICE],
+        ),
+        patch(
+            MOCK_API_GET_SUBSCRIPTION_STATUS,
+            return_value=True,
+        ),
+        patch(
+            MOCK_API_GET_DATA,
+            return_value=vehicle_status,
+        ),
+        patch(
+            MOCK_API_UPDATE,
+        ),
+        patch(MOCK_API_FETCH, side_effect=fetch_effect),
+    ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 

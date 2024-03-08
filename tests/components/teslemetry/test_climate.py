@@ -94,10 +94,13 @@ async def test_errors(
     await setup_platform(hass, platforms=[Platform.CLIMATE])
     entity_id = "climate.test_climate"
 
-    with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.auto_conditioning_start",
-        side_effect=InvalidCommand,
-    ) as mock_on, pytest.raises(HomeAssistantError) as error:
+    with (
+        patch(
+            "homeassistant.components.teslemetry.VehicleSpecific.auto_conditioning_start",
+            side_effect=InvalidCommand,
+        ) as mock_on,
+        pytest.raises(HomeAssistantError) as error,
+    ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_TURN_ON,
@@ -148,9 +151,10 @@ async def test_asleep_or_offline(
     # Run a command but timeout trying to wake up the vehicle
     mock_wake_up.return_value = WAKE_UP_ASLEEP
     mock_vehicle.return_value = WAKE_UP_ASLEEP
-    with patch(
-        "homeassistant.components.teslemetry.entity.asyncio.sleep"
-    ), pytest.raises(HomeAssistantError) as error:
+    with (
+        patch("homeassistant.components.teslemetry.entity.asyncio.sleep"),
+        pytest.raises(HomeAssistantError) as error,
+    ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_TURN_ON,

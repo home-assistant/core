@@ -1,4 +1,5 @@
 """Test the OctoPrint buttons."""
+
 from unittest.mock import patch
 
 from pyoctoprintapi import OctoprintPrinterInfo
@@ -55,9 +56,10 @@ async def test_pause_job(hass: HomeAssistant) -> None:
         assert len(pause_command.mock_calls) == 0
 
     # Test pausing the printer when it is stopped
-    with patch(
-        "pyoctoprintapi.OctoprintClient.pause_job"
-    ) as pause_command, pytest.raises(InvalidPrinterState):
+    with (
+        patch("pyoctoprintapi.OctoprintClient.pause_job") as pause_command,
+        pytest.raises(InvalidPrinterState),
+    ):
         coordinator.data["printer"] = OctoprintPrinterInfo(
             {
                 "state": {"flags": {"printing": False, "paused": False}},
@@ -115,9 +117,10 @@ async def test_resume_job(hass: HomeAssistant) -> None:
         assert len(resume_command.mock_calls) == 0
 
     # Test resuming the printer when it is stopped
-    with patch(
-        "pyoctoprintapi.OctoprintClient.resume_job"
-    ) as resume_command, pytest.raises(InvalidPrinterState):
+    with (
+        patch("pyoctoprintapi.OctoprintClient.resume_job") as resume_command,
+        pytest.raises(InvalidPrinterState),
+    ):
         coordinator.data["printer"] = OctoprintPrinterInfo(
             {
                 "state": {"flags": {"printing": False, "paused": False}},

@@ -1,4 +1,5 @@
 """Test configuration and mocks for the SmartThings component."""
+
 import secrets
 from unittest.mock import Mock, patch
 from uuid import uuid4
@@ -182,9 +183,11 @@ def smartthings_mock_fixture(locations):
     smartthings_mock = Mock(SmartThings)
     smartthings_mock.location.side_effect = _location
     mock = Mock(return_value=smartthings_mock)
-    with patch(COMPONENT_PREFIX + "SmartThings", new=mock), patch(
-        COMPONENT_PREFIX + "config_flow.SmartThings", new=mock
-    ), patch(COMPONENT_PREFIX + "smartapp.SmartThings", new=mock):
+    with (
+        patch(COMPONENT_PREFIX + "SmartThings", new=mock),
+        patch(COMPONENT_PREFIX + "config_flow.SmartThings", new=mock),
+        patch(COMPONENT_PREFIX + "smartapp.SmartThings", new=mock),
+    ):
         yield smartthings_mock
 
 

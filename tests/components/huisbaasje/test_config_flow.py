@@ -1,4 +1,5 @@
 """Test the Huisbaasje config flow."""
+
 from unittest.mock import patch
 
 from energyflip import (
@@ -23,17 +24,22 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "energyflip.EnergyFlip.authenticate", return_value=None
-    ) as mock_authenticate, patch(
-        "energyflip.EnergyFlip.customer_overview", return_value=None
-    ) as mock_customer_overview, patch(
-        "energyflip.EnergyFlip.get_user_id",
-        return_value="test-id",
-    ) as mock_get_user_id, patch(
-        "homeassistant.components.huisbaasje.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "energyflip.EnergyFlip.authenticate", return_value=None
+        ) as mock_authenticate,
+        patch(
+            "energyflip.EnergyFlip.customer_overview", return_value=None
+        ) as mock_customer_overview,
+        patch(
+            "energyflip.EnergyFlip.get_user_id",
+            return_value="test-id",
+        ) as mock_get_user_id,
+        patch(
+            "homeassistant.components.huisbaasje.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         form_result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -128,9 +134,12 @@ async def test_form_customer_overview_cannot_connect(hass: HomeAssistant) -> Non
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("energyflip.EnergyFlip.authenticate", return_value=None), patch(
-        "energyflip.EnergyFlip.customer_overview",
-        side_effect=EnergyFlipConnectionException,
+    with (
+        patch("energyflip.EnergyFlip.authenticate", return_value=None),
+        patch(
+            "energyflip.EnergyFlip.customer_overview",
+            side_effect=EnergyFlipConnectionException,
+        ),
     ):
         form_result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -150,9 +159,12 @@ async def test_form_customer_overview_authentication_error(hass: HomeAssistant) 
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("energyflip.EnergyFlip.authenticate", return_value=None), patch(
-        "energyflip.EnergyFlip.customer_overview",
-        side_effect=EnergyFlipUnauthenticatedException,
+    with (
+        patch("energyflip.EnergyFlip.authenticate", return_value=None),
+        patch(
+            "energyflip.EnergyFlip.customer_overview",
+            side_effect=EnergyFlipUnauthenticatedException,
+        ),
     ):
         form_result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -172,9 +184,12 @@ async def test_form_customer_overview_unknown_error(hass: HomeAssistant) -> None
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("energyflip.EnergyFlip.authenticate", return_value=None), patch(
-        "energyflip.EnergyFlip.customer_overview",
-        side_effect=Exception,
+    with (
+        patch("energyflip.EnergyFlip.authenticate", return_value=None),
+        patch(
+            "energyflip.EnergyFlip.customer_overview",
+            side_effect=Exception,
+        ),
     ):
         form_result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -205,14 +220,17 @@ async def test_form_entry_exists(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("energyflip.EnergyFlip.authenticate", return_value=None), patch(
-        "energyflip.EnergyFlip.customer_overview", return_value=None
-    ), patch(
-        "energyflip.EnergyFlip.get_user_id",
-        return_value="test-id",
-    ), patch(
-        "homeassistant.components.huisbaasje.async_setup_entry",
-        return_value=True,
+    with (
+        patch("energyflip.EnergyFlip.authenticate", return_value=None),
+        patch("energyflip.EnergyFlip.customer_overview", return_value=None),
+        patch(
+            "energyflip.EnergyFlip.get_user_id",
+            return_value="test-id",
+        ),
+        patch(
+            "homeassistant.components.huisbaasje.async_setup_entry",
+            return_value=True,
+        ),
     ):
         form_result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

@@ -1,4 +1,5 @@
 """Common fixtures for the Ecovacs tests."""
+
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
@@ -54,12 +55,15 @@ def device_fixture() -> str:
 @pytest.fixture
 def mock_authenticator(device_fixture: str) -> Generator[Mock, None, None]:
     """Mock the authenticator."""
-    with patch(
-        "homeassistant.components.ecovacs.controller.Authenticator",
-        autospec=True,
-    ) as mock, patch(
-        "homeassistant.components.ecovacs.config_flow.Authenticator",
-        new=mock,
+    with (
+        patch(
+            "homeassistant.components.ecovacs.controller.Authenticator",
+            autospec=True,
+        ) as mock,
+        patch(
+            "homeassistant.components.ecovacs.config_flow.Authenticator",
+            new=mock,
+        ),
     ):
         authenticator = mock.return_value
         authenticator.authenticate.return_value = Credentials("token", "user_id", 0)
@@ -96,12 +100,15 @@ def mock_authenticator_authenticate(mock_authenticator: Mock) -> AsyncMock:
 @pytest.fixture
 def mock_mqtt_client(mock_authenticator: Mock) -> Mock:
     """Mock the MQTT client."""
-    with patch(
-        "homeassistant.components.ecovacs.controller.MqttClient",
-        autospec=True,
-    ) as mock, patch(
-        "homeassistant.components.ecovacs.config_flow.MqttClient",
-        new=mock,
+    with (
+        patch(
+            "homeassistant.components.ecovacs.controller.MqttClient",
+            autospec=True,
+        ) as mock,
+        patch(
+            "homeassistant.components.ecovacs.config_flow.MqttClient",
+            new=mock,
+        ),
     ):
         client = mock.return_value
         client._authenticator = mock_authenticator

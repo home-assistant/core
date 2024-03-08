@@ -1,4 +1,5 @@
 """Test fixtures for the Home Assistant SkyConnect integration."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -24,12 +25,15 @@ def mock_zha():
         MagicMock()
     )
 
-    with patch(
-        "homeassistant.components.zha.radio_manager.ZhaRadioManager.connect_zigpy_app",
-        return_value=mock_connect_app,
-    ), patch(
-        "homeassistant.components.zha.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.zha.radio_manager.ZhaRadioManager.connect_zigpy_app",
+            return_value=mock_connect_app,
+        ),
+        patch(
+            "homeassistant.components.zha.async_setup_entry",
+            return_value=True,
+        ),
     ):
         yield
 

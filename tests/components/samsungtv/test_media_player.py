@@ -1,4 +1,5 @@
 """Tests for samsungtv component."""
+
 from copy import deepcopy
 from datetime import datetime, timedelta
 import logging
@@ -305,11 +306,14 @@ async def test_update_off_ws_with_power_state(
     mock_now: datetime,
 ) -> None:
     """Testing update tv off."""
-    with patch.object(
-        rest_api, "rest_device_info", side_effect=HttpApiError
-    ) as mock_device_info, patch.object(
-        remotews, "start_listening", side_effect=WebSocketException("Boom")
-    ) as mock_start_listening:
+    with (
+        patch.object(
+            rest_api, "rest_device_info", side_effect=HttpApiError
+        ) as mock_device_info,
+        patch.object(
+            remotews, "start_listening", side_effect=WebSocketException("Boom")
+        ) as mock_start_listening,
+    ):
         await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
 
         mock_device_info.assert_called_once()
@@ -433,11 +437,14 @@ async def test_update_ws_connection_failure(
     """Testing update tv connection failure exception."""
     await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
 
-    with patch.object(
-        remotews,
-        "start_listening",
-        side_effect=ConnectionFailure('{"event": "ms.voiceApp.hide"}'),
-    ), patch.object(remotews, "is_alive", return_value=False):
+    with (
+        patch.object(
+            remotews,
+            "start_listening",
+            side_effect=ConnectionFailure('{"event": "ms.voiceApp.hide"}'),
+        ),
+        patch.object(remotews, "is_alive", return_value=False),
+    ):
         next_update = mock_now + timedelta(minutes=5)
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
@@ -463,9 +470,12 @@ async def test_update_ws_connection_closed(
     """Testing update tv connection failure exception."""
     await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
 
-    with patch.object(
-        remotews, "start_listening", side_effect=ConnectionClosedError(None, None)
-    ), patch.object(remotews, "is_alive", return_value=False):
+    with (
+        patch.object(
+            remotews, "start_listening", side_effect=ConnectionClosedError(None, None)
+        ),
+        patch.object(remotews, "is_alive", return_value=False),
+    ):
         next_update = mock_now + timedelta(minutes=5)
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
@@ -485,9 +495,10 @@ async def test_update_ws_unauthorized_error(
     """Testing update tv unauthorized failure exception."""
     await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
 
-    with patch.object(
-        remotews, "start_listening", side_effect=UnauthorizedError
-    ), patch.object(remotews, "is_alive", return_value=False):
+    with (
+        patch.object(remotews, "start_listening", side_effect=UnauthorizedError),
+        patch.object(remotews, "is_alive", return_value=False),
+    ):
         next_update = mock_now + timedelta(minutes=5)
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
@@ -1437,9 +1448,12 @@ async def test_upnp_re_subscribe_events(
     assert dmr_device.async_subscribe_services.call_count == 1
     assert dmr_device.async_unsubscribe_services.call_count == 0
 
-    with patch.object(
-        remotews, "start_listening", side_effect=WebSocketException("Boom")
-    ), patch.object(remotews, "is_alive", return_value=False):
+    with (
+        patch.object(
+            remotews, "start_listening", side_effect=WebSocketException("Boom")
+        ),
+        patch.object(remotews, "is_alive", return_value=False),
+    ):
         next_update = mock_now + timedelta(minutes=5)
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
@@ -1483,9 +1497,12 @@ async def test_upnp_failed_re_subscribe_events(
     assert dmr_device.async_subscribe_services.call_count == 1
     assert dmr_device.async_unsubscribe_services.call_count == 0
 
-    with patch.object(
-        remotews, "start_listening", side_effect=WebSocketException("Boom")
-    ), patch.object(remotews, "is_alive", return_value=False):
+    with (
+        patch.object(
+            remotews, "start_listening", side_effect=WebSocketException("Boom")
+        ),
+        patch.object(remotews, "is_alive", return_value=False),
+    ):
         next_update = mock_now + timedelta(minutes=5)
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)

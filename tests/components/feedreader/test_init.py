@@ -1,4 +1,5 @@
 """The tests for the feedreader component."""
+
 from collections.abc import Generator
 from datetime import datetime, timedelta
 import pickle
@@ -196,10 +197,13 @@ async def test_storage_data_writing(
     """Test writing to storage."""
     storage_data: dict[str, str] = {URL: "2018-04-30T05:10:00+00:00"}
 
-    with patch(
-        "feedparser.http.get",
-        return_value=feed_one_event,
-    ), patch("homeassistant.components.feedreader.DELAY_SAVE", new=0):
+    with (
+        patch(
+            "feedparser.http.get",
+            return_value=feed_one_event,
+        ),
+        patch("homeassistant.components.feedreader.DELAY_SAVE", new=0),
+    ):
         assert await async_setup_component(hass, feedreader.DOMAIN, VALID_CONFIG_2)
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -295,13 +299,16 @@ async def test_feed_identical_timestamps(
     hass: HomeAssistant, events, feed_identically_timed_events
 ) -> None:
     """Test feed with 2 entries with identical timestamps."""
-    with patch(
-        "feedparser.http.get",
-        return_value=feed_identically_timed_events,
-    ), patch(
-        "homeassistant.components.feedreader.StoredData.get_timestamp",
-        return_value=gmtime(
-            datetime.fromisoformat("1970-01-01T00:00:00.0+0000").timestamp()
+    with (
+        patch(
+            "feedparser.http.get",
+            return_value=feed_identically_timed_events,
+        ),
+        patch(
+            "homeassistant.components.feedreader.StoredData.get_timestamp",
+            return_value=gmtime(
+                datetime.fromisoformat("1970-01-01T00:00:00.0+0000").timestamp()
+            ),
         ),
     ):
         assert await async_setup_component(hass, feedreader.DOMAIN, VALID_CONFIG_2)

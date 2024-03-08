@@ -1,4 +1,4 @@
-""""Config flow for Lupusec integration."""
+"""Config flow for Lupusec integration."""
 
 from json import JSONDecodeError
 import logging

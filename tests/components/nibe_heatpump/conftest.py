@@ -1,4 +1,5 @@
 """Test configuration for Nibe Heat Pump."""
+
 from collections.abc import Generator
 from contextlib import ExitStack
 from unittest.mock import AsyncMock, Mock, patch
@@ -70,8 +71,9 @@ async def fixture_coils(mock_connection: MockConnection):
             raise CoilNotFoundException()
         return coils_data
 
-    with patch.object(HeatPump, "get_coils", new=get_coils), patch.object(
-        HeatPump, "get_coil_by_address", new=get_coil_by_address
+    with (
+        patch.object(HeatPump, "get_coils", new=get_coils),
+        patch.object(HeatPump, "get_coil_by_address", new=get_coil_by_address),
     ):
         yield mock_connection.coils
 

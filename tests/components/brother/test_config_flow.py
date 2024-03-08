@@ -1,4 +1,5 @@
 """Define tests for the Brother Printer config flow."""
+
 from ipaddress import ip_address
 import json
 from unittest.mock import patch
@@ -32,9 +33,12 @@ async def test_show_form(hass: HomeAssistant) -> None:
 
 async def test_create_entry_with_hostname(hass: HomeAssistant) -> None:
     """Test that the user step works with printer hostname."""
-    with patch("brother.Brother.initialize"), patch(
-        "brother.Brother._get_data",
-        return_value=json.loads(load_fixture("printer_data.json", "brother")),
+    with (
+        patch("brother.Brother.initialize"),
+        patch(
+            "brother.Brother._get_data",
+            return_value=json.loads(load_fixture("printer_data.json", "brother")),
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -50,9 +54,12 @@ async def test_create_entry_with_hostname(hass: HomeAssistant) -> None:
 
 async def test_create_entry_with_ipv4_address(hass: HomeAssistant) -> None:
     """Test that the user step works with printer IPv4 address."""
-    with patch("brother.Brother.initialize"), patch(
-        "brother.Brother._get_data",
-        return_value=json.loads(load_fixture("printer_data.json", "brother")),
+    with (
+        patch("brother.Brother.initialize"),
+        patch(
+            "brother.Brother._get_data",
+            return_value=json.loads(load_fixture("printer_data.json", "brother")),
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
@@ -66,9 +73,12 @@ async def test_create_entry_with_ipv4_address(hass: HomeAssistant) -> None:
 
 async def test_create_entry_with_ipv6_address(hass: HomeAssistant) -> None:
     """Test that the user step works with printer IPv6 address."""
-    with patch("brother.Brother.initialize"), patch(
-        "brother.Brother._get_data",
-        return_value=json.loads(load_fixture("printer_data.json", "brother")),
+    with (
+        patch("brother.Brother.initialize"),
+        patch(
+            "brother.Brother._get_data",
+            return_value=json.loads(load_fixture("printer_data.json", "brother")),
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -95,8 +105,9 @@ async def test_invalid_hostname(hass: HomeAssistant) -> None:
 
 async def test_connection_error(hass: HomeAssistant) -> None:
     """Test connection to host error."""
-    with patch("brother.Brother.initialize"), patch(
-        "brother.Brother._get_data", side_effect=ConnectionError()
+    with (
+        patch("brother.Brother.initialize"),
+        patch("brother.Brother._get_data", side_effect=ConnectionError()),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
@@ -107,8 +118,9 @@ async def test_connection_error(hass: HomeAssistant) -> None:
 
 async def test_snmp_error(hass: HomeAssistant) -> None:
     """Test SNMP error."""
-    with patch("brother.Brother.initialize"), patch(
-        "brother.Brother._get_data", side_effect=SnmpError("error")
+    with (
+        patch("brother.Brother.initialize"),
+        patch("brother.Brother._get_data", side_effect=SnmpError("error")),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
@@ -119,8 +131,9 @@ async def test_snmp_error(hass: HomeAssistant) -> None:
 
 async def test_unsupported_model_error(hass: HomeAssistant) -> None:
     """Test unsupported printer model error."""
-    with patch("brother.Brother.initialize"), patch(
-        "brother.Brother._get_data", side_effect=UnsupportedModelError("error")
+    with (
+        patch("brother.Brother.initialize"),
+        patch("brother.Brother._get_data", side_effect=UnsupportedModelError("error")),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
@@ -132,9 +145,12 @@ async def test_unsupported_model_error(hass: HomeAssistant) -> None:
 
 async def test_device_exists_abort(hass: HomeAssistant) -> None:
     """Test we abort config flow if Brother printer already configured."""
-    with patch("brother.Brother.initialize"), patch(
-        "brother.Brother._get_data",
-        return_value=json.loads(load_fixture("printer_data.json", "brother")),
+    with (
+        patch("brother.Brother.initialize"),
+        patch(
+            "brother.Brother._get_data",
+            return_value=json.loads(load_fixture("printer_data.json", "brother")),
+        ),
     ):
         MockConfigEntry(domain=DOMAIN, unique_id="0123456789", data=CONFIG).add_to_hass(
             hass
@@ -149,8 +165,9 @@ async def test_device_exists_abort(hass: HomeAssistant) -> None:
 
 async def test_zeroconf_snmp_error(hass: HomeAssistant) -> None:
     """Test we abort zeroconf flow on SNMP error."""
-    with patch("brother.Brother.initialize"), patch(
-        "brother.Brother._get_data", side_effect=SnmpError("error")
+    with (
+        patch("brother.Brother.initialize"),
+        patch("brother.Brother._get_data", side_effect=SnmpError("error")),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -172,9 +189,10 @@ async def test_zeroconf_snmp_error(hass: HomeAssistant) -> None:
 
 async def test_zeroconf_unsupported_model(hass: HomeAssistant) -> None:
     """Test unsupported printer model error."""
-    with patch("brother.Brother.initialize"), patch(
-        "brother.Brother._get_data"
-    ) as mock_get_data:
+    with (
+        patch("brother.Brother.initialize"),
+        patch("brother.Brother._get_data") as mock_get_data,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
@@ -196,9 +214,12 @@ async def test_zeroconf_unsupported_model(hass: HomeAssistant) -> None:
 
 async def test_zeroconf_device_exists_abort(hass: HomeAssistant) -> None:
     """Test we abort zeroconf flow if Brother printer already configured."""
-    with patch("brother.Brother.initialize"), patch(
-        "brother.Brother._get_data",
-        return_value=json.loads(load_fixture("printer_data.json", "brother")),
+    with (
+        patch("brother.Brother.initialize"),
+        patch(
+            "brother.Brother._get_data",
+            return_value=json.loads(load_fixture("printer_data.json", "brother")),
+        ),
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,
@@ -232,9 +253,10 @@ async def test_zeroconf_no_probe_existing_device(hass: HomeAssistant) -> None:
     """Test we do not probe the device is the host is already configured."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id="0123456789", data=CONFIG)
     entry.add_to_hass(hass)
-    with patch("brother.Brother.initialize"), patch(
-        "brother.Brother._get_data"
-    ) as mock_get_data:
+    with (
+        patch("brother.Brother.initialize"),
+        patch("brother.Brother._get_data") as mock_get_data,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
@@ -257,9 +279,12 @@ async def test_zeroconf_no_probe_existing_device(hass: HomeAssistant) -> None:
 
 async def test_zeroconf_confirm_create_entry(hass: HomeAssistant) -> None:
     """Test zeroconf confirmation and create config entry."""
-    with patch("brother.Brother.initialize"), patch(
-        "brother.Brother._get_data",
-        return_value=json.loads(load_fixture("printer_data.json", "brother")),
+    with (
+        patch("brother.Brother.initialize"),
+        patch(
+            "brother.Brother._get_data",
+            return_value=json.loads(load_fixture("printer_data.json", "brother")),
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

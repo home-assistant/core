@@ -1,4 +1,5 @@
 """The test for light device automation."""
+
 from unittest.mock import AsyncMock, Mock, patch
 
 import attr
@@ -1728,10 +1729,13 @@ async def test_async_get_device_automations_platform_reraises_exceptions(
 ) -> None:
     """Test InvalidDeviceAutomationConfig is raised when async_get_integration_with_requirements fails."""
     await async_setup_component(hass, "device_automation", {})
-    with patch(
-        "homeassistant.components.device_automation.async_get_integration_with_requirements",
-        side_effect=exc,
-    ), pytest.raises(InvalidDeviceAutomationConfig):
+    with (
+        patch(
+            "homeassistant.components.device_automation.async_get_integration_with_requirements",
+            side_effect=exc,
+        ),
+        pytest.raises(InvalidDeviceAutomationConfig),
+    ):
         await device_automation.async_get_device_automation_platform(
             hass, "test", device_automation.DeviceAutomationType.TRIGGER
         )

@@ -1,4 +1,5 @@
 """Test the Cloudflare integration."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -124,10 +125,13 @@ async def test_integration_services_with_issue(hass: HomeAssistant, cfupdate) ->
     entry = await init_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
 
-    with patch(
-        "homeassistant.components.cloudflare.async_detect_location_info",
-        return_value=None,
-    ), pytest.raises(HomeAssistantError, match="Could not get external IPv4 address"):
+    with (
+        patch(
+            "homeassistant.components.cloudflare.async_detect_location_info",
+            return_value=None,
+        ),
+        pytest.raises(HomeAssistantError, match="Could not get external IPv4 address"),
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_UPDATE_RECORDS,

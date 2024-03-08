@@ -1,4 +1,5 @@
 """Tests for ScreenLogic integration init."""
+
 from dataclasses import dataclass
 from unittest.mock import DEFAULT, patch
 
@@ -156,14 +157,17 @@ async def test_async_migrate_entries(
     assert entity.unique_id == old_uid
     assert entity.entity_id == old_eid
 
-    with patch(
-        GATEWAY_DISCOVERY_IMPORT_PATH,
-        return_value={},
-    ), patch.multiple(
-        ScreenLogicGateway,
-        async_connect=MIGRATION_CONNECT,
-        is_connected=True,
-        _async_connected_request=DEFAULT,
+    with (
+        patch(
+            GATEWAY_DISCOVERY_IMPORT_PATH,
+            return_value={},
+        ),
+        patch.multiple(
+            ScreenLogicGateway,
+            async_connect=MIGRATION_CONNECT,
+            is_connected=True,
+            _async_connected_request=DEFAULT,
+        ),
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -215,23 +219,27 @@ async def test_entity_migration_data(
     )
 
     # This patch simulates bad data being added to ENTITY_MIGRATIONS
-    with patch.dict(
-        "homeassistant.components.screenlogic.data.ENTITY_MIGRATIONS",
-        {
-            "missing_device": {
-                "new_key": "state",
-                "old_name": "Missing Migration Device",
-                "new_name": "Bad ENTITY_MIGRATIONS Entry",
+    with (
+        patch.dict(
+            "homeassistant.components.screenlogic.data.ENTITY_MIGRATIONS",
+            {
+                "missing_device": {
+                    "new_key": "state",
+                    "old_name": "Missing Migration Device",
+                    "new_name": "Bad ENTITY_MIGRATIONS Entry",
+                },
             },
-        },
-    ), patch(
-        GATEWAY_DISCOVERY_IMPORT_PATH,
-        return_value={},
-    ), patch.multiple(
-        ScreenLogicGateway,
-        async_connect=MIGRATION_CONNECT,
-        is_connected=True,
-        _async_connected_request=DEFAULT,
+        ),
+        patch(
+            GATEWAY_DISCOVERY_IMPORT_PATH,
+            return_value={},
+        ),
+        patch.multiple(
+            ScreenLogicGateway,
+            async_connect=MIGRATION_CONNECT,
+            is_connected=True,
+            _async_connected_request=DEFAULT,
+        ),
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -263,14 +271,17 @@ async def test_platform_setup(
 
     mock_config_entry.add_to_hass(hass)
 
-    with patch(
-        GATEWAY_DISCOVERY_IMPORT_PATH,
-        return_value={},
-    ), patch.multiple(
-        ScreenLogicGateway,
-        async_connect=stub_connect,
-        is_connected=True,
-        _async_connected_request=DEFAULT,
+    with (
+        patch(
+            GATEWAY_DISCOVERY_IMPORT_PATH,
+            return_value={},
+        ),
+        patch.multiple(
+            ScreenLogicGateway,
+            async_connect=stub_connect,
+            is_connected=True,
+            _async_connected_request=DEFAULT,
+        ),
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()

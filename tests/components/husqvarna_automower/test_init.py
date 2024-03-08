@@ -1,4 +1,5 @@
 """Tests for init module."""
+
 from datetime import timedelta
 import http
 import time

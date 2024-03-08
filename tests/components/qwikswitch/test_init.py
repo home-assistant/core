@@ -1,4 +1,5 @@
 """Test qwikswitch sensors."""
+
 import asyncio
 from typing import Any
 from unittest.mock import Mock

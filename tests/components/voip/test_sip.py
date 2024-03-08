@@ -1,4 +1,5 @@
 """Test SIP server."""
+
 import socket
 
 import pytest
@@ -20,9 +21,10 @@ async def test_create_sip_server(hass: HomeAssistant, socket_enabled) -> None:
     entry = result["result"]
     await hass.async_block_till_done()
 
-    with pytest.raises(OSError), socket.socket(
-        socket.AF_INET, socket.SOCK_DGRAM
-    ) as sock:
+    with (
+        pytest.raises(OSError),
+        socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock,
+    ):
         # Server should have the port
         sock.bind(("127.0.0.1", 5060))
 
@@ -40,9 +42,10 @@ async def test_create_sip_server(hass: HomeAssistant, socket_enabled) -> None:
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
         sock.bind(("127.0.0.1", 5060))
 
-    with pytest.raises(OSError), socket.socket(
-        socket.AF_INET, socket.SOCK_DGRAM
-    ) as sock:
+    with (
+        pytest.raises(OSError),
+        socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock,
+    ):
         # Server should now have the new port
         sock.bind(("127.0.0.1", 5061))
 

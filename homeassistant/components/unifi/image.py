@@ -2,6 +2,7 @@
 
 Support for QR code for guest WLANs.
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable

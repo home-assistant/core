@@ -1,4 +1,5 @@
 """Tests for ZHA config flow."""
+
 import copy
 from datetime import timedelta
 from ipaddress import ip_address
@@ -54,12 +55,15 @@ def disable_platform_only():
 @pytest.fixture(autouse=True)
 def mock_multipan_platform():
     """Mock the multipan platform."""
-    with patch(
-        "homeassistant.components.zha.silabs_multiprotocol.async_get_channel",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.zha.silabs_multiprotocol.async_using_multipan",
-        return_value=False,
+    with (
+        patch(
+            "homeassistant.components.zha.silabs_multiprotocol.async_get_channel",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.zha.silabs_multiprotocol.async_using_multipan",
+            return_value=False,
+        ),
     ):
         yield
 
@@ -1863,9 +1867,10 @@ async def test_config_flow_port_yellow_port_name(hass: HomeAssistant) -> None:
     port.manufacturer = None
     port.description = None
 
-    with patch(
-        "homeassistant.components.zha.config_flow.yellow_hardware.async_info"
-    ), patch("serial.tools.list_ports.comports", MagicMock(return_value=[port])):
+    with (
+        patch("homeassistant.components.zha.config_flow.yellow_hardware.async_info"),
+        patch("serial.tools.list_ports.comports", MagicMock(return_value=[port])),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={CONF_SOURCE: SOURCE_USER},
@@ -1880,10 +1885,11 @@ async def test_config_flow_port_yellow_port_name(hass: HomeAssistant) -> None:
 async def test_config_flow_port_multiprotocol_port_name(hass: HomeAssistant) -> None:
     """Test config flow serial port name for multiprotocol add-on."""
 
-    with patch(
-        "homeassistant.components.hassio.addon_manager.AddonManager.async_get_addon_info"
-    ) as async_get_addon_info, patch(
-        "serial.tools.list_ports.comports", MagicMock(return_value=[])
+    with (
+        patch(
+            "homeassistant.components.hassio.addon_manager.AddonManager.async_get_addon_info"
+        ) as async_get_addon_info,
+        patch("serial.tools.list_ports.comports", MagicMock(return_value=[])),
     ):
         async_get_addon_info.return_value.state = AddonState.RUNNING
         async_get_addon_info.return_value.hostname = "core-silabs-multiprotocol"
@@ -1924,11 +1930,14 @@ async def test_probe_wrong_firmware_installed(hass: HomeAssistant) -> None:
 async def test_discovery_wrong_firmware_installed(hass: HomeAssistant) -> None:
     """Test auto-probing failing because the wrong firmware is installed."""
 
-    with patch(
-        "homeassistant.components.zha.radio_manager.ZhaRadioManager.detect_radio_type",
-        return_value=ProbeResult.WRONG_FIRMWARE_INSTALLED,
-    ), patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    with (
+        patch(
+            "homeassistant.components.zha.radio_manager.ZhaRadioManager.detect_radio_type",
+            return_value=ProbeResult.WRONG_FIRMWARE_INSTALLED,
+        ),
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

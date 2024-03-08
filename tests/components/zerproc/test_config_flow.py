@@ -1,4 +1,5 @@
 """Test the zerproc config flow."""
+
 from unittest.mock import patch
 
 import pyzerproc
@@ -17,13 +18,16 @@ async def test_flow_success(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] is None
 
-    with patch(
-        "homeassistant.components.zerproc.config_flow.pyzerproc.discover",
-        return_value=["Light1", "Light2"],
-    ), patch(
-        "homeassistant.components.zerproc.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.zerproc.config_flow.pyzerproc.discover",
+            return_value=["Light1", "Light2"],
+        ),
+        patch(
+            "homeassistant.components.zerproc.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},
@@ -46,13 +50,16 @@ async def test_flow_no_devices_found(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] is None
 
-    with patch(
-        "homeassistant.components.zerproc.config_flow.pyzerproc.discover",
-        return_value=[],
-    ), patch(
-        "homeassistant.components.zerproc.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.zerproc.config_flow.pyzerproc.discover",
+            return_value=[],
+        ),
+        patch(
+            "homeassistant.components.zerproc.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},
@@ -73,13 +80,16 @@ async def test_flow_exceptions_caught(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] is None
 
-    with patch(
-        "homeassistant.components.zerproc.config_flow.pyzerproc.discover",
-        side_effect=pyzerproc.ZerprocException("TEST"),
-    ), patch(
-        "homeassistant.components.zerproc.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.zerproc.config_flow.pyzerproc.discover",
+            side_effect=pyzerproc.ZerprocException("TEST"),
+        ),
+        patch(
+            "homeassistant.components.zerproc.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},

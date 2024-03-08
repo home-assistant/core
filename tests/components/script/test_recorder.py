@@ -1,4 +1,5 @@
 """The tests for script recorder."""
+
 from __future__ import annotations
 
 import pytest

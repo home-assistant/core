@@ -1,4 +1,5 @@
 """Test the epson config flow."""
+
 from unittest.mock import patch
 
 from epson_projector.const import PWR_OFF_STATE
@@ -19,16 +20,20 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
     assert result["step_id"] == config_entries.SOURCE_USER
-    with patch(
-        "homeassistant.components.epson.Projector.get_power",
-        return_value="01",
-    ), patch(
-        "homeassistant.components.epson.Projector.get_serial_number",
-        return_value="12345",
-    ), patch(
-        "homeassistant.components.epson.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.epson.Projector.get_power",
+            return_value="01",
+        ),
+        patch(
+            "homeassistant.components.epson.Projector.get_serial_number",
+            return_value="12345",
+        ),
+        patch(
+            "homeassistant.components.epson.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "1.1.1.1", CONF_NAME: "test-epson"},

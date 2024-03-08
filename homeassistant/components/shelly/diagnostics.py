@@ -1,4 +1,5 @@
 """Diagnostics support for Shelly."""
+
 from __future__ import annotations
 
 from typing import Any

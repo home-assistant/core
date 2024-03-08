@@ -1,4 +1,5 @@
 """Support for Axis binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -114,7 +115,13 @@ class AxisBinarySensor(AxisEventEntity, BinarySensorEntity):
             self._attr_name = self.hub.api.vapix.ports[event.id].name
 
         elif event.group == EventGroup.MOTION:
-            event_data: FenceGuardHandler | LoiteringGuardHandler | MotionGuardHandler | Vmd4Handler | None = None
+            event_data: (
+                FenceGuardHandler
+                | LoiteringGuardHandler
+                | MotionGuardHandler
+                | Vmd4Handler
+                | None
+            ) = None
             if event.topic_base == EventTopic.FENCE_GUARD:
                 event_data = self.hub.api.vapix.fence_guard
             elif event.topic_base == EventTopic.LOITERING_GUARD:

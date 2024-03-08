@@ -71,12 +71,15 @@ def mock_lamarzocco(
         serial_number = "LM01234"
         true_model_name = "Linea Mini"
 
-    with patch(
-        "homeassistant.components.lamarzocco.coordinator.LaMarzoccoClient",
-        autospec=True,
-    ) as lamarzocco_mock, patch(
-        "homeassistant.components.lamarzocco.config_flow.LaMarzoccoClient",
-        new=lamarzocco_mock,
+    with (
+        patch(
+            "homeassistant.components.lamarzocco.coordinator.LaMarzoccoClient",
+            autospec=True,
+        ) as lamarzocco_mock,
+        patch(
+            "homeassistant.components.lamarzocco.config_flow.LaMarzoccoClient",
+            new=lamarzocco_mock,
+        ),
     ):
         lamarzocco = lamarzocco_mock.return_value
 

@@ -1,4 +1,5 @@
 """Tests for Mill init."""
+
 from unittest.mock import patch
 
 from homeassistant.components import mill
@@ -20,9 +21,10 @@ async def test_setup_with_cloud_config(hass: HomeAssistant) -> None:
         },
     )
     entry.add_to_hass(hass)
-    with patch(
-        "mill.Mill.fetch_heater_and_sensor_data", return_value={}
-    ) as mock_fetch, patch("mill.Mill.connect", return_value=True) as mock_connect:
+    with (
+        patch("mill.Mill.fetch_heater_and_sensor_data", return_value={}) as mock_fetch,
+        patch("mill.Mill.connect", return_value=True) as mock_connect,
+    ):
         assert await async_setup_component(hass, "mill", {})
     assert len(mock_fetch.mock_calls) == 1
     assert len(mock_connect.mock_calls) == 1
@@ -54,9 +56,10 @@ async def test_setup_with_old_cloud_config(hass: HomeAssistant) -> None:
         },
     )
     entry.add_to_hass(hass)
-    with patch("mill.Mill.fetch_heater_and_sensor_data", return_value={}), patch(
-        "mill.Mill.connect", return_value=True
-    ) as mock_connect:
+    with (
+        patch("mill.Mill.fetch_heater_and_sensor_data", return_value={}),
+        patch("mill.Mill.connect", return_value=True) as mock_connect,
+    ):
         assert await async_setup_component(hass, "mill", {})
 
     assert len(mock_connect.mock_calls) == 1
@@ -72,24 +75,27 @@ async def test_setup_with_local_config(hass: HomeAssistant) -> None:
         },
     )
     entry.add_to_hass(hass)
-    with patch(
-        "mill_local.Mill.fetch_heater_and_sensor_data",
-        return_value={
-            "ambient_temperature": 20,
-            "set_temperature": 22,
-            "current_power": 0,
-            "control_signal": 0,
-            "raw_ambient_temperature": 19,
-        },
-    ) as mock_fetch, patch(
-        "mill_local.Mill.connect",
-        return_value={
-            "name": "panel heater gen. 3",
-            "version": "0x210927",
-            "operation_key": "",
-            "status": "ok",
-        },
-    ) as mock_connect:
+    with (
+        patch(
+            "mill_local.Mill.fetch_heater_and_sensor_data",
+            return_value={
+                "ambient_temperature": 20,
+                "set_temperature": 22,
+                "current_power": 0,
+                "control_signal": 0,
+                "raw_ambient_temperature": 19,
+            },
+        ) as mock_fetch,
+        patch(
+            "mill_local.Mill.connect",
+            return_value={
+                "name": "panel heater gen. 3",
+                "version": "0x210927",
+                "operation_key": "",
+                "status": "ok",
+            },
+        ) as mock_connect,
+    ):
         assert await async_setup_component(hass, "mill", {})
 
     assert len(mock_fetch.mock_calls) == 1
@@ -108,15 +114,17 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    with patch.object(
-        hass.config_entries,
-        "async_forward_entry_unload",
-        return_value=True,
-    ) as unload_entry, patch(
-        "mill.Mill.fetch_heater_and_sensor_data", return_value={}
-    ), patch(
-        "mill.Mill.connect",
-        return_value=True,
+    with (
+        patch.object(
+            hass.config_entries,
+            "async_forward_entry_unload",
+            return_value=True,
+        ) as unload_entry,
+        patch("mill.Mill.fetch_heater_and_sensor_data", return_value={}),
+        patch(
+            "mill.Mill.connect",
+            return_value=True,
+        ),
     ):
         assert await async_setup_component(hass, "mill", {})
 

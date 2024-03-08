@@ -61,7 +61,12 @@ async def async_setup_events(gateway: DeconzGateway) -> None:
     @callback
     def async_add_sensor(_: EventType, sensor_id: str) -> None:
         """Create DeconzEvent."""
-        new_event: DeconzAlarmEvent | DeconzEvent | DeconzPresenceEvent | DeconzRelativeRotaryEvent
+        new_event: (
+            DeconzAlarmEvent
+            | DeconzEvent
+            | DeconzPresenceEvent
+            | DeconzRelativeRotaryEvent
+        )
         sensor = gateway.api.sensors[sensor_id]
 
         if isinstance(sensor, Switch):

@@ -1,4 +1,5 @@
 """Test init of AccuWeather integration."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -100,13 +101,16 @@ async def test_update_interval_forecast(hass: HomeAssistant) -> None:
     forecast = load_json_array_fixture("accuweather/forecast_data.json")
     future = utcnow() + timedelta(minutes=80)
 
-    with patch(
-        "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
-        return_value=current,
-    ) as mock_current, patch(
-        "homeassistant.components.accuweather.AccuWeather.async_get_daily_forecast",
-        return_value=forecast,
-    ) as mock_forecast:
+    with (
+        patch(
+            "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
+            return_value=current,
+        ) as mock_current,
+        patch(
+            "homeassistant.components.accuweather.AccuWeather.async_get_daily_forecast",
+            return_value=forecast,
+        ) as mock_forecast,
+    ):
         assert mock_current.call_count == 0
         assert mock_forecast.call_count == 0
 

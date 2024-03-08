@@ -1,4 +1,5 @@
 """Test creating repairs from alerts."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -131,15 +132,19 @@ async def test_alerts(
     if supervisor_info is not None:
         hass.config.components.add("hassio")
 
-    with patch(
-        "homeassistant.components.homeassistant_alerts.__version__",
-        ha_version,
-    ), patch(
-        "homeassistant.components.homeassistant_alerts.is_hassio",
-        return_value=supervisor_info is not None,
-    ), patch(
-        "homeassistant.components.homeassistant_alerts.get_supervisor_info",
-        return_value=supervisor_info,
+    with (
+        patch(
+            "homeassistant.components.homeassistant_alerts.__version__",
+            ha_version,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_alerts.is_hassio",
+            return_value=supervisor_info is not None,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_alerts.get_supervisor_info",
+            return_value=supervisor_info,
+        ),
     ):
         assert await async_setup_component(hass, DOMAIN, {})
 
@@ -310,15 +315,19 @@ async def test_alerts_refreshed_on_component_load(
     for domain in initial_components:
         hass.config.components.add(domain)
 
-    with patch(
-        "homeassistant.components.homeassistant_alerts.__version__",
-        ha_version,
-    ), patch(
-        "homeassistant.components.homeassistant_alerts.is_hassio",
-        return_value=supervisor_info is not None,
-    ), patch(
-        "homeassistant.components.homeassistant_alerts.get_supervisor_info",
-        return_value=supervisor_info,
+    with (
+        patch(
+            "homeassistant.components.homeassistant_alerts.__version__",
+            ha_version,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_alerts.is_hassio",
+            return_value=supervisor_info is not None,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_alerts.get_supervisor_info",
+            return_value=supervisor_info,
+        ),
     ):
         assert await async_setup_component(hass, DOMAIN, {})
 
@@ -350,15 +359,19 @@ async def test_alerts_refreshed_on_component_load(
         ]
     }
 
-    with patch(
-        "homeassistant.components.homeassistant_alerts.__version__",
-        ha_version,
-    ), patch(
-        "homeassistant.components.homeassistant_alerts.is_hassio",
-        return_value=supervisor_info is not None,
-    ), patch(
-        "homeassistant.components.homeassistant_alerts.get_supervisor_info",
-        return_value=supervisor_info,
+    with (
+        patch(
+            "homeassistant.components.homeassistant_alerts.__version__",
+            ha_version,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_alerts.is_hassio",
+            return_value=supervisor_info is not None,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_alerts.get_supervisor_info",
+            return_value=supervisor_info,
+        ),
     ):
         # Fake component_loaded events and wait for debounce
         for domain in late_components:

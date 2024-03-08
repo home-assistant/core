@@ -1,4 +1,5 @@
 """Test the lutron config flow."""
+
 from email.message import Message
 from unittest.mock import AsyncMock, patch
 from urllib.error import HTTPError
@@ -29,8 +30,9 @@ async def test_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch("homeassistant.components.lutron.config_flow.Lutron.load_xml_db"), patch(
-        "homeassistant.components.lutron.config_flow.Lutron.guid", "12345678901"
+    with (
+        patch("homeassistant.components.lutron.config_flow.Lutron.load_xml_db"),
+        patch("homeassistant.components.lutron.config_flow.Lutron.guid", "12345678901"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -76,8 +78,9 @@ async def test_flow_failure(
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": text_error}
 
-    with patch("homeassistant.components.lutron.config_flow.Lutron.load_xml_db"), patch(
-        "homeassistant.components.lutron.config_flow.Lutron.guid", "12345678901"
+    with (
+        patch("homeassistant.components.lutron.config_flow.Lutron.load_xml_db"),
+        patch("homeassistant.components.lutron.config_flow.Lutron.guid", "12345678901"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -101,8 +104,9 @@ async def test_flow_incorrect_guid(
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch("homeassistant.components.lutron.config_flow.Lutron.load_xml_db"), patch(
-        "homeassistant.components.lutron.config_flow.Lutron.guid", "12345"
+    with (
+        patch("homeassistant.components.lutron.config_flow.Lutron.load_xml_db"),
+        patch("homeassistant.components.lutron.config_flow.Lutron.guid", "12345"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -112,8 +116,9 @@ async def test_flow_incorrect_guid(
         assert result["type"] == FlowResultType.FORM
         assert result["errors"] == {"base": "cannot_connect"}
 
-    with patch("homeassistant.components.lutron.config_flow.Lutron.load_xml_db"), patch(
-        "homeassistant.components.lutron.config_flow.Lutron.guid", "12345678901"
+    with (
+        patch("homeassistant.components.lutron.config_flow.Lutron.load_xml_db"),
+        patch("homeassistant.components.lutron.config_flow.Lutron.guid", "12345678901"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -148,8 +153,9 @@ async def test_import(
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test import flow."""
-    with patch("homeassistant.components.lutron.config_flow.Lutron.load_xml_db"), patch(
-        "homeassistant.components.lutron.config_flow.Lutron.guid", "12345678901"
+    with (
+        patch("homeassistant.components.lutron.config_flow.Lutron.load_xml_db"),
+        patch("homeassistant.components.lutron.config_flow.Lutron.guid", "12345678901"),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_DATA_IMPORT
@@ -188,8 +194,9 @@ async def test_import_flow_failure(
 async def test_import_flow_guid_failure(hass: HomeAssistant) -> None:
     """Test handling errors while importing."""
 
-    with patch("homeassistant.components.lutron.config_flow.Lutron.load_xml_db"), patch(
-        "homeassistant.components.lutron.config_flow.Lutron.guid", "123"
+    with (
+        patch("homeassistant.components.lutron.config_flow.Lutron.load_xml_db"),
+        patch("homeassistant.components.lutron.config_flow.Lutron.guid", "123"),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_DATA_IMPORT

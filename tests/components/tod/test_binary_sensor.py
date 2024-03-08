@@ -1,4 +1,5 @@
 """Test Times of the Day Binary Sensor."""
+
 from datetime import datetime, timedelta
 
 from freezegun.api import FrozenDateTimeFactory

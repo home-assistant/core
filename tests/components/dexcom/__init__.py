@@ -28,12 +28,15 @@ async def init_integration(hass) -> MockConfigEntry:
         data=CONFIG,
         options=None,
     )
-    with patch(
-        "homeassistant.components.dexcom.Dexcom.get_current_glucose_reading",
-        return_value=GLUCOSE_READING,
-    ), patch(
-        "homeassistant.components.dexcom.Dexcom.create_session",
-        return_value="test_session_id",
+    with (
+        patch(
+            "homeassistant.components.dexcom.Dexcom.get_current_glucose_reading",
+            return_value=GLUCOSE_READING,
+        ),
+        patch(
+            "homeassistant.components.dexcom.Dexcom.create_session",
+            return_value="test_session_id",
+        ),
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)

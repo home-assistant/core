@@ -1,4 +1,5 @@
 """Binary Sensor platform for Advantage Air integration."""
+
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (

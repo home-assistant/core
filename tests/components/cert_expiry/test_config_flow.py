@@ -1,4 +1,5 @@
 """Tests for the Cert Expiry config flow."""
+
 import socket
 import ssl
 from unittest.mock import patch
@@ -64,11 +65,14 @@ async def test_user_with_bad_cert(hass: HomeAssistant) -> None:
 
 async def test_import_host_only(hass: HomeAssistant) -> None:
     """Test import with host only."""
-    with patch(
-        "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
-    ), patch(
-        "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
-        return_value=future_timestamp(1),
+    with (
+        patch(
+            "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
+        ),
+        patch(
+            "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
+            return_value=future_timestamp(1),
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -86,11 +90,14 @@ async def test_import_host_only(hass: HomeAssistant) -> None:
 
 async def test_import_host_and_port(hass: HomeAssistant) -> None:
     """Test import with host and port."""
-    with patch(
-        "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
-    ), patch(
-        "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
-        return_value=future_timestamp(1),
+    with (
+        patch(
+            "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
+        ),
+        patch(
+            "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
+            return_value=future_timestamp(1),
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -108,11 +115,14 @@ async def test_import_host_and_port(hass: HomeAssistant) -> None:
 
 async def test_import_non_default_port(hass: HomeAssistant) -> None:
     """Test import with host and non-default port."""
-    with patch(
-        "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
-    ), patch(
-        "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
-        return_value=future_timestamp(1),
+    with (
+        patch(
+            "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
+        ),
+        patch(
+            "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
+            return_value=future_timestamp(1),
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -130,11 +140,14 @@ async def test_import_non_default_port(hass: HomeAssistant) -> None:
 
 async def test_import_with_name(hass: HomeAssistant) -> None:
     """Test import with name (deprecated)."""
-    with patch(
-        "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
-    ), patch(
-        "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
-        return_value=future_timestamp(1),
+    with (
+        patch(
+            "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
+        ),
+        patch(
+            "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
+            return_value=future_timestamp(1),
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

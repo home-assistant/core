@@ -1,4 +1,5 @@
 """Test for Aladdin Connect init logic."""
+
 from unittest.mock import MagicMock, patch
 
 from AIOAladdinConnect.session_manager import InvalidPasswordError
@@ -25,12 +26,15 @@ async def test_setup_get_doors_errors(hass: HomeAssistant) -> None:
         unique_id="test-id",
     )
     config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.login",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.get_doors",
-        return_value=None,
+    with (
+        patch(
+            "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.login",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.get_doors",
+            return_value=None,
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id) is True
         await hass.async_block_till_done()

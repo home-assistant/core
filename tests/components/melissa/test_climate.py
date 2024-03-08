@@ -1,4 +1,5 @@
 """Test for Melissa climate component."""
+
 import json
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -289,9 +290,12 @@ async def test_send(hass: HomeAssistant) -> None:
 
 async def test_update(hass: HomeAssistant) -> None:
     """Test update."""
-    with patch(
-        "homeassistant.components.melissa.climate._LOGGER.warning"
-    ) as mocked_warning, patch("homeassistant.components.melissa"):
+    with (
+        patch(
+            "homeassistant.components.melissa.climate._LOGGER.warning"
+        ) as mocked_warning,
+        patch("homeassistant.components.melissa"),
+    ):
         api = melissa_mock()
         device = (await api.async_fetch_devices())[_SERIAL]
         thermostat = MelissaClimate(api, _SERIAL, device)
@@ -333,9 +337,12 @@ async def test_melissa_fan_to_hass(hass: HomeAssistant) -> None:
 
 async def test_hass_mode_to_melissa(hass: HomeAssistant) -> None:
     """Test for hass operations to melssa."""
-    with patch(
-        "homeassistant.components.melissa.climate._LOGGER.warning"
-    ) as mocked_warning, patch("homeassistant.components.melissa"):
+    with (
+        patch(
+            "homeassistant.components.melissa.climate._LOGGER.warning"
+        ) as mocked_warning,
+        patch("homeassistant.components.melissa"),
+    ):
         api = melissa_mock()
         device = (await api.async_fetch_devices())[_SERIAL]
         thermostat = MelissaClimate(api, _SERIAL, device)
@@ -351,9 +358,12 @@ async def test_hass_mode_to_melissa(hass: HomeAssistant) -> None:
 
 async def test_hass_fan_to_melissa(hass: HomeAssistant) -> None:
     """Test for translate melissa states to hass."""
-    with patch(
-        "homeassistant.components.melissa.climate._LOGGER.warning"
-    ) as mocked_warning, patch("homeassistant.components.melissa"):
+    with (
+        patch(
+            "homeassistant.components.melissa.climate._LOGGER.warning"
+        ) as mocked_warning,
+        patch("homeassistant.components.melissa"),
+    ):
         api = melissa_mock()
         device = (await api.async_fetch_devices())[_SERIAL]
         thermostat = MelissaClimate(api, _SERIAL, device)
