@@ -181,8 +181,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(client.add_refresh_token_callback(async_save_refresh_token))
 
     # Save the client's refresh token if it's different than what we already have:
-    if client.refresh_token and client.refresh_token != entry.data[CONF_REFRESH_TOKEN]:
-        async_save_refresh_token(client.refresh_token)
+    if (token := client.refresh_token) and token != entry.data[CONF_REFRESH_TOKEN]:
+        async_save_refresh_token(token)
 
     hass.config_entries.async_update_entry(entry, **entry_updates)
 
