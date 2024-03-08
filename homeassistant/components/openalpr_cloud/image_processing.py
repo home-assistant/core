@@ -1,4 +1,5 @@
 """Component that will help set the OpenALPR cloud for ALPR processing."""
+
 from __future__ import annotations
 
 import asyncio
@@ -209,7 +210,7 @@ class OpenAlprCloudEntity(ImageProcessingAlprEntity):
                     _LOGGER.error("Error %d -> %s", request.status, data.get("error"))
                     return
 
-        except (asyncio.TimeoutError, aiohttp.ClientError):
+        except (TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Timeout for OpenALPR API")
             return
 

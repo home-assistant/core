@@ -1,4 +1,5 @@
 """Base class for iRobot devices."""
+
 from __future__ import annotations
 
 import asyncio
@@ -105,12 +106,12 @@ class IRobotEntity(Entity):
     @property
     def run_stats(self):
         """Return the run stats."""
-        return self.vacuum_state.get("bbrun")
+        return self.vacuum_state.get("bbrun", {})
 
     @property
     def mission_stats(self):
         """Return the mission stats."""
-        return self.vacuum_state.get("bbmssn")
+        return self.vacuum_state.get("bbmssn", {})
 
     @property
     def battery_stats(self):

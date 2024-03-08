@@ -1,4 +1,5 @@
 """Test the Aurora ABB PowerOne Solar PV config flow."""
+
 from unittest.mock import patch
 
 from aurorapy.client import AuroraError, AuroraTimeoutError
@@ -8,10 +9,9 @@ from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.aurora_abb_powerone.const import (
     ATTR_FIRMWARE,
     ATTR_MODEL,
-    ATTR_SERIAL_NUMBER,
     DOMAIN,
 )
-from homeassistant.const import CONF_ADDRESS, CONF_PORT
+from homeassistant.const import ATTR_SERIAL_NUMBER, CONF_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 TEST_DATA = {"device": "/dev/ttyUSB7", "address": 3, "name": "MyAuroraPV"}

@@ -1,4 +1,5 @@
 """The profiler integration."""
+
 import asyncio
 from contextlib import suppress
 from datetime import timedelta
@@ -45,7 +46,6 @@ _KNOWN_LRU_CLASSES = (
     "StatesMetaManager",
     "StateAttributesManager",
     "StatisticsMetaManager",
-    "IntegrationMatcher",
 )
 
 SERVICES = (

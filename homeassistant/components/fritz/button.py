@@ -1,4 +1,5 @@
 """Switches for AVM Fritz!Box buttons."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -59,7 +60,6 @@ BUTTONS: Final = [
     FritzButtonDescription(
         key="cleanup",
         translation_key="cleanup",
-        icon="mdi:broom",
         entity_category=EntityCategory.CONFIG,
         press_action=lambda avm_wrapper: avm_wrapper.async_trigger_cleanup(),
     ),

@@ -1,4 +1,5 @@
 """Tests for the Roku select platform."""
+
 from unittest.mock import MagicMock
 
 import pytest

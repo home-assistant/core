@@ -1,4 +1,5 @@
 """Test deprecation helpers."""
+
 from enum import StrEnum
 import logging
 import sys
@@ -20,7 +21,7 @@ from homeassistant.helpers.deprecation import (
 )
 from homeassistant.helpers.frame import MissingIntegrationFrame
 
-from tests.common import MockModule, mock_integration
+from tests.common import MockModule, extract_stack_to_frame, mock_integration
 
 
 class MockBaseClassDeprecatedProperty:
@@ -178,24 +179,29 @@ def test_deprecated_function_called_from_built_in_integration(
         pass
 
     with patch(
-        "homeassistant.helpers.frame.extract_stack",
-        return_value=[
-            Mock(
-                filename="/home/paulus/homeassistant/core.py",
-                lineno="23",
-                line="do_something()",
-            ),
-            Mock(
-                filename="/home/paulus/homeassistant/components/hue/light.py",
-                lineno="23",
-                line="await session.close()",
-            ),
-            Mock(
-                filename="/home/paulus/aiohue/lights.py",
-                lineno="2",
-                line="something()",
-            ),
-        ],
+        "homeassistant.helpers.frame.linecache.getline",
+        return_value="await session.close()",
+    ), patch(
+        "homeassistant.helpers.frame.get_current_frame",
+        return_value=extract_stack_to_frame(
+            [
+                Mock(
+                    filename="/home/paulus/homeassistant/core.py",
+                    lineno="23",
+                    line="do_something()",
+                ),
+                Mock(
+                    filename="/home/paulus/homeassistant/components/hue/light.py",
+                    lineno="23",
+                    line="await session.close()",
+                ),
+                Mock(
+                    filename="/home/paulus/aiohue/lights.py",
+                    lineno="2",
+                    line="something()",
+                ),
+            ]
+        ),
     ):
         mock_deprecated_function()
     assert (
@@ -230,24 +236,29 @@ def test_deprecated_function_called_from_custom_integration(
         pass
 
     with patch(
-        "homeassistant.helpers.frame.extract_stack",
-        return_value=[
-            Mock(
-                filename="/home/paulus/homeassistant/core.py",
-                lineno="23",
-                line="do_something()",
-            ),
-            Mock(
-                filename="/home/paulus/config/custom_components/hue/light.py",
-                lineno="23",
-                line="await session.close()",
-            ),
-            Mock(
-                filename="/home/paulus/aiohue/lights.py",
-                lineno="2",
-                line="something()",
-            ),
-        ],
+        "homeassistant.helpers.frame.linecache.getline",
+        return_value="await session.close()",
+    ), patch(
+        "homeassistant.helpers.frame.get_current_frame",
+        return_value=extract_stack_to_frame(
+            [
+                Mock(
+                    filename="/home/paulus/homeassistant/core.py",
+                    lineno="23",
+                    line="do_something()",
+                ),
+                Mock(
+                    filename="/home/paulus/config/custom_components/hue/light.py",
+                    lineno="23",
+                    line="await session.close()",
+                ),
+                Mock(
+                    filename="/home/paulus/aiohue/lights.py",
+                    lineno="2",
+                    line="something()",
+                ),
+            ]
+        ),
     ):
         mock_deprecated_function()
     assert (
@@ -327,24 +338,29 @@ def test_check_if_deprecated_constant(
 
     # mock sys.modules for homeassistant/helpers/frame.py#get_integration_frame
     with patch.dict(sys.modules, {module_name: Mock(__file__=filename)}), patch(
-        "homeassistant.helpers.frame.extract_stack",
-        return_value=[
-            Mock(
-                filename="/home/paulus/homeassistant/core.py",
-                lineno="23",
-                line="do_something()",
-            ),
-            Mock(
-                filename=filename,
-                lineno="23",
-                line="await session.close()",
-            ),
-            Mock(
-                filename="/home/paulus/aiohue/lights.py",
-                lineno="2",
-                line="something()",
-            ),
-        ],
+        "homeassistant.helpers.frame.linecache.getline",
+        return_value="await session.close()",
+    ), patch(
+        "homeassistant.helpers.frame.get_current_frame",
+        return_value=extract_stack_to_frame(
+            [
+                Mock(
+                    filename="/home/paulus/homeassistant/core.py",
+                    lineno="23",
+                    line="do_something()",
+                ),
+                Mock(
+                    filename=filename,
+                    lineno="23",
+                    line="await session.close()",
+                ),
+                Mock(
+                    filename="/home/paulus/aiohue/lights.py",
+                    lineno="2",
+                    line="something()",
+                ),
+            ]
+        ),
     ):
         value = check_if_deprecated_constant("TEST_CONSTANT", module_globals)
         assert value == _get_value(deprecated_constant)
@@ -397,7 +413,8 @@ def test_check_if_deprecated_constant_integration_not_found(
     }
 
     with patch(
-        "homeassistant.helpers.frame.extract_stack", side_effect=MissingIntegrationFrame
+        "homeassistant.helpers.frame.get_current_frame",
+        side_effect=MissingIntegrationFrame,
     ):
         value = check_if_deprecated_constant("TEST_CONSTANT", module_globals)
         assert value == _get_value(deprecated_constant)

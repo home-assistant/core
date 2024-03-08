@@ -1,4 +1,5 @@
 """Test deCONZ component setup process."""
+
 import asyncio
 from unittest.mock import patch
 
@@ -175,6 +176,7 @@ async def test_update_group_unique_id(
             CONF_PORT: "3",
         },
     )
+    entry.add_to_hass(hass)
 
     # Create entity entry to migrate to new unique ID
     entity_registry.async_get_or_create(

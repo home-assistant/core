@@ -1,4 +1,5 @@
 """GoodWe PV inverter numeric settings entities."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -51,7 +52,6 @@ NUMBERS = (
     GoodweNumberEntityDescription(
         key="grid_export_limit",
         translation_key="grid_export_limit",
-        icon="mdi:transmission-tower",
         entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -66,7 +66,6 @@ NUMBERS = (
     GoodweNumberEntityDescription(
         key="grid_export_limit",
         translation_key="grid_export_limit",
-        icon="mdi:transmission-tower",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
         native_step=1,

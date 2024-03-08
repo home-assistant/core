@@ -1,4 +1,5 @@
 """The Minecraft Server binary sensor platform."""
+
 from dataclasses import dataclass
 
 from homeassistant.components.binary_sensor import (
@@ -14,8 +15,6 @@ from .const import DOMAIN
 from .coordinator import MinecraftServerCoordinator
 from .entity import MinecraftServerEntity
 
-ICON_STATUS = "mdi:lan"
-
 KEY_STATUS = "status"
 
 
@@ -29,7 +28,6 @@ BINARY_SENSOR_DESCRIPTIONS = [
         key=KEY_STATUS,
         translation_key=KEY_STATUS,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        icon=ICON_STATUS,
     ),
 ]
 

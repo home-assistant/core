@@ -1,4 +1,5 @@
 """Test APCUPSd config flow setup process."""
+
 from copy import copy
 from unittest.mock import patch
 

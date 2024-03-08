@@ -1,7 +1,10 @@
 {
-  "start_time": "2020-03-10 11:57:25 +0800",
-  "up_time_seconds": "217h40m57.470801079s",
+  "commission_count": 0,
+  "device_type": "hec",
+  "git_hash": "d0e69bde519634961cca04a616d2d4dae80b9f61",
   "is_new": false,
-  "version": "1.45.1",
-  "git_hash": "13bf684a633175f884079ec79f42997080d90310"
+  "start_time": "2020-10-28 20:14:11 +0800",
+  "sync_type": "v1",
+  "up_time_seconds": "17h11m31.214751424s",
+  "version": "1.50.1 c58c2df3"
 }

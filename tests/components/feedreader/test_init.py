@@ -1,4 +1,5 @@
 """The tests for the feedreader component."""
+
 from collections.abc import Generator
 from datetime import datetime, timedelta
 import pickle

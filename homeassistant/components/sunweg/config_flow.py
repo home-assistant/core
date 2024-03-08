@@ -5,15 +5,14 @@ from typing import Any
 from sunweg.api import APIHelper, SunWegApiError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_PLANT_ID, DOMAIN
 
 
-class SunWEGConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SunWEGConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow class."""
 
     VERSION = 1
@@ -66,7 +65,7 @@ class SunWEGConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_plant()
 
-    async def async_step_plant(self, user_input=None) -> FlowResult:
+    async def async_step_plant(self, user_input=None) -> ConfigFlowResult:
         """Handle adding a "plant" to Home Assistant."""
         plant_list = await self.hass.async_add_executor_job(self.api.listPlants)
 

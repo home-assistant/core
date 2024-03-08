@@ -1,4 +1,5 @@
 """Support for EZVIZ button controls."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -41,7 +42,6 @@ BUTTON_ENTITIES = (
     EzvizButtonEntityDescription(
         key="ptz_up",
         translation_key="ptz_up",
-        icon="mdi:pan",
         method=lambda pyezviz_client, serial, run: pyezviz_client.ptz_control(
             "UP", serial, run
         ),
@@ -50,7 +50,6 @@ BUTTON_ENTITIES = (
     EzvizButtonEntityDescription(
         key="ptz_down",
         translation_key="ptz_down",
-        icon="mdi:pan",
         method=lambda pyezviz_client, serial, run: pyezviz_client.ptz_control(
             "DOWN", serial, run
         ),
@@ -59,7 +58,6 @@ BUTTON_ENTITIES = (
     EzvizButtonEntityDescription(
         key="ptz_left",
         translation_key="ptz_left",
-        icon="mdi:pan",
         method=lambda pyezviz_client, serial, run: pyezviz_client.ptz_control(
             "LEFT", serial, run
         ),
@@ -68,7 +66,6 @@ BUTTON_ENTITIES = (
     EzvizButtonEntityDescription(
         key="ptz_right",
         translation_key="ptz_right",
-        icon="mdi:pan",
         method=lambda pyezviz_client, serial, run: pyezviz_client.ptz_control(
             "RIGHT", serial, run
         ),

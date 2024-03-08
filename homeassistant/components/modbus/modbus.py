@@ -1,4 +1,5 @@
 """Support for Modbus."""
+
 from __future__ import annotations
 
 import asyncio
@@ -7,12 +8,8 @@ from collections.abc import Callable
 import logging
 from typing import Any
 
-from pymodbus.client import (
-    ModbusBaseClient,
-    ModbusSerialClient,
-    ModbusTcpClient,
-    ModbusUdpClient,
-)
+from pymodbus.client import ModbusSerialClient, ModbusTcpClient, ModbusUdpClient
+from pymodbus.client.base import ModbusBaseClient
 from pymodbus.exceptions import ModbusException
 from pymodbus.pdu import ModbusResponse
 from pymodbus.transaction import ModbusAsciiFramer, ModbusRtuFramer, ModbusSocketFramer
@@ -176,9 +173,7 @@ async def async_modbus_setup(
             slave = int(float(service.data[ATTR_SLAVE]))
         address = int(float(service.data[ATTR_ADDRESS]))
         value = service.data[ATTR_VALUE]
-        hub = hub_collect[
-            service.data[ATTR_HUB] if ATTR_HUB in service.data else DEFAULT_HUB
-        ]
+        hub = hub_collect[service.data.get(ATTR_HUB, DEFAULT_HUB)]
         if isinstance(value, list):
             await hub.async_pb_call(
                 slave,
@@ -200,9 +195,7 @@ async def async_modbus_setup(
             slave = int(float(service.data[ATTR_SLAVE]))
         address = service.data[ATTR_ADDRESS]
         state = service.data[ATTR_STATE]
-        hub = hub_collect[
-            service.data[ATTR_HUB] if ATTR_HUB in service.data else DEFAULT_HUB
-        ]
+        hub = hub_collect[service.data.get(ATTR_HUB, DEFAULT_HUB)]
         if isinstance(state, list):
             await hub.async_pb_call(slave, address, state, CALL_TYPE_WRITE_COILS)
         else:

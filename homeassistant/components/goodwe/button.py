@@ -1,4 +1,5 @@
 """GoodWe PV inverter selection settings entities."""
+
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -35,7 +36,6 @@ class GoodweButtonEntityDescription(
 SYNCHRONIZE_CLOCK = GoodweButtonEntityDescription(
     key="synchronize_clock",
     translation_key="synchronize_clock",
-    icon="mdi:clock-check-outline",
     entity_category=EntityCategory.CONFIG,
     action=lambda inv: inv.write_setting("time", datetime.now()),
 )

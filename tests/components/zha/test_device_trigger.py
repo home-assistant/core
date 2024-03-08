@@ -1,4 +1,5 @@
 """ZHA device automation trigger tests."""
+
 from datetime import timedelta
 import time
 from unittest.mock import patch

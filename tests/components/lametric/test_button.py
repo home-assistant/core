@@ -1,4 +1,5 @@
 """Tests for the LaMetric button platform."""
+
 from unittest.mock import MagicMock
 
 from demetriek import LaMetricConnectionError, LaMetricError

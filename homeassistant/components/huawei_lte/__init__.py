@@ -1,4 +1,5 @@
 """Support for Huawei LTE routers."""
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -13,7 +14,6 @@ from xml.parsers.expat import ExpatError
 
 from huawei_lte_api.Client import Client
 from huawei_lte_api.Connection import Connection
-from huawei_lte_api.enums.device import ControlModeEnum
 from huawei_lte_api.exceptions import (
     LoginErrorInvalidCredentialsException,
     ResponseErrorException,
@@ -51,7 +51,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
@@ -59,8 +58,6 @@ from .const import (
     ADMIN_SERVICES,
     ALL_KEYS,
     ATTR_CONFIG_ENTRY_ID,
-    BUTTON_KEY_CLEAR_TRAFFIC_STATISTICS,
-    BUTTON_KEY_RESTART,
     CONF_MANUFACTURER,
     CONF_UNAUTHENTICATED_MODE,
     CONNECTION_TIMEOUT,
@@ -84,8 +81,6 @@ from .const import (
     KEY_WLAN_WIFI_FEATURE_SWITCH,
     KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH,
     NOTIFY_SUPPRESS_TIMEOUT,
-    SERVICE_CLEAR_TRAFFIC_STATISTICS,
-    SERVICE_REBOOT,
     SERVICE_RESUME_INTEGRATION,
     SERVICE_SUSPEND_INTEGRATION,
     UPDATE_SIGNAL,
@@ -133,9 +128,9 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.DEVICE_TRACKER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
-    Platform.SELECT,
 ]
 
 
@@ -533,45 +528,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _LOGGER.error("%s: router %s unavailable", service.service, url)
             return
 
-        if service.service == SERVICE_CLEAR_TRAFFIC_STATISTICS:
-            create_issue(
-                hass,
-                DOMAIN,
-                "service_clear_traffic_statistics_moved_to_button",
-                breaks_in_ha_version="2024.2.0",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="service_changed_to_button",
-                translation_placeholders={
-                    "service": service.service,
-                    "button": BUTTON_KEY_CLEAR_TRAFFIC_STATISTICS,
-                },
-            )
-            if router.suspended:
-                _LOGGER.debug("%s: ignored, integration suspended", service.service)
-                return
-            result = router.client.monitoring.set_clear_traffic()
-            _LOGGER.debug("%s: %s", service.service, result)
-        elif service.service == SERVICE_REBOOT:
-            create_issue(
-                hass,
-                DOMAIN,
-                "service_reboot_moved_to_button",
-                breaks_in_ha_version="2024.2.0",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="service_changed_to_button",
-                translation_placeholders={
-                    "service": service.service,
-                    "button": BUTTON_KEY_RESTART,
-                },
-            )
-            if router.suspended:
-                _LOGGER.debug("%s: ignored, integration suspended", service.service)
-                return
-            result = router.client.device.set_control(ControlModeEnum.REBOOT)
-            _LOGGER.debug("%s: %s", service.service, result)
-        elif service.service == SERVICE_RESUME_INTEGRATION:
+        if service.service == SERVICE_RESUME_INTEGRATION:
             # Login will be handled automatically on demand
             router.suspended = False
             _LOGGER.debug("%s: %s", service.service, "done")
@@ -601,14 +558,12 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         recipient = options.get(CONF_RECIPIENT)
         if isinstance(recipient, str):
             options[CONF_RECIPIENT] = [x.strip() for x in recipient.split(",")]
-        config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry, options=options)
+        hass.config_entries.async_update_entry(config_entry, options=options, version=2)
         _LOGGER.info("Migrated config entry to version %d", config_entry.version)
     if config_entry.version == 2:
-        config_entry.version = 3
         data = dict(config_entry.data)
         data[CONF_MAC] = []
-        hass.config_entries.async_update_entry(config_entry, data=data)
+        hass.config_entries.async_update_entry(config_entry, data=data, version=3)
         _LOGGER.info("Migrated config entry to version %d", config_entry.version)
     # There can be no longer needed *_from_yaml data and options things left behind
     # from pre-2022.4ish; they can be removed while at it when/if we eventually bump and

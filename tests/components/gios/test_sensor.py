@@ -1,4 +1,5 @@
 """Test sensor of GIOS integration."""
+
 from datetime import timedelta
 import json
 from unittest.mock import patch
@@ -43,7 +44,7 @@ async def test_sensor(hass: HomeAssistant, entity_registry: er.EntityRegistry) -
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
-    assert state.attributes.get(ATTR_ICON) == "mdi:molecule"
+    assert state.attributes.get(ATTR_ICON) is None
 
     entry = entity_registry.async_get("sensor.home_benzene")
     assert entry

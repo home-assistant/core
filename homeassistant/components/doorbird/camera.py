@@ -1,4 +1,5 @@
 """Support for viewing the camera feed from a DoorBird video doorbell."""
+
 from __future__ import annotations
 
 import asyncio
@@ -108,7 +109,7 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
             self._last_image = await response.read()
             self._last_update = now
             return self._last_image
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.error("DoorBird %s: Camera image timed out", self.name)
             return self._last_image
         except aiohttp.ClientError as error:

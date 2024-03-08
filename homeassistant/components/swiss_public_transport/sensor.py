@@ -1,14 +1,19 @@
 """Support for transport.opendata.ch."""
+
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
 from homeassistant import config_entries, core
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+)
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_NAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
@@ -104,9 +109,9 @@ class SwissPublicTransportSensor(
     """Implementation of a Swiss public transport sensor."""
 
     _attr_attribution = "Data provided by transport.opendata.ch"
-    _attr_icon = "mdi:bus"
     _attr_has_entity_name = True
     _attr_translation_key = "departure"
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def __init__(
         self,
@@ -143,6 +148,6 @@ class SwissPublicTransportSensor(
         }
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> datetime | None:
         """Return the state of the sensor."""
         return self.coordinator.data["departure"]

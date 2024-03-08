@@ -1,4 +1,5 @@
 """Support for Waze travel time sensor."""
+
 from __future__ import annotations
 
 import asyncio
@@ -90,6 +91,7 @@ class WazeTravelTime(SensorEntity):
         identifiers={(DOMAIN, DOMAIN)},
         configuration_url="https://www.waze.com",
     )
+    _attr_translation_key = "waze_travel_time"
 
     def __init__(
         self,
@@ -105,12 +107,11 @@ class WazeTravelTime(SensorEntity):
         self._attr_name = name
         self._origin = origin
         self._destination = destination
-        self._attr_icon = "mdi:car"
         self._state = None
 
     async def async_added_to_hass(self) -> None:
         """Handle when entity is added."""
-        if self.hass.state != CoreState.running:
+        if self.hass.state is not CoreState.running:
             self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STARTED, self.first_update
             )

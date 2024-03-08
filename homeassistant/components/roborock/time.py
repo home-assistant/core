@@ -1,4 +1,5 @@
 """Support for Roborock time."""
+
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
@@ -46,7 +47,6 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
     RoborockTimeDescription(
         key="dnd_start_time",
         translation_key="dnd_start_time",
-        icon="mdi:bell-cancel",
         cache_key=CacheableAttribute.dnd_timer,
         update_value=lambda cache, desired_time: cache.update_value(
             [
@@ -64,7 +64,6 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
     RoborockTimeDescription(
         key="dnd_end_time",
         translation_key="dnd_end_time",
-        icon="mdi:bell-ring",
         cache_key=CacheableAttribute.dnd_timer,
         update_value=lambda cache, desired_time: cache.update_value(
             [
@@ -82,7 +81,6 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
     RoborockTimeDescription(
         key="off_peak_start",
         translation_key="off_peak_start",
-        icon="mdi:power-plug",
         cache_key=CacheableAttribute.valley_electricity_timer,
         update_value=lambda cache, desired_time: cache.update_value(
             [
@@ -101,7 +99,6 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
     RoborockTimeDescription(
         key="off_peak_end",
         translation_key="off_peak_end",
-        icon="mdi:power-plug-off",
         cache_key=CacheableAttribute.valley_electricity_timer,
         update_value=lambda cache, desired_time: cache.update_value(
             [

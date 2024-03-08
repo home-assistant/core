@@ -1,4 +1,5 @@
 """Support to select an option from a list."""
+
 from __future__ import annotations
 
 import logging

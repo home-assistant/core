@@ -1,4 +1,5 @@
 """Support for setting the Transmission BitTorrent client Turtle Mode."""
+
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging

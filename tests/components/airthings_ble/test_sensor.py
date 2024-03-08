@@ -1,4 +1,5 @@
 """Test the Airthings Wave sensor."""
+
 import logging
 
 from homeassistant.components.airthings_ble.const import DOMAIN

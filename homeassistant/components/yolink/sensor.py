@@ -1,4 +1,5 @@
 """YoLink Sensor."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -22,6 +23,7 @@ from yolink.const import (
     ATTR_DEVICE_TH_SENSOR,
     ATTR_DEVICE_THERMOSTAT,
     ATTR_DEVICE_VIBRATION_SENSOR,
+    ATTR_DEVICE_WATER_DEPTH_SENSOR,
     ATTR_GARAGE_DOOR_CONTROLLER,
 )
 from yolink.device import YoLinkDevice
@@ -37,6 +39,7 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfLength,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -72,6 +75,7 @@ SENSOR_DEVICE_TYPE = [
     ATTR_DEVICE_TH_SENSOR,
     ATTR_DEVICE_THERMOSTAT,
     ATTR_DEVICE_VIBRATION_SENSOR,
+    ATTR_DEVICE_WATER_DEPTH_SENSOR,
     ATTR_DEVICE_LOCK,
     ATTR_DEVICE_MANIPULATOR,
     ATTR_DEVICE_CO_SMOKE_SENSOR,
@@ -91,6 +95,7 @@ BATTERY_POWER_SENSOR = [
     ATTR_DEVICE_LOCK,
     ATTR_DEVICE_MANIPULATOR,
     ATTR_DEVICE_CO_SMOKE_SENSOR,
+    ATTR_DEVICE_WATER_DEPTH_SENSOR,
 ]
 
 MCU_DEV_TEMPERATURE_SENSOR = [
@@ -164,7 +169,6 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         key="state",
         translation_key="power_failure_alarm",
         device_class=SensorDeviceClass.ENUM,
-        icon="mdi:flash",
         options=["normal", "alert", "off"],
         exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
     ),
@@ -172,7 +176,6 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         key="mute",
         translation_key="power_failure_alarm_mute",
         device_class=SensorDeviceClass.ENUM,
-        icon="mdi:volume-mute",
         options=["muted", "unmuted"],
         exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
         value=lambda value: "muted" if value is True else "unmuted",
@@ -181,7 +184,6 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         key="sound",
         translation_key="power_failure_alarm_volume",
         device_class=SensorDeviceClass.ENUM,
-        icon="mdi:volume-high",
         options=["low", "medium", "high"],
         exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
         value=cvt_volume,
@@ -190,10 +192,15 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         key="beep",
         translation_key="power_failure_alarm_beep",
         device_class=SensorDeviceClass.ENUM,
-        icon="mdi:bullhorn",
         options=["enabled", "disabled"],
         exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
         value=lambda value: "enabled" if value is True else "disabled",
+    ),
+    YoLinkSensorEntityDescription(
+        key="waterDepth",
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.METERS,
+        exists_fn=lambda device: device.device_type in ATTR_DEVICE_WATER_DEPTH_SENSOR,
     ),
 )
 

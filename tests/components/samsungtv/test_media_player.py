@@ -1,4 +1,5 @@
 """Tests for samsungtv component."""
+
 from copy import deepcopy
 from datetime import datetime, timedelta
 import logging
@@ -162,7 +163,7 @@ async def test_setup_websocket(hass: HomeAssistant) -> None:
 
         config_entries = hass.config_entries.async_entries(SAMSUNGTV_DOMAIN)
         assert len(config_entries) == 1
-        assert config_entries[0].data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+        assert config_entries[0].data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
 
 
 @pytest.mark.usefixtures("rest_api")
@@ -194,7 +195,7 @@ async def test_setup_websocket_2(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        assert config_entries[0].data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+        assert config_entries[0].data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
 
         next_update = mock_now + timedelta(minutes=5)
         freezer.move_to(next_update)

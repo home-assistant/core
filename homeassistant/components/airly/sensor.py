@@ -1,4 +1,5 @@
 """Support for the Airly sensor service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -66,7 +67,6 @@ class AirlySensorEntityDescription(SensorEntityDescription):
 SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     AirlySensorEntityDescription(
         key=ATTR_API_CAQI,
-        icon="mdi:air-filter",
         translation_key="caqi",
         native_unit_of_measurement="CAQI",
         suggested_display_precision=0,

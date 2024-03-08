@@ -1,4 +1,5 @@
 """Support for Xiaomi Gateway Light."""
+
 import binascii
 import logging
 import struct
