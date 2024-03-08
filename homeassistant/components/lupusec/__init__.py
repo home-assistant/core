@@ -1,4 +1,5 @@
 """Support for Lupusec Home Security system."""
+
 from json import JSONDecodeError
 import logging
 

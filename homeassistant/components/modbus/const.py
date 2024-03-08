@@ -1,4 +1,5 @@
 """Constants used in modbus integration."""
+
 from enum import Enum
 
 from homeassistant.const import (

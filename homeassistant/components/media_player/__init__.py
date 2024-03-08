@@ -1,4 +1,5 @@
 """Component to interface with various media players."""
+
 from __future__ import annotations
 
 import asyncio
