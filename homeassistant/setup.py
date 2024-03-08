@@ -585,7 +585,7 @@ def _async_when_setup(
 
     listeners: list[CALLBACK_TYPE] = []
 
-    async def _matched_event(event: Event) -> None:
+    async def _matched_event(event: Event[Any]) -> None:
         """Call the callback when we matched an event."""
         for listener in listeners:
             listener()
@@ -600,7 +600,7 @@ def _async_when_setup(
         hass.bus.async_listen(
             EVENT_COMPONENT_LOADED,
             _matched_event,
-            event_filter=_async_is_component_filter,  # type: ignore[arg-type]
+            event_filter=_async_is_component_filter,
         )
     )
     if start_event:
