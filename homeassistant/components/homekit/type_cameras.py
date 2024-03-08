@@ -1,4 +1,5 @@
 """Class to hold all camera accessories."""
+
 import asyncio
 from datetime import timedelta
 import logging
