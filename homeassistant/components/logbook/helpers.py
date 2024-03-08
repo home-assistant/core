@@ -27,7 +27,6 @@ from homeassistant.helpers.event import (
     EventStateChangedData,
     async_track_state_change_event,
 )
-from homeassistant.helpers.typing import EventType
 
 from .const import ALWAYS_CONTINUOUS_DOMAINS, AUTOMATION_EVENTS, BUILT_IN_EVENTS, DOMAIN
 from .models import LogbookConfig
@@ -188,7 +187,7 @@ def async_subscribe_events(
         return
 
     @callback
-    def _forward_state_events_filtered(event: EventType[EventStateChangedData]) -> None:
+    def _forward_state_events_filtered(event: Event[EventStateChangedData]) -> None:
         if (old_state := event.data["old_state"]) is None or (
             new_state := event.data["new_state"]
         ) is None:

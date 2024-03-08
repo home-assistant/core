@@ -53,7 +53,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType, EventType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
@@ -517,9 +517,7 @@ class Person(collection.CollectionEntity, RestoreEntity):
         self._update_state()
 
     @callback
-    def _async_handle_tracker_update(
-        self, event: EventType[EventStateChangedData]
-    ) -> None:
+    def _async_handle_tracker_update(self, event: Event[EventStateChangedData]) -> None:
         """Handle the device tracker state changes."""
         self._update_state()
 
