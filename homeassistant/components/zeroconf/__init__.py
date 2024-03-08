@@ -414,10 +414,12 @@ class ZeroconfDiscovery:
         if async_service_info.load_from_cache(zeroconf):
             self._async_process_service_update(async_service_info, service_type, name)
         else:
-            self.hass.async_create_task(
+            self.hass.async_create_background_task(
                 self._async_lookup_and_process_service_update(
                     zeroconf, async_service_info, service_type, name
-                )
+                ),
+                name=f"zeroconf lookup {name}.{service_type}",
+                eager_start=True,
             )
 
     async def _async_lookup_and_process_service_update(
