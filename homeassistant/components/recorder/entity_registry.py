@@ -1,4 +1,5 @@
 """Recorder entity registry helper."""
+
 import logging
 
 from homeassistant.core import Event, HomeAssistant, callback

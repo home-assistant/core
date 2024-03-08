@@ -1,4 +1,5 @@
 """Class to hold all cover accessories."""
+
 import logging
 from typing import Any
 
