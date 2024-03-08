@@ -1,4 +1,5 @@
 """Platform allowing several event entities to be grouped into one event."""
+
 from __future__ import annotations
 
 import itertools

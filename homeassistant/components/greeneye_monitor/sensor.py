@@ -1,4 +1,5 @@
 """Support for the sensors in a GreenEye Monitor."""
+
 from __future__ import annotations
 
 from typing import Any

@@ -1,4 +1,5 @@
 """Buttons for Hunter Douglas Powerview advanced features."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

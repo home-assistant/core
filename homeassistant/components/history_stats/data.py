@@ -1,4 +1,5 @@
 """Manage the history_stats data."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

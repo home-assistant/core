@@ -1,4 +1,5 @@
 """Collection of useful functions for the HomeKit component."""
+
 from __future__ import annotations
 
 import io

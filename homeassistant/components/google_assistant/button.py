@@ -1,4 +1,5 @@
 """Support for buttons."""
+
 from __future__ import annotations
 
 from homeassistant import config_entries
