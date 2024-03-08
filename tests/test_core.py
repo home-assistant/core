@@ -232,35 +232,21 @@ async def test_async_run_eager_hass_job_calls_callback() -> None:
         asyncio.get_running_loop()  # ensure we are in the event loop
         calls.append(1)
 
-    ha.HomeAssistant.async_run_eager_hass_job(hass, ha.HassJob(ha.callback(job)))
+    ha.HomeAssistant.async_run_hass_job(
+        hass, ha.HassJob(ha.callback(job)), eager_start=True
+    )
     assert len(calls) == 1
 
 
 async def test_async_run_eager_hass_job_calls_coro_function() -> None:
-    """Test running coros from async_run_eager_hass_job."""
+    """Test running coros from async_run_hass_job with eager_start."""
     hass = MagicMock()
     calls = []
 
     async def job():
         calls.append(1)
 
-    await ha.HomeAssistant.async_run_eager_hass_job(hass, ha.HassJob(job))
-    assert len(calls) == 1
-
-
-async def test_async_run_eager_hass_job_calls_executor_function() -> None:
-    """Test running in the executor from async_run_eager_hass_job."""
-    hass = MagicMock()
-    hass.loop = asyncio.get_running_loop()
-    calls = []
-
-    def job():
-        try:
-            asyncio.get_running_loop()  # ensure we are not in the event loop
-        except RuntimeError:
-            calls.append(1)
-
-    await ha.HomeAssistant.async_run_eager_hass_job(hass, ha.HassJob(job))
+    await ha.HomeAssistant.async_run_hass_job(hass, ha.HassJob(job), eager_start=True)
     assert len(calls) == 1
 
 
@@ -2745,14 +2731,15 @@ async def test_shutdown_does_not_block_on_shielded_tasks(
     sleep_task.cancel()
 
 
-async def test_cancellable_hassjob(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("eager_start", (True, False))
+async def test_cancellable_hassjob(hass: HomeAssistant, eager_start: bool) -> None:
     """Simulate a shutdown, ensure cancellable jobs are cancelled."""
     job = MagicMock()
 
     @ha.callback
     def run_job(job: HassJob) -> None:
         """Call the action."""
-        hass.async_run_hass_job(job)
+        hass.async_run_hass_job(job, eager_start=True)
 
     timer1 = hass.loop.call_later(
         60, run_job, HassJob(ha.callback(job), cancel_on_shutdown=True)
