@@ -7,7 +7,7 @@ import dataclasses
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Literal, TypedDict, cast
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.util import slugify
 
 from .normalized_name_base_registry import (
@@ -17,7 +17,7 @@ from .normalized_name_base_registry import (
 )
 from .registry import BaseRegistry
 from .storage import Store
-from .typing import UNDEFINED, EventType, UndefinedType
+from .typing import UNDEFINED, UndefinedType
 
 DATA_REGISTRY = "floor_registry"
 EVENT_FLOOR_REGISTRY_UPDATED = "floor_registry_updated"
@@ -32,7 +32,7 @@ class EventFloorRegistryUpdatedData(TypedDict):
     floor_id: str
 
 
-EventFloorRegistryUpdated = EventType[EventFloorRegistryUpdatedData]
+EventFloorRegistryUpdated = Event[EventFloorRegistryUpdatedData]
 
 
 @dataclass(slots=True, kw_only=True, frozen=True)

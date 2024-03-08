@@ -329,8 +329,8 @@ class AreaRegistry(BaseRegistry):
 
         self.hass.bus.async_listen(
             event_type=fr.EVENT_FLOOR_REGISTRY_UPDATED,
-            event_filter=_removed_from_registry_filter,  # type: ignore[arg-type]
-            listener=_handle_floor_registry_update,  # type: ignore[arg-type]
+            event_filter=_removed_from_registry_filter,
+            listener=_handle_floor_registry_update,
         )
 
         @callback
@@ -345,8 +345,8 @@ class AreaRegistry(BaseRegistry):
 
         self.hass.bus.async_listen(
             event_type=lr.EVENT_LABEL_REGISTRY_UPDATED,
-            event_filter=_removed_from_registry_filter,  # type: ignore[arg-type]
-            listener=_handle_label_registry_update,  # type: ignore[arg-type]
+            event_filter=_removed_from_registry_filter,
+            listener=_handle_label_registry_update,
         )
 
 
