@@ -5,6 +5,7 @@ Support for controlling network access of clients selected in option flow.
 Support for controlling deep packet inspection (DPI) restriction groups.
 Support for controlling WLAN availability.
 """
+
 from __future__ import annotations
 
 import asyncio

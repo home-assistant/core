@@ -1,4 +1,5 @@
 """Provide functionality to wake word."""
+
 from __future__ import annotations
 
 from abc import abstractmethod

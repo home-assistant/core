@@ -1,4 +1,5 @@
 """Representation of Z-Wave binary sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

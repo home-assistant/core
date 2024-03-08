@@ -1,4 +1,5 @@
 """Base Sensor for the Xbox Integration."""
+
 from __future__ import annotations
 
 from yarl import URL

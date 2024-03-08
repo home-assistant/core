@@ -7,6 +7,7 @@ The Entity Registry will persist itself 10 seconds after a new entity is
 registered. Registering a new entity while a timer is in progress resets the
 timer.
 """
+
 from __future__ import annotations
 
 from collections import UserDict

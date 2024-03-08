@@ -1,4 +1,5 @@
 """Template platform that aggregates meteorological data."""
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
