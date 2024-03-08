@@ -1,4 +1,5 @@
 """Base class for Acmeda Roller Blinds."""
+
 from __future__ import annotations
 
 import aiopulse

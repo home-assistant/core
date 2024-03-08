@@ -66,6 +66,7 @@ associate with an credential if "type" set to "link_user" in
     "version": 1
 }
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable

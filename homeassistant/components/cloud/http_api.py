@@ -1,4 +1,5 @@
 """The HTTP api to control the cloud integration."""
+
 from __future__ import annotations
 
 import asyncio
