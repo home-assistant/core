@@ -793,7 +793,9 @@ class HomeAssistant:
             hassjob.target(*args)
             return None
 
-        return self.async_add_hass_job(hassjob, *args, background=background)
+        return self.async_add_hass_job(
+            hassjob, *args, eager_start=eager_start, background=background
+        )
 
     @overload
     @callback

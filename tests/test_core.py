@@ -115,8 +115,25 @@ async def test_async_add_hass_job_eager_start_coro_suspends(
     assert task not in hass._tasks
 
 
+async def test_async_run_hass_job_eager_start_coro_suspends(
+    hass: HomeAssistant,
+) -> None:
+    """Test scheduling a coro as a task that will suspend with eager_start."""
+
+    async def job_that_suspends():
+        await asyncio.sleep(0)
+
+    task = hass.async_run_hass_job(
+        ha.HassJob(ha.callback(job_that_suspends)), eager_start=True
+    )
+    assert not task.done()
+    assert task in hass._tasks
+    await task
+    assert task not in hass._tasks
+
+
 async def test_async_add_hass_job_background(hass: HomeAssistant) -> None:
-    """Test scheduling a coro as a background task."""
+    """Test scheduling a coro as a background task with async_add_hass_job."""
 
     async def job_that_suspends():
         await asyncio.sleep(0)
@@ -128,6 +145,85 @@ async def test_async_add_hass_job_background(hass: HomeAssistant) -> None:
     assert task in hass._background_tasks
     await task
     assert task not in hass._background_tasks
+
+
+async def test_async_run_hass_job_background(hass: HomeAssistant) -> None:
+    """Test scheduling a coro as a background task with async_run_hass_job."""
+
+    async def job_that_suspends():
+        await asyncio.sleep(0)
+
+    task = hass.async_run_hass_job(
+        ha.HassJob(ha.callback(job_that_suspends)), background=True
+    )
+    assert not task.done()
+    assert task in hass._background_tasks
+    await task
+    assert task not in hass._background_tasks
+
+
+async def test_async_add_hass_job_eager_background(hass: HomeAssistant) -> None:
+    """Test scheduling a coro as an eager background task with async_add_hass_job."""
+
+    async def job_that_suspends():
+        await asyncio.sleep(0)
+
+    task = hass.async_add_hass_job(
+        ha.HassJob(ha.callback(job_that_suspends)), eager_start=True, background=True
+    )
+    assert not task.done()
+    assert task in hass._background_tasks
+    await task
+    assert task not in hass._background_tasks
+
+
+async def test_async_run_hass_job_eager_background(hass: HomeAssistant) -> None:
+    """Test scheduling a coro as an eager background task with async_run_hass_job."""
+
+    async def job_that_suspends():
+        await asyncio.sleep(0)
+
+    task = hass.async_run_hass_job(
+        ha.HassJob(ha.callback(job_that_suspends)), eager_start=True, background=True
+    )
+    assert not task.done()
+    assert task in hass._background_tasks
+    await task
+    assert task not in hass._background_tasks
+
+
+async def test_async_run_hass_job_background_synchronous(hass: HomeAssistant) -> None:
+    """Test scheduling a coro as an eager background task with async_run_hass_job."""
+
+    async def job_that_does_not_suspends():
+        pass
+
+    task = hass.async_run_hass_job(
+        ha.HassJob(ha.callback(job_that_does_not_suspends)),
+        eager_start=True,
+        background=True,
+    )
+    assert task.done()
+    assert task not in hass._background_tasks
+    assert task not in hass._tasks
+    await task
+
+
+async def test_async_run_hass_job_synchronous(hass: HomeAssistant) -> None:
+    """Test scheduling a coro as an eager task with async_run_hass_job."""
+
+    async def job_that_does_not_suspends():
+        pass
+
+    task = hass.async_run_hass_job(
+        ha.HassJob(ha.callback(job_that_does_not_suspends)),
+        eager_start=True,
+        background=False,
+    )
+    assert task.done()
+    assert task not in hass._background_tasks
+    assert task not in hass._tasks
+    await task
 
 
 async def test_async_add_hass_job_coro_named(hass: HomeAssistant) -> None:
