@@ -555,7 +555,7 @@ async def test_shutdown_calls_block_till_done_after_shutdown_run_callback_thread
     """Ensure shutdown_run_callback_threadsafe is called before the final async_block_till_done."""
     stop_calls = []
 
-    async def _record_block_till_done(wait_background_tasks: bool = True):
+    async def _record_block_till_done(wait_background_tasks: bool = False):
         nonlocal stop_calls
         stop_calls.append("async_block_till_done")
 
