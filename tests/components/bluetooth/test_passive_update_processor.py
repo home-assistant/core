@@ -406,6 +406,8 @@ async def test_unavailable_after_no_data(
     """Test that the coordinator is unavailable after no data for a while."""
     start_monotonic = time.monotonic()
 
+    # fmt: off
+    # Unstable formatting: https://github.com/astral-sh/ruff/issues/10302
     with (
         patch(
             "bleak.BleakScanner.discovered_devices_and_advertisement_data",  # Must patch before we setup
@@ -419,6 +421,7 @@ async def test_unavailable_after_no_data(
     ):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
+    # fmt: on
 
     @callback
     def _mock_update_method(
