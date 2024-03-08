@@ -141,6 +141,7 @@ class LocalCalendarEntity(CalendarEntity):
         recurrence_range: str | None = None,
     ) -> None:
         """Update an existing event on the calendar."""
+        _LOGGER.debug("async_update_event uid=%s, recurrence_id=%s", uid, recurrence_id)
         new_event = _parse_event(event)
         range_value: Range = Range.NONE
         if recurrence_range == Range.THIS_AND_FUTURE:
@@ -154,12 +155,14 @@ class LocalCalendarEntity(CalendarEntity):
             )
         except EventStoreError as err:
             raise HomeAssistantError(f"Error while updating event: {err}") from err
+        _LOGGER.debug("Updated event: %s", new_event)
         await self._async_store()
         await self.async_update_ha_state(force_refresh=True)
 
 
 def _parse_event(event: dict[str, Any]) -> Event:
     """Parse an ical event from a home assistant event dictionary."""
+    _LOGGER.debug("Parsing event: %s", event)
     if rrule := event.get(EVENT_RRULE):
         event[EVENT_RRULE] = Recur.from_rrule(rrule)
 
