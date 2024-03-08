@@ -742,7 +742,7 @@ class BrSensor(SensorEntity):
         """Initialize the sensor."""
         self.entity_description = description
         self._measured = None
-        self._attr_unique_id = "{:2.6f}{:2.6f}{}".format(  # noqa: UP032
+        self._attr_unique_id = f"{coordinates[CONF_LATITUDE]:2.6f}{coordinates[CONF_LONGITUDE]:2.6f}{description.key}"
             coordinates[CONF_LATITUDE], coordinates[CONF_LONGITUDE], description.key
         )
 
