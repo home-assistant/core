@@ -1,4 +1,5 @@
 """The tests for the MQTT sensor platform."""
+
 import copy
 from datetime import datetime, timedelta
 import json

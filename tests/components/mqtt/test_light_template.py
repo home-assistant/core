@@ -24,6 +24,7 @@ If your light doesn't support color temp feature, omit `color_temp_template`.
 
 If your light doesn't support RGB feature, omit `(red|green|blue)_template`.
 """
+
 import copy
 from typing import Any
 from unittest.mock import patch

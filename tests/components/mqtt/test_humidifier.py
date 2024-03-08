@@ -1,4 +1,5 @@
 """Test MQTT humidifiers."""
+
 import copy
 from typing import Any
 from unittest.mock import patch
