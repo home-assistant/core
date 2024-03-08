@@ -822,7 +822,6 @@ async def handle_calendar_event_update(
             recurrence_range=msg.get(EVENT_RECURRENCE_RANGE),
         )
     except (HomeAssistantError, ValueError) as ex:
-        _LOGGER.info(msg)
         _LOGGER.error("Error handling Calendar Event call: %s", ex)
         connection.send_error(msg["id"], "failed", str(ex))
     else:
