@@ -1,4 +1,5 @@
 """Support for Honeywell (US) Total Connect Comfort sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

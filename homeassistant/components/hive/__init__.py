@@ -1,4 +1,5 @@
 """Support for the Hive devices and services."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine

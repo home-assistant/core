@@ -1,4 +1,5 @@
 """Extend the basic Accessory and Bridge functions."""
+
 from __future__ import annotations
 
 import logging

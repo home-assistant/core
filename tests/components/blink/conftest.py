@@ -1,4 +1,5 @@
 """Fixtures for the Blink integration tests."""
+
 from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 from uuid import uuid4
 

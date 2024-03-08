@@ -1,4 +1,5 @@
 """Support for Prometheus metrics export."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

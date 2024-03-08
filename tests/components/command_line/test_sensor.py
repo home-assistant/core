@@ -1,4 +1,5 @@
 """The tests for the Command line sensor platform."""
+
 from __future__ import annotations
 
 import asyncio

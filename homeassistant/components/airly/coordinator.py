@@ -1,4 +1,5 @@
 """DataUpdateCoordinator for the Airly integration."""
+
 from asyncio import timeout
 from datetime import timedelta
 import logging

@@ -1,4 +1,5 @@
 """Tests for the pvpc_hourly_pricing config_flow."""
+
 from datetime import datetime, timedelta
 
 from freezegun.api import FrozenDateTimeFactory

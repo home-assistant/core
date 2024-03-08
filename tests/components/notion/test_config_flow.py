@@ -1,4 +1,5 @@
 """Define tests for the Notion config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from aionotion.errors import InvalidCredentialsError, NotionError

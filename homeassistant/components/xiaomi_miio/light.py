@@ -1,4 +1,5 @@
 """Support for Xiaomi Philips Lights."""
+
 from __future__ import annotations
 
 import asyncio

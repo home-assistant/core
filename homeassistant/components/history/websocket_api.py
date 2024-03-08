@@ -1,4 +1,5 @@
 """Websocket API for the history integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -359,7 +360,7 @@ async def _async_events_consumer(
 def _async_subscribe_events(
     hass: HomeAssistant,
     subscriptions: list[CALLBACK_TYPE],
-    target: Callable[[Event], None],
+    target: Callable[[Event[Any]], None],
     entity_ids: list[str],
     significant_changes_only: bool,
     minimal_response: bool,

@@ -1,4 +1,5 @@
 """Test the switchbot config flow."""
+
 from unittest.mock import patch
 
 from switchbot import SwitchbotAccountConnectionError, SwitchbotAuthenticationError

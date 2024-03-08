@@ -1,4 +1,5 @@
 """Test Wyoming devices."""
+
 from __future__ import annotations
 
 from homeassistant.components.assist_pipeline.select import OPTION_PREFERRED

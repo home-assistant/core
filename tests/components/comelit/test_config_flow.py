@@ -1,4 +1,5 @@
 """Tests for Comelit SimpleHome config flow."""
+
 from typing import Any
 from unittest.mock import patch
 

@@ -1,4 +1,5 @@
 """Constants for the Transmission Bittorent Client component."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

@@ -1,4 +1,5 @@
 """The tests for SleepIQ switch platform."""
+
 from homeassistant.components.sleepiq.coordinator import LONGER_UPDATE_INTERVAL
 from homeassistant.components.switch import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON

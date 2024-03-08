@@ -1,4 +1,5 @@
 """Support for MQTT message handling."""
+
 from __future__ import annotations
 
 import asyncio
@@ -40,6 +41,7 @@ from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
+from homeassistant.util.async_ import create_eager_task
 
 # Loading the config flow file will register the flow
 from . import debug_info, discovery
@@ -449,14 +451,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Forward the entry setup to the MQTT platforms
         await asyncio.gather(
             *(
-                [
-                    device_automation.async_setup_entry(hass, config_entry),
-                    tag.async_setup_entry(hass, config_entry),
-                ]
-                + [
-                    hass.config_entries.async_forward_entry_setup(entry, component)
-                    for component in PLATFORMS
-                ]
+                create_eager_task(
+                    device_automation.async_setup_entry(hass, config_entry)
+                ),
+                create_eager_task(tag.async_setup_entry(hass, config_entry)),
+                create_eager_task(
+                    hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+                ),
             )
         )
         # Setup discovery

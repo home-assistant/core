@@ -1,4 +1,5 @@
 """Support for Apple HomeKit."""
+
 from __future__ import annotations
 
 import asyncio

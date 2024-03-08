@@ -1,4 +1,5 @@
 """The tests for sensor recorder platform."""
+
 from collections.abc import Callable
 from datetime import timedelta
 from unittest.mock import patch

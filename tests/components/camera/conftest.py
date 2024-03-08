@@ -1,4 +1,5 @@
 """Test helpers for camera."""
+
 from unittest.mock import PropertyMock, patch
 
 import pytest

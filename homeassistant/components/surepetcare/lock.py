@@ -1,4 +1,5 @@
 """Support for Sure PetCare Flaps locks."""
+
 from __future__ import annotations
 
 from typing import Any

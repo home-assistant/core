@@ -1,4 +1,5 @@
 """Webhook handlers for mobile_app."""
+
 from __future__ import annotations
 
 import asyncio

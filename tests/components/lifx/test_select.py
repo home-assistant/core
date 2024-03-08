@@ -1,4 +1,5 @@
 """Tests for the lifx integration select entity."""
+
 from datetime import timedelta
 
 from homeassistant.components import lifx
