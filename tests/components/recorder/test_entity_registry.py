@@ -306,6 +306,14 @@ def test_rename_entity_collision_without_states_meta_safeguard(
     hass.states.remove("sensor.test99")
 
     hass.block_till_done()
+    wait_recording_done(hass)
+
+    # Verify history before collision
+    hist = history.get_significant_states(
+        hass, zero, four, list(set(states) | {"sensor.test99", "sensor.test1"})
+    )
+    assert len(hist["sensor.test1"]) == 3
+    assert len(hist["sensor.test99"]) == 2
 
     instance = recorder.get_instance(hass)
     # Patch out the safeguard in the states meta manager
