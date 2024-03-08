@@ -2489,3 +2489,48 @@ async def test_events_are_recorded_until_final_write(
     await hass.async_block_till_done()
 
     assert not instance.engine
+
+
+async def test_commit_before_commits_pending_writes(
+    recorder_mock: Recorder, hass: HomeAssistant, recorder_db_url: str
+) -> None:
+    """Test commit_before commits pending writes."""
+
+    instance = get_instance(hass)
+    verify_states_in_queue_future = hass.loop.create_future()
+    verify_session_commit_future = hass.loop.create_future()
+
+    class VerifyCommitBeforeTask(recorder.tasks.RecorderTask):
+        commit_before = True
+
+        def run(self, instance: Recorder) -> None:
+            if not instance._event_session_has_pending_writes:
+                hass.loop.call_soon_threadsafe(
+                    verify_session_commit_future.set_result, None
+                )
+                return
+            hass.loop.call_soon_threadsafe(
+                verify_session_commit_future.set_exception,
+                RuntimeError("Session still has pending write"),
+            )
+
+    class VerifyStatesInQueueTask(recorder.tasks.RecorderTask):
+        commit_before = False
+
+        def run(self, instance: Recorder) -> None:
+            if instance._event_session_has_pending_writes:
+                hass.loop.call_soon_threadsafe(
+                    verify_states_in_queue_future.set_result, None
+                )
+                return
+            hass.loop.call_soon_threadsafe(
+                verify_states_in_queue_future.set_exception,
+                RuntimeError("Session has no pending write"),
+            )
+
+    instance.queue_task(Event("fake_event"))
+    instance.queue_task(VerifyStatesInQueueTask())
+    instance.queue_task(VerifyCommitBeforeTask())
+
+    await verify_states_in_queue_future
+    await verify_session_commit_future
