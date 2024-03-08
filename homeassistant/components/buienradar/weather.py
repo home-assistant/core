@@ -134,8 +134,8 @@ class BrWeather(WeatherEntity):
         self._stationname = config.get(CONF_NAME, "Buienradar")
         self._attr_name = self._stationname or f"BR {'(unknown station)'}"
 
-        self._attr_unique_id = "{:2.6f}{:2.6f}".format(
-            coordinates[CONF_LATITUDE], coordinates[CONF_LONGITUDE]
+        self._attr_unique_id = (
+            f"{coordinates[CONF_LATITUDE]:2.6f}{coordinates[CONF_LONGITUDE]:2.6f}"
         )
 
     @callback
