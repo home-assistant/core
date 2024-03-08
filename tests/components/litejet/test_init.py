@@ -1,4 +1,5 @@
 """The tests for the litejet component."""
+
 from homeassistant.components import litejet
 from homeassistant.components.litejet.const import DOMAIN
 from homeassistant.core import HomeAssistant

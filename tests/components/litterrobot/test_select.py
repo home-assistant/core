@@ -1,4 +1,5 @@
 """Test the Litter-Robot select entity."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 from pylitterbot import LitterRobot3, LitterRobot4

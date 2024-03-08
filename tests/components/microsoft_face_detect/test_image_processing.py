@@ -1,4 +1,5 @@
 """The tests for the microsoft face detect platform."""
+
 from unittest.mock import PropertyMock, patch
 
 import pytest

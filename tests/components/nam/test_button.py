@@ -1,4 +1,5 @@
 """Test button of Nettigo Air Monitor integration."""
+
 from unittest.mock import patch
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonDeviceClass

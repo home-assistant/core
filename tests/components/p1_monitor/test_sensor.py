@@ -1,4 +1,5 @@
 """Tests for the sensors provided by the P1 Monitor integration."""
+
 from unittest.mock import MagicMock
 
 from p1monitor import P1MonitorNoDataError
