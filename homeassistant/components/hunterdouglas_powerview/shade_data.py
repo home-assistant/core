@@ -1,4 +1,5 @@
 """Shade data for the Hunter Douglas PowerView integration."""
+
 from __future__ import annotations
 
 import logging

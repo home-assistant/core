@@ -1,4 +1,5 @@
 """Hass.io Add-on ingress service."""
+
 from __future__ import annotations
 
 import asyncio
