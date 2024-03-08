@@ -24,7 +24,7 @@ from homeassistant.components.fritz.const import (
 )
 from homeassistant.components.ssdp import ATTR_UPNP_UDN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_SSDP, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SSL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -80,6 +80,7 @@ async def test_user(hass: HomeAssistant, fc_class_mock, mock_get_source_ip) -> N
         assert result["data"][CONF_HOST] == "fake_host"
         assert result["data"][CONF_PASSWORD] == "fake_pass"
         assert result["data"][CONF_USERNAME] == "fake_user"
+        assert result["data"][CONF_SSL] is False
         assert (
             result["options"][CONF_CONSIDER_HOME]
             == DEFAULT_CONSIDER_HOME.total_seconds()
