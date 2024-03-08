@@ -480,6 +480,7 @@ def initialize_bot(p_config: dict, hass: HomeAssistant) -> Bot:
                 is_fixable=False,
                 severity=ir.IssueSeverity.WARNING,
                 translation_key="proxy_params_auth_deprecation",
+                learn_more_url="https://github.com/home-assistant/core/pull/112778",
             )
         else:
             ir.async_create_issue(
@@ -491,6 +492,7 @@ def initialize_bot(p_config: dict, hass: HomeAssistant) -> Bot:
                 is_fixable=False,
                 severity=ir.IssueSeverity.WARNING,
                 translation_key="proxy_params_deprecation",
+                learn_more_url="https://github.com/home-assistant/core/pull/112778",
             )
         proxy = httpx.Proxy(proxy_url, auth=auth, **proxy_params)
         request = HTTPXRequest(connection_pool_size=8, proxy=proxy)

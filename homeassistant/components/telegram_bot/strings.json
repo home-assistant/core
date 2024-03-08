@@ -644,7 +644,7 @@
     },
     "proxy_params_deprecation": {
       "title": "Proxy params option will be removed",
-      "description": "The proxy_params config key for the telegram_bot integration will be removed in a future release.\n\nThe underlying library used has changed to httpx which now has different options.\n\nAuthentication can now be done through the proxy_url option. If you still need this functionality for other options, please raise an issue."
+      "description": "The proxy_params config key for the telegram_bot integration will be removed in a future release.\n\nThe underlying library used has changed to httpx which now has different options.\n\nAuthentication can now be provided through the proxy_url option. If you still need this functionality for other options, please leave a comment on the learn more link."
     }
   }
 }
