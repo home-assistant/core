@@ -275,7 +275,7 @@ class WemoDiscovery:
                 self.MAX_SECONDS_BETWEEN_SCANS,
             )
             if not self._discover_job:
-                self._discover_job = HassJob(self._async_discover_and_schedule_next)
+                self._discover_job = HassJob(self._async_discover_and_schedule_callback)
             self._stop = async_call_later(
                 self._hass,
                 self._scan_delay,
@@ -283,7 +283,7 @@ class WemoDiscovery:
             )
 
     @callback
-    def _async_discover_and_schedule_next(self, event_time: datetime) -> None:
+    def _async_discover_and_schedule_callback(self, event_time: datetime) -> None:
         """Run the periodic background scanning."""
         self._entry.async_create_background_task(
             self._hass,
