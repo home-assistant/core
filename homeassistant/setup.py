@@ -28,7 +28,7 @@ from .core import (
 from .exceptions import DependencyError, HomeAssistantError
 from .helpers import translation
 from .helpers.issue_registry import IssueSeverity, async_create_issue
-from .helpers.typing import ConfigType, EventType
+from .helpers.typing import ConfigType
 from .util import ensure_unique_string
 from .util.async_ import create_eager_task
 
@@ -592,7 +592,7 @@ def _async_when_setup(
         await when_setup()
 
     @callback
-    def _async_is_component_filter(event: EventType[EventComponentLoaded]) -> bool:
+    def _async_is_component_filter(event: Event[EventComponentLoaded]) -> bool:
         """Check if the event is for the component."""
         return event.data[ATTR_COMPONENT] == component
 

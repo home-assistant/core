@@ -43,7 +43,6 @@ from homeassistant.helpers.event import (
     EventStateChangedData,
     async_track_state_added_domain,
 )
-from homeassistant.helpers.typing import EventType
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
@@ -696,14 +695,14 @@ class DefaultAgent(AbstractConversationAgent):
 
     @core.callback
     def _async_handle_area_registry_changed(
-        self, event: EventType[ar.EventAreaRegistryUpdatedData]
+        self, event: core.Event[ar.EventAreaRegistryUpdatedData]
     ) -> None:
         """Clear area area cache when the area registry has changed."""
         self._slot_lists = None
 
     @core.callback
     def _async_handle_entity_registry_changed(
-        self, event: EventType[er.EventEntityRegistryUpdatedData]
+        self, event: core.Event[er.EventEntityRegistryUpdatedData]
     ) -> None:
         """Clear names list cache when an entity registry entry has changed."""
         if event.data["action"] != "update" or not any(
