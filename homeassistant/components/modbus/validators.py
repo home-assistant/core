@@ -391,7 +391,7 @@ def check_config(config: dict) -> dict:
                 else:
                     entity_inx += 1
         if no_entities:
-            err = f"Modbus {hub[CONF_NAME]} is instable without entities, please add entities!"
+            err = f"There are no entities defined for Modbus {hub[CONF_NAME]}, this will cause the integration to be unstable,  please add at least one entity!"
             _LOGGER.warning(err)
             # Ensure timeout is not started/handled.
             hub[CONF_TIMEOUT] = -1
