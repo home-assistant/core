@@ -6,7 +6,7 @@ import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
 
-from zigpy.quirks.v2 import EntityMetadata, NumberMetadata
+from zigpy.quirks.v2 import NumberMetadata
 from zigpy.zcl.clusters.hvac import Thermostat
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
@@ -26,7 +26,7 @@ from .core.const import (
     CLUSTER_HANDLER_LEVEL,
     CLUSTER_HANDLER_OCCUPANCY,
     CLUSTER_HANDLER_THERMOSTAT,
-    QUIRK_METADATA,
+    ENTITY_METADATA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
@@ -403,7 +403,7 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
         Return entity if it is a supported configuration, otherwise return None
         """
         cluster_handler = cluster_handlers[0]
-        if QUIRK_METADATA not in kwargs and (
+        if ENTITY_METADATA not in kwargs and (
             cls._attribute_name in cluster_handler.cluster.unsupported_attributes
             or cls._attribute_name not in cluster_handler.cluster.attributes_by_name
             or cluster_handler.cluster.get(cls._attribute_name) is None
@@ -426,34 +426,33 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
     ) -> None:
         """Init this number configuration entity."""
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
-        if QUIRK_METADATA in kwargs:
-            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA])
+        if ENTITY_METADATA in kwargs:
+            self._init_from_quirks_metadata(kwargs[ENTITY_METADATA])
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
 
-    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
+    def _init_from_quirks_metadata(self, entity_metadata: NumberMetadata) -> None:
         """Init this entity from the quirks metadata."""
         super()._init_from_quirks_metadata(entity_metadata)
-        number_metadata: NumberMetadata = entity_metadata.entity_metadata
-        self._attribute_name = number_metadata.attribute_name
+        self._attribute_name = entity_metadata.attribute_name
 
-        if number_metadata.min is not None:
-            self._attr_native_min_value = number_metadata.min
-        if number_metadata.max is not None:
-            self._attr_native_max_value = number_metadata.max
-        if number_metadata.step is not None:
-            self._attr_native_step = number_metadata.step
-        if number_metadata.multiplier is not None:
-            self._attr_multiplier = number_metadata.multiplier
-        if number_metadata.device_class is not None:
+        if entity_metadata.min is not None:
+            self._attr_native_min_value = entity_metadata.min
+        if entity_metadata.max is not None:
+            self._attr_native_max_value = entity_metadata.max
+        if entity_metadata.step is not None:
+            self._attr_native_step = entity_metadata.step
+        if entity_metadata.multiplier is not None:
+            self._attr_multiplier = entity_metadata.multiplier
+        if entity_metadata.device_class is not None:
             self._attr_device_class = validate_device_class(
                 NumberDeviceClass,
-                number_metadata.device_class,
+                entity_metadata.device_class,
                 Platform.NUMBER.value,
                 _LOGGER,
             )
-        if number_metadata.device_class is None and number_metadata.unit is not None:
+        if entity_metadata.device_class is None and entity_metadata.unit is not None:
             self._attr_native_unit_of_measurement = validate_unit(
-                number_metadata.unit
+                entity_metadata.unit
             ).value
 
     @property

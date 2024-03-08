@@ -5,7 +5,7 @@ from __future__ import annotations
 import functools
 import logging
 
-from zigpy.quirks.v2 import BinarySensorMetadata, EntityMetadata
+from zigpy.quirks.v2 import BinarySensorMetadata
 import zigpy.types as t
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.clusters.security import IasZone
@@ -28,7 +28,7 @@ from .core.const import (
     CLUSTER_HANDLER_OCCUPANCY,
     CLUSTER_HANDLER_ON_OFF,
     CLUSTER_HANDLER_ZONE,
-    QUIRK_METADATA,
+    ENTITY_METADATA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
@@ -82,19 +82,18 @@ class BinarySensor(ZhaEntity, BinarySensorEntity):
     def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs) -> None:
         """Initialize the ZHA binary sensor."""
         self._cluster_handler = cluster_handlers[0]
-        if QUIRK_METADATA in kwargs:
-            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA])
+        if ENTITY_METADATA in kwargs:
+            self._init_from_quirks_metadata(kwargs[ENTITY_METADATA])
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
 
-    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
+    def _init_from_quirks_metadata(self, entity_metadata: BinarySensorMetadata) -> None:
         """Init this entity from the quirks metadata."""
         super()._init_from_quirks_metadata(entity_metadata)
-        binary_sensor_metadata: BinarySensorMetadata = entity_metadata.entity_metadata
-        self._attribute_name = binary_sensor_metadata.attribute_name
-        if binary_sensor_metadata.device_class is not None:
+        self._attribute_name = entity_metadata.attribute_name
+        if entity_metadata.device_class is not None:
             self._attr_device_class = validate_device_class(
                 BinarySensorDeviceClass,
-                binary_sensor_metadata.device_class,
+                entity_metadata.device_class,
                 Platform.BINARY_SENSOR.value,
                 _LOGGER,
             )

@@ -821,14 +821,13 @@ async def test_quirks_v2_entity_discovery_errors(
 
     # fmt: off
     entity_details = (
-        "{'cluster_details': (1, 6, <ClusterType.Server: 0>), "
-        "'quirk_metadata': EntityMetadata(entity_metadata=ZCLSensorMetadata("
-        "attribute_name='off_wait_time', divisor=1, multiplier=1, unit=None, "
-        "device_class=None, state_class=None), entity_platform=<EntityPlatform."
-        "SENSOR: 'sensor'>, entity_type=<EntityType.CONFIG: 'config'>, "
-        "cluster_id=6, endpoint_id=1, cluster_type=<ClusterType.Server: 0>, "
-        "initially_disabled=False, attribute_initialized_from_cache=True, "
-        "translation_key='analog_input')}"
+        "{'cluster_details': (1, 6, <ClusterType.Server: 0>), 'entity_metadata': "
+        "ZCLSensorMetadata(entity_platform=<EntityPlatform.SENSOR: 'sensor'>, "
+        "entity_type=<EntityType.CONFIG: 'config'>, cluster_id=6, endpoint_id=1, "
+        "cluster_type=<ClusterType.Server: 0>, initially_disabled=False, "
+        "attribute_initialized_from_cache=True, translation_key='analog_input', "
+        "attribute_name='off_wait_time', divisor=1, multiplier=1, "
+        "unit=None, device_class=None, state_class=None)}"
     )
     # fmt: on
 
@@ -849,14 +848,14 @@ def validate_device_class_unit(
 ) -> None:
     """Ensure device class and unit are used correctly."""
     if (
-        hasattr(entity_metadata.entity_metadata, "unit")
-        and entity_metadata.entity_metadata.unit is not None
-        and hasattr(entity_metadata.entity_metadata, "device_class")
-        and entity_metadata.entity_metadata.device_class is not None
+        hasattr(entity_metadata, "unit")
+        and entity_metadata.unit is not None
+        and hasattr(entity_metadata, "device_class")
+        and entity_metadata.device_class is not None
     ):
         m1 = "device_class and unit are both set - unit: "
-        m2 = f"{entity_metadata.entity_metadata.unit} device_class: "
-        m3 = f"{entity_metadata.entity_metadata.device_class} for {platform.name} "
+        m2 = f"{entity_metadata.unit} device_class: "
+        m3 = f"{entity_metadata.device_class} for {platform.name} "
         raise ValueError(f"{m1}{m2}{m3}{quirk}")
 
 
@@ -867,10 +866,10 @@ def validate_translation_keys(
     translations: dict,
 ) -> None:
     """Ensure translation keys exist for all v2 quirks."""
-    if isinstance(entity_metadata.entity_metadata, ZCLCommandButtonMetadata):
-        default_translation_key = entity_metadata.entity_metadata.command_name
+    if isinstance(entity_metadata, ZCLCommandButtonMetadata):
+        default_translation_key = entity_metadata.command_name
     else:
-        default_translation_key = entity_metadata.entity_metadata.attribute_name
+        default_translation_key = entity_metadata.attribute_name
     translation_key = entity_metadata.translation_key or default_translation_key
 
     if (
@@ -889,15 +888,15 @@ def validate_translation_keys_device_class(
     translations: dict,
 ) -> None:
     """Validate translation keys and device class usage."""
-    if isinstance(entity_metadata.entity_metadata, ZCLCommandButtonMetadata):
-        default_translation_key = entity_metadata.entity_metadata.command_name
+    if isinstance(entity_metadata, ZCLCommandButtonMetadata):
+        default_translation_key = entity_metadata.command_name
     else:
-        default_translation_key = entity_metadata.entity_metadata.attribute_name
+        default_translation_key = entity_metadata.attribute_name
     translation_key = entity_metadata.translation_key or default_translation_key
 
-    metadata_type = type(entity_metadata.entity_metadata)
+    metadata_type = type(entity_metadata)
     if metadata_type in DEVICE_CLASS_TYPES:
-        device_class = entity_metadata.entity_metadata.device_class
+        device_class = entity_metadata.device_class
         if device_class is not None and translation_key is not None:
             m1 = "translation_key and device_class are both set - translation_key: "
             m2 = f"{translation_key} device_class: {device_class} for {platform.name} "
@@ -964,12 +963,12 @@ def bad_device_class_translation_key_usage(
         (
             bad_device_class_unit_combination,
             validate_device_class_unit,
-            "device_class and unit are both set",
+            "cannot have both unit and device_class",
         ),
         (
             bad_device_class_translation_key_usage,
             validate_translation_keys_device_class,
-            "translation_key and device_class are both set",
+            "cannot have both a translation_key and a device_class",
         ),
     ],
 )
@@ -986,21 +985,32 @@ async def test_quirks_v2_metadata_errors(
     # no error yet
     validate_metadata(validate_method)
 
-    # introduce an error
-    zigpy_device = _get_test_device(
-        zigpy_device_mock,
-        "Ikea of Sweden4",
-        "TRADFRI remote control4",
-        augment_method=augment_method,
-    )
-    await zha_device_joined(zigpy_device)
-
     # ensure the error is caught and raised
     with pytest.raises(ValueError, match=expected_exception_string):
-        validate_metadata(validate_method)
+        try:
+            # introduce an error
+            zigpy_device = _get_test_device(
+                zigpy_device_mock,
+                "Ikea of Sweden4",
+                "TRADFRI remote control4",
+                augment_method=augment_method,
+            )
+            await zha_device_joined(zigpy_device)
 
-    # remove the device so we don't pollute the rest of the tests
-    zigpy.quirks._DEVICE_REGISTRY.remove(zigpy_device)
+            validate_metadata(validate_method)
+            # if the device was created we remove it
+            # so we don't pollute the rest of the tests
+            zigpy.quirks._DEVICE_REGISTRY.remove(zigpy_device)
+        except ValueError as e:
+            # if the device was not created we remove it
+            # so we don't pollute the rest of the tests
+            zigpy.quirks._DEVICE_REGISTRY._registry_v2.pop(
+                (
+                    "Ikea of Sweden4",
+                    "TRADFRI remote control4",
+                )
+            )
+            raise e
 
 
 class BadDeviceClass(enum.Enum):

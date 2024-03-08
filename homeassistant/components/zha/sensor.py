@@ -13,7 +13,7 @@ import random
 from typing import TYPE_CHECKING, Any, Self
 
 from zigpy import types
-from zigpy.quirks.v2 import EntityMetadata, ZCLEnumMetadata, ZCLSensorMetadata
+from zigpy.quirks.v2 import ZCLEnumMetadata, ZCLSensorMetadata
 from zigpy.state import Counter, State
 from zigpy.zcl.clusters.closures import WindowCovering
 from zigpy.zcl.clusters.general import Basic
@@ -71,7 +71,7 @@ from .core.const import (
     CLUSTER_HANDLER_TEMPERATURE,
     CLUSTER_HANDLER_THERMOSTAT,
     DATA_ZHA,
-    QUIRK_METADATA,
+    ENTITY_METADATA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
@@ -154,7 +154,7 @@ class Sensor(ZhaEntity, SensorEntity):
         Return entity if it is a supported configuration, otherwise return None
         """
         cluster_handler = cluster_handlers[0]
-        if QUIRK_METADATA not in kwargs and (
+        if ENTITY_METADATA not in kwargs and (
             cls._attribute_name in cluster_handler.cluster.unsupported_attributes
             or cls._attribute_name not in cluster_handler.cluster.attributes_by_name
         ):
@@ -176,29 +176,28 @@ class Sensor(ZhaEntity, SensorEntity):
     ) -> None:
         """Init this sensor."""
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
-        if QUIRK_METADATA in kwargs:
-            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA])
+        if ENTITY_METADATA in kwargs:
+            self._init_from_quirks_metadata(kwargs[ENTITY_METADATA])
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
 
-    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
+    def _init_from_quirks_metadata(self, entity_metadata: ZCLSensorMetadata) -> None:
         """Init this entity from the quirks metadata."""
         super()._init_from_quirks_metadata(entity_metadata)
-        sensor_metadata: ZCLSensorMetadata = entity_metadata.entity_metadata
-        self._attribute_name = sensor_metadata.attribute_name
-        if sensor_metadata.divisor is not None:
-            self._divisor = sensor_metadata.divisor
-        if sensor_metadata.multiplier is not None:
-            self._multiplier = sensor_metadata.multiplier
-        if sensor_metadata.device_class is not None:
+        self._attribute_name = entity_metadata.attribute_name
+        if entity_metadata.divisor is not None:
+            self._divisor = entity_metadata.divisor
+        if entity_metadata.multiplier is not None:
+            self._multiplier = entity_metadata.multiplier
+        if entity_metadata.device_class is not None:
             self._attr_device_class = validate_device_class(
                 SensorDeviceClass,
-                sensor_metadata.device_class,
+                entity_metadata.device_class,
                 Platform.SENSOR.value,
                 _LOGGER,
             )
-        if sensor_metadata.device_class is None and sensor_metadata.unit is not None:
+        if entity_metadata.device_class is None and entity_metadata.unit is not None:
             self._attr_native_unit_of_measurement = validate_unit(
-                sensor_metadata.unit
+                entity_metadata.unit
             ).value
 
     async def async_added_to_hass(self) -> None:
@@ -375,12 +374,11 @@ class EnumSensor(Sensor):
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
         self._attr_options = [e.name for e in self._enum]
 
-    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
+    def _init_from_quirks_metadata(self, entity_metadata: ZCLEnumMetadata) -> None:
         """Init this entity from the quirks metadata."""
         ZhaEntity._init_from_quirks_metadata(self, entity_metadata)  # pylint: disable=protected-access
-        sensor_metadata: ZCLEnumMetadata = entity_metadata.entity_metadata
-        self._attribute_name = sensor_metadata.attribute_name
-        self._enum = sensor_metadata.enum
+        self._attribute_name = entity_metadata.attribute_name
+        self._enum = entity_metadata.enum
 
     def formatter(self, value: int) -> str | None:
         """Use name of enum."""
