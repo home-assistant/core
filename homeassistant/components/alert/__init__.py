@@ -26,7 +26,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HassJob, HomeAssistant
+from homeassistant.core import Event, HassJob, HomeAssistant
 from homeassistant.exceptions import ServiceNotFound
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -37,7 +37,7 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
 )
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType, EventType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import now
 
 from .const import (
@@ -199,9 +199,7 @@ class Alert(Entity):
             return STATE_ON
         return STATE_IDLE
 
-    async def watched_entity_change(
-        self, event: EventType[EventStateChangedData]
-    ) -> None:
+    async def watched_entity_change(self, event: Event[EventStateChangedData]) -> None:
         """Determine if the alert should start or stop."""
         if (to_state := event.data["new_state"]) is None:
             return
