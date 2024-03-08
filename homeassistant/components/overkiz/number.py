@@ -1,4 +1,5 @@
 """Support for Overkiz (virtual) numbers."""
+
 from __future__ import annotations
 
 import asyncio
