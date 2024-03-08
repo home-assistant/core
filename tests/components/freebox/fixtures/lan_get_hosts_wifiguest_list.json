@@ -1,0 +1,35 @@
+[
+  {
+    "l2ident": {
+      "id": "d0:23:db:36:15:aa",
+      "type": "mac_address"
+    },
+    "active": true,
+    "id": "ether-d0:23:db:36:15:aa",
+    "last_time_reachable": 1360669498,
+    "persistent": true,
+    "names": [
+      {
+        "name": "iPhone-r0ro",
+        "source": "dhcp"
+      }
+    ],
+    "vendor_name": "Apple, Inc.",
+    "host_type": "smartphone",
+    "interface": "wifiguest",
+    "l3connectivities": [
+      {
+        "addr": "192.168.69.20",
+        "active": true,
+        "af": "ipv4",
+        "reachable": true,
+        "last_activity": 1360669498,
+        "last_time_reachable": 1360669498
+      }
+    ],
+    "reachable": true,
+    "last_activity": 1360669498,
+    "primary_name_manual": true,
+    "primary_name": "iPhone r0ro"
+  }
+]
