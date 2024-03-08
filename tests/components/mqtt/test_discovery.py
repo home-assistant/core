@@ -54,10 +54,9 @@ async def test_subscribing_config_topic(
 ) -> None:
     """Test setting up discovery."""
     mqtt_mock = await mqtt_mock_entry()
-    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
 
     discovery_topic = "homeassistant"
-    await async_start(hass, discovery_topic, entry)
+    await async_start(hass, discovery_topic)
 
     call_args1 = mqtt_mock.async_subscribe.mock_calls[0][1]
     assert call_args1[2] == 0
@@ -1502,14 +1501,13 @@ async def test_mqtt_integration_discovery_subscribe_unsubscribe(
     mqtt_mock = await mqtt_mock_entry()
     mock_platform(hass, "comp.config_flow", None)
 
-    entry = hass.config_entries.async_entries("mqtt")[0]
     mqtt_mock().connected = True
 
     with patch(
         "homeassistant.components.mqtt.discovery.async_get_mqtt",
         return_value={"comp": ["comp/discovery/#"]},
     ):
-        await async_start(hass, "homeassistant", entry)
+        await async_start(hass, "homeassistant")
         await hass.async_block_till_done()
         await hass.async_block_till_done()
 
@@ -1552,14 +1550,13 @@ async def test_mqtt_discovery_unsubscribe_once(
     mqtt_mock = await mqtt_mock_entry()
     mock_platform(hass, "comp.config_flow", None)
 
-    entry = hass.config_entries.async_entries("mqtt")[0]
     mqtt_mock().connected = True
 
     with patch(
         "homeassistant.components.mqtt.discovery.async_get_mqtt",
         return_value={"comp": ["comp/discovery/#"]},
     ):
-        await async_start(hass, "homeassistant", entry)
+        await async_start(hass, "homeassistant")
         await hass.async_block_till_done()
         await hass.async_block_till_done()
 
