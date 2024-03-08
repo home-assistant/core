@@ -31,7 +31,7 @@ from homeassistant.helpers.event import (
     async_track_time_interval,
 )
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.typing import UNDEFINED, ConfigType, EventType, UndefinedType
+from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
 from .const import DOMAIN, IMAGE_TIMEOUT  # noqa: F401
 
@@ -342,7 +342,7 @@ async def async_get_still_stream(
 
     event = asyncio.Event()
 
-    async def image_state_update(_event: EventType[EventStateChangedData]) -> None:
+    async def image_state_update(_event: Event[EventStateChangedData]) -> None:
         """Write image to stream."""
         event.set()
 
