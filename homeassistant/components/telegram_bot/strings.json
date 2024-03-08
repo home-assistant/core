@@ -636,5 +636,15 @@
         }
       }
     }
+  },
+  "issues": {
+    "proxy_params_auth_deprecation": {
+      "title": "Proxy authentication should be moved to the URL",
+      "description": "Authentication details for the the proxy configured in the telegram_bot integration should be moved into the URL instead.\n\nThe proxy_params config key will be removed in a future release."
+    },
+    "proxy_params_deprecation": {
+      "title": "Proxy params option will be removed",
+      "description": "The proxy_params config key for the telegram_bot integration will be removed in a future release.\n\nThe underlying library used has changed to httpx which now has different options.\n\nAuthentication can now be done through the proxy_url option. If you still need this functionality for other options, please raise an issue."
+    }
   }
 }
