@@ -14,6 +14,7 @@ from .normalized_name_base_registry import (
     NormalizedNameBaseRegistryItems,
     normalize_name,
 )
+from .registry import BaseRegistry
 from .storage import Store
 from .typing import UNDEFINED, UndefinedType
 
@@ -22,7 +23,6 @@ EVENT_AREA_REGISTRY_UPDATED = "area_registry_updated"
 STORAGE_KEY = "core.area_registry"
 STORAGE_VERSION_MAJOR = 1
 STORAGE_VERSION_MINOR = 6
-SAVE_DELAY = 10
 
 
 class EventAreaRegistryUpdatedData(TypedDict):
@@ -86,7 +86,7 @@ class AreaRegistryStore(Store[dict[str, list[dict[str, Any]]]]):
         return old_data
 
 
-class AreaRegistry:
+class AreaRegistry(BaseRegistry):
     """Class to hold a registry of areas."""
 
     areas: NormalizedNameBaseRegistryItems[AreaEntry]
@@ -272,11 +272,6 @@ class AreaRegistry:
 
         self.areas = areas
         self._area_data = areas.data
-
-    @callback
-    def async_schedule_save(self) -> None:
-        """Schedule saving the area registry."""
-        self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
     @callback
     def _data_to_save(self) -> dict[str, list[dict[str, Any]]]:
