@@ -31,6 +31,7 @@ async def async_setup_entry(
             entity_description=SensorEntityDescription(
                 key=str(entry.data[CONF_SOURCE]),
                 name=entity_name,
+                translation_key="version",
             ),
         )
     ]
@@ -40,8 +41,6 @@ async def async_setup_entry(
 
 class VersionSensorEntity(VersionEntity, SensorEntity):
     """Version sensor entity class."""
-
-    _attr_translation_key = "version"
 
     @property
     def native_value(self) -> StateType:
