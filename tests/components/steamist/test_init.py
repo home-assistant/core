@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from discovery30303 import AIODiscovery30303
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import steamist
@@ -113,7 +114,9 @@ async def test_config_entry_fills_unique_id_with_directed_discovery(
 
 
 @pytest.mark.usefixtures("mock_single_broadcast_address")
-async def test_discovery_happens_at_interval(hass: HomeAssistant) -> None:
+async def test_discovery_happens_at_interval(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test that discovery happens at interval."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=DEFAULT_ENTRY_DATA, unique_id=FORMATTED_MAC_ADDRESS
@@ -130,6 +133,7 @@ async def test_discovery_happens_at_interval(hass: HomeAssistant) -> None:
 
         assert len(mock_aio_discovery.async_scan.mock_calls) == 2
 
-        async_fire_time_changed(hass, utcnow() + steamist.DISCOVERY_INTERVAL)
+        freezer.move_to(utcnow() + steamist.DISCOVERY_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
-        assert len(mock_aio_discovery.async_scan.mock_calls) == 4
+        assert len(mock_aio_discovery.async_scan.mock_calls) == 3
