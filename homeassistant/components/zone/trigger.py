@@ -1,4 +1,5 @@
 """Offer zone automation rules."""
+
 from __future__ import annotations
 
 import logging
