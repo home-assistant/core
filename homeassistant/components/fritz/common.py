@@ -187,6 +187,7 @@ class FritzBoxTools(
         username: str = DEFAULT_USERNAME,
         host: str = DEFAULT_HOST,
         port: int = DEFAULT_PORT,
+        use_tls: bool = False,
     ) -> None:
         """Initialize FritzboxTools class."""
         super().__init__(
@@ -211,6 +212,7 @@ class FritzBoxTools(
         self.password = password
         self.port = port
         self.username = username
+        self.use_tls = use_tls
         self.has_call_deflections: bool = False
         self._model: str | None = None
         self._current_firmware: str | None = None
@@ -235,6 +237,7 @@ class FritzBoxTools(
             port=self.port,
             user=self.username,
             password=self.password,
+            use_tls=self.use_tls,
             timeout=60.0,
             pool_maxsize=30,
         )
