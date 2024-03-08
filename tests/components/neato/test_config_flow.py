@@ -1,4 +1,5 @@
 """Test the Neato Botvac config flow."""
+
 from unittest.mock import patch
 
 from pybotvac.neato import Neato

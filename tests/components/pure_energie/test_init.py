@@ -1,4 +1,5 @@
 """Tests for the Pure Energie integration."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from gridnet import GridNetConnectionError

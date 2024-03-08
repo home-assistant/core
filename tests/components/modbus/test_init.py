@@ -12,6 +12,7 @@ This file is responsible for testing:
 
 It uses binary_sensors/sensors to do black box testing of the read calls.
 """
+
 from datetime import timedelta
 import logging
 from unittest import mock
