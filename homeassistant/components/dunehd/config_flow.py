@@ -1,4 +1,5 @@
 """Adds config flow for Dune HD integration."""
+
 from __future__ import annotations
 
 from typing import Any

@@ -1,4 +1,5 @@
 """Tests for the auth store."""
+
 import asyncio
 from datetime import timedelta
 from typing import Any

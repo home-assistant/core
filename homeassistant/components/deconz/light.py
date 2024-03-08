@@ -1,4 +1,5 @@
 """Support for deCONZ lights."""
+
 from __future__ import annotations
 
 from typing import Any, TypedDict, TypeVar
@@ -165,6 +166,7 @@ class DeconzBaseLight(DeconzDevice[_LightDeviceT], LightEntity):
     """Representation of a deCONZ light."""
 
     TYPE = DOMAIN
+    _attr_color_mode = ColorMode.UNKNOWN
 
     def __init__(self, device: _LightDeviceT, gateway: DeconzGateway) -> None:
         """Set up light."""

@@ -1,4 +1,5 @@
 """The Kostal Plenticore Solar Inverter integration."""
+
 import logging
 
 from pykoplenti import ApiException

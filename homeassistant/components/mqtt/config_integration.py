@@ -1,4 +1,5 @@
 """Support for MQTT platform config setup."""
+
 from __future__ import annotations
 
 import voluptuous as vol

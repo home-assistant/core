@@ -1,4 +1,5 @@
 """Test cases for the Shelly component."""
+
 from unittest.mock import AsyncMock, Mock, patch
 
 from aioshelly.exceptions import (

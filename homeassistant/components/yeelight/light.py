@@ -1,4 +1,5 @@
 """Light platform support for yeelight."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine

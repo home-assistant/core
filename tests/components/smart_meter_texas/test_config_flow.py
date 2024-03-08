@@ -1,4 +1,5 @@
 """Test the Smart Meter Texas config flow."""
+
 from unittest.mock import patch
 
 from aiohttp import ClientError

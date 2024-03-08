@@ -1,4 +1,5 @@
 """Support for the Airzone sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -26,17 +27,12 @@ from .coordinator import AirzoneUpdateCoordinator
 from .entity import AirzoneEntity, AirzoneZoneEntity
 
 
-@dataclass(frozen=True)
-class AirzoneSelectDescriptionMixin:
-    """Define an entity description mixin for select entities."""
+@dataclass(frozen=True, kw_only=True)
+class AirzoneSelectDescription(SelectEntityDescription):
+    """Class to describe an Airzone select entity."""
 
     api_param: str
     options_dict: dict[str, int]
-
-
-@dataclass(frozen=True)
-class AirzoneSelectDescription(SelectEntityDescription, AirzoneSelectDescriptionMixin):
-    """Class to describe an Airzone select entity."""
 
 
 GRILLE_ANGLE_DICT: Final[dict[str, int]] = {

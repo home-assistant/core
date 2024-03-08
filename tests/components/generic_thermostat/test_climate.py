@@ -1,4 +1,5 @@
 """The tests for the generic_thermostat."""
+
 import datetime
 from unittest.mock import patch
 

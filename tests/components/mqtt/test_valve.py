@@ -1,4 +1,5 @@
 """The tests for the MQTT valve platform."""
+
 from typing import Any
 from unittest.mock import patch
 

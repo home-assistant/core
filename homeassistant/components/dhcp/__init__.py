@@ -1,4 +1,5 @@
 """The dhcp integration."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -52,7 +53,7 @@ from homeassistant.helpers.event import (
     async_track_state_added_domain,
     async_track_time_interval,
 )
-from homeassistant.helpers.typing import ConfigType, EventType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import DHCPMatcher, async_get_dhcp
 
 from .const import DOMAIN
@@ -316,7 +317,9 @@ class NetworkWatcher(WatcherBase):
         """Start a new discovery task if one is not running."""
         if self._discover_task and not self._discover_task.done():
             return
-        self._discover_task = self.hass.async_create_task(self.async_discover())
+        self._discover_task = self.hass.async_create_background_task(
+            self.async_discover(), name="dhcp discovery", eager_start=True
+        )
 
     async def async_discover(self) -> None:
         """Process discovery."""
@@ -342,9 +345,7 @@ class DeviceTrackerWatcher(WatcherBase):
             self._async_process_device_state(state)
 
     @callback
-    def _async_process_device_event(
-        self, event: EventType[EventStateChangedData]
-    ) -> None:
+    def _async_process_device_event(self, event: Event[EventStateChangedData]) -> None:
         """Process a device tracker state change event."""
         self._async_process_device_state(event.data["new_state"])
 

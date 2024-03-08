@@ -1,4 +1,5 @@
 """Test the Mullvad config flow."""
+
 from unittest.mock import patch
 
 from mullvad_api import MullvadAPIError

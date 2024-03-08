@@ -7,6 +7,7 @@ The Entity Registry will persist itself 10 seconds after a new entity is
 registered. Registering a new entity while a timer is in progress resets the
 timer.
 """
+
 from __future__ import annotations
 
 from collections import UserDict
@@ -52,6 +53,7 @@ from homeassistant.util.read_only_dict import ReadOnlyDict
 from . import device_registry as dr, storage
 from .device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes
+from .registry import BaseRegistry
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
@@ -61,7 +63,7 @@ T = TypeVar("T")
 
 DATA_REGISTRY = "entity_registry"
 EVENT_ENTITY_REGISTRY_UPDATED = "entity_registry_updated"
-SAVE_DELAY = 10
+
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION_MAJOR = 1
@@ -511,10 +513,6 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
         self._unindex_entry(key)
         super().__delitem__(key)
 
-    def get_entity_ids(self) -> ValuesView[str]:
-        """Return entity ids."""
-        return self._index.values()
-
     def get_device_ids(self) -> KeysView[str]:
         """Return device ids."""
         return self._device_id_index.keys()
@@ -553,7 +551,7 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
         return [data[key] for key in self._area_id_index.get(area_id, ())]
 
 
-class EntityRegistry:
+class EntityRegistry(BaseRegistry):
     """Class to hold a registry of entities."""
 
     deleted_entities: dict[tuple[str, str, str], DeletedRegistryEntry]
@@ -619,11 +617,6 @@ class EntityRegistry:
     ) -> str | None:
         """Check if an entity_id is currently registered."""
         return self.entities.get_entity_id((domain, platform, unique_id))
-
-    @callback
-    def async_entity_ids(self) -> list[str]:
-        """Return entity ids."""
-        return list(self.entities.get_entity_ids())
 
     @callback
     def async_device_ids(self) -> list[str]:
@@ -1190,11 +1183,6 @@ class EntityRegistry:
         self.deleted_entities = deleted_entities
         self.entities = entities
         self._entities_data = entities.data
-
-    @callback
-    def async_schedule_save(self) -> None:
-        """Schedule saving the entity registry."""
-        self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
     @callback
     def _data_to_save(self) -> dict[str, Any]:

@@ -1,4 +1,5 @@
 """The tests for the climate component."""
+
 from __future__ import annotations
 
 from enum import Enum

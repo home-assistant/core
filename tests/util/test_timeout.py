@@ -1,4 +1,5 @@
 """Test Home Assistant timeout handler."""
+
 import asyncio
 from contextlib import suppress
 import time

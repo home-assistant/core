@@ -1,4 +1,5 @@
 """The tests for the london_air platform."""
+
 from http import HTTPStatus
 
 import requests_mock

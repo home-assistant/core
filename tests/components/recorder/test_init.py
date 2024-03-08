@@ -1,4 +1,5 @@
 """The tests for the Recorder component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -2227,6 +2228,10 @@ async def test_connect_args_priority(hass: HomeAssistant, config_url) -> None:
 
         def __init__(*args, **kwargs):
             ...
+
+        @property
+        def is_async(self):
+            return False
 
         def connect(self, *args, **params):
             nonlocal connect_params

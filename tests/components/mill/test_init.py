@@ -1,4 +1,5 @@
 """Tests for Mill init."""
+
 from unittest.mock import patch
 
 from homeassistant.components import mill

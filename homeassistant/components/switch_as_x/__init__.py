@@ -1,4 +1,5 @@
 """Component to wrap switch entities in entities of other domains."""
+
 from __future__ import annotations
 
 import logging

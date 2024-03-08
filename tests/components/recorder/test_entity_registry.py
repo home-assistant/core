@@ -1,4 +1,5 @@
 """The tests for sensor recorder platform."""
+
 from collections.abc import Callable
 
 import pytest

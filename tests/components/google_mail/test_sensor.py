@@ -1,4 +1,5 @@
 """Sensor tests for the Google Mail integration."""
+
 from datetime import timedelta
 from unittest.mock import patch
 

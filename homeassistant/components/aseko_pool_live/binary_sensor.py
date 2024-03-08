@@ -1,4 +1,5 @@
 """Support for Aseko Pool Live binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -20,18 +21,11 @@ from .coordinator import AsekoDataUpdateCoordinator
 from .entity import AsekoEntity
 
 
-@dataclass(frozen=True)
-class AsekoBinarySensorDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class AsekoBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes an Aseko binary sensor entity."""
 
     value_fn: Callable[[Unit], bool]
-
-
-@dataclass(frozen=True)
-class AsekoBinarySensorEntityDescription(
-    BinarySensorEntityDescription, AsekoBinarySensorDescriptionMixin
-):
-    """Describes an Aseko binary sensor entity."""
 
 
 UNIT_BINARY_SENSORS: tuple[AsekoBinarySensorEntityDescription, ...] = (

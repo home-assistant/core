@@ -1,4 +1,5 @@
 """Define fixtures for Notion tests."""
+
 from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, Mock, patch

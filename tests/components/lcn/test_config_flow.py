@@ -1,4 +1,5 @@
 """Tests for the LCN config flow."""
+
 from unittest.mock import patch
 
 from pypck.connection import PchkAuthenticationError, PchkLicenseError

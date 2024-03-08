@@ -1,4 +1,5 @@
 """Tests for Fritz!Tools config flow."""
+
 import dataclasses
 from unittest.mock import patch
 

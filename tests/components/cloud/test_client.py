@@ -1,4 +1,5 @@
 """Test the cloud.iot module."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 

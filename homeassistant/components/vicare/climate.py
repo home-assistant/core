@@ -1,4 +1,5 @@
 """Viessmann ViCare climate device."""
+
 from __future__ import annotations
 
 from contextlib import suppress

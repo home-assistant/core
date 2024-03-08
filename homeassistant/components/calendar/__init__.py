@@ -1,4 +1,5 @@
 """Support for Calendar event device sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
@@ -652,7 +653,7 @@ class CalendarEventView(http.HomeAssistantView):
 
         try:
             calendar_event_list = await entity.async_get_events(
-                request.app["hass"],
+                request.app[http.KEY_HASS],
                 dt_util.as_local(start_date),
                 dt_util.as_local(end_date),
             )
@@ -682,11 +683,12 @@ class CalendarListView(http.HomeAssistantView):
 
     async def get(self, request: web.Request) -> web.Response:
         """Retrieve calendar list."""
-        hass = request.app["hass"]
+        hass = request.app[http.KEY_HASS]
         calendar_list: list[dict[str, str]] = []
 
         for entity in self.component.entities:
             state = hass.states.get(entity.entity_id)
+            assert state
             calendar_list.append({"name": state.name, "entity_id": entity.entity_id})
 
         return self.json(sorted(calendar_list, key=lambda x: cast(str, x["name"])))

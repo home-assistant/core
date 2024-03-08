@@ -1,4 +1,5 @@
 """Support for Roborock select."""
+
 from collections.abc import Callable
 from dataclasses import dataclass
 

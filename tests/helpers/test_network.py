@@ -1,4 +1,5 @@
 """Test network helper."""
+
 from unittest.mock import Mock, patch
 
 import pytest

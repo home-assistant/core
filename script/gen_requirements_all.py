@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Generate updated constraint and requirements files."""
+
 from __future__ import annotations
 
 import difflib

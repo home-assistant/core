@@ -1,4 +1,5 @@
 """Test label registry API."""
+
 import pytest
 
 from homeassistant.components.config import label_registry

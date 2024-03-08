@@ -1,4 +1,5 @@
 """The tests for the Rfxtrx light platform."""
+
 from unittest.mock import call
 
 import pytest
