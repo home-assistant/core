@@ -13,7 +13,6 @@ from typing import TYPE_CHECKING, Any, TypedDict
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError, TemplateError
@@ -393,7 +392,6 @@ class MqttData:
 
     client: MQTT
     config: list[ConfigType]
-    entry: ConfigEntry
     debug_info_entities: dict[str, EntityDebugInfo] = field(default_factory=dict)
     debug_info_triggers: dict[tuple[str, str], TriggerDebugInfo] = field(
         default_factory=dict

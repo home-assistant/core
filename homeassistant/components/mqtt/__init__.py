@@ -283,9 +283,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # Initial setup
             websocket_api.async_register_command(hass, websocket_subscribe)
             websocket_api.async_register_command(hass, websocket_mqtt_info)
-            hass.data[DATA_MQTT] = mqtt_data = MqttData(
-                config=mqtt_yaml, client=client, entry=entry
-            )
+            hass.data[DATA_MQTT] = mqtt_data = MqttData(config=mqtt_yaml, client=client)
         client.start(mqtt_data)
 
         # Restore saved subscriptions
