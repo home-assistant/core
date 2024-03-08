@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 from pyaprilaire.const import Attribute
 
@@ -16,7 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import UNDEFINED, StateType
 
 from .const import DOMAIN
 from .coordinator import AprilaireCoordinator
@@ -66,7 +66,7 @@ class AprilaireSensorDescription(SensorEntityDescription):
     status_sensor_available_value: int | None
     status_sensor_exists_values: list[int] | None
     value_key: str
-    value_fn: Callable[[Any, Any], Any] | None
+    value_fn: Callable[[Any, Any], StateType] | None
 
 
 SENSOR_TYPES: tuple[AprilaireSensorDescription, ...] = (
@@ -146,8 +146,6 @@ SENSOR_TYPES: tuple[AprilaireSensorDescription, ...] = (
     AprilaireSensorDescription(
         key="ventilation_status",
         translation_key="ventilation_status",
-        device_class=None,
-        state_class=None,
         status_key=Attribute.VENTILATION_AVAILABLE,
         status_sensor_available_value=None,
         status_sensor_exists_values=[1],
@@ -157,8 +155,6 @@ SENSOR_TYPES: tuple[AprilaireSensorDescription, ...] = (
     AprilaireSensorDescription(
         key="air_cleaning_status",
         translation_key="air_cleaning_status",
-        device_class=None,
-        state_class=None,
         status_key=Attribute.AIR_CLEANING_AVAILABLE,
         status_sensor_available_value=None,
         status_sensor_exists_values=[1],
@@ -168,8 +164,6 @@ SENSOR_TYPES: tuple[AprilaireSensorDescription, ...] = (
     AprilaireSensorDescription(
         key="fan_status",
         translation_key="fan_status",
-        device_class=None,
-        state_class=None,
         status_key=None,
         status_sensor_available_value=None,
         status_sensor_exists_values=[],
@@ -187,6 +181,8 @@ async def async_setup_entry(
     """Set up Aprilaire sensor devices."""
 
     coordinator: AprilaireCoordinator = hass.data[DOMAIN][config_entry.unique_id]
+
+    assert config_entry.unique_id is not None
 
     async_add_entities(
         AprilaireSensor(coordinator, description, config_entry.unique_id)
@@ -207,7 +203,7 @@ class AprilaireSensor(BaseAprilaireEntity, SensorEntity):
         self,
         coordinator: AprilaireCoordinator,
         description: AprilaireSensorDescription,
-        unique_id: str | None,
+        unique_id: str,
     ) -> None:
         """Initialize a sensor for an Aprilaire device."""
 
@@ -224,9 +220,11 @@ class AprilaireSensor(BaseAprilaireEntity, SensorEntity):
         ):
             return True
 
+        if not super().available:
+            return False
+
         return (
-            super().available
-            and self.coordinator.data.get(self.entity_description.status_key)
+            self.coordinator.data.get(self.entity_description.status_key)
             == self.entity_description.status_sensor_available_value
         )
 
@@ -245,12 +243,12 @@ class AprilaireSensor(BaseAprilaireEntity, SensorEntity):
         return super().native_unit_of_measurement
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         raw_value = self.coordinator.data.get(self.entity_description.value_key)
 
-        return (
-            self.entity_description.value_fn(self, raw_value)
-            if self.entity_description.value_fn
-            else raw_value
-        )
+        if self.entity_description.value_fn is None:
+            # Valid cast as pyaprilaire only provides str | int | float
+            return cast(StateType, raw_value)
+
+        return self.entity_description.value_fn(self, raw_value)
