@@ -613,6 +613,9 @@ class HomeAssistant:
     ) -> asyncio.Future[_R] | None:
         """Add a HassJob from within the event loop.
 
+        If eager_start is True, coroutine functions will be scheduled eagerly.
+        If background is True, the task will created as a background task.
+
         This method must be run in the event loop.
         hassjob: HassJob to call.
         args: parameters for method to call.
@@ -775,6 +778,7 @@ class HomeAssistant:
         This method must be run in the event loop.
 
         If eager_start is True, coroutine functions will be scheduled eagerly.
+        If background is True, the task will created as a background task.
 
         hassjob: HassJob
         args: parameters for method to call.
