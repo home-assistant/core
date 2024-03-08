@@ -1,4 +1,5 @@
 """Read only dictionary."""
+
 from typing import Any, TypeVar
 
 

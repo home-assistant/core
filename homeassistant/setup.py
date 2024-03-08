@@ -1,4 +1,5 @@
 """All methods needed to bootstrap a Home Assistant instance."""
+
 from __future__ import annotations
 
 import asyncio

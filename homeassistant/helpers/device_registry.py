@@ -1,4 +1,5 @@
 """Provide a way to connect entities belonging to one device."""
+
 from __future__ import annotations
 
 from collections import UserDict

@@ -5,6 +5,7 @@ This module exists of the following parts:
  - OAuth2 implementation that works with local provided client ID/secret
 
 """
+
 from __future__ import annotations
 
 from abc import ABC, ABCMeta, abstractmethod
