@@ -1,4 +1,5 @@
 """Tests for the Flexit Nordic (BACnet) __init__."""
+
 from flexit_bacnet import DecodingError
 
 from homeassistant.components.flexit_bacnet.const import DOMAIN
