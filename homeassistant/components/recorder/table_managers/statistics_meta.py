@@ -307,11 +307,18 @@ class StatisticsMetaManager:
         recorder thread.
         """
         self._assert_in_recorder_thread()
+        if self.get(session, new_statistic_id):
+            _LOGGER.error(
+                "Cannot rename statistic_id `%s` to `%s` because the new statistic_id is already in use",
+                old_statistic_id,
+                new_statistic_id,
+            )
+            return
         session.query(StatisticsMeta).filter(
             (StatisticsMeta.statistic_id == old_statistic_id)
             & (StatisticsMeta.source == source)
         ).update({StatisticsMeta.statistic_id: new_statistic_id})
-        self._clear_cache([old_statistic_id, new_statistic_id])
+        self._clear_cache([old_statistic_id])
 
     def delete(self, session: Session, statistic_ids: list[str]) -> None:
         """Clear statistics for a list of statistic_ids.
