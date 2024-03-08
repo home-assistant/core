@@ -144,7 +144,7 @@ async def test_unavailable_callbacks_mark_the_coordinator_unavailable(
     start_monotonic = time.monotonic()
 
     # fmt: off
-    # Unstable formatting
+    # Unstable formatting: https://github.com/astral-sh/ruff/issues/10302
     with (
         patch(
             "bleak.BleakScanner.discovered_devices_and_advertisement_data",  # Must patch before we setup
