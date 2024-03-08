@@ -1,4 +1,5 @@
 """Tests for hassfest dependency finder."""
+
 import ast
 
 import pytest
@@ -59,6 +60,7 @@ def test_renamed_absolute(mock_collector) -> None:
     mock_collector.visit(
         ast.parse(
             """
+
 import homeassistant.components.renamed_absolute as hue
 """
         )
