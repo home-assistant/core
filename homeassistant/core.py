@@ -898,7 +898,20 @@ class HomeAssistant:
             self.async_block_till_done(), self.loop
         ).result()
 
-    async def async_block_till_done(self, wait_periodic_tasks: bool = True) -> None:
+    def _current_tasks(
+        self, periodic: bool, background: bool
+    ) -> set[asyncio.Future[Any]]:
+        """Return the current tasks."""
+        tasks = self._tasks.copy()
+        if periodic:
+            tasks.update(self._periodic_tasks)
+        if background:
+            tasks.update(self._background_tasks)
+        return tasks
+
+    async def async_block_till_done(
+        self, wait_periodic_tasks: bool = True, wait_background_tasks: bool = False
+    ) -> None:
         """Block until all pending work is done."""
         # To flush out any call_soon_threadsafe
         await asyncio.sleep(0)
@@ -906,11 +919,7 @@ class HomeAssistant:
         current_task = asyncio.current_task()
         while tasks := [
             task
-            for task in (
-                self._tasks | self._periodic_tasks
-                if wait_periodic_tasks
-                else self._tasks
-            )
+            for task in self._current_tasks(wait_periodic_tasks, wait_background_tasks)
             if task is not current_task and not cancelling(task)
         ]:
             await self._await_and_log_pending(tasks)

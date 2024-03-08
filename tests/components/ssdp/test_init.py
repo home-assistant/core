@@ -342,7 +342,7 @@ async def test_flow_start_only_alive(
         }
     )
     ssdp_listener._on_search(mock_ssdp_search_response)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_flow_init.assert_awaited_once_with(
         "mock-domain", context={"source": config_entries.SOURCE_SSDP}, data=ANY
@@ -522,9 +522,9 @@ async def test_scan_with_registered_callback(
     async_match_any_callback = AsyncMock()
     await ssdp.async_register_callback(hass, async_match_any_callback)
 
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     ssdp_listener._on_search(mock_ssdp_search_response)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert async_integration_callback.call_count == 1
     assert async_integration_match_all_callback.call_count == 1
@@ -834,7 +834,7 @@ async def test_flow_dismiss_on_byebye(
         }
     )
     ssdp_listener._on_search(mock_ssdp_search_response)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_flow_init.assert_awaited_once_with(
         "mock-domain", context={"source": config_entries.SOURCE_SSDP}, data=ANY
@@ -852,7 +852,7 @@ async def test_flow_dismiss_on_byebye(
         }
     )
     ssdp_listener._on_alive(mock_ssdp_advertisement)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     mock_flow_init.assert_awaited_once_with(
         "mock-domain", context={"source": config_entries.SOURCE_SSDP}, data=ANY
     )
@@ -867,7 +867,7 @@ async def test_flow_dismiss_on_byebye(
         hass.config_entries.flow, "async_abort"
     ) as mock_async_abort:
         ssdp_listener._on_byebye(mock_ssdp_advertisement)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(mock_async_progress_by_init_data_type.mock_calls) == 1
     assert mock_async_abort.mock_calls[0][1][0] == "mock_flow_id"
