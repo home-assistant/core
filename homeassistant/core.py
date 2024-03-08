@@ -638,7 +638,8 @@ class HomeAssistant:
                 )
                 if task.done():
                     return task
-            task = self.loop.create_task(hassjob.target(*args), name=hassjob.name)
+            else:
+                task = self.loop.create_task(hassjob.target(*args), name=hassjob.name)
         elif hassjob.job_type is HassJobType.Callback:
             if TYPE_CHECKING:
                 hassjob.target = cast(Callable[..., _R], hassjob.target)
