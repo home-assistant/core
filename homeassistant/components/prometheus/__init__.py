@@ -49,7 +49,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import Event, HomeAssistant, State
 from homeassistant.helpers import entityfilter, state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_registry import (
@@ -58,7 +58,7 @@ from homeassistant.helpers.entity_registry import (
 )
 from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.helpers.event import EventStateChangedData
-from homeassistant.helpers.typing import ConfigType, EventType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import as_timestamp
 from homeassistant.util.unit_conversion import TemperatureConverter
 
@@ -180,9 +180,7 @@ class PrometheusMetrics:
         self._metrics: dict[str, MetricWrapperBase] = {}
         self._climate_units = climate_units
 
-    def handle_state_changed_event(
-        self, event: EventType[EventStateChangedData]
-    ) -> None:
+    def handle_state_changed_event(self, event: Event[EventStateChangedData]) -> None:
         """Handle new messages from the bus."""
         if (state := event.data.get("new_state")) is None:
             return
@@ -232,7 +230,7 @@ class PrometheusMetrics:
         last_updated_time_seconds.labels(**labels).set(state.last_updated.timestamp())
 
     def handle_entity_registry_updated(
-        self, event: EventType[EventEntityRegistryUpdatedData]
+        self, event: Event[EventEntityRegistryUpdatedData]
     ) -> None:
         """Listen for deleted, disabled or renamed entities and remove them from the Prometheus Registry."""
         if event.data["action"] in (None, "create"):

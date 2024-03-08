@@ -34,6 +34,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
+    Event,
     HomeAssistant,
     State,
     callback,
@@ -48,12 +49,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.start import async_at_start
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    EventType,
-    StateType,
-)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 
@@ -335,7 +331,7 @@ class StatisticsSensor(SensorEntity):
 
         @callback
         def async_stats_sensor_state_listener(
-            event: EventType[EventStateChangedData],
+            event: Event[EventStateChangedData],
         ) -> None:
             """Handle the sensor state changes."""
             if (new_state := event.data["new_state"]) is None:
