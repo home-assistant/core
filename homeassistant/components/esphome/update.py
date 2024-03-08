@@ -1,4 +1,5 @@
 """Update platform for ESPHome."""
+
 from __future__ import annotations
 
 import asyncio
