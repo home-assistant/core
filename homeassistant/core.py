@@ -125,7 +125,7 @@ _P = ParamSpec("_P")
 # Internal; not helpers.typing.UNDEFINED due to circular dependency
 _UNDEF: dict[Any, Any] = {}
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
-_DataT = TypeVar("_DataT", bound=Mapping[str, Any], default=dict[str, Any])
+_DataT = TypeVar("_DataT", bound=Mapping[str, Any], default=Mapping[str, Any])
 CALLBACK_TYPE = Callable[[], None]
 
 CORE_STORAGE_KEY = "core.config"
