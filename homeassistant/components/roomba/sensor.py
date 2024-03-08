@@ -1,4 +1,5 @@
 """Sensor platform for Roomba."""
+
 from collections.abc import Callable
 from dataclasses import dataclass
 
