@@ -858,6 +858,30 @@ async def test_duplicate_fan_mode_validator(do_config) -> None:
             ],
             2,
         ),
+        (
+            [
+                {
+                    CONF_NAME: TEST_MODBUS_NAME,
+                    CONF_TYPE: TCP,
+                    CONF_HOST: TEST_MODBUS_HOST,
+                    CONF_PORT: TEST_PORT_TCP,
+                    CONF_TIMEOUT: 3,
+                    CONF_SENSORS: [
+                        {
+                            CONF_NAME: TEST_ENTITY_NAME,
+                            CONF_ADDRESS: 117,
+                            CONF_SLAVE: 0,
+                        },
+                        {
+                            CONF_NAME: TEST_ENTITY_NAME,
+                            CONF_ADDRESS: 1179,
+                            CONF_SLAVE: 0,
+                        },
+                    ],
+                },
+            ],
+            1,
+        ),
     ],
 )
 async def test_duplicate_addresses(do_config, sensor_cnt) -> None:
@@ -865,6 +889,41 @@ async def test_duplicate_addresses(do_config, sensor_cnt) -> None:
     check_config(do_config)
     use_inx = len(do_config) - 1
     assert len(do_config[use_inx][CONF_SENSORS]) == sensor_cnt
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        [
+            {
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+                CONF_TIMEOUT: 3,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 0,
+                    },
+                ],
+                CONF_BINARY_SENSORS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME + "1",
+                        CONF_ADDRESS: 1179,
+                        CONF_SLAVE: 0,
+                    },
+                ],
+            },
+        ],
+    ],
+)
+async def test_no_duplicate_names(do_config) -> None:
+    """Test duplicate entity validator."""
+    check_config(do_config)
+    assert len(do_config[0][CONF_SENSORS]) == 1
+    assert len(do_config[0][CONF_BINARY_SENSORS]) == 1
 
 
 @pytest.mark.parametrize(
