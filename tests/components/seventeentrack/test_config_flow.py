@@ -16,9 +16,9 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import ACCOUNT_ID
-
 from tests.common import MockConfigEntry
+
+ACCOUNT_ID = "1234"
 
 VALID_CONFIG = {
     CONF_USERNAME: "someemail@gmail.com",
