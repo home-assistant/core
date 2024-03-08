@@ -1,4 +1,5 @@
 """Support for Abode Security System covers."""
+
 from typing import Any
 
 from jaraco.abode.devices.cover import Cover as AbodeCV

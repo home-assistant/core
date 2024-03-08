@@ -1,4 +1,5 @@
 """Unit tests for the OurGroceries todo platform."""
+
 from unittest.mock import AsyncMock
 
 from aiohttp import ClientError

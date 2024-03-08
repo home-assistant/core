@@ -1,4 +1,5 @@
 """Test core config."""
+
 from http import HTTPStatus
 from unittest.mock import Mock, patch
 
@@ -6,6 +7,7 @@ import pytest
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
+from homeassistant.components.config import core
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import (
     CONF_UNIT_SYSTEM,
@@ -23,7 +25,7 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 @pytest.fixture
 async def client(hass, hass_ws_client):
     """Fixture that can interact with the config manager API."""
-    with patch.object(config, "SECTIONS", ["core"]):
+    with patch.object(config, "SECTIONS", [core]):
         assert await async_setup_component(hass, "config", {})
     return await hass_ws_client(hass)
 
@@ -32,7 +34,7 @@ async def test_validate_config_ok(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test checking config."""
-    with patch.object(config, "SECTIONS", ["core"]):
+    with patch.object(config, "SECTIONS", [core]):
         await async_setup_component(hass, "config", {})
 
     client = await hass_client()
@@ -95,7 +97,7 @@ async def test_validate_config_requires_admin(
     hass_read_only_access_token: str,
 ) -> None:
     """Test checking configuration does not work as a normal user."""
-    with patch.object(config, "SECTIONS", ["core"]):
+    with patch.object(config, "SECTIONS", [core]):
         await async_setup_component(hass, "config", {})
 
     client = await hass_client(hass_read_only_access_token)
@@ -180,7 +182,7 @@ async def test_websocket_core_update_not_admin(
 ) -> None:
     """Test core config fails for non admin."""
     hass_admin_user.groups = []
-    with patch.object(config, "SECTIONS", ["core"]):
+    with patch.object(config, "SECTIONS", [core]):
         await async_setup_component(hass, "config", {})
 
     client = await hass_ws_client(hass)

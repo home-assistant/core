@@ -1,4 +1,5 @@
 """Support for Velbus switches."""
+
 from typing import Any
 
 from velbusaio.channels import Relay as VelbusRelay

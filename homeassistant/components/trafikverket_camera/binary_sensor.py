@@ -1,4 +1,5 @@
 """Binary sensor platform for Trafikverket Camera integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -36,7 +37,6 @@ class TVCameraSensorEntityDescription(
 BINARY_SENSOR_TYPE = TVCameraSensorEntityDescription(
     key="active",
     translation_key="active",
-    icon="mdi:camera-outline",
     value_fn=lambda data: data.data.active,
 )
 

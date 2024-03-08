@@ -1,4 +1,5 @@
 """Base entity class for Flo entities."""
+
 from __future__ import annotations
 
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo

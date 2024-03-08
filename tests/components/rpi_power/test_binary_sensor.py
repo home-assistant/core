@@ -1,4 +1,5 @@
 """Tests for rpi_power binary sensor."""
+
 from datetime import timedelta
 import logging
 from unittest.mock import MagicMock

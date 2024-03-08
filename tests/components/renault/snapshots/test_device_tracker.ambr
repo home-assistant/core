@@ -55,7 +55,7 @@
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:car',
+      'original_icon': None,
       'original_name': 'Location',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -71,7 +71,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Location',
-        'icon': 'mdi:car',
         'source_type': <SourceType.GPS: 'gps'>,
       }),
       'context': <ANY>,
@@ -138,7 +137,7 @@
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:car',
+      'original_icon': None,
       'original_name': 'Location',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -154,7 +153,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Location',
-        'icon': 'mdi:car',
         'source_type': <SourceType.GPS: 'gps'>,
       }),
       'context': <ANY>,
@@ -261,7 +259,7 @@
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:car',
+      'original_icon': None,
       'original_name': 'Location',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -277,7 +275,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Location',
-        'icon': 'mdi:car',
         'source_type': <SourceType.GPS: 'gps'>,
       }),
       'context': <ANY>,
@@ -344,7 +341,7 @@
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:car',
+      'original_icon': None,
       'original_name': 'Location',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -361,7 +358,6 @@
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Location',
         'gps_accuracy': 0,
-        'icon': 'mdi:car',
         'latitude': 48.1234567,
         'longitude': 11.1234567,
         'source_type': <SourceType.GPS: 'gps'>,
@@ -430,7 +426,7 @@
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:car',
+      'original_icon': None,
       'original_name': 'Location',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -447,7 +443,6 @@
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Location',
         'gps_accuracy': 0,
-        'icon': 'mdi:car',
         'latitude': 48.1234567,
         'longitude': 11.1234567,
         'source_type': <SourceType.GPS: 'gps'>,
@@ -556,7 +551,7 @@
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:car',
+      'original_icon': None,
       'original_name': 'Location',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -573,7 +568,6 @@
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Location',
         'gps_accuracy': 0,
-        'icon': 'mdi:car',
         'latitude': 48.1234567,
         'longitude': 11.1234567,
         'source_type': <SourceType.GPS: 'gps'>,

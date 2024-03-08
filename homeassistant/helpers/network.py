@@ -1,4 +1,5 @@
 """Network helpers."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -6,6 +7,7 @@ from contextlib import suppress
 from ipaddress import ip_address
 from typing import cast
 
+from hass_nabucasa import remote
 import yarl
 
 from homeassistant.components import http
@@ -129,10 +131,6 @@ def get_url(
     prefer_cloud: bool = False,
 ) -> str:
     """Get a URL to this instance."""
-    # Local import to avoid circular dependencies
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.hassio import get_host_info, is_hassio
-
     if require_current_request and http.current_request.get() is None:
         raise NoURLAvailableError
 
@@ -178,6 +176,10 @@ def get_url(
         and request_host is not None
         and hass.config.api is not None
     ):
+        # Local import to avoid circular dependencies
+        # pylint: disable-next=import-outside-toplevel
+        from homeassistant.components.hassio import get_host_info, is_hassio
+
         scheme = "https" if hass.config.api.use_ssl else "http"
         current_url = yarl.URL.build(
             scheme=scheme, host=request_host, port=hass.config.api.port
@@ -313,7 +315,5 @@ def is_cloud_connection(hass: HomeAssistant) -> bool:
 
     if "cloud" not in hass.config.components:
         return False
-
-    from hass_nabucasa import remote  # pylint: disable=import-outside-toplevel
 
     return remote.is_cloud_request.get()

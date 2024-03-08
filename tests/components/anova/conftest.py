@@ -1,4 +1,5 @@
 """Common fixtures for Anova."""
+
 from unittest.mock import AsyncMock, patch
 
 from anova_wifi import AnovaApi, AnovaPrecisionCooker, InvalidLogin, NoDevicesFound

@@ -4,6 +4,7 @@
   "codeowners": ["@bdraco", "@cgarwood", "@dgomes", "@joostlek", "@catsmanac"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/enphase_envoy",
+  "import_executor": true,
   "iot_class": "local_polling",
   "loggers": ["pyenphase"],
   "requirements": ["pyenphase==1.19.1"],

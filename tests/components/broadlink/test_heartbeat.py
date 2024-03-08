@@ -1,4 +1,5 @@
 """Tests for Broadlink heartbeats."""
+
 from unittest.mock import call, patch
 
 import pytest

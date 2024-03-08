@@ -1,4 +1,5 @@
 """Support for a Emonitor channel sensor."""
+
 from __future__ import annotations
 
 from aioemonitor.monitor import EmonitorChannel, EmonitorStatus

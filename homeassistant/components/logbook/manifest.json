@@ -4,6 +4,7 @@
   "codeowners": ["@home-assistant/core"],
   "dependencies": ["frontend", "http", "recorder"],
   "documentation": "https://www.home-assistant.io/integrations/logbook",
+  "import_executor": true,
   "integration_type": "system",
   "quality_scale": "internal"
 }

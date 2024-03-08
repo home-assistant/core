@@ -1,4 +1,5 @@
 """Test BTHome binary sensors."""
+
 from datetime import timedelta
 import logging
 import time

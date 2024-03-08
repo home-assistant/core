@@ -1,4 +1,5 @@
 """The tests for Kira sensor platform."""
+
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.kira import sensor as kira

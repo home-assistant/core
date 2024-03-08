@@ -1,4 +1,5 @@
 """Config flow for Ring integration."""
+
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -6,8 +7,7 @@ from typing import Any
 import ring_doorbell
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     APPLICATION_NAME,
     CONF_PASSWORD,
@@ -15,7 +15,8 @@ from homeassistant.const import (
     CONF_USERNAME,
     __version__ as ha_version,
 )
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import CONF_2FA, DOMAIN
 
@@ -27,7 +28,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(hass: HomeAssistant, data):
     """Validate the user input allows us to connect."""
 
     auth = ring_doorbell.Auth(f"{APPLICATION_NAME}/{ha_version}")
@@ -47,7 +48,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     return token
 
 
-class RingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class RingConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ring."""
 
     VERSION = 1
@@ -96,7 +97,9 @@ class RingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_2FA): str}),
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle reauth upon an API authentication error."""
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -105,7 +108,7 @@ class RingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         errors = {}
         assert self.reauth_entry is not None
@@ -143,9 +146,9 @@ class RingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class Require2FA(exceptions.HomeAssistantError):
+class Require2FA(HomeAssistantError):
     """Error to indicate we require 2FA."""
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""

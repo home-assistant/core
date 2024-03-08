@@ -1,4 +1,5 @@
 """Test to verify that Home Assistant core works."""
+
 from __future__ import annotations
 
 import array
@@ -221,6 +222,47 @@ async def test_async_create_task_schedule_coroutine_with_name() -> None:
     assert len(hass.loop.create_task.mock_calls) == 1
     assert len(hass.add_job.mock_calls) == 0
     assert "named task" in str(task)
+
+
+async def test_async_run_periodic_hass_job_calls_callback() -> None:
+    """Test that the callback annotation is respected."""
+    hass = MagicMock()
+    calls = []
+
+    def job():
+        asyncio.get_running_loop()  # ensure we are in the event loop
+        calls.append(1)
+
+    ha.HomeAssistant.async_run_periodic_hass_job(hass, ha.HassJob(ha.callback(job)))
+    assert len(calls) == 1
+
+
+async def test_async_run_periodic_hass_job_calls_coro_function() -> None:
+    """Test running coros from async_run_periodic_hass_job."""
+    hass = MagicMock()
+    calls = []
+
+    async def job():
+        calls.append(1)
+
+    await ha.HomeAssistant.async_run_periodic_hass_job(hass, ha.HassJob(job))
+    assert len(calls) == 1
+
+
+async def test_async_run_periodic_hass_job_calls_executor_function() -> None:
+    """Test running in the executor from async_run_periodic_hass_job."""
+    hass = MagicMock()
+    hass.loop = asyncio.get_running_loop()
+    calls = []
+
+    def job():
+        try:
+            asyncio.get_running_loop()  # ensure we are not in the event loop
+        except RuntimeError:
+            calls.append(1)
+
+    await ha.HomeAssistant.async_run_periodic_hass_job(hass, ha.HassJob(job))
+    assert len(calls) == 1
 
 
 async def test_async_run_hass_job_calls_callback() -> None:
@@ -514,7 +556,7 @@ async def test_shutdown_calls_block_till_done_after_shutdown_run_callback_thread
     """Ensure shutdown_run_callback_threadsafe is called before the final async_block_till_done."""
     stop_calls = []
 
-    async def _record_block_till_done():
+    async def _record_block_till_done(wait_periodic_tasks: bool = True):
         nonlocal stop_calls
         stop_calls.append("async_block_till_done")
 
@@ -2098,9 +2140,9 @@ async def test_chained_logging_hits_log_timeout(
             return
         hass.async_create_task(_task_chain_1())
 
-    with patch.object(ha, "BLOCK_LOG_TIMEOUT", 0.0001):
+    with patch.object(ha, "BLOCK_LOG_TIMEOUT", 0.0):
         hass.async_create_task(_task_chain_1())
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_periodic_tasks=False)
 
     assert "_task_chain_" in caplog.text
 
@@ -2190,7 +2232,7 @@ async def test_hassjob_forbid_coroutine() -> None:
     coro = bla()
 
     with pytest.raises(ValueError):
-        ha.HassJob(coro)
+        ha.HassJob(coro).job_type
 
     # To avoid warning about unawaited coro
     await coro
@@ -2654,6 +2696,27 @@ async def test_background_task(hass: HomeAssistant, eager_start: bool) -> None:
     assert result.result() == ha.CoreState.stopping
 
 
+@pytest.mark.parametrize("eager_start", (True, False))
+async def test_periodic_task(hass: HomeAssistant, eager_start: bool) -> None:
+    """Test periodic tasks being quit."""
+    result = asyncio.Future()
+
+    async def test_task():
+        try:
+            await asyncio.sleep(1)
+        except asyncio.CancelledError:
+            result.set_result(hass.state)
+            raise
+
+    task = hass.async_create_periodic_task(
+        test_task(), "happy task", eager_start=eager_start
+    )
+    assert "happy task" in str(task)
+    await asyncio.sleep(0)
+    await hass.async_stop()
+    assert result.result() == ha.CoreState.stopping
+
+
 async def test_shutdown_does_not_block_on_normal_tasks(
     hass: HomeAssistant,
 ) -> None:
@@ -2869,3 +2932,19 @@ def test_one_time_listener_repr(hass: HomeAssistant) -> None:
     assert "OneTimeListener" in repr_str
     assert "test_core" in repr_str
     assert "_listener" in repr_str
+
+
+async def test_async_add_import_executor_job(hass: HomeAssistant) -> None:
+    """Test async_add_import_executor_job works and is limited to one thread."""
+    evt = threading.Event()
+    loop = asyncio.get_running_loop()
+
+    def executor_func() -> None:
+        evt.set()
+        return evt
+
+    future = hass.async_add_import_executor_job(executor_func)
+    await loop.run_in_executor(None, evt.wait)
+    assert await future is evt
+
+    assert hass.import_executor._max_workers == 1

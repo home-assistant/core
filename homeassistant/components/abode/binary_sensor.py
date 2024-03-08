@@ -1,4 +1,5 @@
 """Support for Abode Security System binary sensors."""
+
 from __future__ import annotations
 
 from typing import cast

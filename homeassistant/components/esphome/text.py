@@ -1,4 +1,5 @@
 """Support for esphome texts."""
+
 from __future__ import annotations
 
 from aioesphomeapi import EntityInfo, TextInfo, TextMode as EsphomeTextMode, TextState

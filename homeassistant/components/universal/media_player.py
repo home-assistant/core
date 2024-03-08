@@ -1,4 +1,5 @@
 """Combination of multiple media players for a universal controller."""
+
 from __future__ import annotations
 
 from copy import copy

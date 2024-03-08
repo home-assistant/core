@@ -1,4 +1,5 @@
 """Support for tracking consumption over given periods of time."""
+
 from datetime import timedelta
 import logging
 

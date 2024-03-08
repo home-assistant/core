@@ -1,4 +1,5 @@
 """Base class for Ring entity."""
+
 from typing import TypeVar
 
 from ring_doorbell.generic import RingGeneric

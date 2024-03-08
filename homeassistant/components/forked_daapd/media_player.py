@@ -1,4 +1,5 @@
 """Support forked_daapd media player."""
+
 from __future__ import annotations
 
 import asyncio

@@ -41,13 +41,10 @@ async def async_setup_entry(
             f"Timeout while connecting for entry '{start} {destination}'"
         ) from e
     except OpendataTransportError as e:
-        _LOGGER.error(
-            "Setup failed for entry '%s %s', check at http://transport.opendata.ch/examples/stationboard.html if your station names are valid",
-            start,
-            destination,
-        )
         raise ConfigEntryError(
-            f"Setup failed for entry '{start} {destination}' with invalid data"
+            f"Setup failed for entry '{start} {destination}' with invalid data, check "
+            "at http://transport.opendata.ch/examples/stationboard.html if your "
+            "station names are valid"
         ) from e
 
     coordinator = SwissPublicTransportDataUpdateCoordinator(hass, opendata)

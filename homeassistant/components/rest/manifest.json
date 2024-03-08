@@ -3,6 +3,7 @@
   "name": "RESTful",
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/rest",
+  "import_executor": true,
   "iot_class": "local_polling",
   "requirements": ["jsonpath==0.82.2", "xmltodict==0.13.0"]
 }

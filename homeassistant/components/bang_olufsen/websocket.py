@@ -80,12 +80,12 @@ class BangOlufsenWebsocket(BangOlufsenBase):
 
     def on_connection(self) -> None:
         """Handle WebSocket connection made."""
-        _LOGGER.debug("Connected to the %s notification channel", self._name)
+        _LOGGER.debug("Connected to the %s notification channel", self.entry.title)
         self._update_connection_status()
 
     def on_connection_lost(self) -> None:
         """Handle WebSocket connection lost."""
-        _LOGGER.error("Lost connection to the %s", self._name)
+        _LOGGER.error("Lost connection to the %s", self.entry.title)
         self._update_connection_status()
 
     def on_notification_notification(

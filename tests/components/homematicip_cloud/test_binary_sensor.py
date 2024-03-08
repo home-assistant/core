@@ -1,4 +1,5 @@
 """Tests for HomematicIP Cloud binary sensor."""
+
 from homematicip.base.enums import SmokeDetectorAlarmType, WindowState
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN

@@ -1,4 +1,5 @@
 """Tests for ScreenLogic integration data processing."""
+
 from unittest.mock import DEFAULT, patch
 
 from screenlogicpy import ScreenLogicGateway

@@ -1,4 +1,5 @@
 """SQLAlchemy util functions."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Collection, Generator, Iterable, Sequence

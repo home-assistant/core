@@ -1,4 +1,5 @@
 """The test for the History Statistics sensor platform."""
+
 from datetime import datetime, timedelta
 from unittest.mock import patch
 

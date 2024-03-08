@@ -1,4 +1,5 @@
 """Sensor platform for Trafikverket Camera integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -42,13 +43,11 @@ SENSOR_TYPES: tuple[TVCameraSensorEntityDescription, ...] = (
         key="direction",
         translation_key="direction",
         native_unit_of_measurement=DEGREE,
-        icon="mdi:sign-direction",
         value_fn=lambda data: data.data.direction,
     ),
     TVCameraSensorEntityDescription(
         key="modified",
         translation_key="modified",
-        icon="mdi:camera-retake-outline",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: data.data.modified,
         entity_registry_enabled_default=False,
@@ -56,28 +55,24 @@ SENSOR_TYPES: tuple[TVCameraSensorEntityDescription, ...] = (
     TVCameraSensorEntityDescription(
         key="photo_time",
         translation_key="photo_time",
-        icon="mdi:camera-timer",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: data.data.phototime,
     ),
     TVCameraSensorEntityDescription(
         key="photo_url",
         translation_key="photo_url",
-        icon="mdi:camera-outline",
         value_fn=lambda data: data.data.photourl,
         entity_registry_enabled_default=False,
     ),
     TVCameraSensorEntityDescription(
         key="status",
         translation_key="status",
-        icon="mdi:camera-outline",
         value_fn=lambda data: data.data.status,
         entity_registry_enabled_default=False,
     ),
     TVCameraSensorEntityDescription(
         key="camera_type",
         translation_key="camera_type",
-        icon="mdi:camera-iris",
         value_fn=lambda data: data.data.camera_type,
         entity_registry_enabled_default=False,
     ),
