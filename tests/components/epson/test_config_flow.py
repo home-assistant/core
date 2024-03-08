@@ -1,4 +1,5 @@
 """Test the epson config flow."""
+
 from unittest.mock import patch
 
 from epson_projector.const import PWR_OFF_STATE

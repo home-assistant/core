@@ -1,4 +1,5 @@
 """Tests for the arcam_fmj component."""
+
 from unittest.mock import Mock, patch
 
 from arcam.fmj.client import Client

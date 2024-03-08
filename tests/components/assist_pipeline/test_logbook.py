@@ -1,4 +1,5 @@
 """The tests for assist_pipeline logbook."""
+
 from homeassistant.components import assist_pipeline, logbook
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant
