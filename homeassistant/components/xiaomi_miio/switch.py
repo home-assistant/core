@@ -1,4 +1,5 @@
 """Support for Xiaomi Smart WiFi Socket and Smart Power Strip."""
+
 from __future__ import annotations
 
 import asyncio

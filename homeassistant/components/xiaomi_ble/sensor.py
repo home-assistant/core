@@ -1,4 +1,5 @@
 """Support for xiaomi ble sensors."""
+
 from __future__ import annotations
 
 from xiaomi_ble import DeviceClass, SensorUpdate, Units
