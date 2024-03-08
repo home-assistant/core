@@ -1,11 +1,14 @@
 """Helper functions for qBittorrent."""
-from qbittorrent.client import Client
+import qbittorrentapi
 
 
-def setup_client(url: str, username: str, password: str, verify_ssl: bool) -> Client:
+def setup_client(
+    url: str, username: str, password: str, verify_ssl: bool
+) -> qbittorrentapi.Client:
     """Create a qBittorrent client."""
-    client = Client(url, verify=verify_ssl)
-    client.login(username, password)
-    # Get an arbitrary attribute to test if connection succeeds
-    client.get_alternative_speed_status()
+
+    client = qbittorrentapi.Client(
+        url, username=username, password=password, VERIFY_WEBUI_CERTIFICATE=verify_ssl
+    )
+    client.auth_log_in(username, password)
     return client

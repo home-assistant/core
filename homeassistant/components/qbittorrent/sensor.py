@@ -34,14 +34,15 @@ SENSOR_TYPE_INACTIVE_TORRENTS = "inactive_torrents"
 
 def get_state(coordinator: QBittorrentDataCoordinator) -> str:
     """Get current download/upload state."""
-    upload = coordinator.data["server_state"]["up_info_speed"]
-    download = coordinator.data["server_state"]["dl_info_speed"]
+    server_state = coordinator.data.get("server_state")
+    upload = server_state.get("up_info_speed", int)  # type: ignore[union-attr]
+    download = server_state.get("dl_info_speed", int)  # type: ignore[union-attr]
 
-    if upload > 0 and download > 0:
+    if upload > 0 and download > 0:  # type: ignore[operator]
         return STATE_UP_DOWN
-    if upload > 0 and download == 0:
+    if upload > 0 and download == 0:  # type: ignore[operator]
         return STATE_SEEDING
-    if upload == 0 and download > 0:
+    if upload == 0 and download > 0:  # type: ignore[operator]
         return STATE_DOWNLOADING
     return STATE_IDLE
 
@@ -70,7 +71,7 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
         value_fn=lambda coordinator: float(
-            coordinator.data["server_state"]["dl_info_speed"]
+            coordinator.data.get("server_state").get("dl_info_speed")  # type: ignore[arg-type, union-attr]
         ),
     ),
     QBittorrentSensorEntityDescription(
@@ -82,7 +83,7 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
         value_fn=lambda coordinator: float(
-            coordinator.data["server_state"]["up_info_speed"]
+            coordinator.data.get("server_state").get("up_info_speed")  # type: ignore[arg-type, union-attr]
         ),
     ),
     QBittorrentSensorEntityDescription(
@@ -166,16 +167,15 @@ def count_torrents_in_states(
 ) -> int:
     """Count the number of torrents in specified states."""
     # When torrents are not in the returned data, there are none, return 0.
-    if "torrents" not in coordinator.data:
+    try:
+        if not states:
+            return len(coordinator.data.get("torrents"))  # type: ignore[arg-type]
+        return len(
+            [
+                torrent
+                for torrent in coordinator.data.get("torrents").values()  # type: ignore[union-attr]
+                if torrent.get("state") in states  # type: ignore[operator, union-attr]
+            ]
+        )
+    except AttributeError:
         return 0
-
-    if not states:
-        return len(coordinator.data["torrents"])
-
-    return len(
-        [
-            torrent
-            for torrent in coordinator.data["torrents"].values()
-            if torrent["state"] in states
-        ]
-    )
