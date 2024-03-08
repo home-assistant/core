@@ -7,12 +7,12 @@ from typing import Any, Final
 
 from aioshelly.block_device import BlockDevice
 from aioshelly.common import ConnectionOptions, get_info
-from aioshelly.const import BLOCK_GENERATIONS, RPC_GENERATIONS
+from aioshelly.const import BLOCK_GENERATIONS, DEFAULT_HTTP_PORT, RPC_GENERATIONS
 from aioshelly.exceptions import (
+    CustomPortNotSupported,
     DeviceConnectionError,
     FirmwareUnsupported,
     InvalidAuthError,
-    WrongShellyGen,
 )
 from aioshelly.rpc_device import RpcDevice
 import voluptuous as vol
@@ -126,7 +126,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     MINOR_VERSION = 2
 
     host: str = ""
-    port: int = 80
+    port: int = DEFAULT_HTTP_PORT
     info: dict[str, Any] = {}
     device_info: dict[str, Any] = {}
     entry: ConfigEntry | None = None
@@ -161,8 +161,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                 except DeviceConnectionError:
                     errors["base"] = "cannot_connect"
-                except WrongShellyGen:
-                    errors["base"] = "wrong_shelly_gen"
+                except CustomPortNotSupported:
+                    errors["base"] = "custom_port_not_supported"
                 except Exception:  # pylint: disable=broad-except
                     LOGGER.exception("Unexpected exception")
                     errors["base"] = "unknown"
@@ -201,8 +201,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except DeviceConnectionError:
                 errors["base"] = "cannot_connect"
-            except WrongShellyGen:
-                errors["base"] = "wrong_shelly_gen"
+            except CustomPortNotSupported:
+                errors["base"] = "custom_port_not_supported"
             except Exception:  # pylint: disable=broad-except
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -266,9 +266,6 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         host = discovery_info.host
-        # Devices behind range extender doesn't generate zeroconf packets
-        # so port is always the default one
-        port = 80
         # First try to get the mac address from the name
         # so we can avoid making another connection to the
         # device if we already have it configured
@@ -276,7 +273,9 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             await self._async_discovered_mac(mac, host)
 
         try:
-            self.info = await self._async_get_info(host, port)
+            # Devices behind range extender doesn't generate zeroconf packets
+            # so port is always the default one
+            self.info = await self._async_get_info(host, DEFAULT_HTTP_PORT)
         except DeviceConnectionError:
             return self.async_abort(reason="cannot_connect")
         except FirmwareUnsupported:
@@ -353,7 +352,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         assert self.entry is not None
         host = self.entry.data[CONF_HOST]
-        port = self.entry.data.get(CONF_PORT, 80)
+        port = self.entry.data.get(CONF_PORT, DEFAULT_HTTP_PORT)
 
         if user_input is not None:
             try:

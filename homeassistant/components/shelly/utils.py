@@ -26,6 +26,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir, singleton
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
@@ -480,8 +481,11 @@ async def parse_host(input_host: str) -> tuple[str, int]:
 
     if ":" in input_host:
         splited: list = input_host.split(":")
-        host = splited[0]
-        port = int(splited[1])
+        try:
+            host = splited[0]
+            port = int(splited[1])
+        except ValueError as ex:
+            raise HomeAssistantError("Syntax error") from ex
     else:
         host = input_host
         port = 80
