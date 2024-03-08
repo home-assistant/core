@@ -1,4 +1,5 @@
 """Support for displaying IPs banned by fail2ban."""
+
 from __future__ import annotations
 
 from datetime import timedelta
