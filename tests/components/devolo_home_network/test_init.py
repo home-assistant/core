@@ -1,4 +1,5 @@
 """Test the devolo Home Network integration setup."""
+
 from unittest.mock import patch
 
 from devolo_plc_api.exceptions.device import DeviceNotFound
