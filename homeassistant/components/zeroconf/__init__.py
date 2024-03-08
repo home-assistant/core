@@ -419,7 +419,6 @@ class ZeroconfDiscovery:
                     zeroconf, async_service_info, service_type, name
                 ),
                 name=f"zeroconf lookup {name}.{service_type}",
-                eager_start=True,
             )
 
     async def _async_lookup_and_process_service_update(
