@@ -1,4 +1,5 @@
 """Support for Buienradar.nl weather service."""
+
 from __future__ import annotations
 
 import logging

@@ -1,4 +1,5 @@
 """Adds config flow for AccuWeather."""
+
 from __future__ import annotations
 
 from asyncio import timeout

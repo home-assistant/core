@@ -1,4 +1,5 @@
 """Support for Aseko Pool Live sensors."""
+
 from __future__ import annotations
 
 from aioaseko import Unit, Variable
