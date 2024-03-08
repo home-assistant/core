@@ -1,4 +1,5 @@
 """Tests for the Velbus component initialisation."""
+
 from unittest.mock import patch
 
 import pytest

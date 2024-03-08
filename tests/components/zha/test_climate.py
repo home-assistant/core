@@ -1,4 +1,5 @@
 """Test ZHA climate."""
+
 from typing import Literal
 from unittest.mock import call, patch
 

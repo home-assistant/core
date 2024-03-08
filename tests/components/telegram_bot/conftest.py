@@ -1,4 +1,5 @@
 """Tests for the telegram_bot integration."""
+
 from unittest.mock import patch
 
 import pytest

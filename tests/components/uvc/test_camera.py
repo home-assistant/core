@@ -1,4 +1,5 @@
 """The tests for UVC camera module."""
+
 from datetime import UTC, datetime, timedelta
 from unittest.mock import call, patch
 
