@@ -1,4 +1,5 @@
 """Tests for the Smappee component init module."""
+
 from unittest.mock import patch
 
 from homeassistant.components.smappee.const import DOMAIN

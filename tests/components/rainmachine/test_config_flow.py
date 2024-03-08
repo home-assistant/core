@@ -1,4 +1,5 @@
 """Define tests for the OpenUV config flow."""
+
 from ipaddress import ip_address
 from unittest.mock import patch
 
