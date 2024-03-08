@@ -75,7 +75,9 @@ async def async_forward_entry_setup_and_setup_discovery(
     if new_platforms:
         tasks.append(
             create_eager_task(
-                hass.config_entries.async_forward_entry_setups(config_entry, platforms)
+                hass.config_entries.async_forward_entry_setups(
+                    config_entry, new_platforms
+                )
             )
         )
     if not tasks:
