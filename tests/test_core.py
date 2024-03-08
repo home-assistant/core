@@ -242,13 +242,12 @@ async def test_async_run_eager_hass_job_calls_callback() -> None:
 async def test_async_run_eager_hass_job_calls_coro_function() -> None:
     """Test running coros from async_run_hass_job with eager_start."""
     hass = MagicMock()
-    calls = []
 
     async def job():
-        calls.append(1)
+        pass
 
-    await ha.HomeAssistant.async_run_hass_job(hass, ha.HassJob(job), eager_start=True)
-    assert len(calls) == 1
+    ha.HomeAssistant.async_run_hass_job(hass, ha.HassJob(job), eager_start=True)
+    assert len(hass.async_add_hass_job.mock_calls) == 1
 
 
 async def test_async_run_hass_job_calls_callback() -> None:
