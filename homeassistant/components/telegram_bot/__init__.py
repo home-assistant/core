@@ -38,7 +38,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import TemplateError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_loaded_integration
 
@@ -366,7 +366,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     for p_config in domain_config:
         # Each platform config gets its own bot
-        bot = initialize_bot(p_config)
+        bot = initialize_bot(p_config, hass)
         p_type: str = p_config[CONF_PLATFORM]
 
         platform = platforms[p_type]
@@ -456,7 +456,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-def initialize_bot(p_config):
+def initialize_bot(p_config, hass):
     """Initialize telegram bot with proxy support."""
     api_key = p_config.get(CONF_API_KEY)
     proxy_url = p_config.get(CONF_PROXY_URL)
@@ -471,6 +471,27 @@ def initialize_bot(p_config):
             # Auth can actually be stuffed into the URL, but the docs have previously
             # indicated to put them here.
             auth = proxy_params.pop("username"), proxy_params.pop("password")
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                "proxy_params_auth_deprecation",
+                breaks_in_ha_version="2024.6.0",
+                is_persistent=False,
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="proxy_params_auth_deprecation",
+            )
+        else:
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                "proxy_params_deprecation",
+                breaks_in_ha_version="2024.6.0",
+                is_persistent=False,
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="proxy_params_deprecation",
+            )
         proxy = httpx.Proxy(proxy_url, auth=auth, **proxy_params)
         request = HTTPXRequest(connection_pool_size=8, proxy=proxy)
     else:
