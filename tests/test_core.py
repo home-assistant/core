@@ -223,6 +223,47 @@ async def test_async_create_task_schedule_coroutine_with_name() -> None:
     assert "named task" in str(task)
 
 
+async def test_async_run_periodic_hass_job_calls_callback() -> None:
+    """Test that the callback annotation is respected."""
+    hass = MagicMock()
+    calls = []
+
+    def job():
+        asyncio.get_running_loop()  # ensure we are in the event loop
+        calls.append(1)
+
+    ha.HomeAssistant.async_run_periodic_hass_job(hass, ha.HassJob(ha.callback(job)))
+    assert len(calls) == 1
+
+
+async def test_async_run_periodic_hass_job_calls_coro_function() -> None:
+    """Test running coros from async_run_periodic_hass_job."""
+    hass = MagicMock()
+    calls = []
+
+    async def job():
+        calls.append(1)
+
+    await ha.HomeAssistant.async_run_periodic_hass_job(hass, ha.HassJob(job))
+    assert len(calls) == 1
+
+
+async def test_async_run_periodic_hass_job_calls_executor_function() -> None:
+    """Test running in the executor from async_run_periodic_hass_job."""
+    hass = MagicMock()
+    hass.loop = asyncio.get_running_loop()
+    calls = []
+
+    def job():
+        try:
+            asyncio.get_running_loop()  # ensure we are not in the event loop
+        except RuntimeError:
+            calls.append(1)
+
+    await ha.HomeAssistant.async_run_periodic_hass_job(hass, ha.HassJob(job))
+    assert len(calls) == 1
+
+
 async def test_async_run_hass_job_calls_callback() -> None:
     """Test that the callback annotation is respected."""
     hass = MagicMock()
@@ -2646,6 +2687,27 @@ async def test_background_task(hass: HomeAssistant, eager_start: bool) -> None:
             raise
 
     task = hass.async_create_background_task(
+        test_task(), "happy task", eager_start=eager_start
+    )
+    assert "happy task" in str(task)
+    await asyncio.sleep(0)
+    await hass.async_stop()
+    assert result.result() == ha.CoreState.stopping
+
+
+@pytest.mark.parametrize("eager_start", (True, False))
+async def test_periodic_task(hass: HomeAssistant, eager_start: bool) -> None:
+    """Test periodic tasks being quit."""
+    result = asyncio.Future()
+
+    async def test_task():
+        try:
+            await asyncio.sleep(1)
+        except asyncio.CancelledError:
+            result.set_result(hass.state)
+            raise
+
+    task = hass.async_create_periodic_task(
         test_task(), "happy task", eager_start=eager_start
     )
     assert "happy task" in str(task)
