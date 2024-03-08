@@ -48,16 +48,16 @@ async def test_configuring_tplink_causes_discovery(hass: HomeAssistant) -> None:
     ):
         discover.return_value = {MagicMock(): MagicMock()}
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         call_count = len(discover.mock_calls)
         assert discover.mock_calls
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=15))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert len(discover.mock_calls) == call_count * 2
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=30))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert len(discover.mock_calls) == call_count * 3
 
 
