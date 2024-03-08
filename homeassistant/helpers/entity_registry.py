@@ -52,6 +52,7 @@ from homeassistant.util.read_only_dict import ReadOnlyDict
 from . import device_registry as dr, storage
 from .device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes
+from .registry import BaseRegistry
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
@@ -61,7 +62,7 @@ T = TypeVar("T")
 
 DATA_REGISTRY = "entity_registry"
 EVENT_ENTITY_REGISTRY_UPDATED = "entity_registry_updated"
-SAVE_DELAY = 10
+
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION_MAJOR = 1
@@ -549,7 +550,7 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
         return [data[key] for key in self._area_id_index.get(area_id, ())]
 
 
-class EntityRegistry:
+class EntityRegistry(BaseRegistry):
     """Class to hold a registry of entities."""
 
     deleted_entities: dict[tuple[str, str, str], DeletedRegistryEntry]
@@ -1181,11 +1182,6 @@ class EntityRegistry:
         self.deleted_entities = deleted_entities
         self.entities = entities
         self._entities_data = entities.data
-
-    @callback
-    def async_schedule_save(self) -> None:
-        """Schedule saving the entity registry."""
-        self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
     @callback
     def _data_to_save(self) -> dict[str, Any]:
