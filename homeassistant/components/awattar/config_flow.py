@@ -35,7 +35,7 @@ class AwattarFlowHandler(ConfigFlow, domain=DOMAIN):
 
         user_schema = vol.Schema(
             {
-                vol.Optional(
+                vol.Required(
                     CONF_COUNTRY, default=self.hass.config.country
                 ): CountrySelector(
                     CountrySelectorConfig(
