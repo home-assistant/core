@@ -115,7 +115,7 @@ def async_setup(hass: core.HomeAssistant) -> None:
         async_should_expose(hass, DOMAIN, entity_id)
 
     @core.callback
-    def async_entity_state_listener(event: EventType[EventStateChangedData]) -> None:
+    def async_entity_state_listener(event: core.Event[EventStateChangedData]) -> None:
         """Set expose flag on new entities."""
         async_should_expose(hass, DOMAIN, event.data["entity_id"])
 
@@ -714,7 +714,7 @@ class DefaultAgent(AbstractConversationAgent):
 
     @core.callback
     def _async_handle_state_changed(
-        self, event: EventType[EventStateChangedData]
+        self, event: core.Event[EventStateChangedData]
     ) -> None:
         """Clear names list cache when a state is added or removed from the state machine."""
         if event.data["old_state"] and event.data["new_state"]:
