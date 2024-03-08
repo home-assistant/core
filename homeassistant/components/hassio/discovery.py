@@ -1,4 +1,5 @@
 """Implement the services discovery feature from Hass.io for Add-ons."""
+
 from __future__ import annotations
 
 import asyncio

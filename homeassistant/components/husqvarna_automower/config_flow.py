@@ -1,4 +1,5 @@
 """Config flow to add the integration via the UI."""
+
 from collections.abc import Mapping
 import logging
 from typing import Any

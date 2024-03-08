@@ -1,4 +1,5 @@
 """Provides functionality to interact with image processing services."""
+
 from __future__ import annotations
 
 import asyncio

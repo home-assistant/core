@@ -1,4 +1,5 @@
 """InfluxDB component which allows you to get data from an Influx database."""
+
 from __future__ import annotations
 
 import datetime

@@ -1,4 +1,5 @@
 """Provide the functionality to group entities."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
