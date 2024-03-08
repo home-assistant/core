@@ -508,8 +508,6 @@ filterwarnings = [
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:miio.miioprotocol",
     # https://github.com/hunterjm/python-onvif-zeep-async/pull/51 - >3.1.12
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:onvif.client",
-    # Fixed upstream in python-telegram-bot - >=20.0
-    "ignore:python-telegram-bot is using upstream urllib3:UserWarning:telegram.utils.request",
     # https://github.com/xeniter/romy/pull/1 - >0.0.7
     "ignore:with timeout\\(\\) is deprecated, use async with timeout\\(\\) instead:DeprecationWarning:romy.utils",
     # https://github.com/grahamwetzler/smart-meter-texas/pull/143 - >0.5.3
