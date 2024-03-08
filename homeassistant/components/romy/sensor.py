@@ -1,21 +1,84 @@
 """Sensor checking adc and status values from your ROMY."""
 
+from dataclasses import dataclass
+
 from romy import RomyRobot
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    AREA_SQUARE_METERS,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfLength,
+    UnitOfTime,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 from .coordinator import RomyVacuumCoordinator
+
+
+@dataclass(frozen=True)
+class RomySensorEntityDescription(SensorEntityDescription):
+    """Immutable class for describing Romy data."""
+
+
+SENSORS: list[RomySensorEntityDescription] = [
+    RomySensorEntityDescription(
+        key="battery_level",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RomySensorEntityDescription(
+        key="rssi",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RomySensorEntityDescription(
+        key="dustbin_sensor",
+        translation_key="dustbin_sensor",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RomySensorEntityDescription(
+        key="total_cleaning_time",
+        translation_key="total_cleaning_time",
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RomySensorEntityDescription(
+        key="total_number_of_cleaning_runs",
+        translation_key="total_number_of_cleaning_runs",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="Cleaning Runs",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RomySensorEntityDescription(
+        key="total_area_cleaned",
+        translation_key="total_area_cleaned",
+        native_unit_of_measurement=AREA_SQUARE_METERS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RomySensorEntityDescription(
+        key="total_distance_driven",
+        translation_key="total_distance_driven",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfLength.METERS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+]
 
 
 async def async_setup_entry(
@@ -27,54 +90,23 @@ async def async_setup_entry(
 
     coordinator: RomyVacuumCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    romy_status_sensor_entitiy_battery = RomyStatusSensor(
-        coordinator,
-        coordinator.romy,
-        SensorDeviceClass.BATTERY,
-        "Battery Level",
-        "battery_level",
-        PERCENTAGE,
-    )
-    romy_status_sensor_entitiy_rssi = RomyStatusSensor(
-        coordinator,
-        coordinator.romy,
-        SensorDeviceClass.SIGNAL_STRENGTH,
-        "RSSI Level",
-        "rssi",
-        SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    async_add_entities(
+        RomySensor(coordinator, coordinator.romy, entity_description)
+        for entity_description in SENSORS
+        if entity_description.key in coordinator.romy.sensors
     )
 
-    # add status sensors
-    romy_status_sensor_entities = [
-        romy_status_sensor_entitiy_battery,
-        romy_status_sensor_entitiy_rssi,
-    ]
-    async_add_entities(romy_status_sensor_entities, True)
 
-    adc_sensor_entities = []
-    romy_adc_sensor_entitiy_dustbin_full = RomyAdcSensor(
-        coordinator, coordinator.romy, "Dustbin Full Level", "dustbin_sensor"
-    )
+class RomySensor(CoordinatorEntity[RomyVacuumCoordinator], SensorEntity):
+    """RomySensor Class."""
 
-    # add dustbin sensor if present
-    if "dustbin_sensor" in coordinator.romy.adc_sensors:
-        LOGGER.info("Dustbin Sensor found for ROMY %s", coordinator.romy.unique_id)
-        adc_sensor_entities.append(romy_adc_sensor_entitiy_dustbin_full)
-
-    async_add_entities(adc_sensor_entities, True)
-
-
-class RomyStatusSensor(CoordinatorEntity[RomyVacuumCoordinator], SensorEntity):
-    """RomyStatusSensor Class."""
+    entity_description: RomySensorEntityDescription
 
     def __init__(
         self,
         coordinator: RomyVacuumCoordinator,
         romy: RomyRobot,
-        device_class: SensorDeviceClass,
-        sensor_name: str,
-        sensor_descriptor: str,
-        measurement_unit: str,
+        entity_description: RomySensorEntityDescription,
     ) -> None:
         """Initialize ROMYs StatusSensor."""
         self._sensor_value: int | None = None
@@ -87,80 +119,20 @@ class RomyStatusSensor(CoordinatorEntity[RomyVacuumCoordinator], SensorEntity):
             name=romy.name,
             model=romy.model,
         )
-        self._device_class = device_class
-        self._sensor_name = sensor_name
-        self._sensor_descriptor = sensor_descriptor
-        self._measurement_unit = measurement_unit
+        self.entity_description = entity_description
 
     @property
     def unique_id(self) -> str:
         """Return the ID of this sensor."""
-        return f"{self._sensor_descriptor}_{self._attr_unique_id}"
+        return f"{self.entity_description.key}_{self._attr_unique_id}"
 
-    @property
-    def device_class(self) -> SensorDeviceClass:
-        """Return the device class of the sensor."""
-        return self._device_class
-
-    @property
-    def entity_category(self) -> EntityCategory:
-        """Device entity category."""
-        return EntityCategory.DIAGNOSTIC
-
-    @property
-    def native_unit_of_measurement(self) -> str:
-        """Return the unit_of_measurement of the device."""
-        return self._measurement_unit
-
-    async def async_update(self) -> None:
-        """Fetch the sensor value from the device."""
-        self._sensor_value = self.romy.sensors[self._sensor_descriptor]
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._sensor_value = self.romy.sensors[self.entity_description.key]
+        self.async_write_ha_state()
 
     @property
     def native_value(self) -> int | None:
         """Return the value of the sensor."""
-        return self._sensor_value
-
-
-class RomyAdcSensor(CoordinatorEntity[RomyVacuumCoordinator], SensorEntity):
-    """RomyAdcSensor Class."""
-
-    def __init__(
-        self,
-        coordinator: RomyVacuumCoordinator,
-        romy: RomyRobot,
-        sensor_name: str,
-        sensor_descriptor: str,
-    ) -> None:
-        """Initialize ROMYs DustbinFullSensor."""
-        self._sensor_value: int | None = None
-        super().__init__(coordinator)
-        self.romy = romy
-        self._attr_unique_id = self.romy.unique_id
-        self._device_info = DeviceInfo(
-            identifiers={(DOMAIN, romy.unique_id)},
-            manufacturer="ROMY",
-            name=romy.name,
-            model=romy.model,
-        )
-        self._sensor_name = sensor_name
-        self._sensor_descriptor = sensor_descriptor
-
-    @property
-    def unique_id(self) -> str:
-        """Return the ID of this sensor."""
-        return f"{self._sensor_descriptor}_{self._attr_unique_id}"
-
-    @property
-    def entity_category(self) -> EntityCategory:
-        """Device entity category."""
-        return EntityCategory.DIAGNOSTIC
-
-    async def async_update(self) -> None:
-        """Fetch adc value from the device."""
-        self._sensor_value = self.romy.adc_sensors[self._sensor_descriptor]
-
-    @property
-    def native_value(self) -> int | None:
-        """Return the adc value of the sensor."""
         return self._sensor_value
