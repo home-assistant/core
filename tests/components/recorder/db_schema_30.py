@@ -3,6 +3,7 @@
 This file contains the model definitions for schema version 30.
 It is used to test the schema migration logic.
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable

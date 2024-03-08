@@ -1,4 +1,5 @@
 """The tests for the REST sensor platform."""
+
 from http import HTTPStatus
 import ssl
 from unittest.mock import AsyncMock, MagicMock, patch
