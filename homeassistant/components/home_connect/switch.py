@@ -1,4 +1,5 @@
 """Provides a switch for Home Connect."""
+
 import logging
 from typing import Any
 

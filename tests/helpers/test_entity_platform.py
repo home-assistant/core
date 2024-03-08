@@ -1,4 +1,5 @@
 """Tests for the EntityPlatform helper."""
+
 import asyncio
 from collections.abc import Iterable
 from datetime import timedelta
@@ -200,7 +201,7 @@ async def test_set_scan_interval_via_platform(
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    component.setup({DOMAIN: {"platform": "platform"}})
+    await component.async_setup({DOMAIN: {"platform": "platform"}})
 
     await hass.async_block_till_done()
     assert mock_track.called

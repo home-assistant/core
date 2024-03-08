@@ -1,4 +1,5 @@
 """Support for the Nettigo Air Monitor service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

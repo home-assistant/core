@@ -3,6 +3,7 @@
 The v23 schema used for these tests has been slightly modified to add the
 EventData table to allow the recorder to startup successfully.
 """
+
 from functools import partial
 import importlib
 import json

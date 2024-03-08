@@ -1,4 +1,5 @@
 """Config flow for solarlog integration."""
+
 import logging
 from urllib.parse import ParseResult, urlparse
 

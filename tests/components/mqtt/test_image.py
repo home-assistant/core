@@ -1,4 +1,5 @@
 """The tests for mqtt image component."""
+
 from base64 import b64encode
 from http import HTTPStatus
 import json

@@ -1,4 +1,5 @@
 """Support for Axis camera streaming."""
+
 from urllib.parse import urlencode
 
 from homeassistant.components.camera import CameraEntityFeature

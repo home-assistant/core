@@ -1,4 +1,5 @@
 """Representation of Plex updates."""
+
 import logging
 from typing import Any
 

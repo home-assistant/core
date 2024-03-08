@@ -1,4 +1,5 @@
 """Elmax sensor platform."""
+
 from __future__ import annotations
 
 from elmax_api.model.panel import PanelStatus

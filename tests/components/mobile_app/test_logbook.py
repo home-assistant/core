@@ -1,4 +1,5 @@
 """The tests for mobile_app logbook."""
+
 from homeassistant.components.mobile_app.logbook import (
     DOMAIN,
     IOS_EVENT_ZONE_ENTERED,

@@ -1,4 +1,5 @@
 """Tests for samsungtv component."""
+
 from copy import deepcopy
 from datetime import datetime, timedelta
 import logging

@@ -1,4 +1,5 @@
 """Test the helper method for writing tests."""
+
 from __future__ import annotations
 
 import asyncio
@@ -15,7 +16,7 @@ import os
 import pathlib
 import threading
 import time
-from types import ModuleType
+from types import FrameType, ModuleType
 from typing import Any, NoReturn, TypeVar
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -1074,9 +1075,9 @@ def assert_setup_component(count, domain=None):
         yield config
 
     if domain is None:
-        assert len(config) == 1, "assert_setup_component requires DOMAIN: {}".format(
-            list(config.keys())
-        )
+        assert (
+            len(config) == 1
+        ), f"assert_setup_component requires DOMAIN: {list(config.keys())}"
         domain = list(config.keys())[0]
 
     res = config.get(domain)
@@ -1596,3 +1597,20 @@ def help_test_all(module: ModuleType) -> None:
     assert set(module.__all__) == {
         itm for itm in module.__dir__() if not itm.startswith("_")
     }
+
+
+def extract_stack_to_frame(extract_stack: list[Mock]) -> FrameType:
+    """Convert an extract stack to a frame list."""
+    stack = list(extract_stack)
+    for frame in stack:
+        frame.f_back = None
+        frame.f_code.co_filename = frame.filename
+        frame.f_lineno = int(frame.lineno)
+
+    top_frame = stack.pop()
+    current_frame = top_frame
+    while stack and (next_frame := stack.pop()):
+        current_frame.f_back = next_frame
+        current_frame = next_frame
+
+    return top_frame

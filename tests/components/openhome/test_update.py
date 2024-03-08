@@ -1,4 +1,5 @@
 """Tests for the Openhome update platform."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest

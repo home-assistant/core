@@ -1,4 +1,5 @@
 """The tests for the State vacuum Mqtt platform."""
+
 from copy import deepcopy
 import json
 from typing import Any

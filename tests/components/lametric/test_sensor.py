@@ -1,4 +1,5 @@
 """Tests for the LaMetric sensor platform."""
+
 import pytest
 
 from homeassistant.components.lametric.const import DOMAIN

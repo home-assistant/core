@@ -1,4 +1,5 @@
 """Test Govee light local config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from govee_local_api import GoveeDevice

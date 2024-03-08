@@ -2,6 +2,7 @@
 
 Support for restarting UniFi devices.
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine

@@ -1,4 +1,5 @@
 """The test for the HERE Travel Time sensor platform."""
+
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 

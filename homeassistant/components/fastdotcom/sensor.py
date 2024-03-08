@@ -1,4 +1,5 @@
 """Support for Fast.com internet speed testing sensor."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import (

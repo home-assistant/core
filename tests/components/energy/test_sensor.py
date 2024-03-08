@@ -1,4 +1,5 @@
 """Test the Energy sensors."""
+
 import copy
 from datetime import timedelta
 from typing import Any

@@ -1,4 +1,5 @@
 """Support for Homekit select entities."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

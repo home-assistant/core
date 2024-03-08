@@ -1,4 +1,5 @@
 """Sensor platform for Sensibo integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping

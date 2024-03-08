@@ -1,4 +1,5 @@
 """Test the Fully Kiosk Browser number entities."""
+
 from unittest.mock import MagicMock
 
 from homeassistant.components.fully_kiosk.const import DOMAIN, UPDATE_INTERVAL

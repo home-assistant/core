@@ -1,4 +1,5 @@
 """Constants for the Vizio integration tests."""
+
 from ipaddress import ip_address
 
 from homeassistant.components import zeroconf

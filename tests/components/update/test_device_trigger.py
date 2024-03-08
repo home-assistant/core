@@ -1,4 +1,5 @@
 """The test for update device automation."""
+
 from datetime import timedelta
 
 import pytest

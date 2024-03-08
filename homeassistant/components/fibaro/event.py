@@ -1,4 +1,5 @@
 """Support for Fibaro event entities."""
+
 from __future__ import annotations
 
 from pyfibaro.fibaro_device import DeviceModel, SceneEvent

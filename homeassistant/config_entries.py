@@ -1,4 +1,5 @@
 """Manage config entries in Home Assistant."""
+
 from __future__ import annotations
 
 import asyncio
@@ -17,6 +18,7 @@ from contextvars import ContextVar
 from copy import deepcopy
 from enum import Enum, StrEnum
 import functools
+from itertools import chain
 import logging
 from random import randint
 from types import MappingProxyType
@@ -377,6 +379,7 @@ class ConfigEntry:
 
         self._tasks: set[asyncio.Future[Any]] = set()
         self._background_tasks: set[asyncio.Future[Any]] = set()
+        self._periodic_tasks: set[asyncio.Future[Any]] = set()
 
         self._integration_for_domain: loader.Integration | None = None
         self._tries = 0
@@ -854,15 +857,15 @@ class ConfigEntry:
                 if job := self._on_unload.pop()():
                     self.async_create_task(hass, job)
 
-        if not self._tasks and not self._background_tasks:
+        if not self._tasks and not self._background_tasks and not self._periodic_tasks:
             return
 
         cancel_message = f"Config entry {self.title} with {self.domain} unloading"
-        for task in self._background_tasks:
+        for task in chain(self._background_tasks, self._periodic_tasks):
             task.cancel(cancel_message)
 
         _, pending = await asyncio.wait(
-            [*self._tasks, *self._background_tasks], timeout=10
+            [*self._tasks, *self._background_tasks, *self._periodic_tasks], timeout=10
         )
 
         for task in pending:
@@ -1026,13 +1029,48 @@ class ConfigEntry:
 
         Background tasks are automatically canceled when config entry is unloaded.
 
-        target: target to call.
+        A background task is different from a normal task:
+
+          - Will not block startup
+          - Will be automatically cancelled on shutdown
+          - Calls to async_block_till_done will not wait for completion
+
+        This method must be run in the event loop.
         """
         task = hass.async_create_background_task(target, name, eager_start)
         if task.done():
             return task
         self._background_tasks.add(task)
         task.add_done_callback(self._background_tasks.remove)
+        return task
+
+    @callback
+    def async_create_periodic_task(
+        self,
+        hass: HomeAssistant,
+        target: Coroutine[Any, Any, _R],
+        name: str,
+        eager_start: bool = False,
+    ) -> asyncio.Task[_R]:
+        """Create a periodic task tied to the config entry lifecycle.
+
+        Periodic tasks are automatically canceled when config entry is unloaded.
+
+        This type of task is typically used for polling.
+
+        A periodic task is different from a normal task:
+
+          - Will not block startup
+          - Will be automatically cancelled on shutdown
+          - Calls to async_block_till_done will wait for completion by default
+
+        This method must be run in the event loop.
+        """
+        task = hass.async_create_periodic_task(target, name, eager_start)
+        if task.done():
+            return task
+        self._periodic_tasks.add(task)
+        task.add_done_callback(self._periodic_tasks.remove)
         return task
 
 
@@ -1045,7 +1083,7 @@ class FlowCancelledError(Exception):
     """Error to indicate that a flow has been cancelled."""
 
 
-class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
+class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult, str]):
     """Manage all the config entry flows that are in progress."""
 
     _flow_result = ConfigFlowResult
@@ -1171,7 +1209,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
 
     async def async_finish_flow(
         self,
-        flow: data_entry_flow.FlowHandler[ConfigFlowResult],
+        flow: data_entry_flow.FlowHandler[ConfigFlowResult, str],
         result: ConfigFlowResult,
     ) -> ConfigFlowResult:
         """Finish a config flow and add an entry."""
@@ -1293,7 +1331,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
 
     async def async_post_init(
         self,
-        flow: data_entry_flow.FlowHandler[ConfigFlowResult],
+        flow: data_entry_flow.FlowHandler[ConfigFlowResult, str],
         result: ConfigFlowResult,
     ) -> None:
         """After a flow is initialised trigger new flow notifications."""
@@ -1940,7 +1978,7 @@ def _async_abort_entries_match(
             raise data_entry_flow.AbortFlow("already_configured")
 
 
-class ConfigEntryBaseFlow(data_entry_flow.FlowHandler[ConfigFlowResult]):
+class ConfigEntryBaseFlow(data_entry_flow.FlowHandler[ConfigFlowResult, str]):
     """Base class for config and option flows."""
 
     _flow_result = ConfigFlowResult
@@ -2292,7 +2330,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         return self.async_abort(reason=reason)
 
 
-class OptionsFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
+class OptionsFlowManager(data_entry_flow.FlowManager[ConfigFlowResult, str]):
     """Flow to set options for a configuration entry."""
 
     _flow_result = ConfigFlowResult
@@ -2322,7 +2360,7 @@ class OptionsFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
 
     async def async_finish_flow(
         self,
-        flow: data_entry_flow.FlowHandler[ConfigFlowResult],
+        flow: data_entry_flow.FlowHandler[ConfigFlowResult, str],
         result: ConfigFlowResult,
     ) -> ConfigFlowResult:
         """Finish an options flow and update options for configuration entry.
@@ -2344,7 +2382,7 @@ class OptionsFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         return result
 
     async def _async_setup_preview(
-        self, flow: data_entry_flow.FlowHandler[ConfigFlowResult]
+        self, flow: data_entry_flow.FlowHandler[ConfigFlowResult, str]
     ) -> None:
         """Set up preview for an option flow handler."""
         entry = self._async_get_config_entry(flow.handler)

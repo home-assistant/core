@@ -1,4 +1,5 @@
 """An abstract class for entities."""
+
 from __future__ import annotations
 
 from abc import ABCMeta
@@ -46,6 +47,8 @@ from homeassistant.const import (
 from homeassistant.core import (
     CALLBACK_TYPE,
     Context,
+    Event,
+    HassJobType,
     HomeAssistant,
     callback,
     get_release_channel,
@@ -65,7 +68,7 @@ from .event import (
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
 )
-from .typing import UNDEFINED, EventType, StateType, UndefinedType
+from .typing import UNDEFINED, StateType, UndefinedType
 
 if TYPE_CHECKING:
     from functools import cached_property
@@ -1430,7 +1433,10 @@ class Entity(
 
             self.async_on_remove(
                 async_track_entity_registry_updated_event(
-                    self.hass, self.entity_id, self._async_registry_updated
+                    self.hass,
+                    self.entity_id,
+                    self._async_registry_updated,
+                    job_type=HassJobType.Callback,
                 )
             )
             self._async_subscribe_device_updates()
@@ -1449,7 +1455,7 @@ class Entity(
 
     @callback
     def _async_registry_updated(
-        self, event: EventType[er.EventEntityRegistryUpdatedData]
+        self, event: Event[er.EventEntityRegistryUpdatedData]
     ) -> None:
         """Handle entity registry update."""
         action = event.data["action"]
@@ -1461,7 +1467,7 @@ class Entity(
             )
 
     async def _async_process_registry_update_or_remove(
-        self, event: EventType[er.EventEntityRegistryUpdatedData]
+        self, event: Event[er.EventEntityRegistryUpdatedData]
     ) -> None:
         """Handle entity registry update or remove."""
         data = event.data
@@ -1514,7 +1520,7 @@ class Entity(
 
     @callback
     def _async_device_registry_updated(
-        self, event: EventType[EventDeviceRegistryUpdatedData]
+        self, event: Event[EventDeviceRegistryUpdatedData]
     ) -> None:
         """Handle device registry update."""
         data = event.data
@@ -1545,6 +1551,7 @@ class Entity(
             self.hass,
             device_id,
             self._async_device_registry_updated,
+            job_type=HassJobType.Callback,
         )
         if (
             not self._on_remove

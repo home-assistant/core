@@ -1,4 +1,5 @@
 """Test the National Weather Service (NWS) config flow."""
+
 from unittest.mock import patch
 
 import aiohttp

@@ -1,4 +1,5 @@
 """System Bridge Media Source Implementation."""
+
 from __future__ import annotations
 
 from systembridgemodels.media_directories import MediaDirectory
