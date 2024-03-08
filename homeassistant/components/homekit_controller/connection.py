@@ -339,8 +339,11 @@ class HKDevice:
     @callback
     def _async_schedule_update(self, now: datetime) -> None:
         """Schedule an update."""
-        self.hass.async_create_task(
-            self._debounced_update.async_call(), eager_start=True
+        self.config_entry.async_create_background_task(
+            self.hass,
+            self._debounced_update.async_call(),
+            name=f"hkc {self.unique_id} alive poll",
+            eager_start=True,
         )
 
     async def async_add_new_entities(self) -> None:
@@ -692,8 +695,8 @@ class HKDevice:
 
     def process_config_changed(self, config_num: int) -> None:
         """Handle a config change notification from the pairing."""
-        self.hass.async_create_task(
-            self.async_update_new_accessories_state(), eager_start=True
+        self.config_entry.async_create_task(
+            self.hass, self.async_update_new_accessories_state(), eager_start=True
         )
 
     async def async_update_new_accessories_state(self) -> None:
