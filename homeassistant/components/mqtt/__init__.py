@@ -413,18 +413,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     translation_placeholders=ex.translation_placeholders,
                 ) from ex
 
+            new_config: list[ConfigType] = config_yaml.get(DOMAIN, [])
+            platforms_used = platforms_from_config(new_config)
+            new_platforms = platforms_used - mqtt_data.platforms_loaded
+            await async_forward_entry_setup_and_setup_discovery(
+                hass, entry, new_platforms
+            )
             # Check the schema before continuing reload
             await async_check_config_schema(hass, config_yaml)
 
             # Remove repair issues
             _async_remove_mqtt_issues(hass, mqtt_data)
 
-            mqtt_data.config = config_yaml.get(DOMAIN, {})
-            platforms_used = platforms_from_config(mqtt_data.config)
-            new_platforms = mqtt_data.platforms_loaded - platforms_used
-            await async_forward_entry_setup_and_setup_discovery(
-                hass, entry, new_platforms
-            )
+            mqtt_data.config = new_config
 
             # Reload the modern yaml platforms
             mqtt_platforms = async_get_platforms(hass, DOMAIN)

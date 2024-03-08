@@ -4045,3 +4045,56 @@ async def test_reload_with_empty_config(
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.test") is None
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            "mqtt": [
+                {
+                    "sensor": {
+                        "name": "test",
+                        "state_topic": "test-topic",
+                    }
+                },
+            ]
+        }
+    ],
+)
+async def test_reload_with_new_platform_config(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test reloading yaml with new platform config."""
+    await mqtt_mock_entry()
+    assert hass.states.get("sensor.test") is not None
+    assert hass.states.get("binary_sensor.test") is None
+
+    new_config = {
+        "mqtt": [
+            {
+                "sensor": {
+                    "name": "test",
+                    "state_topic": "test-topic1",
+                },
+                "binary_sensor": {
+                    "name": "test",
+                    "state_topic": "test-topic2",
+                },
+            },
+        ]
+    }
+
+    # Reload with an new platform config and assert again
+    with patch("homeassistant.config.load_yaml_config_file", return_value=new_config):
+        await hass.services.async_call(
+            "mqtt",
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.test") is not None
+    assert hass.states.get("binary_sensor.test") is not None
