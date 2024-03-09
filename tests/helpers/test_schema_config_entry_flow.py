@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import voluptuous as vol
@@ -742,3 +742,48 @@ async def test_options_flow_omit_optional_keys(
         "advanced_default": "a very reasonable default",
         "optional_default": "a very reasonable default",
     }
+
+
+async def test_reauth(hass: HomeAssistant) -> None:
+    """Test the re-auth flow."""
+
+    async def _validate_user_input(
+        handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+    ) -> dict[str, Any]:
+        return {"username": "test", "password": "test2"}
+
+    CONFIG_FLOW: dict[str, SchemaFlowFormStep] = {
+        "user": SchemaFlowFormStep(vol.Schema({})),
+        "reauth": SchemaFlowFormStep(
+            vol.Schema({}), validate_user_input=_validate_user_input
+        ),
+    }
+
+    class TestConfigFlow(MockSchemaConfigFlowHandler, domain=TEST_DOMAIN):
+        config_flow = CONFIG_FLOW
+
+    mock_integration(
+        hass, MockModule(TEST_DOMAIN, async_setup_entry=AsyncMock(return_value=True))
+    )
+    mock_platform(hass, "test.config_flow", None)
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        options={"username": "test", "password": "test1"},
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(config_entries.HANDLERS, {TEST_DOMAIN: TestConfigFlow}):
+        result = await hass.config_entries.flow.async_init(
+            TEST_DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": config_entry.entry_id,
+            },
+        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert config_entry.options == {"username": "test", "password": "test2"}
+    assert config_entry.state == config_entries.ConfigEntryState.LOADED
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
