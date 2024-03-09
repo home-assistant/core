@@ -236,13 +236,9 @@ class TiltBlind(GenericBlind):
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Tilt the blind to a specific position."""
-        new_tilt: int | None = (
-            100 - int(kwargs[ATTR_TILT_POSITION])
-            if ATTR_TILT_POSITION in kwargs and kwargs[ATTR_TILT_POSITION] is not None
-            else None
-        )
-        if new_tilt is None:
+        if kwargs.get(ATTR_TILT_POSITION) is None:
             return
+        new_tilt: int = 100 - int(kwargs[ATTR_TILT_POSITION])
 
         _LOGGER.debug(
             "(%s) Setting tilt position to %i",
