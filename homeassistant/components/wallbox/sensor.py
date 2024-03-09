@@ -150,6 +150,7 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
         key=CHARGER_OCPP_STATUS_KEY,
         translation_key=CHARGER_OCPP_STATUS_KEY,
         device_class=SensorDeviceClass.ENUM,
+        options=["disconnected", "disabled", "connecting", "error", "connected"],
     ),
 }
 
