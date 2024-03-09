@@ -26,8 +26,6 @@ from .const import DOMAIN
 from .controller import OmadaGatewayCoordinator, OmadaSiteController
 from .entity import OmadaDeviceEntity
 
-ONLINE_DETECTION_ICON = "mdi:cloud-check"
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -59,7 +57,6 @@ async def async_setup_entry(
 class GatewayPortBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Entity description for a binary status derived from a gateway port."""
 
-    name_suffix: str
     exists_func: Callable[[OmadaGatewayPortConfig], bool] = lambda _: True
     update_func: Callable[[OmadaGatewayPortStatus], bool]
 
@@ -67,29 +64,28 @@ class GatewayPortBinarySensorEntityDescription(BinarySensorEntityDescription):
 GATEWAY_PORT_SENSORS: list[GatewayPortBinarySensorEntityDescription] = [
     GatewayPortBinarySensorEntityDescription(
         key="wan_link",
-        name_suffix="Internet Link",
+        translation_key="wan_link",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         exists_func=lambda p: p.port_status.mode == GatewayPortMode.WAN,
         update_func=lambda p: p.wan_connected,
     ),
     GatewayPortBinarySensorEntityDescription(
         key="online_detection",
-        name_suffix="Online Detection",
+        translation_key="online_detection",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        icon=ONLINE_DETECTION_ICON,
         exists_func=lambda p: p.port_status.mode == GatewayPortMode.WAN,
         update_func=lambda p: p.online_detection,
     ),
     GatewayPortBinarySensorEntityDescription(
         key="lan_status",
-        name_suffix="LAN Status",
+        translation_key="lan_status",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         exists_func=lambda p: p.port_status.mode == GatewayPortMode.LAN,
         update_func=lambda p: p.link_status == LinkStatus.LINK_UP,
     ),
     GatewayPortBinarySensorEntityDescription(
         key="poe_delivery",
-        name_suffix="PoE Delivery",
+        translation_key="poe_delivery",
         device_class=BinarySensorDeviceClass.POWER,
         exists_func=lambda p: (
             p.port_status.mode == GatewayPortMode.LAN and p.poe_mode == PoEMode.ENABLED
@@ -117,7 +113,7 @@ class OmadaGatewayPortBinarySensor(OmadaDeviceEntity[OmadaGateway], BinarySensor
         self.entity_description = entity_description
         self._port_number = port_number
         self._attr_unique_id = f"{device.mac}_{port_number}_{entity_description.key}"
-        self._attr_name = f"Port {port_number} {entity_description.name_suffix}"
+        self._attr_translation_placeholders = {"port_name": f"{port_number}"}
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""

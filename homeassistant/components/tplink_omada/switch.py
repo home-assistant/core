@@ -31,8 +31,6 @@ from .controller import (
 )
 from .entity import OmadaDeviceEntity
 
-WAN_CONNECTED_ICON = "mdi:wan"
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -78,7 +76,6 @@ async def async_setup_entry(
 class GatewayPortSwitchEntityDescription(SwitchEntityDescription):
     """Entity description for a toggle switch derived from a gateway port."""
 
-    name_suffix: str
     exists_func: Callable[[OmadaGatewayPortStatus], bool] = lambda _: True
     set_func: Callable[
         [OmadaSiteClient, OmadaDevice, OmadaGatewayPortStatus, bool],
@@ -102,16 +99,14 @@ def _wan_connect_disconnect(
 GATEWAY_PORT_SWITCHES: list[GatewayPortSwitchEntityDescription] = [
     GatewayPortSwitchEntityDescription(
         key="wan_connect_ipv4",
-        name_suffix="Internet Connected",
-        icon=WAN_CONNECTED_ICON,
+        translation_key="wan_connect_ipv4",
         exists_func=lambda p: p.mode == GatewayPortMode.WAN,
         set_func=partial(_wan_connect_disconnect, ipv6=False),
         update_func=lambda p: p.wan_connected,
     ),
     GatewayPortSwitchEntityDescription(
         key="wan_connect_ipv6",
-        name_suffix="Internet Connected (IPv6)",
-        icon=WAN_CONNECTED_ICON,
+        translation_key="wan_connect_ipv6",
         exists_func=lambda p: p.mode == GatewayPortMode.WAN and p.wan_ipv6_enabled,
         set_func=partial(_wan_connect_disconnect, ipv6=True),
         update_func=lambda p: p.ipv6_wan_connected,
@@ -123,8 +118,8 @@ def get_port_base_name(port: OmadaSwitchPortDetails) -> str:
     """Get display name for a switch port."""
 
     if port.name == f"Port{port.port}":
-        return f"Port {port.port}"
-    return f"Port {port.port} ({port.name})"
+        return f"{port.port}"
+    return f"{port.port} ({port.name})"
 
 
 class OmadaNetworkSwitchPortPoEControl(
@@ -148,8 +143,9 @@ class OmadaNetworkSwitchPortPoEControl(
         self.port_details = coordinator.data[port_id]
         self.omada_client = coordinator.omada_client
         self._attr_unique_id = f"{device.mac}_{port_id}_poe"
-
-        self._attr_name = f"{get_port_base_name(self.port_details)} PoE"
+        self._attr_translation_placeholders = {
+            "port_name": get_port_base_name(self.port_details)
+        }
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -202,8 +198,7 @@ class OmadaGatewayPortSwitchEntity(OmadaDeviceEntity[OmadaGateway], SwitchEntity
         self.entity_description = entity_description
         self._port_number = port_number
         self._attr_unique_id = f"{device.mac}_{port_number}_{entity_description.key}"
-        self._attr_name = f"Port {port_number} {entity_description.name_suffix}"
-        self._attr_available = False
+        self._attr_translation_placeholders = {"port_name": f"{port_number}"}
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
