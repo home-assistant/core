@@ -133,7 +133,7 @@ class UnifiEntity(Entity, Generic[HandlerT, ApiItemT]):
         self.hub = hub
         self.entity_description = description
 
-        hub.known_objects.add((description.key, obj_id))
+        hub.entity_loader.known_objects.add((description.key, obj_id))
 
         self._removed = False
 
@@ -154,7 +154,9 @@ class UnifiEntity(Entity, Generic[HandlerT, ApiItemT]):
         @callback
         def unregister_object() -> None:
             """Remove object ID from known_objects when unloaded."""
-            self.hub.known_objects.discard((description.key, self._obj_id))
+            self.hub.entity_loader.known_objects.discard(
+                (description.key, self._obj_id)
+            )
 
         self.async_on_remove(unregister_object)
 

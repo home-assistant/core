@@ -220,8 +220,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up device tracker for UniFi Network integration."""
     async_update_unique_id(hass, config_entry)
-    UnifiHub.register_platform(
-        hass, config_entry, async_add_entities, UnifiScannerEntity, ENTITY_DESCRIPTIONS
+    UnifiHub.get_hub(hass, config_entry).entity_loader.register_platform(
+        async_add_entities, UnifiScannerEntity, ENTITY_DESCRIPTIONS
     )
 
 
