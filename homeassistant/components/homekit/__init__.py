@@ -1,4 +1,5 @@
 """Support for Apple HomeKit."""
+
 from __future__ import annotations
 
 import asyncio
@@ -7,6 +8,7 @@ from copy import deepcopy
 import ipaddress
 import logging
 import os
+import socket
 from typing import Any, cast
 
 from aiohttp import web
@@ -26,7 +28,7 @@ from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.device_automation.trigger import (
     async_validate_trigger_config,
 )
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -149,6 +151,8 @@ PORT_CLEANUP_CHECK_INTERVAL_SECS = 1
 _HOMEKIT_CONFIG_UPDATE_TIME = (
     10  # number of seconds to wait for homekit to see the c# change
 )
+_HAS_IPV6 = hasattr(socket, "AF_INET6")
+_DEFAULT_BIND = ["0.0.0.0", "::"] if _HAS_IPV6 else ["0.0.0.0"]
 
 
 def _has_all_unique_names_and_ports(
@@ -256,7 +260,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 DOMAIN,
                 context={"source": SOURCE_IMPORT},
                 data=conf,
-            )
+            ),
+            eager_start=True,
         )
 
     return True
@@ -307,7 +312,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Begin setup HomeKit for %s", name)
 
     # ip_address and advertise_ip are yaml only
-    ip_address = conf.get(CONF_IP_ADDRESS, [None])
+    ip_address = conf.get(CONF_IP_ADDRESS, _DEFAULT_BIND)
     advertise_ips: list[str] = conf.get(
         CONF_ADVERTISE_IP
     ) or await network.async_get_announce_addresses(hass)
@@ -798,10 +803,11 @@ class HomeKit:
             }
         )
 
-        entity_states = []
+        entity_states: list[State] = []
+        entity_filter = self._filter.get_filter()
         for state in self.hass.states.async_all():
             entity_id = state.entity_id
-            if not self._filter(entity_id):
+            if not entity_filter(entity_id):
                 continue
 
             if ent_reg_ent := ent_reg.async_get(entity_id):
@@ -1158,7 +1164,7 @@ class HomeKitPairingQRView(HomeAssistantView):
         if not request.query_string:
             raise Unauthorized()
         entry_id, secret = request.query_string.split("-")
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
         domain_data: dict[str, HomeKitEntryData] = hass.data[DOMAIN]
         if (
             not (entry_data := domain_data.get(entry_id))

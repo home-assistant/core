@@ -1,4 +1,5 @@
 """Test the Yeelight light."""
+
 from datetime import timedelta
 import logging
 import socket

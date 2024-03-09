@@ -1,4 +1,5 @@
 """Configuration for SSDP tests."""
+
 from unittest.mock import AsyncMock, patch
 
 from async_upnp_client.server import UpnpServer

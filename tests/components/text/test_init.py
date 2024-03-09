@@ -1,4 +1,5 @@
 """The tests for the text component."""
+
 from typing import Any
 
 import pytest

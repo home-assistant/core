@@ -1,4 +1,5 @@
 """Test configuration for Shelly."""
+
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 from aioshelly.block_device import BlockDevice, BlockUpdateType
@@ -179,7 +180,7 @@ MOCK_CONFIG = {
         "ui_data": {},
         "device": {"name": "Test name"},
     },
-    "wifi": {"sta": {"enable": True}},
+    "wifi": {"sta": {"enable": True}, "sta1": {"enable": False}},
 }
 
 MOCK_SHELLY_COAP = {

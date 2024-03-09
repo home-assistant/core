@@ -1,6 +1,8 @@
 """Support for MQTT JSON lights."""
+
 from __future__ import annotations
 
+from collections.abc import Callable
 from contextlib import suppress
 import logging
 from typing import TYPE_CHECKING, Any, cast
@@ -20,6 +22,7 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     ATTR_WHITE,
     ATTR_XY_COLOR,
+    DOMAIN as LIGHT_DOMAIN,
     ENTITY_ID_FORMAT,
     FLASH_LONG,
     FLASH_SHORT,
@@ -43,13 +46,15 @@ from homeassistant.const import (
     CONF_XY,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import async_get_hass, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.color as color_util
 from homeassistant.util.json import json_loads_object
+from homeassistant.util.yaml import dump as yaml_dump
 
 from .. import subscription
 from ..config import DEFAULT_QOS, DEFAULT_RETAIN, MQTT_RW_SCHEMA
@@ -59,6 +64,7 @@ from ..const import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
+    DOMAIN as MQTT_DOMAIN,
 )
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, write_state_on_attr_change
@@ -100,12 +106,87 @@ CONF_MAX_MIREDS = "max_mireds"
 CONF_MIN_MIREDS = "min_mireds"
 
 
-def valid_color_configuration(config: ConfigType) -> ConfigType:
+def valid_color_configuration(
+    setup_from_yaml: bool,
+) -> Callable[[dict[str, Any]], dict[str, Any]]:
     """Test color_mode is not combined with deprecated config."""
-    deprecated = {CONF_COLOR_TEMP, CONF_HS, CONF_RGB, CONF_XY}
-    if config[CONF_COLOR_MODE] and any(config.get(key) for key in deprecated):
-        raise vol.Invalid(f"color_mode must not be combined with any of {deprecated}")
-    return config
+
+    def _valid_color_configuration(config: ConfigType) -> ConfigType:
+        deprecated = {CONF_COLOR_TEMP, CONF_HS, CONF_RGB, CONF_XY}
+        deprecated_flags_used = any(config.get(key) for key in deprecated)
+        if config.get(CONF_SUPPORTED_COLOR_MODES):
+            if deprecated_flags_used:
+                raise vol.Invalid(
+                    "supported_color_modes must not "
+                    f"be combined with any of {deprecated}"
+                )
+        elif deprecated_flags_used:
+            deprecated_flags = ", ".join(key for key in deprecated if key in config)
+            _LOGGER.warning(
+                "Deprecated flags [%s] used in MQTT JSON light config "
+                "for handling color mode, please use `supported_color_modes` instead. "
+                "Got: %s. This will stop working in Home Assistant Core 2025.3",
+                deprecated_flags,
+                config,
+            )
+            if not setup_from_yaml:
+                return config
+            issue_id = hex(hash(frozenset(config)))
+            yaml_config_str = yaml_dump(config)
+            learn_more_url = (
+                "https://www.home-assistant.io/integrations/"
+                f"{LIGHT_DOMAIN}.mqtt/#json-schema"
+            )
+            hass = async_get_hass()
+            async_create_issue(
+                hass,
+                MQTT_DOMAIN,
+                issue_id,
+                issue_domain=LIGHT_DOMAIN,
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                learn_more_url=learn_more_url,
+                translation_placeholders={
+                    "deprecated_flags": deprecated_flags,
+                    "config": yaml_config_str,
+                },
+                translation_key="deprecated_color_handling",
+            )
+
+        if CONF_COLOR_MODE in config:
+            _LOGGER.warning(
+                "Deprecated flag `color_mode` used in MQTT JSON light config "
+                ", the `color_mode` flag is not used anymore and should be removed. "
+                "Got: %s. This will stop working in Home Assistant Core 2025.3",
+                config,
+            )
+            if not setup_from_yaml:
+                return config
+            issue_id = hex(hash(frozenset(config)))
+            yaml_config_str = yaml_dump(config)
+            learn_more_url = (
+                "https://www.home-assistant.io/integrations/"
+                f"{LIGHT_DOMAIN}.mqtt/#json-schema"
+            )
+            hass = async_get_hass()
+            async_create_issue(
+                hass,
+                MQTT_DOMAIN,
+                issue_id,
+                breaks_in_ha_version="2025.3.0",
+                issue_domain=LIGHT_DOMAIN,
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                learn_more_url=learn_more_url,
+                translation_placeholders={
+                    "config": yaml_config_str,
+                },
+                translation_key="deprecated_color_mode_flag",
+            )
+
+        return config
+
+    return _valid_color_configuration
 
 
 _PLATFORM_SCHEMA_BASE = (
@@ -115,9 +196,11 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(
                 CONF_BRIGHTNESS_SCALE, default=DEFAULT_BRIGHTNESS_SCALE
             ): vol.All(vol.Coerce(int), vol.Range(min=1)),
-            vol.Inclusive(
-                CONF_COLOR_MODE, "color_mode", default=DEFAULT_COLOR_MODE
-            ): cv.boolean,
+            # CONF_COLOR_MODE was deprecated with HA Core 2024.4 and will be
+            # removed with HA Core 2025.3
+            vol.Optional(CONF_COLOR_MODE): cv.boolean,
+            # CONF_COLOR_TEMP was deprecated with HA Core 2024.4 and will be
+            # removed with HA Core 2025.3
             vol.Optional(CONF_COLOR_TEMP, default=DEFAULT_COLOR_TEMP): cv.boolean,
             vol.Optional(CONF_EFFECT, default=DEFAULT_EFFECT): cv.boolean,
             vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
@@ -127,6 +210,8 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(
                 CONF_FLASH_TIME_SHORT, default=DEFAULT_FLASH_TIME_SHORT
             ): cv.positive_int,
+            # CONF_HS was deprecated with HA Core 2024.4 and will be
+            # removed with HA Core 2025.3
             vol.Optional(CONF_HS, default=DEFAULT_HS): cv.boolean,
             vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
             vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
@@ -135,9 +220,11 @@ _PLATFORM_SCHEMA_BASE = (
                 vol.Coerce(int), vol.In([0, 1, 2])
             ),
             vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+            # CONF_RGB was deprecated with HA Core 2024.4 and will be
+            # removed with HA Core 2025.3
             vol.Optional(CONF_RGB, default=DEFAULT_RGB): cv.boolean,
             vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
-            vol.Inclusive(CONF_SUPPORTED_COLOR_MODES, "color_mode"): vol.All(
+            vol.Optional(CONF_SUPPORTED_COLOR_MODES): vol.All(
                 cv.ensure_list,
                 [vol.In(VALID_COLOR_MODES)],
                 vol.Unique(),
@@ -146,6 +233,8 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(CONF_WHITE_SCALE, default=DEFAULT_WHITE_SCALE): vol.All(
                 vol.Coerce(int), vol.Range(min=1)
             ),
+            # CONF_XY was deprecated with HA Core 2024.4 and will be
+            # removed with HA Core 2025.3
             vol.Optional(CONF_XY, default=DEFAULT_XY): cv.boolean,
         },
     )
@@ -154,13 +243,13 @@ _PLATFORM_SCHEMA_BASE = (
 )
 
 DISCOVERY_SCHEMA_JSON = vol.All(
+    valid_color_configuration(False),
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
-    valid_color_configuration,
 )
 
 PLATFORM_SCHEMA_MODERN_JSON = vol.All(
+    valid_color_configuration(True),
     _PLATFORM_SCHEMA_BASE,
-    valid_color_configuration,
 )
 
 
@@ -175,6 +264,8 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     _flash_times: dict[str, int | None]
     _topic: dict[str, str | None]
     _optimistic: bool
+
+    _deprecated_color_handling: bool = False
 
     @staticmethod
     def config_schema() -> vol.Schema:
@@ -205,7 +296,14 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         self._attr_supported_features |= (
             config[CONF_EFFECT] and LightEntityFeature.EFFECT
         )
-        if not self._config[CONF_COLOR_MODE]:
+        if supported_color_modes := self._config.get(CONF_SUPPORTED_COLOR_MODES):
+            self._attr_supported_color_modes = supported_color_modes
+            if self.supported_color_modes and len(self.supported_color_modes) == 1:
+                self._attr_color_mode = next(iter(self.supported_color_modes))
+            else:
+                self._attr_color_mode = ColorMode.UNKNOWN
+        else:
+            self._deprecated_color_handling = True
             color_modes = {ColorMode.ONOFF}
             if config[CONF_BRIGHTNESS]:
                 color_modes.add(ColorMode.BRIGHTNESS)
@@ -216,15 +314,9 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             self._attr_supported_color_modes = filter_supported_color_modes(color_modes)
             if self.supported_color_modes and len(self.supported_color_modes) == 1:
                 self._fixed_color_mode = next(iter(self.supported_color_modes))
-        else:
-            self._attr_supported_color_modes = self._config[CONF_SUPPORTED_COLOR_MODES]
-            if self.supported_color_modes and len(self.supported_color_modes) == 1:
-                self._attr_color_mode = next(iter(self.supported_color_modes))
-            else:
-                self._attr_color_mode = ColorMode.UNKNOWN
 
     def _update_color(self, values: dict[str, Any]) -> None:
-        if not self._config[CONF_COLOR_MODE]:
+        if self._deprecated_color_handling:
             # Deprecated color handling
             try:
                 red = int(values["color"]["r"])
@@ -353,7 +445,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 self._attr_is_on = None
 
             if (
-                not self._config[CONF_COLOR_MODE]
+                self._deprecated_color_handling
                 and color_supported(self.supported_color_modes)
                 and "color" in values
             ):
@@ -363,7 +455,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 else:
                     self._update_color(values)
 
-            if self._config[CONF_COLOR_MODE] and "color_mode" in values:
+            if not self._deprecated_color_handling and "color_mode" in values:
                 self._update_color(values)
 
             if brightness_supported(self.supported_color_modes):
@@ -390,9 +482,9 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                     )
 
             if (
-                self.supported_color_modes
+                self._deprecated_color_handling
+                and self.supported_color_modes
                 and ColorMode.COLOR_TEMP in self.supported_color_modes
-                and not self._config[CONF_COLOR_MODE]
             ):
                 # Deprecated color handling
                 try:
@@ -461,7 +553,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     @property
     def color_mode(self) -> ColorMode | str | None:
         """Return current color mode."""
-        if self._config[CONF_COLOR_MODE]:
+        if not self._deprecated_color_handling:
             return self._attr_color_mode
         if self._fixed_color_mode:
             # Legacy light with support for a single color mode
@@ -484,19 +576,20 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 message["flash"] = self._flash_times[CONF_FLASH_TIME_SHORT]
 
     def _scale_rgbxx(self, rgbxx: tuple[int, ...], kwargs: Any) -> tuple[int, ...]:
-        # If there's a brightness topic set, we don't want to scale the
-        # RGBxx values given using the brightness.
+        # If brightness is supported, we don't want to scale the
+        # RGBxx values given using the brightness and
+        # we pop the brightness, to omit it from the payload
         brightness: int
         if self._config[CONF_BRIGHTNESS]:
             brightness = 255
         else:
-            brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
+            brightness = kwargs.pop(ATTR_BRIGHTNESS, 255)
         return tuple(round(i / 255 * brightness) for i in rgbxx)
 
     def _supports_color_mode(self, color_mode: ColorMode | str) -> bool:
         """Return True if the light natively supports a color mode."""
         return (
-            self._config[CONF_COLOR_MODE]
+            not self._deprecated_color_handling
             and self.supported_color_modes is not None
             and color_mode in self.supported_color_modes
         )
@@ -522,12 +615,13 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             hs_color = kwargs[ATTR_HS_COLOR]
             message["color"] = {}
             if self._config[CONF_RGB]:
-                # If there's a brightness topic set, we don't want to scale the
+                # If brightness is supported, we don't want to scale the
                 # RGB values given using the brightness.
                 if self._config[CONF_BRIGHTNESS]:
                     brightness = 255
                 else:
-                    brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
+                    # We pop the brightness, to omit it from the payload
+                    brightness = kwargs.pop(ATTR_BRIGHTNESS, 255)
                 rgb = color_util.color_hsv_to_RGB(
                     hs_color[0], hs_color[1], brightness / 255 * 100
                 )
@@ -595,7 +689,9 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
         self._set_flash_and_transition(message, **kwargs)
 
-        if ATTR_BRIGHTNESS in kwargs and self._config[CONF_BRIGHTNESS]:
+        if ATTR_BRIGHTNESS in kwargs and brightness_supported(
+            self.supported_color_modes
+        ):
             device_brightness = color_util.brightness_to_value(
                 (1, self._config[CONF_BRIGHTNESS_SCALE]),
                 kwargs[ATTR_BRIGHTNESS],

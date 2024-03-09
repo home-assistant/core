@@ -1,4 +1,5 @@
 """Support for Neato Connected Vacuums."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -94,7 +95,6 @@ async def async_setup_entry(
 class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
     """Representation of a Neato Connected Vacuum."""
 
-    _attr_icon = "mdi:robot-vacuum-variant"
     _attr_supported_features = (
         VacuumEntityFeature.BATTERY
         | VacuumEntityFeature.PAUSE

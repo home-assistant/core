@@ -1,4 +1,5 @@
 """The tests for sensor recorder platform."""
+
 import datetime
 from datetime import timedelta
 from statistics import fmean
@@ -2225,77 +2226,6 @@ async def test_backup_start_no_recorder(
     response = await client.receive_json()
     assert not response["success"]
     assert response["error"]["code"] == "unknown_command"
-
-
-async def test_backup_start_timeout(
-    recorder_mock: Recorder,
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    hass_supervisor_access_token: str,
-    recorder_db_url: str,
-) -> None:
-    """Test getting backup start when recorder is not present."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test is specific for SQLite: Locking is not implemented for other engines
-        return
-
-    client = await hass_ws_client(hass, hass_supervisor_access_token)
-
-    # Ensure there are no queued events
-    await async_wait_recording_done(hass)
-
-    with patch.object(recorder.core, "DB_LOCK_TIMEOUT", 0):
-        try:
-            await client.send_json_auto_id({"type": "backup/start"})
-            response = await client.receive_json()
-            assert not response["success"]
-            assert response["error"]["code"] == "timeout_error"
-        finally:
-            await client.send_json_auto_id({"type": "backup/end"})
-
-
-async def test_backup_end(
-    recorder_mock: Recorder,
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    hass_supervisor_access_token: str,
-) -> None:
-    """Test backup start."""
-    client = await hass_ws_client(hass, hass_supervisor_access_token)
-
-    # Ensure there are no queued events
-    await async_wait_recording_done(hass)
-
-    await client.send_json_auto_id({"type": "backup/start"})
-    response = await client.receive_json()
-    assert response["success"]
-
-    await client.send_json_auto_id({"type": "backup/end"})
-    response = await client.receive_json()
-    assert response["success"]
-
-
-async def test_backup_end_without_start(
-    recorder_mock: Recorder,
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    hass_supervisor_access_token: str,
-    recorder_db_url: str,
-) -> None:
-    """Test backup start."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test is specific for SQLite: Locking is not implemented for other engines
-        return
-
-    client = await hass_ws_client(hass, hass_supervisor_access_token)
-
-    # Ensure there are no queued events
-    await async_wait_recording_done(hass)
-
-    await client.send_json_auto_id({"type": "backup/end"})
-    response = await client.receive_json()
-    assert not response["success"]
-    assert response["error"]["code"] == "database_unlock_failed"
 
 
 @pytest.mark.parametrize(

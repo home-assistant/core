@@ -1,4 +1,5 @@
 """Constants for the Xiaomi Miio component."""
+
 from miio.integrations.vacuum.roborock.vacuum import (
     ROCKROBO_E2,
     ROCKROBO_S4,

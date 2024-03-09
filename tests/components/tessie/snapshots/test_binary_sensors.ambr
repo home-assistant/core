@@ -1165,7 +1165,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.PRESENCE: 'presence'>,
+    'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
     'original_icon': None,
     'original_name': 'User present',
     'platform': 'tessie',
@@ -1179,7 +1179,7 @@
 # name: test_binary_sensors[binary_sensor.test_user_present-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'presence',
+      'device_class': 'occupancy',
       'friendly_name': 'Test User present',
     }),
     'context': <ANY>,

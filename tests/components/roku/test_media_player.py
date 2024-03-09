@@ -1,4 +1,5 @@
 """Tests for the Roku Media Player platform."""
+
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 

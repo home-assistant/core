@@ -1,4 +1,5 @@
 """Tests for the homewizard component."""
+
 from unittest.mock import MagicMock
 
 from homewizard_energy.errors import DisabledError, HomeWizardEnergyException

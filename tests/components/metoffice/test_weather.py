@@ -1,4 +1,5 @@
 """The tests for the Met Office sensor component."""
+
 import datetime
 from datetime import timedelta
 import json

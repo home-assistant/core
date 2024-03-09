@@ -1,7 +1,8 @@
 """Config flow to configure the Bluetooth integration."""
+
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 
 from bluetooth_adapters import (
     ADAPTER_ADDRESS,
@@ -13,7 +14,7 @@ from bluetooth_adapters import (
 import voluptuous as vol
 
 from homeassistant.components import onboarding
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.core import callback
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
@@ -23,9 +24,6 @@ from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import models
 from .const import CONF_ADAPTER, CONF_DETAILS, CONF_PASSIVE, DOMAIN
-
-if TYPE_CHECKING:
-    from homeassistant.data_entry_flow import FlowResult
 
 OPTIONS_SCHEMA = vol.Schema(
     {
@@ -50,7 +48,7 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
         self._adapter = cast(str, discovery_info[CONF_ADAPTER])
         self._details = cast(AdapterDetails, discovery_info[CONF_DETAILS])
@@ -63,7 +61,7 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_single_adapter(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Select an adapter."""
         adapter = self._adapter
         details = self._details
@@ -86,7 +84,7 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_multiple_adapters(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if user_input is not None:
             assert self._adapters is not None
@@ -138,7 +136,7 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         return await self.async_step_multiple_adapters()
 

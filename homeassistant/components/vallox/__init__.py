@@ -1,4 +1,5 @@
 """Support for Vallox ventilation units."""
+
 from __future__ import annotations
 
 import ipaddress
@@ -46,10 +47,11 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 PLATFORMS: list[str] = [
-    Platform.SENSOR,
-    Platform.FAN,
     Platform.BINARY_SENSOR,
+    Platform.DATE,
+    Platform.FAN,
     Platform.NUMBER,
+    Platform.SENSOR,
     Platform.SWITCH,
 ]
 

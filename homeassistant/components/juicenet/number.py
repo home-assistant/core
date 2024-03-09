@@ -1,4 +1,5 @@
 """Support for controlling juicenet/juicepoint/juicebox based EVSE numbers."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

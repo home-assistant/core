@@ -1,4 +1,5 @@
 """Test for Melissa climate component."""
+
 import json
 from unittest.mock import AsyncMock, Mock, patch
 

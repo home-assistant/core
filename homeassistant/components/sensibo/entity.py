@@ -1,4 +1,5 @@
 """Base entity for Sensibo integration."""
+
 from __future__ import annotations
 
 import asyncio

@@ -1,4 +1,5 @@
 """Tests for Plex config flow."""
+
 import copy
 from http import HTTPStatus
 import ssl

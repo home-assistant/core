@@ -1,4 +1,5 @@
 """Media player entity for the Bang & Olufsen integration."""
+
 from __future__ import annotations
 
 import json
@@ -94,11 +95,12 @@ async def async_setup_entry(
     async_add_entities(new_entities=[BangOlufsenMediaPlayer(config_entry, data.client)])
 
 
-class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
+class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
     """Representation of a media player."""
 
-    _attr_has_entity_name = False
     _attr_icon = "mdi:speaker-wireless"
+    _attr_name = None
+    _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_supported_features = BANG_OLUFSEN_FEATURES
 
     def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
@@ -113,12 +115,9 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
             identifiers={(DOMAIN, self._unique_id)},
             manufacturer="Bang & Olufsen",
             model=self._model,
-            name=cast(str, self.name),
             serial_number=self._unique_id,
         )
-        self._attr_name = self._name
         self._attr_unique_id = self._unique_id
-        self._attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
         # Misc. variables.
         self._audio_sources: dict[str, str] = {}
@@ -523,7 +522,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
             )
             return
 
-        # pylint: disable=consider-using-dict-items
         key = [x for x in self._sources if self._sources[x] == source][0]
 
         # Check for source type

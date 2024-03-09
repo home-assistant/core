@@ -1,4 +1,5 @@
 """Offer time listening automation rules."""
+
 from datetime import datetime
 from functools import partial
 
@@ -12,7 +13,14 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, State, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HassJob,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import (
     EventStateChangedData,
@@ -21,7 +29,7 @@ from homeassistant.helpers.event import (
     async_track_time_change,
 )
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import ConfigType, EventType
+from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 _TIME_TRIGGER_SCHEMA = vol.Any(
@@ -68,10 +76,11 @@ async def async_attach_trigger(
                     "entity_id": entity_id,
                 }
             },
+            eager_start=True,
         )
 
     @callback
-    def update_entity_trigger_event(event: EventType[EventStateChangedData]) -> None:
+    def update_entity_trigger_event(event: Event[EventStateChangedData]) -> None:
         """update_entity_trigger from the event."""
         return update_entity_trigger(event.data["entity_id"], event.data["new_state"])
 

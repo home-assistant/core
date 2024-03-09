@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from http import HTTPStatus
 
 import aiohttp
-from microBeesPy.microbees import MicroBees
+from microBeesPy import MicroBees
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN

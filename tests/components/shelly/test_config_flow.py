@@ -1,4 +1,5 @@
 """Test the Shelly config flow."""
+
 from dataclasses import replace
 from ipaddress import ip_address
 from typing import Any

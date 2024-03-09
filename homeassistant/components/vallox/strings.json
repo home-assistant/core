@@ -84,6 +84,11 @@
       "bypass_locked": {
         "name": "Bypass locked"
       }
+    },
+    "date": {
+      "filter_change_date": {
+        "name": "Filter change date"
+      }
     }
   },
   "services": {

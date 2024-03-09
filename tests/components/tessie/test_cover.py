@@ -1,4 +1,5 @@
 """Test the Tessie cover platform."""
+
 from unittest.mock import patch
 
 import pytest

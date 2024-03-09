@@ -4,6 +4,7 @@
     'attributes': ReadOnlyDict({
       'current_temperature': 19.0,
       'friendly_name': 'Device Name',
+      'hvac_action': <HVACAction.HEATING: 'heating'>,
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.FAN_ONLY: 'fan_only'>,

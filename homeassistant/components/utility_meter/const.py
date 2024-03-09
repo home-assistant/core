@@ -1,4 +1,5 @@
 """Constants for the utility meter component."""
+
 DOMAIN = "utility_meter"
 
 QUARTER_HOURLY = "quarter-hourly"

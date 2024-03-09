@@ -1,4 +1,5 @@
 """Test the Snooz config flow."""
+
 from __future__ import annotations
 
 from asyncio import Event

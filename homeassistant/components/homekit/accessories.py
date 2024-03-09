@@ -1,4 +1,5 @@
 """Extend the basic Accessory and Bridge functions."""
+
 from __future__ import annotations
 
 import logging
@@ -43,6 +44,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     CALLBACK_TYPE,
     Context,
+    Event,
     HomeAssistant,
     State,
     callback as ha_callback,
@@ -53,7 +55,6 @@ from homeassistant.helpers.event import (
     EventStateChangedData,
     async_track_state_change_event,
 )
-from homeassistant.helpers.typing import EventType
 from homeassistant.util.decorator import Registry
 
 from .const import (
@@ -477,7 +478,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
 
     @ha_callback
     def async_update_event_state_callback(
-        self, event: EventType[EventStateChangedData]
+        self, event: Event[EventStateChangedData]
     ) -> None:
         """Handle state change event listener callback."""
         new_state = event.data["new_state"]
@@ -529,7 +530,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
 
     @ha_callback
     def async_update_linked_battery_callback(
-        self, event: EventType[EventStateChangedData]
+        self, event: Event[EventStateChangedData]
     ) -> None:
         """Handle linked battery sensor state change listener callback."""
         if (new_state := event.data["new_state"]) is None:
@@ -542,7 +543,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
 
     @ha_callback
     def async_update_linked_battery_charging_callback(
-        self, event: EventType[EventStateChangedData]
+        self, event: Event[EventStateChangedData]
     ) -> None:
         """Handle linked battery charging sensor state change listener callback."""
         if (new_state := event.data["new_state"]) is None:
@@ -610,7 +611,8 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         self.hass.async_create_task(
             self.hass.services.async_call(
                 domain, service, service_data, context=context
-            )
+            ),
+            eager_start=True,
         )
 
     @ha_callback

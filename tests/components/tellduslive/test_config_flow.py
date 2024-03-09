@@ -1,5 +1,6 @@
 # flake8: noqa pylint: skip-file
 """Tests for the TelldusLive config flow."""
+
 from unittest.mock import Mock, patch
 
 import pytest

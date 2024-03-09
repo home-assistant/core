@@ -1,4 +1,5 @@
 """Tests for Met.no config flow."""
+
 from unittest.mock import ANY, patch
 
 import pytest

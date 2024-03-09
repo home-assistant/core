@@ -1,4 +1,5 @@
 """Test ZHA device discovery."""
+
 from collections.abc import Callable
 import re
 from typing import Any
@@ -6,10 +7,23 @@ from unittest import mock
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from zhaquirks.ikea import PowerConfig1CRCluster, ScenesCluster
+from zhaquirks.xiaomi import (
+    BasicCluster,
+    LocalIlluminanceMeasurementCluster,
+    XiaomiPowerConfigurationPercent,
+)
+from zhaquirks.xiaomi.aqara.driver_curtain_e1 import (
+    WindowCoveringE1,
+    XiaomiAqaraDriverE1,
+)
 from zigpy.const import SIG_ENDPOINTS, SIG_MANUFACTURER, SIG_MODEL, SIG_NODE_DESC
 import zigpy.profiles.zha
 import zigpy.quirks
+from zigpy.quirks.v2 import EntityType, add_to_registry_v2
+from zigpy.quirks.v2.homeassistant import UnitOfTime
 import zigpy.types
+from zigpy.zcl import ClusterType
 import zigpy.zcl.clusters.closures
 import zigpy.zcl.clusters.general
 import zigpy.zcl.clusters.security
@@ -22,10 +36,12 @@ import homeassistant.components.zha.core.discovery as disc
 from homeassistant.components.zha.core.endpoint import Endpoint
 from homeassistant.components.zha.core.helpers import get_zha_gateway
 import homeassistant.components.zha.core.registries as zha_regs
-from homeassistant.const import Platform
+from homeassistant.const import STATE_OFF, Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_platform import EntityPlatform
 
+from .common import find_entity_id, update_attribute_cache
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 from .zha_devices_list import (
     DEV_SIG_ATTRIBUTES,
@@ -48,6 +64,7 @@ IGNORE_SUFFIXES = [
     "off_transition_time",
     "default_move_rate",
     "start_up_current_level",
+    "counter",
 ]
 
 
@@ -79,8 +96,6 @@ async def test_devices(
     zha_device_joined_restored,
 ) -> None:
     """Test device discovery."""
-    entity_registry = er.async_get(hass_disable_services)
-
     zigpy_device = zigpy_device_mock(
         endpoints=device[SIG_ENDPOINTS],
         ieee="00:11:22:33:44:55:66:77",
@@ -95,14 +110,13 @@ async def test_devices(
     if cluster_identify:
         cluster_identify.request.reset_mock()
 
-    orig_new_entity = Endpoint.async_new_entity
-    _dispatch = mock.MagicMock(wraps=orig_new_entity)
-    try:
-        Endpoint.async_new_entity = lambda *a, **kw: _dispatch(*a, **kw)
+    with patch(
+        "homeassistant.helpers.entity_platform.EntityPlatform._async_schedule_add_entities_for_entry",
+        side_effect=EntityPlatform._async_schedule_add_entities_for_entry,
+        autospec=True,
+    ) as mock_add_entities:
         zha_dev = await zha_device_joined_restored(zigpy_device)
         await hass_disable_services.async_block_till_done()
-    finally:
-        Endpoint.async_new_entity = orig_new_entity
 
     if cluster_identify:
         # We only identify on join
@@ -135,60 +149,40 @@ async def test_devices(
         for ch in endpoint.client_cluster_handlers.values()
     }
     assert event_cluster_handlers == set(device[DEV_SIG_EVT_CLUSTER_HANDLERS])
-    # we need to probe the class create entity factory so we need to reset this to get accurate results
-    zha_regs.ZHA_ENTITIES.clean_up()
-    # build a dict of entity_class -> (platform, unique_id, cluster_handlers) tuple
-    ha_ent_info = {}
-    created_entity_count = 0
-    for call in _dispatch.call_args_list:
-        _, platform, entity_cls, unique_id, cluster_handlers = call[0]
-        # the factory can return None. We filter these out to get an accurate created entity count
-        response = entity_cls.create_entity(unique_id, zha_dev, cluster_handlers)
-        if response and not contains_ignored_suffix(response.unique_id):
-            created_entity_count += 1
-            unique_id_head = UNIQUE_ID_HD.match(unique_id).group(
-                0
-            )  # ieee + endpoint_id
-            ha_ent_info[(unique_id_head, entity_cls.__name__)] = (
-                platform,
-                unique_id,
-                cluster_handlers,
-            )
 
-    for comp_id, ent_info in device[DEV_SIG_ENT_MAP].items():
-        platform, unique_id = comp_id
+    # Keep track of unhandled entities: they should always be ones we explicitly ignore
+    created_entities = {
+        entity.entity_id: entity
+        for mock_call in mock_add_entities.mock_calls
+        for entity in mock_call.args[1]
+    }
+    unhandled_entities = set(created_entities.keys())
+    entity_registry = er.async_get(hass_disable_services)
+
+    for (platform, unique_id), ent_info in device[DEV_SIG_ENT_MAP].items():
         no_tail_id = NO_TAIL_ID.sub("", ent_info[DEV_SIG_ENT_MAP_ID])
         ha_entity_id = entity_registry.async_get_entity_id(platform, "zha", unique_id)
-        assert ha_entity_id is not None
+        message1 = f"No entity found for platform[{platform}] unique_id[{unique_id}]"
+        message2 = f"no_tail_id[{no_tail_id}] with entity_id[{ha_entity_id}]"
+        assert ha_entity_id is not None, f"{message1} {message2}"
         assert ha_entity_id.startswith(no_tail_id)
 
-        test_ent_class = ent_info[DEV_SIG_ENT_MAP_CLASS]
-        test_unique_id_head = UNIQUE_ID_HD.match(unique_id).group(0)
-        assert (test_unique_id_head, test_ent_class) in ha_ent_info
+        entity = created_entities[ha_entity_id]
+        unhandled_entities.remove(ha_entity_id)
 
-        ha_comp, ha_unique_id, ha_cluster_handlers = ha_ent_info[
-            (test_unique_id_head, test_ent_class)
-        ]
-        assert platform is ha_comp.value
+        assert entity.platform.domain == platform
+        assert type(entity).__name__ == ent_info[DEV_SIG_ENT_MAP_CLASS]
         # unique_id used for discover is the same for "multi entities"
-        assert unique_id.startswith(ha_unique_id)
-        assert {ch.name for ch in ha_cluster_handlers} == set(
+        assert unique_id == entity.unique_id
+        assert {ch.name for ch in entity.cluster_handlers.values()} == set(
             ent_info[DEV_SIG_CLUSTER_HANDLERS]
         )
 
-    assert created_entity_count == len(device[DEV_SIG_ENT_MAP])
-
-    entity_ids = hass_disable_services.states.async_entity_ids()
-    await hass_disable_services.async_block_till_done()
-
-    zha_entity_ids = {
-        ent
-        for ent in entity_ids
-        if not contains_ignored_suffix(ent) and ent.split(".")[0] in zha_const.PLATFORMS
-    }
-    assert zha_entity_ids == {
-        e[DEV_SIG_ENT_MAP_ID] for e in device[DEV_SIG_ENT_MAP].values()
-    }
+    # All unhandled entities should be ones we explicitly ignore
+    for entity_id in unhandled_entities:
+        domain = entity_id.split(".")[0]
+        assert domain in zha_const.PLATFORMS
+        assert contains_ignored_suffix(entity_id)
 
 
 def _get_first_identify_cluster(zigpy_device):
@@ -484,3 +478,332 @@ async def test_group_probe_cleanup_called(
     await config_entry.async_unload(hass_disable_services)
     await hass_disable_services.async_block_till_done()
     disc.GROUP_PROBE.cleanup.assert_called()
+
+
+async def test_quirks_v2_entity_discovery(
+    hass,
+    zigpy_device_mock,
+    zha_device_joined,
+) -> None:
+    """Test quirks v2 discovery."""
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [
+                    zigpy.zcl.clusters.general.PowerConfiguration.cluster_id,
+                    zigpy.zcl.clusters.general.Groups.cluster_id,
+                    zigpy.zcl.clusters.general.OnOff.cluster_id,
+                ],
+                SIG_EP_OUTPUT: [
+                    zigpy.zcl.clusters.general.Scenes.cluster_id,
+                ],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.NON_COLOR_CONTROLLER,
+            }
+        },
+        ieee="01:2d:6f:00:0a:90:69:e8",
+        manufacturer="Ikea of Sweden",
+        model="TRADFRI remote control",
+    )
+
+    (
+        add_to_registry_v2(
+            "Ikea of Sweden", "TRADFRI remote control", zigpy.quirks._DEVICE_REGISTRY
+        )
+        .replaces(PowerConfig1CRCluster)
+        .replaces(ScenesCluster, cluster_type=ClusterType.Client)
+        .number(
+            zigpy.zcl.clusters.general.OnOff.AttributeDefs.off_wait_time.name,
+            zigpy.zcl.clusters.general.OnOff.cluster_id,
+            min_value=1,
+            max_value=100,
+            step=1,
+            unit=UnitOfTime.SECONDS,
+            multiplier=1,
+        )
+    )
+
+    zigpy_device = zigpy.quirks._DEVICE_REGISTRY.get_device(zigpy_device)
+    zigpy_device.endpoints[1].power.PLUGGED_ATTR_READS = {
+        "battery_voltage": 3,
+        "battery_percentage_remaining": 100,
+    }
+    update_attribute_cache(zigpy_device.endpoints[1].power)
+    zigpy_device.endpoints[1].on_off.PLUGGED_ATTR_READS = {
+        zigpy.zcl.clusters.general.OnOff.AttributeDefs.off_wait_time.name: 3,
+    }
+    update_attribute_cache(zigpy_device.endpoints[1].on_off)
+
+    zha_device = await zha_device_joined(zigpy_device)
+
+    entity_id = find_entity_id(
+        Platform.NUMBER,
+        zha_device,
+        hass,
+    )
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+
+
+async def test_quirks_v2_entity_discovery_e1_curtain(
+    hass,
+    zigpy_device_mock,
+    zha_device_joined,
+) -> None:
+    """Test quirks v2 discovery for e1 curtain motor."""
+    aqara_E1_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.WINDOW_COVERING_DEVICE,
+                SIG_EP_INPUT: [
+                    zigpy.zcl.clusters.general.Basic.cluster_id,
+                    zigpy.zcl.clusters.general.PowerConfiguration.cluster_id,
+                    zigpy.zcl.clusters.general.Identify.cluster_id,
+                    zigpy.zcl.clusters.general.Time.cluster_id,
+                    WindowCoveringE1.cluster_id,
+                    XiaomiAqaraDriverE1.cluster_id,
+                ],
+                SIG_EP_OUTPUT: [
+                    zigpy.zcl.clusters.general.Identify.cluster_id,
+                    zigpy.zcl.clusters.general.Time.cluster_id,
+                    zigpy.zcl.clusters.general.Ota.cluster_id,
+                    XiaomiAqaraDriverE1.cluster_id,
+                ],
+            }
+        },
+        ieee="01:2d:6f:00:0a:90:69:e8",
+        manufacturer="LUMI",
+        model="lumi.curtain.agl006",
+    )
+
+    class AqaraE1HookState(zigpy.types.enum8):
+        """Aqara hook state."""
+
+        Unlocked = 0x00
+        Locked = 0x01
+        Locking = 0x02
+        Unlocking = 0x03
+
+    class FakeXiaomiAqaraDriverE1(XiaomiAqaraDriverE1):
+        """Fake XiaomiAqaraDriverE1 cluster."""
+
+        attributes = XiaomiAqaraDriverE1.attributes.copy()
+        attributes.update(
+            {
+                0x9999: ("error_detected", zigpy.types.Bool, True),
+            }
+        )
+
+    (
+        add_to_registry_v2("LUMI", "lumi.curtain.agl006")
+        .adds(LocalIlluminanceMeasurementCluster)
+        .replaces(BasicCluster)
+        .replaces(XiaomiPowerConfigurationPercent)
+        .replaces(WindowCoveringE1)
+        .replaces(FakeXiaomiAqaraDriverE1)
+        .removes(FakeXiaomiAqaraDriverE1, cluster_type=ClusterType.Client)
+        .enum(
+            BasicCluster.AttributeDefs.power_source.name,
+            BasicCluster.PowerSource,
+            BasicCluster.cluster_id,
+            entity_platform=Platform.SENSOR,
+            entity_type=EntityType.DIAGNOSTIC,
+        )
+        .enum(
+            "hooks_state",
+            AqaraE1HookState,
+            FakeXiaomiAqaraDriverE1.cluster_id,
+            entity_platform=Platform.SENSOR,
+            entity_type=EntityType.DIAGNOSTIC,
+        )
+        .binary_sensor("error_detected", FakeXiaomiAqaraDriverE1.cluster_id)
+    )
+
+    aqara_E1_device = zigpy.quirks._DEVICE_REGISTRY.get_device(aqara_E1_device)
+
+    aqara_E1_device.endpoints[1].opple_cluster.PLUGGED_ATTR_READS = {
+        "hand_open": 0,
+        "positions_stored": 0,
+        "hooks_lock": 0,
+        "hooks_state": AqaraE1HookState.Unlocked,
+        "light_level": 0,
+        "error_detected": 0,
+    }
+    update_attribute_cache(aqara_E1_device.endpoints[1].opple_cluster)
+
+    aqara_E1_device.endpoints[1].basic.PLUGGED_ATTR_READS = {
+        BasicCluster.AttributeDefs.power_source.name: BasicCluster.PowerSource.Mains_single_phase,
+    }
+    update_attribute_cache(aqara_E1_device.endpoints[1].basic)
+
+    WCAttrs = zigpy.zcl.clusters.closures.WindowCovering.AttributeDefs
+    WCT = zigpy.zcl.clusters.closures.WindowCovering.WindowCoveringType
+    WCCS = zigpy.zcl.clusters.closures.WindowCovering.ConfigStatus
+    aqara_E1_device.endpoints[1].window_covering.PLUGGED_ATTR_READS = {
+        WCAttrs.current_position_lift_percentage.name: 0,
+        WCAttrs.window_covering_type.name: WCT.Drapery,
+        WCAttrs.config_status.name: WCCS(~WCCS.Open_up_commands_reversed),
+    }
+    update_attribute_cache(aqara_E1_device.endpoints[1].window_covering)
+
+    zha_device = await zha_device_joined(aqara_E1_device)
+
+    power_source_entity_id = find_entity_id(
+        Platform.SENSOR,
+        zha_device,
+        hass,
+        qualifier=BasicCluster.AttributeDefs.power_source.name,
+    )
+    assert power_source_entity_id is not None
+    state = hass.states.get(power_source_entity_id)
+    assert state is not None
+    assert state.state == BasicCluster.PowerSource.Mains_single_phase.name
+
+    hook_state_entity_id = find_entity_id(
+        Platform.SENSOR,
+        zha_device,
+        hass,
+        qualifier="hooks_state",
+    )
+    assert hook_state_entity_id is not None
+    state = hass.states.get(hook_state_entity_id)
+    assert state is not None
+    assert state.state == AqaraE1HookState.Unlocked.name
+
+    error_detected_entity_id = find_entity_id(
+        Platform.BINARY_SENSOR,
+        zha_device,
+        hass,
+    )
+    assert error_detected_entity_id is not None
+    state = hass.states.get(error_detected_entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
+
+
+def _get_test_device(zigpy_device_mock, manufacturer: str, model: str):
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [
+                    zigpy.zcl.clusters.general.PowerConfiguration.cluster_id,
+                    zigpy.zcl.clusters.general.Groups.cluster_id,
+                    zigpy.zcl.clusters.general.OnOff.cluster_id,
+                ],
+                SIG_EP_OUTPUT: [
+                    zigpy.zcl.clusters.general.Scenes.cluster_id,
+                ],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.NON_COLOR_CONTROLLER,
+            }
+        },
+        ieee="01:2d:6f:00:0a:90:69:e8",
+        manufacturer=manufacturer,
+        model=model,
+    )
+
+    (
+        add_to_registry_v2(manufacturer, model, zigpy.quirks._DEVICE_REGISTRY)
+        .replaces(PowerConfig1CRCluster)
+        .replaces(ScenesCluster, cluster_type=ClusterType.Client)
+        .number(
+            zigpy.zcl.clusters.general.OnOff.AttributeDefs.off_wait_time.name,
+            zigpy.zcl.clusters.general.OnOff.cluster_id,
+            endpoint_id=3,
+            min_value=1,
+            max_value=100,
+            step=1,
+            unit=UnitOfTime.SECONDS,
+            multiplier=1,
+        )
+        .number(
+            zigpy.zcl.clusters.general.OnOff.AttributeDefs.off_wait_time.name,
+            zigpy.zcl.clusters.general.Time.cluster_id,
+            min_value=1,
+            max_value=100,
+            step=1,
+            unit=UnitOfTime.SECONDS,
+            multiplier=1,
+        )
+        .sensor(
+            zigpy.zcl.clusters.general.OnOff.AttributeDefs.off_wait_time.name,
+            zigpy.zcl.clusters.general.OnOff.cluster_id,
+            entity_type=EntityType.CONFIG,
+        )
+    )
+
+    zigpy_device = zigpy.quirks._DEVICE_REGISTRY.get_device(zigpy_device)
+    zigpy_device.endpoints[1].power.PLUGGED_ATTR_READS = {
+        "battery_voltage": 3,
+        "battery_percentage_remaining": 100,
+    }
+    update_attribute_cache(zigpy_device.endpoints[1].power)
+    zigpy_device.endpoints[1].on_off.PLUGGED_ATTR_READS = {
+        zigpy.zcl.clusters.general.OnOff.AttributeDefs.off_wait_time.name: 3,
+    }
+    update_attribute_cache(zigpy_device.endpoints[1].on_off)
+    return zigpy_device
+
+
+async def test_quirks_v2_entity_no_metadata(
+    hass: HomeAssistant,
+    zigpy_device_mock,
+    zha_device_joined,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test quirks v2 discovery skipped - no metadata."""
+
+    zigpy_device = _get_test_device(
+        zigpy_device_mock, "Ikea of Sweden2", "TRADFRI remote control2"
+    )
+    setattr(zigpy_device, "_exposes_metadata", {})
+    zha_device = await zha_device_joined(zigpy_device)
+    assert (
+        f"Device: {str(zigpy_device.ieee)}-{zha_device.name} does not expose any quirks v2 entities"
+        in caplog.text
+    )
+
+
+async def test_quirks_v2_entity_discovery_errors(
+    hass: HomeAssistant,
+    zigpy_device_mock,
+    zha_device_joined,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test quirks v2 discovery skipped - errors."""
+
+    zigpy_device = _get_test_device(
+        zigpy_device_mock, "Ikea of Sweden3", "TRADFRI remote control3"
+    )
+    zha_device = await zha_device_joined(zigpy_device)
+
+    m1 = f"Device: {str(zigpy_device.ieee)}-{zha_device.name} does not have an"
+    m2 = " endpoint with id: 3 - unable to create entity with cluster"
+    m3 = " details: (3, 6, <ClusterType.Server: 0>)"
+    assert f"{m1}{m2}{m3}" in caplog.text
+
+    time_cluster_id = zigpy.zcl.clusters.general.Time.cluster_id
+
+    m1 = f"Device: {str(zigpy_device.ieee)}-{zha_device.name} does not have a"
+    m2 = f" cluster with id: {time_cluster_id} - unable to create entity with "
+    m3 = f"cluster details: (1, {time_cluster_id}, <ClusterType.Server: 0>)"
+    assert f"{m1}{m2}{m3}" in caplog.text
+
+    # fmt: off
+    entity_details = (
+        "{'cluster_details': (1, 6, <ClusterType.Server: 0>), "
+        "'quirk_metadata': EntityMetadata(entity_metadata=ZCLSensorMetadata("
+        "attribute_name='off_wait_time', divisor=1, multiplier=1, unit=None, "
+        "device_class=None, state_class=None), entity_platform=<EntityPlatform."
+        "SENSOR: 'sensor'>, entity_type=<EntityType.CONFIG: 'config'>, "
+        "cluster_id=6, endpoint_id=1, cluster_type=<ClusterType.Server: 0>, "
+        "initially_disabled=False, attribute_initialized_from_cache=True, "
+        "translation_key=None)}"
+    )
+    # fmt: on
+
+    m1 = f"Device: {str(zigpy_device.ieee)}-{zha_device.name} has an entity with "
+    m2 = f"details: {entity_details} that does not have an entity class mapping - "
+    m3 = "unable to create entity"
+    assert f"{m1}{m2}{m3}" in caplog.text

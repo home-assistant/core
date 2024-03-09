@@ -1,4 +1,5 @@
 """Component providing support for Reolink sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -54,7 +55,6 @@ SENSORS = (
         key="ptz_pan_position",
         cmd_key="GetPtzCurPos",
         translation_key="ptz_pan_position",
-        icon="mdi:pan",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda api, ch: api.ptz_pan_position(ch),
@@ -67,7 +67,6 @@ HOST_SENSORS = (
         key="wifi_signal",
         cmd_key="GetWifiSignal",
         translation_key="wifi_signal",
-        icon="mdi:wifi",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,

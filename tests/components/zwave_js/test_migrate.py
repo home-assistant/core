@@ -1,4 +1,5 @@
 """Test the Z-Wave JS migration module."""
+
 import copy
 
 import pytest
