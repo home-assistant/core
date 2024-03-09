@@ -184,19 +184,19 @@ async def test_no_link(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "linking"}
 
     with patch_microbot_api():
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
             USER_INPUT,
         )
     await hass.async_block_till_done()
     
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["step_id"] == "link"
-    assert result2["errors"] == {}
+    assert result3["type"] == FlowResultType.FORM
+    assert result3["step_id"] == "link"
+    assert result3["errors"] == {}
     
     with patch_microbot_api(), patch_async_setup_entry() as mock_setup_entry:
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
             USER_INPUT,
         )
         await hass.async_block_till_done()
