@@ -13,9 +13,12 @@ from typing import TYPE_CHECKING
 
 from aiounifi.interfaces.api_handlers import ItemEvent
 
+from homeassistant.const import Platform
 from homeassistant.core import callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 
 from ..const import LOGGER
 from ..entity import UnifiEntity, UnifiEntityDescription
@@ -56,6 +59,11 @@ class UnifiEntityLoader:
         self.known_objects: set[tuple[str, str]] = set()
         """Tuples of entity description key and object ID of loaded entities."""
 
+    async def initialize(self) -> None:
+        """Initialize API data and extra client support."""
+        await self.refresh_api_data()
+        self.restore_inactive_clients()
+
     async def refresh_api_data(self) -> None:
         """Refresh API data from network application."""
         results = await asyncio.gather(
@@ -65,6 +73,26 @@ class UnifiEntityLoader:
         for result in results:
             if result is not None:
                 LOGGER.warning("Exception on update %s", result)
+
+    @callback
+    def restore_inactive_clients(self) -> None:
+        """Restore inactive clients.
+
+        Provide inactive clients to device tracker and switch platform.
+        """
+        config = self.hub.config
+        macs: list[str] = []
+        entity_registry = er.async_get(self.hub.hass)
+        for entry in async_entries_for_config_entry(
+            entity_registry, config.entry.entry_id
+        ):
+            if entry.domain == Platform.DEVICE_TRACKER and "-" in entry.unique_id:
+                macs.append(entry.unique_id.split("-", 1)[1])
+
+        api = self.hub.api
+        for mac in config.option_supported_clients + config.option_block_clients + macs:
+            if mac not in api.clients and mac in api.clients_all:
+                api.clients.process_raw([dict(api.clients_all[mac].raw)])
 
     @callback
     def register_platform(
