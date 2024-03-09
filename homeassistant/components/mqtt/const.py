@@ -14,7 +14,20 @@ ATTR_RETAIN = "retain"
 ATTR_SERIAL_NUMBER = "serial_number"
 ATTR_TOPIC = "topic"
 
+AVAILABILITY_ALL = "all"
+AVAILABILITY_ANY = "any"
+AVAILABILITY_LATEST = "latest"
+
+AVAILABILITY_MODES = [AVAILABILITY_ALL, AVAILABILITY_ANY, AVAILABILITY_LATEST]
+
+CONF_PAYLOAD_AVAILABLE = "payload_available"
+CONF_PAYLOAD_NOT_AVAILABLE = "payload_not_available"
+
+
 CONF_AVAILABILITY = "availability"
+CONF_AVAILABILITY_MODE = "availability_mode"
+CONF_AVAILABILITY_TEMPLATE = "availability_template"
+CONF_AVAILABILITY_TOPIC = "availability_topic"
 CONF_BROKER = "broker"
 CONF_BIRTH_MESSAGE = "birth_message"
 CONF_COMMAND_TEMPLATE = "command_template"
@@ -70,6 +83,7 @@ CONF_TEMP_MIN = "min_temp"
 CONF_CERTIFICATE = "certificate"
 CONF_CLIENT_KEY = "client_key"
 CONF_CLIENT_CERT = "client_cert"
+CONF_COMPONENTS = "components"
 CONF_TLS_INSECURE = "tls_insecure"
 
 # Device and integration info options
@@ -199,3 +213,33 @@ RELOADABLE_PLATFORMS = [
 ]
 
 TEMPLATE_ERRORS = (jinja2.TemplateError, TemplateError, TypeError, ValueError)
+
+SUPPORTED_COMPONENTS = {
+    "alarm_control_panel",
+    "binary_sensor",
+    "button",
+    "camera",
+    "climate",
+    "cover",
+    "device_automation",
+    "device_tracker",
+    "event",
+    "fan",
+    "humidifier",
+    "image",
+    "lawn_mower",
+    "light",
+    "lock",
+    "number",
+    "scene",
+    "siren",
+    "select",
+    "sensor",
+    "switch",
+    "tag",
+    "text",
+    "update",
+    "vacuum",
+    "valve",
+    "water_heater",
+}
