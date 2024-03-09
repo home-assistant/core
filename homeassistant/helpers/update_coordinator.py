@@ -133,6 +133,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                 cooldown=REQUEST_REFRESH_DEFAULT_COOLDOWN,
                 immediate=REQUEST_REFRESH_DEFAULT_IMMEDIATE,
                 function=self.async_refresh,
+                background=True,
             )
         else:
             request_refresh_debouncer.function = self.async_refresh

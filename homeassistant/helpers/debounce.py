@@ -23,6 +23,7 @@ class Debouncer(Generic[_R_co]):
         cooldown: float,
         immediate: bool,
         function: Callable[[], _R_co] | None = None,
+        background: bool = False,
     ) -> None:
         """Initialize debounce.
 
@@ -45,6 +46,7 @@ class Debouncer(Generic[_R_co]):
                 function, f"debouncer cooldown={cooldown}, immediate={immediate}"
             )
         )
+        self._background = background
         self._shutdown_requested = False
 
     @property
@@ -109,7 +111,9 @@ class Debouncer(Generic[_R_co]):
 
             assert self._job is not None
             try:
-                if task := self.hass.async_run_hass_job(self._job):
+                if task := self.hass.async_run_hass_job(
+                    self._job, background=self._background
+                ):
                     await task
             finally:
                 self._schedule_timer()
@@ -130,7 +134,9 @@ class Debouncer(Generic[_R_co]):
                 return
 
             try:
-                if task := self.hass.async_run_hass_job(self._job):
+                if task := self.hass.async_run_hass_job(
+                    self._job, background=self._background
+                ):
                     await task
             except Exception:  # pylint: disable=broad-except
                 self.logger.exception("Unexpected exception from %s", self.function)
