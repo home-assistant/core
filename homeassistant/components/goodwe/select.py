@@ -1,4 +1,5 @@
 """GoodWe PV inverter selection settings entities."""
+
 import logging
 
 from goodwe import Inverter, InverterError, OperationMode

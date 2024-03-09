@@ -1,4 +1,5 @@
 """Support for the Swedish weather institute weather service."""
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,

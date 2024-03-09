@@ -1,4 +1,5 @@
 """Fixtures for cloud tests."""
+
 from collections.abc import AsyncGenerator, Callable, Coroutine
 from typing import Any
 from unittest.mock import DEFAULT, MagicMock, PropertyMock, patch

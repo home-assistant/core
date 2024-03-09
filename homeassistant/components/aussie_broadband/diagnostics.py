@@ -1,4 +1,5 @@
 """Provides diagnostics for Aussie Broadband."""
+
 from __future__ import annotations
 
 from typing import Any

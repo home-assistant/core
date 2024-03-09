@@ -1,4 +1,5 @@
 """Config flow for the Reolink camera component."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping

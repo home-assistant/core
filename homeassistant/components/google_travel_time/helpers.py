@@ -1,4 +1,5 @@
 """Helpers for Google Time Travel integration."""
+
 import logging
 
 from googlemaps import Client

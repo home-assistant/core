@@ -1,4 +1,5 @@
 """Test the Aurora ABB PowerOne Solar PV sensors."""
+
 from unittest.mock import patch
 
 from aurorapy.client import AuroraError, AuroraTimeoutError

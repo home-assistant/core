@@ -1,4 +1,5 @@
 """Schemas used by insteon component."""
+
 from __future__ import annotations
 
 from binascii import Error as HexError, unhexlify

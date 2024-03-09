@@ -1,4 +1,5 @@
 """Test the Cloud Google Config."""
+
 from http import HTTPStatus
 from unittest.mock import Mock, patch
 

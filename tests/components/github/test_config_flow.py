@@ -1,4 +1,5 @@
 """Test the GitHub config flow."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiogithubapi import GitHubException

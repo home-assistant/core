@@ -1,4 +1,5 @@
 """Tests for the Season config flow."""
+
 from unittest.mock import MagicMock
 
 from homeassistant.components.season.const import DOMAIN, TYPE_ASTRONOMICAL

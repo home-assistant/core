@@ -1,4 +1,5 @@
 """Support for HomeMatic devices."""
+
 from datetime import datetime
 from functools import partial
 import logging

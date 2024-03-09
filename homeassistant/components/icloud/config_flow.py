@@ -1,4 +1,5 @@
 """Config flow to configure the iCloud integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping

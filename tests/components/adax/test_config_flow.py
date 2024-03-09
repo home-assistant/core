@@ -1,4 +1,5 @@
 """Test the Adax config flow."""
+
 from unittest.mock import patch
 
 import adax_local

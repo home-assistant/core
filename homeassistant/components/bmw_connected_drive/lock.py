@@ -1,4 +1,5 @@
 """Support for BMW car locks with BMW ConnectedDrive."""
+
 from __future__ import annotations
 
 import logging

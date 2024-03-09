@@ -1,4 +1,5 @@
 """Test the Version config flow."""
+
 from unittest.mock import patch
 
 from pyhaversion.consts import HaVersionChannel, HaVersionSource

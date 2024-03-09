@@ -1,4 +1,5 @@
 """Define tests for the Brother Printer config flow."""
+
 from ipaddress import ip_address
 import json
 from unittest.mock import patch

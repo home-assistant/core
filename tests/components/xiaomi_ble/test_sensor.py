@@ -1,4 +1,5 @@
 """Test Xiaomi BLE sensors."""
+
 from datetime import timedelta
 import time
 

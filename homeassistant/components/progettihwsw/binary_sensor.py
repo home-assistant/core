@@ -1,4 +1,5 @@
 """Control binary sensor instances."""
+
 import asyncio
 from datetime import timedelta
 import logging

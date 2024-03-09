@@ -1,4 +1,5 @@
 """Support for Washington State Department of Transportation (WSDOT) data."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone

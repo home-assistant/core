@@ -1,4 +1,5 @@
 """Component to interface with cameras."""
+
 from __future__ import annotations
 
 import asyncio
@@ -391,6 +392,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     prefs = CameraPreferences(hass)
+    await prefs.async_load()
     hass.data[DATA_CAMERA_PREFS] = prefs
 
     hass.http.register_view(CameraImageView(component))

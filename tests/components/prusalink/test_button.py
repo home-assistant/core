@@ -1,4 +1,5 @@
 """Test Prusalink buttons."""
+
 from unittest.mock import patch
 
 from pyprusalink.types import Conflict

@@ -1,4 +1,5 @@
 """Support for Synology DSM switch."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -34,7 +35,6 @@ SURVEILLANCE_SWITCH: tuple[SynologyDSMSwitchEntityDescription, ...] = (
         api_key=SynoSurveillanceStation.HOME_MODE_API_KEY,
         key="home_mode",
         translation_key="home_mode",
-        icon="mdi:home-account",
     ),
 )
 

@@ -1,4 +1,5 @@
 """Pluggable auth modules for Home Assistant."""
+
 from __future__ import annotations
 
 import importlib
@@ -95,8 +96,6 @@ class MultiFactorAuthModule:
 
 class SetupFlow(data_entry_flow.FlowHandler):
     """Handler for the setup flow."""
-
-    _flow_result = FlowResult
 
     def __init__(
         self, auth_module: MultiFactorAuthModule, setup_schema: vol.Schema, user_id: str

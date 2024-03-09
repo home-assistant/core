@@ -1,4 +1,5 @@
 """Test KNX expose."""
+
 from datetime import timedelta
 import time
 from unittest.mock import patch

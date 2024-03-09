@@ -1,4 +1,5 @@
 """Test APRS device tracker."""
+
 from collections.abc import Generator
 from unittest.mock import MagicMock, Mock, patch
 

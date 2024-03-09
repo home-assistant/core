@@ -669,6 +669,8 @@ build.json @home-assistant/supervisor
 /tests/components/jellyfin/ @j-stienstra @ctalkington
 /homeassistant/components/jewish_calendar/ @tsvi
 /tests/components/jewish_calendar/ @tsvi
+/homeassistant/components/juicenet/ @jesserockz
+/tests/components/juicenet/ @jesserockz
 /homeassistant/components/justnimbus/ @kvanzuijlen
 /tests/components/justnimbus/ @kvanzuijlen
 /homeassistant/components/jvc_projector/ @SteveEasley @msavazzi
@@ -858,8 +860,8 @@ build.json @home-assistant/supervisor
 /tests/components/nam/ @bieniu
 /homeassistant/components/nanoleaf/ @milanmeu
 /tests/components/nanoleaf/ @milanmeu
-/homeassistant/components/neato/ @dshokouhi @Santobert
-/tests/components/neato/ @dshokouhi @Santobert
+/homeassistant/components/neato/ @Santobert
+/tests/components/neato/ @Santobert
 /homeassistant/components/nederlandse_spoorwegen/ @YarmoM
 /homeassistant/components/ness_alarm/ @nickw444
 /tests/components/ness_alarm/ @nickw444
@@ -1093,7 +1095,6 @@ build.json @home-assistant/supervisor
 /tests/components/recovery_mode/ @home-assistant/core
 /homeassistant/components/refoss/ @ashionky
 /tests/components/refoss/ @ashionky
-/homeassistant/components/rejseplanen/ @DarkFox
 /homeassistant/components/remote/ @home-assistant/core
 /tests/components/remote/ @home-assistant/core
 /homeassistant/components/renault/ @epenet
