@@ -529,7 +529,7 @@ class Entity(
         _entity_component_unrecorded_attributes | _unrecorded_attributes
     )
     # Job type cache
-    _job_types: dict[str, HassJobType] = {}
+    _job_types: dict[str, HassJobType] | None = None
 
     # StateInfo. Set by EntityPlatform by calling async_internal_added_to_hass
     # While not purely typed, it makes typehinting more useful for us
@@ -577,6 +577,8 @@ class Entity(
         This is used for entity service calls to avoid
         figuring out the job type each time.
         """
+        if not self._job_types:
+            self._job_types = {}
         if function_name not in self._job_types:
             self._job_types[function_name] = get_hassjob_callable_job_type(
                 getattr(self, function_name)
