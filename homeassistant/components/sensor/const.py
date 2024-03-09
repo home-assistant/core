@@ -282,6 +282,12 @@ class SensorDeviceClass(StrEnum):
     Unit of measurement: `µg/m³`
     """
 
+    PM4 = "pm4"
+    """Particulate matter <= 4 μm.
+
+    Unit of measurement: `µg/m³`
+    """
+
     POWER_FACTOR = "power_factor"
     """Power factor.
 
