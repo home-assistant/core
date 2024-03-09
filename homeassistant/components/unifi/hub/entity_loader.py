@@ -20,7 +20,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 
-from ..const import LOGGER
+from ..const import LOGGER, UNIFI_WIRELESS_CLIENTS
 from ..entity import UnifiEntity, UnifiEntityDescription
 
 if TYPE_CHECKING:
@@ -46,6 +46,7 @@ class UnifiEntityLoader:
             hub.api.system_information.update,
             hub.api.wlans.update,
         )
+        self.wireless_clients = hub.hass.data[UNIFI_WIRELESS_CLIENTS]
 
         self.platforms: list[
             tuple[
@@ -63,6 +64,7 @@ class UnifiEntityLoader:
         """Initialize API data and extra client support."""
         await self.refresh_api_data()
         self.restore_inactive_clients()
+        self.wireless_clients.update_clients(set(self.hub.api.clients.values()))
 
     async def refresh_api_data(self) -> None:
         """Refresh API data from network application."""

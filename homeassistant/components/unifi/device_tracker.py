@@ -89,7 +89,7 @@ def async_client_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
         return False
 
     client = hub.api.clients[obj_id]
-    if client.mac not in hub.wireless_clients:
+    if client.mac not in hub.entity_loader.wireless_clients:
         if not hub.config.option_track_wired_clients:
             return False
 
@@ -108,7 +108,7 @@ def async_client_is_connected_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if device object is disabled."""
     client = hub.api.clients[obj_id]
 
-    if hub.wireless_clients.is_wireless(client) and client.is_wired:
+    if hub.entity_loader.wireless_clients.is_wireless(client) and client.is_wired:
         if not hub.config.option_ignore_wired_bug:
             return False  # Wired bug in action
 

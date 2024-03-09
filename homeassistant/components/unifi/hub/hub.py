@@ -19,13 +19,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 import homeassistant.util.dt as dt_util
 
-from ..const import (
-    ATTR_MANUFACTURER,
-    CONF_SITE_ID,
-    DOMAIN as UNIFI_DOMAIN,
-    PLATFORMS,
-    UNIFI_WIRELESS_CLIENTS,
-)
+from ..const import ATTR_MANUFACTURER, CONF_SITE_ID, DOMAIN as UNIFI_DOMAIN, PLATFORMS
 from .config import UnifiConfig
 from .entity_loader import UnifiEntityLoader
 from .websocket import UnifiWebsocket
@@ -45,8 +39,6 @@ class UnifiHub:
         self.config = UnifiConfig.from_config_entry(config_entry)
         self.entity_loader = UnifiEntityLoader(self)
         self.websocket = UnifiWebsocket(hass, api, self.signal_reachable)
-
-        self.wireless_clients = hass.data[UNIFI_WIRELESS_CLIENTS]
 
         self.site = config_entry.data[CONF_SITE_ID]
         self.is_admin = False
@@ -90,8 +82,6 @@ class UnifiHub:
 
         assert self.config.entry.unique_id is not None
         self.is_admin = self.api.sites[self.config.entry.unique_id].role == "admin"
-
-        self.wireless_clients.update_clients(set(self.api.clients.values()))
 
         self.config.entry.add_update_listener(self.async_config_entry_updated)
 
