@@ -18,20 +18,13 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class IdasenDeskButtonDescriptionMixin:
-    """Mixin to describe a IdasenDesk button entity."""
+@dataclass(frozen=True, kw_only=True)
+class IdasenDeskButtonDescription(ButtonEntityDescription):
+    """Class to describe a IdasenDesk button entity."""
 
     press_action: Callable[
         [IdasenDeskCoordinator], Callable[[], Coroutine[Any, Any, Any]]
     ]
-
-
-@dataclass(frozen=True)
-class IdasenDeskButtonDescription(
-    ButtonEntityDescription, IdasenDeskButtonDescriptionMixin
-):
-    """Class to describe a IdasenDesk button entity."""
 
 
 BUTTONS: Final = [

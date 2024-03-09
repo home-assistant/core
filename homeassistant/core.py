@@ -125,7 +125,7 @@ _P = ParamSpec("_P")
 # Internal; not helpers.typing.UNDEFINED due to circular dependency
 _UNDEF: dict[Any, Any] = {}
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
-_DataT = TypeVar("_DataT", bound=Mapping[str, Any], default=dict[str, Any])
+_DataT = TypeVar("_DataT", bound=Mapping[str, Any], default=Mapping[str, Any])
 CALLBACK_TYPE = Callable[[], None]
 
 CORE_STORAGE_KEY = "core.config"
@@ -299,7 +299,7 @@ class HassJob(Generic[_P, _R_co]):
     @cached_property
     def job_type(self) -> HassJobType:
         """Return the job type."""
-        return self._job_type or _get_hassjob_callable_job_type(self.target)
+        return self._job_type or get_hassjob_callable_job_type(self.target)
 
     @property
     def cancel_on_shutdown(self) -> bool | None:
@@ -319,7 +319,7 @@ class HassJobWithArgs:
     args: Iterable[Any]
 
 
-def _get_hassjob_callable_job_type(target: Callable[..., Any]) -> HassJobType:
+def get_hassjob_callable_job_type(target: Callable[..., Any]) -> HassJobType:
     """Determine the job type from the callable."""
     # Check for partials to properly determine if coroutine function
     check_target = target
