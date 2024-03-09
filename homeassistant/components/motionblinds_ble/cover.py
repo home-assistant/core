@@ -86,6 +86,8 @@ class GenericBlind(CoverEntity):
 
     _attr_is_closed: bool | None = None
     _attr_should_poll = False
+    _attr_has_entity_name = True
+    _attr_name = None
 
     _device: MotionDevice
 
@@ -105,13 +107,12 @@ class GenericBlind(CoverEntity):
         self.entity_description = COVER_TYPES[entry.data[CONF_BLIND_TYPE]]
         self.config_entry: ConfigEntry = entry
 
-        self._attr_name: str = device.display_name
         self._attr_unique_id: str = entry.data[CONF_ADDRESS]
         self._attr_device_info: DeviceInfo = DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, entry.data[CONF_ADDRESS])},
             manufacturer=MANUFACTURER,
             model=entry.data[CONF_BLIND_TYPE],
-            name=self._attr_name,
+            name=device.display_name,
         )
 
     async def async_update(self) -> None:
