@@ -528,7 +528,7 @@ class Entity(
     __combined_unrecorded_attributes: frozenset[str] = (
         _entity_component_unrecorded_attributes | _unrecorded_attributes
     )
-    # Job cache
+    # Job type cache
     _job_types: dict[str, HassJobType] = {}
 
     # StateInfo. Set by EntityPlatform by calling async_internal_added_to_hass
