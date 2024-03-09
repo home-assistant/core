@@ -463,7 +463,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Setup discovery
         if conf.get(CONF_DISCOVERY, DEFAULT_DISCOVERY):
             await discovery.async_start(
-                hass, conf.get(CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX)
+                hass, conf.get(CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX), entry
             )
         # Setup reload service after all platforms have loaded
         await async_setup_reload_service()
