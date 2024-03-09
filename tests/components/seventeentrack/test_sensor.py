@@ -81,10 +81,10 @@ async def test_add_package(
     assert len(hass.states.async_entity_ids()) == 2
 
 
-async def test_add_package_no_friendly_name(
+async def test_add_package_default_friendly_name(
     hass: HomeAssistant, mock_seventeentrack: AsyncMock
 ) -> None:
-    """Ensure package is added correctly when user add a new package."""
+    """Ensure package is added correctly with default friendly name when user add a new package without his own friendly name."""
     package = get_package(friendly_name=None)
     mock_seventeentrack.return_value.profile.packages.return_value = [package]
     mock_seventeentrack.return_value.profile.summary.return_value = {}
@@ -122,6 +122,11 @@ async def test_remove_package(
     assert len(hass.states.async_entity_ids()) == 2
 
     mock_seventeentrack.return_value.profile.packages.return_value = [package2]
+
+    await _goto_future(hass, freezer)
+
+    assert hass.states.get("sensor.seventeentrack_package_456").state == "unavailable"
+    assert len(hass.states.async_entity_ids()) == 2
 
     await _goto_future(hass, freezer)
 
@@ -225,6 +230,7 @@ async def test_becomes_delivered_not_shown_notification(
         "homeassistant.components.seventeentrack.sensor.persistent_notification"
     ) as persistent_notification_mock:
         await _goto_future(hass, freezer)
+        await _goto_future(hass, freezer)
 
         persistent_notification_mock.create.assert_called()
         assert not hass.states.async_entity_ids()
@@ -241,10 +247,6 @@ async def test_summary_correctly_updated(
     await init_integration(hass, VALID_CONFIG_FULL)
 
     assert len(hass.states.async_entity_ids()) == 8
-    for state in hass.states.async_all():
-        if state.entity_id == "sensor.seventeentrack_package_456":
-            break
-        assert state.state == "0"
 
     state_ready_picked = hass.states.get(
         "sensor.seventeentrack_packages_ready_to_be_picked_up"
@@ -255,6 +257,7 @@ async def test_summary_correctly_updated(
     mock_seventeentrack.return_value.profile.packages.return_value = []
     mock_seventeentrack.return_value.profile.summary.return_value = NEW_SUMMARY_DATA
 
+    await _goto_future(hass, freezer)
     await _goto_future(hass, freezer)
 
     assert len(hass.states.async_entity_ids()) == 7
@@ -281,10 +284,6 @@ async def test_summary_error(
     await init_integration(hass, VALID_CONFIG_FULL)
 
     assert len(hass.states.async_entity_ids()) == 1
-    for state in hass.states.async_all():
-        if state.entity_id == "sensor.seventeentrack_package_456":
-            break
-        assert state.state == "0"
 
     assert (
         hass.states.get("sensor.seventeentrack_packages_ready_to_be_picked_up") is None

@@ -20,7 +20,6 @@ async def init_integration(hass: HomeAssistant, config: ConfigType):
 
 async def _goto_future(hass: HomeAssistant, freezer: FrozenDateTimeFactory):
     """Move to future."""
-    for _ in range(2):
-        freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(minutes=1))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+    freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
