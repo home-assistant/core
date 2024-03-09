@@ -130,10 +130,10 @@ class EntityPlatform:
         # Storage for entities for this specific platform only
         # which are indexed by entity_id
         self.entities: dict[str, Entity] = {}
-        self.component_translations: dict[str, Any] = {}
-        self.platform_translations: dict[str, Any] = {}
-        self.object_id_component_translations: dict[str, Any] = {}
-        self.object_id_platform_translations: dict[str, Any] = {}
+        self.component_translations: dict[str, str] = {}
+        self.platform_translations: dict[str, str] = {}
+        self.object_id_component_translations: dict[str, str] = {}
+        self.object_id_platform_translations: dict[str, str] = {}
         self._tasks: list[asyncio.Task[None]] = []
         # Stop tracking tasks after setup is completed
         self._setup_complete = False
@@ -419,7 +419,7 @@ class EntityPlatform:
 
     async def _async_get_translations(
         self, language: str, category: str, integration: str
-    ) -> dict[str, Any]:
+    ) -> dict[str, str]:
         """Get translations for a language, category, and integration."""
         try:
             return await translation.async_get_translations(
