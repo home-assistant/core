@@ -25,7 +25,6 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -34,8 +33,8 @@ from .const import (
     CONF_MAC_CODE,
     DOMAIN,
     ICON_VERTICAL_BLIND,
-    MANUFACTURER,
 )
+from .entity import MotionblindsBLEEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,15 +80,12 @@ async def async_setup_entry(
     async_add_entities([entity])
 
 
-class GenericBlind(CoverEntity):
+class GenericBlind(MotionblindsBLEEntity, CoverEntity):
     """Representation of a blind."""
 
     _attr_is_closed: bool | None = None
     _attr_should_poll = False
-    _attr_has_entity_name = True
     _attr_name = None
-
-    _device: MotionDevice
 
     def __init__(self, device: MotionDevice, entry: ConfigEntry) -> None:
         """Initialize the blind."""
@@ -99,21 +95,13 @@ class GenericBlind(CoverEntity):
             entry.data[CONF_BLIND_TYPE],
             BLIND_TYPE_TO_CLASS[entry.data[CONF_BLIND_TYPE]].__name__,
         )
-        super().__init__()
-        self._device = device
+        MotionblindsBLEEntity.__init__(self, device, entry)
+        CoverEntity.__init__(self)
+        self._attr_unique_id: str = entry.data[CONF_ADDRESS]
+        self.entity_description = COVER_TYPES[entry.data[CONF_BLIND_TYPE]]
         self._device.register_running_callback(self.async_update_running)
         self._device.register_position_callback(self.async_update_position)
         self._device.register_connection_callback(self.async_update_connection)
-        self.entity_description = COVER_TYPES[entry.data[CONF_BLIND_TYPE]]
-        self.config_entry: ConfigEntry = entry
-
-        self._attr_unique_id: str = entry.data[CONF_ADDRESS]
-        self._attr_device_info: DeviceInfo = DeviceInfo(
-            connections={(CONNECTION_BLUETOOTH, entry.data[CONF_ADDRESS])},
-            manufacturer=MANUFACTURER,
-            model=entry.data[CONF_BLIND_TYPE],
-            name=device.display_name,
-        )
 
     async def async_update(self) -> None:
         """Update state, called by HA if there is a poll interval and by the service homeassistant.update_entity."""
