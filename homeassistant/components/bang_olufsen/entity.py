@@ -1,4 +1,5 @@
 """Entity representing a Bang & Olufsen device."""
+
 from __future__ import annotations
 
 from typing import cast

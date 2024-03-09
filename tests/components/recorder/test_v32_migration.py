@@ -1,4 +1,5 @@
 """The tests for recorder platform migrating data from v30."""
+
 from datetime import timedelta
 import importlib
 from pathlib import Path

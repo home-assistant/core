@@ -1,4 +1,5 @@
 """All methods needed to bootstrap a Home Assistant instance."""
+
 from __future__ import annotations
 
 import asyncio
@@ -27,7 +28,7 @@ from .core import (
 from .exceptions import DependencyError, HomeAssistantError
 from .helpers import translation
 from .helpers.issue_registry import IssueSeverity, async_create_issue
-from .helpers.typing import ConfigType, EventType
+from .helpers.typing import ConfigType
 from .util import ensure_unique_string
 from .util.async_ import create_eager_task
 
@@ -584,14 +585,14 @@ def _async_when_setup(
 
     listeners: list[CALLBACK_TYPE] = []
 
-    async def _matched_event(event: Event) -> None:
+    async def _matched_event(event: Event[Any]) -> None:
         """Call the callback when we matched an event."""
         for listener in listeners:
             listener()
         await when_setup()
 
     @callback
-    def _async_is_component_filter(event: EventType[EventComponentLoaded]) -> bool:
+    def _async_is_component_filter(event: Event[EventComponentLoaded]) -> bool:
         """Check if the event is for the component."""
         return event.data[ATTR_COMPONENT] == component
 
@@ -599,7 +600,7 @@ def _async_when_setup(
         hass.bus.async_listen(
             EVENT_COMPONENT_LOADED,
             _matched_event,
-            event_filter=_async_is_component_filter,  # type: ignore[arg-type]
+            event_filter=_async_is_component_filter,
         )
     )
     if start_event:

@@ -1,4 +1,5 @@
 """Support for SleepIQ foundation preset selection."""
+
 from __future__ import annotations
 
 from asyncsleepiq import (

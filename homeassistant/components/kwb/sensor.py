@@ -1,4 +1,5 @@
 """Support for KWB Easyfire."""
+
 from __future__ import annotations
 
 from pykwb import kwb

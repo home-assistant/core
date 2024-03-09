@@ -3,6 +3,7 @@
 Support for bandwidth sensors of network clients.
 Support for uptime sensors of network clients.
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable

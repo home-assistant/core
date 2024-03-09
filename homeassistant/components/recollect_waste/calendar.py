@@ -1,4 +1,5 @@
 """Support for ReCollect Waste calendars."""
+
 from __future__ import annotations
 
 import datetime

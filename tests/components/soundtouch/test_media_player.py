@@ -1,4 +1,5 @@
 """Test the SoundTouch component."""
+
 from datetime import timedelta
 from typing import Any
 

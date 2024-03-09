@@ -1,4 +1,5 @@
 """The tests for the MQTT subscription component."""
+
 from unittest.mock import ANY, patch
 
 import pytest

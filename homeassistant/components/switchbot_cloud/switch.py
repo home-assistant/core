@@ -1,4 +1,5 @@
 """Support for SwitchBot switch."""
+
 from typing import Any
 
 from switchbot_api import CommonCommands, Device, PowerState, Remote, SwitchBotAPI

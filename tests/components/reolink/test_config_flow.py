@@ -1,4 +1,5 @@
 """Test the Reolink config flow."""
+
 from datetime import timedelta
 import json
 from typing import Any

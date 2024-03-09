@@ -1,4 +1,5 @@
 """The tests for the Modbus sensor component."""
+
 import copy
 from dataclasses import dataclass
 from datetime import timedelta

@@ -1,4 +1,5 @@
 """Config flow for Vogel's MotionMount."""
+
 import logging
 import socket
 from typing import Any

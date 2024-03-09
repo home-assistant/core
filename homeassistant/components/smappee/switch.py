@@ -1,4 +1,5 @@
 """Support for interacting with Smappee Comport Plugs, Switches and Output Modules."""
+
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity

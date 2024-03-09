@@ -1,4 +1,5 @@
 """Support for Solax inverter via local API."""
+
 from __future__ import annotations
 
 import asyncio

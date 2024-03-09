@@ -1,4 +1,5 @@
 """Support for deCONZ alarm control panel devices."""
+
 from __future__ import annotations
 
 from pydeconz.models.alarm_system import AlarmSystemArmAction

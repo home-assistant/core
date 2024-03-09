@@ -1,4 +1,5 @@
 """Control switches."""
+
 import asyncio
 from datetime import timedelta
 import logging

@@ -1,4 +1,5 @@
 """Test the Pentair ScreenLogic config flow."""
+
 from unittest.mock import patch
 
 from screenlogicpy import ScreenLogicError

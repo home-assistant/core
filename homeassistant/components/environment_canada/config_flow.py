@@ -1,4 +1,5 @@
 """Config flow for Environment Canada integration."""
+
 import logging
 import xml.etree.ElementTree as et
 

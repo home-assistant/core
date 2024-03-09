@@ -1,4 +1,5 @@
 """Test Zeroconf multiple instance protection."""
+
 from unittest.mock import Mock, patch
 
 import pytest

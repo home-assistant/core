@@ -1,4 +1,5 @@
 """The roomba component."""
+
 import asyncio
 import contextlib
 from functools import partial

@@ -1,4 +1,5 @@
 """Test the NextBus config flow."""
+
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 

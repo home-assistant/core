@@ -1,4 +1,5 @@
 """Weather information for air and road temperature (by Trafikverket)."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

@@ -1,4 +1,5 @@
 """The test for the sensibo number platform."""
+
 from __future__ import annotations
 
 from datetime import timedelta

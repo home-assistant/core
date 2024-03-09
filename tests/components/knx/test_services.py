@@ -1,4 +1,5 @@
 """Test KNX services."""
+
 from unittest.mock import patch
 
 import pytest
@@ -252,6 +253,7 @@ async def test_exposure_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
     hass.states.async_set(test_entity, STATE_ON, {test_attribute: 25})
     hass.states.async_set(test_entity, STATE_ON, {test_attribute: 25, "unrelated": 2})
     hass.states.async_set(test_entity, STATE_OFF, {test_attribute: 25})
+    await hass.async_block_till_done()
     await knx.assert_telegram_count(1)
     await knx.assert_write(test_address, (25,))
 

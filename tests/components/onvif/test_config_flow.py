@@ -1,4 +1,5 @@
 """Test ONVIF config flow."""
+
 import logging
 from unittest.mock import MagicMock, patch
 

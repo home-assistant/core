@@ -1,4 +1,5 @@
 """The tests for the Script component."""
+
 import asyncio
 from datetime import timedelta
 from typing import Any

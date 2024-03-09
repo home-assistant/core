@@ -1,4 +1,5 @@
 """Fixtures for the Sensibo integration."""
+
 from __future__ import annotations
 
 import json

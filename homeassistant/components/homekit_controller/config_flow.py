@@ -1,4 +1,5 @@
 """Config flow to configure homekit_controller."""
+
 from __future__ import annotations
 
 import logging
