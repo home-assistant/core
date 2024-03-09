@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import copy
-import json
 from typing import TYPE_CHECKING, Any
 
 from attr import asdict
@@ -20,6 +19,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.json import json_dumps
+from homeassistant.util.json import json_loads
 
 from .const import DOMAIN
 from .coordinator import EnphaseUpdateCoordinator
@@ -70,15 +71,13 @@ async def async_get_config_entry_diagnostics(
     old_serial = coordinator.envoy_serial_number
 
     coordinator_data = copy.deepcopy(coordinator.data)
-    coordinator_data_to_clean = json.dumps(coordinator_data).replace(
+    coordinator_data_cleaned = json_dumps(coordinator_data).replace(
         old_serial, CLEAN_TEXT
     )
-    coordinator_data = json.loads(coordinator_data_to_clean)
 
-    device_entities_to_clean = json.dumps(device_entities).replace(
+    device_entities_cleaned = json_dumps(device_entities).replace(
         old_serial, CLEAN_TEXT
     )
-    device_entities = json.loads(device_entities_to_clean)
 
     envoy_model: dict[str, Any] = {
         "encharge_inventory": envoy_data.encharge_inventory,
@@ -115,9 +114,9 @@ async def async_get_config_entry_diagnostics(
     diagnostic_data: dict[str, Any] = {
         "config_entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "envoy_properties": envoy_properties,
-        "raw_data": coordinator_data,
+        "raw_data": json_loads(coordinator_data_cleaned),
         "envoy_model_data": envoy_model,
-        "envoy_entities_by_device": device_entities,
+        "envoy_entities_by_device": json_loads(device_entities_cleaned),
     }
 
     return diagnostic_data
