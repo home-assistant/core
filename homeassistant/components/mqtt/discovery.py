@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque
-from contextlib import suppress
 import functools
 import logging
 import re
@@ -13,7 +12,7 @@ from typing import TYPE_CHECKING, Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE, CONF_NAME, CONF_PLATFORM, Platform
+from homeassistant.const import CONF_DEVICE, CONF_NAME, CONF_PLATFORM
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
@@ -142,8 +141,7 @@ async def async_start(  # noqa: C901
 ) -> None:
     """Start MQTT Discovery."""
     mqtt_data = get_mqtt_data(hass)
-    mqtt_integrations = {}
-    platform_setup_lock = asyncio.Lock()
+    platform_setup_lock: dict[str, asyncio.Lock] = {}
 
     async def _async_jit_component_setup(
         discovery_payload: MQTTDiscoveryPayload,
@@ -151,9 +149,8 @@ async def async_start(  # noqa: C901
         """Perform just in time components set up."""
         discovery_hash = discovery_payload.discovery_data[ATTR_DISCOVERY_HASH]
         component, discovery_id = discovery_hash
-        with suppress(ValueError):
-            component = Platform(component)
-        async with platform_setup_lock:
+        platform_setup_lock.setdefault(component, asyncio.Lock())
+        async with platform_setup_lock[component]:
             if component not in mqtt_data.platforms_loaded:
                 await async_forward_entry_setup_and_setup_discovery(
                     hass, config_entry, {component}
