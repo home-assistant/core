@@ -181,6 +181,8 @@ def get_entities(onewire_hub: OneWireHub) -> list[OneWireSwitch]:
         if "EF" in family:
             device_sub_type = "HobbyBoard"
             family = device_type
+        elif family == "A6":
+            family = "26"
 
         if family not in get_sensor_types(device_sub_type):
             continue
