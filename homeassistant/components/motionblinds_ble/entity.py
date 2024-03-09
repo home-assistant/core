@@ -23,8 +23,18 @@ class MotionblindsBLEEntity(Entity):
     _device: MotionDevice
     config_entry: ConfigEntry
 
-    def __init__(self, device: MotionDevice, entry: ConfigEntry) -> None:
+    def __init__(
+        self,
+        device: MotionDevice,
+        entry: ConfigEntry,
+        unique_id_suffix: str | None = None,
+    ) -> None:
         """Initialize the entity."""
+        self._attr_unique_id: str = (
+            entry.data[CONF_ADDRESS]
+            if unique_id_suffix is None
+            else f"{entry.data[CONF_ADDRESS]}_{unique_id_suffix}"
+        )
         self._device = device
         self.config_entry = entry
         self._attr_device_info = DeviceInfo(
