@@ -21,6 +21,7 @@ from .const import (
     CHARGER_ENERGY_PRICE_KEY,
     CHARGER_LOCKED_UNLOCKED_KEY,
     CHARGER_MAX_CHARGING_CURRENT_KEY,
+    CHARGER_OCPP_STATUS_KEY,
     CHARGER_STATUS_DESCRIPTION_KEY,
     CHARGER_STATUS_ID_KEY,
     CODE_KEY,
@@ -62,6 +63,14 @@ CHARGER_STATUS: dict[int, ChargerStatus] = {
     196: ChargerStatus.DISCHARGING,
     209: ChargerStatus.LOCKED,
     210: ChargerStatus.LOCKED_CAR_CONNECTED,
+}
+
+OCPP_STATUS: dict[int, str] = {
+    0: "disconnected",
+    1: "disabled",
+    2: "connecting",
+    3: "error",
+    4: "connected",
 }
 
 _WallboxCoordinatorT = TypeVar("_WallboxCoordinatorT", bound="WallboxCoordinator")
@@ -140,6 +149,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         data[CHARGER_STATUS_DESCRIPTION_KEY] = CHARGER_STATUS.get(
             data[CHARGER_STATUS_ID_KEY], ChargerStatus.UNKNOWN
         )
+        data[CHARGER_OCPP_STATUS_KEY] = OCPP_STATUS.get(data[CHARGER_OCPP_STATUS_KEY])
         return data
 
     async def _async_update_data(self) -> dict[str, Any]:
