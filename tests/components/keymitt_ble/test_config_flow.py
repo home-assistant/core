@@ -186,7 +186,7 @@ async def test_no_link(hass: HomeAssistant) -> None:
 
     with patch_microbot_api(), patch(
         "homeassistant.components.keymitt_ble.config_flow.MicroBotApiClient",
-        MockMicroBotApiClient,
+        MockMicroBotApiClient
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
