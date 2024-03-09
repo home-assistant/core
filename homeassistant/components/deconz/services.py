@@ -18,7 +18,7 @@ from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from .config_flow import get_master_gateway
 from .const import CONF_BRIDGE_ID, DOMAIN, LOGGER
-from .gateway import DeconzHub
+from .hub import DeconzHub
 
 DECONZ_SERVICES = "deconz_services"
 

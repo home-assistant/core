@@ -32,7 +32,7 @@ import homeassistant.helpers.entity_registry as er
 
 from .const import ATTR_DARK, ATTR_ON, DOMAIN as DECONZ_DOMAIN
 from .deconz_device import DeconzDevice
-from .gateway import DeconzHub, get_gateway_from_config_entry
+from .hub import DeconzHub, get_gateway_from_config_entry
 from .util import serial_from_unique_id
 
 _SensorDeviceT = TypeVar("_SensorDeviceT", bound=PydeconzSensorBase)

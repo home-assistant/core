@@ -36,7 +36,7 @@ from homeassistant.util.color import color_hs_to_xy
 
 from .const import DOMAIN as DECONZ_DOMAIN, POWER_PLUGS
 from .deconz_device import DeconzDevice
-from .gateway import DeconzHub, get_gateway_from_config_entry
+from .hub import DeconzHub, get_gateway_from_config_entry
 
 DECONZ_GROUP = "is_deconz_group"
 EFFECT_TO_DECONZ = {

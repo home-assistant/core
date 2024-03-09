@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .deconz_device import DeconzDevice
-from .gateway import DeconzHub, get_gateway_from_config_entry
+from .hub import DeconzHub, get_gateway_from_config_entry
 
 DECONZ_TYPE_TO_DEVICE_CLASS = {
     ResourceType.LEVEL_CONTROLLABLE_OUTPUT.value: CoverDeviceClass.DAMPER,

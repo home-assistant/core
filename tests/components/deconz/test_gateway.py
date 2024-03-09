@@ -18,8 +18,10 @@ from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.deconz.config_flow import DECONZ_MANUFACTURERURL
 from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.errors import AuthenticationRequired, CannotConnect
-from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
-from homeassistant.components.deconz.hub import get_deconz_api
+from homeassistant.components.deconz.hub import (
+    get_deconz_api,
+    get_gateway_from_config_entry,
+)
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN

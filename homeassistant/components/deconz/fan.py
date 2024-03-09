@@ -17,7 +17,7 @@ from homeassistant.util.percentage import (
 )
 
 from .deconz_device import DeconzDevice
-from .gateway import DeconzHub, get_gateway_from_config_entry
+from .hub import DeconzHub, get_gateway_from_config_entry
 
 ORDERED_NAMED_FAN_SPEEDS: list[LightFanSpeed] = [
     LightFanSpeed.PERCENT_25,

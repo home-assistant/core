@@ -31,7 +31,7 @@ from .deconz_event import (
     DeconzPresenceEvent,
     DeconzRelativeRotaryEvent,
 )
-from .gateway import DeconzHub
+from .hub import DeconzHub
 
 CONF_SUBTYPE = "subtype"
 

@@ -16,7 +16,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN as DECONZ_DOMAIN
-from .gateway import DeconzHub
+from .hub import DeconzHub
 from .util import serial_from_unique_id
 
 _DeviceT = TypeVar(

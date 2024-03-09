@@ -18,7 +18,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import (
+from ..const import (
     CONF_ALLOW_CLIP_SENSOR,
     CONF_ALLOW_DECONZ_GROUPS,
     CONF_ALLOW_NEW_DEVICES,
@@ -32,7 +32,7 @@ from .const import (
 )
 
 if TYPE_CHECKING:
-    from .deconz_event import (
+    from ..deconz_event import (
         DeconzAlarmEvent,
         DeconzEvent,
         DeconzPresenceEvent,

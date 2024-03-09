@@ -29,7 +29,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .deconz_device import DeconzDevice
-from .gateway import DeconzHub, get_gateway_from_config_entry
+from .hub import DeconzHub, get_gateway_from_config_entry
 
 DECONZ_TO_ALARM_STATE = {
     AncillaryControlPanel.ARMED_AWAY: STATE_ALARM_ARMED_AWAY,

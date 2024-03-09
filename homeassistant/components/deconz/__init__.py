@@ -19,8 +19,7 @@ from .config_flow import get_master_gateway
 from .const import CONF_GROUP_ID_BASE, CONF_MASTER_GATEWAY, DOMAIN, PLATFORMS
 from .deconz_event import async_setup_events, async_unload_events
 from .errors import AuthenticationRequired, CannotConnect
-from .gateway import DeconzHub
-from .hub import get_deconz_api
+from .hub import DeconzHub, get_deconz_api
 from .services import async_setup_services, async_unload_services
 
 

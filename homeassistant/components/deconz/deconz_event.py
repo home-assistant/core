@@ -26,7 +26,7 @@ from homeassistant.util import slugify
 
 from .const import ATTR_DURATION, ATTR_ROTATION, CONF_ANGLE, CONF_GESTURE, LOGGER
 from .deconz_device import DeconzBase
-from .gateway import DeconzHub
+from .hub import DeconzHub
 
 CONF_DECONZ_EVENT = "deconz_event"
 CONF_DECONZ_ALARM_EVENT = "deconz_alarm_event"
