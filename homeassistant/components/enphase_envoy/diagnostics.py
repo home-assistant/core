@@ -25,6 +25,7 @@ from .const import DOMAIN
 from .coordinator import EnphaseUpdateCoordinator
 
 CONF_TITLE = "title"
+CLEAN_TEXT = "<<envoyserial>>"
 
 TO_REDACT = {
     CONF_NAME,
@@ -51,7 +52,7 @@ async def async_get_config_entry_diagnostics(
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
 
-    devices = []
+    device_entities = []
     # for each device associated with the envoy get entity and state information
     for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
         entities = []
@@ -63,19 +64,21 @@ async def async_get_config_entry_diagnostics(
                 state_dict = dict(state.as_dict())
                 state_dict.pop("context", None)
             entities.append({"entity": asdict(entity), "state": state_dict})
-        devices.append({"device": asdict(device), "entities": entities})
+        device_entities.append({"device": asdict(device), "entities": entities})
 
-    # redact envoy serial in entity data
-    device_entities = json.loads(
-        json.dumps(devices).replace(coordinator.envoy_serial_number, "<<envoyserial>>")
-    )
+    # remove envoy serial
+    old_serial = coordinator.envoy_serial_number
 
-    # redact envoy serial in envoy data
-    cleaned_data = json.loads(
-        json.dumps(copy.deepcopy(coordinator.data)).replace(
-            coordinator.envoy_serial_number, "<<envoyserial>>"
-        )
+    coordinator_data = copy.deepcopy(coordinator.data)
+    coordinator_data_to_clean = json.dumps(coordinator_data).replace(
+        old_serial, CLEAN_TEXT
     )
+    coordinator_data = json.loads(coordinator_data_to_clean)
+
+    device_entities_to_clean = json.dumps(device_entities).replace(
+        old_serial, CLEAN_TEXT
+    )
+    device_entities = json.loads(device_entities_to_clean)
 
     envoy_model: dict[str, Any] = {
         "encharge_inventory": envoy_data.encharge_inventory,
@@ -112,7 +115,7 @@ async def async_get_config_entry_diagnostics(
     diagnostic_data: dict[str, Any] = {
         "config_entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "envoy_properties": envoy_properties,
-        "raw_data": cleaned_data,
+        "raw_data": coordinator_data,
         "envoy_model_data": envoy_model,
         "envoy_entities_by_device": device_entities,
     }
