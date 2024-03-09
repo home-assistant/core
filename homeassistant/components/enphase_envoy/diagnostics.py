@@ -6,7 +6,6 @@ import copy
 from typing import TYPE_CHECKING, Any
 
 from attr import asdict
-from pyenphase import Envoy, EnvoyData
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
@@ -47,8 +46,8 @@ async def async_get_config_entry_diagnostics(
 
     if TYPE_CHECKING:
         assert coordinator.envoy.data
-    envoy_data: EnvoyData = coordinator.envoy.data
-    envoy: Envoy = coordinator.envoy
+    envoy_data = coordinator.envoy.data
+    envoy = coordinator.envoy
 
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
