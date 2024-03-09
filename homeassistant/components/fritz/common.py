@@ -49,6 +49,7 @@ from .const import (
     DEFAULT_DEVICE_NAME,
     DEFAULT_HOST,
     DEFAULT_PORT,
+    DEFAULT_SSL,
     DEFAULT_USERNAME,
     DOMAIN,
     FRITZ_EXCEPTIONS,
@@ -187,7 +188,7 @@ class FritzBoxTools(
         username: str = DEFAULT_USERNAME,
         host: str = DEFAULT_HOST,
         port: int = DEFAULT_PORT,
-        use_tls: bool = False,
+        use_tls: bool = DEFAULT_SSL,
     ) -> None:
         """Initialize FritzboxTools class."""
         super().__init__(

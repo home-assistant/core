@@ -39,6 +39,7 @@ from .const import (
     DEFAULT_CONF_OLD_DISCOVERY,
     DEFAULT_HOST,
     DEFAULT_PORT,
+    DEFAULT_SSL,
     DOMAIN,
     ERROR_AUTH_INVALID,
     ERROR_CANNOT_CONNECT,
@@ -53,7 +54,7 @@ _LOGGER = logging.getLogger(__name__)
 class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a FRITZ!Box Tools config flow."""
 
-    VERSION = 1
+    VERSION = 2
 
     @staticmethod
     @callback
@@ -208,7 +209,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Optional(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
                     vol.Required(CONF_USERNAME): str,
                     vol.Required(CONF_PASSWORD): str,
-                    vol.Required(CONF_SSL): bool,
+                    vol.Required(CONF_SSL, default=DEFAULT_SSL): bool,
                 }
             ),
             errors=errors or {},
