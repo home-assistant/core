@@ -29,8 +29,7 @@ DEFAULT_OPTIONS = {
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Sinch SMS component."""
-    # hass.data.setdefault(DOMAIN, {})
-    # hass.data[DOMAIN][DATA_HASS_CONFIG] = config
+
     if Platform.NOTIFY in config:
         for entry in config[Platform.NOTIFY]:
             if entry[CONF_PLATFORM] == DOMAIN:
@@ -75,8 +74,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry.data | {
         ATTR_OPTIONS: entry.options
     }
-    # hass.data[DOMAIN][entry.entry_id] = {}
-
     hass.async_create_task(
         discovery.async_load_platform(
             hass,
