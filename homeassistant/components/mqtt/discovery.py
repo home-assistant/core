@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_NAME, CONF_PLATFORM
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
@@ -136,10 +137,11 @@ def async_log_discovery_origin_info(
 
 
 async def async_start(  # noqa: C901
-    hass: HomeAssistant, discovery_topic: str
+    hass: HomeAssistant, discovery_topic: str, config_entry: ConfigEntry
 ) -> None:
     """Start MQTT Discovery."""
     mqtt_data = get_mqtt_data(hass)
+    mqtt_integrations = {}
 
     @callback
     def async_discovery_message_received(msg: ReceiveMessage) -> None:  # noqa: C901
@@ -153,8 +155,9 @@ async def async_start(  # noqa: C901
             if topic_trimmed.endswith("config"):
                 _LOGGER.warning(
                     (
-                        "Received message on illegal discovery topic '%s'. The topic "
-                        "contains not allowed characters. For more information see "
+                        "Received message on illegal discovery topic '%s'. The topic"
+                        " contains "
+                        "not allowed characters. For more information see "
                         "https://www.home-assistant.io/integrations/mqtt/#discovery-topic"
                     ),
                     topic,
