@@ -166,7 +166,7 @@ async def async_start(  # noqa: C901
 
     mqtt_data.reload_dispatchers.append(
         async_dispatcher_connect(
-            hass, MQTT_DISCOVERY_NEW_COMPONENT, functools.partial(_jit_component_setup)
+            hass, MQTT_DISCOVERY_NEW_COMPONENT, _jit_component_setup
         )
     )
 
