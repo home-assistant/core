@@ -5,6 +5,7 @@ Make sure expected clients are available for platforms.
 """
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Iterable
 from datetime import timedelta
 from functools import partial
@@ -16,6 +17,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from ..const import LOGGER
 from ..entity import UnifiEntity, UnifiEntityDescription
 
 if TYPE_CHECKING:
@@ -30,6 +32,17 @@ class UnifiEntityLoader:
     def __init__(self, hub: UnifiHub) -> None:
         """Initialize the UniFi entity loader."""
         self.hub = hub
+        self.api_updaters = (
+            hub.api.clients.update,
+            hub.api.clients_all.update,
+            hub.api.devices.update,
+            hub.api.dpi_apps.update,
+            hub.api.dpi_groups.update,
+            hub.api.port_forwarding.update,
+            hub.api.sites.update,
+            hub.api.system_information.update,
+            hub.api.wlans.update,
+        )
 
         self.platforms: list[
             tuple[
@@ -42,6 +55,16 @@ class UnifiEntityLoader:
 
         self.known_objects: set[tuple[str, str]] = set()
         """Tuples of entity description key and object ID of loaded entities."""
+
+    async def refresh_api_data(self) -> None:
+        """Refresh API data from network application."""
+        results = await asyncio.gather(
+            *[update() for update in self.api_updaters],
+            return_exceptions=True,
+        )
+        for result in results:
+            if result is not None:
+                LOGGER.warning("Exception on update %s", result)
 
     @callback
     def register_platform(
