@@ -81,7 +81,14 @@
         "name": "Max charging current"
       },
       "ocpp_status": {
-        "name": "OCPP status"
+        "name": "OCPP status",
+        "state": {
+          "disabled": "Disabled",
+          "disconnected": "Disconnected",
+          "connecting": "Connecting",
+          "error": "Connection error",
+          "connected": "Connected"
+        }
       }
     },
     "switch": {
