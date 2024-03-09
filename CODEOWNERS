@@ -562,6 +562,8 @@ build.json @home-assistant/supervisor
 /tests/components/homeassistant_hardware/ @home-assistant/core
 /homeassistant/components/homeassistant_sky_connect/ @home-assistant/core
 /tests/components/homeassistant_sky_connect/ @home-assistant/core
+/homeassistant/components/homeassistant_solar_trest_se/ @LordMax2
+/tests/components/homeassistant_solar_trest_se/ @LordMax2
 /homeassistant/components/homeassistant_yellow/ @home-assistant/core
 /tests/components/homeassistant_yellow/ @home-assistant/core
 /homeassistant/components/homekit/ @bdraco

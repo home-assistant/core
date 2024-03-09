@@ -220,6 +220,7 @@ FLOWS = {
         "holiday",
         "home_connect",
         "homeassistant_sky_connect",
+        "homeassistant_solar_trest_se",
         "homekit",
         "homekit_controller",
         "homematicip_cloud",
