@@ -83,18 +83,18 @@ async def mock_client(hass, hass_client, registrations=None):
 class TestHtml5Notify:
     """Tests for HTML5 notify platform."""
 
-    def test_get_service_with_no_json(self):
+    async def test_get_service_with_no_json(self):
         """Test empty json file."""
         hass = MagicMock()
 
         m = mock_open()
         with patch("homeassistant.util.json.open", m, create=True):
-            service = html5.get_service(hass, VAPID_CONF)
+            service = await html5.async_get_service(hass, {}, VAPID_CONF)
 
         assert service is not None
 
     @patch("homeassistant.components.html5.notify.WebPusher")
-    def test_dismissing_message(self, mock_wp):
+    async def test_dismissing_message(self, mock_wp):
         """Test dismissing message."""
         hass = MagicMock()
         mock_wp().send().status_code = 201
@@ -103,7 +103,7 @@ class TestHtml5Notify:
 
         m = mock_open(read_data=json.dumps(data))
         with patch("homeassistant.util.json.open", m, create=True):
-            service = html5.get_service(hass, VAPID_CONF)
+            service = await html5.async_get_service(hass, {}, VAPID_CONF)
 
         assert service is not None
 
@@ -121,7 +121,7 @@ class TestHtml5Notify:
         assert payload["tag"] == "test"
 
     @patch("homeassistant.components.html5.notify.WebPusher")
-    def test_sending_message(self, mock_wp):
+    async def test_sending_message(self, mock_wp):
         """Test sending message."""
         hass = MagicMock()
         mock_wp().send().status_code = 201
@@ -130,7 +130,7 @@ class TestHtml5Notify:
 
         m = mock_open(read_data=json.dumps(data))
         with patch("homeassistant.util.json.open", m, create=True):
-            service = html5.get_service(hass, VAPID_CONF)
+            service = await html5.async_get_service(hass, {}, VAPID_CONF)
 
         assert service is not None
 
@@ -150,7 +150,7 @@ class TestHtml5Notify:
         assert payload["icon"] == "beer.png"
 
     @patch("homeassistant.components.html5.notify.WebPusher")
-    def test_fcm_key_include(self, mock_wp):
+    async def test_fcm_key_include(self, mock_wp):
         """Test if the FCM header is included."""
         hass = MagicMock()
         mock_wp().send().status_code = 201
@@ -159,7 +159,7 @@ class TestHtml5Notify:
 
         m = mock_open(read_data=json.dumps(data))
         with patch("homeassistant.util.json.open", m, create=True):
-            service = html5.get_service(hass, VAPID_CONF)
+            service = await html5.async_get_service(hass, {}, VAPID_CONF)
 
         assert service is not None
 
@@ -173,7 +173,7 @@ class TestHtml5Notify:
         assert mock_wp.mock_calls[3][2]["headers"]["Authorization"] is not None
 
     @patch("homeassistant.components.html5.notify.WebPusher")
-    def test_fcm_send_with_unknown_priority(self, mock_wp):
+    async def test_fcm_send_with_unknown_priority(self, mock_wp):
         """Test if the gcm_key is only included for GCM endpoints."""
         hass = MagicMock()
         mock_wp().send().status_code = 201
@@ -182,7 +182,7 @@ class TestHtml5Notify:
 
         m = mock_open(read_data=json.dumps(data))
         with patch("homeassistant.util.json.open", m, create=True):
-            service = html5.get_service(hass, VAPID_CONF)
+            service = await html5.async_get_service(hass, {}, VAPID_CONF)
 
         assert service is not None
 
@@ -196,7 +196,7 @@ class TestHtml5Notify:
         assert mock_wp.mock_calls[3][2]["headers"]["priority"] == "normal"
 
     @patch("homeassistant.components.html5.notify.WebPusher")
-    def test_fcm_no_targets(self, mock_wp):
+    async def test_fcm_no_targets(self, mock_wp):
         """Test if the gcm_key is only included for GCM endpoints."""
         hass = MagicMock()
         mock_wp().send().status_code = 201
@@ -205,7 +205,7 @@ class TestHtml5Notify:
 
         m = mock_open(read_data=json.dumps(data))
         with patch("homeassistant.util.json.open", m, create=True):
-            service = html5.get_service(hass, VAPID_CONF)
+            service = await html5.async_get_service(hass, {}, VAPID_CONF)
 
         assert service is not None
 
@@ -219,7 +219,7 @@ class TestHtml5Notify:
         assert mock_wp.mock_calls[3][2]["headers"]["priority"] == "normal"
 
     @patch("homeassistant.components.html5.notify.WebPusher")
-    def test_fcm_additional_data(self, mock_wp):
+    async def test_fcm_additional_data(self, mock_wp):
         """Test if the gcm_key is only included for GCM endpoints."""
         hass = MagicMock()
         mock_wp().send().status_code = 201
@@ -228,7 +228,7 @@ class TestHtml5Notify:
 
         m = mock_open(read_data=json.dumps(data))
         with patch("homeassistant.util.json.open", m, create=True):
-            service = html5.get_service(hass, VAPID_CONF)
+            service = await html5.async_get_service(hass, {}, VAPID_CONF)
 
         assert service is not None
 
