@@ -340,6 +340,7 @@ omit =
     homeassistant/components/enocean/light.py
     homeassistant/components/enocean/sensor.py
     homeassistant/components/enocean/switch.py
+    homeassistant/components/enocean/cover.py
     homeassistant/components/enphase_envoy/__init__.py
     homeassistant/components/enphase_envoy/binary_sensor.py
     homeassistant/components/enphase_envoy/coordinator.py
