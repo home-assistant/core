@@ -198,13 +198,9 @@ class PositionBlind(GenericBlind):
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the blind to a specific position."""
-        new_position: int | None = (
-            100 - int(kwargs[ATTR_POSITION])
-            if ATTR_POSITION in kwargs and kwargs[ATTR_POSITION] is not None
-            else None
-        )
-        if new_position is None:
+        if kwargs.get(ATTR_POSITION) is None:
             return
+        new_position: int = 100 - int(kwargs[ATTR_POSITION])
 
         _LOGGER.debug(
             "(%s) Setting position to %i",
