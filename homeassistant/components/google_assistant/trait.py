@@ -2708,9 +2708,8 @@ class SensorStateTrait(_Trait):
     commands: list[str] = []
 
     def _air_quality_description_for_aqi(self, aqi: float | None) -> str:
-        if aqi is None:
+        if aqi is None or aqi < 0:
             return "unknown"
-        aqi = int(aqi)
         if aqi <= 50:
             return "healthy"
         if aqi <= 100:
