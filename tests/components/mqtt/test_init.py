@@ -1,6 +1,7 @@
 """The tests for the MQTT component."""
 import asyncio
 from collections.abc import Generator
+from copy import deepcopy
 from datetime import datetime, timedelta
 from functools import partial
 import json
@@ -4147,15 +4148,21 @@ async def test_multi_platform_discovery(
             "subtype": "button_1",
         },
     }
-    configs = non_entity_configs | entity_configs
-    for platform, config in configs.items():
+    for platform, config in entity_configs.items():
+        for set_number in range(0, 2):
+            set_config = deepcopy(config)
+            set_config["name"] = f"test_{set_number}"
+            topic = f"homeassistant/{platform}/bla_{set_number}/config"
+            async_fire_mqtt_message(hass, topic, json.dumps(set_config))
+    for platform, config in non_entity_configs.items():
         topic = f"homeassistant/{platform}/bla/config"
         async_fire_mqtt_message(hass, topic, json.dumps(config))
     await hass.async_block_till_done()
-    for platform in entity_configs:
-        entity_id = f"{platform}.test"
-        state = hass.states.get(entity_id)
-        assert state is not None
+    for set_number in range(0, 2):
+        for platform in entity_configs:
+            entity_id = f"{platform}.test_{set_number}"
+            state = hass.states.get(entity_id)
+            assert state is not None
     for platform in non_entity_configs:
         assert (
             device_registry.async_get_device(
