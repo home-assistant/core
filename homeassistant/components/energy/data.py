@@ -136,7 +136,8 @@ class DeviceConsumption(TypedDict):
     # This is an ever increasing value
     stat_consumption: str
 
-    name: str
+    # An optional custom name for display in energy graphs
+    name: str | None
 
 
 class EnergyPreferences(TypedDict):
