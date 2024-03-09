@@ -40,6 +40,17 @@ def recursive_flatten(prefix: Any, data: dict[str, Any]) -> dict[str, Any]:
     return output
 
 
+@callback
+def component_translation_path(language: str, integration: Integration) -> pathlib.Path:
+    """Return the translation json file location for a component.
+
+    For component:
+     - components/hue/translations/nl.json
+
+    """
+    return integration.file_path / "translations" / f"{language}.json"
+
+
 def _load_translations_files_by_language(
     translation_files: dict[str, dict[str, pathlib.Path]],
 ) -> dict[str, dict[str, Any]]:
@@ -105,9 +116,7 @@ async def _async_get_component_strings(
             ):
                 continue
 
-            files_to_load[comp] = (
-                integration.file_path / "translations" / f"{language}.json"
-            )
+            files_to_load[comp] = component_translation_path(language, integration)
             has_files_to_load = True
 
     if has_files_to_load:
