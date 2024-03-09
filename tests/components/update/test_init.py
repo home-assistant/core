@@ -647,6 +647,8 @@ async def test_entity_without_progress_support_raising(
             blocking=True,
         )
 
+    await hass.async_block_till_done()
+
     assert len(events) == 2
     assert events[0].data.get("old_state").attributes[ATTR_IN_PROGRESS] is False
     assert events[0].data.get("old_state").attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
