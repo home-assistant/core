@@ -156,21 +156,6 @@ async def async_setup_entry(
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()
 
-    try:
-        # Wait for initial data
-        async with asyncio.timeout(10):
-            while not coordinator.is_ready:
-                _LOGGER.debug(
-                    "Waiting for initial data from %s (%s)",
-                    entry.title,
-                    entry.data[CONF_HOST],
-                )
-                await asyncio.sleep(1)
-    except TimeoutError as exception:
-        raise ConfigEntryNotReady(
-            f"Timed out waiting for {entry.title} ({entry.data[CONF_HOST]})."
-        ) from exception
-
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 

@@ -29,7 +29,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -226,6 +226,20 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
         )
         if not self.websocket_client.connected:
             await self._setup_websocket()
+
+        try:
+            # Wait for initial data
+            async with asyncio.timeout(10):
+                while not self.is_ready:
+                    self.logger.debug(
+                        "Waiting for initial data from %s",
+                        self.title,
+                    )
+                    await asyncio.sleep(1)
+        except TimeoutError as exception:
+            raise ConfigEntryNotReady(
+                f"Timed out waiting for {self.title}."
+            ) from exception
 
         self.logger.debug("_async_update_data done")
 
