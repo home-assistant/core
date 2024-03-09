@@ -54,7 +54,6 @@ from .const import (
     CONF_MSG_WAIT,
     CONF_PARITY,
     CONF_RETRIES,
-    CONF_RETRY_ON_EMPTY,
     CONF_STOPBITS,
     DEFAULT_HUB,
     MODBUS_DOMAIN as DOMAIN,
@@ -272,24 +271,6 @@ class ModbusHub:
             )
         else:
             client_config[CONF_RETRIES] = 3
-        if CONF_RETRY_ON_EMPTY in client_config:
-            async_create_issue(
-                hass,
-                DOMAIN,
-                "deprecated_retry_on_empty",
-                breaks_in_ha_version="2024.4.0",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_retry_on_empty",
-                translation_placeholders={
-                    "config_key": "retry_on_empty",
-                    "integration": DOMAIN,
-                    "url": "https://www.home-assistant.io/integrations/modbus",
-                },
-            )
-            _LOGGER.warning(
-                "`retry_on_empty`: is deprecated and will be removed in version 2024.4"
-            )
         # generic configuration
         self._client: ModbusBaseClient | None = None
         self._async_cancel_listener: Callable[[], None] | None = None
