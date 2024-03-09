@@ -31,7 +31,7 @@ HAP-python==4.9.1
 HATasmota==0.8.0
 
 # homeassistant.components.mastodon
-Mastodon.py==1.5.1
+Mastodon.py==1.8.1
 
 # homeassistant.components.doods
 # homeassistant.components.generic
@@ -2149,7 +2149,7 @@ pysmartthings==0.7.8
 pysml==0.0.12
 
 # homeassistant.components.snmp
-pysnmp-lextudio==5.0.34
+pysnmp-lextudio==6.0.9
 
 # homeassistant.components.snooz
 pysnooz==0.8.6

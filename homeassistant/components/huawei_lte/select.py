@@ -27,16 +27,11 @@ from .const import DOMAIN, KEY_NET_NET_MODE
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class HuaweiSelectEntityMixin:
-    """Mixin for Huawei LTE select entities, to ensure required fields are set."""
+@dataclass(frozen=True, kw_only=True)
+class HuaweiSelectEntityDescription(SelectEntityDescription):
+    """Class describing Huawei LTE select entities."""
 
     setter_fn: Callable[[str], None]
-
-
-@dataclass(frozen=True)
-class HuaweiSelectEntityDescription(SelectEntityDescription, HuaweiSelectEntityMixin):
-    """Class describing Huawei LTE select entities."""
 
 
 async def async_setup_entry(

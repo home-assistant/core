@@ -72,7 +72,7 @@ def async_uptime_sensor_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
 @callback
 def async_client_rx_value_fn(hub: UnifiHub, client: Client) -> float:
     """Calculate receiving data transfer value."""
-    if hub.wireless_clients.is_wireless(client):
+    if hub.entity_loader.wireless_clients.is_wireless(client):
         return client.rx_bytes_r / 1000000
     return client.wired_rx_bytes_r / 1000000
 
@@ -80,7 +80,7 @@ def async_client_rx_value_fn(hub: UnifiHub, client: Client) -> float:
 @callback
 def async_client_tx_value_fn(hub: UnifiHub, client: Client) -> float:
     """Calculate transmission data transfer value."""
-    if hub.wireless_clients.is_wireless(client):
+    if hub.entity_loader.wireless_clients.is_wireless(client):
         return client.tx_bytes_r / 1000000
     return client.wired_tx_bytes_r / 1000000
 

@@ -8,26 +8,18 @@ import aiounifi
 from aiounifi.models.device import DeviceSetPoePortModeRequest
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import (
     DeviceEntry,
     DeviceEntryType,
     DeviceInfo,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 import homeassistant.util.dt as dt_util
 
-from ..const import (
-    ATTR_MANUFACTURER,
-    CONF_SITE_ID,
-    DOMAIN as UNIFI_DOMAIN,
-    PLATFORMS,
-    UNIFI_WIRELESS_CLIENTS,
-)
+from ..const import ATTR_MANUFACTURER, CONF_SITE_ID, DOMAIN as UNIFI_DOMAIN, PLATFORMS
 from .config import UnifiConfig
 from .entity_loader import UnifiEntityLoader
 from .websocket import UnifiWebsocket
@@ -47,8 +39,6 @@ class UnifiHub:
         self.config = UnifiConfig.from_config_entry(config_entry)
         self.entity_loader = UnifiEntityLoader(self)
         self.websocket = UnifiWebsocket(hass, api, self.signal_reachable)
-
-        self.wireless_clients = hass.data[UNIFI_WIRELESS_CLIENTS]
 
         self.site = config_entry.data[CONF_SITE_ID]
         self.is_admin = False
@@ -88,29 +78,10 @@ class UnifiHub:
 
     async def initialize(self) -> None:
         """Set up a UniFi Network instance."""
-        await self.api.initialize()
+        await self.entity_loader.initialize()
 
         assert self.config.entry.unique_id is not None
         self.is_admin = self.api.sites[self.config.entry.unique_id].role == "admin"
-
-        # Restore device tracker clients that are not a part of active clients list.
-        macs: list[str] = []
-        entity_registry = er.async_get(self.hass)
-        for entry in async_entries_for_config_entry(
-            entity_registry, self.config.entry.entry_id
-        ):
-            if entry.domain == Platform.DEVICE_TRACKER and "-" in entry.unique_id:
-                macs.append(entry.unique_id.split("-", 1)[1])
-
-        for mac in (
-            self.config.option_supported_clients
-            + self.config.option_block_clients
-            + macs
-        ):
-            if mac not in self.api.clients and mac in self.api.clients_all:
-                self.api.clients.process_raw([dict(self.api.clients_all[mac].raw)])
-
-        self.wireless_clients.update_clients(set(self.api.clients.values()))
 
         self.config.entry.add_update_listener(self.async_config_entry_updated)
 

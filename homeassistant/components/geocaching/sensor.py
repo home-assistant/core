@@ -19,18 +19,11 @@ from .const import DOMAIN
 from .coordinator import GeocachingDataUpdateCoordinator
 
 
-@dataclass(frozen=True)
-class GeocachingRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class GeocachingSensorEntityDescription(SensorEntityDescription):
+    """Define Sensor entity description class."""
 
     value_fn: Callable[[GeocachingStatus], str | int | None]
-
-
-@dataclass(frozen=True)
-class GeocachingSensorEntityDescription(
-    SensorEntityDescription, GeocachingRequiredKeysMixin
-):
-    """Define Sensor entity description class."""
 
 
 SENSORS: tuple[GeocachingSensorEntityDescription, ...] = (
