@@ -417,11 +417,6 @@ class DenonDevice(MediaPlayerEntity):
             state_attributes[ATTR_DYNAMIC_EQ] = dynamic_eq
         return state_attributes
 
-    @property
-    def dynamic_eq(self) -> bool | None:
-        """Status of DynamicEQ."""
-        return self._receiver.dynamic_eq
-
     @async_log_errors
     async def async_media_play_pause(self) -> None:
         """Play or pause the media player."""
