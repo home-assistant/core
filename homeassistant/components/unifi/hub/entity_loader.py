@@ -59,6 +59,11 @@ class UnifiEntityLoader:
         self.known_objects: set[tuple[str, str]] = set()
         """Tuples of entity description key and object ID of loaded entities."""
 
+    async def initialize(self) -> None:
+        """Initialize API data and extra client support."""
+        await self.refresh_api_data()
+        self.restore_inactive_clients()
+
     async def refresh_api_data(self) -> None:
         """Refresh API data from network application."""
         results = await asyncio.gather(

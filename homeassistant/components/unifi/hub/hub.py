@@ -86,12 +86,10 @@ class UnifiHub:
 
     async def initialize(self) -> None:
         """Set up a UniFi Network instance."""
-        await self.entity_loader.refresh_api_data()
+        await self.entity_loader.initialize()
 
         assert self.config.entry.unique_id is not None
         self.is_admin = self.api.sites[self.config.entry.unique_id].role == "admin"
-
-        self.entity_loader.restore_inactive_clients()
 
         self.wireless_clients.update_clients(set(self.api.clients.values()))
 
