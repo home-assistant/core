@@ -184,6 +184,7 @@ async def async_attach_trigger(
                     }
                 },
                 event.context,
+                eager_start=True,
             )
 
         if not time_delta:

@@ -28,18 +28,11 @@ from . import GlancesDataUpdateCoordinator
 from .const import CPU_ICON, DOMAIN
 
 
-@dataclass(frozen=True)
-class GlancesSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class GlancesSensorEntityDescription(SensorEntityDescription):
+    """Describe Glances sensor entity."""
 
     type: str
-
-
-@dataclass(frozen=True)
-class GlancesSensorEntityDescription(
-    SensorEntityDescription, GlancesSensorEntityDescriptionMixin
-):
-    """Describe Glances sensor entity."""
 
 
 SENSOR_TYPES = {

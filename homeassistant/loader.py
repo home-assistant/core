@@ -825,6 +825,11 @@ class Integration:
         # In the future, we want to default to True for all integrations.
         return self.manifest.get("import_executor", self.is_built_in)
 
+    @cached_property
+    def has_translations(self) -> bool:
+        """Return if the integration has translations."""
+        return "translations" in self._top_level_files
+
     @property
     def mqtt(self) -> list[str] | None:
         """Return Integration MQTT entries."""
