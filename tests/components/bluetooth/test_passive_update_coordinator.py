@@ -142,23 +142,17 @@ async def test_unavailable_callbacks_mark_the_coordinator_unavailable(
 ) -> None:
     """Test that the coordinator goes unavailable when the bluetooth stack no longer sees the device."""
     start_monotonic = time.monotonic()
-
-    # fmt: off
-    # Unstable formatting: https://github.com/astral-sh/ruff/issues/10302
-    with (
-        patch(
-            "bleak.BleakScanner.discovered_devices_and_advertisement_data",  # Must patch before we setup
-            {
-                "44:44:33:11:23:45": (
-                    MagicMock(address="44:44:33:11:23:45"),
-                    MagicMock(),
-                )
-            },
-        )
+    with patch(
+        "bleak.BleakScanner.discovered_devices_and_advertisement_data",  # Must patch before we setup
+        {
+            "44:44:33:11:23:45": (
+                MagicMock(address="44:44:33:11:23:45"),
+                MagicMock(),
+            )
+        },
     ):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
-    # fmt: on
     coordinator = MyCoordinator(
         hass, _LOGGER, "aa:bb:cc:dd:ee:ff", BluetoothScanningMode.PASSIVE
     )
