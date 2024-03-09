@@ -77,10 +77,8 @@ HOST_SENSORS = (
 
 HDD_SENSORS = (
     ReolinkSensorEntityDescription(
-        key="hdd_storage",
+        key="storage",
         cmd_key="GetHddInfo",
-        translation_key="hdd_storage",
-        icon="mdi:harddisk",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -88,20 +86,6 @@ HDD_SENSORS = (
         value=lambda api, idx: api.hdd_storage(idx),
         supported=lambda api, idx: (
             api.supported(None, "hdd") and api.hdd_type(idx) == "HDD"
-        ),
-    ),
-    ReolinkSensorEntityDescription(
-        key="sd_storage",
-        cmd_key="GetHddInfo",
-        translation_key="sd_storage",
-        icon="mdi:micro-sd",
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        value=lambda api, idx: api.hdd_storage(idx),
-        supported=lambda api, idx: (
-            api.supported(None, "hdd") and api.hdd_type(idx) == "SD"
         ),
     ),
 )
@@ -201,6 +185,10 @@ class ReolinkHddSensorEntity(ReolinkHostCoordinatorEntity, SensorEntity):
         self._attr_unique_id = (
             f"{self._host.unique_id}_{hdd_index}_{entity_description.key}"
         )
+        if self._host.api.hdd_type(hdd_index) == "HDD":
+            self._attr_translation_key = "hdd_storage"
+        else:
+            self._attr_translation_key = "sd_storage"
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
