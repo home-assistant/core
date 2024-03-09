@@ -1,6 +1,5 @@
 """The tests for the image component."""
 
-import asyncio
 import datetime
 from http import HTTPStatus
 import ssl
