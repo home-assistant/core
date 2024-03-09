@@ -6,11 +6,10 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from py17track.errors import SeventeenTrackError
-from py17track.package import Package
 
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
+from . import _goto_future, init_integration
 from .conftest import (
     DEFAULT_SUMMARY,
     INVALID_CONFIG,
@@ -18,7 +17,7 @@ from .conftest import (
     VALID_CONFIG_FULL,
     VALID_CONFIG_FULL_NO_DELIVERED,
     VALID_CONFIG_MINIMAL,
-    _goto_future,
+    get_package,
 )
 
 
@@ -26,8 +25,7 @@ async def test_full_valid_config(
     hass: HomeAssistant, mock_seventeentrack: AsyncMock
 ) -> None:
     """Ensure everything starts correctly."""
-    assert await async_setup_component(hass, "sensor", VALID_CONFIG_MINIMAL)
-    await hass.async_block_till_done()
+    await init_integration(hass, VALID_CONFIG_MINIMAL)
     assert len(hass.states.async_entity_ids()) == len(DEFAULT_SUMMARY.keys())
 
 
@@ -35,15 +33,13 @@ async def test_valid_config(
     hass: HomeAssistant, mock_seventeentrack: AsyncMock
 ) -> None:
     """Ensure everything starts correctly."""
-    assert await async_setup_component(hass, "sensor", VALID_CONFIG_FULL)
-    await hass.async_block_till_done()
+    await init_integration(hass, VALID_CONFIG_FULL)
     assert len(hass.states.async_entity_ids()) == len(DEFAULT_SUMMARY.keys())
 
 
 async def test_invalid_config(hass: HomeAssistant) -> None:
     """Ensure nothing is created when config is wrong."""
-    assert await async_setup_component(hass, "sensor", INVALID_CONFIG)
-    await hass.async_block_till_done()
+    await init_integration(hass, INVALID_CONFIG)
     assert not hass.states.async_entity_ids("sensor")
 
 
@@ -54,8 +50,7 @@ async def test_login_exception(
     mock_seventeentrack.return_value.profile.login.side_effect = SeventeenTrackError(
         "Error"
     )
-    assert await async_setup_component(hass, "sensor", VALID_CONFIG_FULL)
-    await hass.async_block_till_done()
+    await init_integration(hass, VALID_CONFIG_FULL)
     assert not hass.states.async_entity_ids("sensor")
 
 
@@ -63,33 +58,20 @@ async def test_add_package(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_seventeentrack: AsyncMock
 ) -> None:
     """Ensure package is added correctly when user add a new package."""
-    package = Package(
-        tracking_number="456",
-        destination_country=206,
-        friendly_name="friendly name 1",
-        info_text="info text 1",
-        location="location 1",
-        timestamp="2020-08-10 10:32",
-        origin_country=206,
-        package_type=2,
-    )
+    package = get_package()
     mock_seventeentrack.return_value.profile.packages.return_value = [package]
     mock_seventeentrack.return_value.profile.summary.return_value = {}
 
-    assert await async_setup_component(hass, "sensor", VALID_CONFIG_FULL)
-    await hass.async_block_till_done()
+    await init_integration(hass, VALID_CONFIG_FULL)
     assert hass.states.get("sensor.seventeentrack_package_456") is not None
     assert len(hass.states.async_entity_ids()) == 1
 
-    package2 = Package(
+    package2 = get_package(
         tracking_number="789",
-        destination_country=206,
         friendly_name="friendly name 2",
         info_text="info text 2",
         location="location 2",
         timestamp="2020-08-10 14:25",
-        origin_country=206,
-        package_type=2,
     )
     mock_seventeentrack.return_value.profile.packages.return_value = [package, package2]
 
@@ -103,20 +85,11 @@ async def test_add_package_no_friendly_name(
     hass: HomeAssistant, mock_seventeentrack: AsyncMock
 ) -> None:
     """Ensure package is added correctly when user add a new package."""
-    package = Package(
-        tracking_number="456",
-        destination_country=206,
-        info_text="info text 1",
-        location="location 1",
-        timestamp="2020-08-10 10:32",
-        origin_country=206,
-        package_type=2,
-    )
+    package = get_package(friendly_name=None)
     mock_seventeentrack.return_value.profile.packages.return_value = [package]
     mock_seventeentrack.return_value.profile.summary.return_value = {}
 
-    assert await async_setup_component(hass, "sensor", VALID_CONFIG_FULL)
-    await hass.async_block_till_done()
+    await init_integration(hass, VALID_CONFIG_FULL)
     state_456 = hass.states.get("sensor.seventeentrack_package_456")
     assert state_456 is not None
     assert state_456.attributes["friendly_name"] == "Seventeentrack Package: 456"
@@ -127,25 +100,13 @@ async def test_remove_package(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_seventeentrack: AsyncMock
 ) -> None:
     """Ensure entity is not there anymore if package is not there."""
-    package1 = Package(
-        tracking_number="456",
-        destination_country=206,
-        friendly_name="friendly name 1",
-        info_text="info text 1",
-        location="location 1",
-        timestamp="2020-08-10 10:32",
-        origin_country=206,
-        package_type=2,
-    )
-    package2 = Package(
+    package1 = get_package()
+    package2 = get_package(
         tracking_number="789",
-        destination_country=206,
         friendly_name="friendly name 2",
         info_text="info text 2",
         location="location 2",
         timestamp="2020-08-10 14:25",
-        origin_country=206,
-        package_type=2,
     )
 
     mock_seventeentrack.return_value.profile.packages.return_value = [
@@ -154,8 +115,7 @@ async def test_remove_package(
     ]
     mock_seventeentrack.return_value.profile.summary.return_value = {}
 
-    assert await async_setup_component(hass, "sensor", VALID_CONFIG_FULL)
-    await hass.async_block_till_done()
+    await init_integration(hass, VALID_CONFIG_FULL)
 
     assert hass.states.get("sensor.seventeentrack_package_456") is not None
     assert hass.states.get("sensor.seventeentrack_package_789") is not None
@@ -179,8 +139,7 @@ async def test_package_error(
     )
     mock_seventeentrack.return_value.profile.summary.return_value = {}
 
-    assert await async_setup_component(hass, "sensor", VALID_CONFIG_FULL)
-    await hass.async_block_till_done()
+    await init_integration(hass, VALID_CONFIG_FULL)
     assert hass.states.get("sensor.seventeentrack_package_456") is None
 
 
@@ -188,35 +147,16 @@ async def test_friendly_name_changed(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_seventeentrack: AsyncMock
 ) -> None:
     """Test friendly name change."""
-    package = Package(
-        tracking_number="456",
-        destination_country=206,
-        friendly_name="friendly name 1",
-        info_text="info text 1",
-        location="location 1",
-        timestamp="2020-08-10 10:32",
-        origin_country=206,
-        package_type=2,
-    )
+    package = get_package()
     mock_seventeentrack.return_value.profile.packages.return_value = [package]
     mock_seventeentrack.return_value.profile.summary.return_value = {}
 
-    assert await async_setup_component(hass, "sensor", VALID_CONFIG_FULL)
-    await hass.async_block_till_done()
+    await init_integration(hass, VALID_CONFIG_FULL)
 
     assert hass.states.get("sensor.seventeentrack_package_456") is not None
     assert len(hass.states.async_entity_ids()) == 1
 
-    package = Package(
-        tracking_number="456",
-        destination_country=206,
-        friendly_name="friendly name 2",
-        info_text="info text 1",
-        location="location 1",
-        timestamp="2020-08-10 10:32",
-        origin_country=206,
-        package_type=2,
-    )
+    package = get_package(friendly_name="friendly name 2")
     mock_seventeentrack.return_value.profile.packages.return_value = [package]
 
     await _goto_future(hass, freezer)
@@ -233,27 +173,14 @@ async def test_delivered_not_shown(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_seventeentrack: AsyncMock
 ) -> None:
     """Ensure delivered packages are not shown."""
-    package = Package(
-        tracking_number="456",
-        destination_country=206,
-        friendly_name="friendly name 1",
-        info_text="info text 1",
-        location="location 1",
-        timestamp="2020-08-10 10:32",
-        origin_country=206,
-        package_type=2,
-        status=40,
-    )
+    package = get_package(status=40)
     mock_seventeentrack.return_value.profile.packages.return_value = [package]
     mock_seventeentrack.return_value.profile.summary.return_value = {}
 
     with patch(
         "homeassistant.components.seventeentrack.sensor.persistent_notification"
     ) as persistent_notification_mock:
-        assert await async_setup_component(
-            hass, "sensor", VALID_CONFIG_FULL_NO_DELIVERED
-        )
-        await hass.async_block_till_done()
+        await init_integration(hass, VALID_CONFIG_FULL_NO_DELIVERED)
         await _goto_future(hass, freezer)
 
         assert not hass.states.async_entity_ids()
@@ -264,25 +191,14 @@ async def test_delivered_shown(
     hass: HomeAssistant, mock_seventeentrack: AsyncMock
 ) -> None:
     """Ensure delivered packages are show when user choose to show them."""
-    package = Package(
-        tracking_number="456",
-        destination_country=206,
-        friendly_name="friendly name 1",
-        info_text="info text 1",
-        location="location 1",
-        timestamp="2020-08-10 10:32",
-        origin_country=206,
-        package_type=2,
-        status=40,
-    )
+    package = get_package(status=40)
     mock_seventeentrack.return_value.profile.packages.return_value = [package]
     mock_seventeentrack.return_value.profile.summary.return_value = {}
 
     with patch(
         "homeassistant.components.seventeentrack.sensor.persistent_notification"
     ) as persistent_notification_mock:
-        assert await async_setup_component(hass, "sensor", VALID_CONFIG_FULL)
-        await hass.async_block_till_done()
+        await init_integration(hass, VALID_CONFIG_FULL)
 
         assert hass.states.get("sensor.seventeentrack_package_456") is not None
         assert len(hass.states.async_entity_ids()) == 1
@@ -293,36 +209,16 @@ async def test_becomes_delivered_not_shown_notification(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_seventeentrack: AsyncMock
 ) -> None:
     """Ensure notification is triggered when package becomes delivered."""
-    package = Package(
-        tracking_number="456",
-        destination_country=206,
-        friendly_name="friendly name 1",
-        info_text="info text 1",
-        location="location 1",
-        timestamp="2020-08-10 10:32",
-        origin_country=206,
-        package_type=2,
-    )
+    package = get_package()
     mock_seventeentrack.return_value.profile.packages.return_value = [package]
     mock_seventeentrack.return_value.profile.summary.return_value = {}
 
-    assert await async_setup_component(hass, "sensor", VALID_CONFIG_FULL_NO_DELIVERED)
-    await hass.async_block_till_done()
+    await init_integration(hass, VALID_CONFIG_FULL_NO_DELIVERED)
 
     assert hass.states.get("sensor.seventeentrack_package_456") is not None
     assert len(hass.states.async_entity_ids()) == 1
 
-    package_delivered = Package(
-        tracking_number="456",
-        destination_country=206,
-        friendly_name="friendly name 1",
-        info_text="info text 1",
-        location="location 1",
-        timestamp="2020-08-10 10:32",
-        origin_country=206,
-        package_type=2,
-        status=40,
-    )
+    package_delivered = get_package(status=40)
     mock_seventeentrack.return_value.profile.packages.return_value = [package_delivered]
 
     with patch(
@@ -338,22 +234,11 @@ async def test_summary_correctly_updated(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_seventeentrack: AsyncMock
 ) -> None:
     """Ensure summary entities are not duplicated."""
-    package = Package(
-        tracking_number="456",
-        destination_country=206,
-        friendly_name="friendly name 1",
-        info_text="info text 1",
-        location="location 1",
-        timestamp="2020-08-10 10:32",
-        origin_country=206,
-        package_type=2,
-        status=30,
-    )
+    package = get_package(status=30)
     mock_seventeentrack.return_value.profile.packages.return_value = [package]
     mock_seventeentrack.return_value.profile.summary.return_value = DEFAULT_SUMMARY
 
-    assert await async_setup_component(hass, "sensor", VALID_CONFIG_FULL)
-    await hass.async_block_till_done()
+    await init_integration(hass, VALID_CONFIG_FULL)
 
     assert len(hass.states.async_entity_ids()) == 8
     for state in hass.states.async_all():
@@ -387,24 +272,13 @@ async def test_summary_error(
     hass: HomeAssistant, mock_seventeentrack: AsyncMock
 ) -> None:
     """Test summary empty if error."""
-    package = Package(
-        tracking_number="456",
-        destination_country=206,
-        friendly_name="friendly name 1",
-        info_text="info text 1",
-        location="location 1",
-        timestamp="2020-08-10 10:32",
-        origin_country=206,
-        package_type=2,
-        status=30,
-    )
+    package = get_package(status=30)
     mock_seventeentrack.return_value.profile.packages.return_value = [package]
     mock_seventeentrack.return_value.profile.summary.side_effect = SeventeenTrackError(
         "Error"
     )
 
-    assert await async_setup_component(hass, "sensor", VALID_CONFIG_FULL)
-    await hass.async_block_till_done()
+    await init_integration(hass, VALID_CONFIG_FULL)
 
     assert len(hass.states.async_entity_ids()) == 1
     for state in hass.states.async_all():
@@ -421,22 +295,13 @@ async def test_utc_timestamp(
     hass: HomeAssistant, mock_seventeentrack: AsyncMock
 ) -> None:
     """Ensure package timestamp is converted correctly from HA-defined time zone to UTC."""
-    package = Package(
-        tracking_number="456",
-        destination_country=206,
-        friendly_name="friendly name 1",
-        info_text="info text 1",
-        location="location 1",
-        timestamp="2020-08-10 10:32",
-        origin_country=206,
-        package_type=2,
-        tz="Asia/Jakarta",
-    )
+
+    package = get_package(tz="Asia/Jakarta")
     mock_seventeentrack.return_value.profile.packages.return_value = [package]
     mock_seventeentrack.return_value.profile.summary.return_value = {}
 
-    assert await async_setup_component(hass, "sensor", VALID_CONFIG_FULL)
-    await hass.async_block_till_done()
+    await init_integration(hass, VALID_CONFIG_FULL)
+
     assert hass.states.get("sensor.seventeentrack_package_456") is not None
     assert len(hass.states.async_entity_ids()) == 1
     state_456 = hass.states.get("sensor.seventeentrack_package_456")
@@ -449,6 +314,5 @@ async def test_non_valid_platform_config(
 ) -> None:
     """Test if login fails."""
     mock_seventeentrack.return_value.profile.login.return_value = False
-    assert await async_setup_component(hass, "sensor", VALID_CONFIG_FULL)
-    await hass.async_block_till_done()
+    await init_integration(hass, VALID_CONFIG_FULL)
     assert len(hass.states.async_entity_ids()) == 0

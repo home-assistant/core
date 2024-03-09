@@ -1,20 +1,16 @@
 """Configuration for 17Track tests."""
 
-from datetime import timedelta
+from typing import Optional
 from unittest.mock import AsyncMock, patch
 
-from freezegun.api import FrozenDateTimeFactory
+from py17track.package import Package
 import pytest
 
 from homeassistant.components.seventeentrack.sensor import (
     CONF_SHOW_ARCHIVED,
     CONF_SHOW_DELIVERED,
-    DEFAULT_SCAN_INTERVAL,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
-
-from tests.common import async_fire_time_changed
 
 VALID_CONFIG_MINIMAL = {
     "sensor": {
@@ -85,9 +81,28 @@ def mock_seventeentrack():
         yield mock_seventeentrack_api
 
 
-async def _goto_future(hass: HomeAssistant, freezer: FrozenDateTimeFactory):
-    """Move to future."""
-    for _ in range(2):
-        freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(minutes=1))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+def get_package(
+    tracking_number: str = "456",
+    destination_country: int = 206,
+    friendly_name: Optional[str] = "friendly name 1",
+    info_text: str = "info text 1",
+    location: str = "location 1",
+    timestamp: str = "2020-08-10 10:32",
+    origin_country: int = 206,
+    package_type: int = 2,
+    status: int = 0,
+    tz: str = "UTC",
+):
+    """Build a Package of the 17Track API."""
+    return Package(
+        tracking_number=tracking_number,
+        destination_country=destination_country,
+        friendly_name=friendly_name,
+        info_text=info_text,
+        location=location,
+        timestamp=timestamp,
+        origin_country=origin_country,
+        package_type=package_type,
+        status=status,
+        tz=tz,
+    )
