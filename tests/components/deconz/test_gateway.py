@@ -290,8 +290,9 @@ async def test_reset_after_successful_setup(
 
 async def test_get_deconz_api(hass: HomeAssistant) -> None:
     """Successful call."""
+    config_entry = MockConfigEntry(domain=DECONZ_DOMAIN, data=ENTRY_CONFIG)
     with patch("pydeconz.DeconzSession.refresh_state", return_value=True):
-        assert await get_deconz_api(hass, ENTRY_CONFIG)
+        assert await get_deconz_api(hass, config_entry)
 
 
 @pytest.mark.parametrize(
@@ -307,8 +308,9 @@ async def test_get_deconz_api_fails(
     hass: HomeAssistant, side_effect, raised_exception
 ) -> None:
     """Failed call."""
+    config_entry = MockConfigEntry(domain=DECONZ_DOMAIN, data=ENTRY_CONFIG)
     with patch(
         "pydeconz.DeconzSession.refresh_state",
         side_effect=side_effect,
     ), pytest.raises(raised_exception):
-        assert await get_deconz_api(hass, ENTRY_CONFIG)
+        assert await get_deconz_api(hass, config_entry)
