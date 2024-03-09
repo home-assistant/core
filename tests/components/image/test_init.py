@@ -1,5 +1,6 @@
 """The tests for the image component."""
 
+import asyncio
 import datetime
 from http import HTTPStatus
 import ssl
@@ -324,4 +325,8 @@ async def test_image_stream(
         await hass.async_block_till_done()
         await hass.async_block_till_done()
 
+    # Wait for the write
+    await asyncio.sleep(0)
+    # Wait for the close
+    await asyncio.sleep(0)
     assert resp.closed
