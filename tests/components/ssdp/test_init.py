@@ -464,6 +464,7 @@ async def test_start_stop_scanner(mock_source_set, hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_get_source_ip")
+@pytest.mark.no_fail_on_log_exception
 @patch("homeassistant.components.ssdp.async_get_ssdp", return_value={})
 async def test_scan_with_registered_callback(
     mock_get_ssdp,
@@ -549,7 +550,7 @@ async def test_scan_with_registered_callback(
         ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
         ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
     }
-    assert "Failed to callback info" in caplog.text
+    assert "Exception in SSDP callback" in caplog.text
 
     async_integration_callback_from_cache = AsyncMock()
     await ssdp.async_register_callback(
