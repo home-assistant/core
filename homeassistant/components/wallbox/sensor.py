@@ -148,8 +148,7 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
     ),
     CHARGER_OCPP_STATUS_KEY: WallboxSensorEntityDescription(
         key=CHARGER_OCPP_STATUS_KEY,
-        translation_key=CHARGER_OCPP_STATUS_KEY,
-        icon="mdi:transit-connection-variant"
+        translation_key=CHARGER_OCPP_STATUS_KEY
     ),
 }
 
