@@ -178,7 +178,7 @@ async def test_no_link(hass: HomeAssistant) -> None:
             result["flow_id"],
             USER_INPUT,
         )
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
     
     assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "link"
@@ -192,7 +192,7 @@ async def test_no_link(hass: HomeAssistant) -> None:
             result2["flow_id"],
             USER_INPUT,
         )
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
     
     assert result3["type"] == FlowResultType.FORM
     assert result3["step_id"] == "link"
