@@ -4027,13 +4027,13 @@ async def test_sensorstate(hass: HomeAssistant) -> None:
                         "currentSensorState": trt._air_quality_description_for_aqi(
                             trt.state.state
                         ),
-                        "rawValue": trt.state.state,
+                        "rawValue": 100.0,
                     },
                 ]
             }
         else:
             assert trt.query_attributes() == {
-                "currentSensorStateData": [{"name": name, "rawValue": trt.state.state}]
+                "currentSensorStateData": [{"name": name, "rawValue": 100.0}]
             }
 
     assert helpers.get_google_type(sensor.DOMAIN, None) is not None
