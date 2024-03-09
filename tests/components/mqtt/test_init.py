@@ -1,7 +1,6 @@
 """The tests for the MQTT component."""
 
 import asyncio
-from collections.abc import Generator
 from copy import deepcopy
 from datetime import datetime, timedelta
 from functools import partial
@@ -32,7 +31,6 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    Platform,
     UnitOfTemperature,
 )
 import homeassistant.core as ha
@@ -90,16 +88,6 @@ class RecordCallsPartial(partial[Any]):
     """Wrapper class for partial."""
 
     __name__ = "RecordCallPartialTest"
-
-
-@pytest.fixture(autouse=True)
-def sensor_platforms_only() -> Generator[None, None, None]:
-    """Only setup the sensor platforms to speed up tests."""
-    with patch(
-        "homeassistant.components.mqtt.PLATFORMS",
-        [Platform.SENSOR, Platform.BINARY_SENSOR],
-    ):
-        yield
 
 
 @pytest.fixture(autouse=True)
@@ -168,7 +156,6 @@ async def test_mqtt_disconnects_on_home_assistant_stop(
     assert mqtt_client_mock.loop_stop.call_count == 1
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [])
 async def test_mqtt_await_ack_at_disconnect(
     hass: HomeAssistant,
 ) -> None:
@@ -312,7 +299,6 @@ async def test_command_template_value(hass: HomeAssistant) -> None:
     assert cmd_tpl.async_render(None, variables=variables) == "beer"
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SELECT])
 @pytest.mark.parametrize(
     "config",
     [
@@ -2162,7 +2148,6 @@ async def test_handle_message_callback(
         }
     ],
 )
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
 async def test_setup_manual_mqtt_with_platform_key(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
@@ -2177,7 +2162,6 @@ async def test_setup_manual_mqtt_with_platform_key(
 
 
 @pytest.mark.parametrize("hass_config", [{mqtt.DOMAIN: {"light": {"name": "test"}}}])
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
 async def test_setup_manual_mqtt_with_invalid_config(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
@@ -2188,7 +2172,6 @@ async def test_setup_manual_mqtt_with_invalid_config(
     assert "required key not provided" in caplog.text
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [])
 @pytest.mark.parametrize(
     ("mqtt_config_entry_data", "protocol"),
     [
@@ -2229,7 +2212,6 @@ async def test_setup_mqtt_client_protocol(
 
 
 @patch("homeassistant.components.mqtt.client.TIMEOUT_ACK", 0.2)
-@patch("homeassistant.components.mqtt.PLATFORMS", [])
 async def test_handle_mqtt_timeout_on_callback(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -2300,7 +2282,6 @@ async def test_setup_raises_config_entry_not_ready_if_no_connect_broker(
         ({"broker": "test-broker", "certificate": "auto", "tls_insecure": True}, True),
     ],
 )
-@patch("homeassistant.components.mqtt.PLATFORMS", [])
 async def test_setup_uses_certificate_on_certificate_set_to_auto_and_insecure(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
@@ -2921,7 +2902,6 @@ async def test_mqtt_ws_get_device_debug_info(
     assert response["result"] == expected_result
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.CAMERA])
 async def test_mqtt_ws_get_device_debug_info_binary(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -3575,7 +3555,6 @@ async def test_unload_config_entry(
     assert "No ACK from MQTT server" not in caplog.text
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [])
 async def test_publish_or_subscribe_without_valid_config_entry(
     hass: HomeAssistant, record_calls: MessageCallbackType
 ) -> None:
@@ -3588,10 +3567,6 @@ async def test_publish_or_subscribe_without_valid_config_entry(
         await mqtt.async_subscribe(hass, "some-topic", record_calls, qos=0)
 
 
-@patch(
-    "homeassistant.components.mqtt.PLATFORMS",
-    [Platform.ALARM_CONTROL_PANEL, Platform.LIGHT],
-)
 @pytest.mark.parametrize(
     "hass_config",
     [
@@ -3666,7 +3641,6 @@ async def test_disabling_and_enabling_entry(
     assert hass.states.get("alarm_control_panel.test") is not None
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
 @pytest.mark.parametrize(
     ("hass_config", "unique"),
     [

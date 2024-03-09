@@ -84,7 +84,6 @@ from .const import (  # noqa: F401
     DOMAIN,
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
-    PLATFORMS,
     RELOADABLE_PLATFORMS,
     TEMPLATE_ERRORS,
 )
