@@ -145,6 +145,11 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    CHARGER_OCPP_STATUS_KEY: WallboxSensorEntityDescription(
+        key=CHARGER_OCPP_STATUS_KEY,
+        translation_key=CHARGER_OCPP_STATUS_KEY,
+        icon="mdi:transit-connection-variant"
+    ),
 }
 
 
