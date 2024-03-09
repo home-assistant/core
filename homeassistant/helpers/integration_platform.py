@@ -140,6 +140,7 @@ def _process_integration_platforms(
                 hass,
                 integration.domain,
                 platform,
+                eager_start=True,
             )
         )
     ]
@@ -249,7 +250,7 @@ async def _async_process_integration_platforms(
             continue
 
         if future := hass.async_run_hass_job(
-            process_job, hass, integration.domain, platform
+            process_job, hass, integration.domain, platform, eager_start=True
         ):
             futures.append(future)
 
