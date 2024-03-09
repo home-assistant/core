@@ -43,33 +43,32 @@ _VALID_QOS_SCHEMA = vol.All(vol.Coerce(int), vol.In([0, 1, 2]))
 
 def platforms_from_config(config: list[ConfigType]) -> set[Platform | str]:
     """Return the platforms to be set up."""
-    platforms = set()
-    keys_list = [list(platform.keys()) for platform in config]
-    for keys in keys_list:
-        platforms.update(keys)
-    return platforms
+    return {key for platform in config for key in platform}
 
 
 async def async_forward_entry_setup_and_setup_discovery(
     hass: HomeAssistant, config_entry: ConfigEntry, platforms: set[Platform | str]
 ) -> None:
     """Forward the config entry setup to the platforms and set up discovery."""
-    # Local import to avoid circular dependencies
-    # pylint: disable-next=import-outside-toplevel
-    from . import device_automation, tag
-
-    # Forward the entry setup to the MQTT platforms
     mqtt_data = get_mqtt_data(hass)
     platforms_loaded = mqtt_data.platforms_loaded
     new_platforms: set[Platform | str] = platforms - platforms_loaded
     platforms_loaded.update(new_platforms)
     tasks: list[asyncio.Task] = []
     if "device_automation" in new_platforms:
+        # Local import to avoid circular dependencies
+        # pylint: disable-next=import-outside-toplevel
+        from . import device_automation
+
         new_platforms.remove("device_automation")
         tasks.append(
             create_eager_task(device_automation.async_setup_entry(hass, config_entry))
         )
     if "tag" in new_platforms:
+        # Local import to avoid circular dependencies
+        # pylint: disable-next=import-outside-toplevel
+        from . import tag
+
         new_platforms.remove("tag")
         tasks.append(create_eager_task(tag.async_setup_entry(hass, config_entry)))
     if new_platforms:

@@ -145,7 +145,9 @@ async def async_start(  # noqa: C901
     mqtt_integrations = {}
     platform_setup_lock = asyncio.Lock()
 
-    async def _jit_component_setup(discovery_payload: MQTTDiscoveryPayload) -> None:
+    async def _async_jit_component_setup(
+        discovery_payload: MQTTDiscoveryPayload,
+    ) -> None:
         """Perform just in time components set up."""
         discovery_hash = discovery_payload.discovery_data[ATTR_DISCOVERY_HASH]
         component, discovery_id = discovery_hash
@@ -166,7 +168,7 @@ async def async_start(  # noqa: C901
 
     mqtt_data.reload_dispatchers.append(
         async_dispatcher_connect(
-            hass, MQTT_DISCOVERY_NEW_COMPONENT, _jit_component_setup
+            hass, MQTT_DISCOVERY_NEW_COMPONENT, _async_jit_component_setup
         )
     )
 
