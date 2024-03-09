@@ -108,15 +108,14 @@ async def _async_get_component_strings(
         files_to_load_by_language[language] = files_to_load
         translations_by_language[language] = {}
 
-        for comp in components:
-            domain = comp.partition(".")[0]
+        for domain in components:
             if (
                 not (integration := integrations.get(domain))
                 or not integration.has_translations
             ):
                 continue
 
-            files_to_load[comp] = component_translation_path(language, integration)
+            files_to_load[domain] = component_translation_path(language, integration)
             has_files_to_load = True
 
     if has_files_to_load:
@@ -126,14 +125,11 @@ async def _async_get_component_strings(
 
     for language in languages:
         loaded_translations = loaded_translations_by_language.setdefault(language, {})
-        for comp in components:
-            if "." in comp:
-                continue
-
+        for domain in components:
             # Translations that miss "title" will get integration put in.
-            component_translations = loaded_translations.setdefault(comp, {})
+            component_translations = loaded_translations.setdefault(domain, {})
             if "title" not in component_translations and (
-                integration := integrations.get(comp)
+                integration := integrations.get(domain)
             ):
                 component_translations["title"] = integration.name
 
