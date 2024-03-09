@@ -183,14 +183,31 @@ async def async_test_still(
     except (
         TimeoutError,
         RequestError,
-        HTTPStatusError,
         TimeoutException,
     ) as err:
         _LOGGER.error("Error getting camera image from %s: %s", url, type(err).__name__)
         return {CONF_STILL_IMAGE_URL: "unable_still_load"}, None
+    except HTTPStatusError as err:
+        _LOGGER.error(
+            "Error getting camera image from %s: %s %s",
+            url,
+            type(err).__name__,
+            err.response.text,
+        )
+        if err.response.status_code == 401:
+            return {CONF_STILL_IMAGE_URL: "unable_still_load_401"}, None
+        if err.response.status_code == 403:
+            return {CONF_STILL_IMAGE_URL: "unable_still_load_403"}, None
+        if err.response.status_code == 404:
+            return {CONF_STILL_IMAGE_URL: "unable_still_load_404"}, None
+        if err.response.status_code == 500:
+            return {CONF_STILL_IMAGE_URL: "unable_still_load_500"}, None
+        if err.response.status_code == 503:
+            return {CONF_STILL_IMAGE_URL: "unable_still_load_503"}, None
+        return {CONF_STILL_IMAGE_URL: "unable_still_load"}, None
 
     if not image:
-        return {CONF_STILL_IMAGE_URL: "unable_still_load"}, None
+        return {CONF_STILL_IMAGE_URL: "unable_still_load_no_image"}, None
     fmt = get_image_type(image)
     _LOGGER.debug(
         "Still image at '%s' detected format: %s",
