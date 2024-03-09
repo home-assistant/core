@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 from datetime import datetime, timedelta
-from functools import partial
 
 import aiounifi
-from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.models.device import DeviceSetPoePortModeRequest
 
 from homeassistant.config_entries import ConfigEntry
@@ -19,11 +16,7 @@ from homeassistant.helpers.device_registry import (
     DeviceEntryType,
     DeviceInfo,
 )
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 import homeassistant.util.dt as dt_util
@@ -35,8 +28,8 @@ from ..const import (
     PLATFORMS,
     UNIFI_WIRELESS_CLIENTS,
 )
-from ..entity import UnifiEntity, UnifiEntityDescription
 from .config import UnifiConfig
+from .entity_loader import UnifiEntityLoader
 from .websocket import UnifiWebsocket
 
 CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
@@ -52,6 +45,7 @@ class UnifiHub:
         self.hass = hass
         self.api = api
         self.config = UnifiConfig.from_config_entry(config_entry)
+        self.entity_loader = UnifiEntityLoader(self)
         self.websocket = UnifiWebsocket(hass, api, self.signal_reachable)
 
         self.wireless_clients = hass.data[UNIFI_WIRELESS_CLIENTS]
@@ -62,95 +56,20 @@ class UnifiHub:
         self._cancel_heartbeat_check: CALLBACK_TYPE | None = None
         self._heartbeat_time: dict[str, datetime] = {}
 
-        self.entities: dict[str, str] = {}
-        self.known_objects: set[tuple[str, str]] = set()
-
         self.poe_command_queue: dict[str, dict[int, str]] = {}
         self._cancel_poe_command: CALLBACK_TYPE | None = None
+
+    @callback
+    @staticmethod
+    def get_hub(hass: HomeAssistant, config_entry: ConfigEntry) -> UnifiHub:
+        """Get UniFi hub from config entry."""
+        hub: UnifiHub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+        return hub
 
     @property
     def available(self) -> bool:
         """Websocket connection state."""
         return self.websocket.available
-
-    @callback
-    @staticmethod
-    def register_platform(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
-        entity_class: type[UnifiEntity],
-        descriptions: tuple[UnifiEntityDescription, ...],
-        requires_admin: bool = False,
-    ) -> None:
-        """Register platform for UniFi entity management."""
-        hub: UnifiHub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-        if requires_admin and not hub.is_admin:
-            return
-        hub.register_platform_add_entities(
-            entity_class, descriptions, async_add_entities
-        )
-
-    @callback
-    def _async_should_add_entity(
-        self, description: UnifiEntityDescription, obj_id: str
-    ) -> bool:
-        """Check if entity should be added."""
-        return bool(
-            (description.key, obj_id) not in self.known_objects
-            and description.allowed_fn(self, obj_id)
-            and description.supported_fn(self, obj_id)
-        )
-
-    @callback
-    def register_platform_add_entities(
-        self,
-        unifi_platform_entity: type[UnifiEntity],
-        descriptions: tuple[UnifiEntityDescription, ...],
-        async_add_entities: AddEntitiesCallback,
-    ) -> None:
-        """Subscribe to UniFi API handlers and create entities."""
-
-        @callback
-        def async_load_entities(descriptions: Iterable[UnifiEntityDescription]) -> None:
-            """Load and subscribe to UniFi endpoints."""
-
-            @callback
-            def async_add_unifi_entities() -> None:
-                """Add UniFi entity."""
-                async_add_entities(
-                    unifi_platform_entity(obj_id, self, description)
-                    for description in descriptions
-                    for obj_id in description.api_handler_fn(self.api)
-                    if self._async_should_add_entity(description, obj_id)
-                )
-
-            async_add_unifi_entities()
-
-            @callback
-            def async_create_entity(
-                description: UnifiEntityDescription, event: ItemEvent, obj_id: str
-            ) -> None:
-                """Create new UniFi entity on event."""
-                if self._async_should_add_entity(description, obj_id):
-                    async_add_entities(
-                        [unifi_platform_entity(obj_id, self, description)]
-                    )
-
-            for description in descriptions:
-                description.api_handler_fn(self.api).subscribe(
-                    partial(async_create_entity, description), ItemEvent.ADDED
-                )
-
-            self.config.entry.async_on_unload(
-                async_dispatcher_connect(
-                    self.hass,
-                    self.signal_options_update,
-                    async_add_unifi_entities,
-                )
-            )
-
-        async_load_entities(descriptions)
 
     @property
     def signal_reachable(self) -> str:
