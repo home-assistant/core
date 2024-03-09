@@ -963,11 +963,10 @@ async def _handle_entity_call(
 
     task: asyncio.Future[ServiceResponse] | None
     if isinstance(func, str):
-        task = hass.async_run_hass_job(
-            HassJob(partial(getattr(entity, func), **data))  # type: ignore[arg-type]
-        )
+        job = HassJob(partial(getattr(entity, func), **data))  # type: ignore[arg-type]
+        task = hass.async_run_hass_job(job, eager_start=True)
     else:
-        task = hass.async_run_hass_job(func, entity, data)
+        task = hass.async_run_hass_job(func, entity, data, eager_start=True)
 
     # Guard because callback functions do not return a task when passed to
     # async_run_job.
@@ -1002,7 +1001,7 @@ async def _async_admin_handler(
         if not user.is_admin:
             raise Unauthorized(context=call.context)
 
-    result = hass.async_run_hass_job(service_job, call)
+    result = hass.async_run_hass_job(service_job, call, eager_start=True)
     if result is not None:
         await result
 
