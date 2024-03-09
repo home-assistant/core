@@ -45,7 +45,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     SERVICE_RELOAD,
 )
-from homeassistant.core import Context, CoreState, HomeAssistant, State, callback
+from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.restore_state import StoredState, async_get
@@ -158,7 +158,6 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
 
     results = []
 
-    @callback
     def fake_event_listener(event):
         """Fake event listener for trigger."""
         results.append(event)
@@ -405,7 +404,6 @@ async def test_wait_till_timer_expires(hass: HomeAssistant) -> None:
 
     results = []
 
-    @callback
     def fake_event_listener(event):
         """Fake event listener for trigger."""
         results.append(event)
@@ -582,7 +580,6 @@ async def test_timer_restarted_event(hass: HomeAssistant) -> None:
 
     results = []
 
-    @callback
     def fake_event_listener(event):
         """Fake event listener for trigger."""
         results.append(event)
