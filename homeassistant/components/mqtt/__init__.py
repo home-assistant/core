@@ -590,7 +590,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await asyncio.gather(
         *(
             hass.config_entries.async_forward_entry_unload(entry, component)
-            for component in list(mqtt_data.platforms_loaded)
+            for component in mqtt_data.platforms_loaded
         )
     )
     mqtt_data.platforms_loaded = set()
