@@ -112,7 +112,6 @@ async def _async_get_component_strings(
                 and integration.has_translations
             )
         }
-        translations_by_language[language] = {}
         files_to_load_by_language[language] = files_to_load
         has_files_to_load |= bool(files_to_load)
 
@@ -131,7 +130,7 @@ async def _async_get_component_strings(
             ):
                 component_translations["title"] = integration.name
 
-        translations_by_language[language].update(loaded_translations)
+        translations_by_language.setdefault(language, {}).update(loaded_translations)
 
     return translations_by_language
 
