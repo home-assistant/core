@@ -1,4 +1,5 @@
 """Test the Google Maps Travel Time config flow."""
+
 import pytest
 
 from homeassistant import config_entries, data_entry_flow

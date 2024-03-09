@@ -1,6 +1,5 @@
 """Number entity for myUplink."""
 
-
 from aiohttp import ClientError
 from myuplink import DevicePoint
 

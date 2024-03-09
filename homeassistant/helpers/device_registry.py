@@ -1,4 +1,5 @@
 """Provide a way to connect entities belonging to one device."""
+
 from __future__ import annotations
 
 from collections import UserDict
@@ -31,6 +32,7 @@ from .deprecation import (
 )
 from .frame import report
 from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes
+from .registry import BaseRegistry
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
@@ -45,7 +47,7 @@ EVENT_DEVICE_REGISTRY_UPDATED = "device_registry_updated"
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION_MAJOR = 1
 STORAGE_VERSION_MINOR = 5
-SAVE_DELAY = 10
+
 CLEANUP_DELAY = 10
 
 CONNECTION_BLUETOOTH = "bluetooth"
@@ -456,7 +458,7 @@ class DeviceRegistryItems(UserDict[str, _EntryTypeT]):
         return None
 
 
-class DeviceRegistry:
+class DeviceRegistry(BaseRegistry):
     """Class to hold a registry of devices."""
 
     devices: DeviceRegistryItems[DeviceEntry]
@@ -899,11 +901,6 @@ class DeviceRegistry:
         self._device_data = devices.data
 
     @callback
-    def async_schedule_save(self) -> None:
-        """Schedule saving the device registry."""
-        self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
-
-    @callback
     def _data_to_save(self) -> dict[str, list[dict[str, Any]]]:
         """Return data of device registry to store in a file."""
         data: dict[str, list[dict[str, Any]]] = {}
@@ -1090,7 +1087,7 @@ def async_cleanup(
 ) -> None:
     """Clean up device registry."""
     # Find all devices that are referenced by a config_entry.
-    config_entry_ids = {entry.entry_id for entry in hass.config_entries.async_entries()}
+    config_entry_ids = set(hass.config_entries.async_entry_ids())
     references_config_entries = {
         device.id
         for device in dev_reg.devices.values()
@@ -1099,9 +1096,13 @@ def async_cleanup(
     }
 
     # Find all devices that are referenced in the entity registry.
-    references_entities = {entry.device_id for entry in ent_reg.entities.values()}
+    device_ids_referenced_by_entities = set(ent_reg.entities.get_device_ids())
 
-    orphan = set(dev_reg.devices) - references_entities - references_config_entries
+    orphan = (
+        set(dev_reg.devices)
+        - device_ids_referenced_by_entities
+        - references_config_entries
+    )
 
     for dev_id in orphan:
         dev_reg.async_remove_device(dev_id)
@@ -1140,8 +1141,8 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
 
     hass.bus.async_listen(
         event_type=lr.EVENT_LABEL_REGISTRY_UPDATED,
-        event_filter=_label_removed_from_registry_filter,  # type: ignore[arg-type]
-        listener=_handle_label_registry_update,  # type: ignore[arg-type]
+        event_filter=_label_removed_from_registry_filter,
+        listener=_handle_label_registry_update,
     )
 
     @callback

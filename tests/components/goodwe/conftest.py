@@ -1,4 +1,5 @@
 """Fixtures for the Aladdin Connect integration tests."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 from goodwe import Inverter

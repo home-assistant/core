@@ -1,4 +1,5 @@
 """Tests for the yandex transport platform."""
+
 import json
 from unittest.mock import AsyncMock, patch
 

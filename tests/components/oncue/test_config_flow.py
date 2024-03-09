@@ -1,4 +1,5 @@
 """Test the Oncue config flow."""
+
 from unittest.mock import patch
 
 from aiooncue import LoginFailedException

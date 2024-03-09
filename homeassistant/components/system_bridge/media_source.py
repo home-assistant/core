@@ -1,8 +1,9 @@
 """System Bridge Media Source Implementation."""
+
 from __future__ import annotations
 
-from systembridgemodels.media_directories import MediaDirectories
-from systembridgemodels.media_files import File as MediaFile, MediaFiles
+from systembridgemodels.media_directories import MediaDirectory
+from systembridgemodels.media_files import MediaFile, MediaFiles
 
 from homeassistant.components.media_player import MediaClass
 from homeassistant.components.media_source import MEDIA_CLASS_MAP, MEDIA_MIME_TYPES
@@ -129,7 +130,7 @@ def _build_base_url(
 
 def _build_root_paths(
     entry: ConfigEntry,
-    media_directories: MediaDirectories,
+    media_directories: list[MediaDirectory],
 ) -> BrowseMediaSource:
     """Build base categories for System Bridge media."""
     return BrowseMediaSource(
@@ -152,7 +153,7 @@ def _build_root_paths(
                 children=[],
                 children_media_class=MediaClass.DIRECTORY,
             )
-            for directory in media_directories.directories
+            for directory in media_directories
         ],
         children_media_class=MediaClass.DIRECTORY,
     )

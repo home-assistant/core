@@ -1,4 +1,5 @@
 """Provide functionality to keep track of devices."""
+
 from __future__ import annotations
 
 from functools import partial

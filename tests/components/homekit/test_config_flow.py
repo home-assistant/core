@@ -1,4 +1,5 @@
 """Test the HomeKit config flow."""
+
 from unittest.mock import patch
 
 import pytest

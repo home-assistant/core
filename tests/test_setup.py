@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 import voluptuous as vol
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries, loader, setup
 from homeassistant.const import EVENT_COMPONENT_LOADED, EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -617,7 +617,7 @@ async def test_async_when_setup_or_start_already_loaded(hass: HomeAssistant) -> 
 async def test_setup_import_blows_up(hass: HomeAssistant) -> None:
     """Test that we handle it correctly when importing integration blows up."""
     with patch(
-        "homeassistant.loader.Integration.get_component", side_effect=ImportError
+        "homeassistant.loader.Integration.async_get_component", side_effect=ImportError
     ):
         assert not await setup.async_setup_component(hass, "sun", {})
 
@@ -822,3 +822,30 @@ async def test_importing_integration_in_executor(
     assert await setup.async_setup_component(hass, "test_package_loaded_executor", {})
     assert await setup.async_setup_component(hass, "test_package_loaded_executor", {})
     await hass.async_block_till_done()
+
+
+async def test_async_prepare_setup_platform(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test we can prepare a platform setup."""
+    integration = await loader.async_get_integration(hass, "test")
+    with patch.object(
+        integration, "async_get_component", side_effect=ImportError("test is broken")
+    ):
+        assert (
+            await setup.async_prepare_setup_platform(hass, {}, "config", "test") is None
+        )
+
+    assert "test is broken" in caplog.text
+
+    caplog.clear()
+    # There is no actual config platform for this integration
+    assert await setup.async_prepare_setup_platform(hass, {}, "config", "test") is None
+    assert "No module named 'custom_components.test.config'" in caplog.text
+
+    button_platform = (
+        await setup.async_prepare_setup_platform(hass, {}, "button", "test") is None
+    )
+    assert button_platform is not None

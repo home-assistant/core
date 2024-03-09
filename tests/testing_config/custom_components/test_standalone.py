@@ -1,4 +1,5 @@
 """Provide a mock standalone component."""
+
 DOMAIN = "test_standalone"
 
 

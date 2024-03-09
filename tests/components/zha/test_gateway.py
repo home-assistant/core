@@ -1,4 +1,5 @@
 """Test ZHA Gateway."""
+
 import asyncio
 from unittest.mock import MagicMock, PropertyMock, patch
 

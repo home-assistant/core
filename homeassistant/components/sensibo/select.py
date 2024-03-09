@@ -1,4 +1,5 @@
 """Select platform for Sensibo integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -41,7 +42,6 @@ DEVICE_SELECT_TYPES = (
     SensiboSelectEntityDescription(
         key="horizontalSwing",
         data_key="horizontal_swing_mode",
-        icon="mdi:air-conditioner",
         value_fn=lambda data: data.horizontal_swing_mode,
         options_fn=lambda data: data.horizontal_swing_modes,
         translation_key="horizontalswing",
@@ -50,7 +50,6 @@ DEVICE_SELECT_TYPES = (
     SensiboSelectEntityDescription(
         key="light",
         data_key="light_mode",
-        icon="mdi:flashlight",
         value_fn=lambda data: data.light_mode,
         options_fn=lambda data: data.light_modes,
         translation_key="light",

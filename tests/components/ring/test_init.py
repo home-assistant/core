@@ -147,7 +147,7 @@ async def test_auth_failure_on_device_update(
         side_effect=AuthenticationError,
     ):
         async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert "Authentication failed while fetching devices data: " in [
             record.message
@@ -191,7 +191,7 @@ async def test_error_on_global_update(
         side_effect=error_type,
     ):
         async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert log_msg in [
             record.message for record in caplog.records if record.levelname == "ERROR"
@@ -232,7 +232,7 @@ async def test_error_on_device_update(
         side_effect=error_type,
     ):
         async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert log_msg in [
             record.message for record in caplog.records if record.levelname == "ERROR"

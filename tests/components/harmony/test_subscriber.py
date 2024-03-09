@@ -1,4 +1,5 @@
 """Test the HarmonySubscriberMixin class."""
+
 import asyncio
 from unittest.mock import AsyncMock, MagicMock
 

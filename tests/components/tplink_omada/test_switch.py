@@ -1,4 +1,5 @@
 """Tests for TP-Link Omada switch entities."""
+
 from unittest.mock import MagicMock
 
 from syrupy.assertion import SnapshotAssertion

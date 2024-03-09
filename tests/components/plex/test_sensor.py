@@ -1,4 +1,5 @@
 """Tests for Plex sensors."""
+
 from datetime import datetime, timedelta
 from http import HTTPStatus
 from unittest.mock import patch

@@ -1,4 +1,5 @@
 """Test Environment Canada diagnostics."""
+
 from datetime import UTC, datetime
 import json
 from unittest.mock import AsyncMock, MagicMock, patch

@@ -1,7 +1,9 @@
 """Test config validators."""
+
 from collections import OrderedDict
 from datetime import date, datetime, timedelta
 import enum
+import logging
 import os
 from socket import _GLOBAL_DEFAULT_TIMEOUT
 from unittest.mock import Mock, patch
@@ -986,7 +988,11 @@ def test_deprecated_with_default(caplog: pytest.LogCaptureFixture, schema) -> No
     deprecated_schema = vol.All(cv.deprecated("mars", default=False), schema)
 
     test_data = {"mars": True}
-    output = deprecated_schema(test_data.copy())
+    with patch(
+        "homeassistant.helpers.config_validation.get_integration_logger",
+        return_value=logging.getLogger(__name__),
+    ):
+        output = deprecated_schema(test_data.copy())
     assert len(caplog.records) == 1
     assert caplog.records[0].name == __name__
     assert (
@@ -1062,21 +1068,19 @@ def test_deprecated_with_replacement_key_and_default(
 
 
 def test_deprecated_cant_find_module() -> None:
-    """Test if the current module cannot be inspected."""
-    with patch("inspect.getmodule", return_value=None):
-        # This used to raise.
-        cv.deprecated(
-            "mars",
-            replacement_key="jupiter",
-            default=False,
-        )
+    """Test if the current module cannot be found."""
+    # This used to raise.
+    cv.deprecated(
+        "mars",
+        replacement_key="jupiter",
+        default=False,
+    )
 
-    with patch("inspect.getmodule", return_value=None):
-        # This used to raise.
-        cv.removed(
-            "mars",
-            default=False,
-        )
+    # This used to raise.
+    cv.removed(
+        "mars",
+        default=False,
+    )
 
 
 def test_deprecated_or_removed_logger_with_config_attributes(
@@ -1551,8 +1555,7 @@ def test_empty_schema(caplog: pytest.LogCaptureFixture) -> None:
 
 def test_empty_schema_cant_find_module() -> None:
     """Test if the current module cannot be inspected."""
-    with patch("inspect.getmodule", return_value=None):
-        cv.empty_config_schema("test_domain")({"test_domain": {"foo": "bar"}})
+    cv.empty_config_schema("test_domain")({"test_domain": {"foo": "bar"}})
 
 
 def test_config_entry_only_schema(
@@ -1582,10 +1585,7 @@ def test_config_entry_only_schema(
 
 def test_config_entry_only_schema_cant_find_module() -> None:
     """Test if the current module cannot be inspected."""
-    with patch("inspect.getmodule", return_value=None):
-        cv.config_entry_only_config_schema("test_domain")(
-            {"test_domain": {"foo": "bar"}}
-        )
+    cv.config_entry_only_config_schema("test_domain")({"test_domain": {"foo": "bar"}})
 
 
 def test_config_entry_only_schema_no_hass(

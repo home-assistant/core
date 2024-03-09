@@ -1,4 +1,5 @@
 """Decorators for the Home Assistant API."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine

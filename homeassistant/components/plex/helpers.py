@@ -1,4 +1,5 @@
 """Helper methods for common Plex integration operations."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine

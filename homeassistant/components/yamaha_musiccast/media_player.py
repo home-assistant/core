@@ -1,4 +1,5 @@
 """Implementation of the musiccast media player."""
+
 from __future__ import annotations
 
 import contextlib

@@ -1,4 +1,5 @@
 """The Enphase Envoy integration."""
+
 from __future__ import annotations
 
 from pyenphase import Envoy

@@ -1,4 +1,5 @@
 """Support for the OSO Energy devices and services."""
+
 from typing import Any, Generic, TypeVar
 
 from aiohttp.web_exceptions import HTTPException

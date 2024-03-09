@@ -1,4 +1,5 @@
 """Test the FiveM config flow."""
+
 from unittest.mock import patch
 
 from fivem import FiveMServerOfflineError

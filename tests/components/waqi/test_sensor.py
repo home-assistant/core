@@ -1,4 +1,5 @@
 """Test the World Air Quality Index (WAQI) sensor."""
+
 import json
 from unittest.mock import patch
 

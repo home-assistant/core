@@ -1,4 +1,5 @@
 """Assist pipeline Websocket API."""
+
 import asyncio
 
 # Suppressing disable=deprecated-module is needed for Python 3.11

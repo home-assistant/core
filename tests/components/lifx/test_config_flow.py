@@ -1,4 +1,5 @@
 """Tests for the lifx integration config flow."""
+
 from ipaddress import ip_address
 import socket
 from unittest.mock import patch

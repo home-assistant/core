@@ -1,4 +1,5 @@
 """The tests for MQTT device triggers."""
+
 import json
 from unittest.mock import patch
 

@@ -1,4 +1,5 @@
 """Test config flow."""
+
 from ipaddress import ip_address
 import json
 from unittest.mock import AsyncMock, MagicMock, patch

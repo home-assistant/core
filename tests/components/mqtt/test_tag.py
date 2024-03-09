@@ -1,4 +1,5 @@
 """The tests for MQTT tag scanner."""
+
 from collections.abc import Generator
 import copy
 import json
