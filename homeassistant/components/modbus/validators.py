@@ -370,12 +370,14 @@ def check_config(config: dict) -> dict:
         if not validate_modbus(hub, hub_name_inx):
             del config[hub_inx]
             continue
+        minimum_scan_interval = 9999
+        no_entities = True
         for component, conf_key in PLATFORMS:
             if conf_key not in hub:
                 continue
+            no_entities = False
             entity_inx = 0
             entities = hub[conf_key]
-            minimum_scan_interval = 9999
             while entity_inx < len(entities):
                 if not validate_entity(
                     hub[CONF_NAME],
@@ -388,7 +390,11 @@ def check_config(config: dict) -> dict:
                     del entities[entity_inx]
                 else:
                     entity_inx += 1
-
+        if no_entities:
+            err = f"Modbus {hub[CONF_NAME]} contain no entities, this will cause instability,  please add at least one entity!"
+            _LOGGER.warning(err)
+            # Ensure timeout is not started/handled.
+            hub[CONF_TIMEOUT] = -1
         if hub[CONF_TIMEOUT] >= minimum_scan_interval:
             hub[CONF_TIMEOUT] = minimum_scan_interval - 1
             _LOGGER.warning(
