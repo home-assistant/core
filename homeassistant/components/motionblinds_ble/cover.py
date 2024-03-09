@@ -23,7 +23,6 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -96,7 +95,6 @@ class GenericBlind(MotionblindsBLEEntity, CoverEntity):
         )
         MotionblindsBLEEntity.__init__(self, device, entry)
         CoverEntity.__init__(self)
-        self._attr_unique_id: str = entry.data[CONF_ADDRESS]
         self.entity_description = COVER_TYPES[entry.data[CONF_BLIND_TYPE]]
         self._device.register_running_callback(self.async_update_running)
         self._device.register_position_callback(self.async_update_position)
