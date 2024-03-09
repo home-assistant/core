@@ -1,4 +1,5 @@
 """Support for OpenTherm Gateway sensors."""
+
 import logging
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT, SensorEntity

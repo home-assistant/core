@@ -277,17 +277,21 @@
       }
     }
   },
-  "issues": {
-    "service_deprecation_start_pause": {
-      "title": "Roborock vacuum support for vacuum.start_pause is being removed",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::roborock::issues::service_deprecation_start_pause::title%]",
-            "description": "Roborock vacuum support for the vacuum.start_pause service is deprecated and will be removed in Home Assistant 2024.2; Please adjust any automation or script that uses the service to instead call vacuum.pause or vacuum.start and select submit below to mark this issue as resolved."
-          }
-        }
-      }
+  "exceptions": {
+    "command_failed": {
+      "message": "Error while calling {command}"
+    },
+    "home_data_fail": {
+      "message": "Failed to get Roborock home data"
+    },
+    "invalid_credentials": {
+      "message": "Invalid credentials."
+    },
+    "map_failure": {
+      "message": "Something went wrong creating the map"
+    },
+    "no_coordinators": {
+      "message": "No devices were able to successfully setup"
     }
   }
 }

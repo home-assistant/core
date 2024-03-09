@@ -1,4 +1,5 @@
 """The 1-Wire component."""
+
 import logging
 
 from pyownet import protocol

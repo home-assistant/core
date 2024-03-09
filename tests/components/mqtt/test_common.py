@@ -1,4 +1,5 @@
 """Common test objects."""
+
 from collections.abc import Iterable
 from contextlib import suppress
 import copy
@@ -43,6 +44,7 @@ DEFAULT_CONFIG_DEVICE_INFO_ID = {
     "name": "Beer",
     "model": "Glass",
     "hw_version": "rev1",
+    "serial_number": "1234deadbeef",
     "sw_version": "0.1-beta",
     "suggested_area": "default_area",
     "configuration_url": "http://example.com",
@@ -54,6 +56,7 @@ DEFAULT_CONFIG_DEVICE_INFO_MAC = {
     "name": "Beer",
     "model": "Glass",
     "hw_version": "rev1",
+    "serial_number": "1234deadbeef",
     "sw_version": "0.1-beta",
     "suggested_area": "default_area",
     "configuration_url": "http://example.com",

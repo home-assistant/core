@@ -1,4 +1,5 @@
 """The test for weather entity."""
+
 from datetime import datetime
 
 import pytest

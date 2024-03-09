@@ -1,4 +1,5 @@
 """Test init of APCUPSd integration."""
+
 import asyncio
 from collections import OrderedDict
 from unittest.mock import patch

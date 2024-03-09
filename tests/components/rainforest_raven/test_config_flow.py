@@ -1,5 +1,5 @@
 """Test Rainforest RAVEn config flow."""
-import asyncio
+
 from unittest.mock import patch
 
 from aioraven.device import RAVEnConnectionError
@@ -48,8 +48,8 @@ def mock_device_comm_error(mock_device):
 @pytest.fixture
 def mock_device_timeout(mock_device):
     """Mock a device which times out when queried."""
-    mock_device.get_meter_list.side_effect = asyncio.TimeoutError
-    mock_device.get_meter_info.side_effect = asyncio.TimeoutError
+    mock_device.get_meter_list.side_effect = TimeoutError
+    mock_device.get_meter_info.side_effect = TimeoutError
     return mock_device
 
 

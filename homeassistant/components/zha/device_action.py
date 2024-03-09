@@ -1,4 +1,5 @@
 """Provides device actions for ZHA devices."""
+
 from __future__ import annotations
 
 from typing import Any

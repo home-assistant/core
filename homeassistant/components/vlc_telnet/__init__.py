@@ -1,4 +1,5 @@
 """The VLC media player Telnet integration."""
+
 from aiovlc.client import Client
 from aiovlc.exceptions import AuthError, ConnectError
 

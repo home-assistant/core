@@ -1,4 +1,5 @@
 """The AirTouch4 integration."""
+
 from airtouch4pyapi import AirTouch
 
 from homeassistant.config_entries import ConfigEntry

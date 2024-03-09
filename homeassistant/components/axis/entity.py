@@ -10,7 +10,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN as AXIS_DOMAIN
-from .device import AxisNetworkDevice
+from .hub import AxisHub
 
 TOPIC_TO_EVENT_TYPE = {
     EventTopic.DAY_NIGHT_VISION: "DayNight",
@@ -37,13 +37,13 @@ class AxisEntity(Entity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, device: AxisNetworkDevice) -> None:
+    def __init__(self, hub: AxisHub) -> None:
         """Initialize the Axis event."""
-        self.device = device
+        self.hub = hub
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(AXIS_DOMAIN, device.unique_id)},  # type: ignore[arg-type]
-            serial_number=device.unique_id,
+            identifiers={(AXIS_DOMAIN, hub.unique_id)},  # type: ignore[arg-type]
+            serial_number=hub.unique_id,
         )
 
     async def async_added_to_hass(self) -> None:
@@ -51,7 +51,7 @@ class AxisEntity(Entity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                self.device.signal_reachable,
+                self.hub.signal_reachable,
                 self.async_signal_reachable_callback,
             )
         )
@@ -59,7 +59,7 @@ class AxisEntity(Entity):
     @callback
     def async_signal_reachable_callback(self) -> None:
         """Call when device connection state change."""
-        self._attr_available = self.device.available
+        self._attr_available = self.hub.available
         self.async_write_ha_state()
 
 
@@ -68,16 +68,16 @@ class AxisEventEntity(AxisEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, event: Event, device: AxisNetworkDevice) -> None:
+    def __init__(self, event: Event, hub: AxisHub) -> None:
         """Initialize the Axis event."""
-        super().__init__(device)
+        super().__init__(hub)
 
         self._event_id = event.id
         self._event_topic = event.topic_base
         self._event_type = TOPIC_TO_EVENT_TYPE[event.topic_base]
 
         self._attr_name = f"{self._event_type} {event.id}"
-        self._attr_unique_id = f"{device.unique_id}-{event.topic}-{event.id}"
+        self._attr_unique_id = f"{hub.unique_id}-{event.topic}-{event.id}"
 
         self._attr_device_class = event.group.value
 
@@ -90,7 +90,7 @@ class AxisEventEntity(AxisEntity):
         """Subscribe sensors events."""
         await super().async_added_to_hass()
         self.async_on_remove(
-            self.device.api.event.subscribe(
+            self.hub.api.event.subscribe(
                 self.async_event_callback,
                 id_filter=self._event_id,
                 topic_filter=self._event_topic,

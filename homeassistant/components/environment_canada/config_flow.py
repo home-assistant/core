@@ -1,4 +1,5 @@
 """Config flow for Environment Canada integration."""
+
 import logging
 import xml.etree.ElementTree as et
 
@@ -6,7 +7,7 @@ import aiohttp
 from env_canada import ECWeather, ec_exc
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_LANGUAGE, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.helpers import config_validation as cv
 
@@ -40,7 +41,7 @@ async def validate_input(data):
     }
 
 
-class EnvironmentCanadaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class EnvironmentCanadaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Environment Canada weather."""
 
     VERSION = 1

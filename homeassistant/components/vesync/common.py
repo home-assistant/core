@@ -1,4 +1,5 @@
 """Common utilities for VeSync Component."""
+
 import logging
 from typing import Any
 

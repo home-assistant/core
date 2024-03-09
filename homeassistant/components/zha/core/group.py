@@ -1,4 +1,5 @@
 """Group for Zigbee Home Automation."""
+
 from __future__ import annotations
 
 import asyncio
@@ -87,6 +88,9 @@ class ZHAGroupMember(LogMixin):
         entity_info = []
 
         for entity_ref in zha_device_registry.get(self.device.ieee):
+            # We have device entities now that don't leverage cluster handlers
+            if not entity_ref.cluster_handlers:
+                continue
             entity = entity_registry.async_get(entity_ref.reference_id)
             handler = list(entity_ref.cluster_handlers.values())[0]
 
@@ -112,7 +116,7 @@ class ZHAGroupMember(LogMixin):
             await self._zha_device.device.endpoints[
                 self._endpoint_id
             ].remove_from_group(self._zha_group.group_id)
-        except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
+        except (zigpy.exceptions.ZigbeeException, TimeoutError) as ex:
             self.debug(
                 (
                     "Failed to remove endpoint: %s for device '%s' from group: 0x%04x"

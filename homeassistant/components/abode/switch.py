@@ -1,4 +1,5 @@
 """Support for Abode Security System switches."""
+
 from __future__ import annotations
 
 from typing import Any, cast
@@ -16,8 +17,6 @@ from . import AbodeAutomation, AbodeDevice, AbodeSystem
 from .const import DOMAIN
 
 DEVICE_TYPES = [CONST.TYPE_SWITCH, CONST.TYPE_VALVE]
-
-ICON = "mdi:robot"
 
 
 async def async_setup_entry(
@@ -63,7 +62,7 @@ class AbodeSwitch(AbodeDevice, SwitchEntity):
 class AbodeAutomationSwitch(AbodeAutomation, SwitchEntity):
     """A switch implementation for Abode automations."""
 
-    _attr_icon = ICON
+    _attr_translation_key = "automation"
 
     async def async_added_to_hass(self) -> None:
         """Set up trigger automation service."""

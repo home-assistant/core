@@ -1,4 +1,5 @@
 """Config flow for Snooz component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -14,9 +15,8 @@ from homeassistant.components.bluetooth import (
     async_discovered_service_info,
     async_process_advertisements,
 )
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_TOKEN
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
@@ -45,7 +45,7 @@ class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the bluetooth discovery step."""
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
@@ -57,7 +57,7 @@ class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_bluetooth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm discovery."""
         assert self._discovery is not None
 
@@ -77,7 +77,7 @@ class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the user step to pick discovered device."""
         if user_input is not None:
             name = user_input[CONF_NAME]
@@ -128,30 +128,32 @@ class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_wait_for_pairing_mode(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Wait for device to enter pairing mode."""
         if not self._pairing_task:
             self._pairing_task = self.hass.async_create_task(
                 self._async_wait_for_pairing_mode()
             )
+
+        if not self._pairing_task.done():
             return self.async_show_progress(
                 step_id="wait_for_pairing_mode",
                 progress_action="wait_for_pairing_mode",
+                progress_task=self._pairing_task,
             )
 
         try:
             await self._pairing_task
-        except asyncio.TimeoutError:
-            self._pairing_task = None
+        except TimeoutError:
             return self.async_show_progress_done(next_step_id="pairing_timeout")
-
-        self._pairing_task = None
+        finally:
+            self._pairing_task = None
 
         return self.async_show_progress_done(next_step_id="pairing_complete")
 
     async def async_step_pairing_complete(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Create a configuration entry for a device that entered pairing mode."""
         assert self._discovery
 
@@ -164,7 +166,7 @@ class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_pairing_timeout(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Inform the user that the device never entered pairing mode."""
         if user_input is not None:
             return await self.async_step_wait_for_pairing_mode()
@@ -172,7 +174,7 @@ class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
         self._set_confirm_only()
         return self.async_show_form(step_id="pairing_timeout")
 
-    def _create_snooz_entry(self, discovery: DiscoveredSnooz) -> FlowResult:
+    def _create_snooz_entry(self, discovery: DiscoveredSnooz) -> ConfigFlowResult:
         assert discovery.device.display_name
         return self.async_create_entry(
             title=discovery.device.display_name,
@@ -192,15 +194,10 @@ class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
         ) -> bool:
             return device.supported(service_info) and device.is_pairing
 
-        try:
-            await async_process_advertisements(
-                self.hass,
-                is_device_in_pairing_mode,
-                {"address": self._discovery.info.address},
-                BluetoothScanningMode.ACTIVE,
-                WAIT_FOR_PAIRING_TIMEOUT,
-            )
-        finally:
-            self.hass.async_create_task(
-                self.hass.config_entries.flow.async_configure(flow_id=self.flow_id)
-            )
+        await async_process_advertisements(
+            self.hass,
+            is_device_in_pairing_mode,
+            {"address": self._discovery.info.address},
+            BluetoothScanningMode.ACTIVE,
+            WAIT_FOR_PAIRING_TIMEOUT,
+        )

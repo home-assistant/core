@@ -1,4 +1,5 @@
 """The Flux LED/MagicLight integration discovery."""
+
 from __future__ import annotations
 
 import asyncio

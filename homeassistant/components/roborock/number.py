@@ -1,4 +1,5 @@
 """Support for Roborock number."""
+
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
@@ -44,7 +45,6 @@ NUMBER_DESCRIPTIONS: list[RoborockNumberDescription] = [
     RoborockNumberDescription(
         key="volume",
         translation_key="volume",
-        icon="mdi:volume-source",
         native_min_value=0,
         native_max_value=100,
         native_unit_of_measurement=PERCENTAGE,

@@ -4,7 +4,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Information provided by the OpenSky Network (https://opensky-network.org)',
       'friendly_name': 'OpenSky',
-      'icon': 'mdi:airplane',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'flights',
     }),
@@ -20,7 +19,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Information provided by the OpenSky Network (https://opensky-network.org)',
       'friendly_name': 'OpenSky',
-      'icon': 'mdi:airplane',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'flights',
     }),

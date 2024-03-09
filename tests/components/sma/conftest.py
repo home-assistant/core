@@ -1,4 +1,5 @@
 """Fixtures for sma tests."""
+
 from unittest.mock import patch
 
 from pysma.const import GENERIC_SENSORS

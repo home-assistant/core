@@ -1,4 +1,5 @@
 """Switch platform for Sensibo integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -47,7 +48,6 @@ DEVICE_SWITCH_TYPES: tuple[SensiboDeviceSwitchEntityDescription, ...] = (
         key="timer_on_switch",
         translation_key="timer_on_switch",
         device_class=SwitchDeviceClass.SWITCH,
-        icon="mdi:timer",
         value_fn=lambda data: data.timer_on,
         extra_fn=lambda data: {"id": data.timer_id, "turn_on": data.timer_state_on},
         command_on="async_turn_on_timer",
@@ -58,7 +58,6 @@ DEVICE_SWITCH_TYPES: tuple[SensiboDeviceSwitchEntityDescription, ...] = (
         key="climate_react_switch",
         translation_key="climate_react_switch",
         device_class=SwitchDeviceClass.SWITCH,
-        icon="mdi:wizard-hat",
         value_fn=lambda data: data.smart_on,
         extra_fn=lambda data: {"type": data.smart_type},
         command_on="async_turn_on_off_smart",

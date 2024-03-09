@@ -19,8 +19,8 @@
         'location': '**REDACTED**',
         'measurement_type': 'ELECTRICITY',
         'meter_id': 'f8d610b7a8cc4e73939fa33b990ded54',
+        'meter_type': 'TST',
         'serial_number': '**REDACTED**',
-        'type': 'TST',
       }),
       dict({
         'additional': dict({
@@ -39,8 +39,8 @@
         'location': '**REDACTED**',
         'measurement_type': 'GAS',
         'meter_id': 'd81a652fe0824f9a9d336016587d3b9d',
+        'meter_type': 'PIP',
         'serial_number': '**REDACTED**',
-        'type': 'PIP',
       }),
     ]),
     'readings': dict({

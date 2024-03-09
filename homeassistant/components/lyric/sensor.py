@@ -1,4 +1,5 @@
 """Support for Honeywell Lyric sensor platform."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -105,7 +106,6 @@ DEVICE_SENSORS: list[LyricSensorEntityDescription] = [
     LyricSensorEntityDescription(
         key="setpoint_status",
         translation_key="setpoint_status",
-        icon="mdi:thermostat",
         value_fn=lambda device: get_setpoint_status(
             device.changeableValues.thermostatSetpointStatus,
             device.changeableValues.nextPeriodTime,

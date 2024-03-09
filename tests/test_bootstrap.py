@@ -1,14 +1,16 @@
 """Test the bootstrapping."""
+
 import asyncio
 from collections.abc import Generator, Iterable
 import glob
 import os
+import sys
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant import bootstrap, runner
+from homeassistant import bootstrap, loader, runner
 import homeassistant.config as config_util
 from homeassistant.config_entries import HANDLERS, ConfigEntry
 from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
@@ -87,12 +89,12 @@ async def test_async_enable_logging(
 
 
 async def test_load_hassio(hass: HomeAssistant) -> None:
-    """Test that we load Hass.io component."""
+    """Test that we load the hassio integration when using Supervisor."""
     with patch.dict(os.environ, {}, clear=True):
-        assert bootstrap._get_domains(hass, {}) == set()
+        assert "hassio" not in bootstrap._get_domains(hass, {})
 
     with patch.dict(os.environ, {"SUPERVISOR": "1"}):
-        assert bootstrap._get_domains(hass, {}) == {"hassio"}
+        assert "hassio" in bootstrap._get_domains(hass, {})
 
 
 @pytest.mark.parametrize("load_registries", [False])
@@ -471,7 +473,6 @@ async def test_setup_hass(
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
     caplog: pytest.LogCaptureFixture,
-    event_loop: asyncio.AbstractEventLoop,
 ) -> None:
     """Test it works."""
     verbose = Mock()
@@ -521,7 +522,6 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
     caplog: pytest.LogCaptureFixture,
-    event_loop: asyncio.AbstractEventLoop,
 ) -> None:
     """Test it works."""
     verbose = Mock()
@@ -560,7 +560,6 @@ async def test_setup_hass_invalid_yaml(
     mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
-    event_loop: asyncio.AbstractEventLoop,
 ) -> None:
     """Test it works."""
     with patch(
@@ -588,7 +587,6 @@ async def test_setup_hass_config_dir_nonexistent(
     mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
-    event_loop: asyncio.AbstractEventLoop,
 ) -> None:
     """Test it works."""
     mock_ensure_config_exists.return_value = False
@@ -615,7 +613,6 @@ async def test_setup_hass_recovery_mode(
     mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
-    event_loop: asyncio.AbstractEventLoop,
 ) -> None:
     """Test it works."""
     with patch("homeassistant.components.browser.setup") as browser_setup, patch(
@@ -650,7 +647,6 @@ async def test_setup_hass_safe_mode(
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
     caplog: pytest.LogCaptureFixture,
-    event_loop: asyncio.AbstractEventLoop,
 ) -> None:
     """Test it works."""
     with patch("homeassistant.components.browser.setup"), patch(
@@ -683,7 +679,6 @@ async def test_setup_hass_recovery_mode_and_safe_mode(
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
     caplog: pytest.LogCaptureFixture,
-    event_loop: asyncio.AbstractEventLoop,
 ) -> None:
     """Test it works."""
     with patch("homeassistant.components.browser.setup"), patch(
@@ -716,7 +711,6 @@ async def test_setup_hass_invalid_core_config(
     mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
-    event_loop: asyncio.AbstractEventLoop,
 ) -> None:
     """Test it works."""
     with patch("homeassistant.bootstrap.async_notify_setup_error") as mock_notify:
@@ -756,7 +750,6 @@ async def test_setup_recovery_mode_if_no_frontend(
     mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
-    event_loop: asyncio.AbstractEventLoop,
 ) -> None:
     """Test we setup recovery mode if frontend didn't load."""
     verbose = Mock()
@@ -784,6 +777,7 @@ async def test_setup_recovery_mode_if_no_frontend(
 
 
 @pytest.mark.parametrize("load_registries", [False])
+@patch("homeassistant.bootstrap.DEFAULT_INTEGRATIONS", set())
 async def test_empty_integrations_list_is_only_sent_at_the_end_of_bootstrap(
     hass: HomeAssistant,
 ) -> None:
@@ -836,7 +830,7 @@ async def test_empty_integrations_list_is_only_sent_at_the_end_of_bootstrap(
 
     assert integrations[0] != {}
     assert "an_after_dep" in integrations[0]
-    assert integrations[-3] != {}
+    assert integrations[-2] != {}
     assert integrations[-1] == {}
 
     assert "normal_integration" in hass.config.components
@@ -851,10 +845,10 @@ async def test_warning_logged_on_wrap_up_timeout(
 
     def gen_domain_setup(domain):
         async def async_setup(hass, config):
-            async def _background_task():
+            async def _not_marked_background_task():
                 await asyncio.sleep(0.2)
 
-            hass.async_create_task(_background_task())
+            hass.async_create_task(_not_marked_background_task())
             return True
 
         return async_setup
@@ -872,7 +866,86 @@ async def test_warning_logged_on_wrap_up_timeout(
         await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
         await hass.async_block_till_done()
 
-    assert "Setup timed out for bootstrap - moving forward" in caplog.text
+    assert "Setup timed out for bootstrap" in caplog.text
+    assert "waiting on" in caplog.text
+    assert "_not_marked_background_task" in caplog.text
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_tasks_logged_that_block_stage_1(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we log tasks that delay stage 1 startup."""
+
+    def gen_domain_setup(domain):
+        async def async_setup(hass, config):
+            async def _not_marked_background_task():
+                await asyncio.sleep(0.2)
+
+            hass.async_create_task(_not_marked_background_task())
+            await asyncio.sleep(0.1)
+            return True
+
+        return async_setup
+
+    mock_integration(
+        hass,
+        MockModule(
+            domain="normal_integration",
+            async_setup=gen_domain_setup("normal_integration"),
+            partial_manifest={},
+        ),
+    )
+
+    original_stage_1 = bootstrap.STAGE_1_INTEGRATIONS
+    with patch.object(bootstrap, "STAGE_1_TIMEOUT", 0), patch.object(
+        bootstrap, "COOLDOWN_TIME", 0
+    ), patch.object(
+        bootstrap, "STAGE_1_INTEGRATIONS", [*original_stage_1, "normal_integration"]
+    ):
+        await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
+        await hass.async_block_till_done()
+
+    assert "Setup timed out for stage 1 waiting on" in caplog.text
+    assert "waiting on" in caplog.text
+    assert "_not_marked_background_task" in caplog.text
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_tasks_logged_that_block_stage_2(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we log tasks that delay stage 2 startup."""
+
+    def gen_domain_setup(domain):
+        async def async_setup(hass, config):
+            async def _not_marked_background_task():
+                await asyncio.sleep(0.2)
+
+            hass.async_create_task(_not_marked_background_task())
+            await asyncio.sleep(0.1)
+            return True
+
+        return async_setup
+
+    mock_integration(
+        hass,
+        MockModule(
+            domain="normal_integration",
+            async_setup=gen_domain_setup("normal_integration"),
+            partial_manifest={},
+        ),
+    )
+
+    with patch.object(bootstrap, "STAGE_2_TIMEOUT", 0), patch.object(
+        bootstrap, "COOLDOWN_TIME", 0
+    ):
+        await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
+        await hass.async_block_till_done()
+
+    assert "Setup timed out for stage 2 waiting on" in caplog.text
+    assert "waiting on" in caplog.text
+    assert "_not_marked_background_task" in caplog.text
 
 
 @pytest.mark.parametrize("load_registries", [False])
@@ -925,7 +998,7 @@ async def test_bootstrap_dependencies(
         """Assert the mqtt config entry was set up."""
         calls.append("mqtt")
         # assert the integration is not yet set up
-        assertions.append(hass.data["setup_done"][integration].is_set() is False)
+        assertions.append(hass.data["setup_done"][integration].done() is False)
         assertions.append(
             all(
                 dependency in hass.config.components
@@ -941,7 +1014,7 @@ async def test_bootstrap_dependencies(
         # assert mqtt was already set up
         assertions.append(
             "mqtt" not in hass.data["setup_done"]
-            or hass.data["setup_done"]["mqtt"].is_set()
+            or hass.data["setup_done"]["mqtt"].done()
         )
         assertions.append("mqtt" in hass.config.components)
         return True
@@ -1028,5 +1101,95 @@ async def test_bootstrap_dependencies(
     assert calls == ["mqtt", integration]
 
     assert (
-        f"Dependency {integration} will wait for dependencies ['mqtt']" in caplog.text
+        f"Dependency {integration} will wait for dependencies dict_keys(['mqtt'])"
+        in caplog.text
     )
+
+
+async def test_pre_import_no_requirements(hass: HomeAssistant) -> None:
+    """Test pre-imported and do not have any requirements."""
+    pre_imports = [
+        name.removesuffix("_pre_import")
+        for name in dir(bootstrap)
+        if name.endswith("_pre_import")
+    ]
+
+    # Make sure future refactoring does not
+    # accidentally remove the pre-imports
+    # or change the naming convention without
+    # updating this test.
+    assert len(pre_imports) > 3
+
+    for pre_import in pre_imports:
+        integration = await loader.async_get_integration(hass, pre_import)
+        assert not integration.requirements
+
+
+@pytest.mark.timeout(20)
+async def test_bootstrap_does_not_preload_stage_1_integrations() -> None:
+    """Test that the bootstrap does not preload stage 1 integrations.
+
+    If this test fails it means that stage1 integrations are being
+    loaded too soon and will not get their requirements updated
+    before they are loaded at runtime.
+    """
+
+    process = await asyncio.create_subprocess_exec(
+        sys.executable,
+        "-c",
+        "import homeassistant.bootstrap; import sys; print(sys.modules)",
+        stdout=asyncio.subprocess.PIPE,
+    )
+    stdout, _ = await process.communicate()
+    assert process.returncode == 0
+    decoded_stdout = stdout.decode()
+
+    # Ensure no stage1 integrations have been imported
+    # as a side effect of importing the pre-imports
+    for integration in bootstrap.STAGE_1_INTEGRATIONS:
+        assert f"homeassistant.components.{integration}" not in decoded_stdout
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_cancellation_does_not_leak_upward_from_async_setup(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+) -> None:
+    """Test setting up an integration that raises asyncio.CancelledError."""
+    await bootstrap.async_setup_multi_components(
+        hass, {"test_package_raises_cancelled_error"}, {}
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        "Error during setup of component test_package_raises_cancelled_error"
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_cancellation_does_not_leak_upward_from_async_setup_entry(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+) -> None:
+    """Test setting up an integration that raises asyncio.CancelledError."""
+    entry = MockConfigEntry(
+        domain="test_package_raises_cancelled_error_config_entry", data={}
+    )
+    entry.add_to_hass(hass)
+    await bootstrap.async_setup_multi_components(
+        hass, {"test_package_raises_cancelled_error_config_entry"}, {}
+    )
+    await hass.async_block_till_done()
+
+    await bootstrap.async_setup_multi_components(hass, {"test_package"}, {})
+    await hass.async_block_till_done()
+    assert (
+        "Error setting up entry Mock Title for test_package_raises_cancelled_error_config_entry"
+        in caplog.text
+    )
+
+    assert "test_package" in hass.config.components
+    assert "test_package_raises_cancelled_error_config_entry" in hass.config.components

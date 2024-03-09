@@ -1,4 +1,5 @@
 """The tests for the xiaomi_miio button component."""
+
 from unittest.mock import MagicMock, patch
 
 import pytest
