@@ -4,7 +4,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from trest_solar_service import TrestIdentityService
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -13,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
+from .services.trest_identity_service import TrestIdentityService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,8 +27,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate if the user input contains valid credentials."""
 
-    identity = TrestIdentityService()
-    identity.authenticate(data[CONF_USERNAME], data[CONF_PASSWORD])
+    identity = TrestIdentityService(hass, data[CONF_USERNAME], data[CONF_PASSWORD])
+    await identity.authenticate_async()
 
     if not identity.check_token_is_expired():
         raise InvalidAuth
