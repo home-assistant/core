@@ -79,6 +79,9 @@
       },
       "max_charging_current": {
         "name": "Max charging current"
+      },
+      "ocpp_status": {
+        "name": "OCPP status"
       }
     },
     "switch": {
