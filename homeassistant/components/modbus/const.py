@@ -16,7 +16,6 @@ from homeassistant.const import (
 CONF_BAUDRATE = "baudrate"
 CONF_BYTESIZE = "bytesize"
 CONF_CLIMATES = "climates"
-CONF_CLOSE_COMM_ON_ERROR = "close_comm_on_error"
 CONF_DATA_TYPE = "data_type"
 CONF_DEVICE_ADDRESS = "device_address"
 CONF_FANS = "fans"

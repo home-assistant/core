@@ -61,7 +61,6 @@ from .const import (  # noqa: F401
     CONF_BAUDRATE,
     CONF_BYTESIZE,
     CONF_CLIMATES,
-    CONF_CLOSE_COMM_ON_ERROR,
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
     CONF_FAN_MODE_AUTO,
@@ -374,7 +373,6 @@ MODBUS_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string,
         vol.Optional(CONF_TIMEOUT, default=3): cv.socket_timeout,
-        vol.Optional(CONF_CLOSE_COMM_ON_ERROR): cv.boolean,
         vol.Optional(CONF_DELAY, default=0): cv.positive_int,
         vol.Optional(CONF_RETRIES): cv.positive_int,
         vol.Optional(CONF_RETRY_ON_EMPTY): cv.boolean,
