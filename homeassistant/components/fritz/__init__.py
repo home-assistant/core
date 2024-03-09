@@ -16,6 +16,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from .common import AvmWrapper, FritzData
 from .const import (
     DATA_FRITZ,
+    DEFAULT_SSL,
     DOMAIN,
     FRITZ_AUTH_EXCEPTIONS,
     FRITZ_EXCEPTIONS,
@@ -92,3 +93,18 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update when config_entry options update."""
     if entry.options:
         await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    # Version 1 had no TLS support, so we add the default (False)
+    if config_entry.version == 1:
+        new_data = {**config_entry.data, CONF_SSL: DEFAULT_SSL}
+        hass.config_entries.async_update_entry(config_entry, data=new_data, version=2)
+
+    _LOGGER.info("Migration to version %s successful", config_entry.version)
+
+    return True
