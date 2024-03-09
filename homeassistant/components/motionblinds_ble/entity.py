@@ -1,5 +1,7 @@
 """Base entity for the Motionblinds BLE integration."""
 
+import logging
+
 from motionblindsble.device import MotionDevice
 
 from homeassistant.config_entries import ConfigEntry
@@ -7,13 +9,16 @@ from homeassistant.const import CONF_ADDRESS
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from .const import CONF_BLIND_TYPE, MANUFACTURER
+from .const import CONF_BLIND_TYPE, CONF_MAC_CODE, MANUFACTURER
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class MotionblindsBLEEntity(Entity):
     """Base class for Motionblinds BLE entities."""
 
     _attr_has_entity_name = True
+    _attr_should_poll = False
 
     _device: MotionDevice
     config_entry: ConfigEntry
@@ -28,3 +33,8 @@ class MotionblindsBLEEntity(Entity):
             model=entry.data[CONF_BLIND_TYPE],
             name=device.display_name,
         )
+
+    async def async_update(self) -> None:
+        """Update state, called by HA if there is a poll interval and by the service homeassistant.update_entity."""
+        _LOGGER.debug("(%s) Updating entity", self.config_entry.data[CONF_MAC_CODE])
+        await self._device.connect()
