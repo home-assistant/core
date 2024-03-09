@@ -144,12 +144,7 @@ async def test_unavailable_callbacks_mark_the_coordinator_unavailable(
     start_monotonic = time.monotonic()
     with patch(
         "bleak.BleakScanner.discovered_devices_and_advertisement_data",  # Must patch before we setup
-        {
-            "44:44:33:11:23:45": (
-                MagicMock(address="44:44:33:11:23:45"),
-                MagicMock(),
-            )
-        },
+        {"44:44:33:11:23:45": (MagicMock(address="44:44:33:11:23:45"), MagicMock())},
     ):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()

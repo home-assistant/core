@@ -586,8 +586,7 @@ class HomeAssistant:
         *args: Any,
         eager_start: bool = False,
         background: bool = False,
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @overload
     @callback
@@ -597,8 +596,7 @@ class HomeAssistant:
         *args: Any,
         eager_start: bool = False,
         background: bool = False,
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @callback
     def async_add_hass_job(
@@ -749,8 +747,7 @@ class HomeAssistant:
         *args: Any,
         eager_start: bool = False,
         background: bool = False,
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @overload
     @callback
@@ -760,8 +757,7 @@ class HomeAssistant:
         *args: Any,
         eager_start: bool = False,
         background: bool = False,
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @callback
     def async_run_hass_job(
