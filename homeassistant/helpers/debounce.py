@@ -109,7 +109,7 @@ class Debouncer(Generic[_R_co]):
 
             assert self._job is not None
             try:
-                if task := self.hass.async_run_hass_job(self._job):
+                if task := self.hass.async_run_hass_job(self._job, eager_start=True):
                     await task
             finally:
                 self._schedule_timer()
