@@ -1,4 +1,5 @@
 """Websocekt API handlers for the hassio integration."""
+
 import logging
 from numbers import Number
 import re

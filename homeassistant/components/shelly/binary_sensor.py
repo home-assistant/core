@@ -1,4 +1,5 @@
 """Binary sensor for Shelly."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

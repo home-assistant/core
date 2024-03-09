@@ -1,4 +1,5 @@
 """Test UniFi Network config flow."""
+
 import socket
 from unittest.mock import patch
 

@@ -1,4 +1,5 @@
 """The tests for the GDACS Feed integration."""
+
 from unittest.mock import patch
 
 from freezegun import freeze_time

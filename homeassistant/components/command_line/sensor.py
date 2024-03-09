@@ -1,4 +1,5 @@
 """Allows to configure custom shell commands to turn a value for a sensor."""
+
 from __future__ import annotations
 
 import asyncio

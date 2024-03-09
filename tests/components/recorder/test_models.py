@@ -1,4 +1,5 @@
 """The tests for the Recorder component."""
+
 from datetime import datetime, timedelta
 from unittest.mock import PropertyMock
 

@@ -1,4 +1,5 @@
 """Support for loading picture from Neato."""
+
 from __future__ import annotations
 
 from datetime import timedelta

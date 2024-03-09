@@ -1,4 +1,5 @@
 """Support for Roborock vacuum class."""
+
 from typing import Any
 
 from roborock.code_mappings import RoborockStateCode

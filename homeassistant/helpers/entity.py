@@ -1,4 +1,5 @@
 """An abstract class for entities."""
+
 from __future__ import annotations
 
 from abc import ABCMeta
@@ -46,6 +47,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     CALLBACK_TYPE,
     Context,
+    Event,
     HassJobType,
     HomeAssistant,
     callback,
@@ -66,7 +68,7 @@ from .event import (
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
 )
-from .typing import UNDEFINED, EventType, StateType, UndefinedType
+from .typing import UNDEFINED, StateType, UndefinedType
 
 if TYPE_CHECKING:
     from functools import cached_property
@@ -608,7 +610,7 @@ class Entity(
 
     def _device_class_name_helper(
         self,
-        component_translations: dict[str, Any],
+        component_translations: dict[str, str],
     ) -> str | None:
         """Return a translated name of the entity based on its device class."""
         if not self.has_entity_name:
@@ -673,7 +675,7 @@ class Entity(
     def _name_internal(
         self,
         device_class_name: str | None,
-        platform_translations: dict[str, Any],
+        platform_translations: dict[str, str],
     ) -> str | UndefinedType | None:
         """Return the name of the entity."""
         if hasattr(self, "_attr_name"):
@@ -683,8 +685,6 @@ class Entity(
             and (name_translation_key := self._name_translation_key)
             and (name := platform_translations.get(name_translation_key))
         ):
-            if TYPE_CHECKING:
-                assert isinstance(name, str)
             return self._substitute_name_placeholders(name)
         if hasattr(self, "entity_description"):
             description_name = self.entity_description.name
@@ -1453,7 +1453,7 @@ class Entity(
 
     @callback
     def _async_registry_updated(
-        self, event: EventType[er.EventEntityRegistryUpdatedData]
+        self, event: Event[er.EventEntityRegistryUpdatedData]
     ) -> None:
         """Handle entity registry update."""
         action = event.data["action"]
@@ -1465,7 +1465,7 @@ class Entity(
             )
 
     async def _async_process_registry_update_or_remove(
-        self, event: EventType[er.EventEntityRegistryUpdatedData]
+        self, event: Event[er.EventEntityRegistryUpdatedData]
     ) -> None:
         """Handle entity registry update or remove."""
         data = event.data
@@ -1518,7 +1518,7 @@ class Entity(
 
     @callback
     def _async_device_registry_updated(
-        self, event: EventType[EventDeviceRegistryUpdatedData]
+        self, event: Event[EventDeviceRegistryUpdatedData]
     ) -> None:
         """Handle device registry update."""
         data = event.data

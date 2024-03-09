@@ -1,4 +1,5 @@
 """Details about printers which are connected to CUPS."""
+
 from __future__ import annotations
 
 from datetime import timedelta

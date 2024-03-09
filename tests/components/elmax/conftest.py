@@ -1,4 +1,5 @@
 """Configuration for Elmax tests."""
+
 import json
 from unittest.mock import patch
 

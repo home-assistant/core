@@ -1,4 +1,5 @@
 """Tests for Transmission config flow."""
+
 from unittest.mock import MagicMock, patch
 
 import pytest

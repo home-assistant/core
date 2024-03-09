@@ -1,4 +1,5 @@
 """Integration tests for the auth component."""
+
 from datetime import timedelta
 from http import HTTPStatus
 import logging

@@ -1,4 +1,5 @@
 """Support for testing internet speed via Speedtest.net."""
+
 from __future__ import annotations
 
 from functools import partial

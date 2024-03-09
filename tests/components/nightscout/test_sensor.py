@@ -1,4 +1,5 @@
 """The sensor tests for the Nightscout platform."""
+
 from homeassistant.components.nightscout.const import (
     ATTR_DELTA,
     ATTR_DEVICE,

@@ -1,4 +1,5 @@
 """Test the SSDP integration."""
+
 from datetime import datetime
 from ipaddress import IPv4Address
 from unittest.mock import ANY, AsyncMock, patch

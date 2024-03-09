@@ -1,4 +1,5 @@
 """Sensor entities for Tami4Edge."""
+
 import logging
 
 from Tami4EdgeAPI import Tami4EdgeAPI

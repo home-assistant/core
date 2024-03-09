@@ -1,4 +1,5 @@
 """Helpers to help coordinate updates."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -8,11 +9,12 @@ from datetime import datetime, timedelta
 import logging
 from random import randint
 from time import monotonic
-from typing import Any, Generic, Protocol, TypeVar
+from typing import Any, Generic, Protocol
 import urllib.error
 
 import aiohttp
 import requests
+from typing_extensions import TypeVar
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -37,12 +39,14 @@ from .debounce import Debouncer
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
 
-_DataT = TypeVar("_DataT")
+_DataT = TypeVar("_DataT", default=dict[str, Any])
 _BaseDataUpdateCoordinatorT = TypeVar(
     "_BaseDataUpdateCoordinatorT", bound="BaseDataUpdateCoordinatorProtocol"
 )
 _DataUpdateCoordinatorT = TypeVar(
-    "_DataUpdateCoordinatorT", bound="DataUpdateCoordinator[Any]"
+    "_DataUpdateCoordinatorT",
+    bound="DataUpdateCoordinator[Any]",
+    default="DataUpdateCoordinator[dict[str, Any]]",
 )
 
 
@@ -254,14 +258,14 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
     def __wrap_handle_refresh_interval(self) -> None:
         """Handle a refresh interval occurrence."""
         if self.config_entry:
-            self.config_entry.async_create_periodic_task(
+            self.config_entry.async_create_background_task(
                 self.hass,
                 self._handle_refresh_interval(),
                 name=f"{self.name} - {self.config_entry.title} - refresh",
                 eager_start=True,
             )
         else:
-            self.hass.async_create_periodic_task(
+            self.hass.async_create_background_task(
                 self._handle_refresh_interval(),
                 name=f"{self.name} - refresh",
                 eager_start=True,

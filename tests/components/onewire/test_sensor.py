@@ -1,4 +1,5 @@
 """Tests for 1-Wire sensors."""
+
 from collections.abc import Generator
 from copy import deepcopy
 import logging

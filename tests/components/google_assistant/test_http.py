@@ -1,4 +1,5 @@
 """Test Google http services."""
+
 from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
 import json

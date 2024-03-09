@@ -1,4 +1,5 @@
 """The command_line component."""
+
 from __future__ import annotations
 
 import asyncio

@@ -1,4 +1,5 @@
 """Test the ViCare config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 import pytest

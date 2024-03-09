@@ -1,6 +1,5 @@
 """Test the group helper."""
 
-
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import group
