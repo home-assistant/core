@@ -152,9 +152,9 @@ async def test_gateway_setup(
         gateway = get_gateway_from_config_entry(hass, config_entry)
         assert gateway.bridgeid == BRIDGEID
         assert gateway.master is True
-        assert gateway.option_allow_clip_sensor is False
-        assert gateway.option_allow_deconz_groups is True
-        assert gateway.option_allow_new_devices is True
+        assert gateway.config.allow_clip_sensor is False
+        assert gateway.config.allow_deconz_groups is True
+        assert gateway.config.allow_new_devices is True
 
         assert len(gateway.deconz_ids) == 0
         assert len(hass.states.async_all()) == 0
