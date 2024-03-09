@@ -211,7 +211,7 @@ def async_subscribe_events(
     subscriptions.append(
         hass.bus.async_listen(
             EVENT_STATE_CHANGED,
-            _forward_state_events_filtered,  # type: ignore[arg-type]
+            _forward_state_events_filtered,
             run_immediately=True,
         )
     )

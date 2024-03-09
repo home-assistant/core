@@ -132,10 +132,10 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         default_metric,
     )
 
-    hass.bus.listen(EVENT_STATE_CHANGED, metrics.handle_state_changed_event)  # type: ignore[arg-type]
+    hass.bus.listen(EVENT_STATE_CHANGED, metrics.handle_state_changed_event)
     hass.bus.listen(
         EVENT_ENTITY_REGISTRY_UPDATED,
-        metrics.handle_entity_registry_updated,  # type: ignore[arg-type]
+        metrics.handle_entity_registry_updated,
     )
 
     for state in hass.states.all():
