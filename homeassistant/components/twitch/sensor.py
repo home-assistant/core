@@ -136,6 +136,11 @@ class TwitchSensor(SensorEntity):
     async def async_update(self) -> None:
         """Update device state."""
         await self._session.async_ensure_token_valid()
+        await self._client.set_user_authentication(
+            self._session.token["access_token"],
+            OAUTH_SCOPES,
+            self._session.token["refresh_token"],
+        )
         followers = await self._client.get_channel_followers(self._channel.id)
 
         self._attr_extra_state_attributes = {
