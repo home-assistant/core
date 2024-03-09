@@ -964,7 +964,10 @@ async def _handle_entity_call(
     task: asyncio.Future[ServiceResponse] | None
     if isinstance(func, str):
         task = hass.async_run_hass_job(
-            HassJob(partial(getattr(entity, func), **data))  # type: ignore[arg-type]
+            HassJob(
+                partial(getattr(entity, func), **data),  # type: ignore[arg-type]
+                job_type=entity.get_job_type(func),
+            )
         )
     else:
         task = hass.async_run_hass_job(func, entity, data)
