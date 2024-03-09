@@ -21,6 +21,9 @@
       },
       "status_description": {
         "default": "mdi:ev-station"
+      },
+      "ocpp_status": {
+        "default": "mdi:transit-connection-variant"
       }
     }
   }
