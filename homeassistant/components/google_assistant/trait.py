@@ -2707,8 +2707,8 @@ class SensorStateTrait(_Trait):
     name = TRAIT_SENSOR_STATE
     commands: list[str] = []
 
-    def _air_quality_description_for_aqi(self, aqi):
-        if aqi is None or aqi.isnumeric() is False:
+    def _air_quality_description_for_aqi(self, aqi: float | None) -> str:
+        if aqi is None:
             return "unknown"
         aqi = int(aqi)
         if aqi <= 50:
@@ -2775,7 +2775,7 @@ class SensorStateTrait(_Trait):
 
         if device_class == sensor.SensorDeviceClass.AQI:
             sensor_data["currentSensorState"] = self._air_quality_description_for_aqi(
-                self.state.state
+                value
             )
 
         return {"currentSensorStateData": [sensor_data]}
