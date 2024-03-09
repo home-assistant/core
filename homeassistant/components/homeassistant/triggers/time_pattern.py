@@ -93,6 +93,7 @@ async def async_attach_trigger(
                     "description": "time pattern",
                 }
             },
+            eager_start=True,
         )
 
     return async_track_time_change(
