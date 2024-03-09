@@ -83,7 +83,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                 # Convert any int values to string
                 if isinstance(value, int):
                     value = str(value)
-                
+
                 await coordinator.fully.setConfigurationString(
                     key, value
                 )
