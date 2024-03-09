@@ -10,15 +10,29 @@ from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
 
 from ..validation import ga_validator, maybe_ga_validator, sync_state_validator
 
-BASE_ENTITY_SCHEMA = vol.Schema(
+BASE_ENTITY_SCHEMA = vol.All(
     {
-        # TODO: name shall be required when no device_info is given
         vol.Optional("name", default=None): vol.Maybe(str),
         vol.Optional("device_info", default=None): vol.Maybe(str),
         vol.Optional("entity_category", default=None): vol.Any(
             ENTITY_CATEGORIES_SCHEMA, vol.SetTo(None)
         ),
-    }
+    },
+    vol.Any(
+        vol.Schema(
+            {
+                vol.Required("name"): str,
+            },
+            extra=vol.ALLOW_EXTRA,
+        ),
+        vol.Schema(
+            {
+                vol.Required("device_info"): str,
+            },
+            extra=vol.ALLOW_EXTRA,
+        ),
+        msg="One of `Device` or `Name` is required",
+    ),
 )
 
 
@@ -87,9 +101,12 @@ def optional_ga_schema(
 SWITCH_SCHEMA = vol.Schema(
     {
         vol.Required("entity"): BASE_ENTITY_SCHEMA,
-        vol.Optional("invert", default=False): bool,
-        vol.Required("ga_switch"): ga_schema(write_required=True),
-        vol.Optional("respond_to_read", default=False): bool,
+        vol.Required("knx"): {
+            vol.Optional("invert", default=False): bool,
+            vol.Required("ga_switch"): ga_schema(write_required=True),
+            vol.Optional("respond_to_read", default=False): bool,
+            vol.Optional("sync_state", default=True): sync_state_validator,
+        },
         vol.Optional("sync_state", default=True): sync_state_validator,
     }
 )
