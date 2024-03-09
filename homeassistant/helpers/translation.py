@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable
 import logging
+import pathlib
 import string
 from typing import Any
 
@@ -39,24 +40,8 @@ def recursive_flatten(prefix: Any, data: dict[str, Any]) -> dict[str, Any]:
     return output
 
 
-@callback
-def component_translation_path(language: str, integration: Integration) -> str | None:
-    """Return the translation json file location for a component.
-
-    For component:
-     - components/hue/translations/nl.json
-
-    If component is just a single file, will return None.
-    """
-    # If it's a component that is just one file, we don't support translations
-    # Example custom_components/my_component.py
-    if integration.file_path.name != integration.domain:
-        return None
-    return str(integration.file_path / "translations" / f"{language}.json")
-
-
 def _load_translations_files_by_language(
-    translation_files: dict[str, dict[str, str]],
+    translation_files: dict[str, dict[str, pathlib.Path]],
 ) -> dict[str, dict[str, Any]]:
     """Load and parse translation.json files."""
     loaded: dict[str, dict[str, Any]] = {}
@@ -104,11 +89,11 @@ async def _async_get_component_strings(
     """Load translations."""
     translations_by_language: dict[str, dict[str, Any]] = {}
     # Determine paths of missing components/platforms
-    files_to_load_by_language: dict[str, dict[str, str]] = {}
+    files_to_load_by_language: dict[str, dict[str, pathlib.Path]] = {}
     loaded_translations_by_language: dict[str, dict[str, Any]] = {}
     has_files_to_load = False
     for language in languages:
-        files_to_load: dict[str, str] = {}
+        files_to_load: dict[str, pathlib.Path] = {}
         files_to_load_by_language[language] = files_to_load
         translations_by_language[language] = {}
 
@@ -119,9 +104,11 @@ async def _async_get_component_strings(
                 or not integration.has_translations
             ):
                 continue
-            if path := component_translation_path(language, integration):
-                files_to_load[comp] = path
-                has_files_to_load = True
+
+            files_to_load[comp] = (
+                integration.file_path / "translations" / f"{language}.json"
+            )
+            has_files_to_load = True
 
     if has_files_to_load:
         loaded_translations_by_language = await hass.async_add_executor_job(
