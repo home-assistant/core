@@ -1,4 +1,5 @@
 """Test the device level APIs."""
+
 import asyncio
 from unittest.mock import patch
 

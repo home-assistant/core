@@ -1,4 +1,5 @@
 """Control a MQTT alarm."""
+
 from __future__ import annotations
 
 import logging

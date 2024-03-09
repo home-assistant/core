@@ -1,4 +1,5 @@
 """Config flow for Vilfo Router integration."""
+
 import logging
 
 from vilfo import Client as VilfoClient

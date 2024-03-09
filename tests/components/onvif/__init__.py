@@ -1,4 +1,5 @@
 """Tests for the ONVIF integration."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from onvif.exceptions import ONVIFError

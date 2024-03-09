@@ -1,4 +1,5 @@
 """Test the Litter-Robot button entity."""
+
 from unittest.mock import MagicMock
 
 from freezegun import freeze_time

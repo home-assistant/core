@@ -1,4 +1,5 @@
 """The tests for the Group components."""
+
 from __future__ import annotations
 
 from collections import OrderedDict
@@ -759,6 +760,7 @@ async def test_service_group_services_add_remove_entities(hass: HomeAssistant) -
     assert await async_setup_component(hass, "person", {})
     with assert_setup_component(0, "group"):
         await async_setup_component(hass, "group", {"group": {}})
+    await hass.async_block_till_done()
 
     assert hass.services.has_service("group", group.SERVICE_SET)
 

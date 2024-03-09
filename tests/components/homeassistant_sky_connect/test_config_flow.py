@@ -1,4 +1,5 @@
 """Test the Home Assistant SkyConnect config flow."""
+
 from collections.abc import Generator
 import copy
 from unittest.mock import Mock, patch

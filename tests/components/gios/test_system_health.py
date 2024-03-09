@@ -1,4 +1,5 @@
 """Test GIOS system health."""
+
 import asyncio
 
 from aiohttp import ClientError
@@ -21,6 +22,7 @@ async def test_gios_system_health(
     await integration.async_get_component()
     hass.config.components.add(DOMAIN)
     assert await async_setup_component(hass, "system_health", {})
+    await hass.async_block_till_done()
 
     info = await get_system_health_info(hass, DOMAIN)
 
@@ -40,6 +42,7 @@ async def test_gios_system_health_fail(
     await integration.async_get_component()
     hass.config.components.add(DOMAIN)
     assert await async_setup_component(hass, "system_health", {})
+    await hass.async_block_till_done()
 
     info = await get_system_health_info(hass, DOMAIN)
 

@@ -1,4 +1,5 @@
 """Support for DD-WRT routers."""
+
 from __future__ import annotations
 
 from http import HTTPStatus

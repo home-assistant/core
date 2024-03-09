@@ -1,4 +1,5 @@
 """Test Home Assistant scenes."""
+
 from unittest.mock import patch
 
 import pytest

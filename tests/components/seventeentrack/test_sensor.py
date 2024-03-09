@@ -1,4 +1,5 @@
 """Tests for the seventeentrack sensor."""
+
 from __future__ import annotations
 
 import datetime
@@ -138,15 +139,15 @@ async def _setup_seventeentrack(hass, config=None, summary_data=None):
     await hass.async_block_till_done()
 
 
-async def _goto_future(hass, future=None):
+async def _goto_future(hass: HomeAssistant, future=None):
     """Move to future."""
     if not future:
         future = utcnow() + datetime.timedelta(minutes=10)
     with patch("homeassistant.util.utcnow", return_value=future):
         async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
 
 async def test_full_valid_config(hass: HomeAssistant) -> None:

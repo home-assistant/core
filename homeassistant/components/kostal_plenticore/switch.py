@@ -1,4 +1,5 @@
 """Platform for Kostal Plenticore switches."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

@@ -1,4 +1,5 @@
 """Const file for Rova."""
+
 import logging
 
 LOGGER = logging.getLogger(__package__)

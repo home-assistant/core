@@ -1,4 +1,5 @@
 """Support for monitoring a Smappee energy sensor."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field

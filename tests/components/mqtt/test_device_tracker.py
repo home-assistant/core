@@ -1,4 +1,5 @@
 """The tests for the MQTT device_tracker platform."""
+
 from datetime import UTC, datetime
 from unittest.mock import patch
 

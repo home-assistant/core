@@ -1,4 +1,5 @@
 """Handle intents with scripts."""
+
 from __future__ import annotations
 
 import logging

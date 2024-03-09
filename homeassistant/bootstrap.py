@@ -1,4 +1,5 @@
 """Provide methods to bootstrap a Home Assistant instance."""
+
 from __future__ import annotations
 
 import asyncio
@@ -37,6 +38,8 @@ from .components import (
     file_upload as file_upload_pre_import,  # noqa: F401
     history as history_pre_import,  # noqa: F401
     http,  # not named pre_import since it has requirements
+    image_upload as image_upload_import,  # noqa: F401 - not named pre_import since it has requirements
+    logbook as logbook_pre_import,  # noqa: F401
     lovelace as lovelace_pre_import,  # noqa: F401
     onboarding as onboarding_pre_import,  # noqa: F401
     recorder as recorder_import,  # noqa: F401 - not named pre_import since it has requirements
@@ -44,8 +47,10 @@ from .components import (
     search as search_pre_import,  # noqa: F401
     sensor as sensor_pre_import,  # noqa: F401
     system_log as system_log_pre_import,  # noqa: F401
+    webhook as webhook_pre_import,  # noqa: F401
     websocket_api as websocket_api_pre_import,  # noqa: F401
 )
+from .components.sensor import recorder as sensor_recorder  # noqa: F401
 from .const import (
     FORMAT_DATETIME,
     KEY_DATA_LOGGING as DATA_LOGGING,
@@ -100,7 +105,6 @@ STAGE_2_TIMEOUT = 300
 WRAP_UP_TIMEOUT = 300
 COOLDOWN_TIME = 60
 
-MAX_LOAD_CONCURRENTLY = 6
 
 DEBUGGER_INTEGRATIONS = {"debugpy"}
 CORE_INTEGRATIONS = {"homeassistant", "persistent_notification"}
@@ -141,6 +145,7 @@ DEFAULT_INTEGRATIONS = {
     # These integrations are set up unless recovery mode is activated.
     #
     # Integrations providing core functionality:
+    "analytics",  # Needed for onboarding
     "application_credentials",
     "backup",
     "frontend",
@@ -603,7 +608,10 @@ class _WatchPendingSetups:
             domain: (now - start_time)
             for domain, start_time in self._setup_started.items()
         }
-        _LOGGER.debug("Integration remaining: %s", remaining_with_setup_started)
+        if remaining_with_setup_started:
+            _LOGGER.debug("Integration remaining: %s", remaining_with_setup_started)
+        elif waiting_tasks := self._hass._active_tasks:  # pylint: disable=protected-access
+            _LOGGER.debug("Waiting on tasks: %s", waiting_tasks)
         self._async_dispatch(remaining_with_setup_started)
         if (
             self._setup_started
@@ -859,7 +867,10 @@ async def _async_set_up_integrations(
             ):
                 await async_setup_multi_components(hass, stage_1_domains, config)
         except TimeoutError:
-            _LOGGER.warning("Setup timed out for stage 1 - moving forward")
+            _LOGGER.warning(
+                "Setup timed out for stage 1 waiting on %s - moving forward",
+                hass._active_tasks,  # pylint: disable=protected-access
+            )
 
     # Add after dependencies when setting up stage 2 domains
     async_set_domains_to_be_loaded(hass, stage_2_domains)
@@ -872,7 +883,10 @@ async def _async_set_up_integrations(
             ):
                 await async_setup_multi_components(hass, stage_2_domains, config)
         except TimeoutError:
-            _LOGGER.warning("Setup timed out for stage 2 - moving forward")
+            _LOGGER.warning(
+                "Setup timed out for stage 2 waiting on %s - moving forward",
+                hass._active_tasks,  # pylint: disable=protected-access
+            )
 
     # Wrap up startup
     _LOGGER.debug("Waiting for startup to wrap up")
@@ -880,7 +894,10 @@ async def _async_set_up_integrations(
         async with hass.timeout.async_timeout(WRAP_UP_TIMEOUT, cool_down=COOLDOWN_TIME):
             await hass.async_block_till_done()
     except TimeoutError:
-        _LOGGER.warning("Setup timed out for bootstrap - moving forward")
+        _LOGGER.warning(
+            "Setup timed out for bootstrap waiting on %s - moving forward",
+            hass._active_tasks,  # pylint: disable=protected-access
+        )
 
     watcher.async_stop()
 

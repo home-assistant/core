@@ -1,4 +1,5 @@
 """The tests for mqtt select component."""
+
 from collections.abc import Generator
 import copy
 import json

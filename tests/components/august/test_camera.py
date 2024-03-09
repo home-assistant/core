@@ -1,4 +1,5 @@
 """The camera tests for the august platform."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 

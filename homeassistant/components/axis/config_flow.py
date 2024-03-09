@@ -1,4 +1,5 @@
 """Config flow to configure Axis devices."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -271,7 +272,7 @@ class AxisOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
             schema[
                 vol.Optional(
-                    CONF_STREAM_PROFILE, default=self.hub.option_stream_profile
+                    CONF_STREAM_PROFILE, default=self.hub.config.stream_profile
                 )
             ] = vol.In(stream_profiles)
 
@@ -290,7 +291,7 @@ class AxisOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 video_sources[int(idx) + 1] = video_source.name
 
             schema[
-                vol.Optional(CONF_VIDEO_SOURCE, default=self.hub.option_video_source)
+                vol.Optional(CONF_VIDEO_SOURCE, default=self.hub.config.video_source)
             ] = vol.In(video_sources)
 
         return self.async_show_form(

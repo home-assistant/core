@@ -1,4 +1,5 @@
 """Support for Vallox ventilation unit switches."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -92,10 +93,8 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        [
-            ValloxSwitchEntity(
-                data["name"], data["coordinator"], description, data["client"]
-            )
-            for description in SWITCH_ENTITIES
-        ]
+        ValloxSwitchEntity(
+            data["name"], data["coordinator"], description, data["client"]
+        )
+        for description in SWITCH_ENTITIES
     )

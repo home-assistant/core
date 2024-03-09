@@ -1,4 +1,5 @@
 """Set up some common test helper things."""
+
 from __future__ import annotations
 
 import asyncio
@@ -96,6 +97,7 @@ from .common import (  # noqa: E402, isort:skip
     init_recorder_component,
     mock_storage,
     patch_yaml_files,
+    extract_stack_to_frame,
 )
 from .test_util.aiohttp import (  # noqa: E402, isort:skip
     AiohttpClientMocker,
@@ -1588,20 +1590,24 @@ def mock_integration_frame() -> Generator[Mock, None, None]:
         line="self.light.is_on",
     )
     with patch(
-        "homeassistant.helpers.frame.extract_stack",
-        return_value=[
-            Mock(
-                filename="/home/paulus/homeassistant/core.py",
-                lineno="23",
-                line="do_something()",
-            ),
-            correct_frame,
-            Mock(
-                filename="/home/paulus/aiohue/lights.py",
-                lineno="2",
-                line="something()",
-            ),
-        ],
+        "homeassistant.helpers.frame.linecache.getline", return_value=correct_frame.line
+    ), patch(
+        "homeassistant.helpers.frame.get_current_frame",
+        return_value=extract_stack_to_frame(
+            [
+                Mock(
+                    filename="/home/paulus/homeassistant/core.py",
+                    lineno="23",
+                    line="do_something()",
+                ),
+                correct_frame,
+                Mock(
+                    filename="/home/paulus/aiohue/lights.py",
+                    lineno="2",
+                    line="something()",
+                ),
+            ]
+        ),
     ):
         yield correct_frame
 

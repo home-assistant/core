@@ -1,4 +1,5 @@
 """Config flow for Transmission Bittorent Client."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping

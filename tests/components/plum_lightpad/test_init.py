@@ -1,4 +1,5 @@
 """Tests for the Plum Lightpad config flow."""
+
 from unittest.mock import Mock, patch
 
 from aiohttp import ContentTypeError

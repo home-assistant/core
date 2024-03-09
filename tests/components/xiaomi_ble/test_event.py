@@ -1,4 +1,5 @@
 """Test the Xiaomi BLE events."""
+
 import pytest
 
 from homeassistant.components.event import ATTR_EVENT_TYPE
