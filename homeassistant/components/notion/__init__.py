@@ -166,9 +166,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except NotionError as err:
         raise ConfigEntryNotReady("Config entry failed to load") from err
 
-    # Always update the config entry with the latest refresh token and user UUID:
-    entry_updates["data"][CONF_REFRESH_TOKEN] = client.refresh_token
-    entry_updates["data"][CONF_USER_UUID] = client.user_uuid
+    # Update the Notion user UUID and refresh token if they've changed:
+    for key, value in (
+        (CONF_REFRESH_TOKEN, client.refresh_token),
+        (CONF_USER_UUID, client.user_uuid),
+    ):
+        if entry.data[key] == value:
+            continue
+        entry_updates["data"][key] = value
 
     hass.config_entries.async_update_entry(entry, **entry_updates)
 
