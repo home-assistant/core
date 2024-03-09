@@ -1,4 +1,5 @@
 """Support for RSS/Atom feeds."""
+
 from __future__ import annotations
 
 from calendar import timegm

@@ -1,6 +1,6 @@
 """Test Enphase Envoy diagnostics."""
 
-from syrupy.assertion import SnapshotAssertion
+from syrupy import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

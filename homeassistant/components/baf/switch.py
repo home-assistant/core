@@ -1,4 +1,5 @@
 """Support for Big Ass Fans switch."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

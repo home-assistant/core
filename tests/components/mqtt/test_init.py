@@ -1,4 +1,5 @@
 """The tests for the MQTT component."""
+
 import asyncio
 from collections.abc import Generator
 from datetime import datetime, timedelta
@@ -747,11 +748,11 @@ def test_validate_topic() -> None:
     with pytest.raises(vol.Invalid):
         mqtt.util.valid_topic("\u0001")
     with pytest.raises(vol.Invalid):
-        mqtt.util.valid_topic("\u001F")
+        mqtt.util.valid_topic("\u001f")
     with pytest.raises(vol.Invalid):
-        mqtt.util.valid_topic("\u007F")
+        mqtt.util.valid_topic("\u007f")
     with pytest.raises(vol.Invalid):
-        mqtt.util.valid_topic("\u009F")
+        mqtt.util.valid_topic("\u009f")
     with pytest.raises(vol.Invalid):
         mqtt.util.valid_topic("\ufdd0")
     with pytest.raises(vol.Invalid):
@@ -2722,7 +2723,7 @@ async def test_mqtt_ws_subscription(
 
     async_fire_mqtt_message(hass, "test-topic", "test1")
     async_fire_mqtt_message(hass, "test-topic", "test2")
-    async_fire_mqtt_message(hass, "test-topic", b"\xDE\xAD\xBE\xEF")
+    async_fire_mqtt_message(hass, "test-topic", b"\xde\xad\xbe\xef")
 
     response = await client.receive_json()
     assert response["event"]["topic"] == "test-topic"
@@ -2750,7 +2751,7 @@ async def test_mqtt_ws_subscription(
 
     async_fire_mqtt_message(hass, "test-topic", "test1", 2)
     async_fire_mqtt_message(hass, "test-topic", "test2", 2)
-    async_fire_mqtt_message(hass, "test-topic", b"\xDE\xAD\xBE\xEF", 2)
+    async_fire_mqtt_message(hass, "test-topic", b"\xde\xad\xbe\xef", 2)
 
     response = await client.receive_json()
     assert response["event"]["topic"] == "test-topic"

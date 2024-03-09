@@ -1,4 +1,5 @@
 """Test Axis device."""
+
 from ipaddress import ip_address
 from unittest import mock
 from unittest.mock import Mock, patch

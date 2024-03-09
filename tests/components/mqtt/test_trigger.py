@@ -1,4 +1,5 @@
 """The tests for the MQTT automation."""
+
 from unittest.mock import ANY, patch
 
 import pytest

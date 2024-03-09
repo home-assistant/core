@@ -1,4 +1,5 @@
 """Representation of Idasen Desk buttons."""
+
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging

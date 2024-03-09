@@ -1,4 +1,5 @@
 """Define tests for the lookin config flow."""
+
 from __future__ import annotations
 
 import dataclasses

@@ -1,4 +1,5 @@
 """Test deCONZ gateway."""
+
 from copy import deepcopy
 from unittest.mock import patch
 

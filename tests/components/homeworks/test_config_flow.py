@@ -1,4 +1,5 @@
 """Test Lutron Homeworks Series 4 and 8 config flow."""
+
 from unittest.mock import ANY, MagicMock
 
 import pytest

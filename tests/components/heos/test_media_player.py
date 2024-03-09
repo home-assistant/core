@@ -1,4 +1,5 @@
 """Tests for the Heos Media Player platform."""
+
 import asyncio
 
 from pyheos import CommandFailedError, const

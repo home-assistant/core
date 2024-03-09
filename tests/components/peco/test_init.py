@@ -1,4 +1,5 @@
 """Test the PECO Outage Counter init file."""
+
 from unittest.mock import patch
 
 from peco import (

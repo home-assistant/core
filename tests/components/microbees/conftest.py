@@ -1,4 +1,5 @@
 """Conftest for microBees tests."""
+
 import time
 from unittest.mock import AsyncMock, patch
 

@@ -1,4 +1,5 @@
 """Test the LaCrosse View sensors."""
+
 from typing import Any
 from unittest.mock import patch
 

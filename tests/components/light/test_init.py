@@ -1,4 +1,5 @@
 """The tests for the Light component."""
+
 from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
@@ -2791,7 +2792,7 @@ def test_report_invalid_color_mode(
         (
             light.ColorMode.ONOFF,
             {light.ColorMode.ONOFF, light.ColorMode.BRIGHTNESS},
-            "tuya",  # We don't log issues for tuya
+            "philips_js",  # We don't log issues for philips_js
             False,
         ),
     ],

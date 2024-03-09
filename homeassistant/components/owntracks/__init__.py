@@ -1,4 +1,5 @@
 """Support for OwnTracks."""
+
 from collections import defaultdict
 import json
 import logging

@@ -1,4 +1,5 @@
 """Support to serve the Home Assistant API as WSGI application."""
+
 from __future__ import annotations
 
 import asyncio
@@ -33,7 +34,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import storage
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.http import (
+    KEY_ALLOW_CONFIGRED_CORS,
     KEY_AUTHENTICATED,  # noqa: F401
+    KEY_HASS,
     HomeAssistantView,
     current_request,
 )
@@ -47,7 +50,7 @@ from homeassistant.util.json import json_loads
 
 from .auth import async_setup_auth
 from .ban import setup_bans
-from .const import KEY_HASS, KEY_HASS_REFRESH_TOKEN_ID, KEY_HASS_USER  # noqa: F401
+from .const import KEY_HASS_REFRESH_TOKEN_ID, KEY_HASS_USER  # noqa: F401
 from .cors import setup_cors
 from .decorators import require_admin  # noqa: F401
 from .forwarded import async_setup_forwarded
@@ -323,6 +326,7 @@ class HomeAssistantHTTP:
     ) -> None:
         """Initialize the server."""
         self.app[KEY_HASS] = self.hass
+        self.app["hass"] = self.hass  # For backwards compatibility
 
         # Order matters, security filters middleware needs to go first,
         # forwarded middleware needs to go second.
@@ -387,7 +391,7 @@ class HomeAssistantHTTP:
             # Should be instance of aiohttp.web_exceptions._HTTPMove.
             raise redirect_exc(redirect_to)  # type: ignore[arg-type,misc]
 
-        self.app["allow_configured_cors"](
+        self.app[KEY_ALLOW_CONFIGRED_CORS](
             self.app.router.add_route("GET", url, redirect)
         )
 
@@ -403,7 +407,7 @@ class HomeAssistantHTTP:
             else:
                 resource = web.StaticResource(url_path, path)
             self.app.router.register_resource(resource)
-            self.app["allow_configured_cors"](resource)
+            self.app[KEY_ALLOW_CONFIGRED_CORS](resource)
             return
 
         async def serve_file(request: web.Request) -> web.FileResponse:
@@ -412,7 +416,7 @@ class HomeAssistantHTTP:
                 return web.FileResponse(path, headers=CACHE_HEADERS)
             return web.FileResponse(path)
 
-        self.app["allow_configured_cors"](
+        self.app[KEY_ALLOW_CONFIGRED_CORS](
             self.app.router.add_route("GET", url_path, serve_file)
         )
 

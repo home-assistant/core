@@ -1,4 +1,5 @@
 """Configure pytest for Skybell tests."""
+
 from unittest.mock import AsyncMock, patch
 
 from aioskybell import Skybell, SkybellDevice

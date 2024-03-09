@@ -1,4 +1,5 @@
 """Test sensor of Nettigo Air Monitor integration."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, patch
 

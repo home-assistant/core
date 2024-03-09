@@ -1,4 +1,5 @@
 """Test the entity helper."""
+
 import asyncio
 from collections.abc import Iterable
 import dataclasses

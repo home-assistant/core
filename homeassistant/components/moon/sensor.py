@@ -1,4 +1,5 @@
 """Support for tracking the moon phases."""
+
 from __future__ import annotations
 
 from astral import moon

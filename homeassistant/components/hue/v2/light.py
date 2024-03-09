@@ -1,4 +1,5 @@
 """Support for Hue lights."""
+
 from __future__ import annotations
 
 from functools import partial

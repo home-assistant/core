@@ -1,4 +1,5 @@
 """Support for KNX/IP weather station."""
+
 from __future__ import annotations
 
 from xknx import XKNX

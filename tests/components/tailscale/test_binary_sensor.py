@@ -1,4 +1,5 @@
 """Tests for the sensors provided by the Tailscale integration."""
+
 from homeassistant.components.binary_sensor import (
     STATE_OFF,
     STATE_ON,

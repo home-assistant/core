@@ -1,4 +1,5 @@
 """The sensor tests for the AEMET OpenData platform."""
+
 import datetime
 from unittest.mock import patch
 

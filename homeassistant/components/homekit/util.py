@@ -1,4 +1,5 @@
 """Collection of useful functions for the HomeKit component."""
+
 from __future__ import annotations
 
 import io
@@ -37,11 +38,10 @@ from homeassistant.const import (
     CONF_TYPE,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, State, callback, split_entity_id
+from homeassistant.core import Event, HomeAssistant, State, callback, split_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import EventStateChangedData
 from homeassistant.helpers.storage import STORAGE_DIR
-from homeassistant.helpers.typing import EventType
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
@@ -623,7 +623,7 @@ def state_needs_accessory_mode(state: State) -> bool:
     )
 
 
-def state_changed_event_is_same_state(event: EventType[EventStateChangedData]) -> bool:
+def state_changed_event_is_same_state(event: Event[EventStateChangedData]) -> bool:
     """Check if a state changed event is the same state."""
     event_data = event.data
     old_state = event_data["old_state"]
