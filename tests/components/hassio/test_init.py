@@ -852,11 +852,11 @@ async def test_device_registry_calls(hass: HomeAssistant) -> None:
         ),
     ):
         async_fire_time_changed(hass, dt_util.now() + timedelta(hours=1))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert len(dev_reg.devices) == 5
 
         async_fire_time_changed(hass, dt_util.now() + timedelta(hours=2))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert len(dev_reg.devices) == 5
 
     supervisor_mock_data = {

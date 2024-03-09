@@ -610,7 +610,7 @@ class Entity(
 
     def _device_class_name_helper(
         self,
-        component_translations: dict[str, Any],
+        component_translations: dict[str, str],
     ) -> str | None:
         """Return a translated name of the entity based on its device class."""
         if not self.has_entity_name:
@@ -675,7 +675,7 @@ class Entity(
     def _name_internal(
         self,
         device_class_name: str | None,
-        platform_translations: dict[str, Any],
+        platform_translations: dict[str, str],
     ) -> str | UndefinedType | None:
         """Return the name of the entity."""
         if hasattr(self, "_attr_name"):
@@ -685,8 +685,6 @@ class Entity(
             and (name_translation_key := self._name_translation_key)
             and (name := platform_translations.get(name_translation_key))
         ):
-            if TYPE_CHECKING:
-                assert isinstance(name, str)
             return self._substitute_name_placeholders(name)
         if hasattr(self, "entity_description"):
             description_name = self.entity_description.name

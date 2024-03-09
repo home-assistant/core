@@ -147,15 +147,15 @@ async def test_discovery_is_more_frequent_during_migration(
         assert start_calls == 1
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert start_calls == 3
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert start_calls == 4
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=15))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert start_calls == 5
 
 
