@@ -51,6 +51,7 @@ from homeassistant.core import (
     HassJobType,
     HomeAssistant,
     callback,
+    get_hassjob_callable_job_type,
     get_release_channel,
 )
 from homeassistant.exceptions import (
@@ -527,6 +528,8 @@ class Entity(
     __combined_unrecorded_attributes: frozenset[str] = (
         _entity_component_unrecorded_attributes | _unrecorded_attributes
     )
+    # Job type cache
+    _job_types: dict[str, HassJobType] | None = None
 
     # StateInfo. Set by EntityPlatform by calling async_internal_added_to_hass
     # While not purely typed, it makes typehinting more useful for us
@@ -567,6 +570,20 @@ class Entity(
         cls.__combined_unrecorded_attributes = (
             cls._entity_component_unrecorded_attributes | cls._unrecorded_attributes
         )
+
+    def get_hassjob_type(self, function_name: str) -> HassJobType:
+        """Get the job type function for the given name.
+
+        This is used for entity service calls to avoid
+        figuring out the job type each time.
+        """
+        if not self._job_types:
+            self._job_types = {}
+        if function_name not in self._job_types:
+            self._job_types[function_name] = get_hassjob_callable_job_type(
+                getattr(self, function_name)
+            )
+        return self._job_types[function_name]
 
     @cached_property
     def should_poll(self) -> bool:
