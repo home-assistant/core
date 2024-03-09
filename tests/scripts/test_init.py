@@ -1,4 +1,5 @@
 """Test script init."""
+
 from unittest.mock import patch
 
 import homeassistant.scripts as scripts

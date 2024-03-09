@@ -1,4 +1,5 @@
 """Test HomematicIP Cloud accesspoint."""
+
 from unittest.mock import Mock, patch
 
 from homematicip.aio.auth import AsyncAuth

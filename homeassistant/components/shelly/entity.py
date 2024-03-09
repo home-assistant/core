@@ -1,4 +1,5 @@
 """Shelly entity helper."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -78,7 +79,7 @@ def async_setup_block_attribute_entities(
                 continue
 
             # Filter out non-existing sensors and sensors without a value
-            if getattr(block, sensor_id, None) in (-1, None):
+            if getattr(block, sensor_id, None) is None:
                 continue
 
             # Filter and remove entities that according to settings

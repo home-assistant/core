@@ -1,4 +1,5 @@
 """Pytest modules for Aurora ABB Powerone PV inverter sensor integration."""
+
 from unittest.mock import patch
 
 from homeassistant.components.aurora_abb_powerone.const import (

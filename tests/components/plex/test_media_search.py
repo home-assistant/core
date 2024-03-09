@@ -1,4 +1,5 @@
 """Tests for Plex server."""
+
 from unittest.mock import patch
 
 from plexapi.exceptions import BadRequest, NotFound

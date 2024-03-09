@@ -1,4 +1,5 @@
 """The tests for the humidifier component."""
+
 from enum import Enum
 from types import ModuleType
 from unittest.mock import MagicMock

@@ -1,4 +1,5 @@
 """The test for switch device automation."""
+
 import pytest
 from pytest_unordered import unordered
 

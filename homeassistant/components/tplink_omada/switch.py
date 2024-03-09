@@ -1,11 +1,12 @@
 """Support for TPLink Omada device toggle options."""
+
 from __future__ import annotations
 
 from typing import Any
 
+from tplink_omada_client import SwitchPortOverrides
 from tplink_omada_client.definitions import PoEMode
 from tplink_omada_client.devices import OmadaSwitch, OmadaSwitchPortDetails
-from tplink_omada_client.omadasiteclient import SwitchPortOverrides
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -16,8 +17,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .controller import OmadaSiteController, OmadaSwitchPortCoordinator
 from .entity import OmadaDeviceEntity
-
-POE_SWITCH_ICON = "mdi:ethernet"
 
 
 async def async_setup_entry(
@@ -62,8 +61,8 @@ class OmadaNetworkSwitchPortPoEControl(
     """Representation of a PoE control toggle on a single network port on a switch."""
 
     _attr_has_entity_name = True
+    _attr_translation_key = "poe_control"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon = POE_SWITCH_ICON
 
     def __init__(
         self,
@@ -74,8 +73,8 @@ class OmadaNetworkSwitchPortPoEControl(
         """Initialize the PoE switch."""
         super().__init__(coordinator, device)
         self.port_id = port_id
-        self.port_details = self.coordinator.data[port_id]
-        self.omada_client = self.coordinator.omada_client
+        self.port_details = coordinator.data[port_id]
+        self.omada_client = coordinator.omada_client
         self._attr_unique_id = f"{device.mac}_{port_id}_poe"
 
         self._attr_name = f"{get_port_base_name(self.port_details)} PoE"

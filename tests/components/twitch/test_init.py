@@ -1,4 +1,5 @@
 """Tests for YouTube."""
+
 import http
 import time
 from unittest.mock import patch

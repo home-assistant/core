@@ -1,4 +1,5 @@
 """Support for OSO Energy water heaters."""
+
 from typing import Any
 
 from apyosoenergyapi.helper.const import OSOEnergyWaterHeaterData

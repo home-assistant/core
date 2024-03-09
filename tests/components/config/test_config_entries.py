@@ -1,8 +1,10 @@
 """Test config entries API."""
+
 from collections import OrderedDict
 from http import HTTPStatus
 from unittest.mock import ANY, AsyncMock, patch
 
+from aiohttp.test_utils import TestClient
 import pytest
 import voluptuous as vol
 
@@ -39,7 +41,7 @@ def mock_test_component(hass):
 
 
 @pytest.fixture
-async def client(hass, hass_client):
+async def client(hass, hass_client) -> TestClient:
     """Fixture that can interact with the config manager API."""
     await async_setup_component(hass, "http", {})
     config_entries.async_setup(hass)
@@ -121,6 +123,7 @@ async def test_get_entries(hass: HomeAssistant, client, clear_handlers) -> None:
             "title": "Test 1",
             "source": "bla",
             "state": core_ce.ConfigEntryState.NOT_LOADED.value,
+            "supports_reconfigure": False,
             "supports_options": True,
             "supports_remove_device": False,
             "supports_unload": True,
@@ -134,6 +137,7 @@ async def test_get_entries(hass: HomeAssistant, client, clear_handlers) -> None:
             "title": "Test 2",
             "source": "bla2",
             "state": core_ce.ConfigEntryState.SETUP_ERROR.value,
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -147,6 +151,7 @@ async def test_get_entries(hass: HomeAssistant, client, clear_handlers) -> None:
             "title": "Test 3",
             "source": "bla3",
             "state": core_ce.ConfigEntryState.NOT_LOADED.value,
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -160,6 +165,7 @@ async def test_get_entries(hass: HomeAssistant, client, clear_handlers) -> None:
             "title": "Test 4",
             "source": "bla4",
             "state": core_ce.ConfigEntryState.NOT_LOADED.value,
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -173,6 +179,7 @@ async def test_get_entries(hass: HomeAssistant, client, clear_handlers) -> None:
             "title": "Test 5",
             "source": "bla5",
             "state": core_ce.ConfigEntryState.NOT_LOADED.value,
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -521,6 +528,7 @@ async def test_create_account(
             "entry_id": entries[0].entry_id,
             "source": core_ce.SOURCE_USER,
             "state": core_ce.ConfigEntryState.LOADED.value,
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -599,6 +607,7 @@ async def test_two_step_flow(
                 "entry_id": entries[0].entry_id,
                 "source": core_ce.SOURCE_USER,
                 "state": core_ce.ConfigEntryState.LOADED.value,
+                "supports_reconfigure": False,
                 "supports_options": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
@@ -941,10 +950,8 @@ async def test_two_step_options_flow(hass: HomeAssistant, client) -> None:
             "handler": "test1",
             "type": "create_entry",
             "title": "Enable disable",
-            "version": 1,
             "description": None,
             "description_placeholders": None,
-            "minor_version": 1,
         }
 
 
@@ -1053,6 +1060,7 @@ async def test_get_single(
         "reason": None,
         "source": "user",
         "state": "loaded",
+        "supports_reconfigure": False,
         "supports_options": False,
         "supports_remove_device": False,
         "supports_unload": False,
@@ -1387,6 +1395,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla",
             "state": "not_loaded",
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -1401,6 +1410,7 @@ async def test_get_matching_entries_ws(
             "reason": "Unsupported API",
             "source": "bla2",
             "state": "setup_error",
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -1415,6 +1425,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla3",
             "state": "not_loaded",
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -1429,6 +1440,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla4",
             "state": "not_loaded",
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -1443,6 +1455,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla5",
             "state": "not_loaded",
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -1468,6 +1481,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla",
             "state": "not_loaded",
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -1492,6 +1506,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla4",
             "state": "not_loaded",
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -1506,6 +1521,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla5",
             "state": "not_loaded",
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -1530,6 +1546,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla",
             "state": "not_loaded",
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -1544,6 +1561,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla3",
             "state": "not_loaded",
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -1574,6 +1592,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla",
             "state": "not_loaded",
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -1588,6 +1607,7 @@ async def test_get_matching_entries_ws(
             "reason": "Unsupported API",
             "source": "bla2",
             "state": "setup_error",
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -1602,6 +1622,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla3",
             "state": "not_loaded",
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -1616,6 +1637,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla4",
             "state": "not_loaded",
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -1630,6 +1652,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla5",
             "state": "not_loaded",
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -1728,6 +1751,7 @@ async def test_subscribe_entries_ws(
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
+                "supports_reconfigure": False,
                 "supports_options": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
@@ -1745,6 +1769,7 @@ async def test_subscribe_entries_ws(
                 "reason": "Unsupported API",
                 "source": "bla2",
                 "state": "setup_error",
+                "supports_reconfigure": False,
                 "supports_options": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
@@ -1762,6 +1787,7 @@ async def test_subscribe_entries_ws(
                 "reason": None,
                 "source": "bla3",
                 "state": "not_loaded",
+                "supports_reconfigure": False,
                 "supports_options": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
@@ -1783,6 +1809,7 @@ async def test_subscribe_entries_ws(
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
+                "supports_reconfigure": False,
                 "supports_options": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
@@ -1805,6 +1832,7 @@ async def test_subscribe_entries_ws(
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
+                "supports_reconfigure": False,
                 "supports_options": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
@@ -1827,6 +1855,7 @@ async def test_subscribe_entries_ws(
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
+                "supports_reconfigure": False,
                 "supports_options": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
@@ -1908,6 +1937,7 @@ async def test_subscribe_entries_ws_filtered(
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
+                "supports_reconfigure": False,
                 "supports_options": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
@@ -1925,6 +1955,7 @@ async def test_subscribe_entries_ws_filtered(
                 "reason": None,
                 "source": "bla3",
                 "state": "not_loaded",
+                "supports_reconfigure": False,
                 "supports_options": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
@@ -1948,6 +1979,7 @@ async def test_subscribe_entries_ws_filtered(
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
+                "supports_reconfigure": False,
                 "supports_options": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
@@ -1969,6 +2001,7 @@ async def test_subscribe_entries_ws_filtered(
                 "reason": None,
                 "source": "bla3",
                 "state": "not_loaded",
+                "supports_reconfigure": False,
                 "supports_options": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
@@ -1992,6 +2025,7 @@ async def test_subscribe_entries_ws_filtered(
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
+                "supports_reconfigure": False,
                 "supports_options": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
@@ -2014,6 +2048,7 @@ async def test_subscribe_entries_ws_filtered(
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
+                "supports_reconfigure": False,
                 "supports_options": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
@@ -2108,3 +2143,123 @@ async def test_flow_with_multiple_schema_errors_base(
                 "latitude": "required key not provided",
             }
         }
+
+
+async def test_supports_reconfigure(
+    hass: HomeAssistant, client, enable_custom_integrations: None
+) -> None:
+    """Test a flow that support reconfigure step."""
+    mock_platform(hass, "test.config_flow", None)
+
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
+
+    class TestFlow(core_ce.ConfigFlow):
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            return self.async_create_entry(
+                title="Test Entry", data={"secret": "account_token"}
+            )
+
+        async def async_step_reconfigure(self, user_input=None):
+            if user_input is None:
+                return self.async_show_form(
+                    step_id="reconfigure", data_schema=vol.Schema({})
+                )
+            return self.async_create_entry(
+                title="Test Entry", data={"secret": "account_token"}
+            )
+
+    with patch.dict(HANDLERS, {"test": TestFlow}):
+        resp = await client.post(
+            "/api/config/config_entries/flow",
+            json={"handler": "test", "entry_id": "1"},
+        )
+
+    assert resp.status == HTTPStatus.OK
+
+    data = await resp.json()
+    flow_id = data.pop("flow_id")
+
+    assert data == {
+        "type": "form",
+        "handler": "test",
+        "step_id": "reconfigure",
+        "data_schema": [],
+        "last_step": None,
+        "preview": None,
+        "description_placeholders": None,
+        "errors": None,
+    }
+
+    with patch.dict(HANDLERS, {"test": TestFlow}):
+        resp = await client.post(
+            f"/api/config/config_entries/flow/{flow_id}",
+            json={},
+        )
+    assert resp.status == HTTPStatus.OK
+
+    entries = hass.config_entries.async_entries("test")
+    assert len(entries) == 1
+
+    data = await resp.json()
+    data.pop("flow_id")
+    assert data == {
+        "handler": "test",
+        "title": "Test Entry",
+        "type": "create_entry",
+        "version": 1,
+        "result": {
+            "disabled_by": None,
+            "domain": "test",
+            "entry_id": entries[0].entry_id,
+            "source": core_ce.SOURCE_RECONFIGURE,
+            "state": core_ce.ConfigEntryState.LOADED.value,
+            "supports_reconfigure": True,
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "title": "Test Entry",
+            "reason": None,
+        },
+        "description": None,
+        "description_placeholders": None,
+        "options": {},
+        "minor_version": 1,
+    }
+
+
+async def test_does_not_support_reconfigure(
+    hass: HomeAssistant, client: TestClient, enable_custom_integrations: None
+) -> None:
+    """Test a flow that does not support reconfigure step."""
+    mock_platform(hass, "test.config_flow", None)
+
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
+
+    class TestFlow(core_ce.ConfigFlow):
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            return self.async_create_entry(
+                title="Test Entry", data={"secret": "account_token"}
+            )
+
+    with patch.dict(HANDLERS, {"test": TestFlow}):
+        resp = await client.post(
+            "/api/config/config_entries/flow",
+            json={"handler": "test", "entry_id": "1"},
+        )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    response = await resp.text()
+    assert (
+        response
+        == '{"message":"Handler ConfigEntriesFlowManager doesn\'t support step reconfigure"}'
+    )

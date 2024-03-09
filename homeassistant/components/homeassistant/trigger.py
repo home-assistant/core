@@ -1,4 +1,5 @@
 """Home Assistant trigger dispatcher."""
+
 import importlib
 
 from homeassistant.const import CONF_PLATFORM

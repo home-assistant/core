@@ -1,4 +1,5 @@
 """Test the Cloud Google Config."""
+
 from http import HTTPStatus
 from unittest.mock import Mock, patch
 
@@ -841,3 +842,17 @@ async def test_google_config_migrate_expose_entity_prefs_default(
     assert async_get_entity_settings(hass, water_heater.entity_id) == {
         "cloud.google_assistant": {"should_expose": False}
     }
+
+
+async def test_google_config_get_agent_user_id(
+    hass: HomeAssistant, mock_cloud_login, cloud_prefs
+) -> None:
+    """Test overridden get_agent_user_id_from_webhook method."""
+    config = CloudGoogleConfig(
+        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data["cloud"]
+    )
+    assert (
+        config.get_agent_user_id_from_webhook(cloud_prefs.google_local_webhook_id)
+        == config.agent_user_id
+    )
+    assert config.get_agent_user_id_from_webhook("other_id") != config.agent_user_id

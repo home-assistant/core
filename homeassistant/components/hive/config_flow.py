@@ -1,4 +1,5 @@
 """Config Flow for Hive."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -13,15 +14,20 @@ from apyhiveapi.helper.hive_exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_CODE, CONF_DEVICE_NAME, CONFIG_ENTRY_VERSION, DOMAIN
 
 
-class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Hive config flow."""
 
     VERSION = CONFIG_ENTRY_VERSION
@@ -47,7 +53,7 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             # Get user from existing entry and abort if already setup
             self.entry = await self.async_set_unique_id(self.data[CONF_USERNAME])
-            if self.context["source"] != config_entries.SOURCE_REAUTH:
+            if self.context["source"] != SOURCE_REAUTH:
                 self._abort_if_unique_id_configured()
 
             # Login to the Hive.
@@ -94,7 +100,7 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "no_internet_available"
 
             if not errors:
-                if self.context["source"] == config_entries.SOURCE_REAUTH:
+                if self.context["source"] == SOURCE_REAUTH:
                     return await self.async_setup_hive_entry()
                 self.device_registration = True
                 return await self.async_step_configuration()
@@ -132,7 +138,7 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Setup the config entry
         self.data["tokens"] = self.tokens
-        if self.context["source"] == config_entries.SOURCE_REAUTH:
+        if self.context["source"] == SOURCE_REAUTH:
             self.hass.config_entries.async_update_entry(
                 self.entry, title=self.data["username"], data=self.data
             )
@@ -140,7 +146,9 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="reauth_successful")
         return self.async_create_entry(title=self.data["username"], data=self.data)
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Re Authenticate a user."""
         data = {
             CONF_USERNAME: entry_data[CONF_USERNAME],
@@ -155,16 +163,16 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> HiveOptionsFlowHandler:
         """Hive options callback."""
         return HiveOptionsFlowHandler(config_entry)
 
 
-class HiveOptionsFlowHandler(config_entries.OptionsFlow):
+class HiveOptionsFlowHandler(OptionsFlow):
     """Config flow options for Hive."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize Hive options flow."""
         self.hive = None
         self.config_entry = config_entry

@@ -1,9 +1,9 @@
 """Constants for the Dexcom integration."""
+
 from homeassistant.const import Platform
 
 DOMAIN = "dexcom"
 PLATFORMS = [Platform.SENSOR]
-GLUCOSE_VALUE_ICON = "mdi:diabetes"
 
 GLUCOSE_TREND_ICON = [
     "mdi:help",
@@ -25,6 +25,3 @@ CONF_SERVER = "server"
 
 SERVER_OUS = "EU"
 SERVER_US = "US"
-
-COORDINATOR = "coordinator"
-UNDO_UPDATE_LISTENER = "undo_update_listener"

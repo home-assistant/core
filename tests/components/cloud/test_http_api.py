@@ -1,4 +1,5 @@
 """Tests for the HTTP API for the cloud component."""
+
 from copy import deepcopy
 from http import HTTPStatus
 from typing import Any
@@ -1046,7 +1047,7 @@ async def test_enabling_remote_remote_activation_not_allowed(
     client = await hass_ws_client(hass)
     mock_connect = cloud.remote.connect
     assert not cloud.client.remote_autostart
-    cloud.client.prefs.async_update(remote_allow_remote_enable=False)
+    await cloud.client.prefs.async_update(remote_allow_remote_enable=False)
 
     await client.send_json({"id": 5, "type": "cloud/remote/connect"})
     response = await client.receive_json()

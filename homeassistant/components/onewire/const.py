@@ -1,4 +1,5 @@
 """Constants for 1-Wire component."""
+
 from __future__ import annotations
 
 from homeassistant.const import Platform

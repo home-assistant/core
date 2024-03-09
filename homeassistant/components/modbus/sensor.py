@@ -1,4 +1,5 @@
 """Support for Modbus Register sensors."""
+
 from __future__ import annotations
 
 from datetime import datetime

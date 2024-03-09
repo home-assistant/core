@@ -1,9 +1,11 @@
 """Binary sensors on Zigbee Home Automation networks."""
+
 from __future__ import annotations
 
 import functools
 from typing import Any
 
+from zigpy.quirks.v2 import BinarySensorMetadata, EntityMetadata
 import zigpy.types as t
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.clusters.security import IasZone
@@ -26,6 +28,7 @@ from .core.const import (
     CLUSTER_HANDLER_OCCUPANCY,
     CLUSTER_HANDLER_ON_OFF,
     CLUSTER_HANDLER_ZONE,
+    QUIRK_METADATA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
@@ -76,8 +79,16 @@ class BinarySensor(ZhaEntity, BinarySensorEntity):
 
     def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs) -> None:
         """Initialize the ZHA binary sensor."""
-        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
         self._cluster_handler = cluster_handlers[0]
+        if QUIRK_METADATA in kwargs:
+            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA])
+        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
+
+    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
+        """Init this entity from the quirks metadata."""
+        super()._init_from_quirks_metadata(entity_metadata)
+        binary_sensor_metadata: BinarySensorMetadata = entity_metadata.entity_metadata
+        self._attribute_name = binary_sensor_metadata.attribute_name
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""

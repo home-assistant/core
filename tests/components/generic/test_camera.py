@@ -1,4 +1,5 @@
 """The tests for generic camera component."""
+
 import asyncio
 from datetime import timedelta
 from http import HTTPStatus

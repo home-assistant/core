@@ -1,4 +1,5 @@
 """Test NAM diagnostics."""
+
 import json
 
 from homeassistant.core import HomeAssistant

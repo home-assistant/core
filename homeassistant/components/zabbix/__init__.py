@@ -1,4 +1,5 @@
 """Support for Zabbix."""
+
 from contextlib import suppress
 import json
 import logging

@@ -19,7 +19,8 @@ from .config_flow import get_master_gateway
 from .const import CONF_GROUP_ID_BASE, CONF_MASTER_GATEWAY, DOMAIN, PLATFORMS
 from .deconz_event import async_setup_events, async_unload_events
 from .errors import AuthenticationRequired, CannotConnect
-from .gateway import DeconzGateway, get_deconz_session
+from .gateway import DeconzGateway
+from .hub import get_deconz_api
 from .services import async_setup_services, async_unload_services
 
 
@@ -37,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         await async_update_master_gateway(hass, config_entry)
 
     try:
-        api = await get_deconz_session(hass, config_entry.data)
+        api = await get_deconz_api(hass, config_entry.data)
     except CannotConnect as err:
         raise ConfigEntryNotReady from err
     except AuthenticationRequired as err:
