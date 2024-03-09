@@ -1,4 +1,5 @@
 """Test Bluetooth LE device tracker."""
+
 from datetime import timedelta
 from unittest.mock import patch
 

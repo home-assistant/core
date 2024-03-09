@@ -1,4 +1,5 @@
 """Switch platform for V2C EVSE."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine

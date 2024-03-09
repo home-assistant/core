@@ -1,4 +1,5 @@
 """Test the Litter-Robot switch entity."""
+
 from unittest.mock import MagicMock
 
 from pylitterbot import Robot

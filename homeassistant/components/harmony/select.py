@@ -1,4 +1,5 @@
 """Support for Harmony Hub select activities."""
+
 from __future__ import annotations
 
 import logging

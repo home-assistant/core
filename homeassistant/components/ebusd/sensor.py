@@ -1,4 +1,5 @@
 """Support for Ebusd sensors."""
+
 from __future__ import annotations
 
 import datetime

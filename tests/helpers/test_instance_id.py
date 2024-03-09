@@ -1,4 +1,5 @@
 """Tests for instance ID helper."""
+
 from json import JSONDecodeError
 from typing import Any
 from unittest.mock import patch

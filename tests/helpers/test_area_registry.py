@@ -1,4 +1,5 @@
 """Tests for the Area Registry."""
+
 from typing import Any
 
 import pytest

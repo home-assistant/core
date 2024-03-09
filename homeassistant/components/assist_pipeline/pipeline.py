@@ -1,4 +1,5 @@
 """Classes for voice assistant pipelines."""
+
 from __future__ import annotations
 
 import array

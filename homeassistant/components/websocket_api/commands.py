@@ -1,4 +1,5 @@
 """Commands part of Websocket API."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -47,7 +48,6 @@ from homeassistant.helpers.json import (
     json_bytes,
 )
 from homeassistant.helpers.service import async_get_all_descriptions
-from homeassistant.helpers.typing import EventType
 from homeassistant.loader import (
     Integration,
     IntegrationNotFound,
@@ -367,7 +367,7 @@ def _forward_entity_changes(
     entity_ids: set[str],
     user: User,
     msg_id: int,
-    event: Event,
+    event: Event[EventStateChangedData],
 ) -> None:
     """Forward entity state changed events to websocket."""
     entity_id = event.data["entity_id"]
@@ -621,7 +621,7 @@ async def handle_render_template(
 
     @callback
     def _template_listener(
-        event: EventType[EventStateChangedData] | None,
+        event: Event[EventStateChangedData] | None,
         updates: list[TrackTemplateResult],
     ) -> None:
         track_template_result = updates.pop()

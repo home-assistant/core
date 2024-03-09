@@ -1,4 +1,5 @@
 """Switch representing the shutoff valve for the Flo by Moen integration."""
+
 from __future__ import annotations
 
 from typing import Any

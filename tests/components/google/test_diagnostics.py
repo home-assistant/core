@@ -1,4 +1,5 @@
 """Tests for diagnostics platform of google calendar."""
+
 from collections.abc import Callable
 from typing import Any
 

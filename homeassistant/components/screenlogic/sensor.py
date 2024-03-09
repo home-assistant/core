@@ -1,4 +1,5 @@
 """Support for a ScreenLogic Sensor."""
+
 from collections.abc import Callable
 from copy import copy
 import dataclasses

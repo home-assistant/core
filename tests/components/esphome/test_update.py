@@ -1,4 +1,5 @@
 """Test ESPHome update entities."""
+
 from collections.abc import Awaitable, Callable
 import dataclasses
 from unittest.mock import Mock, patch

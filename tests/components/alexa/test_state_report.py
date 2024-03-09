@@ -1,4 +1,5 @@
 """Test report state."""
+
 import json
 from unittest.mock import AsyncMock, patch
 

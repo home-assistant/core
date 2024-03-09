@@ -1,4 +1,5 @@
 """Tests for the mobile app integration."""
+
 from collections.abc import Awaitable, Callable
 from typing import Any
 from unittest.mock import Mock, patch

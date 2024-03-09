@@ -1,4 +1,5 @@
 """Tests for the WLED sensor platform."""
+
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 

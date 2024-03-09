@@ -1,4 +1,5 @@
 """Tests for IPMA config flow."""
+
 from unittest.mock import patch
 
 from pyipma import IPMAException

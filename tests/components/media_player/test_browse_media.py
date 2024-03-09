@@ -1,4 +1,5 @@
 """Test media browser helpers for media player."""
+
 from unittest.mock import Mock, patch
 
 import pytest

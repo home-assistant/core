@@ -1,4 +1,5 @@
 """Test 1-Wire diagnostics."""
+
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 

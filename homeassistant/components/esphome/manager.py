@@ -1,4 +1,5 @@
 """Manager for esphome devices."""
+
 from __future__ import annotations
 
 import asyncio
@@ -49,7 +50,6 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import EventType
 from homeassistant.util.async_ import create_eager_task
 
 from .bluetooth import async_connect_scanner
@@ -282,7 +282,7 @@ class ESPHomeManager:
     def _send_home_assistant_state_event(
         self,
         attribute: str | None,
-        event: EventType[EventStateChangedData],
+        event: Event[EventStateChangedData],
     ) -> None:
         """Forward Home Assistant states updates to ESPHome."""
         event_data = event.data

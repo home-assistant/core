@@ -1,4 +1,5 @@
 """Support for TPLink HS100/HS110/HS200 smart switch."""
+
 from __future__ import annotations
 
 import logging

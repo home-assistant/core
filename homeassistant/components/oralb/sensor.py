@@ -1,4 +1,5 @@
 """Support for OralB sensors."""
+
 from __future__ import annotations
 
 from oralb_ble import OralBSensor, SensorUpdate

@@ -1,4 +1,5 @@
 """The tests for the Script component."""
+
 import asyncio
 from contextlib import contextmanager
 from datetime import timedelta

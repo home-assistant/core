@@ -1,6 +1,5 @@
 """Tests for the La Marzocco select entities."""
 
-
 from unittest.mock import MagicMock
 
 from lmcloud.const import LaMarzoccoModel

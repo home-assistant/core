@@ -1,4 +1,5 @@
 """Platform allowing several fans to be grouped into one fan."""
+
 from __future__ import annotations
 
 from functools import reduce

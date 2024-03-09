@@ -1,4 +1,5 @@
 """Tests for the Sonarr sensor platform."""
+
 from datetime import timedelta
 from unittest.mock import MagicMock
 

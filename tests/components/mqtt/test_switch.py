@@ -1,4 +1,5 @@
 """The tests for the MQTT switch platform."""
+
 import copy
 from typing import Any
 from unittest.mock import patch

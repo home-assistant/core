@@ -1,4 +1,5 @@
 """Tests for syncthru config flow."""
+
 import re
 from unittest.mock import patch
 

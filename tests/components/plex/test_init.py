@@ -1,4 +1,5 @@
 """Tests for Plex setup."""
+
 import copy
 from datetime import timedelta
 from http import HTTPStatus

@@ -1,4 +1,5 @@
 """Data update coordinator for Traccar Server."""
+
 from __future__ import annotations
 
 import asyncio

@@ -1,4 +1,5 @@
 """The tests for mqtt lawn_mower component."""
+
 import copy
 import json
 from typing import Any

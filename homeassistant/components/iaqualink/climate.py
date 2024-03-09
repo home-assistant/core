@@ -1,4 +1,5 @@
 """Support for Aqualink Thermostats."""
+
 from __future__ import annotations
 
 import logging

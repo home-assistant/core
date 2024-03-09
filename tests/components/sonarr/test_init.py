@@ -1,4 +1,5 @@
 """Tests for the Sonsrr integration."""
+
 from unittest.mock import MagicMock, patch
 
 from aiopyarr import ArrAuthenticationException, ArrException
