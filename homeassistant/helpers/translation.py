@@ -104,19 +104,17 @@ async def _async_get_component_strings(
     loaded_translations_by_language: dict[str, dict[str, Any]] = {}
     has_files_to_load = False
     for language in languages:
-        files_to_load: dict[str, pathlib.Path] = {}
-        files_to_load_by_language[language] = files_to_load
-        translations_by_language[language] = {}
-
-        for domain in components:
+        files_to_load: dict[str, pathlib.Path] = {
+            domain: component_translation_path(language, integration)
+            for domain in components
             if (
-                not (integration := integrations.get(domain))
-                or not integration.has_translations
-            ):
-                continue
-
-            files_to_load[domain] = component_translation_path(language, integration)
-            has_files_to_load = True
+                (integration := integrations.get(domain))
+                and integration.has_translations
+            )
+        }
+        translations_by_language[language] = {}
+        files_to_load_by_language[language] = files_to_load
+        has_files_to_load |= bool(files_to_load)
 
     if has_files_to_load:
         loaded_translations_by_language = await hass.async_add_executor_job(
