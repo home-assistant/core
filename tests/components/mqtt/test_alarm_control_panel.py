@@ -35,7 +35,6 @@ from homeassistant.const import (
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
     STATE_UNKNOWN,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -133,15 +132,6 @@ DEFAULT_CONFIG_REMOTE_CODE_TEXT = {
         }
     }
 }
-
-
-@pytest.fixture(autouse=True)
-def alarm_control_panel_platform_only():
-    """Only setup the alarm_control_panel platform to speed up tests."""
-    with patch(
-        "homeassistant.components.mqtt.PLATFORMS", [Platform.ALARM_CONTROL_PANEL]
-    ):
-        yield
 
 
 @pytest.mark.parametrize(
