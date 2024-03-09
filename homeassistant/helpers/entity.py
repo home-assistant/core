@@ -571,7 +571,7 @@ class Entity(
             cls._entity_component_unrecorded_attributes | cls._unrecorded_attributes
         )
 
-    def get_job_type(self, function_name: str) -> HassJobType:
+    def get_hassjob_type(self, function_name: str) -> HassJobType:
         """Get the job type function for the given name.
 
         This is used for entity service calls to avoid

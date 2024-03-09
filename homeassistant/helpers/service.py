@@ -965,7 +965,7 @@ async def _handle_entity_call(
     if isinstance(func, str):
         job = HassJob(
             partial(getattr(entity, func), **data),  # type: ignore[arg-type]
-            job_type=entity.get_job_type(func),
+            job_type=entity.get_hassjob_type(func),
         )
         task = hass.async_run_hass_job(job, eager_start=True)
     else:
