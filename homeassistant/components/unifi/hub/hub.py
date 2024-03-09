@@ -87,13 +87,12 @@ class UnifiHub:
     async def initialize(self) -> None:
         """Set up a UniFi Network instance."""
         await self.entity_loader.initialize()
+        self._entity_helper.initialize()
 
         assert self.config.entry.unique_id is not None
         self.is_admin = self.api.sites[self.config.entry.unique_id].role == "admin"
 
         self.config.entry.add_update_listener(self.async_config_entry_updated)
-
-        self._entity_helper.initialize()
 
     @property
     def device_info(self) -> DeviceInfo:
