@@ -84,7 +84,6 @@ class GenericBlind(MotionblindsBLEEntity, CoverEntity):
     """Representation of a blind."""
 
     _attr_is_closed: bool | None = None
-    _attr_should_poll = False
     _attr_name = None
 
     def __init__(self, device: MotionDevice, entry: ConfigEntry) -> None:
@@ -102,11 +101,6 @@ class GenericBlind(MotionblindsBLEEntity, CoverEntity):
         self._device.register_running_callback(self.async_update_running)
         self._device.register_position_callback(self.async_update_position)
         self._device.register_connection_callback(self.async_update_connection)
-
-    async def async_update(self) -> None:
-        """Update state, called by HA if there is a poll interval and by the service homeassistant.update_entity."""
-        _LOGGER.debug("(%s) Updating entity", self.config_entry.data[CONF_MAC_CODE])
-        await self._device.connect()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop moving the blind."""
