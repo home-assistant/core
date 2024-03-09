@@ -530,9 +530,6 @@ filterwarnings = [
     "ignore:loop argument is deprecated:DeprecationWarning:emulated_roku",
     # https://github.com/thecynic/pylutron - v0.2.10
     "ignore:setDaemon\\(\\) is deprecated, set the daemon attribute instead:DeprecationWarning:pylutron",
-    # Fixed for Python 3.12
-    # https://github.com/lextudio/pysnmp/issues/10
-    "ignore:The asyncore module is deprecated and will be removed in Python 3.12:DeprecationWarning:pysnmp.carrier.asyncore.base",
     # Wrong stacklevel
     # https://bugs.launchpad.net/beautifulsoup/+bug/2034451
     "ignore:It looks like you're parsing an XML document using an HTML parser:UserWarning:bs4.builder",
