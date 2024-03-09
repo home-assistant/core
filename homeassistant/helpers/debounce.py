@@ -130,7 +130,7 @@ class Debouncer(Generic[_R_co]):
                 return
 
             try:
-                if task := self.hass.async_run_hass_job(self._job):
+                if task := self.hass.async_run_hass_job(self._job, eager_start=True):
                     await task
             except Exception:  # pylint: disable=broad-except
                 self.logger.exception("Unexpected exception from %s", self.function)
