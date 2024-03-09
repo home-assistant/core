@@ -362,6 +362,12 @@ async def test_exception_struct_validator(do_config) -> None:
                 CONF_HOST: TEST_MODBUS_HOST,
                 CONF_PORT: TEST_PORT_TCP,
                 CONF_TIMEOUT: 3,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: "dummy",
+                        CONF_ADDRESS: 9999,
+                    }
+                ],
             },
             {
                 CONF_NAME: TEST_MODBUS_NAME,
@@ -369,6 +375,12 @@ async def test_exception_struct_validator(do_config) -> None:
                 CONF_HOST: TEST_MODBUS_HOST + " 2",
                 CONF_PORT: TEST_PORT_TCP,
                 CONF_TIMEOUT: 3,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: "dummy",
+                        CONF_ADDRESS: 9999,
+                    }
+                ],
             },
             {
                 CONF_NAME: TEST_MODBUS_NAME + "2",
@@ -376,6 +388,12 @@ async def test_exception_struct_validator(do_config) -> None:
                 CONF_HOST: TEST_MODBUS_HOST,
                 CONF_PORT: TEST_PORT_TCP,
                 CONF_TIMEOUT: 3,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: "dummy",
+                        CONF_ADDRESS: 9999,
+                    }
+                ],
             },
         ],
         [
@@ -384,6 +402,12 @@ async def test_exception_struct_validator(do_config) -> None:
                 CONF_HOST: TEST_MODBUS_HOST,
                 CONF_PORT: TEST_PORT_TCP,
                 CONF_TIMEOUT: 3,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: "dummy",
+                        CONF_ADDRESS: 9999,
+                    }
+                ],
             },
             {
                 CONF_NAME: TEST_MODBUS_NAME + " 2",
@@ -391,6 +415,12 @@ async def test_exception_struct_validator(do_config) -> None:
                 CONF_HOST: TEST_MODBUS_HOST,
                 CONF_PORT: TEST_PORT_TCP,
                 CONF_TIMEOUT: 3,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: "dummy",
+                        CONF_ADDRESS: 9999,
+                    }
+                ],
             },
         ],
     ],
@@ -1093,6 +1123,12 @@ SERVICE = "service"
             CONF_PORT: TEST_PORT_SERIAL,
             CONF_PARITY: "E",
             CONF_STOPBITS: 1,
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: "dummy",
+                    CONF_ADDRESS: 9999,
+                }
+            ],
         },
     ],
 )
@@ -1287,6 +1323,12 @@ async def test_pymodbus_constructor_fail(
                 CONF_TYPE: TCP,
                 CONF_HOST: TEST_MODBUS_HOST,
                 CONF_PORT: TEST_PORT_TCP,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: "dummy",
+                        CONF_ADDRESS: 9999,
+                    },
+                ],
             }
         ]
     }
