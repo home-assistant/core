@@ -367,7 +367,7 @@ def _forward_entity_changes(
     entity_ids: set[str],
     user: User,
     msg_id: int,
-    event: Event,
+    event: Event[EventStateChangedData],
 ) -> None:
     """Forward entity state changed events to websocket."""
     entity_id = event.data["entity_id"]
