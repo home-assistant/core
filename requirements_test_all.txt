@@ -1670,7 +1670,7 @@ pysmartthings==0.7.8
 pysml==0.0.12
 
 # homeassistant.components.snmp
-pysnmp-lextudio==5.0.34
+pysnmp-lextudio==6.0.9
 
 # homeassistant.components.snooz
 pysnooz==0.8.6
