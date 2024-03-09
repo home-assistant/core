@@ -74,11 +74,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up blind based on a config entry."""
 
-    blind_type = BLIND_TO_ENTITY_TYPE[entry.data[CONF_BLIND_TYPE]]
+    blind_class = BLIND_TYPE_TO_CLASS[entry.data[CONF_BLIND_TYPE]]
     device = hass.data[DOMAIN][entry.entry_id]
-    blind = blind_type(device, entry)
+    entity = blind_class(device, entry)
 
-    async_add_entities([blind])
+    async_add_entities([entity])
 
 
 class GenericBlind(CoverEntity):
@@ -95,7 +95,7 @@ class GenericBlind(CoverEntity):
             "(%s) Setting up %s cover entity (%s)",
             entry.data[CONF_MAC_CODE],
             entry.data[CONF_BLIND_TYPE],
-            BLIND_TO_ENTITY_TYPE[entry.data[CONF_BLIND_TYPE]].__name__,
+            BLIND_TYPE_TO_CLASS[entry.data[CONF_BLIND_TYPE]].__name__,
         )
         super().__init__()
         self._device = device
@@ -263,7 +263,7 @@ class PositionTiltBlind(PositionBlind, TiltBlind):
     )
 
 
-BLIND_TO_ENTITY_TYPE: dict[str, type[GenericBlind]] = {
+BLIND_TYPE_TO_CLASS: dict[str, type[GenericBlind]] = {
     MotionBlindType.ROLLER.name: PositionBlind,
     MotionBlindType.HONEYCOMB.name: PositionBlind,
     MotionBlindType.ROMAN.name: PositionBlind,
