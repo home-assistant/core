@@ -80,7 +80,7 @@ async def test_two_sensor_sites_running(
     """Test we handle two sets of sensors running for two different sites."""
 
     # all metoffice test data encapsulated in here
-    mock_json = json.loads(load_fixture("metoffice.json"))
+    mock_json = json.loads(load_fixture("metoffice/metoffice.json"))
     all_sites = json.dumps(mock_json["all_sites"])
     wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
     wavertree_daily = json.dumps(mock_json["wavertree_daily"])
