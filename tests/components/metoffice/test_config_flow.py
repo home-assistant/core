@@ -64,7 +64,7 @@ async def test_form_already_configured(
     hass.config.longitude = TEST_LONGITUDE_WAVERTREE
 
     # all metoffice test data encapsulated in here
-    mock_json = json.loads(load_fixture("metoffice/metoffice.json"))
+    mock_json = json.loads(load_fixture("metoffice.json", "metoffice"))
 
     all_sites = json.dumps(mock_json["all_sites"])
 
