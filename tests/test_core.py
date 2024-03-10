@@ -2124,6 +2124,7 @@ async def test_async_run_job_starts_task_eagerly(hass: HomeAssistant) -> None:
     task = hass.async_run_job(_test)
     # No call to hass.async_block_till_done to ensure the task is run eagerly
     assert len(runs) == 1
+    assert task.done()
     await task
 
 
