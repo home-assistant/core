@@ -3598,14 +3598,20 @@ async def test_disabling_and_enabling_entry(
     config_alarm_control_panel = '{"name": "test_new", "state_topic": "home/alarm", "command_topic": "home/alarm/set"}'
     config_light = '{"name": "test_new", "command_topic": "test-topic_new"}'
 
-    # Discovery of mqtt tag
-    async_fire_mqtt_message(hass, "homeassistant/tag/abc/config", config_tag)
+    with patch(
+        "homeassistant.components.mqtt.mixins.mqtt_config_entry_enabled",
+        return_value=False,
+    ):
+        # Discovery of mqtt tag
+        async_fire_mqtt_message(hass, "homeassistant/tag/abc/config", config_tag)
 
-    # Late discovery of mqtt entities
-    async_fire_mqtt_message(
-        hass, "homeassistant/alarm_control_panel/abc/config", config_alarm_control_panel
-    )
-    async_fire_mqtt_message(hass, "homeassistant/light/abc/config", config_light)
+        # Late discovery of mqtt entities
+        async_fire_mqtt_message(
+            hass,
+            "homeassistant/alarm_control_panel/abc/config",
+            config_alarm_control_panel,
+        )
+        async_fire_mqtt_message(hass, "homeassistant/light/abc/config", config_light)
 
     # Disable MQTT config entry
     await hass.config_entries.async_set_disabled_by(
