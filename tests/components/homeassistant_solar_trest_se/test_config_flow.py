@@ -2,11 +2,8 @@
 from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
-from homeassistant.components.homeassistant_solar_trest_se.config_flow import (
-    CannotConnect,
-    InvalidAuth,
-)
-from homeassistant.components.homeassistant_solar_trest_se.const import DOMAIN
+from homeassistant.components.trest_solar.config_flow import CannotConnect, InvalidAuth
+from homeassistant.components.trest_solar.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType

@@ -2536,12 +2536,6 @@
       "integration_type": "virtual",
       "supported_by": "netatmo"
     },
-    "homeassistant_solar_trest_se": {
-      "name": "TrestSolarController",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
     "homematic": {
       "name": "Homematic",
       "integrations": {
@@ -6285,6 +6279,12 @@
       "name": "Travis-CI",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "cloud_polling"
+    },
+    "trest_solar": {
+      "name": "TrestSolarController",
+      "integration_type": "hub",
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "tuya": {
