@@ -14,19 +14,9 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def init_integration(
-    hass: HomeAssistant, config, options=None
-) -> MockConfigEntry:
+    hass: HomeAssistant, config_entry: MockConfigEntry,
+) -> None:
     """Set up the 17Track integration in Home Assistant."""
-
-    if options is None:
-        options = {}
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="17Track",
-        unique_id=ACCOUNT_ID,
-        data=config,
-        options=options,
-    )
 
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
