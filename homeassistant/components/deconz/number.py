@@ -25,7 +25,7 @@ import homeassistant.helpers.entity_registry as er
 
 from .const import DOMAIN as DECONZ_DOMAIN
 from .deconz_device import DeconzDevice
-from .gateway import DeconzGateway, get_gateway_from_config_entry
+from .hub import DeconzHub, get_gateway_from_config_entry
 from .util import serial_from_unique_id
 
 T = TypeVar("T", Presence, PydeconzSensorBase)
@@ -129,7 +129,7 @@ class DeconzNumber(DeconzDevice[SensorResources], NumberEntity):
     def __init__(
         self,
         device: SensorResources,
-        gateway: DeconzGateway,
+        gateway: DeconzHub,
         description: DeconzNumberDescription,
     ) -> None:
         """Initialize deCONZ number entity."""

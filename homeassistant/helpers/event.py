@@ -328,7 +328,7 @@ def _async_dispatch_entity_id_event(
         return
     for job in callbacks_list.copy():
         try:
-            hass.async_run_hass_job(job, event)
+            hass.async_run_hass_job(job, event, eager_start=True)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Error while dispatching event for %s to %s",

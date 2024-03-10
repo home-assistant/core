@@ -1132,8 +1132,8 @@ async def test_eventbus_filtered_listener(hass: HomeAssistant) -> None:
     unsub()
 
 
-async def test_eventbus_run_immediately(hass: HomeAssistant) -> None:
-    """Test we can call events immediately."""
+async def test_eventbus_run_immediately_callback(hass: HomeAssistant) -> None:
+    """Test we can call events immediately with a callback."""
     calls = []
 
     @ha.callback
@@ -1150,14 +1150,21 @@ async def test_eventbus_run_immediately(hass: HomeAssistant) -> None:
     unsub()
 
 
-async def test_eventbus_run_immediately_not_callback(hass: HomeAssistant) -> None:
-    """Test we raise when passing a non-callback with run_immediately."""
+async def test_eventbus_run_immediately_coro(hass: HomeAssistant) -> None:
+    """Test we can call events immediately with a coro."""
+    calls = []
 
-    def listener(event):
+    async def listener(event):
         """Mock listener."""
+        calls.append(event)
 
-    with pytest.raises(HomeAssistantError):
-        hass.bus.async_listen("test", listener, run_immediately=True)
+    unsub = hass.bus.async_listen("test", listener, run_immediately=True)
+
+    hass.bus.async_fire("test", {"event": True})
+    # No async_block_till_done here
+    assert len(calls) == 1
+
+    unsub()
 
 
 async def test_eventbus_unsubscribe_listener(hass: HomeAssistant) -> None:

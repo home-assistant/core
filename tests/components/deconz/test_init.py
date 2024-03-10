@@ -4,7 +4,7 @@ import asyncio
 from unittest.mock import patch
 
 from homeassistant.components.deconz import (
-    DeconzGateway,
+    DeconzHub,
     async_setup_entry,
     async_unload_entry,
     async_update_group_unique_id,
@@ -39,8 +39,8 @@ ENTRY2_UUID = "789ACE"
 
 async def setup_entry(hass, entry):
     """Test that setup entry works."""
-    with patch.object(DeconzGateway, "async_setup", return_value=True), patch.object(
-        DeconzGateway, "async_update_device_registry", return_value=True
+    with patch.object(DeconzHub, "async_setup", return_value=True), patch.object(
+        DeconzHub, "async_update_device_registry", return_value=True
     ):
         assert await async_setup_entry(hass, entry) is True
 
