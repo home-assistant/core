@@ -63,9 +63,9 @@ async def test_device_setup(
     assert forward_entry_setup.mock_calls[2][1][1] == "light"
     assert forward_entry_setup.mock_calls[3][1][1] == "switch"
 
-    assert hub.host == config[CONF_HOST]
-    assert hub.model == config[CONF_MODEL]
-    assert hub.name == config[CONF_NAME]
+    assert hub.config.host == config[CONF_HOST]
+    assert hub.config.model == config[CONF_MODEL]
+    assert hub.config.name == config[CONF_NAME]
     assert hub.unique_id == FORMATTED_MAC
 
     device_entry = device_registry.async_get_device(
