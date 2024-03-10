@@ -21,7 +21,6 @@ class RenaultButtonEntityDescription(ButtonEntityDescription):
     """Class describing Renault button entities."""
 
     async_press: Callable[[RenaultButtonEntity], Coroutine[Any, Any, Any]]
-
     requires_electricity: bool = False
 
 
