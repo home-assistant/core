@@ -366,7 +366,7 @@ class RuntimeEntryData:
     @callback
     def async_update_device_state(self) -> None:
         """Distribute an update of a core device state like availability."""
-        for callback_ in self.device_update_subscriptions:
+        for callback_ in self.device_update_subscriptions.copy():
             callback_()
 
     async def async_load_from_store(self) -> tuple[list[EntityInfo], list[UserService]]:
