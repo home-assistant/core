@@ -46,5 +46,9 @@
         }
       }
     }
-  }
+  },
+  "mounts": [
+    "source=/home/yeyvo/Desktop/iot/home-assistant/custom_components/mawaqit,target=/workspaces/core/homeassistant/components/mawaqit,type=bind",
+    "source=/home/yeyvo/Desktop/iot/home-assistant/custom_components/tests/mawaqit,target=/workspaces/core/tests/components/mawaqit,type=bind"
+  ]
 }
