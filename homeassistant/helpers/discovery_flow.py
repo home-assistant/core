@@ -1,4 +1,5 @@
 """The discovery flow helper."""
+
 from __future__ import annotations
 
 from collections.abc import Coroutine

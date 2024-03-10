@@ -1,4 +1,5 @@
 """Tests for the Hisense AEH-W4A1 init file."""
+
 from unittest.mock import patch
 
 from pyaehw4a1 import exceptions

@@ -1,4 +1,5 @@
 """Config flow to configure Xiaomi Aqara."""
+
 import logging
 from socket import gaierror
 

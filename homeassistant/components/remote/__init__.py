@@ -1,4 +1,5 @@
 """Support to interface with universal remote control devices."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable

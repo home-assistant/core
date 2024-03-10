@@ -1,4 +1,5 @@
 """Test initialization of lamarzocco."""
+
 from unittest.mock import MagicMock
 
 from lmcloud.exceptions import AuthFail, RequestNotSuccessful

@@ -1,4 +1,5 @@
 """Hass.io const variables."""
+
 from datetime import timedelta
 from enum import StrEnum
 

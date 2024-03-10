@@ -1,4 +1,5 @@
 """Support for Overkiz (virtual) buttons."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

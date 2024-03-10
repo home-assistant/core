@@ -1,4 +1,5 @@
 """The nsw_fuel_station component."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

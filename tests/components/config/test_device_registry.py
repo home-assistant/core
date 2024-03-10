@@ -1,4 +1,5 @@
 """Test device_registry API."""
+
 import pytest
 
 from homeassistant.components.config import device_registry

@@ -1,4 +1,5 @@
 """Support for the for Danfoss Air HRV binary sensors."""
+
 from __future__ import annotations
 
 from pydanfossair.commands import ReadCommand

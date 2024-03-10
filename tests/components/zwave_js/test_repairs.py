@@ -1,4 +1,5 @@
 """Test the Z-Wave JS repairs module."""
+
 from copy import deepcopy
 from http import HTTPStatus
 from unittest.mock import patch

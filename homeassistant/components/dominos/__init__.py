@@ -1,4 +1,5 @@
 """Support for Dominos Pizza ordering."""
+
 from datetime import timedelta
 import logging
 

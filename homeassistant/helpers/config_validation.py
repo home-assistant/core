@@ -1,4 +1,5 @@
 """Helpers for config validation using voluptuous."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Hashable
@@ -904,7 +905,7 @@ def _deprecated_or_removed(
             try:
                 near = (
                     f"near {config.__config_file__}"  # type: ignore[attr-defined]
-                    f":{config.__line__} "
+                    f":{config.__line__} "  # type: ignore[attr-defined]
                 )
             except AttributeError:
                 near = ""

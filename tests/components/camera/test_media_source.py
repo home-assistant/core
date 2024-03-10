@@ -1,4 +1,5 @@
 """Test camera media source."""
+
 from unittest.mock import PropertyMock, patch
 
 import pytest

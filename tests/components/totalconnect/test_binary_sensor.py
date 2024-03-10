@@ -1,4 +1,5 @@
 """Tests for the TotalConnect binary sensor."""
+
 from unittest.mock import patch
 
 from homeassistant.components.binary_sensor import (

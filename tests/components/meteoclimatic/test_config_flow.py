@@ -1,4 +1,5 @@
 """Tests for the Meteoclimatic config flow."""
+
 from unittest.mock import patch
 
 from meteoclimatic.exceptions import MeteoclimaticError, StationNotFound

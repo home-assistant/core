@@ -1,4 +1,5 @@
 """Tests for the Elmax config flow."""
+
 from unittest.mock import patch
 
 from elmax_api.exceptions import ElmaxBadLoginError, ElmaxBadPinError, ElmaxNetworkError

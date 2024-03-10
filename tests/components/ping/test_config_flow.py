@@ -1,4 +1,5 @@
 """Test the Ping (ICMP) config flow."""
+
 from __future__ import annotations
 
 import pytest

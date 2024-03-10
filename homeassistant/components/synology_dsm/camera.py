@@ -1,4 +1,5 @@
 """Support for Synology DSM cameras."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

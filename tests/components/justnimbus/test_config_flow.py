@@ -1,4 +1,5 @@
 """Test the JustNimbus config flow."""
+
 from unittest.mock import patch
 
 from justnimbus.exceptions import InvalidClientID, JustNimbusError

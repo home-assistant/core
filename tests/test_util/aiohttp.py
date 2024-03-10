@@ -1,4 +1,5 @@
 """Aiohttp test utils."""
+
 import asyncio
 from contextlib import contextmanager
 from http import HTTPStatus

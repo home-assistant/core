@@ -1,4 +1,5 @@
 """Teslemetry integration."""
+
 import asyncio
 from typing import Final
 

@@ -1,4 +1,5 @@
 """Adds config flow for dnsip integration."""
+
 from __future__ import annotations
 
 import asyncio

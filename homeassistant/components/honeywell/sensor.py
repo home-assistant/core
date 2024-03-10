@@ -1,4 +1,5 @@
 """Support for Honeywell (US) Total Connect Comfort sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -36,19 +37,12 @@ def _get_temperature_sensor_unit(device: Device) -> str:
     return UnitOfTemperature.FAHRENHEIT
 
 
-@dataclass(frozen=True)
-class HoneywellSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class HoneywellSensorEntityDescription(SensorEntityDescription):
+    """Describes a Honeywell sensor entity."""
 
     value_fn: Callable[[Device], Any]
     unit_fn: Callable[[Device], Any]
-
-
-@dataclass(frozen=True)
-class HoneywellSensorEntityDescription(
-    SensorEntityDescription, HoneywellSensorEntityDescriptionMixin
-):
-    """Describes a Honeywell sensor entity."""
 
 
 SENSOR_TYPES: tuple[HoneywellSensorEntityDescription, ...] = (

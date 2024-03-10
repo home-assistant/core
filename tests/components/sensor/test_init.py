@@ -1,4 +1,5 @@
 """The test for sensor entity."""
+
 from __future__ import annotations
 
 from collections.abc import Generator

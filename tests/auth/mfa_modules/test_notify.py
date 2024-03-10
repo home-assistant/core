@@ -1,4 +1,5 @@
 """Test the HMAC-based One Time Password (MFA) auth module."""
+
 import asyncio
 from unittest.mock import patch
 

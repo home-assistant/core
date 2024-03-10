@@ -1,4 +1,5 @@
 """Support to turn on lights based on the states."""
+
 from datetime import timedelta
 import logging
 

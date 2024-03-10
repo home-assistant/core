@@ -1,4 +1,5 @@
 """Test the RabbitAir config flow."""
+
 from __future__ import annotations
 
 from collections.abc import Generator

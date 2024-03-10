@@ -1,4 +1,5 @@
 """The test for light device automation."""
+
 import pytest
 from pytest_unordered import unordered
 

@@ -1,4 +1,5 @@
 """Test the nuki config flow."""
+
 from unittest.mock import patch
 
 from pynuki.bridge import InvalidCredentialsException

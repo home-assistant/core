@@ -1,4 +1,5 @@
 """Test the Z-Wave JS light platform."""
+
 from copy import deepcopy
 
 from zwave_js_server.event import Event

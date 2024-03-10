@@ -1,4 +1,5 @@
 """Test the base functions of the media player."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 

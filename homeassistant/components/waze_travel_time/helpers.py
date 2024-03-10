@@ -1,4 +1,5 @@
 """Helpers for Waze Travel Time integration."""
+
 import logging
 
 from pywaze.route_calculator import WazeRouteCalculator, WRCError

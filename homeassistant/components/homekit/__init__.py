@@ -1,4 +1,5 @@
 """Support for Apple HomeKit."""
+
 from __future__ import annotations
 
 import asyncio
@@ -27,7 +28,7 @@ from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.device_automation.trigger import (
     async_validate_trigger_config,
 )
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -1163,7 +1164,7 @@ class HomeKitPairingQRView(HomeAssistantView):
         if not request.query_string:
             raise Unauthorized()
         entry_id, secret = request.query_string.split("-")
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
         domain_data: dict[str, HomeKitEntryData] = hass.data[DOMAIN]
         if (
             not (entry_data := domain_data.get(entry_id))

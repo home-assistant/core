@@ -1,4 +1,5 @@
 """Helper functions for Android TV Remote integration."""
+
 from __future__ import annotations
 
 from androidtvremote2 import AndroidTVRemote

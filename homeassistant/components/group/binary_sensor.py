@@ -1,4 +1,5 @@
 """Platform allowing several binary sensor to be grouped into one binary sensor."""
+
 from __future__ import annotations
 
 from typing import Any
