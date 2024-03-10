@@ -9,6 +9,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -74,8 +75,9 @@ async def async_setup_entry(
     ]
 
     entities = [
-        TrestSolarControllerSensor(coordinator, description)
+        TrestSolarControllerSensor(coordinator, entry.entry_id, description)
         for description in descriptions
+        # for description in descriptions
     ]
 
     async_add_entities(entities)
@@ -84,37 +86,34 @@ async def async_setup_entry(
 class TrestSolarControllerSensor(CoordinatorEntity[TrestDataCoordinator], SensorEntity):
     """The sensor for Trest Solar Controller."""
 
+    _attr_has_entity_name = True
+    entity_description: SensorEntityDescription
+
     def __init__(
-        self, coordinator: TrestDataCoordinator, description: SensorEntityDescription
+        self,
+        coordinator: TrestDataCoordinator,
+        entry_id: str,
+        description: SensorEntityDescription,
     ) -> None:
         """TrestSolarControllerSensor constructor."""
         super().__init__(coordinator)
-        self.description = description
+        self.entity_description = description
+        self._attr_unique_id = f"{entry_id}.{description.key}"
+        self._attr_device_info = DeviceInfo(
+            name="Trest Solar Controller",
+            identifiers={(DOMAIN, entry_id)},
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
     @property
     def native_value(self) -> str | int | float | datetime | None:
         """Return the state of the sensor."""
 
-        if self.description.key == "timestamp":
-            timestamp_str = getattr(self.coordinator.data, self.description.key)
+        if self.entity_description.key == "timestamp":
+            timestamp_str = getattr(self.coordinator.data, self.entity_description.key)
             return datetime.fromisoformat(timestamp_str)
 
-        if hasattr(self.coordinator.data, self.description.key):
-            return getattr(self.coordinator.data, self.description.key)
+        if hasattr(self.coordinator.data, self.entity_description.key):
+            return getattr(self.coordinator.data, self.entity_description.key)
 
         return None
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the sensor."""
-        return f"{self.description.name}"
-
-    @property
-    def device_class(self) -> SensorDeviceClass | None:
-        """Return the class of this device."""
-        return self.description.device_class
-
-    @property
-    def state_class(self) -> str | None:
-        """Return the state class of this entity."""
-        return self.description.state_class
