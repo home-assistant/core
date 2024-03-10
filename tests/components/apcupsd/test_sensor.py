@@ -96,6 +96,27 @@ async def test_sensor(hass: HomeAssistant, entity_registry: er.EntityRegistry) -
     assert entry.unique_id == "XXXXXXXXXXXX_nompower"
 
 
+async def test_sensor_name(hass: HomeAssistant) -> None:
+    """Test if sensor name follows the recommended entity naming scheme.
+
+    See https://developers.home-assistant.io/docs/core/entity/#entity-naming for more details.
+    """
+    await async_init_integration(hass, status=MOCK_STATUS)
+
+    all_states = hass.states.async_all()
+    assert len(all_states) != 0
+
+    device_name = MOCK_STATUS["UPSNAME"]
+    for state in all_states:
+        # Friendly name must start with the device name.
+        friendly_name = state.name
+        assert friendly_name.startswith(device_name)
+
+        # Entity names should start with a capital letter, the rest of the words are lower case.
+        entity_name = friendly_name.removeprefix(device_name).strip()
+        assert entity_name == entity_name.capitalize()
+
+
 async def test_sensor_disabled(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
