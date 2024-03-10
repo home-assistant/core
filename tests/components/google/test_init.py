@@ -1,4 +1,5 @@
 """The tests for the Google Calendar component."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable

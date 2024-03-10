@@ -1,4 +1,5 @@
 """Test the ibeacon device trackers."""
+
 from datetime import timedelta
 import time
 from unittest.mock import patch

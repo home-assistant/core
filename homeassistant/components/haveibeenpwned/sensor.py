@@ -1,4 +1,5 @@
 """Support for haveibeenpwned (email breaches) sensor."""
+
 from __future__ import annotations
 
 from datetime import timedelta

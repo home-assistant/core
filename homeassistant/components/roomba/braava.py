@@ -1,4 +1,5 @@
 """Class for Braava devices."""
+
 import logging
 
 from homeassistant.components.vacuum import VacuumEntityFeature

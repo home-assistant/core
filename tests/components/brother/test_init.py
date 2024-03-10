@@ -1,4 +1,5 @@
 """Test init of Brother integration."""
+
 from unittest.mock import patch
 
 from brother import SnmpError

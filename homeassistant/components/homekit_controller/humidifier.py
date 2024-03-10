@@ -1,4 +1,5 @@
 """Support for HomeKit Controller humidifier."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any

@@ -1,4 +1,5 @@
 """The tests for the WSDOT platform."""
+
 from datetime import datetime, timedelta, timezone
 import re
 

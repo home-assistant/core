@@ -1,4 +1,5 @@
 """ViCare helpers functions."""
+
 import logging
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice

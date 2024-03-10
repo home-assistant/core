@@ -1,4 +1,5 @@
 """Config flow for Elk-M1 Control integration."""
+
 from __future__ import annotations
 
 import logging
@@ -8,8 +9,8 @@ from elkm1_lib.discovery import ElkSystem
 from elkm1_lib.elk import Elk
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
 from homeassistant.components import dhcp
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_HOST,
@@ -18,7 +19,7 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_USERNAME,
 )
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.util import slugify
@@ -126,7 +127,7 @@ def _placeholders_from_device(device: ElkSystem) -> dict[str, str]:
     }
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Elk-M1 Control."""
 
     VERSION = 1
@@ -136,7 +137,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_device: ElkSystem | None = None
         self._discovered_devices: dict[str, ElkSystem] = {}
 
-    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle discovery via dhcp."""
         self._discovered_device = ElkSystem(
             discovery_info.macaddress, discovery_info.ip, 0
@@ -146,7 +149,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle integration discovery."""
         self._discovered_device = ElkSystem(
             discovery_info["mac_address"],
@@ -158,7 +161,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return await self._async_handle_discovery()
 
-    async def _async_handle_discovery(self) -> FlowResult:
+    async def _async_handle_discovery(self) -> ConfigFlowResult:
         """Handle any discovery."""
         device = self._discovered_device
         assert device is not None
@@ -191,7 +194,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm discovery."""
         assert self._discovered_device is not None
         self.context["title_placeholders"] = _placeholders_from_device(
@@ -201,7 +204,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is not None:
             if mac := user_input[CONF_DEVICE]:
@@ -236,7 +239,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_create_or_error(
         self, user_input: dict[str, Any], importing: bool
-    ) -> tuple[dict[str, str] | None, FlowResult | None]:
+    ) -> tuple[dict[str, str] | None, ConfigFlowResult | None]:
         """Try to connect and create the entry or error."""
         if self._url_already_configured(_make_url_from_data(user_input)):
             return None, self.async_abort(reason="address_already_configured")
@@ -267,7 +270,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_discovered_connection(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle connecting the device when we have a discovery."""
         errors: dict[str, str] | None = {}
         device = self._discovered_device
@@ -299,7 +302,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_manual_connection(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle connecting the device when we need manual entry."""
         errors: dict[str, str] | None = {}
         if user_input is not None:
@@ -334,7 +337,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Handle import."""
         _LOGGER.debug("Elk is importing from yaml")
         url = _make_url_from_data(user_input)
@@ -371,5 +374,5 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return hostname_from_url(url) in existing_hosts
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""

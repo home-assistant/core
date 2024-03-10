@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from abc import abstractmethod
 import asyncio
 from collections.abc import Collection, Coroutine, Iterable
 import dataclasses
@@ -385,8 +386,8 @@ class IntentHandler:
         return f"<{self.__class__.__name__} - {self.intent_type}>"
 
 
-class ServiceIntentHandler(IntentHandler):
-    """Service Intent handler registration.
+class DynamicServiceIntentHandler(IntentHandler):
+    """Service Intent handler registration (dynamic).
 
     Service specific intent handler that calls a service by name/entity_id.
     """
@@ -404,15 +405,11 @@ class ServiceIntentHandler(IntentHandler):
     def __init__(
         self,
         intent_type: str,
-        domain: str,
-        service: str,
         speech: str | None = None,
         extra_slots: dict[str, vol.Schema] | None = None,
     ) -> None:
         """Create Service Intent Handler."""
         self.intent_type = intent_type
-        self.domain = domain
-        self.service = service
         self.speech = speech
         self.extra_slots = extra_slots
 
@@ -440,6 +437,13 @@ class ServiceIntentHandler(IntentHandler):
             },
             extra=vol.ALLOW_EXTRA,
         )
+
+    @abstractmethod
+    def get_domain_and_service(
+        self, intent_obj: Intent, state: State
+    ) -> tuple[str, str]:
+        """Get the domain and service name to call."""
+        raise NotImplementedError()
 
     async def async_handle(self, intent_obj: Intent) -> IntentResponse:
         """Handle the hass intent."""
@@ -536,7 +540,10 @@ class ServiceIntentHandler(IntentHandler):
 
         service_coros: list[Coroutine[Any, Any, None]] = []
         for state in states:
-            service_coros.append(self.async_call_service(intent_obj, state))
+            domain, service = self.get_domain_and_service(intent_obj, state)
+            service_coros.append(
+                self.async_call_service(domain, service, intent_obj, state)
+            )
 
         # Handle service calls in parallel, noting failures as they occur.
         failed_results: list[IntentResponseTarget] = []
@@ -558,7 +565,7 @@ class ServiceIntentHandler(IntentHandler):
             # If no entities succeeded, raise an error.
             failed_entity_ids = [target.id for target in failed_results]
             raise IntentHandleError(
-                f"Failed to call {self.service} for: {failed_entity_ids}"
+                f"Failed to call {service} for: {failed_entity_ids}"
             )
 
         response.async_set_results(
@@ -574,7 +581,9 @@ class ServiceIntentHandler(IntentHandler):
 
         return response
 
-    async def async_call_service(self, intent_obj: Intent, state: State) -> None:
+    async def async_call_service(
+        self, domain: str, service: str, intent_obj: Intent, state: State
+    ) -> None:
         """Call service on entity."""
         hass = intent_obj.hass
 
@@ -587,13 +596,13 @@ class ServiceIntentHandler(IntentHandler):
         await self._run_then_background(
             hass.async_create_task(
                 hass.services.async_call(
-                    self.domain,
-                    self.service,
+                    domain,
+                    service,
                     service_data,
                     context=intent_obj.context,
                     blocking=True,
                 ),
-                f"intent_call_service_{self.domain}_{self.service}",
+                f"intent_call_service_{domain}_{service}",
             )
         )
 
@@ -613,6 +622,32 @@ class ServiceIntentHandler(IntentHandler):
             task.cancel()
             await asyncio.wait({task}, timeout=5)
             raise
+
+
+class ServiceIntentHandler(DynamicServiceIntentHandler):
+    """Service Intent handler registration.
+
+    Service specific intent handler that calls a service by name/entity_id.
+    """
+
+    def __init__(
+        self,
+        intent_type: str,
+        domain: str,
+        service: str,
+        speech: str | None = None,
+        extra_slots: dict[str, vol.Schema] | None = None,
+    ) -> None:
+        """Create service handler."""
+        super().__init__(intent_type, speech=speech, extra_slots=extra_slots)
+        self.domain = domain
+        self.service = service
+
+    def get_domain_and_service(
+        self, intent_obj: Intent, state: State
+    ) -> tuple[str, str]:
+        """Get the domain and service name to call."""
+        return (self.domain, self.service)
 
 
 class IntentCategory(Enum):

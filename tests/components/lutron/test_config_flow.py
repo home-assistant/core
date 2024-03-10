@@ -1,4 +1,5 @@
 """Test the lutron config flow."""
+
 from email.message import Message
 from unittest.mock import AsyncMock, patch
 from urllib.error import HTTPError

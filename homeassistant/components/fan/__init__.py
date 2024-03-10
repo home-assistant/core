@@ -1,4 +1,5 @@
 """Provides functionality to interact with fans."""
+
 from __future__ import annotations
 
 from datetime import timedelta

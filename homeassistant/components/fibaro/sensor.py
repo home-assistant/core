@@ -1,4 +1,5 @@
 """Support for Fibaro sensors."""
+
 from __future__ import annotations
 
 from contextlib import suppress

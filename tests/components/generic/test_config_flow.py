@@ -1,4 +1,5 @@
 """Test The generic (IP Camera) config flow."""
+
 import contextlib
 import errno
 from http import HTTPStatus

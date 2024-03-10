@@ -1,4 +1,5 @@
 """Support for ZHA controls using the select platform."""
+
 from __future__ import annotations
 
 from enum import Enum

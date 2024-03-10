@@ -1,4 +1,5 @@
 """The tests for the feedreader component."""
+
 from collections.abc import Generator
 from datetime import datetime, timedelta
 import pickle
@@ -369,14 +370,14 @@ async def test_feed_updates(
         # Change time and fetch more entries
         future = dt_util.utcnow() + timedelta(hours=1, seconds=1)
         async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert len(events) == 2
 
         # Change time but no new entries
         future = dt_util.utcnow() + timedelta(hours=2, seconds=2)
         async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert len(events) == 2
 

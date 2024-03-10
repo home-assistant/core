@@ -1,4 +1,5 @@
 """The Hardkernel hardware platform."""
+
 from __future__ import annotations
 
 from homeassistant.components.hardware.models import BoardInfo, HardwareInfo

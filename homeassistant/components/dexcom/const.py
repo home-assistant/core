@@ -1,4 +1,5 @@
 """Constants for the Dexcom integration."""
+
 from homeassistant.const import Platform
 
 DOMAIN = "dexcom"
@@ -24,6 +25,3 @@ CONF_SERVER = "server"
 
 SERVER_OUS = "EU"
 SERVER_US = "US"
-
-COORDINATOR = "coordinator"
-UNDO_UPDATE_LISTENER = "undo_update_listener"

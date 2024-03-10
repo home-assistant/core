@@ -1,4 +1,5 @@
 """The tests for Humidifier device actions."""
+
 import pytest
 from pytest_unordered import unordered
 import voluptuous_serialize

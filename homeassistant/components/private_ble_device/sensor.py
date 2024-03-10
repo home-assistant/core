@@ -1,4 +1,5 @@
 """Support for iBeacon device sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -65,7 +66,6 @@ SENSOR_DESCRIPTIONS = (
     PrivateDeviceSensorEntityDescription(
         key="estimated_distance",
         translation_key="estimated_distance",
-        icon="mdi:signal-distance-variant",
         native_unit_of_measurement=UnitOfLength.METERS,
         value_fn=lambda _, service_info: service_info.advertisement
         and service_info.advertisement.tx_power
@@ -79,7 +79,6 @@ SENSOR_DESCRIPTIONS = (
     PrivateDeviceSensorEntityDescription(
         key="estimated_broadcast_interval",
         translation_key="estimated_broadcast_interval",
-        icon="mdi:timer-sync-outline",
         native_unit_of_measurement=UnitOfTime.SECONDS,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,

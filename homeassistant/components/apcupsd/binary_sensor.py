@@ -1,4 +1,5 @@
 """Support for tracking the online status of a UPS."""
+
 from __future__ import annotations
 
 import logging
@@ -13,7 +14,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN, APCUPSdCoordinator
+from .const import DOMAIN
+from .coordinator import APCUPSdCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 _DESCRIPTION = BinarySensorEntityDescription(
@@ -53,7 +55,7 @@ class OnlineStatus(CoordinatorEntity[APCUPSdCoordinator], BinarySensorEntity):
         super().__init__(coordinator, context=description.key.upper())
 
         # Set up unique id and device info if serial number is available.
-        if (serial_no := coordinator.ups_serial_no) is not None:
+        if (serial_no := coordinator.data.serial_no) is not None:
             self._attr_unique_id = f"{serial_no}_{description.key}"
         self.entity_description = description
         self._attr_device_info = coordinator.device_info

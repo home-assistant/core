@@ -1,4 +1,5 @@
 """Data update coordinator for trigger based template entities."""
+
 from collections.abc import Callable
 import logging
 

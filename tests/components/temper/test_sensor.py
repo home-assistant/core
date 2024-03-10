@@ -1,4 +1,5 @@
 """The tests for the temper (USB temperature sensor) component."""
+
 from datetime import timedelta
 from unittest.mock import Mock, patch
 

@@ -1,4 +1,5 @@
 """Fixtures for component testing."""
+
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock, patch

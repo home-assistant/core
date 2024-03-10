@@ -1,4 +1,5 @@
 """The tests for the microsoft face platform."""
+
 from unittest.mock import patch
 
 import pytest

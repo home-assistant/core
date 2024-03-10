@@ -1,4 +1,5 @@
 """Test different accessory types: Thermostats."""
+
 from unittest.mock import patch
 
 from pyhap.characteristic import Characteristic
