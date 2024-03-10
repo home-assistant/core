@@ -45,7 +45,7 @@ def log_ha_config(conf):
     """Log the returned config."""
     _LOGGER.debug("CONFIG - %s lines - %s errors", len(conf), len(conf.errors))
     for cnt, (key, val) in enumerate(conf.items()):
-        _LOGGER.debug("#%s - %s: %s", cnt, key, val)
+        _LOGGER.debug("#%s - %s: %s", cnt + 1, key, val)
     for cnt, err in enumerate(conf.errors):
         _LOGGER.debug("error[%s] = %s", cnt, err)
 
