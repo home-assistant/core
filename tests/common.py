@@ -1031,8 +1031,7 @@ def patch_yaml_files(files_dict, endswith=True):
         # Fallback for hass.components (i.e. services.yaml)
         if "homeassistant/components" in fname:
             _LOGGER.debug("patch_yaml_files using real file: %s", fname)
-            with open(fname, encoding="utf-8") as file:
-                return file
+            return open(fname, encoding="utf-8")
 
         # Not found
         raise FileNotFoundError(f"File not found: {fname}")

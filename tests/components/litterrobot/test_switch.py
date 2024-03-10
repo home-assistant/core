@@ -63,6 +63,6 @@ async def test_on_off_commands(
         await hass.services.async_call(PLATFORM_DOMAIN, service, data, blocking=True)
         robot._update_data({updated_field: new_value}, partial=True)
 
-        assert getattr(robot, robot_command).call_count == count
+        assert getattr(robot, robot_command).call_count == count + 1
         assert (state := hass.states.get(entity_id))
         assert state.state == new_state

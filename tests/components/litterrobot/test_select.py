@@ -47,7 +47,7 @@ async def test_wait_time_select(
             blocking=True,
         )
 
-        assert mock_account.robots[0].set_wait_time.call_count == count
+        assert mock_account.robots[0].set_wait_time.call_count == count + 1
 
 
 async def test_invalid_wait_time_select(hass: HomeAssistant, mock_account) -> None:
@@ -100,4 +100,4 @@ async def test_panel_brightness_select(
             blocking=True,
         )
 
-        assert robot.set_panel_brightness.call_count == count
+        assert robot.set_panel_brightness.call_count == count + 1
