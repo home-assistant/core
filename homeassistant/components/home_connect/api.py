@@ -33,6 +33,7 @@ from .const import (
     BSH_OPERATION_STATE,
     BSH_POWER_OFF,
     BSH_POWER_STANDBY,
+    SETTINGS_NAMES,
     SIGNAL_UPDATE_ENTITIES,
 )
 
@@ -110,6 +111,9 @@ class HomeConnectDevice:
     # for some devices, this is instead BSH_POWER_STANDBY
     # see https://developer.home-connect.com/docs/settings/power_state
     power_off_state = BSH_POWER_OFF
+    # Only some devices can be powered off
+    # see https://api-docs.home-connect.com/settings/#power-state
+    can_power_off = True
 
     def __init__(self, hass, appliance):
         """Initialize the device class."""
@@ -189,6 +193,35 @@ class DeviceWithPrograms(HomeConnectDevice):
         ]
 
 
+class DeviceWithSettings(HomeConnectDevice):
+    """Device with settings."""
+
+    def get_settings_available(self):
+        """Get the available settings."""
+        try:
+            settings_available = self.appliance.get_settings()
+        except (HomeConnectError, ValueError):
+            _LOGGER.debug("Unable to fetch available settings. Probably offline")
+            settings_available = []
+        return settings_available
+
+    def get_setting_switches(self):
+        """Get a dictionary with info about settings switches.
+
+        There will be one switch for each boolean switch.
+        """
+        settings = self.get_settings_available()
+        return [
+            {
+                ATTR_DEVICE: self,
+                ATTR_DESC: SETTINGS_NAMES.get(s, None),
+                "setting_name": s,
+            }
+            for s in settings
+            if "value" in settings[s] and isinstance(settings[s]["value"], bool)
+        ]
+
+
 class DeviceWithOpState(HomeConnectDevice):
     """Device that has an operation state sensor."""
 
@@ -217,6 +250,32 @@ class DeviceWithDoor(HomeConnectDevice):
             ATTR_DEVICE: self,
             ATTR_DESC: "Door",
             ATTR_SENSOR_TYPE: "door",
+            ATTR_DEVICE_CLASS: "door",
+        }
+
+
+class DeviceWithFreezerDoor(HomeConnectDevice):
+    """Device that has a fridge door sensor."""
+
+    def get_freezer_door_entity(self):
+        """Get a dictionary with info about the door binary sensor."""
+        return {
+            ATTR_DEVICE: self,
+            ATTR_DESC: "Freezer Door",
+            ATTR_SENSOR_TYPE: "freezer_door",
+            ATTR_DEVICE_CLASS: "door",
+        }
+
+
+class DeviceWithRefrigeratorDoor(HomeConnectDevice):
+    """Device that has a refrigerator door sensor."""
+
+    def get_refrigerator_door_entity(self):
+        """Get a dictionary with info about the door binary sensor."""
+        return {
+            ATTR_DEVICE: self,
+            ATTR_DESC: "Refrigerator Door",
+            ATTR_SENSOR_TYPE: "refrigerator_door",
             ATTR_DEVICE_CLASS: "door",
         }
 
@@ -269,6 +328,8 @@ class Dryer(
     DeviceWithRemoteStart,
 ):
     """Dryer class."""
+
+    can_power_off = False
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
@@ -345,6 +406,8 @@ class Washer(
 ):
     """Washer class."""
 
+    can_power_off = False
+
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
         door_entity = self.get_door_entity()
@@ -368,6 +431,8 @@ class WasherDryer(
     DeviceWithRemoteStart,
 ):
     """WasherDryer class."""
+
+    can_power_off = False
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
@@ -429,31 +494,60 @@ class Hood(
         }
 
 
-class FridgeFreezer(DeviceWithDoor):
+class FridgeFreezer(
+    DeviceWithSettings,
+    DeviceWithDoor,
+    DeviceWithFreezerDoor,
+    DeviceWithRefrigeratorDoor,
+):
     """Fridge/Freezer class."""
 
+    can_power_off = False
+
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
         door_entity = self.get_door_entity()
-        return {"binary_sensor": [door_entity]}
+        freezer_door_entity = self.get_freezer_door_entity()
+        refrigerator_door_entity = self.get_refrigerator_door_entity()
+        setting_switches = self.get_setting_switches()
+        return {
+            "binary_sensor": [
+                door_entity,
+                freezer_door_entity,
+                refrigerator_door_entity,
+            ],
+            "switch": setting_switches,
+        }
 
 
-class Refrigerator(DeviceWithDoor):
+class Refrigerator(DeviceWithSettings, DeviceWithDoor):
     """Refrigerator class."""
 
+    can_power_off = False
+
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
         door_entity = self.get_door_entity()
-        return {"binary_sensor": [door_entity]}
+        setting_switches = self.get_setting_switches()
+        return {
+            "binary_sensor": [door_entity],
+            "switch": setting_switches,
+        }
 
 
-class Freezer(DeviceWithDoor):
+class Freezer(DeviceWithSettings, DeviceWithDoor):
     """Freezer class."""
 
+    can_power_off = False
+
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
         door_entity = self.get_door_entity()
-        return {"binary_sensor": [door_entity]}
+        setting_switches = self.get_setting_switches()
+        return {
+            "binary_sensor": [door_entity],
+            "switch": setting_switches,
+        }
 
 
 class Hob(DeviceWithOpState, DeviceWithPrograms, DeviceWithRemoteControl):
