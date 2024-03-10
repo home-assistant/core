@@ -103,7 +103,7 @@ class AugustCamera(AugustEntityMixin, Camera):
                 )
             except ContentTokenExpired:
                 if self._data.brand == Brand.YALE_HOME:
-                    _LOGGER.warning(
+                    _LOGGER.debug(
                         "Error fetching camera image, updating content-token from api to retry"
                     )
                     await self._async_update()
