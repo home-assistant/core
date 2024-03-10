@@ -118,7 +118,6 @@ class EsphomeMediaPlayer(
             media_url=media_id,
         )
 
-    @convert_api_error_ha_error
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,
