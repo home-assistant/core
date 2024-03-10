@@ -134,7 +134,7 @@ async def test_setup_component_test_entities(
     """Set up component."""
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups"),
-        text=load_fixture("microsoft_face/persongroups.json"),
+        text=load_fixture("persongroups.json", "microsoft_face"),
     )
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups/test_group1/persons"),
