@@ -48,13 +48,13 @@
       }
     },
     "binary_sensor": {
-      "dustbin": {
+      "dustbin_present": {
         "name": "Dustbin present"
       },
-      "dock": {
+      "docked": {
         "name": "Robot docked"
       },
-      "water_tank": {
+      "water_tank_present": {
         "name": "Watertank present"
       },
       "water_tank_empty": {
