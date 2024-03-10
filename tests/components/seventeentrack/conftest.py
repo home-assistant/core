@@ -106,8 +106,7 @@ def mock_config_entry_with_default_options() -> MockConfigEntry:
 @pytest.fixture
 def mock_seventeentrack():
     """Build a fixture for the 17Track API."""
-    mock_seventeentrack_profile = AsyncMock(account_id=ACCOUNT_ID)
-    mock_seventeentrack_api = AsyncMock(profile=mock_seventeentrack_profile)
+    mock_seventeentrack_api = AsyncMock()
     with (
         patch(
             "homeassistant.components.seventeentrack.SeventeenTrackClient",
@@ -118,6 +117,7 @@ def mock_seventeentrack():
             return_value=mock_seventeentrack_api,
         ) as mock_seventeentrack_api,
     ):
+        mock_seventeentrack_api.return_value.profile.account_id = ACCOUNT_ID
         mock_seventeentrack_api.return_value.profile.login.return_value = True
         mock_seventeentrack_api.return_value.profile.packages.return_value = []
         mock_seventeentrack_api.return_value.profile.summary.return_value = (
