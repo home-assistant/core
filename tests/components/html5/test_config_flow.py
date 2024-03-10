@@ -41,7 +41,8 @@ async def test_step_user_success(hass: HomeAssistant) -> None:
             ATTR_VAPID_EMAIL: MOCK_CONF[ATTR_VAPID_EMAIL],
         }
 
-        assert len(mock_setup_entry.mock_calls) == 1
+        assert mock_setup_entry.call_count == 1
+        assert mock_create_issue.call_count == 0
 
 
 @pytest.mark.parametrize(
@@ -70,8 +71,8 @@ async def test_step_user_form(hass: HomeAssistant, key: str, value: str) -> None
         await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert len(mock_setup_entry.mock_calls) == 0
-        assert len(mock_create_issue.mock_calls) == 0
+        assert mock_setup_entry.call_count == 0
+        assert mock_create_issue.mock_calls == 0
 
 
 async def test_step_import_good(hass: HomeAssistant) -> None:
@@ -100,8 +101,8 @@ async def test_step_import_good(hass: HomeAssistant) -> None:
             ATTR_VAPID_EMAIL: conf[ATTR_VAPID_EMAIL],
         }
 
-        assert len(mock_setup_entry.mock_calls) == 1
-        assert len(mock_create_issue.mock_calls) == 1
+        assert mock_setup_entry.call_count == 1
+        assert mock_create_issue.call_count == 1
         assert mock_create_issue.call_args_list[0].args[1] is True
 
 
@@ -131,6 +132,6 @@ async def test_step_import_bad(hass: HomeAssistant, key: str, value: str) -> Non
         await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.FlowResultType.ABORT
-        assert len(mock_setup_entry.mock_calls) == 0
-        assert len(mock_create_issue.mock_calls) == 1
+        assert mock_setup_entry.call_count == 0
+        assert mock_create_issue.call_count == 1
         assert mock_create_issue.call_args_list[0].args[1] is False
