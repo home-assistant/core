@@ -632,6 +632,7 @@ select = [
     "SIM105", # Use contextlib.suppress({exception}) instead of try-except-pass
     "SIM107", # Don't use return in try-except and finally
     "SIM109", # Use {replacement} instead of multiple equality comparisons
+    "SIM110", # Use {replacement} instead of for loop
     "SIM114", # Combine if branches using logical or operator
     "SIM117", # Merge with-statements that use the same scope
     "SIM118", # Use {key} in {dict} instead of {key} in {dict}.keys()
