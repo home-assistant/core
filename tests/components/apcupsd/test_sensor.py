@@ -124,8 +124,8 @@ async def test_sensor_disabled(
 ) -> None:
     """Test sensor disabled by default."""
     await async_init_integration(hass)
-    device_slug, serialno = slugify(MOCK_STATUS["UPSNAME"]), MOCK_STATUS["SERIALNO"]
 
+    device_slug, serialno = slugify(MOCK_STATUS["UPSNAME"]), MOCK_STATUS["SERIALNO"]
     # Test a representative integration-disabled sensor.
     entry = entity_registry.async_get(f"sensor.{device_slug}_model")
     assert entry.disabled
@@ -144,8 +144,8 @@ async def test_sensor_disabled(
 async def test_state_update(hass: HomeAssistant) -> None:
     """Ensure the sensor state changes after updating the data."""
     await async_init_integration(hass)
-    device_slug = slugify(MOCK_STATUS["UPSNAME"])
 
+    device_slug = slugify(MOCK_STATUS["UPSNAME"])
     state = hass.states.get(f"sensor.{device_slug}_load")
     assert state
     assert state.state != STATE_UNAVAILABLE
@@ -166,8 +166,8 @@ async def test_state_update(hass: HomeAssistant) -> None:
 async def test_manual_update_entity(hass: HomeAssistant) -> None:
     """Test manual update entity via service homeassistant/update_entity."""
     await async_init_integration(hass)
-    device_slug = slugify(MOCK_STATUS["UPSNAME"])
 
+    device_slug = slugify(MOCK_STATUS["UPSNAME"])
     # Assert the initial state of sensor.ups_load.
     state = hass.states.get(f"sensor.{device_slug}_load")
     assert state
@@ -214,8 +214,8 @@ async def test_multiple_manual_update_entity(hass: HomeAssistant) -> None:
     We should only do network call once for the multiple simultaneous update entity services.
     """
     await async_init_integration(hass)
-    device_slug = slugify(MOCK_STATUS["UPSNAME"])
 
+    device_slug = slugify(MOCK_STATUS["UPSNAME"])
     # Setup HASS for calling the update_entity service.
     await async_setup_component(hass, "homeassistant", {})
 
