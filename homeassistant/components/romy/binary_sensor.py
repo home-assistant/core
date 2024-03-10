@@ -75,7 +75,6 @@ class RomyBinarySensor(CoordinatorEntity[RomyVacuumCoordinator], BinarySensorEnt
         entity_description: RomyBinarySensorEntityDescription,
     ) -> None:
         """Initialize ROMYs StatusSensor."""
-        self._sensor_value: bool | None = None
         super().__init__(coordinator)
         self.romy = romy
         self._attr_unique_id = self.romy.unique_id
