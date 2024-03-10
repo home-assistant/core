@@ -43,7 +43,6 @@ from homeassistant.helpers.event import (
     EventStateChangedData,
     async_track_state_added_domain,
 )
-from homeassistant.helpers.typing import EventType
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
@@ -115,7 +114,7 @@ def async_setup(hass: core.HomeAssistant) -> None:
         async_should_expose(hass, DOMAIN, entity_id)
 
     @core.callback
-    def async_entity_state_listener(event: EventType[EventStateChangedData]) -> None:
+    def async_entity_state_listener(event: core.Event[EventStateChangedData]) -> None:
         """Set expose flag on new entities."""
         async_should_expose(hass, DOMAIN, event.data["entity_id"])
 
@@ -162,17 +161,17 @@ class DefaultAgent(AbstractConversationAgent):
 
         self.hass.bus.async_listen(
             ar.EVENT_AREA_REGISTRY_UPDATED,
-            self._async_handle_area_registry_changed,  # type: ignore[arg-type]
+            self._async_handle_area_registry_changed,
             run_immediately=True,
         )
         self.hass.bus.async_listen(
             er.EVENT_ENTITY_REGISTRY_UPDATED,
-            self._async_handle_entity_registry_changed,  # type: ignore[arg-type]
+            self._async_handle_entity_registry_changed,
             run_immediately=True,
         )
         self.hass.bus.async_listen(
             EVENT_STATE_CHANGED,
-            self._async_handle_state_changed,  # type: ignore[arg-type]
+            self._async_handle_state_changed,
             run_immediately=True,
         )
         async_listen_entity_updates(
@@ -696,14 +695,14 @@ class DefaultAgent(AbstractConversationAgent):
 
     @core.callback
     def _async_handle_area_registry_changed(
-        self, event: EventType[ar.EventAreaRegistryUpdatedData]
+        self, event: core.Event[ar.EventAreaRegistryUpdatedData]
     ) -> None:
         """Clear area area cache when the area registry has changed."""
         self._slot_lists = None
 
     @core.callback
     def _async_handle_entity_registry_changed(
-        self, event: EventType[er.EventEntityRegistryUpdatedData]
+        self, event: core.Event[er.EventEntityRegistryUpdatedData]
     ) -> None:
         """Clear names list cache when an entity registry entry has changed."""
         if event.data["action"] != "update" or not any(
@@ -714,7 +713,7 @@ class DefaultAgent(AbstractConversationAgent):
 
     @core.callback
     def _async_handle_state_changed(
-        self, event: EventType[EventStateChangedData]
+        self, event: core.Event[EventStateChangedData]
     ) -> None:
         """Clear names list cache when a state is added or removed from the state machine."""
         if event.data["old_state"] and event.data["new_state"]:

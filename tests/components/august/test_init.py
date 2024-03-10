@@ -1,4 +1,5 @@
 """The tests for the august platform."""
+
 from unittest.mock import Mock, patch
 
 from aiohttp import ClientResponseError

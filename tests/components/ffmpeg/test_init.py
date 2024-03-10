@@ -1,4 +1,5 @@
 """The tests for Home Assistant ffmpeg."""
+
 from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
 
 from homeassistant.components import ffmpeg

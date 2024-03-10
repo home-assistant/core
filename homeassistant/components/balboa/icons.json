@@ -19,6 +19,14 @@
           "on": "mdi:pump"
         }
       }
+    },
+    "fan": {
+      "pump": {
+        "default": "mdi:pump",
+        "state": {
+          "off": "mdi:pump-off"
+        }
+      }
     }
   }
 }

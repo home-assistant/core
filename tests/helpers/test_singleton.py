@@ -1,4 +1,5 @@
 """Test singleton helper."""
+
 from unittest.mock import Mock
 
 import pytest

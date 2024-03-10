@@ -1,4 +1,5 @@
 """Switches on Zigbee Home Automation networks."""
+
 from __future__ import annotations
 
 import functools
@@ -6,6 +7,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Self
 
 from zhaquirks.quirk_ids import TUYA_PLUG_ONOFF
+from zigpy.quirks.v2 import EntityMetadata, SwitchMetadata
 from zigpy.zcl.clusters.closures import ConfigStatus, WindowCovering, WindowCoveringMode
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.foundation import Status
@@ -23,6 +25,7 @@ from .core.const import (
     CLUSTER_HANDLER_COVER,
     CLUSTER_HANDLER_INOVELLI,
     CLUSTER_HANDLER_ON_OFF,
+    QUIRK_METADATA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
@@ -173,6 +176,8 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
     _attribute_name: str
     _inverter_attribute_name: str | None = None
     _force_inverted: bool = False
+    _off_value: int = 0
+    _on_value: int = 1
 
     @classmethod
     def create_entity(
@@ -187,7 +192,7 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
         Return entity if it is a supported configuration, otherwise return None
         """
         cluster_handler = cluster_handlers[0]
-        if (
+        if QUIRK_METADATA not in kwargs and (
             cls._attribute_name in cluster_handler.cluster.unsupported_attributes
             or cls._attribute_name not in cluster_handler.cluster.attributes_by_name
             or cluster_handler.cluster.get(cls._attribute_name) is None
@@ -210,7 +215,21 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
     ) -> None:
         """Init this number configuration entity."""
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
+        if QUIRK_METADATA in kwargs:
+            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA])
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
+
+    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
+        """Init this entity from the quirks metadata."""
+        super()._init_from_quirks_metadata(entity_metadata)
+        switch_metadata: SwitchMetadata = entity_metadata.entity_metadata
+        self._attribute_name = switch_metadata.attribute_name
+        if switch_metadata.invert_attribute_name:
+            self._inverter_attribute_name = switch_metadata.invert_attribute_name
+        if switch_metadata.force_inverted:
+            self._force_inverted = switch_metadata.force_inverted
+        self._off_value = switch_metadata.off_value
+        self._on_value = switch_metadata.on_value
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
@@ -236,14 +255,25 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return if the switch is on based on the statemachine."""
-        val = bool(self._cluster_handler.cluster.get(self._attribute_name))
+        if self._on_value != 1:
+            val = self._cluster_handler.cluster.get(self._attribute_name)
+            val = val == self._on_value
+        else:
+            val = bool(self._cluster_handler.cluster.get(self._attribute_name))
         return (not val) if self.inverted else val
 
     async def async_turn_on_off(self, state: bool) -> None:
         """Turn the entity on or off."""
-        await self._cluster_handler.write_attributes_safe(
-            {self._attribute_name: not state if self.inverted else state}
-        )
+        if self.inverted:
+            state = not state
+        if state:
+            await self._cluster_handler.write_attributes_safe(
+                {self._attribute_name: self._on_value}
+            )
+        else:
+            await self._cluster_handler.write_attributes_safe(
+                {self._attribute_name: self._off_value}
+            )
         self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:

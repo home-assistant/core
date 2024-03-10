@@ -1,4 +1,5 @@
 """Support for media browsing."""
+
 import logging
 
 from afsapi import AFSAPI, FSApiException, OutOfRangeException, Preset

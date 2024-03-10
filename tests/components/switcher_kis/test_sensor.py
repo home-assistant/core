@@ -1,4 +1,5 @@
 """Test the Switcher Sensor Platform."""
+
 import pytest
 
 from homeassistant.components.switcher_kis.const import DATA_DEVICE, DOMAIN

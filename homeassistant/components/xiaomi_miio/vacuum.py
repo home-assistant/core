@@ -1,4 +1,5 @@
 """Support for the Xiaomi vacuum cleaner robot."""
+
 from __future__ import annotations
 
 from functools import partial

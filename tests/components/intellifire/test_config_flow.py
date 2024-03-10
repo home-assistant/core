@@ -1,4 +1,5 @@
 """Test the IntelliFire config flow."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from intellifire4py.exceptions import LoginException

@@ -1,4 +1,5 @@
 """Tests for the SolarEdge coordinator services."""
+
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory

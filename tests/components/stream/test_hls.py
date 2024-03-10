@@ -1,4 +1,5 @@
 """The tests for hls streams."""
+
 from datetime import timedelta
 from http import HTTPStatus
 import logging

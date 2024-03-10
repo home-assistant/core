@@ -1,4 +1,5 @@
 """Support for APCUPSd sensors."""
+
 from __future__ import annotations
 
 import logging
@@ -24,7 +25,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN, APCUPSdCoordinator
+from .const import DOMAIN
+from .coordinator import APCUPSdCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -493,7 +495,7 @@ class APCUPSdSensor(CoordinatorEntity[APCUPSdCoordinator], SensorEntity):
         super().__init__(coordinator=coordinator, context=description.key.upper())
 
         # Set up unique id and device info if serial number is available.
-        if (serial_no := coordinator.ups_serial_no) is not None:
+        if (serial_no := coordinator.data.serial_no) is not None:
             self._attr_unique_id = f"{serial_no}_{description.key}"
 
         self.entity_description = description

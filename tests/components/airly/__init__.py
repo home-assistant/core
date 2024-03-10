@@ -1,4 +1,5 @@
 """Tests for Airly."""
+
 from homeassistant.components.airly.const import DOMAIN
 
 from tests.common import MockConfigEntry, load_fixture

@@ -1,4 +1,5 @@
 """Support for MQTT discovery."""
+
 from __future__ import annotations
 
 import asyncio
@@ -39,7 +40,7 @@ from .const import (
     DOMAIN,
 )
 from .models import MqttOriginInfo, ReceiveMessage
-from .util import get_mqtt_data
+from .util import async_forward_entry_setup_and_setup_discovery, get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,6 +81,7 @@ SUPPORTED_COMPONENTS = {
 
 MQTT_DISCOVERY_UPDATED = "mqtt_discovery_updated_{}"
 MQTT_DISCOVERY_NEW = "mqtt_discovery_new_{}_{}"
+MQTT_DISCOVERY_NEW_COMPONENT = "mqtt_discovery_new_component"
 MQTT_DISCOVERY_DONE = "mqtt_discovery_done_{}"
 
 TOPIC_BASE = "~"
@@ -140,7 +142,33 @@ async def async_start(  # noqa: C901
 ) -> None:
     """Start MQTT Discovery."""
     mqtt_data = get_mqtt_data(hass)
-    mqtt_integrations = {}
+    platform_setup_lock: dict[str, asyncio.Lock] = {}
+
+    async def _async_jit_component_setup(
+        discovery_payload: MQTTDiscoveryPayload,
+    ) -> None:
+        """Perform just in time components set up."""
+        discovery_hash = discovery_payload.discovery_data[ATTR_DISCOVERY_HASH]
+        component, discovery_id = discovery_hash
+        platform_setup_lock.setdefault(component, asyncio.Lock())
+        async with platform_setup_lock[component]:
+            if component not in mqtt_data.platforms_loaded:
+                await async_forward_entry_setup_and_setup_discovery(
+                    hass, config_entry, {component}
+                )
+        # Add component
+        message = f"Found new component: {component} {discovery_id}"
+        async_log_discovery_origin_info(message, discovery_payload)
+        mqtt_data.discovery_already_discovered.add(discovery_hash)
+        async_dispatcher_send(
+            hass, MQTT_DISCOVERY_NEW.format(component, "mqtt"), discovery_payload
+        )
+
+    mqtt_data.reload_dispatchers.append(
+        async_dispatcher_connect(
+            hass, MQTT_DISCOVERY_NEW_COMPONENT, _async_jit_component_setup
+        )
+    )
 
     @callback
     def async_discovery_message_received(msg: ReceiveMessage) -> None:  # noqa: C901
@@ -303,7 +331,10 @@ async def async_start(  # noqa: C901
                 "pending": deque([]),
             }
 
-        if already_discovered:
+        if component not in mqtt_data.platforms_loaded and payload:
+            # Load component first
+            async_dispatcher_send(hass, MQTT_DISCOVERY_NEW_COMPONENT, payload)
+        elif already_discovered:
             # Dispatch update
             message = f"Component has already been discovered: {component} {discovery_id}, sending update"
             async_log_discovery_origin_info(message, payload)

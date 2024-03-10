@@ -1,4 +1,5 @@
 """The tests for Alarm control panel device triggers."""
+
 from datetime import timedelta
 
 import pytest

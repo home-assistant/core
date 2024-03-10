@@ -1,4 +1,5 @@
 """Platform for cover integration."""
+
 from typing import Any
 
 from boschshcpy import SHCSession, SHCShutterControl

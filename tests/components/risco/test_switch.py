@@ -1,4 +1,5 @@
 """Tests for the Risco binary sensors."""
+
 from unittest.mock import PropertyMock, patch
 
 import pytest

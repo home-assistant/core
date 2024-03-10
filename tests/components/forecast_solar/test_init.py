@@ -1,4 +1,5 @@
 """Tests for the Forecast.Solar integration."""
+
 from unittest.mock import MagicMock, patch
 
 from forecast_solar import ForecastSolarConnectionError

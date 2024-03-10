@@ -1,4 +1,5 @@
 """Config flow for Ukraine Alarm."""
+
 from __future__ import annotations
 
 import logging
@@ -7,7 +8,7 @@ import aiohttp
 from uasiren.client import Client
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_NAME, CONF_REGION
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -16,7 +17,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class UkraineAlarmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class UkraineAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for Ukraine Alarm."""
 
     VERSION = 1

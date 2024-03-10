@@ -1,4 +1,5 @@
 """Support for a ScreenLogic heating device."""
+
 from dataclasses import dataclass
 import logging
 from typing import Any

@@ -1,4 +1,5 @@
 """Weather component that handles meteorological data for your location."""
+
 from __future__ import annotations
 
 import abc

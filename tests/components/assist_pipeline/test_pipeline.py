@@ -1,4 +1,5 @@
 """Websocket tests for Voice Assistant integration."""
+
 from collections.abc import AsyncGenerator
 from typing import Any
 from unittest.mock import ANY, patch

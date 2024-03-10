@@ -1,4 +1,5 @@
 """Helper to help store data."""
+
 from __future__ import annotations
 
 import asyncio
@@ -21,7 +22,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.loader import MAX_LOAD_CONCURRENTLY, bind_hass
+from homeassistant.loader import bind_hass
 from homeassistant.util import json as json_util
 import homeassistant.util.dt as dt_util
 from homeassistant.util.file import WriteError
@@ -36,6 +37,7 @@ else:
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-warn-return-any
 # mypy: no-check-untyped-defs
+MAX_LOAD_CONCURRENTLY = 6
 
 STORAGE_DIR = ".storage"
 _LOGGER = logging.getLogger(__name__)

@@ -1,4 +1,5 @@
 """Binary sensor platform integration for Numato USB GPIO expanders."""
+
 from __future__ import annotations
 
 from functools import partial

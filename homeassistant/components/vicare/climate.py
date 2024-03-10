@@ -1,4 +1,5 @@
 """Viessmann ViCare climate device."""
+
 from __future__ import annotations
 
 from contextlib import suppress
@@ -205,7 +206,8 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
                     "heating_curve_shift"
                 ] = self._circuit.getHeatingCurveShift()
 
-            self._attributes["vicare_modes"] = self._circuit.getModes()
+            with suppress(PyViCareNotSupportedFeatureError):
+                self._attributes["vicare_modes"] = self._circuit.getModes()
 
             self._current_action = False
             # Update the specific device attributes

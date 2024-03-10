@@ -1,4 +1,5 @@
 """The tests for Media Extractor integration."""
+
 import os
 import os.path
 from typing import Any

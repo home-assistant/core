@@ -1,4 +1,5 @@
 """Helpers for components that manage entities."""
+
 from __future__ import annotations
 
 import asyncio
@@ -22,6 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     Event,
     HassJob,
+    HassJobType,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -147,6 +149,7 @@ class EntityComponent(Generic[_EntityT]):
                 self.hass.async_create_task(
                     self.async_setup_platform(p_type, p_config),
                     f"EntityComponent setup platform {p_type} {self.domain}",
+                    eager_start=True,
                 )
 
         # Generic discovery listener for loading platform dynamically
@@ -277,6 +280,7 @@ class EntityComponent(Generic[_EntityT]):
             ),
             schema,
             supports_response,
+            job_type=HassJobType.Coroutinefunction,
         )
 
     async def async_setup_platform(

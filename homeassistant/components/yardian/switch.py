@@ -1,4 +1,5 @@
 """Support for Yardian integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -47,8 +48,8 @@ async def async_setup_entry(
 class YardianSwitch(CoordinatorEntity[YardianUpdateCoordinator], SwitchEntity):
     """Representation of a Yardian switch."""
 
-    _attr_icon = "mdi:water"
     _attr_has_entity_name = True
+    _attr_translation_key = "switch"
 
     def __init__(self, coordinator: YardianUpdateCoordinator, zone_id) -> None:
         """Initialize a Yardian Switch Device."""

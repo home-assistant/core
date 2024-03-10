@@ -1,4 +1,5 @@
 """Interfaces with the myLeviton API for Decora Smart WiFi products."""
+
 from __future__ import annotations
 
 import logging

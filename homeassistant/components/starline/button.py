@@ -1,4 +1,5 @@
 """Support for StarLine button."""
+
 from __future__ import annotations
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
@@ -14,7 +15,6 @@ BUTTON_TYPES: tuple[ButtonEntityDescription, ...] = (
     ButtonEntityDescription(
         key="poke",
         translation_key="horn",
-        icon="mdi:bullhorn-outline",
     ),
 )
 

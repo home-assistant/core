@@ -1,4 +1,5 @@
 """Binary sensor for Shelly."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -205,6 +206,14 @@ RPC_SENSORS: Final = {
         sub_key="alarm",
         name="Smoke",
         device_class=BinarySensorDeviceClass.SMOKE,
+    ),
+    "restart": RpcBinarySensorDescription(
+        key="sys",
+        sub_key="restart_required",
+        name="Restart required",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
 

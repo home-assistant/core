@@ -1,4 +1,5 @@
 """The tests for Device tracker device conditions."""
+
 import pytest
 from pytest_unordered import unordered
 
