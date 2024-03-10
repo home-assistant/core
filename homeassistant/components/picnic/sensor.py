@@ -80,7 +80,6 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
         key=SENSOR_SELECTED_SLOT_START,
         translation_key=SENSOR_SELECTED_SLOT_START,
         device_class=SensorDeviceClass.TIMESTAMP,
-        icon="mdi:calendar-start",
         entity_registry_enabled_default=True,
         data_type="slot_data",
         value_fn=lambda slot: dt_util.parse_datetime(str(slot.get("window_start"))),
