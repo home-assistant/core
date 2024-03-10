@@ -841,7 +841,7 @@ class HomeAssistant:
         # https://github.com/home-assistant/core/pull/71960
         if TYPE_CHECKING:
             target = cast(Callable[..., Coroutine[Any, Any, _R] | _R], target)
-        return self.async_run_hass_job(HassJob(target), *args)
+        return self.async_run_hass_job(HassJob(target), *args, eager_start=True)
 
     def block_till_done(self) -> None:
         """Block until all pending work is done."""
