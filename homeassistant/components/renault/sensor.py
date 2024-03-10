@@ -51,7 +51,6 @@ class RenaultSensorEntityDescription(
 
     data_key: str
     entity_class: type[RenaultSensor[T]]
-
     condition_lambda: Callable[[RenaultVehicleProxy], bool] | None = None
     requires_fuel: bool = False
     value_lambda: Callable[[RenaultSensor[T]], StateType | datetime] | None = None
