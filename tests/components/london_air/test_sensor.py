@@ -18,7 +18,7 @@ async def test_valid_state(
 ) -> None:
     """Test for operational london_air sensor with proper attributes."""
     requests_mock.get(
-        URL, text=load_fixture("london_air.json"), status_code=HTTPStatus.OK
+        URL, text=load_fixture("london_air/london_air.json"), status_code=HTTPStatus.OK
     )
     assert await async_setup_component(hass, "sensor", VALID_CONFIG)
     await hass.async_block_till_done()
