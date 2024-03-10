@@ -99,15 +99,15 @@ async def test_ms_identify_process_image(
     """Set up and scan a picture and test plates from event."""
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups"),
-        text=load_fixture("microsoft_face_persongroups.json"),
+        text=load_fixture("microsoft_face_identify/persongroups.json"),
     )
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups/test_group1/persons"),
-        text=load_fixture("microsoft_face_persons.json"),
+        text=load_fixture("microsoft_face_identify/persons.json"),
     )
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups/test_group2/persons"),
-        text=load_fixture("microsoft_face_persons.json"),
+        text=load_fixture("microsoft_face_identify/persons.json"),
     )
 
     await async_setup_component(hass, ip.DOMAIN, CONFIG)
@@ -129,11 +129,11 @@ async def test_ms_identify_process_image(
 
     aioclient_mock.post(
         ENDPOINT_URL.format("detect"),
-        text=load_fixture("microsoft_face_detect.json"),
+        text=load_fixture("microsoft_face_identify/detect.json"),
     )
     aioclient_mock.post(
         ENDPOINT_URL.format("identify"),
-        text=load_fixture("microsoft_face_identify.json"),
+        text=load_fixture("microsoft_face_identify/identify.json"),
     )
 
     common.async_scan(hass, entity_id="image_processing.test_local")
