@@ -101,4 +101,4 @@ class RomyBinarySensor(CoordinatorEntity[RomyVacuumCoordinator], BinarySensorEnt
     @property
     def is_on(self) -> bool | None:
         """Return the value of the sensor."""
-        return self._sensor_value
+        return self.romy.binary_sensors[self.entity_description.key]
