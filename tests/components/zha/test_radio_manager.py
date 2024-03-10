@@ -115,7 +115,7 @@ async def test_migrate_matching_port(
         domain=DOMAIN,
         options={},
         title="Test",
-        version=3,
+        version=5,
     )
     config_entry.add_to_hass(hass)
 
@@ -123,7 +123,7 @@ async def test_migrate_matching_port(
         "new_discovery_info": {
             "name": "Test Updated",
             "port": {
-                "path": "socket://some/virtual_port",
+                "path": "socket://some-virtual-port:1234",
                 "baudrate": 115200,
                 "flow_control": "hardware",
             },
@@ -148,7 +148,7 @@ async def test_migrate_matching_port(
     # Check the ZHA config entry data is updated
     assert config_entry.data == {
         "device": {
-            "path": "socket://some/virtual_port",
+            "path": "socket://some-virtual-port:1234",
             "baudrate": 115200,
             "flow_control": "hardware",
         },
@@ -175,7 +175,7 @@ async def test_migrate_matching_port_usb(
         domain=DOMAIN,
         options={},
         title="Test",
-        version=3,
+        version=5,
     )
     config_entry.add_to_hass(hass)
 
@@ -183,7 +183,7 @@ async def test_migrate_matching_port_usb(
         "new_discovery_info": {
             "name": "Test Updated",
             "port": {
-                "path": "socket://some/virtual_port",
+                "path": "socket://some-virtual-port:1234",
                 "baudrate": 115200,
                 "flow_control": "hardware",
             },
@@ -200,7 +200,7 @@ async def test_migrate_matching_port_usb(
     # Check the ZHA config entry data is updated
     assert config_entry.data == {
         "device": {
-            "path": "socket://some/virtual_port",
+            "path": "socket://some-virtual-port:1234",
             "baudrate": 115200,
             "flow_control": "hardware",
         },
@@ -230,7 +230,7 @@ async def test_migrate_matching_port_config_entry_not_loaded(
         "new_discovery_info": {
             "name": "Test Updated",
             "port": {
-                "path": "socket://some/virtual_port",
+                "path": "socket://some-virtual-port:1234",
                 "baudrate": 115200,
                 "flow_control": "hardware",
             },
@@ -255,7 +255,7 @@ async def test_migrate_matching_port_config_entry_not_loaded(
     # Check the ZHA config entry data is updated
     assert config_entry.data == {
         "device": {
-            "path": "socket://some/virtual_port",
+            "path": "socket://some-virtual-port:1234",
             "baudrate": 115200,
             "flow_control": "hardware",
         },
@@ -290,7 +290,7 @@ async def test_migrate_matching_port_retry(
         "new_discovery_info": {
             "name": "Test Updated",
             "port": {
-                "path": "socket://some/virtual_port",
+                "path": "socket://some-virtual-port:1234",
                 "baudrate": 115200,
                 "flow_control": "hardware",
             },
@@ -315,7 +315,7 @@ async def test_migrate_matching_port_retry(
     # Check the ZHA config entry data is updated
     assert config_entry.data == {
         "device": {
-            "path": "socket://some/virtual_port",
+            "path": "socket://some-virtual-port:1234",
             "baudrate": 115200,
             "flow_control": "hardware",
         },
@@ -346,7 +346,7 @@ async def test_migrate_non_matching_port(
         "new_discovery_info": {
             "name": "Test Updated",
             "port": {
-                "path": "socket://some/virtual_port",
+                "path": "socket://some-virtual-port:1234",
                 "baudrate": 115200,
                 "flow_control": "hardware",
             },
@@ -395,7 +395,7 @@ async def test_migrate_initiate_failure(
         "new_discovery_info": {
             "name": "Test Updated",
             "port": {
-                "path": "socket://some/virtual_port",
+                "path": "socket://some-virtual-port:1234",
                 "baudrate": 115200,
                 "flow_control": "hardware",
             },

@@ -5,6 +5,7 @@ import contextlib
 import copy
 import logging
 import re
+import urllib.parse
 
 import voluptuous as vol
 from zhaquirks import setup as setup_quirks
@@ -251,6 +252,12 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
+
+    # Circular import
+    from .config_flow import (  # pylint: disable=import-outside-toplevel
+        DEFAULT_ZHA_ZEROCONF_PORT,
+    )
+
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
     if config_entry.version == 1:
@@ -291,11 +298,21 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         hass.config_entries.async_update_entry(config_entry, data=data, version=4)
 
     if config_entry.version == 4:
-        path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+        data = {**config_entry.data}
+        path = data[CONF_DEVICE][CONF_DEVICE_PATH]
+
+        if path.startswith("socket://"):
+            parsed = urllib.parse.urlparse(path)
+            path = (
+                f"socket://{parsed.hostname}:{parsed.port or DEFAULT_ZHA_ZEROCONF_PORT}"
+            )
+
         port = await async_serial_port_from_path(hass, path)
+        data[CONF_DEVICE][CONF_DEVICE_PATH] = port.path
 
         hass.config_entries.async_update_entry(
             config_entry,
+            data=data,
             unique_id=port.unique_id,
             version=5,
         )
