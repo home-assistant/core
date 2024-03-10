@@ -1482,7 +1482,7 @@ class EventBus:
                     job_type=HassJobType.Callback,
                 ),
                 None,
-                True,
+                run_immediately,
             ),
         )
         one_time_listener.remove = remove
