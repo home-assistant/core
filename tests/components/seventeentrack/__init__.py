@@ -4,12 +4,13 @@ from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
 
+from homeassistant.components.seventeentrack import DOMAIN
 from homeassistant.components.seventeentrack.sensor import DEFAULT_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.setup import async_setup_component
 
-from tests.common import async_fire_time_changed
+from .conftest import ACCOUNT_ID
+
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def init_integration(

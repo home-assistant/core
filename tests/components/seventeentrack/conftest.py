@@ -1,5 +1,6 @@
 """Configuration for 17Track tests."""
 
+from collections.abc import Generator
 from typing import Optional
 from unittest.mock import AsyncMock, patch
 
@@ -11,36 +12,6 @@ from homeassistant.components.seventeentrack.sensor import (
     CONF_SHOW_DELIVERED,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-
-VALID_CONFIG_MINIMAL = {
-    "sensor": {
-        "platform": "seventeentrack",
-        CONF_USERNAME: "test",
-        CONF_PASSWORD: "test",
-    }
-}
-
-INVALID_CONFIG = {"sensor": {"platform": "seventeentrack", "boom": "test"}}
-
-VALID_CONFIG_FULL = {
-    "sensor": {
-        "platform": "seventeentrack",
-        CONF_USERNAME: "test",
-        CONF_PASSWORD: "test",
-        CONF_SHOW_ARCHIVED: True,
-        CONF_SHOW_DELIVERED: True,
-    }
-}
-
-VALID_CONFIG_FULL_NO_DELIVERED = {
-    "sensor": {
-        "platform": "seventeentrack",
-        CONF_USERNAME: "test",
-        CONF_PASSWORD: "test",
-        CONF_SHOW_ARCHIVED: False,
-        CONF_SHOW_DELIVERED: False,
-    }
-}
 
 DEFAULT_SUMMARY = {
     "Not Found": 0,
@@ -64,11 +35,39 @@ NEW_SUMMARY_DATA = {
     "Returned": 1,
 }
 
+VALID_CONFIG = {
+    CONF_USERNAME: "test",
+    CONF_PASSWORD: "test",
+}
+
+INVALID_CONFIG = {"notusername": "seventeentrack", "notpassword": "test"}
+
+VALID_OPTIONS = {
+    CONF_SHOW_ARCHIVED: True,
+    CONF_SHOW_DELIVERED: True,
+}
+
+NO_DELIVERED_OPTIONS = {
+    CONF_SHOW_ARCHIVED: False,
+    CONF_SHOW_DELIVERED: False,
+}
+
+VALID_PLATFORM_CONFIG_FULL = {
+    "sensor": {
+        "platform": "seventeentrack",
+        CONF_USERNAME: "test",
+        CONF_PASSWORD: "test",
+        CONF_SHOW_ARCHIVED: True,
+        CONF_SHOW_DELIVERED: True,
+    }
+}
+
+
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Override async_setup_entry."""
     with patch(
-            "homeassistant.components.seventeentrack.async_setup_entry", return_value=True
+        "homeassistant.components.seventeentrack.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
 
