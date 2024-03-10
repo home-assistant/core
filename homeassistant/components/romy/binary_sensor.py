@@ -1,10 +1,13 @@
-"""Sensor checking adc and status values from your ROMY."""
+"""Checking binary status values from your ROMY."""
+
+from dataclasses import dataclass
 
 from romy import RomyRobot
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -12,8 +15,36 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 from .coordinator import RomyVacuumCoordinator
+
+
+@dataclass(frozen=True)
+class RomyBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Immutable class for describing Romy data."""
+
+
+BINARY_SENSORS: list[RomyBinarySensorEntityDescription] = [
+    RomyBinarySensorEntityDescription(
+        key="dustbin",
+        translation_key="dustbin",
+    ),
+    RomyBinarySensorEntityDescription(
+        key="dock",
+        translation_key="dock",
+        device_class=BinarySensorDeviceClass.PRESENCE,
+    ),
+    RomyBinarySensorEntityDescription(
+        key="water_tank",
+        translation_key="water_tank",
+        device_class=BinarySensorDeviceClass.MOISTURE,
+    ),
+    RomyBinarySensorEntityDescription(
+        key="water_tank_empty",
+        translation_key="water_tank_empty",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+]
 
 
 async def async_setup_entry(
@@ -25,72 +56,26 @@ async def async_setup_entry(
 
     coordinator: RomyVacuumCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    binary_sensor_entities = []
-
-    romy_binary_sensor_entitiy_dustbin_present = RomyBinarySensor(
-        coordinator, coordinator.romy, None, "Dustbin present", "dustbin"
+    async_add_entities(
+        RomyBinarySensor(coordinator, coordinator.romy, entity_description)
+        for entity_description in BINARY_SENSORS
+        if entity_description.key in coordinator.romy.binary_sensors
     )
-    if "dustbin" in coordinator.romy.binary_sensors:
-        LOGGER.info(
-            "Binary sensor Dustbin present found for ROMY %s",
-            coordinator.romy.unique_id,
-        )
-        binary_sensor_entities.append(romy_binary_sensor_entitiy_dustbin_present)
-
-    romy_binary_sensor_entitiy_docked = RomyBinarySensor(
-        coordinator,
-        coordinator.romy,
-        BinarySensorDeviceClass.PRESENCE,
-        "Robot docked",
-        "dock",
-    )
-    if "dock" in coordinator.romy.binary_sensors:
-        LOGGER.info("Binary Robot docked found for ROMY %s", coordinator.romy.unique_id)
-        binary_sensor_entities.append(romy_binary_sensor_entitiy_docked)
-
-    romy_binary_sensor_entitiy_watertank_present = RomyBinarySensor(
-        coordinator,
-        coordinator.romy,
-        BinarySensorDeviceClass.MOISTURE,
-        "Watertank present",
-        "water_tank",
-    )
-    if "water_tank" in coordinator.romy.binary_sensors:
-        LOGGER.info(
-            "Binary sensor Watertank present found for ROMY %s",
-            coordinator.romy.unique_id,
-        )
-        binary_sensor_entities.append(romy_binary_sensor_entitiy_watertank_present)
-
-    romy_binary_sensor_entitiy_watertank_empty = RomyBinarySensor(
-        coordinator,
-        coordinator.romy,
-        BinarySensorDeviceClass.PROBLEM,
-        "Watertank empty",
-        "water_tank_empty",
-    )
-    if "water_tank_empty" in coordinator.romy.binary_sensors:
-        LOGGER.info(
-            "Binary sensor Watertank empty found for ROMY %s",
-            coordinator.romy.unique_id,
-        )
-        binary_sensor_entities.append(romy_binary_sensor_entitiy_watertank_empty)
-
-    async_add_entities(binary_sensor_entities, True)
 
 
 class RomyBinarySensor(CoordinatorEntity[RomyVacuumCoordinator], BinarySensorEntity):
     """RomyBinarySensor Class."""
 
+    entity_description: RomyBinarySensorEntityDescription
+
     def __init__(
         self,
         coordinator: RomyVacuumCoordinator,
         romy: RomyRobot,
-        device_class: BinarySensorDeviceClass | None,
-        sensor_name: str,
-        device_descriptor: str,
+        entity_description: RomyBinarySensorEntityDescription,
     ) -> None:
-        """Initialize ROMYs BinarySensor."""
+        """Initialize ROMYs StatusSensor."""
+        self._sensor_value: bool | None = None
         super().__init__(coordinator)
         self.romy = romy
         self._attr_unique_id = self.romy.unique_id
@@ -100,34 +85,20 @@ class RomyBinarySensor(CoordinatorEntity[RomyVacuumCoordinator], BinarySensorEnt
             name=romy.name,
             model=romy.model,
         )
-        self._attr_device_class = device_class
-        self._sensor_value = False
-        self._sensor_name = sensor_name
-        self._device_descriptor = device_descriptor
-
-    @property
-    def device_descriptor(self) -> str:
-        """Return the device_descriptor of this sensor."""
-        return self._device_descriptor
+        self.entity_description = entity_description
 
     @property
     def unique_id(self) -> str:
         """Return the ID of this sensor."""
-        return f"{self._device_descriptor}_{self._attr_unique_id}"
+        return f"{self.entity_description.key}_{self._attr_unique_id}"
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        LOGGER.debug("################ async_update")
-        self._sensor_value = self.romy.binary_sensors[self._device_descriptor]
+        self._sensor_value = self.romy.binary_sensors[self.entity_description.key]
         self.async_write_ha_state()
-
-    # async def async_update(self) -> None:
-    #    """Fetch value from the device."""
-    #    LOGGER.debug("################ async_update")
-    #    self._sensor_value = self.romy.binary_sensors[self._device_descriptor]
 
     @property
     def is_on(self) -> bool | None:
-        """Return the state of the sensor."""
+        """Return the value of the sensor."""
         return self._sensor_value
