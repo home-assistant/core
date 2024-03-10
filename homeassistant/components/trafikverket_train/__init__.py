@@ -1,4 +1,5 @@
 """The trafikverket_train component."""
+
 from __future__ import annotations
 
 from pytrafikverket import TrafikverketTrain

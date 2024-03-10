@@ -1,4 +1,5 @@
 """Tests for the Bond fan device."""
+
 from __future__ import annotations
 
 from datetime import timedelta

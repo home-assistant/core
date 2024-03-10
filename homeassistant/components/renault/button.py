@@ -1,4 +1,5 @@
 """Support for Renault button entities."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -61,20 +62,17 @@ BUTTON_TYPES: tuple[RenaultButtonEntityDescription, ...] = (
     RenaultButtonEntityDescription(
         async_press=lambda x: x.vehicle.set_ac_start(21, None),
         key="start_air_conditioner",
-        icon="mdi:air-conditioner",
         translation_key="start_air_conditioner",
     ),
     RenaultButtonEntityDescription(
         async_press=lambda x: x.vehicle.set_charge_start(),
         key="start_charge",
-        icon="mdi:ev-station",
         requires_electricity=True,
         translation_key="start_charge",
     ),
     RenaultButtonEntityDescription(
         async_press=lambda x: x.vehicle.set_charge_stop(),
         key="stop_charge",
-        icon="mdi:ev-station",
         requires_electricity=True,
         translation_key="stop_charge",
     ),

@@ -1,4 +1,5 @@
 """The dlna_dmr component."""
+
 from __future__ import annotations
 
 from homeassistant import config_entries

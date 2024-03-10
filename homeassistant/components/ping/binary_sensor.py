@@ -1,4 +1,5 @@
 """Tracks the latency of a host by sending ICMP echo requests (ping)."""
+
 from __future__ import annotations
 
 import logging
@@ -95,7 +96,7 @@ class PingBinarySensor(PingEntity, BinarySensorEntity):
         self, config_entry: ConfigEntry, coordinator: PingUpdateCoordinator
     ) -> None:
         """Initialize the Ping Binary sensor."""
-        super().__init__(coordinator, config_entry.entry_id)
+        super().__init__(config_entry, coordinator, config_entry.entry_id)
 
         # if this was imported just enable it when it was enabled before
         if CONF_IMPORTED_BY in config_entry.data:

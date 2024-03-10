@@ -1,4 +1,5 @@
 """Support for Sensibo wifi-enabled home thermostats."""
+
 from __future__ import annotations
 
 from bisect import bisect_left

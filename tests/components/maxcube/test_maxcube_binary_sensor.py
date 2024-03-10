@@ -1,4 +1,5 @@
 """Test EQ3 Max! Window Shutters."""
+
 from datetime import timedelta
 
 from maxcube.cube import MaxCube

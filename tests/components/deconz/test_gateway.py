@@ -1,4 +1,5 @@
 """Test deCONZ gateway."""
+
 from copy import deepcopy
 from unittest.mock import patch
 
@@ -17,10 +18,8 @@ from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.deconz.config_flow import DECONZ_MANUFACTURERURL
 from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.errors import AuthenticationRequired, CannotConnect
-from homeassistant.components.deconz.gateway import (
-    get_deconz_session,
-    get_gateway_from_config_entry,
-)
+from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
+from homeassistant.components.deconz.hub import get_deconz_api
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
@@ -287,10 +286,10 @@ async def test_reset_after_successful_setup(
     assert result is True
 
 
-async def test_get_deconz_session(hass: HomeAssistant) -> None:
+async def test_get_deconz_api(hass: HomeAssistant) -> None:
     """Successful call."""
     with patch("pydeconz.DeconzSession.refresh_state", return_value=True):
-        assert await get_deconz_session(hass, ENTRY_CONFIG)
+        assert await get_deconz_api(hass, ENTRY_CONFIG)
 
 
 @pytest.mark.parametrize(
@@ -302,7 +301,7 @@ async def test_get_deconz_session(hass: HomeAssistant) -> None:
         (pydeconz.Unauthorized, AuthenticationRequired),
     ],
 )
-async def test_get_deconz_session_fails(
+async def test_get_deconz_api_fails(
     hass: HomeAssistant, side_effect, raised_exception
 ) -> None:
     """Failed call."""
@@ -310,4 +309,4 @@ async def test_get_deconz_session_fails(
         "pydeconz.DeconzSession.refresh_state",
         side_effect=side_effect,
     ), pytest.raises(raised_exception):
-        assert await get_deconz_session(hass, ENTRY_CONFIG)
+        assert await get_deconz_api(hass, ENTRY_CONFIG)

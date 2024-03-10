@@ -1,4 +1,5 @@
 """Helper functions for the homekit_controller component."""
+
 from functools import lru_cache
 from typing import cast
 

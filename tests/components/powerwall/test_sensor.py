@@ -1,4 +1,5 @@
 """The sensor tests for the powerwall platform."""
+
 from datetime import timedelta
 from unittest.mock import Mock, patch
 

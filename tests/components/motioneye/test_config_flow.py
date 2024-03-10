@@ -1,4 +1,5 @@
 """Test the motionEye config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from motioneye_client.client import (

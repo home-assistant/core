@@ -1,4 +1,5 @@
 """The Minecraft Server binary sensor platform."""
+
 from dataclasses import dataclass
 
 from homeassistant.components.binary_sensor import (

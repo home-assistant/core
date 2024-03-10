@@ -1,4 +1,5 @@
 """Test Media Source initialization."""
+
 from unittest.mock import Mock, patch
 
 import pytest

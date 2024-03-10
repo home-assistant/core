@@ -1,4 +1,5 @@
 """The tests for the openalpr cloud platform."""
+
 from unittest.mock import PropertyMock, patch
 
 import pytest

@@ -1,4 +1,5 @@
 """Common helpers for refoss test cases."""
+
 import asyncio
 import logging
 from unittest.mock import AsyncMock, Mock

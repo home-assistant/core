@@ -1,4 +1,5 @@
 """Implement the Ingress Panel feature for Hass.io Add-ons."""
+
 from http import HTTPStatus
 import logging
 from typing import Any

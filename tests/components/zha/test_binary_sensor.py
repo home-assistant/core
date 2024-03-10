@@ -1,4 +1,5 @@
 """Test ZHA binary sensor."""
+
 from unittest.mock import patch
 
 import pytest

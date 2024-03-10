@@ -1,4 +1,5 @@
 """Support for AVM FRITZ!Box classes."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, ValuesView

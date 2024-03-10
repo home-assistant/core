@@ -1,4 +1,5 @@
 """Test check_config helper."""
+
 import logging
 from unittest.mock import Mock, patch
 
@@ -338,7 +339,7 @@ async def test_config_platform_import_error(hass: HomeAssistant) -> None:
     # Make sure they don't exist
     files = {YAML_CONFIG_FILE: BASE_CONFIG + "light:\n  platform: beer"}
     with patch(
-        "homeassistant.loader.Integration.get_platform",
+        "homeassistant.loader.Integration.async_get_platform",
         side_effect=ImportError("blablabla"),
     ), patch("os.path.isfile", return_value=True), patch_yaml_files(files):
         res = await async_check_ha_config_file(hass)
@@ -358,7 +359,7 @@ async def test_platform_import_error(hass: HomeAssistant) -> None:
     # Make sure they don't exist
     files = {YAML_CONFIG_FILE: BASE_CONFIG + "light:\n  platform: demo"}
     with patch(
-        "homeassistant.loader.Integration.get_platform",
+        "homeassistant.loader.Integration.async_get_platform",
         side_effect=[None, ImportError("blablabla")],
     ), patch("os.path.isfile", return_value=True), patch_yaml_files(files):
         res = await async_check_ha_config_file(hass)

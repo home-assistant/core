@@ -1,4 +1,5 @@
 """Tests for wemo_device.py."""
+
 import asyncio
 from dataclasses import asdict
 from datetime import timedelta

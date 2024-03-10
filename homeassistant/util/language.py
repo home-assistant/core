@@ -1,4 +1,5 @@
 """Helper methods for language selection in Home Assistant."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable

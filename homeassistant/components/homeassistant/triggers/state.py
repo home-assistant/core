@@ -1,4 +1,5 @@
 """Offer state listening automation rules."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -9,7 +10,14 @@ import voluptuous as vol
 
 from homeassistant import exceptions
 from homeassistant.const import CONF_ATTRIBUTE, CONF_FOR, CONF_PLATFORM, MATCH_ALL
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, State, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HassJob,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     entity_registry as er,
@@ -22,7 +30,7 @@ from homeassistant.helpers.event import (
     process_state_match,
 )
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import ConfigType, EventType
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -124,7 +132,7 @@ async def async_attach_trigger(
     _variables = trigger_info["variables"] or {}
 
     @callback
-    def state_automation_listener(event: EventType[EventStateChangedData]) -> None:
+    def state_automation_listener(event: Event[EventStateChangedData]) -> None:
         """Listen for state changes and calls action."""
         entity = event.data["entity_id"]
         from_s = event.data["old_state"]
@@ -176,6 +184,7 @@ async def async_attach_trigger(
                     }
                 },
                 event.context,
+                eager_start=True,
             )
 
         if not time_delta:

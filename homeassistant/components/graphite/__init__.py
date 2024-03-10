@@ -1,4 +1,5 @@
 """Support for sending data to a Graphite installation."""
+
 from contextlib import suppress
 import logging
 import queue

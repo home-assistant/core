@@ -1,4 +1,5 @@
 """The Screenlogic integration."""
+
 import logging
 from typing import Any
 

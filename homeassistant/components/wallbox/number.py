@@ -2,6 +2,7 @@
 
 The number component allows control of charging current.
 """
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -92,11 +93,9 @@ async def async_setup_entry(
         raise PlatformNotReady from exc
 
     async_add_entities(
-        [
-            WallboxNumber(coordinator, entry, description)
-            for ent in coordinator.data
-            if (description := NUMBER_TYPES.get(ent))
-        ]
+        WallboxNumber(coordinator, entry, description)
+        for ent in coordinator.data
+        if (description := NUMBER_TYPES.get(ent))
     )
 
 

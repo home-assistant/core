@@ -1,4 +1,5 @@
 """AirTouch 5 component to control AirTouch 5 Climate Devices."""
+
 import logging
 from typing import Any
 

@@ -1,4 +1,5 @@
 """YoLink Sensor."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -168,7 +169,6 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         key="state",
         translation_key="power_failure_alarm",
         device_class=SensorDeviceClass.ENUM,
-        icon="mdi:flash",
         options=["normal", "alert", "off"],
         exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
     ),
@@ -176,7 +176,6 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         key="mute",
         translation_key="power_failure_alarm_mute",
         device_class=SensorDeviceClass.ENUM,
-        icon="mdi:volume-mute",
         options=["muted", "unmuted"],
         exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
         value=lambda value: "muted" if value is True else "unmuted",
@@ -185,7 +184,6 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         key="sound",
         translation_key="power_failure_alarm_volume",
         device_class=SensorDeviceClass.ENUM,
-        icon="mdi:volume-high",
         options=["low", "medium", "high"],
         exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
         value=cvt_volume,
@@ -194,7 +192,6 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         key="beep",
         translation_key="power_failure_alarm_beep",
         device_class=SensorDeviceClass.ENUM,
-        icon="mdi:bullhorn",
         options=["enabled", "disabled"],
         exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
         value=lambda value: "enabled" if value is True else "disabled",
