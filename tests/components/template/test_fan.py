@@ -414,7 +414,7 @@ async def test_on_off(hass: HomeAssistant, calls) -> None:
         await func(hass, _TEST_FAN)
         assert hass.states.get(_STATE_INPUT_BOOLEAN).state == state
         _verify(hass, state, 0, None, None, None)
-        assert len(calls) == expected_calls
+        assert len(calls) == expected_calls + 1
         assert calls[-1].data["action"] == action
         assert calls[-1].data["caller"] == _TEST_FAN
 
