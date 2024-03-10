@@ -9,7 +9,7 @@ from py17track.errors import SeventeenTrackError
 
 from homeassistant.core import HomeAssistant
 
-from . import _goto_future, init_integration
+from . import goto_future, init_integration
 from .conftest import (
     DEFAULT_SUMMARY,
     INVALID_CONFIG,
@@ -75,7 +75,7 @@ async def test_add_package(
     )
     mock_seventeentrack.return_value.profile.packages.return_value = [package, package2]
 
-    await _goto_future(hass, freezer)
+    await goto_future(hass, freezer)
 
     assert hass.states.get("sensor.seventeentrack_package_789") is not None
     assert len(hass.states.async_entity_ids()) == 2
@@ -123,12 +123,12 @@ async def test_remove_package(
 
     mock_seventeentrack.return_value.profile.packages.return_value = [package2]
 
-    await _goto_future(hass, freezer)
+    await goto_future(hass, freezer)
 
     assert hass.states.get("sensor.seventeentrack_package_456").state == "unavailable"
     assert len(hass.states.async_entity_ids()) == 2
 
-    await _goto_future(hass, freezer)
+    await goto_future(hass, freezer)
 
     assert hass.states.get("sensor.seventeentrack_package_456") is None
     assert hass.states.get("sensor.seventeentrack_package_789") is not None
@@ -164,7 +164,7 @@ async def test_friendly_name_changed(
     package = get_package(friendly_name="friendly name 2")
     mock_seventeentrack.return_value.profile.packages.return_value = [package]
 
-    await _goto_future(hass, freezer)
+    await goto_future(hass, freezer)
 
     assert hass.states.get("sensor.seventeentrack_package_456") is not None
     entity = hass.data["entity_components"]["sensor"].get_entity(
@@ -186,7 +186,7 @@ async def test_delivered_not_shown(
         "homeassistant.components.seventeentrack.sensor.persistent_notification"
     ) as persistent_notification_mock:
         await init_integration(hass, VALID_CONFIG_FULL_NO_DELIVERED)
-        await _goto_future(hass, freezer)
+        await goto_future(hass, freezer)
 
         assert not hass.states.async_entity_ids()
         persistent_notification_mock.create.assert_called()
@@ -229,8 +229,8 @@ async def test_becomes_delivered_not_shown_notification(
     with patch(
         "homeassistant.components.seventeentrack.sensor.persistent_notification"
     ) as persistent_notification_mock:
-        await _goto_future(hass, freezer)
-        await _goto_future(hass, freezer)
+        await goto_future(hass, freezer)
+        await goto_future(hass, freezer)
 
         persistent_notification_mock.create.assert_called()
         assert not hass.states.async_entity_ids()
@@ -257,8 +257,8 @@ async def test_summary_correctly_updated(
     mock_seventeentrack.return_value.profile.packages.return_value = []
     mock_seventeentrack.return_value.profile.summary.return_value = NEW_SUMMARY_DATA
 
-    await _goto_future(hass, freezer)
-    await _goto_future(hass, freezer)
+    await goto_future(hass, freezer)
+    await goto_future(hass, freezer)
 
     assert len(hass.states.async_entity_ids()) == 7
     for state in hass.states.async_all():
