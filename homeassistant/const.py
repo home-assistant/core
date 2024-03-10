@@ -607,6 +607,10 @@ ATTR_TEMPERATURE: Final = "temperature"
 # Persons attribute
 ATTR_PERSONS: Final = "persons"
 
+# Offset attributes
+ATTR_OFFSET: Final = "offset"
+ATTR_OFFSET_DIRECTION: Final = "offset_direction"
+
 
 # #### UNITS OF MEASUREMENT ####
 # Apparent power units
@@ -1613,6 +1617,15 @@ KEY_DATA_LOGGING = "logging"
 FORMAT_DATE: Final = "%Y-%m-%d"
 FORMAT_TIME: Final = "%H:%M:%S"
 FORMAT_DATETIME: Final = f"{FORMAT_DATE} {FORMAT_TIME}"
+
+
+# Offset directions
+class OffsetDirection(StrEnum):
+    """Offset direction."""
+
+    INCREASE = "increase"
+    DECREASE = "decrease"
+
 
 # These can be removed if no deprecated constant are in this module anymore
 __getattr__ = partial(check_if_deprecated_constant, module_globals=globals())

@@ -144,6 +144,8 @@ DEFAULT_MAX_HUMIDITY = 99
 
 DOMAIN = "climate"
 
+SERVICE_CHANGE_HUMIDITY = "change_humidity"
+SERVICE_CHANGE_TEMPERATURE = "change_temperature"
 SERVICE_SET_AUX_HEAT = "set_aux_heat"
 SERVICE_SET_FAN_MODE = "set_fan_mode"
 SERVICE_SET_PRESET_MODE = "set_preset_mode"

@@ -12,6 +12,8 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_OFFSET,
+    ATTR_OFFSET_DIRECTION,
     ATTR_TEMPERATURE,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
@@ -20,6 +22,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    OffsetDirection,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -97,6 +100,8 @@ from .const import (  # noqa: F401
     PRESET_HOME,
     PRESET_NONE,
     PRESET_SLEEP,
+    SERVICE_CHANGE_HUMIDITY,
+    SERVICE_CHANGE_TEMPERATURE,
     SERVICE_SET_AUX_HEAT,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HUMIDITY,
@@ -217,6 +222,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         {vol.Required(ATTR_SWING_MODE): cv.string},
         "async_handle_set_swing_mode_service",
         [ClimateEntityFeature.SWING_MODE],
+    )
+    component.async_register_entity_service(
+        SERVICE_CHANGE_TEMPERATURE,
+        {
+            vol.Required(ATTR_OFFSET_DIRECTION): vol.Coerce(OffsetDirection),
+            vol.Required(ATTR_OFFSET): vol.Coerce(float),
+        },
+        "async_change_temperature",
+        [ClimateEntityFeature.TARGET_TEMPERATURE],
+    )
+    component.async_register_entity_service(
+        SERVICE_CHANGE_HUMIDITY,
+        {
+            vol.Required(ATTR_OFFSET_DIRECTION): vol.Coerce(OffsetDirection),
+            vol.Required(ATTR_OFFSET): vol.Coerce(int),
+        },
+        "async_change_humidity",
+        [ClimateEntityFeature.TARGET_HUMIDITY],
     )
 
     return True
@@ -666,6 +689,21 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             ft.partial(self.set_temperature, **kwargs)
         )
 
+    @final
+    async def async_change_temperature(
+        self, offset: float, offset_direction: OffsetDirection
+    ) -> None:
+        """Change target temperature by offset."""
+        if self.target_temperature is None:
+            return
+
+        if offset_direction == OffsetDirection.DECREASE:
+            offset *= -1
+
+        await self.async_set_temperature(
+            **{ATTR_TEMPERATURE: self.target_temperature + offset}
+        )
+
     def set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         raise NotImplementedError()
@@ -673,6 +711,19 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         await self.hass.async_add_executor_job(self.set_humidity, humidity)
+
+    @final
+    async def async_change_humidity(
+        self, offset: int, offset_direction: OffsetDirection
+    ) -> None:
+        """Change target humidity by offset."""
+        if self.target_humidity is None:
+            return
+
+        if offset_direction == OffsetDirection.DECREASE:
+            offset *= -1
+
+        await self.async_set_humidity(self.target_humidity + offset)
 
     @final
     async def async_handle_set_fan_mode_service(self, fan_mode: str) -> None:

@@ -130,6 +130,34 @@
     }
   },
   "services": {
+    "change_humidity": {
+      "name": "Change target humidity",
+      "description": "Changes target humidity by given offset.",
+      "fields": {
+        "offset_direction": {
+          "name": "Offset direction",
+          "description": "The direction the offset should be applied."
+        },
+        "offset": {
+          "name": "Offset",
+          "description": "The offset to be applied."
+        }
+      }
+    },
+    "change_temperature": {
+      "name": "Change target temperature",
+      "description": "Changes target temperature by given offset.",
+      "fields": {
+        "offset_direction": {
+          "name": "Offset direction",
+          "description": "The direction the offset should be applied."
+        },
+        "offset": {
+          "name": "Offset",
+          "description": "The offset to be applied."
+        }
+      }
+    },
     "set_aux_heat": {
       "name": "Turn on/off auxiliary heater",
       "description": "Turns auxiliary heater on/off.",
@@ -235,6 +263,12 @@
         "fan_only": "Fan only",
         "heat_cool": "Heat/cool",
         "heat": "Heat"
+      }
+    },
+    "offset_direction": {
+      "options": {
+        "decrease": "Decrease",
+        "increase": "Increase"
       }
     }
   },

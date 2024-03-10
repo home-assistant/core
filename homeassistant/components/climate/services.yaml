@@ -77,6 +77,31 @@ set_temperature:
             - "heat_cool"
             - "heat"
           translation_key: hvac_mode
+
+change_temperature:
+  target:
+    entity:
+      domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.TARGET_TEMPERATURE
+  fields:
+    offset_direction:
+      required: true
+      selector:
+        select:
+          options:
+            - "decrease"
+            - "increase"
+          translation_key: offset_direction
+    offset:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 250
+          step: 0.1
+          mode: box
+
 set_humidity:
   target:
     entity:
@@ -85,6 +110,29 @@ set_humidity:
         - climate.ClimateEntityFeature.TARGET_HUMIDITY
   fields:
     humidity:
+      required: true
+      selector:
+        number:
+          min: 30
+          max: 99
+          unit_of_measurement: "%"
+
+change_humidity:
+  target:
+    entity:
+      domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.TARGET_HUMIDITY
+  fields:
+    offset_direction:
+      required: true
+      selector:
+        select:
+          options:
+            - "decrease"
+            - "increase"
+          translation_key: offset_direction
+    offset:
       required: true
       selector:
         number:
