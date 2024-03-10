@@ -63,7 +63,7 @@ def async_at_start(
     """
 
     def _is_running(hass: HomeAssistant) -> bool:
-        return hass.state is CoreState.running
+        return hass.is_running
 
     return _async_at_core_state(
         hass, at_start_cb, EVENT_HOMEASSISTANT_START, _is_running
