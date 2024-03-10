@@ -320,9 +320,10 @@ async def test_non_valid_platform_config(
 
 
 async def test_full_valid_platform_config(
-    hass: HomeAssistant, mock_seventeentrack: AsyncMock
+    hass: HomeAssistant, mock_seventeentrack: AsyncMock, issue_registry: ir.IssueRegistry,
 ) -> None:
     """Ensure everything starts correctly."""
     assert await async_setup_component(hass, "sensor", VALID_PLATFORM_CONFIG_FULL)
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids()) == len(DEFAULT_SUMMARY.keys())
+    assert len(issue_registry) == 1
