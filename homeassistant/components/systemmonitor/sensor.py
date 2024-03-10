@@ -511,9 +511,9 @@ async def async_setup_entry(  # noqa: C901
             "network_arguments": get_all_network_interfaces(hass),
         }
 
-    cpu_temperature = 0.0
+    cpu_temperature: float | None = None
     with contextlib.suppress(AttributeError):
-        cpu_temperature = read_cpu_temperature(sensor_data.temperatures) or 0.0
+        cpu_temperature = read_cpu_temperature(sensor_data.temperatures)
 
     startup_arguments = await hass.async_add_executor_job(get_arguments)
     startup_arguments["cpu_temperature"] = cpu_temperature
