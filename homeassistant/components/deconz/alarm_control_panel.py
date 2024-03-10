@@ -29,7 +29,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .deconz_device import DeconzDevice
-from .gateway import DeconzGateway, get_gateway_from_config_entry
+from .hub import DeconzHub, get_gateway_from_config_entry
 
 DECONZ_TO_ALARM_STATE = {
     AncillaryControlPanel.ARMED_AWAY: STATE_ALARM_ARMED_AWAY,
@@ -45,9 +45,7 @@ DECONZ_TO_ALARM_STATE = {
 }
 
 
-def get_alarm_system_id_for_unique_id(
-    gateway: DeconzGateway, unique_id: str
-) -> str | None:
+def get_alarm_system_id_for_unique_id(gateway: DeconzHub, unique_id: str) -> str | None:
     """Retrieve alarm system ID the unique ID is registered to."""
     for alarm_system in gateway.api.alarm_systems.values():
         if unique_id in alarm_system.devices:
@@ -97,7 +95,7 @@ class DeconzAlarmControlPanel(DeconzDevice[AncillaryControl], AlarmControlPanelE
     def __init__(
         self,
         device: AncillaryControl,
-        gateway: DeconzGateway,
+        gateway: DeconzHub,
         alarm_system_id: str,
     ) -> None:
         """Set up alarm control panel device."""

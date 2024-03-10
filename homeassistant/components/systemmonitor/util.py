@@ -77,13 +77,8 @@ def get_all_running_processes(hass: HomeAssistant) -> set[str]:
     return processes
 
 
-def read_cpu_temperature(
-    hass: HomeAssistant, temps: dict[str, list[shwtemp]] | None = None
-) -> float | None:
+def read_cpu_temperature(temps: dict[str, list[shwtemp]]) -> float | None:
     """Attempt to read CPU / processor temperature."""
-    if temps is None:
-        psutil_wrapper: ha_psutil = hass.data[DOMAIN]
-        temps = psutil_wrapper.psutil.sensors_temperatures()
     entry: shwtemp
 
     _LOGGER.debug("CPU Temperatures: %s", temps)

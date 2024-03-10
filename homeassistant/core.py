@@ -125,7 +125,7 @@ _P = ParamSpec("_P")
 # Internal; not helpers.typing.UNDEFINED due to circular dependency
 _UNDEF: dict[Any, Any] = {}
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
-_DataT = TypeVar("_DataT", bound=Mapping[str, Any], default=dict[str, Any])
+_DataT = TypeVar("_DataT", bound=Mapping[str, Any], default=Mapping[str, Any])
 CALLBACK_TYPE = Callable[[], None]
 
 CORE_STORAGE_KEY = "core.config"
@@ -299,7 +299,7 @@ class HassJob(Generic[_P, _R_co]):
     @cached_property
     def job_type(self) -> HassJobType:
         """Return the job type."""
-        return self._job_type or _get_hassjob_callable_job_type(self.target)
+        return self._job_type or get_hassjob_callable_job_type(self.target)
 
     @property
     def cancel_on_shutdown(self) -> bool | None:
@@ -319,7 +319,7 @@ class HassJobWithArgs:
     args: Iterable[Any]
 
 
-def _get_hassjob_callable_job_type(target: Callable[..., Any]) -> HassJobType:
+def get_hassjob_callable_job_type(target: Callable[..., Any]) -> HassJobType:
     """Determine the job type from the callable."""
     # Check for partials to properly determine if coroutine function
     check_target = target
@@ -375,7 +375,6 @@ class HomeAssistant:
         self.loop = asyncio.get_running_loop()
         self._tasks: set[asyncio.Future[Any]] = set()
         self._background_tasks: set[asyncio.Future[Any]] = set()
-        self._periodic_tasks: set[asyncio.Future[Any]] = set()
         self.bus = EventBus(self)
         self.services = ServiceRegistry(self)
         self.states = StateMachine(self.bus, self.loop)
@@ -585,22 +584,37 @@ class HomeAssistant:
     @overload
     @callback
     def async_add_hass_job(
-        self, hassjob: HassJob[..., Coroutine[Any, Any, _R]], *args: Any
+        self,
+        hassjob: HassJob[..., Coroutine[Any, Any, _R]],
+        *args: Any,
+        eager_start: bool = False,
+        background: bool = False,
     ) -> asyncio.Future[_R] | None:
         ...
 
     @overload
     @callback
     def async_add_hass_job(
-        self, hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R], *args: Any
+        self,
+        hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
+        *args: Any,
+        eager_start: bool = False,
+        background: bool = False,
     ) -> asyncio.Future[_R] | None:
         ...
 
     @callback
     def async_add_hass_job(
-        self, hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R], *args: Any
+        self,
+        hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
+        *args: Any,
+        eager_start: bool = False,
+        background: bool = False,
     ) -> asyncio.Future[_R] | None:
         """Add a HassJob from within the event loop.
+
+        If eager_start is True, coroutine functions will be scheduled eagerly.
+        If background is True, the task will created as a background task.
 
         This method must be run in the event loop.
         hassjob: HassJob to call.
@@ -618,7 +632,14 @@ class HomeAssistant:
                 )
             # Use loop.create_task
             # to avoid the extra function call in asyncio.create_task.
-            task = self.loop.create_task(hassjob.target(*args), name=hassjob.name)
+            if eager_start:
+                task = create_eager_task(
+                    hassjob.target(*args), name=hassjob.name, loop=self.loop
+                )
+                if task.done():
+                    return task
+            else:
+                task = self.loop.create_task(hassjob.target(*args), name=hassjob.name)
         elif hassjob.job_type is HassJobType.Callback:
             if TYPE_CHECKING:
                 hassjob.target = cast(Callable[..., _R], hassjob.target)
@@ -629,58 +650,9 @@ class HomeAssistant:
                 hassjob.target = cast(Callable[..., _R], hassjob.target)
             task = self.loop.run_in_executor(None, hassjob.target, *args)
 
-        self._tasks.add(task)
-        task.add_done_callback(self._tasks.remove)
-
-        return task
-
-    @overload
-    @callback
-    def async_run_periodic_hass_job(
-        self, hassjob: HassJob[..., Coroutine[Any, Any, _R]], *args: Any
-    ) -> asyncio.Future[_R] | None:
-        ...
-
-    @overload
-    @callback
-    def async_run_periodic_hass_job(
-        self, hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R], *args: Any
-    ) -> asyncio.Future[_R] | None:
-        ...
-
-    @callback
-    def async_run_periodic_hass_job(
-        self, hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R], *args: Any
-    ) -> asyncio.Future[_R] | None:
-        """Add a periodic HassJob from within the event loop.
-
-        This method must be run in the event loop.
-        hassjob: HassJob to call.
-        args: parameters for method to call.
-        """
-        task: asyncio.Future[_R]
-        # This code path is performance sensitive and uses
-        # if TYPE_CHECKING to avoid the overhead of constructing
-        # the type used for the cast. For history see:
-        # https://github.com/home-assistant/core/pull/71960
-        if hassjob.job_type is HassJobType.Coroutinefunction:
-            if TYPE_CHECKING:
-                hassjob.target = cast(
-                    Callable[..., Coroutine[Any, Any, _R]], hassjob.target
-                )
-            task = create_eager_task(hassjob.target(*args), name=hassjob.name)
-        elif hassjob.job_type is HassJobType.Callback:
-            if TYPE_CHECKING:
-                hassjob.target = cast(Callable[..., _R], hassjob.target)
-            hassjob.target(*args)
-            return None
-        else:
-            if TYPE_CHECKING:
-                hassjob.target = cast(Callable[..., _R], hassjob.target)
-            task = self.loop.run_in_executor(None, hassjob.target, *args)
-
-        self._periodic_tasks.add(task)
-        task.add_done_callback(self._periodic_tasks.remove)
+        task_bucket = self._background_tasks if background else self._tasks
+        task_bucket.add(task)
+        task.add_done_callback(task_bucket.remove)
 
         return task
 
@@ -752,37 +724,6 @@ class HomeAssistant:
         return task
 
     @callback
-    def async_create_periodic_task(
-        self, target: Coroutine[Any, Any, _R], name: str, eager_start: bool = False
-    ) -> asyncio.Task[_R]:
-        """Create a task from within the event loop.
-
-        This type of task is typically used for polling.
-
-        A periodic task is different from a normal task:
-
-          - Will not block startup
-          - Will be automatically cancelled on shutdown
-          - Calls to async_block_till_done will wait for completion by default
-
-        If you are using this in your integration, use the create task
-        methods on the config entry instead.
-
-        This method must be run in the event loop.
-        """
-        if eager_start:
-            task = create_eager_task(target, name=name, loop=self.loop)
-            if task.done():
-                return task
-        else:
-            # Use loop.create_task
-            # to avoid the extra function call in asyncio.create_task.
-            task = self.loop.create_task(target, name=name)
-        self._periodic_tasks.add(task)
-        task.add_done_callback(self._periodic_tasks.remove)
-        return task
-
-    @callback
     def async_add_executor_job(
         self, target: Callable[..., _T], *args: Any
     ) -> asyncio.Future[_T]:
@@ -806,24 +747,39 @@ class HomeAssistant:
     @overload
     @callback
     def async_run_hass_job(
-        self, hassjob: HassJob[..., Coroutine[Any, Any, _R]], *args: Any
+        self,
+        hassjob: HassJob[..., Coroutine[Any, Any, _R]],
+        *args: Any,
+        eager_start: bool = False,
+        background: bool = False,
     ) -> asyncio.Future[_R] | None:
         ...
 
     @overload
     @callback
     def async_run_hass_job(
-        self, hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R], *args: Any
+        self,
+        hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
+        *args: Any,
+        eager_start: bool = False,
+        background: bool = False,
     ) -> asyncio.Future[_R] | None:
         ...
 
     @callback
     def async_run_hass_job(
-        self, hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R], *args: Any
+        self,
+        hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
+        *args: Any,
+        eager_start: bool = False,
+        background: bool = False,
     ) -> asyncio.Future[_R] | None:
         """Run a HassJob from within the event loop.
 
         This method must be run in the event loop.
+
+        If eager_start is True, coroutine functions will be scheduled eagerly.
+        If background is True, the task will created as a background task.
 
         hassjob: HassJob
         args: parameters for method to call.
@@ -838,7 +794,9 @@ class HomeAssistant:
             hassjob.target(*args)
             return None
 
-        return self.async_add_hass_job(hassjob, *args)
+        return self.async_add_hass_job(
+            hassjob, *args, eager_start=eager_start, background=background
+        )
 
     @overload
     @callback
@@ -891,7 +849,7 @@ class HomeAssistant:
             self.async_block_till_done(), self.loop
         ).result()
 
-    async def async_block_till_done(self, wait_periodic_tasks: bool = True) -> None:
+    async def async_block_till_done(self, wait_background_tasks: bool = False) -> None:
         """Block until all pending work is done."""
         # To flush out any call_soon_threadsafe
         await asyncio.sleep(0)
@@ -900,8 +858,8 @@ class HomeAssistant:
         while tasks := [
             task
             for task in (
-                self._tasks | self._periodic_tasks
-                if wait_periodic_tasks
+                self._tasks | self._background_tasks
+                if wait_background_tasks
                 else self._tasks
             )
             if task is not current_task and not cancelling(task)
@@ -1034,7 +992,7 @@ class HomeAssistant:
         self._tasks = set()
 
         # Cancel all background tasks
-        for task in self._background_tasks | self._periodic_tasks:
+        for task in self._background_tasks:
             self._tasks.add(task)
             task.add_done_callback(self._tasks.remove)
             task.cancel("Home Assistant is stopping")
@@ -1046,7 +1004,7 @@ class HomeAssistant:
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         try:
             async with self.timeout.async_timeout(STOP_STAGE_SHUTDOWN_TIMEOUT):
-                await self.async_block_till_done(wait_periodic_tasks=False)
+                await self.async_block_till_done()
         except TimeoutError:
             _LOGGER.warning(
                 "Timed out waiting for integrations to stop, the shutdown will"
@@ -1059,7 +1017,7 @@ class HomeAssistant:
         self.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
         try:
             async with self.timeout.async_timeout(FINAL_WRITE_STAGE_SHUTDOWN_TIMEOUT):
-                await self.async_block_till_done(wait_periodic_tasks=False)
+                await self.async_block_till_done()
         except TimeoutError:
             _LOGGER.warning(
                 "Timed out waiting for final writes to complete, the shutdown will"
@@ -1111,7 +1069,7 @@ class HomeAssistant:
 
         try:
             async with self.timeout.async_timeout(CLOSE_STAGE_SHUTDOWN_TIMEOUT):
-                await self.async_block_till_done(wait_periodic_tasks=False)
+                await self.async_block_till_done()
         except TimeoutError:
             _LOGGER.warning(
                 "Timed out waiting for close event to be processed, the shutdown will"
@@ -1397,7 +1355,7 @@ class EventBus:
                     continue
             if run_immediately:
                 try:
-                    job.target(event)
+                    self._hass.async_run_hass_job(job, event, eager_start=True)
                 except Exception:  # pylint: disable=broad-except
                     _LOGGER.exception("Error running job: %s", job)
             else:
@@ -1440,23 +1398,18 @@ class EventBus:
         @callback that returns a boolean value, determines if the
         listener callable should run.
 
-        If run_immediately is passed, the callback will be run
-        right away instead of using call_soon. Only use this if
-        the callback results in scheduling another task.
+        If run_immediately is passed:
+          - callbacks will be run right away instead of using call_soon.
+          - coroutine functions will be scheduled eagerly.
 
         This method must be run in the event loop.
         """
-        job_type: HassJobType | None = None
         if event_filter is not None and not is_callback_check_partial(event_filter):
             raise HomeAssistantError(f"Event filter {event_filter} is not a callback")
-        if run_immediately:
-            if not is_callback_check_partial(listener):
-                raise HomeAssistantError(f"Event listener {listener} is not a callback")
-            job_type = HassJobType.Callback
         return self._async_listen_filterable_job(
             event_type,
             (
-                HassJob(listener, f"listen {event_type}", job_type=job_type),
+                HassJob(listener, f"listen {event_type}"),
                 event_filter,
                 run_immediately,
             ),

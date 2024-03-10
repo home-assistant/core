@@ -67,7 +67,7 @@ async def test_catch_request_error_unavailable(
 ) -> None:
     """Test the device is checked for availability before trying requests."""
     # DmsDevice notifies of disconnect via SSDP
-    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
         ssdp.SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
