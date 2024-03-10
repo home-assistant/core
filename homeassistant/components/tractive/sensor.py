@@ -44,18 +44,11 @@ from .const import (
 from .entity import TractiveEntity
 
 
-@dataclass(frozen=True)
-class TractiveRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class TractiveSensorEntityDescription(SensorEntityDescription):
+    """Class describing Tractive sensor entities."""
 
     signal_prefix: str
-
-
-@dataclass(frozen=True)
-class TractiveSensorEntityDescription(
-    SensorEntityDescription, TractiveRequiredKeysMixin
-):
-    """Class describing Tractive sensor entities."""
 
     hardware_sensor: bool = False
     value_fn: Callable[[StateType], StateType] = lambda state: state
