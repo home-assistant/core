@@ -1,4 +1,5 @@
 """Support for MyBMW button entities."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -25,17 +26,11 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class BMWRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    remote_function: Callable[[MyBMWVehicle], Coroutine[Any, Any, RemoteServiceStatus]]
-
-
-@dataclass(frozen=True)
-class BMWButtonEntityDescription(ButtonEntityDescription, BMWRequiredKeysMixin):
+@dataclass(frozen=True, kw_only=True)
+class BMWButtonEntityDescription(ButtonEntityDescription):
     """Class describing BMW button entities."""
 
+    remote_function: Callable[[MyBMWVehicle], Coroutine[Any, Any, RemoteServiceStatus]]
     enabled_when_read_only: bool = False
     is_available: Callable[[MyBMWVehicle], bool] = lambda _: True
 

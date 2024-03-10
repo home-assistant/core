@@ -12,6 +12,7 @@ creates a packet sequence, with a mocked output buffer to capture the segments
 pushed to the output streams. The packet sequence can be used to exercise
 failure modes or corner cases like how out of order packets are handled.
 """
+
 import asyncio
 import fractions
 import io

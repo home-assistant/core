@@ -57,7 +57,6 @@ async def test_number_values(
     assert raindelay.state == expected_state
     assert raindelay.attributes == {
         "friendly_name": "Rain Bird Controller Rain delay",
-        "icon": "mdi:water-off",
         "min": 0,
         "max": 14,
         "mode": "auto",

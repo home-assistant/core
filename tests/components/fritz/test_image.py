@@ -1,4 +1,5 @@
 """Tests for Fritz!Tools image platform."""
+
 from datetime import timedelta
 from http import HTTPStatus
 from unittest.mock import patch

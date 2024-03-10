@@ -1,4 +1,5 @@
 """Diagnostics support for P1 Monitor."""
+
 from __future__ import annotations
 
 from dataclasses import asdict

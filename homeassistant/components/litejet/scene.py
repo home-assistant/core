@@ -1,4 +1,5 @@
 """Support for LiteJet scenes."""
+
 import logging
 from typing import Any
 

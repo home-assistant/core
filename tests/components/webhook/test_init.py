@@ -1,4 +1,5 @@
 """Test the webhook component."""
+
 from http import HTTPStatus
 from ipaddress import ip_address
 from unittest.mock import Mock, patch

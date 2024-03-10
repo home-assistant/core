@@ -1,4 +1,5 @@
 """The tests for the Dialogflow component."""
+
 import copy
 from http import HTTPStatus
 import json

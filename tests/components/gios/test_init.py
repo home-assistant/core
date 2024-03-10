@@ -1,4 +1,5 @@
 """Test init of GIOS integration."""
+
 import json
 from unittest.mock import patch
 

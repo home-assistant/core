@@ -1,4 +1,5 @@
 """Test the sma config flow."""
+
 from unittest.mock import patch
 
 from pysma.exceptions import (

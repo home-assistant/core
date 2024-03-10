@@ -1,4 +1,5 @@
 """Test the WattTime config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from aiowatttime.errors import CoordinatesNotFoundError, InvalidCredentialsError

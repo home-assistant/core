@@ -1,4 +1,5 @@
 """Support for Epson Workforce Printer."""
+
 from __future__ import annotations
 
 from datetime import timedelta

@@ -1,4 +1,5 @@
 """Translation string lookup helpers."""
+
 from __future__ import annotations
 
 import asyncio
@@ -162,41 +163,49 @@ async def _async_get_component_strings(
     translations_by_language: dict[str, dict[str, Any]] = {}
     # Determine paths of missing components/platforms
     files_to_load_by_language: dict[str, dict[str, str]] = {}
+    loaded_translations_by_language: dict[str, dict[str, Any]] = {}
+    has_files_to_load = False
     for language in languages:
         files_to_load: dict[str, str] = {}
         files_to_load_by_language[language] = files_to_load
+        translations_by_language[language] = {}
 
-        loaded_translations: dict[str, Any] = {}
-        translations_by_language[language] = loaded_translations
-
-        for loaded in components:
-            domain = loaded.partition(".")[0]
-            if not (integration := integrations.get(domain)):
+        for comp in components:
+            domain, _, platform = comp.partition(".")
+            if (
+                not (integration := integrations.get(domain))
+                or not integration.has_translations
+            ):
                 continue
 
-            path = component_translation_path(loaded, language, integration)
-            # No translation available
-            if path is None:
-                loaded_translations[loaded] = {}
-            else:
-                files_to_load[loaded] = path
-
-    if not files_to_load:
-        return translations_by_language
-
-    # Load files
-    loaded_translations_by_language = await hass.async_add_executor_job(
-        _load_translations_files_by_language, files_to_load_by_language
-    )
-
-    # Translations that miss "title" will get integration put in.
-    for language, loaded_translations in loaded_translations_by_language.items():
-        for loaded, loaded_translation in loaded_translations.items():
-            if "." in loaded:
+            if platform and integration.is_built_in:
+                # Legacy state translations are no longer used for built-in integrations
+                # and we avoid trying to load them. This is a temporary measure to allow
+                # them to keep working for custom integrations until we can fully remove
+                # them.
                 continue
 
-            if "title" not in loaded_translation:
-                loaded_translation["title"] = integrations[loaded].name
+            if path := component_translation_path(comp, language, integration):
+                files_to_load[comp] = path
+                has_files_to_load = True
+
+    if has_files_to_load:
+        loaded_translations_by_language = await hass.async_add_executor_job(
+            _load_translations_files_by_language, files_to_load_by_language
+        )
+
+    for language in languages:
+        loaded_translations = loaded_translations_by_language.setdefault(language, {})
+        for comp in components:
+            if "." in comp:
+                continue
+
+            # Translations that miss "title" will get integration put in.
+            component_translations = loaded_translations.setdefault(comp, {})
+            if "title" not in component_translations and (
+                integration := integrations.get(comp)
+            ):
+                component_translations["title"] = integration.name
 
         translations_by_language[language].update(loaded_translations)
 

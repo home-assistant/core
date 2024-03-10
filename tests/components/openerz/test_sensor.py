@@ -1,4 +1,5 @@
 """Tests for OpenERZ component."""
+
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN

@@ -1,4 +1,5 @@
 """Common test objects."""
+
 from collections.abc import Iterable
 from contextlib import suppress
 import copy
@@ -934,6 +935,9 @@ async def help_test_encoding_subscribable_topics(
     async_fire_mqtt_message(
         hass, f"homeassistant/{domain}/item3/config", json.dumps(config3)
     )
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     expected_result = attribute_value or value

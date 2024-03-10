@@ -1,4 +1,5 @@
 """Define tests for the Bravia TV config flow."""
+
 from unittest.mock import patch
 
 from pybravia import (

@@ -1,4 +1,5 @@
 """Test the Blue Current config flow."""
+
 from unittest.mock import patch
 
 import pytest

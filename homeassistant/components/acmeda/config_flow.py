@@ -1,4 +1,5 @@
 """Config flow for Rollease Acmeda Automate Pulse Hub."""
+
 from __future__ import annotations
 
 from asyncio import timeout

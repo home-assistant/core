@@ -1,4 +1,5 @@
 """Tests for Tomorrow.io sensor entities."""
+
 from __future__ import annotations
 
 from datetime import datetime

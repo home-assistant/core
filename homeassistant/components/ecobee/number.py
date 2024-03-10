@@ -1,4 +1,5 @@
 """Support for using number with ecobee thermostats."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -18,19 +19,12 @@ from .entity import EcobeeBaseEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class EcobeeNumberEntityDescriptionBase:
-    """Required values when describing Ecobee number entities."""
+@dataclass(frozen=True, kw_only=True)
+class EcobeeNumberEntityDescription(NumberEntityDescription):
+    """Class describing Ecobee number entities."""
 
     ecobee_setting_key: str
     set_fn: Callable[[EcobeeData, int, int], Awaitable]
-
-
-@dataclass(frozen=True)
-class EcobeeNumberEntityDescription(
-    NumberEntityDescription, EcobeeNumberEntityDescriptionBase
-):
-    """Class describing Ecobee number entities."""
 
 
 VENTILATOR_NUMBERS = (

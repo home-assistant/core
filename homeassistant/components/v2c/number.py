@@ -1,4 +1,5 @@
 """Number platform for V2C settings."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine

@@ -1,4 +1,5 @@
 """Test ZHA switch."""
+
 from unittest.mock import AsyncMock, call, patch
 
 import pytest
@@ -25,6 +26,7 @@ from homeassistant.components.zha.core.helpers import get_zha_gateway
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 
@@ -38,6 +40,8 @@ from .common import (
     update_attribute_cache,
 )
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
+
+from tests.common import MockConfigEntry
 
 ON = 1
 OFF = 0
@@ -89,27 +93,6 @@ def zigpy_cover_device(zigpy_device_mock):
         }
     }
     return zigpy_device_mock(endpoints)
-
-
-@pytest.fixture
-async def coordinator(hass, zigpy_device_mock, zha_device_joined):
-    """Test ZHA light platform."""
-
-    zigpy_device = zigpy_device_mock(
-        {
-            1: {
-                SIG_EP_INPUT: [],
-                SIG_EP_OUTPUT: [],
-                SIG_EP_TYPE: zha.DeviceType.COLOR_DIMMABLE_LIGHT,
-            }
-        },
-        ieee="00:15:8d:00:02:32:4f:32",
-        nwk=0x0000,
-        node_descriptor=b"\xf8\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff",
-    )
-    zha_device = await zha_device_joined(zigpy_device)
-    zha_device.available = True
-    return zha_device
 
 
 @pytest.fixture
@@ -300,19 +283,41 @@ async def zigpy_device_tuya(hass, zigpy_device_mock, zha_device_joined):
     new=0,
 )
 async def test_zha_group_switch_entity(
-    hass: HomeAssistant, device_switch_1, device_switch_2, coordinator
+    hass: HomeAssistant,
+    device_switch_1,
+    device_switch_2,
+    entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test the switch entity for a ZHA group."""
+
+    # make sure we can still get groups when counter entities exist
+    entity_id = "sensor.coordinator_manufacturer_coordinator_model_counter_1"
+    state = hass.states.get(entity_id)
+    assert state is None
+
+    # Enable the entity.
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "1"
+
     zha_gateway = get_zha_gateway(hass)
     assert zha_gateway is not None
-    zha_gateway.coordinator_zha_device = coordinator
-    coordinator._zha_gateway = zha_gateway
     device_switch_1._zha_gateway = zha_gateway
     device_switch_2._zha_gateway = zha_gateway
-    member_ieee_addresses = [device_switch_1.ieee, device_switch_2.ieee]
+    member_ieee_addresses = [
+        device_switch_1.ieee,
+        device_switch_2.ieee,
+        zha_gateway.coordinator_zha_device.ieee,
+    ]
     members = [
         GroupMember(device_switch_1.ieee, 1),
         GroupMember(device_switch_2.ieee, 1),
+        GroupMember(zha_gateway.coordinator_zha_device.ieee, 1),
     ]
 
     # test creating a group with 2 members
@@ -320,7 +325,7 @@ async def test_zha_group_switch_entity(
     await hass.async_block_till_done()
 
     assert zha_group is not None
-    assert len(zha_group.members) == 2
+    assert len(zha_group.members) == 3
     for member in zha_group.members:
         assert member.device.ieee in member_ieee_addresses
         assert member.group == zha_group
@@ -332,12 +337,6 @@ async def test_zha_group_switch_entity(
     group_cluster_on_off = zha_group.endpoint[general.OnOff.cluster_id]
     dev1_cluster_on_off = device_switch_1.device.endpoints[1].on_off
     dev2_cluster_on_off = device_switch_2.device.endpoints[1].on_off
-
-    await async_enable_traffic(hass, [device_switch_1, device_switch_2], enabled=False)
-    await async_wait_for_updates(hass)
-
-    # test that the switches were created and that they are off
-    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     # allow traffic to flow through the gateway and device
     await async_enable_traffic(hass, [device_switch_1, device_switch_2])
