@@ -62,7 +62,7 @@ async def test_step_user_success_generate(hass: HomeAssistant) -> None:
         assert mock_setup_entry.call_count == 1
 
 
-async def test_step_user_new_form(hass: HomeAssistant, key: str, value: str) -> None:
+async def test_step_user_new_form(hass: HomeAssistant) -> None:
     """Test new user input."""
 
     with patch(
