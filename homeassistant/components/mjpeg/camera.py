@@ -145,7 +145,8 @@ class MjpegCamera(Camera):
         try:
             async with asyncio.timeout(TIMEOUT):
                 response = await websession.get(self._still_image_url, auth=self._auth)
-                return await response.read()
+                image = await response.read()
+                return image
 
         except TimeoutError:
             LOGGER.error("Timeout getting camera image from %s", self.name)
