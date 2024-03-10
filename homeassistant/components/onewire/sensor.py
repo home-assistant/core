@@ -383,7 +383,7 @@ def get_entities(
         elif "7E" in family:
             device_sub_type = "EDS"
             family = device_type
-        elif family == "A6":
+        elif "A6" in family:
             family = "26"
 
         if family not in get_sensor_types(device_sub_type):
