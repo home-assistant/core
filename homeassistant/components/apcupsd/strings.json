@@ -48,9 +48,6 @@
       "battery_voltage": {
         "name": "Battery voltage"
       },
-      "battery": {
-        "name": "[%key:component::sensor::entity_component::battery::name%]"
-      },
       "cable_type": {
         "name": "Cable type"
       },
