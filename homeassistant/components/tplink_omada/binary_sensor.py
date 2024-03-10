@@ -1,11 +1,16 @@
 """Support for TPLink Omada binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Generator
 
 from attr import dataclass
 from tplink_omada_client.definitions import GatewayPortMode, LinkStatus
-from tplink_omada_client.devices import OmadaDevice, OmadaGateway, OmadaGatewayPort
+from tplink_omada_client.devices import (
+    OmadaDevice,
+    OmadaGateway,
+    OmadaGatewayPortStatus,
+)
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -81,7 +86,7 @@ class GatewayPortBinarySensorConfig:
     id_suffix: str
     name_suffix: str
     device_class: BinarySensorDeviceClass
-    update_func: Callable[[OmadaGatewayPort], bool]
+    update_func: Callable[[OmadaGatewayPortStatus], bool]
 
 
 class OmadaGatewayPortBinarySensor(OmadaDeviceEntity[OmadaGateway], BinarySensorEntity):

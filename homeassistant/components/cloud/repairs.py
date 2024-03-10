@@ -1,4 +1,5 @@
 """Repairs implementation for the cloud integration."""
+
 from __future__ import annotations
 
 import asyncio

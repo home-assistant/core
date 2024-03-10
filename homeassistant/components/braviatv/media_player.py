@@ -1,6 +1,8 @@
 """Media player support for Bravia TV integration."""
+
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 
 from homeassistant.components.media_player import (
@@ -110,6 +112,16 @@ class BraviaTVMediaPlayer(BraviaTVEntity, MediaPlayerEntity):
     def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
         return self.coordinator.media_duration
+
+    @property
+    def media_position(self) -> int | None:
+        """Position of current playing media in seconds."""
+        return self.coordinator.media_position
+
+    @property
+    def media_position_updated_at(self) -> datetime | None:
+        """When was the position of the current playing media valid."""
+        return self.coordinator.media_position_updated_at
 
     async def async_turn_on(self) -> None:
         """Turn the device on."""

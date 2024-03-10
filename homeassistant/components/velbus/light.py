@@ -1,4 +1,5 @@
 """Support for Velbus light."""
+
 from __future__ import annotations
 
 from typing import Any

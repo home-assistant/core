@@ -1,10 +1,15 @@
 """Support for the Airzone Cloud sensors."""
+
 from __future__ import annotations
 
 from typing import Any, Final
 
 from aioairzone_cloud.const import (
     AZD_AIDOOS,
+    AZD_AQ_INDEX,
+    AZD_AQ_PM_1,
+    AZD_AQ_PM_2P5,
+    AZD_AQ_PM_10,
     AZD_HUMIDITY,
     AZD_TEMP,
     AZD_WEBSERVERS,
@@ -20,6 +25,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
@@ -58,6 +64,29 @@ WEBSERVER_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
 )
 
 ZONE_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
+    SensorEntityDescription(
+        device_class=SensorDeviceClass.AQI,
+        key=AZD_AQ_INDEX,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        device_class=SensorDeviceClass.PM1,
+        key=AZD_AQ_PM_1,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        device_class=SensorDeviceClass.PM25,
+        key=AZD_AQ_PM_2P5,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        device_class=SensorDeviceClass.PM10,
+        key=AZD_AQ_PM_10,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     SensorEntityDescription(
         device_class=SensorDeviceClass.TEMPERATURE,
         key=AZD_TEMP,

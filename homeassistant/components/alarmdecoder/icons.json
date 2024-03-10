@@ -1,0 +1,13 @@
+{
+  "entity": {
+    "sensor": {
+      "alarm_panel_display": {
+        "default": "mdi:alarm-check"
+      }
+    }
+  },
+  "services": {
+    "alarm_keypress": "mdi:dialpad",
+    "alarm_toggle_chime": "mdi:abc"
+  }
+}

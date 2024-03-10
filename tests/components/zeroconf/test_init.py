@@ -1,4 +1,5 @@
 """Test Zeroconf component setup process."""
+
 from typing import Any
 from unittest.mock import call, patch
 

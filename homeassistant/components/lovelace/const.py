@@ -1,4 +1,5 @@
 """Constants for Lovelace."""
+
 from typing import Any
 
 import voluptuous as vol

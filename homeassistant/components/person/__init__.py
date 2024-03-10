@@ -1,4 +1,5 @@
 """Support for tracking people."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -53,7 +54,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType, EventType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
@@ -482,18 +483,24 @@ class Person(collection.CollectionEntity, RestoreEntity):
 
         if self.hass.is_running:
             # Update person now if hass is already running.
-            await self.async_update_config(self._config)
+            self._async_update_config(self._config)
         else:
             # Wait for hass start to not have race between person
             # and device trackers finishing setup.
-            async def person_start_hass(_: Event) -> None:
-                await self.async_update_config(self._config)
+            @callback
+            def _async_person_start_hass(_: Event) -> None:
+                self._async_update_config(self._config)
 
             self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_START, person_start_hass
+                EVENT_HOMEASSISTANT_START, _async_person_start_hass
             )
 
     async def async_update_config(self, config: ConfigType) -> None:
+        """Handle when the config is updated."""
+        self._async_update_config(config)
+
+    @callback
+    def _async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._config = config
 
@@ -511,9 +518,7 @@ class Person(collection.CollectionEntity, RestoreEntity):
         self._update_state()
 
     @callback
-    def _async_handle_tracker_update(
-        self, event: EventType[EventStateChangedData]
-    ) -> None:
+    def _async_handle_tracker_update(self, event: Event[EventStateChangedData]) -> None:
         """Handle the device tracker state changes."""
         self._update_state()
 

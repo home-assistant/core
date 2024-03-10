@@ -1,4 +1,5 @@
 """Test the SensorPush sensors."""
+
 from datetime import timedelta
 import time
 

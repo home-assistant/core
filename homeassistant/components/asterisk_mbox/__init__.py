@@ -1,4 +1,5 @@
 """Support for Asterisk Voicemail interface."""
+
 import logging
 from typing import Any, cast
 
@@ -15,6 +16,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_connect
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,6 +52,21 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     password: str = conf[CONF_PASSWORD]
 
     hass.data[DOMAIN] = AsteriskData(hass, host, port, password, config)
+    create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_integration",
+        breaks_in_ha_version="2024.9.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_integration",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Asterisk Voicemail",
+            "mailbox": "mailbox",
+        },
+    )
 
     return True
 

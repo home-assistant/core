@@ -1,4 +1,5 @@
 """Offer Home Assistant core automation rules."""
+
 import voluptuous as vol
 
 from homeassistant.const import CONF_EVENT, CONF_PLATFORM
@@ -55,6 +56,7 @@ async def async_attach_trigger(
                     "description": "Home Assistant starting",
                 }
             },
+            eager_start=True,
         )
 
     return lambda: None

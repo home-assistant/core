@@ -1,4 +1,5 @@
 """Tests for StarLine config flow."""
+
 import requests_mock
 
 from homeassistant import config_entries

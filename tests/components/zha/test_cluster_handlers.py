@@ -1,4 +1,5 @@
 """Test ZHA Core cluster handlers."""
+
 from collections.abc import Callable
 import logging
 import math

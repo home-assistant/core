@@ -1,4 +1,5 @@
 """Base implementation for all modbus platforms."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -199,6 +200,8 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             self._precision = config.get(CONF_PRECISION, 2)
         else:
             self._precision = config.get(CONF_PRECISION, 0)
+            if self._precision > 0 or self._scale != int(self._scale):
+                self._value_is_int = False
 
     def _swap_registers(self, registers: list[int], slave_count: int) -> list[int]:
         """Do swap as needed."""

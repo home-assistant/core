@@ -1,4 +1,5 @@
 """Button platform for Sensibo integration."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -34,7 +35,6 @@ class SensiboButtonEntityDescription(
 DEVICE_BUTTON_TYPES = SensiboButtonEntityDescription(
     key="reset_filter",
     translation_key="reset_filter",
-    icon="mdi:air-filter",
     entity_category=EntityCategory.CONFIG,
     data_key="filter_clean",
 )

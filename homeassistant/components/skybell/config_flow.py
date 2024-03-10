@@ -1,4 +1,5 @@
 """Config flow for Skybell integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -7,27 +8,28 @@ from typing import Any
 from aioskybell import Skybell, exceptions
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
 
-class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class SkybellFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Skybell."""
 
     reauth_email: str
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle a reauthorization flow request."""
         self.reauth_email = entry_data[CONF_EMAIL]
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle user's reauth credentials."""
         errors = {}
         if user_input:
@@ -53,7 +55,7 @@ class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 

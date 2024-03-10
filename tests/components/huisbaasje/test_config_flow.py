@@ -1,4 +1,5 @@
 """Test the Huisbaasje config flow."""
+
 from unittest.mock import patch
 
 from energyflip import (

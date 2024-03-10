@@ -1,4 +1,5 @@
 """Support for Roborock sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -232,10 +233,8 @@ class RoborockSensorEntity(RoborockCoordinatedEntity, SensorEntity):
         description: RoborockSensorDescription,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(unique_id, coordinator)
         self.entity_description = description
-        if (protocol := self.entity_description.protocol_listener) is not None:
-            self.api.add_listener(protocol, self._update_from_listener, self.api.cache)
+        super().__init__(unique_id, coordinator, description.protocol_listener)
 
     @property
     def native_value(self) -> StateType | datetime.datetime:

@@ -1,4 +1,5 @@
 """Test the AirTouch 4 config flow."""
+
 from unittest.mock import AsyncMock, Mock, patch
 
 from airtouch4pyapi.airtouch import AirTouch, AirTouchAc, AirTouchGroup, AirTouchStatus

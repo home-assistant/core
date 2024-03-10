@@ -1,4 +1,5 @@
 """Tests for the aws component config and setup."""
+
 import json
 from unittest.mock import AsyncMock, MagicMock, call, patch as async_patch
 

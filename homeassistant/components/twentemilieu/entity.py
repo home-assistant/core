@@ -1,4 +1,5 @@
 """Base entity for the Twente Milieu integration."""
+
 from __future__ import annotations
 
 from datetime import date

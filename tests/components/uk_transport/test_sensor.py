@@ -1,4 +1,5 @@
 """The tests for the uk_transport platform."""
+
 import re
 from unittest.mock import patch
 

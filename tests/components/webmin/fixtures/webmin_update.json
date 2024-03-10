@@ -1,0 +1,97 @@
+{
+  "load_1m": 0.98,
+  "load_5m": 1.02,
+  "load_15m": 1.0,
+  "mem_total": 32767008,
+  "mem_free": 26162544,
+  "swap_total": 1953088,
+  "swap_free": 1953088,
+  "total_space": 18104905818112,
+  "free_space": 8641328926720,
+  "fs": [
+    {
+      "free": 174511820800,
+      "dir": "/",
+      "iused": 391146,
+      "used": 61225123840,
+      "type": "ext4",
+      "device": "UUID=00000000-80b6-0000-8a06-000000000000",
+      "iused_percent": 3,
+      "used_percent": 26,
+      "total": 248431161344,
+      "itotal": 15482880,
+      "ifree": 15091734
+    },
+    {
+      "iused": 8877,
+      "used": 4608079593472,
+      "type": "ext4",
+      "dir": "/media/disk1",
+      "free": 1044483624960,
+      "used_percent": 82,
+      "ifree": 183131475,
+      "itotal": 183140352,
+      "total": 5952635744256,
+      "device": "UUID=00000000-2bb2-0000-896c-000000000000",
+      "iused_percent": 1
+    },
+    {
+      "used": 3881508986880,
+      "type": "ext4",
+      "iused": 3411401,
+      "dir": "/media/disk2",
+      "free": 7422333480960,
+      "used_percent": 35,
+      "total": 11903838912512,
+      "itotal": 366198784,
+      "ifree": 362787383,
+      "device": "/dev/md127",
+      "iused_percent": 1
+    }
+  ],
+  "used_space": 8550813704192,
+  "uptime": { "days": 3, "minutes": 23, "seconds": 12 },
+  "active_interfaces": [
+    {
+      "fullname": "lo",
+      "up": 1,
+      "index": 0,
+      "scope6": ["host"],
+      "netmask": "255.0.0.0",
+      "netmask6": [128],
+      "edit": 1,
+      "broadcast": 0,
+      "mtu": 65536,
+      "name": "lo",
+      "address": "127.0.0.1",
+      "address6": ["::1"]
+    },
+    {
+      "mtu": 1500,
+      "fullname": "enp6s0",
+      "up": 1,
+      "index": 1,
+      "ether": "12:34:56:78:9a:bc",
+      "address6": [],
+      "netmask6": [],
+      "edit": 1,
+      "scope6": [],
+      "name": "enp6s0"
+    },
+    {
+      "edit": 1,
+      "netmask6": [64],
+      "netmask": "255.255.255.0",
+      "scope6": ["link"],
+      "up": 1,
+      "index": 2,
+      "fullname": "eno1",
+      "address6": ["fe80::2:3:4"],
+      "address": "192.168.1.4",
+      "name": "eno1",
+      "mtu": 1500,
+      "broadcast": "192.168.1.255",
+      "ether": "12:34:56:78:9a:bd"
+    }
+  ]
+}

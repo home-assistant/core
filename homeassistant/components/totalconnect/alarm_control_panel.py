@@ -1,4 +1,5 @@
 """Interfaces with TotalConnect alarm control panels."""
+
 from __future__ import annotations
 
 from total_connect_client import ArmingHelper

@@ -1,4 +1,5 @@
 """Support for Ecobee Thermostats."""
+
 from __future__ import annotations
 
 import collections

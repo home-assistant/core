@@ -6,6 +6,7 @@ Component design guidelines:
   format "<DOMAIN>.<OBJECT_ID>".
 - Each component should publish services only under its own domain.
 """
+
 from __future__ import annotations
 
 import logging

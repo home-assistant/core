@@ -1,4 +1,5 @@
 """Config flow to configure qnap component."""
+
 from __future__ import annotations
 
 import logging
@@ -8,7 +9,7 @@ from qnapstats import QNAPStats
 from requests.exceptions import ConnectTimeout
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -17,7 +18,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -42,7 +42,7 @@ DATA_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class QnapConfigFlow(ConfigFlow, domain=DOMAIN):
     """Qnap configuration flow."""
 
     VERSION = 1
@@ -50,7 +50,7 @@ class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
