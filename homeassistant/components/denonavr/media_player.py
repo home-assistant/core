@@ -54,8 +54,44 @@ from .config_flow import (
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_SOUND_MODE_RAW = "sound_mode_raw"
+ATTR_BASS = "bass"
+ATTR_BASS_LEVEL = "bass_level"
 ATTR_DYNAMIC_EQ = "dynamic_eq"
+ATTR_DYNAMIC_VOLUME = "dynamic_volume"
+ATTR_MULTI_EQ = "multi_eq"
+ATTR_RECEIVER_TYPE = "receiver_type"
+ATTR_REFERENCE_LEVEL_OFFSET = "reference_level_offset"
+ATTR_SOUND_MODE_RAW = "sound_mode_raw"
+ATTR_SUPPORT_SOUND_MODE = "support_sound_mode"
+ATTR_TELNET_CONNECTED = "telnet_connected"
+ATTR_TELNET_HEALTHY = "telnet_healthy"
+ATTR_TONE_CONTROL_ADJUST = "tone_control_adjust"
+ATTR_TONE_CONTROL_STATUS = "tone_control_status"
+ATTR_TREBLE = "treble"
+ATTR_TREBLE_LEVEL = "treble_level"
+ATTR_ZONE = "zone"
+
+EXTRA_STATE_ATTRIBUTES = {
+    ATTR_RECEIVER_TYPE,
+    ATTR_SUPPORT_SOUND_MODE,
+    ATTR_TELNET_CONNECTED,
+    ATTR_TELNET_HEALTHY,
+    ATTR_ZONE,
+}
+
+EXTRA_STATE_ATTRIBUTES_ON = {
+    ATTR_BASS,
+    ATTR_BASS_LEVEL,
+    ATTR_DYNAMIC_EQ,
+    ATTR_DYNAMIC_VOLUME,
+    ATTR_MULTI_EQ,
+    ATTR_REFERENCE_LEVEL_OFFSET,
+    ATTR_SOUND_MODE_RAW,
+    ATTR_TONE_CONTROL_ADJUST,
+    ATTR_TONE_CONTROL_STATUS,
+    ATTR_TREBLE,
+    ATTR_TREBLE_LEVEL,
+}
 
 SUPPORT_DENON = (
     MediaPlayerEntityFeature.VOLUME_STEP
@@ -406,15 +442,19 @@ class DenonDevice(MediaPlayerEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         receiver = self._receiver
-        if receiver.power != POWER_ON:
-            return {}
         state_attributes: dict[str, Any] = {}
-        if (
-            sound_mode_raw := receiver.sound_mode_raw
-        ) is not None and receiver.support_sound_mode:
-            state_attributes[ATTR_SOUND_MODE_RAW] = sound_mode_raw
-        if (dynamic_eq := receiver.dynamic_eq) is not None:
-            state_attributes[ATTR_DYNAMIC_EQ] = dynamic_eq
+
+        for attr in EXTRA_STATE_ATTRIBUTES:
+            value = getattr(receiver, attr, None)
+            if value is not None:
+                state_attributes[attr] = value
+
+        if receiver.power == POWER_ON:
+            for attr in EXTRA_STATE_ATTRIBUTES_ON:
+                value = getattr(receiver, attr, None)
+                if value is not None:
+                    state_attributes[attr] = value
+
         return state_attributes
 
     @async_log_errors
