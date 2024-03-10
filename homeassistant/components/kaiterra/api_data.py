@@ -100,6 +100,6 @@ class KaiterraApiData:
         except IndexError as err:
             _LOGGER.error("Parsing error %s", err)
         except TypeError as err:
-            _LOGGER.error("Type error %s", err)
+            _LOGGER.debug("Type error %s", err)
 
         async_dispatcher_send(self._hass, DISPATCHER_KAITERRA)
