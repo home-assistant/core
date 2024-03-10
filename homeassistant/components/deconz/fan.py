@@ -17,7 +17,7 @@ from homeassistant.util.percentage import (
 )
 
 from .deconz_device import DeconzDevice
-from .gateway import DeconzGateway, get_gateway_from_config_entry
+from .hub import DeconzHub, get_gateway_from_config_entry
 
 ORDERED_NAMED_FAN_SPEEDS: list[LightFanSpeed] = [
     LightFanSpeed.PERCENT_25,
@@ -58,7 +58,7 @@ class DeconzFan(DeconzDevice[Light], FanEntity):
 
     _attr_supported_features = FanEntityFeature.SET_SPEED
 
-    def __init__(self, device: Light, gateway: DeconzGateway) -> None:
+    def __init__(self, device: Light, gateway: DeconzHub) -> None:
         """Set up fan."""
         super().__init__(device, gateway)
         _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
