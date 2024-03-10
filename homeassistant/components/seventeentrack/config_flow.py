@@ -84,7 +84,12 @@ class SeventeenTrackConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=user_input[CONF_USERNAME], data=user_input
+                    title=user_input[CONF_USERNAME],
+                    data=user_input,
+                    options={
+                        CONF_SHOW_ARCHIVED: DEFAULT_SHOW_ARCHIVED,
+                        CONF_SHOW_DELIVERED: DEFAULT_SHOW_DELIVERED,
+                    },
                 )
 
         return self.async_show_form(
@@ -115,7 +120,12 @@ class SeventeenTrackConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(account_id)
         self._abort_if_unique_id_configured()
         return self.async_create_entry(
-            title=import_data[CONF_USERNAME], data=import_data
+            title=import_data[CONF_USERNAME],
+            data=import_data,
+            options={
+                CONF_SHOW_ARCHIVED: DEFAULT_SHOW_ARCHIVED,
+                CONF_SHOW_DELIVERED: DEFAULT_SHOW_DELIVERED,
+            },
         )
 
     async def _get_client(self):

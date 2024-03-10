@@ -7,11 +7,17 @@ from unittest.mock import AsyncMock, patch
 from py17track.package import Package
 import pytest
 
+from homeassistant.components.seventeentrack.const import (
+    DEFAULT_SHOW_ARCHIVED,
+    DEFAULT_SHOW_DELIVERED,
+)
 from homeassistant.components.seventeentrack.sensor import (
     CONF_SHOW_ARCHIVED,
     CONF_SHOW_DELIVERED,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+
+from tests.common import MockConfigEntry
 
 DEFAULT_SUMMARY = {
     "Not Found": 0,
@@ -70,6 +76,31 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
         "homeassistant.components.seventeentrack.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+@pytest.fixture(autouse=True)
+def mock_config_entry() -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        domain="seventeentrack",
+        data=VALID_CONFIG,
+        options=VALID_OPTIONS,
+        unique_id=ACCOUNT_ID,
+    )
+
+
+@pytest.fixture(autouse=True)
+def mock_config_entry_no_options() -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        domain="seventeentrack",
+        data=VALID_CONFIG,
+        options={
+            CONF_SHOW_ARCHIVED: DEFAULT_SHOW_ARCHIVED,
+            CONF_SHOW_DELIVERED: DEFAULT_SHOW_DELIVERED,
+        },
+        unique_id=ACCOUNT_ID,
+    )
 
 
 @pytest.fixture

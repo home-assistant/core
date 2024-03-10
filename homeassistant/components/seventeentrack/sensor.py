@@ -59,20 +59,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
-                vol.Optional(CONF_SHOW_ARCHIVED, default=False): bool,
-                vol.Optional(CONF_SHOW_DELIVERED, default=False): bool,
-            },
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
 ISSUE_PLACEHOLDER = {"url": "/config/integrations/dashboard/add?domain=seventeentrack"}
 
 
@@ -131,8 +117,8 @@ async def async_setup_entry(
         client,
         async_add_entities,
         DEFAULT_SCAN_INTERVAL,
-        config_entry.options.get(CONF_SHOW_ARCHIVED, False),
-        config_entry.options.get(CONF_SHOW_DELIVERED, False),
+        config_entry.options[CONF_SHOW_ARCHIVED],
+        config_entry.options[CONF_SHOW_DELIVERED],
         str(hass.config.time_zone),
     )
     await data.async_update()
