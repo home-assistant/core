@@ -144,7 +144,7 @@ class MjpegCamera(Camera):
         websession = async_get_clientsession(self.hass, verify_ssl=self._verify_ssl)
         try:
             async with asyncio.timeout(TIMEOUT):
-                response = await websession.get(self._mjpeg_url, auth=self._auth)
+                response = await websession.get(self._still_image_url, auth=self._auth)
                 return await response.read()
 
         except TimeoutError:
