@@ -87,10 +87,6 @@ class RomyBinarySensor(CoordinatorEntity[RomyVacuumCoordinator], BinarySensorEnt
         )
         self.entity_description = entity_description
 
-    @property
-    def unique_id(self) -> str:
-        """Return the ID of this sensor."""
-        return f"{self.entity_description.key}_{self._attr_unique_id}"
 
     @callback
     def _handle_coordinator_update(self) -> None:
