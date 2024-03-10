@@ -399,9 +399,6 @@ _DEPRECATED_DEVICE_CLASS_PM10: Final = DeprecatedConstant(
 _DEPRECATED_DEVICE_CLASS_PM25: Final = DeprecatedConstant(
     "pm25", "SensorDeviceClass.PM25", "2025.1"
 )
-_DEPRECATED_DEVICE_CLASS_PM4: Final = DeprecatedConstant(
-    "pm4", "SensorDeviceClass.PM4", "2025.1"
-)
 _DEPRECATED_DEVICE_CLASS_POWER_FACTOR: Final = DeprecatedConstant(
     "power_factor",
     "SensorDeviceClass.POWER_FACTOR",
