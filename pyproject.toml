@@ -642,6 +642,8 @@ select = [
     "SIM223", # Use {expr} instead of {replaced}
     "SIM300", # Yoda conditions. Use 'age == 42' instead of '42 == age'.
     "SIM401", # Use get from dict with default instead of an if block
+    "SIM910", # Use {expected} instead of {actual}
+    "SIM911", # Use {expected} instead of {actual}
     "T100", # Trace found: {name} used
     "T20", # flake8-print
     "TID251", # Banned imports
