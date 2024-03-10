@@ -1,4 +1,5 @@
 """The tests for the Ring switch platform."""
+
 import requests_mock
 
 from homeassistant.const import ATTR_ENTITY_ID, Platform

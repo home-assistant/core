@@ -1,4 +1,5 @@
 """Test Xiaomi BLE events."""
+
 import pytest
 
 from homeassistant.components import automation

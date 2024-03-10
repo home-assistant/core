@@ -1,4 +1,5 @@
 """Provide a base implementation for registries."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

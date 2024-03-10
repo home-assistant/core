@@ -2,25 +2,19 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
-from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, cast
 
-from pydeconz import DeconzSession, errors
+from pydeconz import DeconzSession
 from pydeconz.interfaces import sensors
 from pydeconz.interfaces.api_handlers import APIHandler, GroupedAPIHandler
 from pydeconz.interfaces.groups import GroupHandler
 from pydeconz.models.event import EventType
 
 from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import (
-    aiohttp_client,
-    device_registry as dr,
-    entity_registry as er,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -34,10 +28,8 @@ from .const import (
     DEFAULT_ALLOW_NEW_DEVICES,
     DOMAIN as DECONZ_DOMAIN,
     HASSIO_CONFIGURATION_URL,
-    LOGGER,
     PLATFORMS,
 )
-from .errors import AuthenticationRequired, CannotConnect
 
 if TYPE_CHECKING:
     from .deconz_event import (
@@ -339,30 +331,3 @@ def get_gateway_from_config_entry(
 ) -> DeconzGateway:
     """Return gateway with a matching config entry ID."""
     return cast(DeconzGateway, hass.data[DECONZ_DOMAIN][config_entry.entry_id])
-
-
-async def get_deconz_session(
-    hass: HomeAssistant,
-    config: MappingProxyType[str, Any],
-) -> DeconzSession:
-    """Create a gateway object and verify configuration."""
-    session = aiohttp_client.async_get_clientsession(hass)
-
-    deconz_session = DeconzSession(
-        session,
-        config[CONF_HOST],
-        config[CONF_PORT],
-        config[CONF_API_KEY],
-    )
-    try:
-        async with asyncio.timeout(10):
-            await deconz_session.refresh_state()
-        return deconz_session
-
-    except errors.Unauthorized as err:
-        LOGGER.warning("Invalid key for deCONZ at %s", config[CONF_HOST])
-        raise AuthenticationRequired from err
-
-    except (TimeoutError, errors.RequestError, errors.ResponseError) as err:
-        LOGGER.error("Error connecting to deCONZ gateway at %s", config[CONF_HOST])
-        raise CannotConnect from err

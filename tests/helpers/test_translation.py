@@ -1,4 +1,5 @@
 """Test the translation helper."""
+
 import asyncio
 from os import path
 import pathlib
@@ -831,3 +832,35 @@ async def test_translate_state(hass: HomeAssistant):
             ]
         )
         assert result == "on"
+
+
+async def test_get_translations_still_has_title_without_translations_files(
+    hass: HomeAssistant, mock_config_flows
+) -> None:
+    """Test the title still gets added in if there are no translation files."""
+    mock_config_flows["integration"].append("component1")
+    integration = Mock(file_path=pathlib.Path(__file__))
+    integration.name = "Component 1"
+
+    with patch(
+        "homeassistant.helpers.translation.component_translation_path",
+        return_value="bla.json",
+    ), patch(
+        "homeassistant.helpers.translation._load_translations_files_by_language",
+        return_value={},
+    ), patch(
+        "homeassistant.helpers.translation.async_get_integrations",
+        return_value={"component1": integration},
+    ):
+        translations = await translation.async_get_translations(
+            hass, "en", "title", config_flow=True
+        )
+        translations_again = await translation.async_get_translations(
+            hass, "en", "title", config_flow=True
+        )
+
+        assert translations == translations_again
+
+    assert translations == {
+        "component.component1.title": "Component 1",
+    }

@@ -1,4 +1,5 @@
 """Support for the Twitch stream status."""
+
 from __future__ import annotations
 
 from twitchAPI.helper import first

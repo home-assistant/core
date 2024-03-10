@@ -1,4 +1,5 @@
 """Test the helper method for writing tests."""
+
 from __future__ import annotations
 
 import asyncio
@@ -1074,9 +1075,9 @@ def assert_setup_component(count, domain=None):
         yield config
 
     if domain is None:
-        assert len(config) == 1, "assert_setup_component requires DOMAIN: {}".format(
-            list(config.keys())
-        )
+        assert (
+            len(config) == 1
+        ), f"assert_setup_component requires DOMAIN: {list(config.keys())}"
         domain = list(config.keys())[0]
 
     res = config.get(domain)

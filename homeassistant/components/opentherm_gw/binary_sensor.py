@@ -1,4 +1,5 @@
 """Support for OpenTherm Gateway binary sensors."""
+
 import logging
 
 from homeassistant.components.binary_sensor import ENTITY_ID_FORMAT, BinarySensorEntity

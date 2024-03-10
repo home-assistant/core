@@ -1,4 +1,5 @@
 """Support for Google Domains."""
+
 import asyncio
 from datetime import timedelta
 import logging
