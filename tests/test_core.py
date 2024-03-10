@@ -2114,7 +2114,7 @@ async def test_async_functions_with_callback(hass: HomeAssistant) -> None:
     assert len(runs) == 3
 
 
-async def test_async_run_job_starts_task_eagerly(hass: HomeAssistant) -> None:
+async def test_async_run_job_starts_tasks_eagerly(hass: HomeAssistant) -> None:
     """Test async_run_job starts tasks eagerly."""
     runs = []
 
