@@ -936,6 +936,9 @@ async def help_test_encoding_subscribable_topics(
         hass, f"homeassistant/{domain}/item3/config", json.dumps(config3)
     )
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     expected_result = attribute_value or value
 
