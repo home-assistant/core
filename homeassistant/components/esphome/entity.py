@@ -5,14 +5,14 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import math
-from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast, Concatenate, ParamSpec
+from typing import TYPE_CHECKING, Any, Concatenate, Generic, ParamSpec, TypeVar, cast
 
 from aioesphomeapi import (
+    APIConnectionError,
     EntityCategory as EsphomeEntityCategory,
     EntityInfo,
     EntityState,
     build_unique_id,
-    APIConnectionError,
 )
 import voluptuous as vol
 

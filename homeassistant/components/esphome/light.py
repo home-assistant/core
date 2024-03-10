@@ -35,9 +35,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .entity import (
     EsphomeEntity,
+    convert_api_error_ha_error,
     esphome_state_property,
     platform_async_setup_entry,
-    convert_api_error_ha_error,
 )
 
 FLASH_LENGTHS = {FLASH_SHORT: 2, FLASH_LONG: 10}

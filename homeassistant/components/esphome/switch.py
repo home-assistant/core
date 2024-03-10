@@ -14,9 +14,9 @@ from homeassistant.util.enum import try_parse_enum
 
 from .entity import (
     EsphomeEntity,
+    convert_api_error_ha_error,
     esphome_state_property,
     platform_async_setup_entry,
-    convert_api_error_ha_error,
 )
 
 

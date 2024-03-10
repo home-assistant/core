@@ -18,9 +18,9 @@ from .domain_data import DomainData
 from .entity import (
     EsphomeAssistEntity,
     EsphomeEntity,
+    convert_api_error_ha_error,
     esphome_state_property,
     platform_async_setup_entry,
-    convert_api_error_ha_error,
 )
 from .entry_data import RuntimeEntryData
 
