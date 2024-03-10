@@ -48,9 +48,10 @@ class GlancesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def get_uptime(self) -> datetime | None:
         """Get uptime by converting Glances duration to datetime."""
+        uptime = None
         if self.data:
             uptime = self.data["uptime"]
             up_duration = parse_duration(uptime)
             if up_duration:
-                return utcnow() - up_duration
-        return None
+                uptime = utcnow() - up_duration
+        return uptime
