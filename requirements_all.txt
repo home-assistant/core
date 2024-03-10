@@ -31,7 +31,7 @@ HAP-python==4.9.1
 HATasmota==0.8.0
 
 # homeassistant.components.mastodon
-Mastodon.py==1.5.1
+Mastodon.py==1.8.1
 
 # homeassistant.components.doods
 # homeassistant.components.generic

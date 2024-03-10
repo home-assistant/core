@@ -134,7 +134,6 @@ async def test_return_default_get_file_path(
         assert await hass.async_add_executor_job(_get_file_path, tempdir)
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [])
 async def test_waiting_for_client_not_loaded(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
@@ -172,7 +171,6 @@ async def test_waiting_for_client_not_loaded(
         unsub()
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [])
 async def test_waiting_for_client_loaded(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
