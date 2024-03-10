@@ -771,7 +771,7 @@ class HomeAssistant:
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
         *args: Any,
-        eager_start: bool = False,
+        eager_start: bool = True,
         background: bool = False,
     ) -> asyncio.Future[_R] | None:
         """Run a HassJob from within the event loop.
