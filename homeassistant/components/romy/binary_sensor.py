@@ -1,7 +1,5 @@
 """Checking binary status values from your ROMY."""
 
-from dataclasses import dataclass
-
 from romy import RomyRobot
 
 from homeassistant.components.binary_sensor import (
@@ -18,28 +16,22 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import RomyVacuumCoordinator
 
-
-@dataclass(frozen=True)
-class RomyBinarySensorEntityDescription(BinarySensorEntityDescription):
-    """Immutable class for describing Romy data."""
-
-
-BINARY_SENSORS: list[RomyBinarySensorEntityDescription] = [
-    RomyBinarySensorEntityDescription(
+BINARY_SENSORS: list[BinarySensorEntityDescription] = [
+    BinarySensorEntityDescription(
         key="dustbin",
         translation_key="dustbin_present",
     ),
-    RomyBinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key="dock",
         translation_key="docked",
         device_class=BinarySensorDeviceClass.PRESENCE,
     ),
-    RomyBinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key="water_tank",
         translation_key="water_tank_present",
         device_class=BinarySensorDeviceClass.MOISTURE,
     ),
-    RomyBinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key="water_tank_empty",
         translation_key="water_tank_empty",
         device_class=BinarySensorDeviceClass.PROBLEM,
@@ -66,13 +58,13 @@ async def async_setup_entry(
 class RomyBinarySensor(CoordinatorEntity[RomyVacuumCoordinator], BinarySensorEntity):
     """RomyBinarySensor Class."""
 
-    entity_description: RomyBinarySensorEntityDescription
+    entity_description: BinarySensorEntityDescription
 
     def __init__(
         self,
         coordinator: RomyVacuumCoordinator,
         romy: RomyRobot,
-        entity_description: RomyBinarySensorEntityDescription,
+        entity_description: BinarySensorEntityDescription,
     ) -> None:
         """Initialize ROMYs StatusSensor."""
         super().__init__(coordinator)
