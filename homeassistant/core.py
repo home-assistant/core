@@ -1355,7 +1355,7 @@ class EventBus:
                     continue
             if run_immediately:
                 try:
-                    job.target(event)
+                    self._hass.async_run_hass_job(job, event, eager_start=True)
                 except Exception:  # pylint: disable=broad-except
                     _LOGGER.exception("Error running job: %s", job)
             else:
@@ -1398,23 +1398,18 @@ class EventBus:
         @callback that returns a boolean value, determines if the
         listener callable should run.
 
-        If run_immediately is passed, the callback will be run
-        right away instead of using call_soon. Only use this if
-        the callback results in scheduling another task.
+        If run_immediately is passed:
+          - callbacks will be run right away instead of using call_soon.
+          - coroutine functions will be scheduled eagerly.
 
         This method must be run in the event loop.
         """
-        job_type: HassJobType | None = None
         if event_filter is not None and not is_callback_check_partial(event_filter):
             raise HomeAssistantError(f"Event filter {event_filter} is not a callback")
-        if run_immediately:
-            if not is_callback_check_partial(listener):
-                raise HomeAssistantError(f"Event listener {listener} is not a callback")
-            job_type = HassJobType.Callback
         return self._async_listen_filterable_job(
             event_type,
             (
-                HassJob(listener, f"listen {event_type}", job_type=job_type),
+                HassJob(listener, f"listen {event_type}"),
                 event_filter,
                 run_immediately,
             ),
