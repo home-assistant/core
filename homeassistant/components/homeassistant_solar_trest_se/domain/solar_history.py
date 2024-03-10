@@ -18,13 +18,29 @@ class SolarHistory:
 
     def __init__(self, data) -> None:  # noqa: D107
         self.id = data.get("id")
-        self.serial_number = data.get("serial_number")
-        self.battery_discharge = data.get("battery_discharge")
-        self.battery_charge = data.get("battery_charge")
-        self.battery_capacity = data.get("battery_capacity")
-        self.battery_stored_power = data.get("battery_stored_power")
-        self.total_load_active_power = data.get("total_load_active_power")
-        self.realtime_solar = data.get("realtime_solar")
+        self.serial_number = data.get("serialNumber")
+        self.battery_discharge = data.get("batteryDischarge")
+        self.battery_charge = data.get("batteryCharge")
+        self.battery_capacity = data.get("batteryCapacity")
+        self.battery_stored_power = data.get("batteryStoredPower")
+        self.total_load_active_power = data.get("totalLoadActivePower")
+        self.realtime_solar = data.get("realtimeSolar")
         self.timestamp = data.get("timestamp")
-        self.solar_profile = data.get("solar_profile")
-        self.daily_yeild = data.get("daily_yeild")
+        self.solar_profile = data.get("solarProfile")
+        self.daily_yeild = data.get("dailyYeild")
+
+    def to_dict(self):
+        """Convert SolarHistory object to a dictionary."""
+        return {
+            "id": self.id,
+            "serial_number": self.serial_number,
+            "battery_discharge": self.battery_discharge,
+            "battery_charge": self.battery_charge,
+            "battery_capacity": self.battery_capacity,
+            "battery_stored_power": self.battery_stored_power,
+            "total_load_active_power": self.total_load_active_power,
+            "realtime_solar": self.realtime_solar,
+            "timestamp": self.timestamp,
+            "solar_profile": self.solar_profile,
+            "daily_yeild": self.daily_yeild,
+        }

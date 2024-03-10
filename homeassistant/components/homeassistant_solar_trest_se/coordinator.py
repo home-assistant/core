@@ -24,20 +24,18 @@ class TrestDataCoordinator(DataUpdateCoordinator[SolarHistory]):
         trest_solar_service: CloudSolarTrestService,
     ) -> None:
         """Initialize coordinator."""
-
-        self.trest_solar_service = trest_solar_service
-
         super().__init__(
             hass,
             logger,
             name="Trest Solar Controller",
             update_interval=timedelta(seconds=REFRESH_INTERVAL),
         )
+        self.trest_solar_service = trest_solar_service
 
     async def _async_update_data(self) -> SolarHistory:
         """Fetch data from Trest Cloud."""
 
-        _LOGGER.error("RUN")
+        _LOGGER.info("Requesting Solar History data from Cloud Trest")
         response = await self.trest_solar_service.get_latest_solar_history_async()
 
         solar_history = SolarHistory(response)
