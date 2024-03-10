@@ -113,7 +113,7 @@ class AbstractConfig(ABC):
             """Sync entities to Google."""
             await self.async_sync_entities_all()
 
-        self._on_deinitialize.append(start.async_at_start(self.hass, sync_google))
+        self._on_deinitialize.append(start.async_at_started(self.hass, sync_google))
 
     @callback
     def async_deinitialize(self) -> None:

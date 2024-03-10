@@ -22,8 +22,13 @@ async def test_at_start_when_running_awaitable(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(calls) == 1
 
-    hass.set_state(CoreState.starting)
-    assert hass.is_running
+    hass.set_state(CoreState.not_running)
+
+    start.async_at_start(hass, cb_at_start)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    hass.set_state(CoreState.running)
 
     start.async_at_start(hass, cb_at_start)
     await hass.async_block_till_done()
@@ -47,8 +52,12 @@ async def test_at_start_when_running_callback(
     start.async_at_start(hass, cb_at_start)()
     assert len(calls) == 1
 
-    hass.set_state(CoreState.starting)
-    assert hass.is_running
+    hass.set_state(CoreState.not_running)
+
+    start.async_at_start(hass, cb_at_start)()
+    assert len(calls) == 1
+
+    hass.set_state(CoreState.running)
 
     start.async_at_start(hass, cb_at_start)()
     assert len(calls) == 2
