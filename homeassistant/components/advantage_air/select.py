@@ -21,11 +21,9 @@ async def async_setup_entry(
 
     instance: AdvantageAirData = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
-    entities: list[SelectEntity] = []
     if aircons := instance.coordinator.data.get("aircons"):
-        for ac_key in aircons:
-            entities.append(AdvantageAirMyZone(instance, ac_key))
-    async_add_entities(entities)
+        entities = [AdvantageAirMyZone(instance, ac_key) for ac_key in aircons]
+        async_add_entities(entities)
 
 
 class AdvantageAirMyZone(AdvantageAirAcEntity, SelectEntity):
