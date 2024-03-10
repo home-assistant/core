@@ -3,6 +3,7 @@
 This module has quite some complex parts. I have tried to add as much
 documentation as possible to keep it understandable.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -823,6 +824,11 @@ class Integration:
         # True if it's a built-in integration and False if it's a custom integration.
         # In the future, we want to default to True for all integrations.
         return self.manifest.get("import_executor", self.is_built_in)
+
+    @cached_property
+    def has_translations(self) -> bool:
+        """Return if the integration has translations."""
+        return "translations" in self._top_level_files
 
     @property
     def mqtt(self) -> list[str] | None:

@@ -1,4 +1,5 @@
 """Platform for Kostal Plenticore sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

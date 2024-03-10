@@ -1,4 +1,5 @@
 """Unit test for CCM15 coordinator component."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 

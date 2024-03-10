@@ -3,12 +3,12 @@
 import logging
 
 from aioautomower.session import AutomowerSession
-from aiohttp import ClientError
+from aiohttp import ClientResponseError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from . import api
@@ -35,7 +35,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     automower_api = AutomowerSession(api_api)
     try:
         await api_api.async_get_access_token()
-    except ClientError as err:
+    except ClientResponseError as err:
+        if 400 <= err.status < 500:
+            raise ConfigEntryAuthFailed from err
         raise ConfigEntryNotReady from err
     coordinator = AutomowerDataUpdateCoordinator(hass, automower_api, entry)
     await coordinator.async_config_entry_first_refresh()

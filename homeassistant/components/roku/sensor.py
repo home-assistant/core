@@ -1,4 +1,5 @@
 """Support for Roku sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -17,18 +18,11 @@ from .coordinator import RokuDataUpdateCoordinator
 from .entity import RokuEntity
 
 
-@dataclass(frozen=True)
-class RokuSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class RokuSensorEntityDescription(SensorEntityDescription):
+    """Describes Roku sensor entity."""
 
     value_fn: Callable[[RokuDevice], str | None]
-
-
-@dataclass(frozen=True)
-class RokuSensorEntityDescription(
-    SensorEntityDescription, RokuSensorEntityDescriptionMixin
-):
-    """Describes Roku sensor entity."""
 
 
 SENSORS: tuple[RokuSensorEntityDescription, ...] = (

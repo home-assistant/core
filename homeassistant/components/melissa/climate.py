@@ -1,4 +1,5 @@
 """Support for Melissa Climate A/C."""
+
 from __future__ import annotations
 
 import logging

@@ -1,4 +1,5 @@
 """Test the Z-Wave JS update entities."""
+
 import asyncio
 from datetime import timedelta
 

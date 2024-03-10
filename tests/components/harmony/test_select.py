@@ -1,4 +1,5 @@
 """Test the Logitech Harmony Hub activity select."""
+
 from datetime import timedelta
 
 from homeassistant.components.harmony.const import DOMAIN

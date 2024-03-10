@@ -1,4 +1,5 @@
 """Allows the creation of a sensor that filters state property."""
+
 from __future__ import annotations
 
 from collections import Counter, deque
@@ -34,7 +35,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.core import Event, HomeAssistant, State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
@@ -43,12 +44,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.start import async_at_started
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    EventType,
-    StateType,
-)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.util.decorator import Registry
 import homeassistant.util.dt as dt_util
 
@@ -226,7 +222,7 @@ class SensorFilter(SensorEntity):
 
     @callback
     def _update_filter_sensor_state_event(
-        self, event: EventType[EventStateChangedData]
+        self, event: Event[EventStateChangedData]
     ) -> None:
         """Handle device state changes."""
         _LOGGER.debug("Update filter on event: %s", event)

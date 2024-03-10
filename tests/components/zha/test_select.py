@@ -1,4 +1,5 @@
 """Test ZHA select entities."""
+
 from unittest.mock import call, patch
 
 import pytest

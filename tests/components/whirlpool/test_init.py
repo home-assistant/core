@@ -1,4 +1,5 @@
 """Test the Whirlpool Sixth Sense init."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 import aiohttp

@@ -1,4 +1,5 @@
 """The Diagnostics integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine, Mapping

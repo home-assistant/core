@@ -1,4 +1,5 @@
 """Constant values for the AEMET OpenData component."""
+
 from __future__ import annotations
 
 from aemet_opendata.const import (

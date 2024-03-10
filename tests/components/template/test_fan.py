@@ -1,4 +1,5 @@
 """The tests for the Template fan platform."""
+
 import pytest
 import voluptuous as vol
 

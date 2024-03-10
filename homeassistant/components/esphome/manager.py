@@ -1,4 +1,5 @@
 """Manager for esphome devices."""
+
 from __future__ import annotations
 
 import asyncio
@@ -49,7 +50,6 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import EventType
 from homeassistant.util.async_ import create_eager_task
 
 from .bluetooth import async_connect_scanner
@@ -282,7 +282,7 @@ class ESPHomeManager:
     def _send_home_assistant_state_event(
         self,
         attribute: str | None,
-        event: EventType[EventStateChangedData],
+        event: Event[EventStateChangedData],
     ) -> None:
         """Forward Home Assistant states updates to ESPHome."""
         event_data = event.data
@@ -455,7 +455,7 @@ class ESPHomeManager:
 
         self.device_id = _async_setup_device_registry(hass, entry, entry_data)
 
-        entry_data.async_update_device_state(hass)
+        entry_data.async_update_device_state()
         await entry_data.async_update_static_infos(
             hass, entry, entity_infos, device_info.mac_address
         )
@@ -510,7 +510,7 @@ class ESPHomeManager:
             # since it generates a lot of state changed events and database
             # writes when we already know we're shutting down and the state
             # will be cleared anyway.
-            entry_data.async_update_device_state(hass)
+            entry_data.async_update_device_state()
 
     async def on_connect_error(self, err: Exception) -> None:
         """Start reauth flow if appropriate connect error type."""

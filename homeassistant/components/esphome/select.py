@@ -1,4 +1,5 @@
 """Support for esphome selects."""
+
 from __future__ import annotations
 
 from aioesphomeapi import EntityInfo, SelectInfo, SelectState

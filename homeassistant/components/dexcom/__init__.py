@@ -1,4 +1,5 @@
 """The Dexcom integration."""
+
 from datetime import timedelta
 import logging
 

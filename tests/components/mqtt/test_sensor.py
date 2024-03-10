@@ -1,4 +1,5 @@
 """The tests for the MQTT sensor platform."""
+
 import copy
 from datetime import datetime, timedelta
 import json
@@ -16,7 +17,6 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    Platform,
     UnitOfTemperature,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
@@ -78,13 +78,6 @@ from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {sensor.DOMAIN: {"name": "test", "state_topic": "test-topic"}}
 }
-
-
-@pytest.fixture(autouse=True)
-def sensor_platform_only():
-    """Only setup the sensor platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR]):
-        yield
 
 
 @pytest.mark.parametrize(

@@ -1,4 +1,5 @@
 """The tests for the logbook component."""
+
 import asyncio
 import collections
 from collections.abc import Callable

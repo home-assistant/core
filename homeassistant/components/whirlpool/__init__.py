@@ -1,4 +1,5 @@
 """The Whirlpool Appliances integration."""
+
 from dataclasses import dataclass
 import logging
 

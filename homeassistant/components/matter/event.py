@@ -1,4 +1,5 @@
 """Matter event entities from Node events."""
+
 from __future__ import annotations
 
 from typing import Any

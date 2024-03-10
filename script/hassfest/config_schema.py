@@ -1,4 +1,5 @@
 """Validate integrations which can be setup from YAML have config schemas."""
+
 from __future__ import annotations
 
 import ast

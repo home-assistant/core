@@ -4,7 +4,6 @@
   "codeowners": ["@hunterjm", "@uvjustin", "@allenporter"],
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/stream",
-  "import_executor": true,
   "integration_type": "system",
   "iot_class": "local_push",
   "quality_scale": "internal",

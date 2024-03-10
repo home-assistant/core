@@ -1,4 +1,5 @@
 """Support for the Torque OBD application."""
+
 from __future__ import annotations
 
 import re

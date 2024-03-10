@@ -1,4 +1,5 @@
 """Support for Rflink devices."""
+
 from __future__ import annotations
 
 import asyncio
