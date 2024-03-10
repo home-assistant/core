@@ -33,7 +33,6 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 
@@ -81,13 +80,6 @@ DEFAULT_CONFIG = {
         }
     }
 }
-
-
-@pytest.fixture(autouse=True)
-def fan_platform_only():
-    """Only setup the fan platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.FAN]):
-        yield
 
 
 @pytest.mark.parametrize("hass_config", [{mqtt.DOMAIN: {fan.DOMAIN: {"name": "test"}}}])

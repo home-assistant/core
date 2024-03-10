@@ -31,7 +31,7 @@ HAP-python==4.9.1
 HATasmota==0.8.0
 
 # homeassistant.components.mastodon
-Mastodon.py==1.5.1
+Mastodon.py==1.8.1
 
 # homeassistant.components.doods
 # homeassistant.components.generic
@@ -1403,7 +1403,7 @@ nsw-fuel-api-client==1.1.0
 nuheat==1.0.1
 
 # homeassistant.components.numato
-numato-gpio==0.10.0
+numato-gpio==0.12.0
 
 # homeassistant.components.compensation
 # homeassistant.components.iqvia
@@ -2866,7 +2866,7 @@ wyoming==1.5.3
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.25.2
+xiaomi-ble==0.26.1
 
 # homeassistant.components.knx
 xknx==2.12.2
@@ -2893,7 +2893,7 @@ yalesmartalarmclient==0.3.9
 yalexs-ble==2.4.2
 
 # homeassistant.components.august
-yalexs==1.11.4
+yalexs==2.0.0
 
 # homeassistant.components.yeelight
 yeelight==0.7.14

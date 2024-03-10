@@ -11,7 +11,7 @@ import pytest
 import respx
 
 from homeassistant.components import image, mqtt
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from .test_common import (
@@ -52,13 +52,6 @@ from tests.typing import (
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {image.DOMAIN: {"name": "test", "image_topic": "test_topic"}}
 }
-
-
-@pytest.fixture(autouse=True)
-def image_platform_only():
-    """Only setup the image platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.IMAGE]):
-        yield
 
 
 @pytest.mark.freeze_time("2023-04-01 00:00:00+00:00")
