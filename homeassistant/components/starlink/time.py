@@ -28,21 +28,15 @@ async def async_setup_entry(
     )
 
 
-@dataclass(frozen=True)
-class StarlinkTimeEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class StarlinkTimeEntityDescription(
+    TimeEntityDescription
+):
+    """Describes a Starlink time entity."""
 
     value_fn: Callable[[StarlinkData], time | None]
     update_fn: Callable[[StarlinkUpdateCoordinator, time], Awaitable[None]]
     available_fn: Callable[[StarlinkData], bool]
-
-
-@dataclass(frozen=True)
-class StarlinkTimeEntityDescription(
-    TimeEntityDescription, StarlinkTimeEntityDescriptionMixin
-):
-    """Describes a Starlink time entity."""
-
 
 class StarlinkTimeEntity(StarlinkEntity, TimeEntity):
     """A TimeEntity for Starlink devices. Handles creating unique IDs."""
