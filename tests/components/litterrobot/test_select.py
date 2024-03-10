@@ -37,9 +37,7 @@ async def test_wait_time_select(
 
     data = {ATTR_ENTITY_ID: SELECT_ENTITY_ID}
 
-    count = 0
-    for wait_time in LitterRobot3.VALID_WAIT_TIMES:
-        count += 1
+    for count, wait_time in enumerate(LitterRobot3.VALID_WAIT_TIMES):
         data[ATTR_OPTION] = wait_time
 
         await hass.services.async_call(
@@ -91,9 +89,8 @@ async def test_panel_brightness_select(
 
     robot: LitterRobot4 = mock_account_with_litterrobot_4.robots[0]
     robot.set_panel_brightness = AsyncMock(return_value=True)
-    count = 0
-    for option in select.attributes[ATTR_OPTIONS]:
-        count += 1
+
+    for count, option in enumerate(select.attributes[ATTR_OPTIONS]):
         data[ATTR_OPTION] = option
 
         await hass.services.async_call(
