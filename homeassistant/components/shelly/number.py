@@ -34,8 +34,8 @@ from .entity import (
 class BlockNumberDescription(BlockEntityDescription, NumberEntityDescription):
     """Class to describe a BLOCK sensor."""
 
-    rest_path: str
-    rest_arg: str
+    rest_path: str = ""
+    rest_arg: str = ""
 
 
 NUMBERS: dict[tuple[str, str], BlockNumberDescription] = {
