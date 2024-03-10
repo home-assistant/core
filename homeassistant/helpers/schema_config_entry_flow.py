@@ -190,7 +190,7 @@ class SchemaCommonFlowHandler:
                 self.parent_handler.context["entry_id"]
             )
             assert entry
-            cast(
+            return cast(
                 SchemaConfigFlowHandler, self.parent_handler
             ).async_update_reload_and_abort(entry, options=user_input)
 
