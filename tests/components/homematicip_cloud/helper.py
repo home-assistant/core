@@ -28,7 +28,7 @@ from tests.common import load_fixture
 HAPID = "3014F7110000000000000001"
 HAPPIN = "5678"
 AUTH_TOKEN = "1234"
-HOME_JSON = "homematicip_cloud.json"
+HOME_JSON = "homematicip_cloud/homematicip_cloud.json"
 FIXTURE_DATA = load_fixture(HOME_JSON)
 
 
