@@ -41,6 +41,7 @@ UNITS_OF_MEASUREMENT = {
     SensorDeviceClass.PM1: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of PM1
     SensorDeviceClass.PM10: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of PM10
     SensorDeviceClass.PM25: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of PM2.5
+    SensorDeviceClass.PM4: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of PM4
     SensorDeviceClass.SIGNAL_STRENGTH: SIGNAL_STRENGTH_DECIBELS,  # signal strength (dB/dBm)
     SensorDeviceClass.SULPHUR_DIOXIDE: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of sulphur dioxide
     SensorDeviceClass.TEMPERATURE: "C",  # temperature (C/F)

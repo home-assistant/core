@@ -282,6 +282,12 @@ class SensorDeviceClass(StrEnum):
     Unit of measurement: `µg/m³`
     """
 
+    PM4 = "pm4"
+    """Particulate matter <= 4 μm.
+
+    Unit of measurement: `µg/m³`
+    """
+
     POWER_FACTOR = "power_factor"
     """Power factor.
 
@@ -548,6 +554,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.PM1: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     SensorDeviceClass.PM10: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     SensorDeviceClass.PM25: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    SensorDeviceClass.PM4: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     SensorDeviceClass.POWER_FACTOR: {PERCENTAGE, None},
     SensorDeviceClass.POWER: {UnitOfPower.WATT, UnitOfPower.KILO_WATT},
     SensorDeviceClass.PRECIPITATION: set(UnitOfPrecipitationDepth),
@@ -618,6 +625,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.PM1: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.PM10: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.PM25: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.PM4: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.POWER_FACTOR: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.POWER: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.PRECIPITATION: set(SensorStateClass),

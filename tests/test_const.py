@@ -52,6 +52,7 @@ def test_all() -> None:
             sensor.SensorDeviceClass.PM1,
             sensor.SensorDeviceClass.PM10,
             sensor.SensorDeviceClass.PM25,
+            sensor.SensorDeviceClass.PM4,
             sensor.SensorDeviceClass.POWER_FACTOR,
             sensor.SensorDeviceClass.POWER,
             sensor.SensorDeviceClass.PRESSURE,
