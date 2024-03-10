@@ -1,6 +1,5 @@
 """Checking binary status values from your ROMY."""
 
-from romy import RomyRobot
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -9,12 +8,12 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import RomyVacuumCoordinator
+from .entity import RomyEntity
 
 BINARY_SENSORS: list[BinarySensorEntityDescription] = [
     BinarySensorEntityDescription(
@@ -49,13 +48,15 @@ async def async_setup_entry(
     coordinator: RomyVacuumCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
-        RomyBinarySensor(coordinator, coordinator.romy, entity_description)
+        RomyBinarySensor(coordinator, entity_description)
         for entity_description in BINARY_SENSORS
         if entity_description.key in coordinator.romy.binary_sensors
     )
 
 
-class RomyBinarySensor(CoordinatorEntity[RomyVacuumCoordinator], BinarySensorEntity):
+class RomyBinarySensor(
+    RomyEntity, CoordinatorEntity[RomyVacuumCoordinator], BinarySensorEntity
+):
     """RomyBinarySensor Class."""
 
     entity_description: BinarySensorEntityDescription
@@ -63,19 +64,12 @@ class RomyBinarySensor(CoordinatorEntity[RomyVacuumCoordinator], BinarySensorEnt
     def __init__(
         self,
         coordinator: RomyVacuumCoordinator,
-        romy: RomyRobot,
         entity_description: BinarySensorEntityDescription,
     ) -> None:
         """Initialize ROMYs StatusSensor."""
-        super().__init__(coordinator)
-        self.romy = romy
-        self._attr_unique_id = f"{entity_description.key}_{romy.unique_id}"
-        self._device_info = DeviceInfo(
-            identifiers={(DOMAIN, romy.unique_id)},
-            manufacturer="ROMY",
-            name=romy.name,
-            model=romy.model,
-        )
+        RomyEntity.__init__(self, coordinator.romy)
+        CoordinatorEntity.__init__(self, coordinator)
+        self._attr_unique_id = f"{entity_description.key}_{self.romy.unique_id}"
         self.entity_description = entity_description
 
     @property
