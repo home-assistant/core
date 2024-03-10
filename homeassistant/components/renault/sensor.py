@@ -43,21 +43,14 @@ from .renault_hub import RenaultHub
 from .renault_vehicle import RenaultVehicleProxy
 
 
-@dataclass(frozen=True)
-class RenaultSensorRequiredKeysMixin(Generic[T]):
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class RenaultSensorEntityDescription(
+    SensorEntityDescription, RenaultDataEntityDescription, Generic[T]
+):
+    """Class describing Renault sensor entities."""
 
     data_key: str
     entity_class: type[RenaultSensor[T]]
-
-
-@dataclass(frozen=True)
-class RenaultSensorEntityDescription(
-    SensorEntityDescription,
-    RenaultDataEntityDescription,
-    RenaultSensorRequiredKeysMixin[T],
-):
-    """Class describing Renault sensor entities."""
 
     condition_lambda: Callable[[RenaultVehicleProxy], bool] | None = None
     requires_fuel: bool = False
