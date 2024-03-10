@@ -10,7 +10,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -27,16 +27,16 @@ class RomyBinarySensorEntityDescription(BinarySensorEntityDescription):
 BINARY_SENSORS: list[RomyBinarySensorEntityDescription] = [
     RomyBinarySensorEntityDescription(
         key="dustbin",
-        translation_key="dustbin",
+        translation_key="dustbin_present",
     ),
     RomyBinarySensorEntityDescription(
         key="dock",
-        translation_key="dock",
+        translation_key="docked",
         device_class=BinarySensorDeviceClass.PRESENCE,
     ),
     RomyBinarySensorEntityDescription(
         key="water_tank",
-        translation_key="water_tank",
+        translation_key="water_tank_present",
         device_class=BinarySensorDeviceClass.MOISTURE,
     ),
     RomyBinarySensorEntityDescription(
@@ -77,7 +77,7 @@ class RomyBinarySensor(CoordinatorEntity[RomyVacuumCoordinator], BinarySensorEnt
         """Initialize ROMYs StatusSensor."""
         super().__init__(coordinator)
         self.romy = romy
-        self._attr_unique_id =f"{entity_description.key}_{romy.unique_id}"
+        self._attr_unique_id = f"{entity_description.key}_{romy.unique_id}"
         self._device_info = DeviceInfo(
             identifiers={(DOMAIN, romy.unique_id)},
             manufacturer="ROMY",
@@ -85,8 +85,6 @@ class RomyBinarySensor(CoordinatorEntity[RomyVacuumCoordinator], BinarySensorEnt
             model=romy.model,
         )
         self.entity_description = entity_description
-
-
 
     @property
     def is_on(self) -> bool | None:
