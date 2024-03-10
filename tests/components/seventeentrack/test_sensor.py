@@ -200,7 +200,7 @@ async def test_delivered_not_shown(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_seventeentrack: AsyncMock,
-    mock_config_entry_no_options: MockConfigEntry,
+    mock_config_entry_with_default_options: MockConfigEntry,
 ) -> None:
     """Ensure delivered packages are not shown."""
     package = get_package(status=40)
@@ -210,7 +210,7 @@ async def test_delivered_not_shown(
     with patch(
         "homeassistant.components.seventeentrack.sensor.persistent_notification"
     ) as persistent_notification_mock:
-        await init_integration(hass, mock_config_entry_no_options)
+        await init_integration(hass, mock_config_entry_with_default_options)
         await goto_future(hass, freezer)
 
         assert not hass.states.async_entity_ids()
@@ -241,14 +241,14 @@ async def test_becomes_delivered_not_shown_notification(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_seventeentrack: AsyncMock,
-    mock_config_entry_no_options: MockConfigEntry,
+    mock_config_entry_with_default_options: MockConfigEntry,
 ) -> None:
     """Ensure notification is triggered when package becomes delivered."""
     package = get_package()
     mock_seventeentrack.return_value.profile.packages.return_value = [package]
     mock_seventeentrack.return_value.profile.summary.return_value = {}
 
-    await init_integration(hass, mock_config_entry_no_options)
+    await init_integration(hass, mock_config_entry_with_default_options)
 
     assert hass.states.get("sensor.seventeentrack_package_456") is not None
     assert len(hass.states.async_entity_ids()) == 1

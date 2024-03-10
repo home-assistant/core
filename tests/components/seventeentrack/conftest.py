@@ -90,7 +90,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_config_entry_no_options() -> MockConfigEntry:
+def mock_config_entry_with_default_options() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         domain="seventeentrack",

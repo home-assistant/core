@@ -123,8 +123,12 @@ class SeventeenTrackConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             title=import_data[CONF_USERNAME],
             data=import_data,
             options={
-                CONF_SHOW_ARCHIVED: DEFAULT_SHOW_ARCHIVED,
-                CONF_SHOW_DELIVERED: DEFAULT_SHOW_DELIVERED,
+                CONF_SHOW_ARCHIVED: import_data.get(
+                    CONF_SHOW_ARCHIVED, DEFAULT_SHOW_ARCHIVED
+                ),
+                CONF_SHOW_DELIVERED: import_data.get(
+                    CONF_SHOW_DELIVERED, DEFAULT_SHOW_DELIVERED
+                ),
             },
         )
 
