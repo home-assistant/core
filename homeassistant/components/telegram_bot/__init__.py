@@ -341,7 +341,8 @@ async def load_data(
                 )
         elif filepath is not None:
             if hass.config.is_allowed_path(filepath):
-                return open(filepath, "rb")
+                with open(filepath, "rb") as file:
+                    return file
 
             _LOGGER.warning("'%s' are not secure to load data from!", filepath)
         else:

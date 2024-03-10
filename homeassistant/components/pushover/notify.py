@@ -84,9 +84,9 @@ class PushoverNotificationService(BaseNotificationService):
                 # try to open it as a normal file.
                 try:
                     # pylint: disable-next=consider-using-with
-                    file_handle = open(data[ATTR_ATTACHMENT], "rb")
-                    # Replace the attachment identifier with file object.
-                    image = file_handle
+                    with open(data[ATTR_ATTACHMENT], "rb") as file_handle:
+                        # Replace the attachment identifier with file object.
+                        image = file_handle
                 except OSError as ex_val:
                     _LOGGER.error(ex_val)
                     # Remove attachment key to send without attachment.
