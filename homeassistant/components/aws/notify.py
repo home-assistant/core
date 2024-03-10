@@ -193,7 +193,7 @@ class AWSSNS(AWSNotify):
         ) as client:
             tasks = [
                 client.publish(
-                    TopicArn=target,
+                    TargetArn=target,
                     Message=message,
                     Subject=subject,
                     MessageAttributes=message_attributes,
