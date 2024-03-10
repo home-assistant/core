@@ -77,7 +77,7 @@ class RomyBinarySensor(CoordinatorEntity[RomyVacuumCoordinator], BinarySensorEnt
         """Initialize ROMYs StatusSensor."""
         super().__init__(coordinator)
         self.romy = romy
-        self._attr_unique_id = self.romy.unique_id
+        self._attr_unique_id =f"{entity_description.key}_{romy.unique_id}"
         self._device_info = DeviceInfo(
             identifiers={(DOMAIN, romy.unique_id)},
             manufacturer="ROMY",
