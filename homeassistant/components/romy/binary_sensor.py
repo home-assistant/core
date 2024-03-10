@@ -87,11 +87,6 @@ class RomyBinarySensor(CoordinatorEntity[RomyVacuumCoordinator], BinarySensorEnt
         self.entity_description = entity_description
 
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._sensor_value = self.romy.binary_sensors[self.entity_description.key]
-        self.async_write_ha_state()
 
     @property
     def is_on(self) -> bool | None:
