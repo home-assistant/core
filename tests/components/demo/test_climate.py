@@ -25,6 +25,8 @@ from homeassistant.components.climate import (
     DOMAIN,
     PRESET_AWAY,
     PRESET_ECO,
+    SERVICE_CHANGE_HUMIDITY,
+    SERVICE_CHANGE_TEMPERATURE,
     SERVICE_SET_AUX_HEAT,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HUMIDITY,
@@ -37,11 +39,14 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_OFFSET,
+    ATTR_OFFSET_DIRECTION,
     ATTR_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    OffsetDirection,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -221,6 +226,40 @@ async def test_set_temp_with_hvac_mode(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_TEMPERATURE) == 23
 
 
+async def test_change_target_temperature(hass: HomeAssistant) -> None:
+    """Test the changing of the target temperature."""
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get(ATTR_TEMPERATURE) == 21
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CHANGE_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: ENTITY_CLIMATE,
+            ATTR_OFFSET_DIRECTION: OffsetDirection.DECREASE,
+            ATTR_OFFSET: 3,
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get(ATTR_TEMPERATURE) == 18
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CHANGE_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: ENTITY_CLIMATE,
+            ATTR_OFFSET_DIRECTION: OffsetDirection.INCREASE,
+            ATTR_OFFSET: 5,
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get(ATTR_TEMPERATURE) == 23
+
+
 async def test_set_target_humidity_bad_attr(hass: HomeAssistant) -> None:
     """Test setting the target humidity without required attribute."""
     state = hass.states.get(ENTITY_CLIMATE)
@@ -252,6 +291,40 @@ async def test_set_target_humidity(hass: HomeAssistant) -> None:
 
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get(ATTR_HUMIDITY) == 64.0
+
+
+async def test_change_target_humidity(hass: HomeAssistant) -> None:
+    """Test the changing of the target humidity."""
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get(ATTR_HUMIDITY) == 67
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CHANGE_HUMIDITY,
+        {
+            ATTR_ENTITY_ID: ENTITY_CLIMATE,
+            ATTR_OFFSET_DIRECTION: OffsetDirection.DECREASE,
+            ATTR_OFFSET: 10,
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get(ATTR_HUMIDITY) == 57.0
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CHANGE_HUMIDITY,
+        {
+            ATTR_ENTITY_ID: ENTITY_CLIMATE,
+            ATTR_OFFSET_DIRECTION: OffsetDirection.INCREASE,
+            ATTR_OFFSET: 15,
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get(ATTR_HUMIDITY) == 72.0
 
 
 async def test_set_fan_mode_bad_attr(hass: HomeAssistant) -> None:
