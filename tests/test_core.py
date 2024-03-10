@@ -2118,10 +2118,10 @@ async def test_async_run_job_starts_task_eagerly(hass: HomeAssistant) -> None:
     """Test async_run_job starts tasks eagerly."""
     runs = []
 
-    async def test():
+    async def _test():
         runs.append(True)
 
-    await hass.async_add_job(test)
+    await hass.async_run_job(_test)
     # No call to hass.async_block_till_done to ensure the task is run eagerly
     assert len(runs) == 1
 
