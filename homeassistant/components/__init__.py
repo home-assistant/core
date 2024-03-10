@@ -29,7 +29,7 @@ def is_on(hass: HomeAssistant, entity_id: str | None = None) -> bool:
             " This is deprecated and will stop working in Home Assistant 2024.6, it"
             " should be updated to use the function of the platform directly."
         ),
-        error_if_core=False,
+        error_if_core=True,
     )
 
     if entity_id:
