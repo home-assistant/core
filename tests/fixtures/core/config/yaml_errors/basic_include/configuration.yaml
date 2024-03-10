@@ -1,1 +1,0 @@
-iot_domain: !include integrations/iot_domain.yaml
