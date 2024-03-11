@@ -97,18 +97,12 @@ class GenericBlind(MotionblindsBLEEntity, CoverEntity):
         self, running_type: MotionRunningType | None, write_state: bool = True
     ) -> None:
         """Update whether the blind is running (opening/closing) or not."""
-        self._attr_is_opening = (
-            False
-            if running_type
-            in [None, MotionRunningType.STILL, MotionRunningType.UNKNOWN]
-            else running_type is MotionRunningType.OPENING
-        )
-        self._attr_is_closing = (
-            False
-            if running_type
-            in [None, MotionRunningType.STILL, MotionRunningType.UNKNOWN]
-            else running_type is not MotionRunningType.OPENING
-        )
+        if running_type in [None, MotionRunningType.STILL, MotionRunningType.UNKNOWN]:
+            self._attr_is_opening = False
+            self._attr_is_closing = False
+        else:
+            self._attr_is_opening = running_type is MotionRunningType.OPENING
+            self._attr_is_closing = running_type is not MotionRunningType.OPENING
         if running_type is not MotionRunningType.STILL:
             self._attr_is_closed = None
         if write_state:
