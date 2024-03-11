@@ -19,7 +19,7 @@ from yarl import URL
 
 from homeassistant.auth import jwt_wrapper
 from homeassistant.auth.const import GROUP_ID_READ_ONLY
-from homeassistant.auth.models import RefreshToken, User
+from homeassistant.auth.models import User
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.http import current_request
@@ -141,9 +141,7 @@ async def async_setup_auth(
     hass.data[STORAGE_KEY] = refresh_token.id
 
     @callback
-    def async_validate_auth_header(
-        request: Request, set_refresh_token_on_request: Callable[[RefreshToken], None]
-    ) -> bool:
+    def async_validate_auth_header(request: Request) -> bool:
         """Test authorization header against access token.
 
         Basic auth_type is legacy code, should be removed with api_password.
@@ -167,7 +165,44 @@ async def async_setup_auth(
         if async_user_not_allowed_do_auth(hass, refresh_token.user, request):
             return False
 
-        set_refresh_token_on_request(refresh_token)
+        request[KEY_HASS_USER] = refresh_token.user
+        request[KEY_HASS_REFRESH_TOKEN_ID] = refresh_token.id
+        return True
+
+    @callback
+    def async_validate_signed_request(request: Request) -> bool:
+        """Validate a signed request."""
+        if (secret := hass.data.get(DATA_SIGN_SECRET)) is None:
+            return False
+
+        if (signature := request.query.get(SIGN_QUERY_PARAM)) is None:
+            return False
+
+        try:
+            claims = jwt_wrapper.verify_and_decode(
+                signature, secret, algorithms=["HS256"], options={"verify_iss": False}
+            )
+        except jwt.InvalidTokenError:
+            return False
+
+        if claims["path"] != request.path:
+            return False
+
+        params = [
+            list(itm)  # claims stores tuples as lists
+            for itm in request.query.items()
+            if itm[0] not in SAFE_QUERY_PARAMS and itm[0] != SIGN_QUERY_PARAM
+        ]
+        if claims["params"] != params:
+            return False
+
+        refresh_token = hass.auth.async_get_refresh_token(claims["iss"])
+
+        if refresh_token is None:
+            return False
+
+        request[KEY_HASS_USER] = refresh_token.user
+        request[KEY_HASS_REFRESH_TOKEN_ID] = refresh_token.id
         return True
 
     @middleware
@@ -176,16 +211,10 @@ async def async_setup_auth(
     ) -> StreamResponse:
         """Authenticate as middleware."""
 
-        def set_refresh_token_on_request(refresh_token: RefreshToken) -> None:
-            """Set refresh token and user on request."""
-            request[KEY_HASS_USER] = refresh_token.user
-            request[KEY_HASS_REFRESH_TOKEN_ID] = refresh_token.id
-
         authenticated = False
-        strict_connection_session = False
 
         if hdrs.AUTHORIZATION in request.headers and async_validate_auth_header(
-            request, set_refresh_token_on_request
+            request
         ):
             authenticated = True
             auth_type = "bearer token"
@@ -195,25 +224,17 @@ async def async_setup_auth(
         elif (
             request.method == "GET"
             and SIGN_QUERY_PARAM in request.query_string
-            and _async_validate_signed_request(
-                hass, request, set_refresh_token_on_request
-            )
+            and async_validate_signed_request(request)
         ):
             authenticated = True
             auth_type = "signed request"
 
-        elif not authenticated:
-            session_authenticated = await hass.auth.session.async_validate_session(
-                request, set_refresh_token_on_request
-            )
-            if session_authenticated is not None:
-                strict_connection_session = True
-                authenticated = session_authenticated
-
         if (
             not authenticated
             and strict_connection_enabled
-            and not strict_connection_session
+            and not await hass.auth.session.async_validate_strict_connection_session(
+                request
+            )
         ):
             _async_close_connection_on_non_local(hass, request)
 
@@ -230,46 +251,6 @@ async def async_setup_auth(
 
     app.middlewares.append(session_middleware(HomeAssistantCookieStorage(hass)))
     app.middlewares.append(auth_middleware)
-
-
-@callback
-def _async_validate_signed_request(
-    hass: HomeAssistant,
-    request: Request,
-    set_refresh_token_on_request: Callable[[RefreshToken], None],
-) -> bool:
-    """Validate a signed request."""
-    if (secret := hass.data.get(DATA_SIGN_SECRET)) is None:
-        return False
-
-    if (signature := request.query.get(SIGN_QUERY_PARAM)) is None:
-        return False
-
-    try:
-        claims = jwt_wrapper.verify_and_decode(
-            signature, secret, algorithms=["HS256"], options={"verify_iss": False}
-        )
-    except jwt.InvalidTokenError:
-        return False
-
-    if claims["path"] != request.path:
-        return False
-
-    params = [
-        list(itm)  # claims stores tuples as lists
-        for itm in request.query.items()
-        if itm[0] not in SAFE_QUERY_PARAMS and itm[0] != SIGN_QUERY_PARAM
-    ]
-    if claims["params"] != params:
-        return False
-
-    refresh_token = hass.auth.async_get_refresh_token(claims["iss"])
-
-    if refresh_token is None:
-        return False
-
-    set_refresh_token_on_request(refresh_token)
-    return True
 
 
 @callback

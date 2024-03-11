@@ -1,19 +1,18 @@
 """Session auth module."""
 from __future__ import annotations
 
-from collections.abc import Callable
-import dataclasses
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 import secrets
-from typing import TYPE_CHECKING, Any, TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
 from aiohttp.web import Request
 from aiohttp_session import Session, get_session, new_session
 from cryptography.fernet import Fernet
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
@@ -22,13 +21,9 @@ from .models import RefreshToken
 if TYPE_CHECKING:
     from . import AuthManager
 
-_LOGGER = logging.getLogger(__name__)
 
-ABSOLUTE_TIMEOUT = timedelta(hours=4)
-IDLE_TIMEOUT = timedelta(minutes=15)
-IDLE_TIMEOUT_SECONDS = IDLE_TIMEOUT.total_seconds()
 TEMP_TIMEOUT = timedelta(minutes=5)
-TRANSITION_TIMEOUT = timedelta(seconds=10)
+TEMP_TIMEOUT_SECONDS = timedelta(minutes=5).total_seconds()
 
 SESSION_ID = "id"
 STORAGE_VERSION = 1
@@ -36,43 +31,18 @@ STORAGE_KEY = "auth.session"
 
 
 @dataclass
-class UnauthorizedTempSessionData:
-    """Session data for accessing unauthorized resources for a short period of time."""
+class StrictConnectionTempSessionData:
+    """Session data for accessing unauthorized resources for a short period of time, when strict connection is enabled."""
 
+    cancel_remove: CALLBACK_TYPE
     absolute_expiry: datetime = dt_util.utcnow() + TEMP_TIMEOUT
-
-
-@dataclass
-class UnauthorizedRefreshTokenSessionData:
-    """Session data for accessing unauthorized resources using a reference to a valid refresh token."""
-
-    refresh_token_id: str
-
-
-@dataclass
-class AuthorizedSessionData:
-    """Session data for accessing authorized resources."""
-
-    refresh_token_id: str
-    absolute_expiry: datetime = dt_util.utcnow() + ABSOLUTE_TIMEOUT
-    idle_expiry: datetime = dt_util.utcnow() + IDLE_TIMEOUT
 
 
 class StoreData(TypedDict):
     """Data to store."""
 
-    authorized_sessions: dict[str, dict[str, Any]]
-    unauthorized_sessions: dict[str, dict[str, Any]]
+    unauthorized_sessions: dict[str, str]
     key: str
-
-
-def _validate_authorized_session_data(
-    now: datetime, data: AuthorizedSessionData
-) -> bool:
-    """Validate an authorized session data."""
-    if now <= data.absolute_expiry and now <= data.idle_expiry:
-        return True
-    return False
 
 
 class SessionManager:
@@ -81,10 +51,9 @@ class SessionManager:
     def __init__(self, hass: HomeAssistant, auth: AuthManager) -> None:
         """Initialize the strict connection manager."""
         self._auth = auth
-        self._unauthorized_sessions: dict[
-            str, UnauthorizedTempSessionData | UnauthorizedRefreshTokenSessionData
-        ] = {}
-        self._authorized_sessions: dict[str, AuthorizedSessionData] = {}
+        self._hass = hass
+        self._temp_sessions: dict[str, StrictConnectionTempSessionData] = {}
+        self._unauthorized_sessions: dict[str, str] = {}
         self._store = Store[StoreData](
             hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
@@ -96,94 +65,41 @@ class SessionManager:
         """Return the encryption key."""
         return self._key
 
-    async def async_validate_session(
+    async def async_validate_strict_connection_session(
         self,
         request: Request,
-        set_refresh_token_on_request: Callable[[RefreshToken], None],
-    ) -> None | bool:
-        """Check if a request has a valid session and if that session authenticated the user.
-
-        Return values:
-        - None -> No session or a invalid one was provided
-        - False -> A session was provided to access unauthenticated resources
-        - True -> A session was provided to access authenticated resources
-        """
+    ) -> bool:
+        """Check if a request has a valid strict connection session."""
         session = await get_session(request)
         if session.new:
-            return None
-        result = await self._async_validate_session(
-            request, session, set_refresh_token_on_request
-        )
-        if result is None:
+            return False
+        result = await self._async_validate_strict_connection_session(session)
+        if result is False:
             session.invalidate()
             # todo raise for None to notify ban?
         return result
 
-    async def _async_validate_session(
+    async def _async_validate_strict_connection_session(
         self,
-        request: Request,
         session: Session,
-        set_refresh_token_on_request: Callable[[RefreshToken], None],
-    ) -> None | bool:
+    ) -> bool:
         if not (session_id := session.get(SESSION_ID)):
-            return None
-
-        refresh_token_id = None
-        now = dt_util.utcnow()
-        auth_session_data = None
-        data: None | UnauthorizedTempSessionData | UnauthorizedRefreshTokenSessionData | AuthorizedSessionData
-
-        if data := self._authorized_sessions.get(session_id):
-            if _validate_authorized_session_data(now, data):
-                refresh_token_id = data.refresh_token_id
-                auth_session_data = data
-            else:
-                self._authorized_sessions.pop(session_id)
-
-        if not auth_session_data and (
-            data := self._unauthorized_sessions.get(session_id)
-        ):
-            if (
-                isinstance(data, UnauthorizedTempSessionData)
-                and now <= data.absolute_expiry
-            ):
-                return False
-            if isinstance(data, UnauthorizedRefreshTokenSessionData):
-                refresh_token_id = data.refresh_token_id
-
-        if refresh_token_id and (
-            refresh := self._auth.async_get_refresh_token(refresh_token_id)
-        ):
-            if auth_session_data:
-                set_refresh_token_on_request(refresh)
-
-                # Update idle expiry
-                auth_session_data.idle_expiry = now + IDLE_TIMEOUT
-                self._async_schedule_save(IDLE_TIMEOUT_SECONDS)
-
-                # If the session is close to expiring, create a new session
-                if (
-                    auth_session_data.idle_expiry > auth_session_data.absolute_expiry
-                    and now + TRANSITION_TIMEOUT < auth_session_data.absolute_expiry
-                ):
-                    await self.async_create_session(request, refresh)
-                return True
             return False
 
-        self._authorized_sessions.pop(session_id, None)
-        self._unauthorized_sessions.pop(session_id, None)
-        self._async_schedule_save()
-        return None
+        if token_id := self._unauthorized_sessions.get(session_id):
+            if self._auth.async_get_refresh_token(token_id):
+                return True
+            # refresh token is invalid, delete entry
+            self._unauthorized_sessions.pop(session_id)
+            self._async_schedule_save()
 
-    @callback
-    def _async_invalidate_auth_sessions(self, refresh_token: RefreshToken) -> None:
-        """Invalidate all sessions for a refresh token."""
-        refresh_token_id = refresh_token.id
-        for session_id, data in self._authorized_sessions.items():
-            if data.refresh_token_id == refresh_token_id:
-                self._authorized_sessions.pop(session_id)
-                self._unauthorized_sessions.pop(session_id, None)
-        self._async_schedule_save()
+        if data := self._temp_sessions.get(session_id):
+            if dt_util.utcnow() <= data.absolute_expiry:
+                return True
+            # session expired, delete entry
+            self._temp_sessions.pop(session_id).cancel_remove()
+
+        return False
 
     @callback
     def _async_register_revoke_token_callback(self, refresh_token_id: str) -> None:
@@ -194,10 +110,9 @@ class SessionManager:
         @callback
         def async_invalidate_auth_sessions() -> None:
             """Invalidate all sessions for a refresh token."""
-            for session_id, data in self._authorized_sessions.items():
-                if data.refresh_token_id == refresh_token_id:
-                    self._authorized_sessions.pop(session_id)
-                    self._unauthorized_sessions.pop(session_id, None)
+            for session_id, token_id in self._unauthorized_sessions.items():
+                if token_id == refresh_token_id:
+                    self._unauthorized_sessions.pop(session_id)
             self._async_schedule_save()
 
         self._refresh_token_revoce_callbacks[
@@ -215,28 +130,27 @@ class SessionManager:
         if not self._auth.async_get_refresh_token(refresh_token.id):
             return
 
-        now_plus_transition = dt_util.utcnow() + TRANSITION_TIMEOUT
-        for session_id, data in self._authorized_sessions.items():
-            if data.refresh_token_id == refresh_token.id:
-                data.absolute_expiry = min(data.absolute_expiry, now_plus_transition)
-                self._unauthorized_sessions.pop(session_id, None)
+        for session_id, token_id in self._unauthorized_sessions.items():
+            if token_id == refresh_token.id:
+                self._unauthorized_sessions.pop(session_id)
 
         self._async_register_revoke_token_callback(refresh_token.id)
         session_id = await self._async_create_new_session(request)
-        self._authorized_sessions[session_id] = AuthorizedSessionData(
-            refresh_token_id=refresh_token.id
-        )
-        self._unauthorized_sessions[session_id] = UnauthorizedRefreshTokenSessionData(
-            refresh_token_id=refresh_token.id
-        )
+        self._unauthorized_sessions[session_id] = refresh_token.id
         self._async_schedule_save()
 
     async def async_create_temp_unauthorized_session(self, request: Request) -> None:
         """Create a temporary unauthorized session."""
         session_id = await self._async_create_new_session(
-            request, max_age=int(TEMP_TIMEOUT.total_seconds())
+            request, max_age=int(TEMP_TIMEOUT_SECONDS)
         )
-        self._unauthorized_sessions[session_id] = UnauthorizedTempSessionData()
+
+        def remove(_: datetime) -> None:
+            self._temp_sessions.pop(session_id, None)
+
+        self._temp_sessions[session_id] = StrictConnectionTempSessionData(
+            async_call_later(self._hass, TEMP_TIMEOUT_SECONDS, remove)
+        )
 
     async def _async_create_new_session(
         self,
@@ -260,49 +174,26 @@ class SessionManager:
     @callback
     def _data_to_save(self) -> StoreData:
         """Return the data to store."""
-        now = dt_util.utcnow()
-        authorized_sessions = {
-            session_id: dataclasses.asdict(data)
-            for session_id, data in self._authorized_sessions.items()
-            if _validate_authorized_session_data(now, data)
-        }
-        unauthorized_sessions = {
-            session_id: dataclasses.asdict(data)
-            for session_id, data in self._unauthorized_sessions.items()
-            if isinstance(data, UnauthorizedRefreshTokenSessionData)
-        }
         return StoreData(
-            authorized_sessions=authorized_sessions,
-            unauthorized_sessions=unauthorized_sessions,
+            unauthorized_sessions=self._unauthorized_sessions,
             key=self._key,
         )
 
-    async def async_load(self) -> None:
-        """Load sessions."""
+    async def async_setup(self) -> None:
+        """Set up session manager."""
         data = await self._store.async_load()
         if data is None or not isinstance(data, dict):
             self._set_defaults()
             return
 
         self._key = data["key"]
-        self._unauthorized_sessions = {
-            session_id: UnauthorizedRefreshTokenSessionData(
-                refresh_token_id=session_data["refresh_token_id"]
-            )
-            for session_id, session_data in data["unauthorized_sessions"].items()
-        }
-        for session_id, session_data in data["authorized_sessions"].items():
-            self._authorized_sessions[session_id] = AuthorizedSessionData(
-                refresh_token_id=session_data["refresh_token_id"],
-                absolute_expiry=datetime.fromisoformat(session_data["absolute_expiry"]),
-                idle_expiry=datetime.fromisoformat(session_data["idle_expiry"]),
-            )
-            self._async_register_revoke_token_callback(session_data["refresh_token_id"])
+        self._unauthorized_sessions = data["unauthorized_sessions"]
+        for token_id in self._unauthorized_sessions.values():
+            self._async_register_revoke_token_callback(token_id)
 
     @callback
     def _set_defaults(self) -> None:
         """Set default values."""
-        self._authorized_sessions = {}
         self._unauthorized_sessions = {}
         self._key = _generate_key()
         self._async_schedule_save(0)

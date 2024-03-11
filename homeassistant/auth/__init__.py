@@ -187,7 +187,7 @@ class AuthManager:
             )
         )
         self._async_track_next_refresh_token_expiration()
-        await self.session.async_load()
+        await self.session.async_setup()
 
     @property
     def auth_providers(self) -> list[AuthProvider]:
