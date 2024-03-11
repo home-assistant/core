@@ -144,9 +144,7 @@ async def async_start(  # noqa: C901
     mqtt_data = get_mqtt_data(hass)
     platform_setup_lock: dict[str, asyncio.Lock] = {}
 
-    async def _async_component_setup(
-        discovery_payload: MQTTDiscoveryPayload,
-    ) -> None:
+    async def _async_component_setup(discovery_payload: MQTTDiscoveryPayload) -> None:
         """Perform component set up."""
         discovery_hash = discovery_payload.discovery_data[ATTR_DISCOVERY_HASH]
         component, discovery_id = discovery_hash
