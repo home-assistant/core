@@ -2,16 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass, field
 import logging
 from typing import Any
 
-from motionblindsble.const import (
-    MotionBlindType,
-    MotionConnectionType,
-    MotionRunningType,
-)
+from motionblindsble.const import MotionBlindType, MotionRunningType
 from motionblindsble.device import MotionDevice
 
 from homeassistant.components.cover import (
@@ -26,13 +21,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    ATTR_CONNECTION,
-    CONF_BLIND_TYPE,
-    CONF_MAC_CODE,
-    DOMAIN,
-    ICON_VERTICAL_BLIND,
-)
+from .const import CONF_BLIND_TYPE, CONF_MAC_CODE, DOMAIN, ICON_VERTICAL_BLIND
 from .entity import MotionblindsBLEEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -98,7 +87,6 @@ class GenericBlind(MotionblindsBLEEntity, CoverEntity):
         self.entity_description = COVER_TYPES[entry.data[CONF_BLIND_TYPE]]
         self._device.register_running_callback(self.async_update_running)
         self._device.register_position_callback(self.async_update_position)
-        self._device.register_connection_callback(self.async_update_connection)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop moving the blind."""
@@ -144,17 +132,6 @@ class GenericBlind(MotionblindsBLEEntity, CoverEntity):
             self._attr_current_cover_position == 0 if position is not None else None
         )
         self.async_write_ha_state()
-
-    @callback
-    def async_update_connection(self, connection_type: MotionConnectionType) -> None:
-        """Update the connection status."""
-        # Write state to update connection state attribute
-        self.async_write_ha_state()
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, str]:
-        """Return the state attributes."""
-        return {ATTR_CONNECTION: self._device.connection_type}
 
 
 class PositionBlind(GenericBlind):
