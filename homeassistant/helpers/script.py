@@ -505,7 +505,9 @@ class _ScriptRun:
         self._stop.set()
         if self._started:
             # If the script was never started
-            # do not try no wait for it to stop
+            # the stopped event will never be
+            # set because the script will never
+            # start running
             await self._stopped.wait()
 
     def _handle_exception(
