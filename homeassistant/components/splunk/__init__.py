@@ -1,4 +1,5 @@
 """Support to send data to a Splunk instance."""
+
 from http import HTTPStatus
 import json
 import logging

@@ -1,4 +1,5 @@
 """Config flow to configure SleepIQ component."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping

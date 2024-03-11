@@ -1,4 +1,5 @@
 """deCONZ sensor platform tests."""
+
 from datetime import timedelta
 from unittest.mock import patch
 

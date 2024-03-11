@@ -1,4 +1,5 @@
 """Test the Scrape config flow."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch

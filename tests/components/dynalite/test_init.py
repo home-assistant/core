@@ -1,4 +1,5 @@
 """Test Dynalite __init__."""
+
 from unittest.mock import call, patch
 
 import pytest

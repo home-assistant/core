@@ -1,4 +1,5 @@
 """The tests for Netatmo component."""
+
 from datetime import timedelta
 from time import time
 from unittest.mock import AsyncMock, patch

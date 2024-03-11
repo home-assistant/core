@@ -1,4 +1,5 @@
 """Validation helpers for KNX config schemas."""
+
 from collections.abc import Callable
 import ipaddress
 from typing import Any

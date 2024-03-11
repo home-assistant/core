@@ -1,4 +1,5 @@
 """Test core config."""
+
 from http import HTTPStatus
 from unittest.mock import Mock, patch
 

@@ -1,4 +1,5 @@
 """The tests for Philips TV device triggers."""
+
 import pytest
 from pytest_unordered import unordered
 

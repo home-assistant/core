@@ -1,4 +1,5 @@
 """Light platform for Evil Genius Light."""
+
 from __future__ import annotations
 
 import asyncio

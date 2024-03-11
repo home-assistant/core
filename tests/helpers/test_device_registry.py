@@ -1,4 +1,5 @@
 """Tests for the Device Registry."""
+
 from collections.abc import Iterable
 from contextlib import AbstractContextManager, nullcontext
 import time

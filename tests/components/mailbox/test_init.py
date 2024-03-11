@@ -1,4 +1,5 @@
 """The tests for the mailbox component."""
+
 from datetime import datetime
 from hashlib import sha1
 from http import HTTPStatus

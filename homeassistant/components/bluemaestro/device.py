@@ -1,4 +1,5 @@
 """Support for BlueMaestro devices."""
+
 from __future__ import annotations
 
 from bluemaestro_ble import DeviceKey

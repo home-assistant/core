@@ -1,4 +1,5 @@
 """The tests for the pilight component."""
+
 from datetime import timedelta
 import logging
 import socket

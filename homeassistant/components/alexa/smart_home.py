@@ -1,4 +1,5 @@
 """Support for alexa Smart Home Skill API."""
+
 import logging
 from typing import Any
 

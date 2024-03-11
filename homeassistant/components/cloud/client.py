@@ -1,4 +1,5 @@
 """Interface implementation for cloud client."""
+
 from __future__ import annotations
 
 import asyncio

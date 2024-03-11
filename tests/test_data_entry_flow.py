@@ -1,4 +1,5 @@
 """Test the flow classes."""
+
 import asyncio
 import dataclasses
 import logging

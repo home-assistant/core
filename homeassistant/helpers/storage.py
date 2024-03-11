@@ -1,4 +1,5 @@
 """Helper to help store data."""
+
 from __future__ import annotations
 
 import asyncio

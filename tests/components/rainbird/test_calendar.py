@@ -1,6 +1,5 @@
 """Tests for rainbird calendar platform."""
 
-
 from collections.abc import Awaitable, Callable
 import datetime
 from http import HTTPStatus

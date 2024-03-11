@@ -1,4 +1,5 @@
 """Test deprecation helpers."""
+
 from enum import StrEnum
 import logging
 import sys

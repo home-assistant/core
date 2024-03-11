@@ -1,4 +1,5 @@
 """Tests for the HomeKit component."""
+
 from __future__ import annotations
 
 import asyncio
