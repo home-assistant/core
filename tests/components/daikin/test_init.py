@@ -1,5 +1,5 @@
 """Define tests for the Daikin init."""
-import asyncio
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, PropertyMock, patch
 
@@ -224,7 +224,7 @@ async def test_timeout_error(hass: HomeAssistant, mock_daikin) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    mock_daikin.factory.side_effect = asyncio.TimeoutError
+    mock_daikin.factory.side_effect = TimeoutError
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 

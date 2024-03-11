@@ -1,4 +1,5 @@
 """Implement the Google Smart Home traits."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -482,6 +483,11 @@ class OnOffTrait(_Trait):
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
         if domain == water_heater.DOMAIN and features & WaterHeaterEntityFeature.ON_OFF:
+            return True
+
+        if domain == climate.DOMAIN and features & (
+            ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+        ):
             return True
 
         return domain in (
@@ -1937,9 +1943,7 @@ class ModesTrait(_Trait):
         elif self.state.domain == media_player.DOMAIN:
             if media_player.ATTR_SOUND_MODE_LIST in attrs:
                 mode_settings["sound mode"] = attrs.get(media_player.ATTR_SOUND_MODE)
-        elif self.state.domain == input_select.DOMAIN:
-            mode_settings["option"] = self.state.state
-        elif self.state.domain == select.DOMAIN:
+        elif self.state.domain in (input_select.DOMAIN, select.DOMAIN):
             mode_settings["option"] = self.state.state
         elif self.state.domain == humidifier.DOMAIN:
             if ATTR_MODE in attrs:

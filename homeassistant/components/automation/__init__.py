@@ -1,4 +1,5 @@
 """Allow to set up simple automation rules via the config file."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -701,13 +702,18 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         await super().async_will_remove_from_hass()
         await self.async_disable()
 
-    async def _async_enable_automation(self, event: Event) -> None:
+    async def _async_enable_automation(self) -> None:
         """Start automation on startup."""
         # Don't do anything if no longer enabled or already attached
         if not self._is_enabled or self._async_detach_triggers is not None:
             return
 
         self._async_detach_triggers = await self._async_attach_triggers(True)
+
+    @callback
+    def _async_create_enable_automation_task(self, event: Event) -> None:
+        """Create a task to enable the automation."""
+        self.hass.async_create_task(self._async_enable_automation(), eager_start=True)
 
     async def async_enable(self) -> None:
         """Enable this automation entity.
@@ -726,7 +732,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             return
 
         self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STARTED, self._async_enable_automation
+            EVENT_HOMEASSISTANT_STARTED, self._async_create_enable_automation_task
         )
         self.async_write_ha_state()
 

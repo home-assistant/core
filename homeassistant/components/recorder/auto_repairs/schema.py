@@ -1,4 +1,5 @@
 """Schema repairs."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping

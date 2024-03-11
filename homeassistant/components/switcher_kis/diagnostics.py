@@ -1,4 +1,5 @@
 """Diagnostics support for Switcher."""
+
 from __future__ import annotations
 
 from dataclasses import asdict

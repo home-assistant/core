@@ -1,4 +1,5 @@
 """Configuration for Sonos tests."""
+
 from copy import copy
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, Mock, patch

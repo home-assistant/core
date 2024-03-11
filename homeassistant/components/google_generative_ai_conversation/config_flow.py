@@ -1,4 +1,5 @@
 """Config flow for Google Generative AI Conversation integration."""
+
 from __future__ import annotations
 
 from functools import partial
@@ -11,10 +12,14 @@ from google.api_core.exceptions import ClientError
 import google.generativeai as genai
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -66,14 +71,14 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     await hass.async_add_executor_job(partial(genai.list_models))
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Google Generative AI Conversation."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -103,22 +108,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
         """Create the options flow."""
-        return OptionsFlow(config_entry)
+        return GoogleGenerativeAIOptionsFlow(config_entry)
 
 
-class OptionsFlow(config_entries.OptionsFlow):
+class GoogleGenerativeAIOptionsFlow(OptionsFlow):
     """Google Generative AI config flow options handler."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(

@@ -1,13 +1,17 @@
 """Common fixtures for the Homeassistant Analytics tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from python_homeassistant_analytics import CurrentAnalytics
-from python_homeassistant_analytics.models import Integration
+from python_homeassistant_analytics.models import CustomIntegration, Integration
 
 from homeassistant.components.analytics_insights import DOMAIN
-from homeassistant.components.analytics_insights.const import CONF_TRACKED_INTEGRATIONS
+from homeassistant.components.analytics_insights.const import (
+    CONF_TRACKED_CUSTOM_INTEGRATIONS,
+    CONF_TRACKED_INTEGRATIONS,
+)
 
 from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
 
@@ -40,6 +44,13 @@ def mock_analytics_client() -> Generator[AsyncMock, None, None]:
         client.get_integrations.return_value = {
             key: Integration.from_dict(value) for key, value in integrations.items()
         }
+        custom_integrations = load_json_object_fixture(
+            "analytics_insights/custom_integrations.json"
+        )
+        client.get_custom_integrations.return_value = {
+            key: CustomIntegration.from_dict(value)
+            for key, value in custom_integrations.items()
+        }
         yield client
 
 
@@ -50,5 +61,8 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="Homeassistant Analytics",
         data={},
-        options={CONF_TRACKED_INTEGRATIONS: ["youtube", "spotify", "myq"]},
+        options={
+            CONF_TRACKED_INTEGRATIONS: ["youtube", "spotify", "myq"],
+            CONF_TRACKED_CUSTOM_INTEGRATIONS: ["hacs"],
+        },
     )

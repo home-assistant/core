@@ -1,4 +1,5 @@
 """Test the Zeversolar config flow."""
+
 from unittest.mock import MagicMock, patch
 
 import pytest

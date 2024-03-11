@@ -1,4 +1,5 @@
 """Media browsing tests for the forked_daapd media player platform."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 

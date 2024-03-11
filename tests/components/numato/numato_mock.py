@@ -1,4 +1,5 @@
 """Mockup for the numato component interface."""
+
 from numato_gpio import NumatoGpioError
 
 

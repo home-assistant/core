@@ -1,4 +1,5 @@
 """Tests for the Input slider component."""
+
 import datetime
 from unittest.mock import patch
 

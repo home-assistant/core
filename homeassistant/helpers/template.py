@@ -1,4 +1,5 @@
 """Template helper methods for rendering strings with Home Assistant data."""
+
 from __future__ import annotations
 
 from ast import literal_eval
@@ -78,8 +79,15 @@ from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.thread import ThreadWithException
 
-from . import area_registry, device_registry, entity_registry, location as loc_helper
+from . import (
+    area_registry,
+    device_registry,
+    entity_registry,
+    issue_registry,
+    location as loc_helper,
+)
 from .singleton import singleton
+from .translation import async_translate_state
 from .typing import TemplateVarsType
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -665,7 +673,7 @@ class Template:
                 await finish_event.wait()
             if self._exc_info:
                 raise TemplateError(self._exc_info[1].with_traceback(self._exc_info[2]))
-        except asyncio.TimeoutError:
+        except TimeoutError:
             template_render_thread.raise_exc(TimeoutError)
             return True
         finally:
@@ -892,6 +900,36 @@ class AllStates:
     def __repr__(self) -> str:
         """Representation of All States."""
         return "<template AllStates>"
+
+
+class StateTranslated:
+    """Class to represent a translated state in a template."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize all states."""
+        self._hass = hass
+
+    def __call__(self, entity_id: str) -> str | None:
+        """Retrieve translated state if available."""
+        state = _get_state_if_valid(self._hass, entity_id)
+
+        if state is None:
+            return STATE_UNKNOWN
+
+        state_value = state.state
+        domain = state.domain
+        device_class = state.attributes.get("device_class")
+        entry = entity_registry.async_get(self._hass).async_get(entity_id)
+        platform = None if entry is None else entry.platform
+        translation_key = None if entry is None else entry.translation_key
+
+        return async_translate_state(
+            self._hass, state_value, domain, platform, translation_key, device_class
+        )
+
+    def __repr__(self) -> str:
+        """Representation of Translated state."""
+        return "<template StateTranslated>"
 
 
 class DomainStates:
@@ -1249,19 +1287,23 @@ def integration_entities(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
     or provide a config entry title for filtering between instances of the same
     integration.
     """
-    # first try if this is a config entry match
-    conf_entry = next(
-        (
-            entry.entry_id
-            for entry in hass.config_entries.async_entries()
-            if entry.title == entry_name
-        ),
-        None,
-    )
-    if conf_entry is not None:
-        ent_reg = entity_registry.async_get(hass)
-        entries = entity_registry.async_entries_for_config_entry(ent_reg, conf_entry)
-        return [entry.entity_id for entry in entries]
+
+    # Don't allow searching for config entries without title
+    if not entry_name:
+        return []
+
+    # first try if there are any config entries with a matching title
+    entities: list[str] = []
+    ent_reg = entity_registry.async_get(hass)
+    for entry in hass.config_entries.async_entries():
+        if entry.title != entry_name:
+            continue
+        entries = entity_registry.async_entries_for_config_entry(
+            ent_reg, entry.entry_id
+        )
+        entities.extend(entry.entity_id for entry in entries)
+    if entities:
+        return entities
 
     # fallback to just returning all entities for a domain
     # pylint: disable-next=import-outside-toplevel
@@ -1324,6 +1366,21 @@ def is_device_attr(
 ) -> bool:
     """Test if a device's attribute is a specific value."""
     return bool(device_attr(hass, device_or_entity_id, attr_name) == attr_value)
+
+
+def issues(hass: HomeAssistant) -> dict[tuple[str, str], dict[str, Any]]:
+    """Return all open issues."""
+    current_issues = issue_registry.async_get(hass).issues
+    # Use JSON for safe representation
+    return {k: v.to_json() for (k, v) in current_issues.items()}
+
+
+def issue(hass: HomeAssistant, domain: str, issue_id: str) -> dict[str, Any] | None:
+    """Get issue by domain and issue_id."""
+    result = issue_registry.async_get(hass).async_get_issue(domain, issue_id)
+    if result:
+        return result.to_json()
+    return None
 
 
 def areas(hass: HomeAssistant) -> Iterable[str | None]:
@@ -2295,6 +2352,7 @@ def iif(
         {{ is_state("device_tracker.frenck", "home") | iif("yes", "no") }}
         {{ iif(1==2, "yes", "no") }}
         {{ (1 == 1) | iif("yes", "no") }}
+
     """
     if value is None and if_none is not _SENTINEL:
         return if_none
@@ -2587,8 +2645,12 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["device_id"] = hassfunction(device_id)
         self.filters["device_id"] = self.globals["device_id"]
 
+        self.globals["issues"] = hassfunction(issues)
+
+        self.globals["issue"] = hassfunction(issue)
+        self.filters["issue"] = self.globals["issue"]
+
         self.globals["areas"] = hassfunction(areas)
-        self.filters["areas"] = self.globals["areas"]
 
         self.globals["area_id"] = hassfunction(area_id)
         self.filters["area_id"] = self.globals["area_id"]
@@ -2625,6 +2687,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "is_state_attr",
                 "state_attr",
                 "states",
+                "state_translated",
                 "has_value",
                 "utcnow",
                 "now",
@@ -2675,6 +2738,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["state_attr"] = self.globals["state_attr"]
         self.globals["states"] = AllStates(hass)
         self.filters["states"] = self.globals["states"]
+        self.globals["state_translated"] = StateTranslated(hass)
+        self.filters["state_translated"] = self.globals["state_translated"]
         self.globals["has_value"] = hassfunction(has_value)
         self.filters["has_value"] = self.globals["has_value"]
         self.tests["has_value"] = hassfunction(has_value, pass_eval_context)
@@ -2687,7 +2752,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
     def is_safe_callable(self, obj):
         """Test if callback is safe."""
-        return isinstance(obj, AllStates) or super().is_safe_callable(obj)
+        return isinstance(
+            obj, (AllStates, StateTranslated)
+        ) or super().is_safe_callable(obj)
 
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""

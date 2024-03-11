@@ -1,4 +1,5 @@
 """The Z-Wave JS integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -168,7 +169,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 translation_key="invalid_server_version",
             )
         raise ConfigEntryNotReady(f"Invalid server version: {err}") from err
-    except (asyncio.TimeoutError, BaseZwaveJSServerError) as err:
+    except (TimeoutError, BaseZwaveJSServerError) as err:
         raise ConfigEntryNotReady(f"Failed to connect: {err}") from err
 
     async_delete_issue(hass, DOMAIN, "invalid_server_version")

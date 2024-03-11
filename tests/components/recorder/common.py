@@ -1,4 +1,5 @@
 """Common test utils for working with recorder."""
+
 from __future__ import annotations
 
 import asyncio

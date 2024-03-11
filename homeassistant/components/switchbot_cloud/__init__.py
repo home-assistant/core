@@ -1,4 +1,5 @@
 """The SwitchBot via API integration."""
+
 from asyncio import gather
 from dataclasses import dataclass, field
 from logging import getLogger

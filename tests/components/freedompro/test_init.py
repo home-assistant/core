@@ -1,4 +1,5 @@
 """Freedompro component tests."""
+
 import logging
 from unittest.mock import patch
 

@@ -1,4 +1,5 @@
 """The OpenAI Conversation integration."""
+
 from __future__ import annotations
 
 import logging

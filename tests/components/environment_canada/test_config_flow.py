@@ -1,4 +1,5 @@
 """Test the Environment Canada (EC) config flow."""
+
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import xml.etree.ElementTree as et
 
