@@ -1,6 +1,7 @@
 """Test the Shelly config flow."""
 
 from dataclasses import replace
+from datetime import timedelta
 from ipaddress import ip_address
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
@@ -21,13 +22,15 @@ from homeassistant.components.shelly.const import (
     DOMAIN,
     BLEScannerMode,
 )
+from homeassistant.components.shelly.coordinator import ENTRY_RELOAD_COOLDOWN
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from . import init_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
@@ -1030,6 +1033,9 @@ async def test_zeroconf_already_configured_triggers_refresh_mac_in_name(
 
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     mock_rpc_device.mock_disconnected()
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=ENTRY_RELOAD_COOLDOWN)
+    )
     await hass.async_block_till_done()
     assert len(mock_rpc_device.initialize.mock_calls) == 2
 
@@ -1062,6 +1068,9 @@ async def test_zeroconf_already_configured_triggers_refresh(
 
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     mock_rpc_device.mock_disconnected()
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=ENTRY_RELOAD_COOLDOWN)
+    )
     await hass.async_block_till_done()
     assert len(mock_rpc_device.initialize.mock_calls) == 2
 
@@ -1100,6 +1109,9 @@ async def test_zeroconf_sleeping_device_not_triggers_refresh(
 
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     mock_rpc_device.mock_disconnected()
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=ENTRY_RELOAD_COOLDOWN)
+    )
     await hass.async_block_till_done()
     assert len(mock_rpc_device.initialize.mock_calls) == 0
     assert "device did not update" not in caplog.text

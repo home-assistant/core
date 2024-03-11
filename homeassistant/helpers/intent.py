@@ -197,11 +197,7 @@ def _has_name(
     if (entity is None) or (not entity.aliases):
         return False
 
-    for alias in entity.aliases:
-        if name == alias.casefold():
-            return True
-
-    return False
+    return any(name == alias.casefold() for alias in entity.aliases)
 
 
 def _find_area(

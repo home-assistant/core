@@ -404,17 +404,17 @@ async def test_invalid_availability_template_keeps_component_available(
 async def test_on_off(hass: HomeAssistant, calls) -> None:
     """Test turn on and turn off."""
     await _register_components(hass)
-    expected_calls = 0
 
-    for func, state, action in [
-        (common.async_turn_on, STATE_ON, "turn_on"),
-        (common.async_turn_off, STATE_OFF, "turn_off"),
-    ]:
+    for expected_calls, (func, state, action) in enumerate(
+        [
+            (common.async_turn_on, STATE_ON, "turn_on"),
+            (common.async_turn_off, STATE_OFF, "turn_off"),
+        ]
+    ):
         await func(hass, _TEST_FAN)
         assert hass.states.get(_STATE_INPUT_BOOLEAN).state == state
         _verify(hass, state, 0, None, None, None)
-        expected_calls += 1
-        assert len(calls) == expected_calls
+        assert len(calls) == expected_calls + 1
         assert calls[-1].data["action"] == action
         assert calls[-1].data["caller"] == _TEST_FAN
 
