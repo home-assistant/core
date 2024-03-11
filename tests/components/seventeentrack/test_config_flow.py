@@ -61,7 +61,7 @@ async def test_create_entry(
         (
             False,
             None,
-            "invalid_credentials",
+            "invalid_auth",
         ),
         (
             True,
