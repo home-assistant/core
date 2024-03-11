@@ -1,4 +1,5 @@
 """Provides functionality to interact with image processing services."""
+
 from __future__ import annotations
 
 import asyncio
@@ -262,7 +263,7 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
                 continue
 
             face.update({ATTR_ENTITY_ID: self.entity_id})
-            self.hass.bus.async_fire(EVENT_DETECT_FACE, face)  # type: ignore[arg-type]
+            self.hass.bus.async_fire(EVENT_DETECT_FACE, face)
 
         # Update entity store
         self.faces = faces

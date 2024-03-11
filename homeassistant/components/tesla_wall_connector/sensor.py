@@ -1,4 +1,5 @@
 """Sensors for Tesla Wall Connector."""
+
 from dataclasses import dataclass
 import logging
 
@@ -66,7 +67,6 @@ WALL_CONNECTOR_SENSORS = [
             data[WALLCONNECTOR_DATA_VITALS].evse_state
         ),
         options=list(EVSE_STATE.values()),
-        icon="mdi:ev-station",
     ),
     WallConnectorSensorDescription(
         key="handle_temp_c",
@@ -156,7 +156,7 @@ WALL_CONNECTOR_SENSORS = [
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].session_energy_wh,
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     WallConnectorSensorDescription(
         key="energy_kWh",
@@ -172,7 +172,7 @@ WALL_CONNECTOR_SENSORS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_devices: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the Wall Connector sensor devices."""
     wall_connector_data = hass.data[DOMAIN][config_entry.entry_id]
@@ -182,7 +182,7 @@ async def async_setup_entry(
         for description in WALL_CONNECTOR_SENSORS
     ]
 
-    async_add_devices(all_entities)
+    async_add_entities(all_entities)
 
 
 class WallConnectorSensorEntity(WallConnectorEntity, SensorEntity):

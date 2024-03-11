@@ -1,4 +1,5 @@
 """Tests for Vizio init."""
+
 from datetime import timedelta
 
 import pytest

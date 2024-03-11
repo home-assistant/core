@@ -1,4 +1,5 @@
 """The Airtouch 5 integration."""
+
 from __future__ import annotations
 
 from airtouch5py.airtouch5_simple_client import Airtouch5SimpleClient

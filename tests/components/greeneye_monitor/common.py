@@ -1,4 +1,5 @@
 """Common helpers for greeneye_monitor tests."""
+
 from __future__ import annotations
 
 from typing import Any

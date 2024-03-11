@@ -1,4 +1,5 @@
 """Tests for the devolo Home Network sensors."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock
 

@@ -1,4 +1,5 @@
 """Support for a ScreenLogic Binary Sensor."""
+
 from copy import copy
 import dataclasses
 import logging

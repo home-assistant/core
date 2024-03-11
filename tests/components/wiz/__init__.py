@@ -35,7 +35,7 @@ FAKE_STATE = PilotParser(
     }
 )
 FAKE_IP = "1.1.1.1"
-FAKE_MAC = "ABCABCABCABC"
+FAKE_MAC = "abcabcabcabc"
 FAKE_BULB_CONFIG = {
     "method": "getSystemConfig",
     "env": "pro",

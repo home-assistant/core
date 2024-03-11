@@ -1,4 +1,5 @@
 """The tests for hls streams."""
+
 import asyncio
 from collections import deque
 from http import HTTPStatus

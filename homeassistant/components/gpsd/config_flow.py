@@ -1,4 +1,5 @@
 """Config flow for GPSD integration."""
+
 from __future__ import annotations
 
 import socket
@@ -7,9 +8,8 @@ from typing import Any
 from gps3.agps3threaded import GPSD_PORT as DEFAULT_PORT, HOST as DEFAULT_HOST
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
@@ -22,18 +22,18 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-class GPSDConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class GPSDConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for GPSD."""
 
     VERSION = 1
 
-    async def async_step_import(self, import_data: dict[str, Any]) -> FlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a config entry from configuration.yaml."""
         return await self.async_step_user(import_data)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is not None:
             self._async_abort_entries_match(user_input)

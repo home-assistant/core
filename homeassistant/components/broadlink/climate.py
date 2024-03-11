@@ -1,4 +1,5 @@
 """Support for Broadlink climate devices."""
+
 from typing import Any
 
 from homeassistant.components.climate import (
@@ -30,7 +31,7 @@ async def async_setup_entry(
         async_add_entities([BroadlinkThermostat(device)])
 
 
-class BroadlinkThermostat(ClimateEntity, BroadlinkEntity):
+class BroadlinkThermostat(BroadlinkEntity, ClimateEntity):
     """Representation of a Broadlink Hysen climate entity."""
 
     _attr_has_entity_name = True

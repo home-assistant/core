@@ -1,4 +1,5 @@
 """Sensor platform integration for ADC ports of Numato USB GPIO expanders."""
+
 from __future__ import annotations
 
 import logging

@@ -1,7 +1,7 @@
 """Support for RainMachine devices."""
+
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
@@ -206,13 +206,10 @@ async def async_update_programs_and_zones(
     programs affect zones and certain combinations of zones affect programs.
     """
     data: RainMachineData = hass.data[DOMAIN][entry.entry_id]
-
-    await asyncio.gather(
-        *[
-            data.coordinators[DATA_PROGRAMS].async_refresh(),
-            data.coordinators[DATA_ZONES].async_refresh(),
-        ]
-    )
+    # No gather here to allow http keep-alive to reuse
+    # the connection for each coordinator.
+    await data.coordinators[DATA_PROGRAMS].async_refresh()
+    await data.coordinators[DATA_ZONES].async_refresh()
 
 
 async def async_setup_entry(  # noqa: C901
@@ -302,14 +299,6 @@ async def async_setup_entry(  # noqa: C901
 
         return data
 
-    async def async_init_coordinator(
-        coordinator: RainMachineDataUpdateCoordinator,
-    ) -> None:
-        """Initialize a RainMachineDataUpdateCoordinator."""
-        await coordinator.async_initialize()
-        await coordinator.async_config_entry_first_refresh()
-
-    controller_init_tasks = []
     coordinators = {}
     for api_category, update_interval in COORDINATOR_UPDATE_INTERVAL_MAP.items():
         coordinator = coordinators[api_category] = RainMachineDataUpdateCoordinator(
@@ -320,9 +309,11 @@ async def async_setup_entry(  # noqa: C901
             update_interval=update_interval,
             update_method=partial(async_update, api_category),
         )
-        controller_init_tasks.append(async_init_coordinator(coordinator))
-
-    await asyncio.gather(*controller_init_tasks)
+        coordinator.async_initialize()
+        # Its generally faster not to gather here so we can
+        # reuse the connection instead of creating a new
+        # connection for each coordinator.
+        await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = RainMachineData(
@@ -507,7 +498,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # 1 -> 2: Update unique IDs to be consistent across platform (including removing
     # the silly removal of colons in the MAC address that was added originally):
     if version == 1:
-        version = entry.version = 2
+        version = 2
+        hass.config_entries.async_update_entry(entry, version=version)
 
         @callback
         def migrate_unique_id(entity_entry: er.RegistryEntry) -> dict[str, Any]:

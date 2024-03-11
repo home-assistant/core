@@ -1,4 +1,5 @@
 """The climate tests for the venstar integration."""
+
 from unittest.mock import patch
 
 from homeassistant.components.climate import ClimateEntityFeature

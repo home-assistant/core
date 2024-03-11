@@ -1,4 +1,5 @@
 """Support for ESPHome lights."""
+
 from __future__ import annotations
 
 from functools import lru_cache
@@ -285,7 +286,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
                 # (fewest capabilities set)
                 data["color_mode"] = _least_complex_color_mode(color_modes)
 
-        await self._client.light_command(**data)
+        self._client.light_command(**data)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
@@ -294,7 +295,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
             data["flash_length"] = FLASH_LENGTHS[kwargs[ATTR_FLASH]]
         if ATTR_TRANSITION in kwargs:
             data["transition_length"] = kwargs[ATTR_TRANSITION]
-        await self._client.light_command(**data)
+        self._client.light_command(**data)
 
     @property
     @esphome_state_property

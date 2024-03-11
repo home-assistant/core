@@ -1,4 +1,5 @@
 """Helpers to execute scripts."""
+
 from __future__ import annotations
 
 import asyncio
@@ -274,9 +275,9 @@ async def async_validate_actions_config(
     hass: HomeAssistant, actions: list[ConfigType]
 ) -> list[ConfigType]:
     """Validate a list of actions."""
-    return await asyncio.gather(
-        *(async_validate_action_config(hass, action) for action in actions)
-    )
+    # No gather here because async_validate_action_config is unlikely
+    # to suspend and the overhead of creating many tasks is not worth it
+    return [await async_validate_action_config(hass, action) for action in actions]
 
 
 async def async_validate_action_config(

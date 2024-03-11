@@ -3,6 +3,7 @@
 The only mocking required is of the underlying SmartThings API object so
 real HTTP calls are not initiated during testing.
 """
+
 from pysmartthings import Attribute, Capability
 from pysmartthings.device import Status
 
@@ -120,7 +121,7 @@ async def test_unload_config_entry(hass: HomeAssistant, device_factory) -> None:
     # Arrange
     device = device_factory("Lock_1", [Capability.lock], {Attribute.lock: "locked"})
     config_entry = await setup_platform(hass, LOCK_DOMAIN, devices=[device])
-    config_entry.state = ConfigEntryState.LOADED
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     # Act
     await hass.config_entries.async_forward_entry_unload(config_entry, "lock")
     # Assert

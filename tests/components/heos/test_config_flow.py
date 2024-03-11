@@ -1,4 +1,5 @@
 """Tests for the Heos config flow module."""
+
 from unittest.mock import patch
 from urllib.parse import urlparse
 

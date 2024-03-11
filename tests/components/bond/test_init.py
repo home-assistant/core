@@ -1,4 +1,5 @@
 """Tests for the Bond module."""
+
 from unittest.mock import MagicMock, Mock
 
 from aiohttp import ClientConnectionError, ClientResponseError

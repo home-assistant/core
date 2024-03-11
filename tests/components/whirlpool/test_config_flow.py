@@ -1,4 +1,5 @@
 """Test the Whirlpool Sixth Sense config flow."""
+
 from unittest.mock import patch
 
 import aiohttp

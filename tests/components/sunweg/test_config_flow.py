@@ -1,4 +1,5 @@
 """Tests for the Sun WEG server config flow."""
+
 from unittest.mock import patch
 
 from sunweg.api import APIHelper

@@ -1,4 +1,5 @@
 """Provides core stream functionality."""
+
 from __future__ import annotations
 
 import asyncio
@@ -13,7 +14,7 @@ from typing import TYPE_CHECKING, Any
 from aiohttp import web
 import numpy as np
 
-from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.decorator import Registry
@@ -380,7 +381,7 @@ class StreamView(HomeAssistantView):
         self, request: web.Request, token: str, sequence: str = "", part_num: str = ""
     ) -> web.StreamResponse:
         """Start a GET request."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
 
         stream = next(
             (s for s in hass.data[DOMAIN][ATTR_STREAMS] if s.access_token == token),

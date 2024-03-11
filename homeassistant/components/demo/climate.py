@@ -1,4 +1,5 @@
 """Demo platform that offers a fake climate device."""
+
 from __future__ import annotations
 
 from typing import Any

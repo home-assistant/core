@@ -1,4 +1,5 @@
 """Platform for retrieving meteorological data from Environment Canada."""
+
 from __future__ import annotations
 
 import datetime
@@ -68,17 +69,15 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][config_entry.entry_id]["weather_coordinator"]
     entity_registry = er.async_get(hass)
 
-    entities = [ECWeather(coordinator, False)]
-
-    # Add hourly entity to legacy config entries
-    if entity_registry.async_get_entity_id(
+    # Remove hourly entity from legacy config entries
+    if hourly_entity_id := entity_registry.async_get_entity_id(
         WEATHER_DOMAIN,
         DOMAIN,
         _calculate_unique_id(config_entry.unique_id, True),
     ):
-        entities.append(ECWeather(coordinator, True))
+        entity_registry.async_remove(hourly_entity_id)
 
-    async_add_entities(entities)
+    async_add_entities([ECWeather(coordinator)])
 
 
 def _calculate_unique_id(config_entry_unique_id: str | None, hourly: bool) -> str:
@@ -98,17 +97,15 @@ class ECWeather(SingleCoordinatorWeatherEntity):
         WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
     )
 
-    def __init__(self, coordinator, hourly):
+    def __init__(self, coordinator):
         """Initialize Environment Canada weather."""
         super().__init__(coordinator)
         self.ec_data = coordinator.ec_data
         self._attr_attribution = self.ec_data.metadata["attribution"]
-        self._attr_translation_key = "hourly_forecast" if hourly else "forecast"
+        self._attr_translation_key = "forecast"
         self._attr_unique_id = _calculate_unique_id(
-            coordinator.config_entry.unique_id, hourly
+            coordinator.config_entry.unique_id, False
         )
-        self._attr_entity_registry_enabled_default = not hourly
-        self._hourly = hourly
         self._attr_device_info = device_info(coordinator.config_entry)
 
     @property
@@ -180,7 +177,7 @@ class ECWeather(SingleCoordinatorWeatherEntity):
     @property
     def forecast(self) -> list[Forecast] | None:
         """Return the forecast array."""
-        return get_forecast(self.ec_data, self._hourly)
+        return get_forecast(self.ec_data, False)
 
     @callback
     def _async_forecast_daily(self) -> list[Forecast] | None:

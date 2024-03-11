@@ -1,4 +1,5 @@
 """Tests for the Huawei LTE config flow."""
+
 from typing import Any
 from unittest.mock import patch
 from urllib.parse import urlparse, urlunparse

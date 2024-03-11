@@ -1,4 +1,5 @@
 """Test the Home Assistant Cloud config flow."""
+
 from unittest.mock import patch
 
 from homeassistant.components.cloud.const import DOMAIN

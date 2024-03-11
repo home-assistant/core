@@ -1,4 +1,5 @@
 """Tests for the Wemo standalone/non-bridge light entity."""
+
 import pytest
 from pywemo.exceptions import ActionException
 

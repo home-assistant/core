@@ -1,4 +1,5 @@
 """Support for fetching data from Broadlink devices."""
+
 from abc import ABC, abstractmethod
 from datetime import timedelta
 import logging
