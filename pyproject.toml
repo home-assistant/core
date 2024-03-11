@@ -627,8 +627,16 @@ select = [
     "S604", # call-with-shell-equals-true
     "S608", # hardcoded-sql-expression
     "S609", # unix-command-wildcard-injection
+    "SIM101", # Multiple isinstance calls for {name}, merge into a single call
+    "SIM103", # Return the condition {condition} directly
     "SIM105", # Use contextlib.suppress({exception}) instead of try-except-pass
+    "SIM107", # Don't use return in try-except and finally
+    "SIM109", # Use {replacement} instead of multiple equality comparisons
+    "SIM110", # Use {replacement} instead of for loop
+    "SIM112", # Use capitalized environment variable {expected} instead of {actual}
+    "SIM113", # Use enumerate() for index variable {index} in for loop
     "SIM114", # Combine if branches using logical or operator
+    "SIM116", # Use a dictionary instead of consecutive if statements
     "SIM117", # Merge with-statements that use the same scope
     "SIM118", # Use {key} in {dict} instead of {key} in {dict}.keys()
     "SIM201", # Use {left} != {right} instead of not {left} == {right}
