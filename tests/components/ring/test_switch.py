@@ -127,14 +127,14 @@ async def test_switch_errors_when_turned_on(
 
     with patch.object(
         ring_doorbell.RingStickUpCam, "siren", new_callable=PropertyMock
-    ) as mock_siren:
-        mock_siren.side_effect = exception_type
+    ) as mock_switch:
+        mock_switch.side_effect = exception_type
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 "switch", "turn_on", {"entity_id": "switch.front_siren"}, blocking=True
             )
         await hass.async_block_till_done()
-    assert mock_siren.call_count == 1
+    assert mock_switch.call_count == 1
     assert (
         any(
             flow

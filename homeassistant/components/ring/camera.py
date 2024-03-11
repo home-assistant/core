@@ -144,10 +144,9 @@ class RingCam(RingEntity, Camera):
         if self._last_video_id != self._last_event["id"]:
             self._image = None
 
-        video_url = await self.hass.async_add_executor_job(self._get_video)
+        self._video_url = await self.hass.async_add_executor_job(self._get_video)
 
         self._last_video_id = self._last_event["id"]
-        self._video_url = video_url
         self._expires_at = FORCE_REFRESH_INTERVAL + utcnow
 
     @exception_wrap
