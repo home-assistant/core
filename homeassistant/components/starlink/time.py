@@ -29,9 +29,7 @@ async def async_setup_entry(
 
 
 @dataclass(frozen=True, kw_only=True)
-class StarlinkTimeEntityDescription(
-    TimeEntityDescription
-):
+class StarlinkTimeEntityDescription(TimeEntityDescription):
     """Describes a Starlink time entity."""
 
     value_fn: Callable[[StarlinkData], time | None]
