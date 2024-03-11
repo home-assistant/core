@@ -736,6 +736,20 @@ async def test_pending_scheduler(hass: HomeAssistant) -> None:
     assert len(call_count) == 3
 
 
+def test_add_job_pending_tasks_coro(hass: HomeAssistant) -> None:
+    """Add a coro to pending tasks."""
+
+    async def test_coro():
+        """Test Coro."""
+        pass
+
+    for _ in range(2):
+        hass.add_job(test_coro())
+
+    # Ensure add_job does not run immediately
+    assert len(hass._tasks) == 0
+
+
 async def test_async_add_job_pending_tasks_coro(hass: HomeAssistant) -> None:
     """Add a coro to pending tasks."""
     call_count = []
@@ -745,18 +759,12 @@ async def test_async_add_job_pending_tasks_coro(hass: HomeAssistant) -> None:
         call_count.append("call")
 
     for _ in range(2):
-        hass.add_job(test_coro())
-
-    async def wait_finish_callback():
-        """Wait until all stuff is scheduled."""
-        await asyncio.sleep(0)
-        await asyncio.sleep(0)
-
-    await wait_finish_callback()
+        hass.async_add_job(test_coro())
 
     assert len(hass._tasks) == 2
     await hass.async_block_till_done()
     assert len(call_count) == 2
+    assert len(hass._tasks) == 0
 
 
 async def test_async_create_task_pending_tasks_coro(hass: HomeAssistant) -> None:
@@ -768,18 +776,12 @@ async def test_async_create_task_pending_tasks_coro(hass: HomeAssistant) -> None
         call_count.append("call")
 
     for _ in range(2):
-        hass.create_task(test_coro())
-
-    async def wait_finish_callback():
-        """Wait until all stuff is scheduled."""
-        await asyncio.sleep(0)
-        await asyncio.sleep(0)
-
-    await wait_finish_callback()
+        hass.async_create_task(test_coro())
 
     assert len(hass._tasks) == 2
     await hass.async_block_till_done()
     assert len(call_count) == 2
+    assert len(hass._tasks) == 0
 
 
 async def test_async_add_job_pending_tasks_executor(hass: HomeAssistant) -> None:
@@ -2112,6 +2114,20 @@ async def test_async_functions_with_callback(hass: HomeAssistant) -> None:
 
     await hass.services.async_call("test_domain", "test_service", blocking=True)
     assert len(runs) == 3
+
+
+async def test_async_run_job_starts_tasks_eagerly(hass: HomeAssistant) -> None:
+    """Test async_run_job starts tasks eagerly."""
+    runs = []
+
+    async def _test():
+        runs.append(True)
+
+    task = hass.async_run_job(_test)
+    # No call to hass.async_block_till_done to ensure the task is run eagerly
+    assert len(runs) == 1
+    assert task.done()
+    await task
 
 
 def test_valid_entity_id() -> None:
