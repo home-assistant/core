@@ -239,7 +239,7 @@ async def test_google_entity_registry_sync(
         assert len(mock_sync.mock_calls) == 3
 
         # When hass is not started yet we wait till started
-        hass.set_state(CoreState.not_running)
+        hass.set_state(CoreState.starting)
         hass.bus.async_fire(
             er.EVENT_ENTITY_REGISTRY_UPDATED,
             {"action": "create", "entity_id": entry.entity_id},
