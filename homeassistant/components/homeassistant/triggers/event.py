@@ -144,6 +144,7 @@ async def async_attach_trigger(
                 }
             },
             event.context,
+            eager_start=True,
         )
 
     removes = [

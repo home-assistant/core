@@ -48,7 +48,7 @@ def no_sensor():
 async def wavertree_data(requests_mock: requests_mock.Mocker) -> dict[str, _Matcher]:
     """Mock data for the Wavertree location."""
     # all metoffice test data encapsulated in here
-    mock_json = json.loads(load_fixture("metoffice.json"))
+    mock_json = json.loads(load_fixture("metoffice.json", "metoffice"))
     all_sites = json.dumps(mock_json["all_sites"])
     wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
     wavertree_daily = json.dumps(mock_json["wavertree_daily"])
@@ -247,7 +247,7 @@ async def test_two_weather_sites_running(
     )
 
     # all metoffice test data encapsulated in here
-    mock_json = json.loads(load_fixture("metoffice.json"))
+    mock_json = json.loads(load_fixture("metoffice.json", "metoffice"))
     kingslynn_hourly = json.dumps(mock_json["kingslynn_hourly"])
     kingslynn_daily = json.dumps(mock_json["kingslynn_daily"])
 

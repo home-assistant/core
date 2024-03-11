@@ -10,7 +10,6 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_STATE_CHANGED,
-    Platform,
 )
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
@@ -37,7 +36,6 @@ from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
         }
     ],
 )
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
 async def test_availability_with_shared_state_topic(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
@@ -296,7 +294,6 @@ async def test_availability_with_shared_state_topic(
         "entity_name_startswith_device_name2",
     ],
 )
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
 @patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
 async def test_default_entity_and_device_name(
     hass: HomeAssistant,
@@ -340,7 +337,6 @@ async def test_default_entity_and_device_name(
     assert len(events) == 0
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
 async def test_name_attribute_is_set_or_not(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
