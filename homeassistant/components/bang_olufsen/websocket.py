@@ -94,18 +94,10 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         """Send notification dispatch."""
 
         if notification.value:
-            if notification.value in (
-                WEBSOCKET_NOTIFICATION.BEOLINK_LISTENERS.value,
-                WEBSOCKET_NOTIFICATION.BEOLINK_AVAILABLE_LISTENERS.value,
-            ):
+            if WEBSOCKET_NOTIFICATION.BEOLINK.value in notification.value:
                 async_dispatcher_send(
                     self.hass,
-                    f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.BEOLINK_LISTENERS}",
-                )
-            elif notification.value is WEBSOCKET_NOTIFICATION.BEOLINK_PEERS.value:
-                async_dispatcher_send(
-                    self.hass,
-                    f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.BEOLINK_PEERS}",
+                    f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.BEOLINK}",
                 )
             elif notification.value is WEBSOCKET_NOTIFICATION.CONFIGURATION.value:
                 async_dispatcher_send(
@@ -197,5 +189,4 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         notification["device_id"] = self._device.id
         notification["serial_number"] = int(self._unique_id)
 
-        _LOGGER.debug("%s", notification)
         self.hass.bus.async_fire(BANG_OLUFSEN_WEBSOCKET_EVENT, notification)

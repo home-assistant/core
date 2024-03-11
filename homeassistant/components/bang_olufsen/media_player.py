@@ -58,7 +58,6 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     async_get_current_platform,
 )
-from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.util.dt import utcnow
 
 from . import BangOlufsenData
@@ -205,11 +204,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
         # Beolink
         self._remote_leader: BeolinkLeader | None = None
-
-        self._beolink_self: dict[str, dict[str, str]] | None = None
-        self._beolink_listeners: dict[str, dict[str, str]] | None = None
-        self._beolink_leader: dict[str, dict[str, str]] | None = None
-        self._beolink_peers: dict[str, dict[str, str]] | None = None
+        self._beolink_attribute: dict[str, dict] = {}
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
@@ -277,29 +272,15 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.BEOLINK_LISTENERS}",
-                self._update_beolink_listeners,
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.BEOLINK_AVAILABLE_LISTENERS}",
-                self._update_beolink_listeners,
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.BEOLINK_PEERS}",
-                self._update_beolink_peers,
+                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.BEOLINK}",
+                self._update_beolink,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.CONFIGURATION}",
-                self._update_beolink_self_and_name,
+                self._update_name,
             )
         )
 
@@ -347,11 +328,8 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         # If the device has been updated with new sources, then the API will fail here.
         await self._update_sources()
 
-        # Update beolink attributes and set friendly name.
-        self._update_beolink_leader()
-        await self._update_beolink_self_and_name(update_ha_state=False)
-        await self._update_beolink_peers(update_ha_state=False)
-        await self._update_beolink_listeners(update_ha_state=False)
+        # Update beolink attributes.
+        await self._update_beolink(should_update=False)
 
         self.async_write_ha_state()
 
@@ -422,16 +400,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
         # Update current artwork and remote_leader.
         self._media_image = get_highest_resolution_artwork(self._playback_metadata)
-        self._remote_leader = self._playback_metadata.remote_leader
-
-        # # Temp fix for mismatch in WebSocket metadata and "real" REST endpoint where the remote leader is not deleted.
-        if self._remote_leader and self.source in (
-            SOURCE_ENUM.lineIn,
-            SOURCE_ENUM.uriStreamer,
-        ):
-            self._remote_leader = None
-
-        self._update_beolink_leader()
+        await self._update_beolink(should_update=False)
 
         self.async_write_ha_state()
 
@@ -472,89 +441,94 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
         self.async_write_ha_state()
 
-    def _update_beolink_leader(self) -> None:
-        """Update the current Beolink leader."""
-        self._beolink_leader = None
-        group_members = []
-
-        if self._remote_leader:
-            # Check and add leader if device is added in Home Assistant
-            if leader_entity_id := self._get_entity_id_from_jid(
-                self._remote_leader.jid
-            ):
-                group_members.append(leader_entity_id)
-
-            # Add listener to Home Assistant group.
-            # Listeners are not aware of other listeners in the same session
-            # which means that only the leader may have a complete picture of the Home Assistant group
-            group_members.append(
-                cast(str, self._get_entity_id_from_jid(self._beolink_jid))
-            )
-
-            self._beolink_leader = {
-                "leader": {self._remote_leader.friendly_name: self._remote_leader.jid}
-            }
-
-            self._attr_group_members = group_members
-
-    async def _update_beolink_self_and_name(self, update_ha_state: bool = True) -> None:
-        """Update the device friendly name and beolink self attribute."""
+    async def _update_name(self) -> None:
+        """Update the device friendly name."""
         beolink_self = await self._client.get_beolink_self()
         self._attr_name = beolink_self.friendly_name
 
-        # Add the current device's information
-        self._beolink_self = {"self": {cast(str, self.name): self._beolink_jid}}
+        await self._update_beolink(should_update=False)
 
-        if update_ha_state:
-            self.async_write_ha_state()
+        self.async_write_ha_state()
 
-    async def _update_beolink_peers(self, update_ha_state: bool = True) -> None:
-        """Update the Beolink peers."""
+    async def _update_beolink(self, should_update: bool = True) -> None:
+        """Update the current Beolink leader, listeners, peers and self."""
+
+        self._beolink_attribute = {}
+
+        # Add Beolink self
+        self._beolink_attribute = {"beolink": {"self": {self.name: self._beolink_jid}}}
+
+        # Add Beolink peers
         peers = await self._client.get_beolink_peers()
-        self._beolink_peers = None
 
-        # Add peers
         if len(peers) > 0:
-            self._beolink_peers = {"peers": {}}
+            self._beolink_attribute["beolink"]["peers"] = {}
             for peer in peers:
-                self._beolink_peers["peers"][peer.friendly_name] = peer.jid
+                self._beolink_attribute["beolink"]["peers"][
+                    peer.friendly_name
+                ] = peer.jid
 
-        if update_ha_state:
-            self.async_write_ha_state()
+        self._remote_leader = self._playback_metadata.remote_leader
 
-    async def _update_beolink_listeners(self, update_ha_state: bool = True) -> None:
-        """Update the current Beolink listeners."""
-        # Create a new session dict
-        self._beolink_listeners = None
+        # Temp fix for mismatch in WebSocket metadata and "real" REST endpoint where the remote leader is not deleted.
+        if self.source in (
+            SOURCE_ENUM.lineIn,
+            SOURCE_ENUM.uriStreamer,
+        ):
+            self._remote_leader = None
+
+        # Add Beolink listeners / leader
+
+        # Create group members list
         group_members = []
 
-        beolink_listeners = await self._client.get_beolink_listeners()
+        # If the device is a listener.
+        if self._remote_leader is not None:
+            # Add leader
+            group_members.append(
+                cast(str, self._get_entity_id_from_jid(self._remote_leader.jid))
+            )
 
-        if len(beolink_listeners) > 0:
             # Add self
             group_members.append(
                 cast(str, self._get_entity_id_from_jid(self._beolink_jid))
             )
 
-            # Get the friendly names from listeners from the peers
-            peers = await self._client.get_beolink_peers()
+            self._beolink_attribute["beolink"]["leader"] = {
+                self._remote_leader.friendly_name: self._remote_leader.jid,
+            }
 
-            self._beolink_listeners = {"listeners": {}}
+        # If not listener, check if leader.
+        else:
+            beolink_listeners = await self._client.get_beolink_listeners()
 
-            for beolink_listener in beolink_listeners:
+            # Check if the device is a leader.
+            if len(beolink_listeners) > 0:
+                # Add self
                 group_members.append(
-                    cast(str, self._get_entity_id_from_jid(beolink_listener.jid))
+                    cast(str, self._get_entity_id_from_jid(self._beolink_jid))
                 )
-                for peer in peers:
-                    if peer.jid == beolink_listener.jid:
-                        self._beolink_listeners["listeners"][
-                            peer.friendly_name
-                        ] = beolink_listener.jid
-                        break
+
+                # Get the friendly names for the listeners from the peers
+                beolink_listeners_attribute = {}
+                for beolink_listener in beolink_listeners:
+                    group_members.append(
+                        cast(str, self._get_entity_id_from_jid(beolink_listener.jid))
+                    )
+                    for peer in peers:
+                        if peer.jid == beolink_listener.jid:
+                            beolink_listeners_attribute[
+                                peer.friendly_name
+                            ] = beolink_listener.jid
+                            break
+
+                self._beolink_attribute["beolink"][
+                    "listeners"
+                ] = beolink_listeners_attribute
 
         self._attr_group_members = group_members
 
-        if update_ha_state:
+        if should_update:
             self.async_write_ha_state()
 
     def _get_entity_id_from_jid(self, jid: str) -> str | None:
@@ -573,19 +547,19 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         """Get beolink JID from entity_id."""
         entity_registry = er.async_get(self.hass)
 
-        # Make mypy happy
-        entity_entry = cast(RegistryEntry, entity_registry.async_get(entity_id))
-        config_entry = cast(
-            ConfigEntry,
-            self.hass.config_entries.async_get_entry(
-                cast(str, entity_entry.config_entry_id)
-            ),
-        )
+        entity_entry = entity_registry.async_get(entity_id)
+        if entity_entry:
+            config_entry = cast(
+                ConfigEntry,
+                self.hass.config_entries.async_get_entry(
+                    cast(str, entity_entry.config_entry_id)
+                ),
+            )
 
-        try:
-            jid = cast(str, config_entry.data[CONF_BEOLINK_JID])
-        except KeyError:
-            jid = None
+            try:
+                jid = cast(str, config_entry.data[CONF_BEOLINK_JID])
+            except KeyError:
+                jid = None
 
         return jid
 
@@ -706,26 +680,13 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return information that is not returned anywhere else."""
-        attributes: dict[str, Any] = {"beolink": {}}
+        attributes: dict[str, Any] = {}
 
-        for beolink_attribute in (
-            self._beolink_self,
-            self._beolink_peers,
-            self._beolink_listeners,
-            self._beolink_leader,
-        ):
-            if beolink_attribute is not None:
-                attributes["beolink"].update(beolink_attribute)
+        # Add Beolink attributes
+        if self._beolink_attribute:
+            attributes.update(self._beolink_attribute)
 
-        # Remote any keys without values
-        for key, value in attributes.items():
-            if not value:
-                attributes.pop(key)
-
-        if attributes:
-            return attributes
-
-        return None
+        return attributes
 
     async def async_turn_off(self) -> None:
         """Set the device to "networkStandby"."""
@@ -733,7 +694,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        # _LOGGER.error(self._beolink_attribute)
         await self._client.set_current_volume_level(
             volume_level=VolumeLevel(level=int(volume * 100))
         )
