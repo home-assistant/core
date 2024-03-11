@@ -503,11 +503,11 @@ class _ScriptRun:
     async def async_stop(self) -> None:
         """Stop script run."""
         self._stop.set()
+        # If the script was never started
+        # the stopped event will never be
+        # set because the script will never
+        # start running
         if self._started:
-            # If the script was never started
-            # the stopped event will never be
-            # set because the script will never
-            # start running
             await self._stopped.wait()
 
     def _handle_exception(
