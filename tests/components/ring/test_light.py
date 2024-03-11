@@ -129,6 +129,10 @@ async def test_light_errors_when_turned_on(
         await hass.async_block_till_done()
     assert mock_lights.call_count == 1
     assert (
-        any(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+        any(
+            flow
+            for flow in config_entry.async_get_active_flows(hass, {SOURCE_REAUTH})
+            if flow["handler"] == "ring"
+        )
         == reauth_expected
     )

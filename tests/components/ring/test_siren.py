@@ -167,7 +167,7 @@ async def test_siren_errors_when_turned_on(
     exception_type,
     reauth_expected,
 ) -> None:
-    """Tests the light turns on correctly."""
+    """Tests the siren turns on correctly."""
     await setup_platform(hass, Platform.SIREN)
     config_entry = hass.config_entries.async_entries("ring")[0]
 
@@ -186,6 +186,10 @@ async def test_siren_errors_when_turned_on(
         await hass.async_block_till_done()
     assert mock_siren.call_count == 1
     assert (
-        any(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+        any(
+            flow
+            for flow in config_entry.async_get_active_flows(hass, {SOURCE_REAUTH})
+            if flow["handler"] == "ring"
+        )
         == reauth_expected
     )

@@ -8,7 +8,6 @@ import logging
 from typing import Optional
 
 from haffmpeg.camera import CameraMjpeg
-import requests
 
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import Camera
@@ -145,18 +144,11 @@ class RingCam(RingEntity, Camera):
         if self._last_video_id != self._last_event["id"]:
             self._image = None
 
-        try:
-            video_url = await self.hass.async_add_executor_job(self._get_video)
-        except requests.Timeout:
-            _LOGGER.warning(
-                "Time out fetching recording url for camera %s", self.entity_id
-            )
-            video_url = None
+        video_url = await self.hass.async_add_executor_job(self._get_video)
 
-        if video_url:
-            self._last_video_id = self._last_event["id"]
-            self._video_url = video_url
-            self._expires_at = FORCE_REFRESH_INTERVAL + utcnow
+        self._last_video_id = self._last_event["id"]
+        self._video_url = video_url
+        self._expires_at = FORCE_REFRESH_INTERVAL + utcnow
 
     @exception_wrap
     def _get_video(self) -> str:

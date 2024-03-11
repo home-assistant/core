@@ -4,7 +4,6 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-import requests
 from ring_doorbell import RingStickUpCam
 from ring_doorbell.generic import RingGeneric
 
@@ -79,11 +78,7 @@ class RingLight(RingEntity, LightEntity):
     @exception_wrap
     def _set_light(self, new_state):
         """Update light state, and causes Home Assistant to correctly update."""
-        try:
-            self._device.lights = new_state
-        except requests.Timeout:
-            _LOGGER.error("Time out setting %s light to %s", self.entity_id, new_state)
-            return
+        self._device.lights = new_state
 
         self._attr_is_on = new_state == ON_STATE
         self._no_updates_until = dt_util.utcnow() + SKIP_UPDATES_DELAY
