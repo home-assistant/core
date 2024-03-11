@@ -1476,7 +1476,7 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        one_time_listener = _OneTimeListener(self._hass, listener, None)
+        one_time_listener = _OneTimeListener(self._hass, listener)
         remove = self._async_listen_filterable_job(
             event_type,
             (
