@@ -847,7 +847,7 @@ class HomeAssistant:
         args: parameters for method to call.
         """
         if asyncio.iscoroutine(target):
-            return self.async_create_task(target, eager_start=True)
+            return self.async_create_task(target)
 
         # This code path is performance sensitive and uses
         # if TYPE_CHECKING to avoid the overhead of constructing
