@@ -2177,7 +2177,7 @@ watchdog==2.3.1
 weatherflow4py==0.1.14
 
 # homeassistant.components.webmin
-webmin-xmlrpc==0.0.1
+webmin-xmlrpc==0.0.2
 
 # homeassistant.components.assist_pipeline
 webrtc-noise-gain==1.2.3
