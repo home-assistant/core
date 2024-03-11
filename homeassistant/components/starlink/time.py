@@ -36,6 +36,7 @@ class StarlinkTimeEntityDescription(TimeEntityDescription):
     update_fn: Callable[[StarlinkUpdateCoordinator, time], Awaitable[None]]
     available_fn: Callable[[StarlinkData], bool]
 
+
 class StarlinkTimeEntity(StarlinkEntity, TimeEntity):
     """A TimeEntity for Starlink devices. Handles creating unique IDs."""
 
