@@ -328,6 +328,7 @@ class CloudForgotPasswordView(HomeAssistantView):
         return self.json_message("ok")
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command({vol.Required("type"): "cloud/remove_data"})
 @websocket_api.async_response
 async def websocket_cloud_remove_data(
