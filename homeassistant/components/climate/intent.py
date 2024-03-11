@@ -135,9 +135,6 @@ class SetTemperatureIntent(intent.ServiceIntentHandler):
         target_temperature_slot = slots.get("temperature", {})
         target_temperature = target_temperature_slot.get("value")
 
-        if target_temperature is None:
-            raise intent.IntentHandleError("Target temperature missing")
-
         assert target_temperature is not None
 
         service_call_data = {ATTR_ENTITY_ID: state.entity_id}
