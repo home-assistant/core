@@ -220,20 +220,13 @@ MODEL_TO_FEATURES_MAP = {
 }
 
 
-@dataclass(frozen=True)
-class XiaomiMiioSwitchRequiredKeyMixin:
+@dataclass(frozen=True, kw_only=True)
+class XiaomiMiioSwitchDescription(SwitchEntityDescription):
     """A class that describes switch entities."""
 
     feature: int
     method_on: str
     method_off: str
-
-
-@dataclass(frozen=True)
-class XiaomiMiioSwitchDescription(
-    SwitchEntityDescription, XiaomiMiioSwitchRequiredKeyMixin
-):
-    """A class that describes switch entities."""
 
     available_with_device_off: bool = True
 

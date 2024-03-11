@@ -33,7 +33,6 @@ LOGGER: Logger = getLogger(__package__)
 
 DATA_CONFIG_ENTRY: Final = "config_entry"
 CONF_COAP_PORT: Final = "coap_port"
-DEFAULT_COAP_PORT: Final = 5683
 FIRMWARE_PATTERN: Final = re.compile(r"^(\d{8})")
 
 # max light transition time in milliseconds
