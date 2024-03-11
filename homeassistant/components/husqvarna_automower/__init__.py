@@ -24,6 +24,7 @@ PLATFORMS: list[Platform] = [
     Platform.SWITCH,
 ]
 
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
     implementation = (
