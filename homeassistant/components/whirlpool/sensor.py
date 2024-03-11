@@ -1,4 +1,5 @@
 """The Washer/Dryer Sensor for Whirlpool Appliances."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -89,18 +90,11 @@ def washer_state(washer: WasherDryer) -> str | None:
     return MACHINE_STATE.get(machine_state, None)
 
 
-@dataclass(frozen=True)
-class WhirlpoolSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class WhirlpoolSensorEntityDescription(SensorEntityDescription):
+    """Describes Whirlpool Washer sensor entity."""
 
     value_fn: Callable
-
-
-@dataclass(frozen=True)
-class WhirlpoolSensorEntityDescription(
-    SensorEntityDescription, WhirlpoolSensorEntityDescriptionMixin
-):
-    """Describes Whirlpool Washer sensor entity."""
 
 
 SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (

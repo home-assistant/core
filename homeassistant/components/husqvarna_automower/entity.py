@@ -17,7 +17,6 @@ class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
     """Defining the Automower base Entity."""
 
     _attr_has_entity_name = True
-    _attr_should_poll = False
 
     def __init__(
         self,
@@ -39,3 +38,12 @@ class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
     def mower_attributes(self) -> MowerAttributes:
         """Get the mower attributes of the current mower."""
         return self.coordinator.data[self.mower_id]
+
+
+class AutomowerControlEntity(AutomowerBaseEntity):
+    """AutomowerControlEntity, for dynamic availability."""
+
+    @property
+    def available(self) -> bool:
+        """Return True if the device is available."""
+        return super().available and self.mower_attributes.metadata.connected

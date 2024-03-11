@@ -1,4 +1,5 @@
 """The tests for calendar recorder."""
+
 from datetime import timedelta
 from typing import Any
 
@@ -10,9 +11,7 @@ from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .conftest import MockCalendarEntity, create_mock_platform
-
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
 
 
@@ -22,10 +21,11 @@ async def mock_setup_dependencies(
     hass: HomeAssistant,
     set_time_zone: Any,
     mock_setup_integration: None,
-    test_entities: list[MockCalendarEntity],
+    config_entry: MockConfigEntry,
 ) -> None:
     """Fixture that ensures the recorder is setup in the right order."""
-    await create_mock_platform(hass, test_entities)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
 
 async def test_exclude_attributes(hass: HomeAssistant) -> None:

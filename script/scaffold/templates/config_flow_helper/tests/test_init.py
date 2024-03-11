@@ -1,4 +1,5 @@
 """Test the NEW_NAME integration."""
+
 import pytest
 
 from homeassistant.components.NEW_DOMAIN.const import DOMAIN

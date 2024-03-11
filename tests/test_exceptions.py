@@ -1,4 +1,5 @@
 """Test to verify that Home Assistant exceptions work."""
+
 from __future__ import annotations
 
 import pytest

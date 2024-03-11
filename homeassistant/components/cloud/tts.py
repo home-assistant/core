@@ -1,4 +1,5 @@
 """Support for the cloud for text-to-speech service."""
+
 from __future__ import annotations
 
 import asyncio
@@ -20,8 +21,9 @@ from homeassistant.components.tts import (
     Voice,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_PLATFORM, Platform
+from homeassistant.core import HomeAssistant, async_get_hass, callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -37,6 +39,27 @@ DEPRECATED_VOICES = {"XiaoxuanNeural": "XiaozhenNeural"}
 SUPPORT_LANGUAGES = list(TTS_VOICES)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _deprecated_platform(value: str) -> str:
+    """Validate if platform is deprecated."""
+    if value == DOMAIN:
+        _LOGGER.warning(
+            "The cloud tts platform configuration is deprecated, "
+            "please remove it from your configuration "
+            "and use the UI to change settings instead"
+        )
+        hass = async_get_hass()
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_tts_platform_config",
+            breaks_in_ha_version="2024.9.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_tts_platform_config",
+        )
+    return value
 
 
 def validate_lang(value: dict[str, Any]) -> dict[str, Any]:
@@ -58,6 +81,7 @@ def validate_lang(value: dict[str, Any]) -> dict[str, Any]:
 PLATFORM_SCHEMA = vol.All(
     TTS_PLATFORM_SCHEMA.extend(
         {
+            vol.Required(CONF_PLATFORM): vol.All(cv.string, _deprecated_platform),
             vol.Optional(CONF_LANG): str,
             vol.Optional(ATTR_GENDER): str,
         }

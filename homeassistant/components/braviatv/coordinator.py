@@ -1,8 +1,9 @@
 """Update coordinator for Bravia TV integration."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine, Iterable
-from datetime import timedelta
+from datetime import datetime, timedelta
 from functools import wraps
 import logging
 from types import MappingProxyType
@@ -87,6 +88,8 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.media_content_type: MediaType | None = None
         self.media_uri: str | None = None
         self.media_duration: int | None = None
+        self.media_position: int | None = None
+        self.media_position_updated_at: datetime | None = None
         self.volume_level: float | None = None
         self.volume_target: str | None = None
         self.volume_muted = False
@@ -185,6 +188,16 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.media_content_id = None
         self.media_content_type = None
         self.source = None
+        if start_datetime := playing_info.get("startDateTime"):
+            start_datetime = datetime.fromisoformat(start_datetime)
+            current_datetime = datetime.now().replace(tzinfo=start_datetime.tzinfo)
+            self.media_position = int(
+                (current_datetime - start_datetime).total_seconds()
+            )
+            self.media_position_updated_at = datetime.now()
+        else:
+            self.media_position = None
+            self.media_position_updated_at = None
         if self.media_uri:
             self.media_content_id = self.media_uri
             if self.media_uri[:8] == "extInput":

@@ -1,4 +1,5 @@
 """Test the Integration - Riemann sum integral integration."""
+
 import pytest
 
 from homeassistant.components.integration.const import DOMAIN

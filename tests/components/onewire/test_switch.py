@@ -1,4 +1,5 @@
 """Tests for 1-Wire switches."""
+
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 

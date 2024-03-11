@@ -1,4 +1,5 @@
 """Offer Z-Wave JS event listening automation trigger."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

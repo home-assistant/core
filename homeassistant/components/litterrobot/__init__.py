@@ -1,4 +1,5 @@
 """The Litter-Robot integration."""
+
 from __future__ import annotations
 
 from pylitterbot import FeederRobot, LitterRobot, LitterRobot3, LitterRobot4, Robot

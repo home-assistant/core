@@ -1,4 +1,5 @@
 """Test zone component."""
+
 from unittest.mock import patch
 
 import pytest
@@ -226,6 +227,46 @@ async def test_in_zone_works_for_passive_zones(hass: HomeAssistant) -> None:
     )
 
     assert zone.in_zone(hass.states.get("zone.passive_zone"), latitude, longitude)
+
+
+async def test_async_active_zone_with_non_zero_radius(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_active_zone with a non-zero radius."""
+    latitude = 32.880600
+    longitude = -117.237561
+
+    assert await setup.async_setup_component(
+        hass,
+        zone.DOMAIN,
+        {
+            "zone": [
+                {
+                    "name": "Small Zone",
+                    "latitude": 32.980600,
+                    "longitude": -117.137561,
+                    "radius": 50000,
+                },
+                {
+                    "name": "Big Zone",
+                    "latitude": 32.980600,
+                    "longitude": -117.137561,
+                    "radius": 100000,
+                },
+            ]
+        },
+    )
+
+    home_state = hass.states.get("zone.home")
+    assert home_state.attributes["radius"] == 100
+    assert home_state.attributes["latitude"] == 32.87336
+    assert home_state.attributes["longitude"] == -117.22743
+
+    active = zone.async_active_zone(hass, latitude, longitude, 5000)
+    assert active.entity_id == "zone.home"
+
+    active = zone.async_active_zone(hass, latitude, longitude, 0)
+    assert active.entity_id == "zone.small_zone"
 
 
 async def test_core_config_update(hass: HomeAssistant) -> None:

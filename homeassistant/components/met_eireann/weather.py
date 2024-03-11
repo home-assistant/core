@@ -1,4 +1,5 @@
 """Support for Met Éireann weather service."""
+
 import logging
 from types import MappingProxyType
 from typing import Any, cast

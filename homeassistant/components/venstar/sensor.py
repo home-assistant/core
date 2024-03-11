@@ -1,4 +1,5 @@
 """Representation of Venstar sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -65,18 +66,13 @@ SCHEDULE_PARTS: dict[int, str] = {
 }
 
 
-@dataclass(frozen=True)
-class VenstarSensorTypeMixin:
-    """Mixin for sensor required keys."""
+@dataclass(frozen=True, kw_only=True)
+class VenstarSensorEntityDescription(SensorEntityDescription):
+    """Base description of a Sensor entity."""
 
     value_fn: Callable[[VenstarDataUpdateCoordinator, str], Any]
     name_fn: Callable[[str], str]
     uom_fn: Callable[[Any], str | None]
-
-
-@dataclass(frozen=True)
-class VenstarSensorEntityDescription(SensorEntityDescription, VenstarSensorTypeMixin):
-    """Base description of a Sensor entity."""
 
 
 async def async_setup_entry(

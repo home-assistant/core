@@ -1,4 +1,5 @@
 """Tests for AVM Fritz!Box config flow."""
+
 import dataclasses
 from unittest import mock
 from unittest.mock import Mock, patch

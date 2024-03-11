@@ -1,4 +1,5 @@
 """Support for Google Nest SDM Cameras."""
+
 from __future__ import annotations
 
 import asyncio

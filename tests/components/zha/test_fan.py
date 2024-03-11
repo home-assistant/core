@@ -1,4 +1,5 @@
 """Test ZHA fan."""
+
 from unittest.mock import AsyncMock, call, patch
 
 import pytest
@@ -374,6 +375,7 @@ async def test_zha_group_fan_entity(
     # test some of the group logic to make sure we key off states correctly
     await send_attributes_report(hass, dev1_fan_cluster, {0: 0})
     await send_attributes_report(hass, dev2_fan_cluster, {0: 0})
+    await hass.async_block_till_done()
 
     # test that group fan is off
     assert hass.states.get(entity_id).state == STATE_OFF

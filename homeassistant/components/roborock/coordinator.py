@@ -1,4 +1,5 @@
 """Roborock Coordinator."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -79,7 +80,8 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
 
     async def release(self) -> None:
         """Disconnect from API."""
-        await self.api.async_disconnect()
+        await self.api.async_release()
+        await self.cloud_api.async_release()
 
     async def _update_device_prop(self) -> None:
         """Update device properties."""

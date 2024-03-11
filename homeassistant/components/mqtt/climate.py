@@ -1,4 +1,5 @@
 """Support for MQTT climate devices."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -174,7 +175,6 @@ VALUE_TEMPLATE_KEYS = (
     CONF_FAN_MODE_STATE_TEMPLATE,
     CONF_HUMIDITY_STATE_TEMPLATE,
     CONF_MODE_STATE_TEMPLATE,
-    CONF_POWER_STATE_TEMPLATE,
     CONF_ACTION_TEMPLATE,
     CONF_PRESET_MODE_VALUE_TEMPLATE,
     CONF_SWING_MODE_STATE_TEMPLATE,

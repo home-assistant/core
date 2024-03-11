@@ -1,4 +1,5 @@
 """Tests for proximity diagnostics platform."""
+
 from __future__ import annotations
 
 from syrupy.assertion import SnapshotAssertion

@@ -1,4 +1,5 @@
 """Test the repairs websocket API."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -338,9 +339,7 @@ async def test_fix_issue(
         "description_placeholders": None,
         "flow_id": flow_id,
         "handler": domain,
-        "minor_version": 1,
         "type": "create_entry",
-        "version": 1,
     }
 
     await ws_client.send_json({"id": 4, "type": "repairs/list_issues"})

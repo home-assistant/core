@@ -1,4 +1,5 @@
 """Test honeywell setup process."""
+
 from unittest.mock import MagicMock, create_autospec, patch
 
 import aiosomecomfort
@@ -195,15 +196,18 @@ async def test_remove_stale_device(
         (DOMAIN, 7654321) in device.identifiers for device in device_entries_other
     )
 
-    assert await config_entry.async_unload(hass)
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
     del location.devices_by_id[another_device.deviceid]
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
     assert config_entry.state is ConfigEntryState.LOADED
+
     assert (
         hass.states.async_entity_ids_count() == 3
     )  # 1 climate entities; 2 sensor entities

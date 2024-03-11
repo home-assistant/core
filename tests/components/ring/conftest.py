@@ -1,4 +1,5 @@
 """Configuration for Ring tests."""
+
 from collections.abc import Generator
 import re
 from unittest.mock import AsyncMock, Mock, patch
