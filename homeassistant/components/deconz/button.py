@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .deconz_device import DeconzDevice, DeconzSceneMixin
-from .gateway import DeconzGateway, get_gateway_from_config_entry
+from .hub import DeconzHub, get_gateway_from_config_entry
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -88,7 +88,7 @@ class DeconzSceneButton(DeconzSceneMixin, ButtonEntity):
     def __init__(
         self,
         device: PydeconzScene,
-        gateway: DeconzGateway,
+        gateway: DeconzHub,
         description: DeconzButtonDescription,
     ) -> None:
         """Initialize deCONZ number entity."""

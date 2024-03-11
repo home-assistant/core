@@ -36,15 +36,13 @@ SWITCH_TYPES = [
 class NetgearSwitchEntityDescriptionRequired:
     """Required attributes of NetgearSwitchEntityDescription."""
 
+
+@dataclass(frozen=True, kw_only=True)
+class NetgearSwitchEntityDescription(SwitchEntityDescription):
+    """Class describing Netgear Switch entities."""
+
     update: Callable[[NetgearRouter], bool]
     action: Callable[[NetgearRouter], bool]
-
-
-@dataclass(frozen=True)
-class NetgearSwitchEntityDescription(
-    SwitchEntityDescription, NetgearSwitchEntityDescriptionRequired
-):
-    """Class describing Netgear Switch entities."""
 
 
 ROUTER_SWITCH_TYPES = [

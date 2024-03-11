@@ -18,7 +18,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import (
+from ..const import (
     CONF_ALLOW_CLIP_SENSOR,
     CONF_ALLOW_DECONZ_GROUPS,
     CONF_ALLOW_NEW_DEVICES,
@@ -32,7 +32,7 @@ from .const import (
 )
 
 if TYPE_CHECKING:
-    from .deconz_event import (
+    from ..deconz_event import (
         DeconzAlarmEvent,
         DeconzEvent,
         DeconzPresenceEvent,
@@ -69,7 +69,7 @@ SENSORS = (
 )
 
 
-class DeconzGateway:
+class DeconzHub:
     """Manages a single deCONZ gateway."""
 
     def __init__(
@@ -328,6 +328,6 @@ class DeconzGateway:
 @callback
 def get_gateway_from_config_entry(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> DeconzGateway:
+) -> DeconzHub:
     """Return gateway with a matching config entry ID."""
-    return cast(DeconzGateway, hass.data[DECONZ_DOMAIN][config_entry.entry_id])
+    return cast(DeconzHub, hass.data[DECONZ_DOMAIN][config_entry.entry_id])
