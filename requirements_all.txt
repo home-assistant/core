@@ -242,7 +242,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==23.1.0
+aioesphomeapi==23.1.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -511,7 +511,7 @@ aurorapy==0.2.7
 # avion==0.10
 
 # homeassistant.components.axis
-axis==52
+axis==53
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
@@ -618,7 +618,7 @@ brunt==1.2.0
 bt-proximity==0.2.1
 
 # homeassistant.components.bthome
-bthome-ble==3.7.0
+bthome-ble==3.8.0
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
@@ -1112,7 +1112,7 @@ ibmiotf==0.3.4
 # homeassistant.components.google
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
-ical==7.0.0
+ical==7.0.1
 
 # homeassistant.components.ping
 icmplib==3.0
