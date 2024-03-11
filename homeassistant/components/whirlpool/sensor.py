@@ -87,7 +87,7 @@ def washer_state(washer: WasherDryer) -> str | None:
             if func(washer):
                 return cycle_name
 
-    return MACHINE_STATE.get(machine_state, None)
+    return MACHINE_STATE.get(machine_state)
 
 
 @dataclass(frozen=True, kw_only=True)
