@@ -67,7 +67,7 @@ async def test_imperial_metric(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("weather.abc_daynight")
+    state = hass.states.get("weather.abc")
 
     assert state
     assert state.state == ATTR_CONDITION_SUNNY
@@ -94,7 +94,7 @@ async def test_night_clear(hass: HomeAssistant, mock_simple_nws, no_sensor) -> N
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("weather.abc_daynight")
+    state = hass.states.get("weather.abc")
     assert state.state == ATTR_CONDITION_CLEAR_NIGHT
 
 
@@ -112,7 +112,7 @@ async def test_none_values(hass: HomeAssistant, mock_simple_nws, no_sensor) -> N
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("weather.abc_daynight")
+    state = hass.states.get("weather.abc")
     assert state.state == STATE_UNKNOWN
     data = state.attributes
     for key in WEATHER_EXPECTED_OBSERVATION_IMPERIAL:
@@ -137,7 +137,7 @@ async def test_none(hass: HomeAssistant, mock_simple_nws, no_sensor) -> None:
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("weather.abc_daynight")
+    state = hass.states.get("weather.abc")
     assert state
     assert state.state == STATE_UNKNOWN
 
@@ -163,8 +163,7 @@ async def test_error_station(hass: HomeAssistant, mock_simple_nws, no_sensor) ->
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("weather.abc_hourly") is None
-    assert hass.states.get("weather.abc_daynight") is None
+    assert hass.states.get("weather.abc") is None
 
 
 async def test_entity_refresh(hass: HomeAssistant, mock_simple_nws, no_sensor) -> None:
@@ -187,7 +186,7 @@ async def test_entity_refresh(hass: HomeAssistant, mock_simple_nws, no_sensor) -
     await hass.services.async_call(
         "homeassistant",
         "update_entity",
-        {"entity_id": "weather.abc_daynight"},
+        {"entity_id": "weather.abc"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -226,7 +225,7 @@ async def test_error_observation(
 
         instance.update_observation.assert_called_once()
 
-        state = hass.states.get("weather.abc_daynight")
+        state = hass.states.get("weather.abc")
         assert state
         assert state.state == STATE_UNAVAILABLE
 
@@ -237,7 +236,7 @@ async def test_error_observation(
 
         assert instance.update_observation.call_count == 2
 
-        state = hass.states.get("weather.abc_daynight")
+        state = hass.states.get("weather.abc")
         assert state
         assert state.state == ATTR_CONDITION_SUNNY
 
@@ -249,7 +248,7 @@ async def test_error_observation(
 
         assert instance.update_observation.call_count == 3
 
-        state = hass.states.get("weather.abc_daynight")
+        state = hass.states.get("weather.abc")
         assert state
         assert state.state == ATTR_CONDITION_SUNNY
 
@@ -257,7 +256,7 @@ async def test_error_observation(
         increment_time(timedelta(minutes=10))
         await hass.async_block_till_done()
 
-        state = hass.states.get("weather.abc_daynight")
+        state = hass.states.get("weather.abc")
         assert state
         assert state.state == STATE_UNAVAILABLE
 
@@ -277,7 +276,7 @@ async def test_error_forecast(hass: HomeAssistant, mock_simple_nws, no_sensor) -
 
     instance.update_forecast.assert_called_once()
 
-    state = hass.states.get("weather.abc_daynight")
+    state = hass.states.get("weather.abc")
     assert state
     assert state.state == STATE_UNAVAILABLE
 
@@ -288,7 +287,7 @@ async def test_error_forecast(hass: HomeAssistant, mock_simple_nws, no_sensor) -
 
     assert instance.update_forecast.call_count == 2
 
-    state = hass.states.get("weather.abc_daynight")
+    state = hass.states.get("weather.abc")
     assert state
     assert state.state == ATTR_CONDITION_SUNNY
 
@@ -346,7 +345,7 @@ async def test_forecast_service(
             WEATHER_DOMAIN,
             service,
             {
-                "entity_id": "weather.abc_daynight",
+                "entity_id": "weather.abc",
                 "type": forecast_type,
             },
             blocking=True,
@@ -373,7 +372,7 @@ async def test_forecast_service(
             WEATHER_DOMAIN,
             service,
             {
-                "entity_id": "weather.abc_daynight",
+                "entity_id": "weather.abc",
                 "type": forecast_type,
             },
             blocking=True,
@@ -396,7 +395,7 @@ async def test_forecast_service(
         WEATHER_DOMAIN,
         service,
         {
-            "entity_id": "weather.abc_daynight",
+            "entity_id": "weather.abc",
             "type": "hourly",
         },
         blocking=True,
@@ -413,7 +412,7 @@ async def test_forecast_service(
         WEATHER_DOMAIN,
         service,
         {
-            "entity_id": "weather.abc_daynight",
+            "entity_id": "weather.abc",
             "type": "hourly",
         },
         blocking=True,
@@ -424,7 +423,7 @@ async def test_forecast_service(
 
 @pytest.mark.parametrize(
     ("forecast_type", "entity_id"),
-    [("hourly", "weather.abc_daynight")],
+    [("hourly", "weather.abc")],
 )
 async def test_forecast_subscription(
     hass: HomeAssistant,
