@@ -31,8 +31,8 @@ _LOGGER = logging.getLogger(__name__)
 class MotionCoverEntityDescription(CoverEntityDescription):
     """Entity description of a cover entity with default values."""
 
-    key: str = field(default=CoverDeviceClass.BLIND.value, init=False)
-    translation_key: str = field(default=CoverDeviceClass.BLIND.value, init=False)
+    key: str = CoverDeviceClass.BLIND.value
+    translation_key: str = CoverDeviceClass.BLIND.value
     device_class: CoverDeviceClass = field(default=CoverDeviceClass.SHADE, init=True)
 
 
