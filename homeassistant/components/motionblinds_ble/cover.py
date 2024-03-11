@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -33,20 +33,27 @@ class MotionCoverEntityDescription(CoverEntityDescription):
 
     key: str = CoverDeviceClass.BLIND.value
     translation_key: str = CoverDeviceClass.BLIND.value
-    device_class: CoverDeviceClass = field(default=CoverDeviceClass.SHADE, init=True)
 
 
 COVER_TYPES: dict[str, MotionCoverEntityDescription] = {
-    MotionBlindType.ROLLER.name: MotionCoverEntityDescription(),
-    MotionBlindType.HONEYCOMB.name: MotionCoverEntityDescription(),
-    MotionBlindType.ROMAN.name: MotionCoverEntityDescription(),
+    MotionBlindType.HONEYCOMB.name: MotionCoverEntityDescription(
+        device_class=CoverDeviceClass.SHADE
+    ),
+    MotionBlindType.ROMAN.name: MotionCoverEntityDescription(
+        device_class=CoverDeviceClass.SHADE
+    ),
+    MotionBlindType.ROLLER.name: MotionCoverEntityDescription(
+        device_class=CoverDeviceClass.SHADE
+    ),
+    MotionBlindType.DOUBLE_ROLLER.name: MotionCoverEntityDescription(
+        device_class=CoverDeviceClass.SHADE
+    ),
     MotionBlindType.VENETIAN.name: MotionCoverEntityDescription(
         device_class=CoverDeviceClass.BLIND
     ),
     MotionBlindType.VENETIAN_TILT_ONLY.name: MotionCoverEntityDescription(
         device_class=CoverDeviceClass.BLIND
     ),
-    MotionBlindType.DOUBLE_ROLLER.name: MotionCoverEntityDescription(),
     MotionBlindType.CURTAIN.name: MotionCoverEntityDescription(
         device_class=CoverDeviceClass.CURTAIN
     ),
