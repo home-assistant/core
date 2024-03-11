@@ -205,6 +205,17 @@ async def test_light_turn_on_service(
     )
     assert mock_bridge_v2.mock_requests[8]["json"]["timed_effects"]["duration"] == 6000
 
+    # test enabling effect should ignore colors
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": test_light_id, "effect": "candle", "color_temp": 500},
+        blocking=True,
+    )
+    assert len(mock_bridge_v2.mock_requests) == 10
+    assert mock_bridge_v2.mock_requests[9]["json"]["effects"]["effect"] == "candle"
+    assert "color_temperature" not in mock_bridge_v2.mock_requests[9]["json"]
+
 
 async def test_light_turn_off_service(
     hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data
