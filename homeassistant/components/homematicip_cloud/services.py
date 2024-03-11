@@ -1,4 +1,5 @@
 """Support for HomematicIP Cloud devices."""
+
 from __future__ import annotations
 
 import logging
@@ -110,7 +111,7 @@ SCHEMA_RESET_ENERGY_COUNTER = vol.Schema(
 async def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the HomematicIP Cloud services."""
 
-    if hass.services.async_services().get(HMIPC_DOMAIN):
+    if hass.services.async_services_for_domain(HMIPC_DOMAIN):
         return
 
     @verify_domain_control(hass, HMIPC_DOMAIN)

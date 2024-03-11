@@ -36,8 +36,6 @@ from .common import async_wait_recording_done, create_engine_test
 
 from tests.common import async_fire_time_changed
 
-ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
-
 
 def _get_native_states(hass, entity_id):
     with session_scope(hass=hass, read_only=True) as session:

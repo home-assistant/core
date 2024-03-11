@@ -1,4 +1,5 @@
 """Test the SFR Box config flow."""
+
 import json
 from unittest.mock import AsyncMock, patch
 

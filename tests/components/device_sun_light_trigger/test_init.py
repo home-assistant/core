@@ -1,4 +1,5 @@
 """The tests device sun light trigger component."""
+
 from datetime import datetime
 from unittest.mock import patch
 
@@ -238,7 +239,7 @@ async def test_lights_turn_on_when_coming_home_after_sun_set_person(
 
 async def test_initialize_start(hass: HomeAssistant) -> None:
     """Test we initialize when HA starts."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     assert await async_setup_component(
         hass,
         device_sun_light_trigger.DOMAIN,

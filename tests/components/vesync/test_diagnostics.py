@@ -1,4 +1,5 @@
 """Tests for the diagnostics data provided by the VeSync integration."""
+
 from unittest.mock import patch
 
 from pyvesync.helpers import Helpers

@@ -12,6 +12,10 @@
     "maria_db_range_index_regression": {
       "title": "Update MariaDB to {min_version} or later resolve a significant performance issue",
       "description": "Older versions of MariaDB suffer from a significant performance regression when retrieving history data or purging the database. Update to MariaDB version {min_version} or later and restart Home Assistant. If you are using the MariaDB core add-on, make sure to update it to the latest version."
+    },
+    "backup_failed_out_of_resources": {
+      "title": "Database backup failed due to lack of resources",
+      "description": "The database backup stated at {start_time} failed due to lack of resources. The backup cannot be trusted and must be restarted. This can happen if the database is too large or if the system is under heavy load. Consider upgrading the system hardware or reducing the size of the database by decreasing the number of history days to keep or creating a filter."
     }
   },
   "services": {

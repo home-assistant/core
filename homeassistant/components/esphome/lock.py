@@ -1,4 +1,5 @@
 """Support for ESPHome locks."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -71,13 +72,13 @@ class EsphomeLock(EsphomeEntity[LockInfo, LockEntityState], LockEntity):
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
-        await self._client.lock_command(self._key, LockCommand.LOCK)
+        self._client.lock_command(self._key, LockCommand.LOCK)
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         code = kwargs.get(ATTR_CODE, None)
-        await self._client.lock_command(self._key, LockCommand.UNLOCK, code)
+        self._client.lock_command(self._key, LockCommand.UNLOCK, code)
 
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
-        await self._client.lock_command(self._key, LockCommand.OPEN)
+        self._client.lock_command(self._key, LockCommand.OPEN)

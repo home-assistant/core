@@ -1,4 +1,5 @@
 """Helpers for Google Time Travel integration."""
+
 import logging
 
 from googlemaps import Client
@@ -35,7 +36,7 @@ def validate_config_entry(
         raise UnknownException() from transport_error
     except Timeout as timeout_error:
         _LOGGER.error("Timeout error")
-        raise UnknownException() from timeout_error
+        raise TimeoutError() from timeout_error
 
 
 class InvalidApiKeyException(Exception):

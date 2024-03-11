@@ -1,4 +1,5 @@
 """Tests for Steam integration."""
+
 import random
 import string
 from unittest.mock import patch

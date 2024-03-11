@@ -1,4 +1,5 @@
 """Fixtures for HERE Travel Time tests."""
+
 import json
 from unittest.mock import patch
 

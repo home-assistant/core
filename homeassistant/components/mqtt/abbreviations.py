@@ -271,6 +271,7 @@ DEVICE_ABBREVIATIONS = {
     "hw": "hw_version",
     "sw": "sw_version",
     "sa": "suggested_area",
+    "sn": "serial_number",
 }
 
 ORIGIN_ABBREVIATIONS = {

@@ -1,4 +1,5 @@
 """The test for the Melissa Climate component."""
+
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components import melissa

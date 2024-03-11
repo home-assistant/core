@@ -1,4 +1,5 @@
 """Test the jellyfin config flow."""
+
 from unittest.mock import MagicMock
 
 import pytest

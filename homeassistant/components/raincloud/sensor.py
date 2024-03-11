@@ -1,4 +1,5 @@
 """Support for Melnor RainCloud sprinkler water timer."""
+
 from __future__ import annotations
 
 import logging

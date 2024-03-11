@@ -1,4 +1,5 @@
 """Home Assistant trigger dispatcher."""
+
 import importlib
 
 from homeassistant.const import CONF_PLATFORM
@@ -23,7 +24,7 @@ async def async_validate_trigger_config(
     if hasattr(platform, "async_validate_trigger_config"):
         return await platform.async_validate_trigger_config(hass, config)
 
-    return platform.TRIGGER_SCHEMA(config)
+    return platform.TRIGGER_SCHEMA(config)  # type: ignore[no-any-return]
 
 
 async def async_attach_trigger(

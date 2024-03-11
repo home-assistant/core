@@ -1,4 +1,5 @@
 """Support for Avion dimmers."""
+
 from __future__ import annotations
 
 import importlib

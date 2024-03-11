@@ -1,0 +1,12 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:lightbulb"
+    }
+  },
+  "services": {
+    "toggle": "mdi:lightbulb",
+    "turn_off": "mdi:lightbulb-off",
+    "turn_on": "mdi:lightbulb-on"
+  }
+}

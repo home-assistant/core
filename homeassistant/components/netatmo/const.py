@@ -1,4 +1,5 @@
 """Constants used by the Netatmo component."""
+
 from homeassistant.const import Platform
 
 API = "api"
@@ -42,6 +43,7 @@ NETATMO_CREATE_CAMERA = "netatmo_create_camera"
 NETATMO_CREATE_CAMERA_LIGHT = "netatmo_create_camera_light"
 NETATMO_CREATE_CLIMATE = "netatmo_create_climate"
 NETATMO_CREATE_COVER = "netatmo_create_cover"
+NETATMO_CREATE_FAN = "netatmo_create_fan"
 NETATMO_CREATE_LIGHT = "netatmo_create_light"
 NETATMO_CREATE_ROOM_SENSOR = "netatmo_create_room_sensor"
 NETATMO_CREATE_SELECT = "netatmo_create_select"

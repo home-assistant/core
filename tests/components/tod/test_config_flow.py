@@ -1,4 +1,5 @@
 """Test the Times of the Day config flow."""
+
 from unittest.mock import patch
 
 import pytest

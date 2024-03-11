@@ -1,4 +1,5 @@
 """Rabbit Air Update Coordinator."""
+
 from collections.abc import Coroutine
 from datetime import timedelta
 import logging

@@ -1,4 +1,5 @@
 """Platform for Control4 Lights."""
+
 from __future__ import annotations
 
 import asyncio

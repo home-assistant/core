@@ -1,4 +1,5 @@
 """Constants for Bravia TV integration."""
+
 from __future__ import annotations
 
 from enum import StrEnum

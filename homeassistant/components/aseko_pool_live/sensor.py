@@ -1,4 +1,5 @@
 """Support for Aseko Pool Live sensors."""
+
 from __future__ import annotations
 
 from aioaseko import Unit, Variable
@@ -59,10 +60,8 @@ class VariableSensorEntity(AsekoEntity, SensorEntity):
         self._attr_native_unit_of_measurement = self._variable.unit
 
         self._attr_icon = {
-            "clf": "mdi:flask",
             "rx": "mdi:test-tube",
             "waterLevel": "mdi:waves",
-            "waterTemp": "mdi:coolant-temperature",
         }.get(self._variable.type)
 
         self._attr_device_class = {

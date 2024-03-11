@@ -1,4 +1,5 @@
 """Support for Roborock number."""
+
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
@@ -23,9 +24,9 @@ from .device import RoborockEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class RoborockNumberDescriptionMixin:
-    """Define an entity description mixin for button entities."""
+@dataclass(frozen=True, kw_only=True)
+class RoborockNumberDescription(NumberEntityDescription):
+    """Class to describe a Roborock number entity."""
 
     # Gets the status of the switch
     cache_key: CacheableAttribute
@@ -33,18 +34,10 @@ class RoborockNumberDescriptionMixin:
     update_value: Callable[[AttributeCache, float], Coroutine[Any, Any, dict]]
 
 
-@dataclass(frozen=True)
-class RoborockNumberDescription(
-    NumberEntityDescription, RoborockNumberDescriptionMixin
-):
-    """Class to describe an Roborock number entity."""
-
-
 NUMBER_DESCRIPTIONS: list[RoborockNumberDescription] = [
     RoborockNumberDescription(
         key="volume",
         translation_key="volume",
-        icon="mdi:volume-source",
         native_min_value=0,
         native_max_value=100,
         native_unit_of_measurement=PERCENTAGE,

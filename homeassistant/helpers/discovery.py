@@ -5,6 +5,7 @@ There are two different types of discoveries that can be fired/listened for.
  - listen_platform/discover_platform is for platforms. These are used by
    components to allow discovery of their platforms.
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -49,7 +50,9 @@ def async_listen(
     @core.callback
     def _async_discovery_event_listener(discovered: DiscoveryDict) -> None:
         """Listen for discovery events."""
-        hass.async_run_hass_job(job, discovered["service"], discovered["discovered"])
+        hass.async_run_hass_job(
+            job, discovered["service"], discovered["discovered"], eager_start=True
+        )
 
     async_dispatcher_connect(
         hass,
@@ -112,7 +115,9 @@ def async_listen_platform(
         """Listen for platform discovery events."""
         if not (platform := discovered["platform"]):
             return
-        hass.async_run_hass_job(job, platform, discovered.get("discovered"))
+        hass.async_run_hass_job(
+            job, platform, discovered.get("discovered"), eager_start=True
+        )
 
     return async_dispatcher_connect(
         hass,
