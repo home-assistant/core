@@ -10,10 +10,13 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.husqvarna_automower.const import DOMAIN, OAUTH2_TOKEN
+from homeassistant.components.husqvarna_automower.entity import HUSQVARNA_URL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
+from .const import TEST_MOWER_ID
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -109,3 +112,29 @@ async def test_websocket_not_available(
     assert mock_automower_client.auth.websocket_connect.call_count == 2
     assert mock_automower_client.start_listening.call_count == 2
     assert mock_config_entry.state == ConfigEntryState.LOADED
+
+
+async def test_device_info(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test select platform."""
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    reg_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, TEST_MOWER_ID)},
+    )
+    assert (
+        reg_device.configuration_url
+        == f"{HUSQVARNA_URL}/applications/433e5fdf-5129-452c-xxxx-fadce3213042"
+    )
+    assert reg_device.identifiers == {(DOMAIN, TEST_MOWER_ID)}
+    assert reg_device.manufacturer == "Husqvarna"
+    assert reg_device.model == "450XH-TEST"
+    assert reg_device.name == "Test Mower 1"
+    assert reg_device.serial_number == 123
+    assert reg_device.suggested_area == "Garden"
