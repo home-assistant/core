@@ -182,6 +182,7 @@ def get_entities(onewire_hub: OneWireHub) -> list[OneWireSwitch]:
             device_sub_type = "HobbyBoard"
             family = device_type
         elif "A6" in family:
+            # A6 is a secondary family code for DS2438
             family = "26"
 
         if family not in get_sensor_types(device_sub_type):
