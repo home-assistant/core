@@ -301,10 +301,7 @@ class MqttSiren(MqttEntity, SirenEntity):
             else {}
         )
         if extra_attributes:
-            return (
-                dict({*self._extra_attributes.items(), *extra_attributes.items()})
-                or None
-            )
+            return dict({*self._extra_attributes.items(), *extra_attributes.items()})
         return self._extra_attributes or None
 
     async def _async_publish(
