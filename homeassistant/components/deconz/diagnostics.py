@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 
-from .gateway import get_gateway_from_config_entry
+from .hub import get_gateway_from_config_entry
 
 REDACT_CONFIG = {CONF_API_KEY, CONF_UNIQUE_ID}
 REDACT_DECONZ_CONFIG = {"bridgeid", "mac", "panid"}

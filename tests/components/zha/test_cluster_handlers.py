@@ -380,7 +380,7 @@ def test_cluster_handler_registry() -> None:
         assert cluster_id in all_quirk_ids
         assert isinstance(cluster_handler_classes, dict)
         for quirk_id, cluster_handler in cluster_handler_classes.items():
-            assert isinstance(quirk_id, NoneType) or isinstance(quirk_id, str)
+            assert isinstance(quirk_id, (NoneType, str))
             assert issubclass(cluster_handler, cluster_handlers.ClusterHandler)
             assert quirk_id in all_quirk_ids[cluster_id]
 
