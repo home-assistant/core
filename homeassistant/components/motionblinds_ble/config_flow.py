@@ -92,6 +92,11 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 )
             return await self.async_step_confirm()
 
+        scanner_count = bluetooth.async_scanner_count(self.hass, connectable=True)
+        if scanner_count == 0:
+            _LOGGER.error("No bluetooth adapter found")
+            return self.async_abort(reason=EXCEPTION_MAP[NoBluetoothAdapter])
+
         return self.async_show_form(
             step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
         )
@@ -141,8 +146,8 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Invalid MAC code: %s", mac_code.upper())
             raise InvalidMACCode()
 
-        count = bluetooth.async_scanner_count(self.hass, connectable=True)
-        if count == 0:
+        scanner_count = bluetooth.async_scanner_count(self.hass, connectable=True)
+        if scanner_count == 0:
             _LOGGER.error("No bluetooth adapter found")
             raise NoBluetoothAdapter()
 
