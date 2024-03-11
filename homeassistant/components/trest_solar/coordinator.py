@@ -8,7 +8,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import REFRESH_INTERVAL
-from .domain.solar_history import SolarHistory
+from .models.solar_history import SolarHistory
 from .services.trest_solar_service import CloudSolarTrestService
 
 _LOGGER = logging.getLogger(__name__)
