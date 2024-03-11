@@ -371,7 +371,7 @@ aioshelly==8.1.1
 aioskybell==22.7.0
 
 # homeassistant.components.slimproto
-aioslimproto==2.3.3
+aioslimproto==3.0.0
 
 # homeassistant.components.steamist
 aiosteamist==0.3.2
@@ -593,7 +593,7 @@ bluetooth-data-tools==1.19.0
 bond-async==0.2.1
 
 # homeassistant.components.bosch_shc
-boschshcpy==0.2.75
+boschshcpy==0.2.82
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
@@ -2421,7 +2421,7 @@ raspyrfm-client==1.2.8
 refoss-ha==1.2.0
 
 # homeassistant.components.rainmachine
-regenmaschine==2024.01.0
+regenmaschine==2024.03.0
 
 # homeassistant.components.renault
 renault-api==0.2.1
@@ -2463,7 +2463,7 @@ roombapy==1.6.13
 roonapi==0.1.6
 
 # homeassistant.components.rova
-rova==0.4.0
+rova==0.4.1
 
 # homeassistant.components.rpi_power
 rpi-bad-power==0.1.0
@@ -2836,7 +2836,7 @@ waterfurnace==1.1.0
 weatherflow4py==0.1.14
 
 # homeassistant.components.webmin
-webmin-xmlrpc==0.0.1
+webmin-xmlrpc==0.0.2
 
 # homeassistant.components.assist_pipeline
 webrtc-noise-gain==1.2.3
@@ -2866,7 +2866,7 @@ wyoming==1.5.3
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.26.1
+xiaomi-ble==0.27.0
 
 # homeassistant.components.knx
 xknx==2.12.2

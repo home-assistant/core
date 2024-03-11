@@ -627,23 +627,7 @@ select = [
     "S604", # call-with-shell-equals-true
     "S608", # hardcoded-sql-expression
     "S609", # unix-command-wildcard-injection
-    "SIM101", # Multiple isinstance calls for {name}, merge into a single call
-    "SIM103", # Return the condition {condition} directly
-    "SIM105", # Use contextlib.suppress({exception}) instead of try-except-pass
-    "SIM107", # Don't use return in try-except and finally
-    "SIM109", # Use {replacement} instead of multiple equality comparisons
-    "SIM110", # Use {replacement} instead of for loop
-    "SIM112", # Use capitalized environment variable {expected} instead of {actual}
-    "SIM113", # Use enumerate() for index variable {index} in for loop
-    "SIM114", # Combine if branches using logical or operator
-    "SIM116", # Use a dictionary instead of consecutive if statements
-    "SIM117", # Merge with-statements that use the same scope
-    "SIM118", # Use {key} in {dict} instead of {key} in {dict}.keys()
-    "SIM201", # Use {left} != {right} instead of not {left} == {right}
-    "SIM208", # Use {expr} instead of not (not {expr})
-    "SIM212", # Use {a} if {a} else {b} instead of {b} if not {a} else {a}
-    "SIM300", # Yoda conditions. Use 'age == 42' instead of '42 == age'.
-    "SIM401", # Use get from dict with default instead of an if block
+    "SIM", # flake8-simplify
     "T100", # Trace found: {name} used
     "T20", # flake8-print
     "TID251", # Banned imports
@@ -675,6 +659,9 @@ ignore = [
     "PLR0915", # Too many statements ({statements} > {max_statements})
     "PLR2004", # Magic value used in comparison, consider replacing {value} with a constant variable
     "PLW2901", # Outer {outer_kind} variable {name} overwritten by inner {inner_kind} target
+    "SIM102", # Use a single if statement instead of nested if statements
+    "SIM108", # Use ternary operator {contents} instead of if-else-block
+    "SIM115", # Use context handler for opening files
     "UP006", # keep type annotation style as is
     "UP007", # keep type annotation style as is
     # Ignored due to performance: https://github.com/charliermarsh/ruff/issues/2923
