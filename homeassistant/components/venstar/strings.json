@@ -37,8 +37,8 @@
       "active_stage": {
         "state": {
           "idle": "Idle",
-          "first_stage": "First Stage",
-          "second_stage": "Second Stage"
+          "first_stage": "First stage",
+          "second_stage": "Second stage"
         }
       }
     }

@@ -249,6 +249,6 @@ INFO_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
         value_fn=lambda coordinator, sensor_name: STAGES[
             coordinator.client.get_info(sensor_name)
         ],
-        name_fn=lambda _: "Active Stage",
+        name_fn=lambda _: "Active stage",
     ),
 )
