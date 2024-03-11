@@ -138,6 +138,35 @@ async def test_resolve(
         )
 
 
+@pytest.mark.parametrize(
+    "audio_codec",
+    [("aac"), ("wma"), ("vorbis"), ("mp3")],
+)
+async def test_audio_codec_resolve(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    init_integration: MockConfigEntry,
+    mock_jellyfin: MagicMock,
+    mock_api: MagicMock,
+    snapshot: SnapshotAssertion,
+    audio_codec: str,
+) -> None:
+    """Test resolving Jellyfin media items with audio codec."""
+    result = await hass.config_entries.options.async_init(init_integration.entry_id)
+    await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"audio_codec": audio_codec}
+    )
+    assert init_integration.options["audio_codec"] == audio_codec
+
+    play_media = await async_resolve_media(hass, f"{URI_SCHEME}{DOMAIN}/TRACK-UUID")
+
+    assert play_media.mime_type == "audio/flac"
+    assert play_media.url == snapshot
+
+    mock_api.audio_url.assert_called_with("TRACK-UUID", audio_codec=audio_codec)
+    assert mock_api.audio_url.call_count == 1
+
+
 async def test_root(
     hass: HomeAssistant,
     mock_client: MagicMock,

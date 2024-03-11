@@ -462,39 +462,7 @@ async def test_options_flow(
         result["flow_id"], user_input={}
     )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert config_entry.options.get(CONF_AUDIO_CODEC, None) is None
-
-    # Manual aac
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_AUDIO_CODEC: "aac"}
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert config_entry.options[CONF_AUDIO_CODEC] == "aac"
-
-    # Manual mp3
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_AUDIO_CODEC: "mp3"}
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert config_entry.options[CONF_AUDIO_CODEC] == "mp3"
-
-    # Manual vorbis
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_AUDIO_CODEC: "vorbis"}
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert config_entry.options[CONF_AUDIO_CODEC] == "vorbis"
-
-    # Manual wma
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_AUDIO_CODEC: "wma"}
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert config_entry.options[CONF_AUDIO_CODEC] == "wma"
+    assert CONF_AUDIO_CODEC not in config_entry.options
 
     # Bad
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -502,3 +470,26 @@ async def test_options_flow(
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], user_input={CONF_AUDIO_CODEC: "ogg"}
         )
+
+
+@pytest.mark.parametrize(
+    "codec",
+    [("aac"), ("wma"), ("vorbis"), ("mp3")],
+)
+async def test_setting_codec(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_jellyfin: MagicMock,
+    mock_client: MagicMock,
+    codec: str,
+) -> None:
+    """Test setting the audio_codec."""
+    config_entry = MockConfigEntry(domain=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_AUDIO_CODEC: codec}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert config_entry.options[CONF_AUDIO_CODEC] == codec
