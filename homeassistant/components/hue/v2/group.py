@@ -142,7 +142,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         light_resource_ids = (
             x.id for x in self.controller.get_lights(self.resource.id)
         )
-        light_names, light_entities = self._get_names_and_entity_id_for_resource_ids(
+        light_names, light_entities = self._get_names_and_entity_ids_for_resource_ids(
             light_resource_ids
         )
         return {
@@ -287,7 +287,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
 
     @callback
     @lru_cache
-    def _get_names_and_entity_id_for_resource_ids(
+    def _get_names_and_entity_ids_for_resource_ids(
         self, resource_ids: Iterable[str]
     ) -> tuple[set[str], set[str]]:
         """Return the names and entity ids for the given Hue (light) resource IDs."""
