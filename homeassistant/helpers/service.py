@@ -633,16 +633,18 @@ async def async_get_all_descriptions(
         ints_or_excs = await async_get_integrations(hass, domains_with_missing_services)
         integrations: list[Integration] = []
         for domain, int_or_exc in ints_or_excs.items():
-            if type(int_or_exc) is Integration:  # noqa: E721
+            if type(int_or_exc) is Integration and int_or_exc.has_services:  # noqa: E721
                 integrations.append(int_or_exc)
                 continue
             if TYPE_CHECKING:
                 assert isinstance(int_or_exc, Exception)
             _LOGGER.error("Failed to load integration: %s", domain, exc_info=int_or_exc)
-        contents = await hass.async_add_executor_job(
-            _load_services_files, hass, integrations
-        )
-        loaded = dict(zip(domains_with_missing_services, contents))
+
+        if integrations:
+            contents = await hass.async_add_executor_job(
+                _load_services_files, hass, integrations
+            )
+            loaded = dict(zip(domains_with_missing_services, contents))
 
     # Load translations for all service domains
     translations = await translation.async_get_translations(
