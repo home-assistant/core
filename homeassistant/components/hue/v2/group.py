@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from functools import lru_cache
 from typing import Any
 
 from aiohue.v2 import HueBridgeV2
@@ -26,6 +27,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_registry import async_get as get_ent_reg
 
 from ..bridge import HueBridge
 from ..const import DOMAIN
@@ -136,15 +138,18 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         scenes = {
             x.metadata.name for x in self.api.scenes if x.group.rid == self.group.id
         }
-        lights = {
-            self.controller.get_device(x.id).metadata.name
-            for x in self.controller.get_lights(self.resource.id)
-        }
+        light_names: set[str] = set()
+        light_entities: set[str] = set()
+        for light_resource in self.controller.get_lights(self.resource.id):
+            light_names.add(self.controller.get_device(light_resource.id).metadata.name)
+            if entity_id := self._get_entity_id_for_resource_id(light_resource.id):
+                light_entities.add(entity_id)
         return {
             "is_hue_group": True,
             "hue_scenes": scenes,
             "hue_type": self.group.type.value,
-            "lights": lights,
+            "lights": light_names,
+            "entity_id": light_entities,
             "dynamics": self._dynamic_mode_active,
         }
 
@@ -278,3 +283,10 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             self._attr_color_mode = ColorMode.BRIGHTNESS
         else:
             self._attr_color_mode = ColorMode.ONOFF
+
+    @callback
+    @lru_cache
+    def _get_entity_id_for_resource_id(self, resource_id: str) -> str | None:
+        """Return the entity id for the given Hue resource ID."""
+        ent_reg = get_ent_reg(self.hass)
+        return ent_reg.async_get_entity_id(self.platform.domain, DOMAIN, resource_id)
