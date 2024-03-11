@@ -211,8 +211,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                             led.legacy_uuid,
                             entry_data.client.guid,
                         )
-
-                entry_data.buttons.append((area.name, keypad, button))
+                if button.button_type:
+                    entry_data.buttons.append((area.name, keypad, button))
         if area.occupancy_group is not None:
             entry_data.binary_sensors.append((area.name, area.occupancy_group))
             platform = Platform.BINARY_SENSOR
