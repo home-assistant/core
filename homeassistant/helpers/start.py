@@ -62,9 +62,11 @@ def async_at_start(
 ) -> CALLBACK_TYPE:
     """Execute a job at_start_cb when Home Assistant is starting.
 
-    The job is executed immediately if Home Assistant has fired
-    the start event (reached CoreState.running), Otherwise, it
-    will wait for EVENT_HOMEASSISTANT_START
+    The job is executed immediately if Home Assistant has reached
+    CoreState.running
+
+    Otherwise, it will wait for EVENT_HOMEASSISTANT_START event
+    to be fired.
     """
     return _async_at_core_state(
         hass, at_start_cb, EVENT_HOMEASSISTANT_START, _is_running
@@ -78,9 +80,11 @@ def async_at_started(
 ) -> CALLBACK_TYPE:
     """Execute a job at_start_cb when Home Assistant has started.
 
-    The job is executed immediately if Home Assistant has fired
-    the start event (reached CoreState.running), Otherwise, it
-    will wait for EVENT_HOMEASSISTANT_STARTED
+    The job is executed immediately if Home Assistant has reached
+    CoreState.running
+
+    Otherwise, it will wait for the EVENT_HOMEASSISTANT_STARTED
+    event to be fired.
     """
     return _async_at_core_state(
         hass, at_start_cb, EVENT_HOMEASSISTANT_STARTED, _is_running
