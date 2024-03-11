@@ -4344,7 +4344,7 @@ async def test_script_mode_queued_cancel(hass: HomeAssistant) -> None:
             await task2
 
         assert script_obj.is_running
-        assert script_obj.runs == 1
+        assert script_obj.runs == 2
 
         with pytest.raises(asyncio.CancelledError):
             task1.cancel()
@@ -5621,3 +5621,20 @@ async def test_conversation_response_not_set_subscript_if(
         "1/if/condition/0": [{"result": {"result": var == 1, "entities": []}}],
     }
     assert_action_trace(expected_trace)
+
+
+async def test_stopping_run_before_starting(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test stopping a script run before its started."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"wait_template": "{{ 'on' == 'off' }}"},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+    # Tested directly because we are checking for a race in the internals
+    # where the script is stopped before it is started. Previously this
+    # would hang indefinitely.
+    run = script._ScriptRun(hass, script_obj, {}, None, True)
+    await run.async_stop()
