@@ -1,4 +1,5 @@
 """ONVIF switches for controlling cameras."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -41,8 +42,7 @@ class ONVIFSwitchEntityDescription(
 SWITCHES: tuple[ONVIFSwitchEntityDescription, ...] = (
     ONVIFSwitchEntityDescription(
         key="autofocus",
-        name="Autofocus",
-        icon="mdi:focus-auto",
+        translation_key="autofocus",
         turn_on_data={"Focus": {"AutoFocusMode": "AUTO"}},
         turn_off_data={"Focus": {"AutoFocusMode": "MANUAL"}},
         turn_on_fn=lambda device: device.async_set_imaging_settings,
@@ -51,8 +51,7 @@ SWITCHES: tuple[ONVIFSwitchEntityDescription, ...] = (
     ),
     ONVIFSwitchEntityDescription(
         key="ir_lamp",
-        name="IR lamp",
-        icon="mdi:spotlight-beam",
+        translation_key="ir_lamp",
         turn_on_data={"IrCutFilter": "OFF"},
         turn_off_data={"IrCutFilter": "ON"},
         turn_on_fn=lambda device: device.async_set_imaging_settings,
@@ -61,8 +60,7 @@ SWITCHES: tuple[ONVIFSwitchEntityDescription, ...] = (
     ),
     ONVIFSwitchEntityDescription(
         key="wiper",
-        name="Wiper",
-        icon="mdi:wiper",
+        translation_key="wiper",
         turn_on_data="tt:Wiper|On",
         turn_off_data="tt:Wiper|Off",
         turn_on_fn=lambda device: device.async_run_aux_command,

@@ -1,4 +1,5 @@
 """Support for Salda Smarty XP/XV Ventilation Unit Sensors."""
+
 from __future__ import annotations
 
 import datetime as dt

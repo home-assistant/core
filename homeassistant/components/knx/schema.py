@@ -1,4 +1,5 @@
 """Voluptuous schemas for the KNX integration."""
+
 from __future__ import annotations
 
 from abc import ABC
@@ -191,7 +192,7 @@ class KNXPlatformSchema(ABC):
     """Voluptuous schema for KNX platform entity configuration."""
 
     PLATFORM: ClassVar[Platform | str]
-    ENTITY_SCHEMA: ClassVar[vol.Schema]
+    ENTITY_SCHEMA: ClassVar[vol.Schema | vol.All | vol.Any]
 
     @classmethod
     def platform_node(cls) -> dict[vol.Optional, vol.All]:
@@ -447,18 +448,6 @@ class CoverSchema(KNXPlatformSchema):
     ENTITY_SCHEMA = vol.All(
         vol.Schema(
             {
-                vol.Required(
-                    vol.Any(CONF_MOVE_LONG_ADDRESS, CONF_POSITION_ADDRESS),
-                    msg=(
-                        f"At least one of '{CONF_MOVE_LONG_ADDRESS}' or"
-                        f" '{CONF_POSITION_ADDRESS}' is required."
-                    ),
-                ): object,
-            },
-            extra=vol.ALLOW_EXTRA,
-        ),
-        vol.Schema(
-            {
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                 vol.Optional(CONF_MOVE_LONG_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_MOVE_SHORT_ADDRESS): ga_list_validator,
@@ -479,6 +468,20 @@ class CoverSchema(KNXPlatformSchema):
                 vol.Optional(CONF_DEVICE_CLASS): COVER_DEVICE_CLASSES_SCHEMA,
                 vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
             }
+        ),
+        vol.Any(
+            vol.Schema(
+                {vol.Required(CONF_MOVE_LONG_ADDRESS): object},
+                extra=vol.ALLOW_EXTRA,
+            ),
+            vol.Schema(
+                {vol.Required(CONF_POSITION_ADDRESS): object},
+                extra=vol.ALLOW_EXTRA,
+            ),
+            msg=(
+                f"At least one of '{CONF_MOVE_LONG_ADDRESS}' or"
+                f" '{CONF_POSITION_ADDRESS}' is required."
+            ),
         ),
     )
 

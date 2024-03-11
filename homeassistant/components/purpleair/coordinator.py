@@ -1,4 +1,5 @@
 """Define a PurpleAir DataUpdateCoordinator."""
+
 from __future__ import annotations
 
 from datetime import timedelta

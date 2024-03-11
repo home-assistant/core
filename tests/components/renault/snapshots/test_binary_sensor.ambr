@@ -785,7 +785,7 @@
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:fan-off',
+      'original_icon': None,
       'original_name': 'HVAC',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -823,7 +823,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER HVAC',
-        'icon': 'mdi:fan-off',
       }),
       'context': <ANY>,
       'entity_id': 'binary_sensor.reg_number_hvac',
@@ -951,7 +950,7 @@
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:fan-off',
+      'original_icon': None,
       'original_name': 'HVAC',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -1175,7 +1174,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER HVAC',
-        'icon': 'mdi:fan-off',
       }),
       'context': <ANY>,
       'entity_id': 'binary_sensor.reg_number_hvac',
@@ -2037,7 +2035,7 @@
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:fan-off',
+      'original_icon': None,
       'original_name': 'HVAC',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -2075,7 +2073,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER HVAC',
-        'icon': 'mdi:fan-off',
       }),
       'context': <ANY>,
       'entity_id': 'binary_sensor.reg_number_hvac',
@@ -2203,7 +2200,7 @@
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:fan-off',
+      'original_icon': None,
       'original_name': 'HVAC',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -2427,7 +2424,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER HVAC',
-        'icon': 'mdi:fan-off',
       }),
       'context': <ANY>,
       'entity_id': 'binary_sensor.reg_number_hvac',

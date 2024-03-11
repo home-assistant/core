@@ -7,10 +7,11 @@ The Entity Registry will persist itself 10 seconds after a new entity is
 registered. Registering a new entity while a timer is in progress resets the
 timer.
 """
+
 from __future__ import annotations
 
 from collections import UserDict
-from collections.abc import Callable, Iterable, Mapping, ValuesView
+from collections.abc import Callable, Iterable, KeysView, Mapping, ValuesView
 from datetime import datetime, timedelta
 from enum import StrEnum
 import logging
@@ -52,6 +53,7 @@ from homeassistant.util.read_only_dict import ReadOnlyDict
 from . import device_registry as dr, storage
 from .device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes
+from .registry import BaseRegistry
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
@@ -61,7 +63,7 @@ T = TypeVar("T")
 
 DATA_REGISTRY = "entity_registry"
 EVENT_ENTITY_REGISTRY_UPDATED = "entity_registry_updated"
-SAVE_DELAY = 10
+
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION_MAJOR = 1
@@ -511,6 +513,10 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
         self._unindex_entry(key)
         super().__delitem__(key)
 
+    def get_device_ids(self) -> KeysView[str]:
+        """Return device ids."""
+        return self._device_id_index.keys()
+
     def get_entity_id(self, key: tuple[str, str, str]) -> str | None:
         """Get entity_id from (domain, platform, unique_id)."""
         return self._index.get(key)
@@ -545,7 +551,7 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
         return [data[key] for key in self._area_id_index.get(area_id, ())]
 
 
-class EntityRegistry:
+class EntityRegistry(BaseRegistry):
     """Class to hold a registry of entities."""
 
     deleted_entities: dict[tuple[str, str, str], DeletedRegistryEntry]
@@ -611,6 +617,11 @@ class EntityRegistry:
     ) -> str | None:
         """Check if an entity_id is currently registered."""
         return self.entities.get_entity_id((domain, platform, unique_id))
+
+    @callback
+    def async_device_ids(self) -> list[str]:
+        """Return known device ids."""
+        return list(self.entities.get_device_ids())
 
     def _entity_id_available(
         self, entity_id: str, known_object_ids: Iterable[str] | None
@@ -1174,11 +1185,6 @@ class EntityRegistry:
         self._entities_data = entities.data
 
     @callback
-    def async_schedule_save(self) -> None:
-        """Schedule saving the entity registry."""
-        self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
-
-    @callback
     def _data_to_save(self) -> dict[str, Any]:
         """Return data of entity registry to store in a file."""
         data: dict[str, Any] = {}
@@ -1374,8 +1380,8 @@ def _async_setup_cleanup(hass: HomeAssistant, registry: EntityRegistry) -> None:
 
     hass.bus.async_listen(
         event_type=lr.EVENT_LABEL_REGISTRY_UPDATED,
-        event_filter=_label_removed_from_registry_filter,  # type: ignore[arg-type]
-        listener=_handle_label_registry_update,  # type: ignore[arg-type]
+        event_filter=_label_removed_from_registry_filter,
+        listener=_handle_label_registry_update,
     )
 
     @callback

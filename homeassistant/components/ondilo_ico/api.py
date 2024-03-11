@@ -1,4 +1,5 @@
 """API for Ondilo ICO bound to Home Assistant OAuth."""
+
 from asyncio import run_coroutine_threadsafe
 import logging
 from typing import Any

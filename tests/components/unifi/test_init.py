@@ -1,4 +1,5 @@
 """Test UniFi Network integration setup process."""
+
 from typing import Any
 from unittest.mock import patch
 

@@ -1,4 +1,5 @@
 """The bluetooth integration matchers."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

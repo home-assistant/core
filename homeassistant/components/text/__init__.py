@@ -1,4 +1,5 @@
 """Component to allow setting text as platforms."""
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass

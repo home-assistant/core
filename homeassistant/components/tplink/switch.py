@@ -1,4 +1,5 @@
 """Support for TPLink HS100/HS110/HS200 smart switch."""
+
 from __future__ import annotations
 
 import logging
@@ -61,7 +62,7 @@ class SmartPlugLedSwitch(CoordinatedTPLinkEntity, SwitchEntity):
     ) -> None:
         """Initialize the LED switch."""
         super().__init__(device, coordinator)
-        self._attr_unique_id = f"{self.device.mac}_led"
+        self._attr_unique_id = f"{device.mac}_led"
         self._async_update_attrs()
 
     @async_refresh_after
@@ -77,9 +78,7 @@ class SmartPlugLedSwitch(CoordinatedTPLinkEntity, SwitchEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Update the entity's attributes."""
-        is_on = self.device.led
-        self._attr_is_on = is_on
-        self._attr_icon = "mdi:led-on" if is_on else "mdi:led-off"
+        self._attr_is_on = self.device.led
 
     @callback
     def _handle_coordinator_update(self) -> None:

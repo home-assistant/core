@@ -1,4 +1,5 @@
 """Support for wake on lan."""
+
 from __future__ import annotations
 
 import logging

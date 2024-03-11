@@ -1,4 +1,5 @@
 """Tests for 1-Wire config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from pyownet import protocol

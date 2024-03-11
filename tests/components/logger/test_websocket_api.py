@@ -1,4 +1,5 @@
 """Tests for Logger Websocket API commands."""
+
 import logging
 from unittest.mock import patch
 

@@ -1,4 +1,5 @@
 """The tests for MQTT tag scanner."""
+
 from collections.abc import Generator
 import copy
 import json
@@ -8,7 +9,6 @@ import pytest
 
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.mqtt.const import DOMAIN as MQTT_DOMAIN
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -44,13 +44,6 @@ DEFAULT_TAG_SCAN = "E9F35959"
 DEFAULT_TAG_SCAN_JSON = (
     '{"Time":"2020-09-28T17:02:10","PN532":{"UID":"E9F35959", "DATA":"ILOVETASMOTA"}}'
 )
-
-
-@pytest.fixture(autouse=True)
-def binary_sensor_only() -> Generator[None, None, None]:
-    """Only setup the binary_sensor platform to speed up test."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR]):
-        yield
 
 
 @pytest.fixture

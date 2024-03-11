@@ -1,4 +1,5 @@
 """The Z-Wave-Me WS integration."""
+
 import logging
 
 from zwave_me_ws import ZWaveMe, ZWaveMeData

@@ -1,4 +1,5 @@
 """Test for Roborock init."""
+
 from unittest.mock import patch
 
 from roborock import RoborockException, RoborockInvalidCredentials
@@ -130,6 +131,7 @@ async def test_reauth_started(
         side_effect=RoborockInvalidCredentials(),
     ):
         await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
         assert mock_roborock_entry.state is ConfigEntryState.SETUP_ERROR
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1

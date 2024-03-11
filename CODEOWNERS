@@ -159,8 +159,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/binary_sensor/ @home-assistant/core
 /tests/components/binary_sensor/ @home-assistant/core
 /homeassistant/components/bizkaibus/ @UgaitzEtxebarria
-/homeassistant/components/blebox/ @bbx-a @riokuu
-/tests/components/blebox/ @bbx-a @riokuu
+/homeassistant/components/blebox/ @bbx-a @riokuu @swistakm
+/tests/components/blebox/ @bbx-a @riokuu @swistakm
 /homeassistant/components/blink/ @fronzbot @mkmer
 /tests/components/blink/ @fronzbot @mkmer
 /homeassistant/components/blue_current/ @Floris272 @gleeuwen
@@ -331,8 +331,8 @@ build.json @home-assistant/supervisor
 /tests/components/ecoforest/ @pjanuario
 /homeassistant/components/econet/ @w1ll1am23
 /tests/components/econet/ @w1ll1am23
-/homeassistant/components/ecovacs/ @OverloadUT @mib1185 @edenhaus
-/tests/components/ecovacs/ @OverloadUT @mib1185 @edenhaus
+/homeassistant/components/ecovacs/ @OverloadUT @mib1185 @edenhaus @Augar
+/tests/components/ecovacs/ @OverloadUT @mib1185 @edenhaus @Augar
 /homeassistant/components/ecowitt/ @pvizeli
 /tests/components/ecowitt/ @pvizeli
 /homeassistant/components/efergy/ @tkdrob
@@ -770,8 +770,8 @@ build.json @home-assistant/supervisor
 /tests/components/lupusec/ @majuss @suaveolent
 /homeassistant/components/lutron/ @cdheiser @wilburCForce
 /tests/components/lutron/ @cdheiser @wilburCForce
-/homeassistant/components/lutron_caseta/ @swails @bdraco @danaues
-/tests/components/lutron_caseta/ @swails @bdraco @danaues
+/homeassistant/components/lutron_caseta/ @swails @bdraco @danaues @eclair4151
+/tests/components/lutron_caseta/ @swails @bdraco @danaues @eclair4151
 /homeassistant/components/lyric/ @timmo001
 /tests/components/lyric/ @timmo001
 /homeassistant/components/mastodon/ @fabaff
@@ -854,14 +854,14 @@ build.json @home-assistant/supervisor
 /tests/components/mysensors/ @MartinHjelmare @functionpointer
 /homeassistant/components/mystrom/ @fabaff
 /tests/components/mystrom/ @fabaff
-/homeassistant/components/myuplink/ @pajzo
-/tests/components/myuplink/ @pajzo
+/homeassistant/components/myuplink/ @pajzo @astrandb
+/tests/components/myuplink/ @pajzo @astrandb
 /homeassistant/components/nam/ @bieniu
 /tests/components/nam/ @bieniu
 /homeassistant/components/nanoleaf/ @milanmeu
 /tests/components/nanoleaf/ @milanmeu
-/homeassistant/components/neato/ @dshokouhi @Santobert
-/tests/components/neato/ @dshokouhi @Santobert
+/homeassistant/components/neato/ @Santobert
+/tests/components/neato/ @Santobert
 /homeassistant/components/nederlandse_spoorwegen/ @YarmoM
 /homeassistant/components/ness_alarm/ @nickw444
 /tests/components/ness_alarm/ @nickw444
@@ -973,8 +973,8 @@ build.json @home-assistant/supervisor
 /tests/components/otbr/ @home-assistant/core
 /homeassistant/components/ourgroceries/ @OnFreund
 /tests/components/ourgroceries/ @OnFreund
-/homeassistant/components/overkiz/ @imicknl @vlebourl @tetienne @nyroDev
-/tests/components/overkiz/ @imicknl @vlebourl @tetienne @nyroDev
+/homeassistant/components/overkiz/ @imicknl @vlebourl @tetienne @nyroDev @tronix117
+/tests/components/overkiz/ @imicknl @vlebourl @tetienne @nyroDev @tronix117
 /homeassistant/components/ovo_energy/ @timmo001
 /tests/components/ovo_energy/ @timmo001
 /homeassistant/components/p1_monitor/ @klaasnicolaas
@@ -1095,7 +1095,6 @@ build.json @home-assistant/supervisor
 /tests/components/recovery_mode/ @home-assistant/core
 /homeassistant/components/refoss/ @ashionky
 /tests/components/refoss/ @ashionky
-/homeassistant/components/rejseplanen/ @DarkFox
 /homeassistant/components/remote/ @home-assistant/core
 /tests/components/remote/ @home-assistant/core
 /homeassistant/components/renault/ @epenet
@@ -1511,10 +1510,14 @@ build.json @home-assistant/supervisor
 /tests/components/weather/ @home-assistant/core
 /homeassistant/components/weatherflow/ @natekspencer @jeeftor
 /tests/components/weatherflow/ @natekspencer @jeeftor
+/homeassistant/components/weatherflow_cloud/ @jeeftor
+/tests/components/weatherflow_cloud/ @jeeftor
 /homeassistant/components/weatherkit/ @tjhorner
 /tests/components/weatherkit/ @tjhorner
 /homeassistant/components/webhook/ @home-assistant/core
 /tests/components/webhook/ @home-assistant/core
+/homeassistant/components/webmin/ @autinerd
+/tests/components/webmin/ @autinerd
 /homeassistant/components/webostv/ @thecode
 /tests/components/webostv/ @thecode
 /homeassistant/components/websocket_api/ @home-assistant/core

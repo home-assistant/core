@@ -1,10 +1,10 @@
 """Config flow for myUplink."""
+
 from collections.abc import Mapping
 import logging
 from typing import Any
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN, OAUTH2_SCOPES
@@ -29,7 +29,9 @@ class OAuth2FlowHandler(
         """Extra data that needs to be appended to the authorize url."""
         return {"scope": " ".join(OAUTH2_SCOPES)}
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self.config_entry_reauth = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -38,7 +40,7 @@ class OAuth2FlowHandler(
 
     async def async_step_reauth_confirm(
         self, user_input: Mapping[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         if user_input is None:
             return self.async_show_form(
@@ -47,7 +49,7 @@ class OAuth2FlowHandler(
 
         return await self.async_step_user()
 
-    async def async_oauth_create_entry(self, data: dict) -> FlowResult:
+    async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create or update the config entry."""
         if self.config_entry_reauth:
             return self.async_update_reload_and_abort(

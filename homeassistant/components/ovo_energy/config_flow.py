@@ -1,4 +1,5 @@
 """Config flow to configure the OVO Energy integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -8,9 +9,8 @@ import aiohttp
 from ovoenergy.ovoenergy import OVOEnergy
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_ACCOUNT, DOMAIN
 
@@ -37,7 +37,7 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self,
         user_input: Mapping[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
         if user_input is not None:
@@ -73,7 +73,7 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth(
         self,
         user_input: Mapping[str, Any],
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         errors = {}
 

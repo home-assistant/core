@@ -1,4 +1,5 @@
 """Tests for the Config Entry Flow helper."""
+
 from collections.abc import Generator
 from unittest.mock import Mock, PropertyMock, patch
 

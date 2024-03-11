@@ -1,4 +1,5 @@
 """The pi_hole component."""
+
 from __future__ import annotations
 
 import logging

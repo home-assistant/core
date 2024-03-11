@@ -2,6 +2,7 @@
 
 Call init before using it in your tests to ensure clean test data.
 """
+
 from homeassistant.components.binary_sensor import DEVICE_CLASSES, BinarySensorEntity
 
 from tests.common import MockEntity

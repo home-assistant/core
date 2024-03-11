@@ -1,4 +1,5 @@
 """The test for switch device automation."""
+
 from datetime import timedelta
 
 from freezegun import freeze_time

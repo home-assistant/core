@@ -1,4 +1,5 @@
 """The tests for the Recorder component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -2228,6 +2229,10 @@ async def test_connect_args_priority(hass: HomeAssistant, config_url) -> None:
         def __init__(*args, **kwargs):
             ...
 
+        @property
+        def is_async(self):
+            return False
+
         def connect(self, *args, **params):
             nonlocal connect_params
             connect_params.append(params)
@@ -2485,3 +2490,73 @@ async def test_events_are_recorded_until_final_write(
     await hass.async_block_till_done()
 
     assert not instance.engine
+
+
+async def test_commit_before_commits_pending_writes(
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
+    recorder_db_url: str,
+    tmp_path: Path,
+) -> None:
+    """Test commit_before with a non-zero commit interval.
+
+    All of our test run with a commit interval of 0 by
+    default, so we need to test this with a non-zero commit
+    """
+    config = {
+        recorder.CONF_DB_URL: recorder_db_url,
+        recorder.CONF_COMMIT_INTERVAL: 60,
+    }
+
+    recorder_helper.async_initialize_recorder(hass)
+    hass.create_task(async_setup_recorder_instance(hass, config))
+    await recorder_helper.async_wait_recorder(hass)
+    instance = get_instance(hass)
+    assert instance.commit_interval == 60
+    verify_states_in_queue_future = hass.loop.create_future()
+    verify_session_commit_future = hass.loop.create_future()
+
+    class VerifyCommitBeforeTask(recorder.tasks.RecorderTask):
+        """Task to verify that commit before ran.
+
+        If commit_before is true, we should have no pending writes.
+        """
+
+        commit_before = True
+
+        def run(self, instance: Recorder) -> None:
+            if not instance._event_session_has_pending_writes:
+                hass.loop.call_soon_threadsafe(
+                    verify_session_commit_future.set_result, None
+                )
+                return
+            hass.loop.call_soon_threadsafe(
+                verify_session_commit_future.set_exception,
+                RuntimeError("Session still has pending write"),
+            )
+
+    class VerifyStatesInQueueTask(recorder.tasks.RecorderTask):
+        """Task to verify that states are in the queue."""
+
+        commit_before = False
+
+        def run(self, instance: Recorder) -> None:
+            if instance._event_session_has_pending_writes:
+                hass.loop.call_soon_threadsafe(
+                    verify_states_in_queue_future.set_result, None
+                )
+                return
+            hass.loop.call_soon_threadsafe(
+                verify_states_in_queue_future.set_exception,
+                RuntimeError("Session has no pending write"),
+            )
+
+    # First insert an event
+    instance.queue_task(Event("fake_event"))
+    # Next verify that the event session has pending writes
+    instance.queue_task(VerifyStatesInQueueTask())
+    # Finally, verify that the session was committed
+    instance.queue_task(VerifyCommitBeforeTask())
+
+    await verify_states_in_queue_future
+    await verify_session_commit_future

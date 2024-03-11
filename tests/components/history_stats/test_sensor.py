@@ -1,4 +1,5 @@
 """The test for the History Statistics sensor platform."""
+
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
@@ -1002,7 +1003,7 @@ async def test_does_not_work_into_the_future(
         one_hour_in = start_time + timedelta(minutes=60)
         with freeze_time(one_hour_in):
             async_fire_time_changed(hass, one_hour_in)
-            await hass.async_block_till_done()
+            await hass.async_block_till_done(wait_background_tasks=True)
 
         assert hass.states.get("sensor.sensor1").state == STATE_UNKNOWN
         assert hass.states.get("sensor.sensor2").state == STATE_UNKNOWN
@@ -1012,7 +1013,7 @@ async def test_does_not_work_into_the_future(
             hass.states.async_set("binary_sensor.state", "off")
             await hass.async_block_till_done()
             async_fire_time_changed(hass, turn_off_time)
-            await hass.async_block_till_done()
+            await hass.async_block_till_done(wait_background_tasks=True)
 
         assert hass.states.get("sensor.sensor1").state == STATE_UNKNOWN
         assert hass.states.get("sensor.sensor2").state == STATE_UNKNOWN
@@ -1020,7 +1021,7 @@ async def test_does_not_work_into_the_future(
         turn_back_on_time = start_time + timedelta(minutes=105)
         with freeze_time(turn_back_on_time):
             async_fire_time_changed(hass, turn_back_on_time)
-            await hass.async_block_till_done()
+            await hass.async_block_till_done(wait_background_tasks=True)
 
         assert hass.states.get("sensor.sensor1").state == STATE_UNKNOWN
         assert hass.states.get("sensor.sensor2").state == STATE_UNKNOWN
@@ -1035,7 +1036,7 @@ async def test_does_not_work_into_the_future(
         end_time = start_time + timedelta(minutes=120)
         with freeze_time(end_time):
             async_fire_time_changed(hass, end_time)
-            await hass.async_block_till_done()
+            await hass.async_block_till_done(wait_background_tasks=True)
 
         assert hass.states.get("sensor.sensor1").state == STATE_UNKNOWN
         assert hass.states.get("sensor.sensor2").state == STATE_UNKNOWN
@@ -1043,7 +1044,7 @@ async def test_does_not_work_into_the_future(
         in_the_window = start_time + timedelta(hours=23, minutes=5)
         with freeze_time(in_the_window):
             async_fire_time_changed(hass, in_the_window)
-            await hass.async_block_till_done()
+            await hass.async_block_till_done(wait_background_tasks=True)
 
         assert hass.states.get("sensor.sensor1").state == "0.08"
         assert hass.states.get("sensor.sensor2").state == "0.0833333333333333"
@@ -1054,7 +1055,7 @@ async def test_does_not_work_into_the_future(
         return_value=[],
     ), freeze_time(past_the_window):
         async_fire_time_changed(hass, past_the_window)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get("sensor.sensor1").state == STATE_UNKNOWN
 
@@ -1076,7 +1077,7 @@ async def test_does_not_work_into_the_future(
         _fake_off_states,
     ), freeze_time(past_the_window_with_data):
         async_fire_time_changed(hass, past_the_window_with_data)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get("sensor.sensor1").state == STATE_UNKNOWN
 
@@ -1086,7 +1087,7 @@ async def test_does_not_work_into_the_future(
         _fake_off_states,
     ), freeze_time(at_the_next_window_with_data):
         async_fire_time_changed(hass, at_the_next_window_with_data)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get("sensor.sensor1").state == "0.0"
 
@@ -1486,7 +1487,7 @@ async def test_end_time_with_microseconds_zeroed(
         )
 
         async_fire_time_changed(hass, time_200)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert hass.states.get("sensor.heatpump_compressor_today").state == "1.83"
         assert (
             hass.states.get("sensor.heatpump_compressor_today2").state
@@ -1498,7 +1499,7 @@ async def test_end_time_with_microseconds_zeroed(
     time_400 = start_of_today + timedelta(hours=4)
     with freeze_time(time_400):
         async_fire_time_changed(hass, time_400)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert hass.states.get("sensor.heatpump_compressor_today").state == "1.83"
         assert (
             hass.states.get("sensor.heatpump_compressor_today2").state
@@ -1509,7 +1510,7 @@ async def test_end_time_with_microseconds_zeroed(
     time_600 = start_of_today + timedelta(hours=6)
     with freeze_time(time_600):
         async_fire_time_changed(hass, time_600)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert hass.states.get("sensor.heatpump_compressor_today").state == "3.83"
         assert (
             hass.states.get("sensor.heatpump_compressor_today2").state
@@ -1524,7 +1525,7 @@ async def test_end_time_with_microseconds_zeroed(
 
     with freeze_time(rolled_to_next_day):
         async_fire_time_changed(hass, rolled_to_next_day)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert hass.states.get("sensor.heatpump_compressor_today").state == "0.0"
         assert hass.states.get("sensor.heatpump_compressor_today2").state == "0.0"
 
@@ -1533,7 +1534,7 @@ async def test_end_time_with_microseconds_zeroed(
     )
     with freeze_time(rolled_to_next_day_plus_12):
         async_fire_time_changed(hass, rolled_to_next_day_plus_12)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert hass.states.get("sensor.heatpump_compressor_today").state == "12.0"
         assert hass.states.get("sensor.heatpump_compressor_today2").state == "12.0"
 
@@ -1542,7 +1543,7 @@ async def test_end_time_with_microseconds_zeroed(
     )
     with freeze_time(rolled_to_next_day_plus_14):
         async_fire_time_changed(hass, rolled_to_next_day_plus_14)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert hass.states.get("sensor.heatpump_compressor_today").state == "14.0"
         assert hass.states.get("sensor.heatpump_compressor_today2").state == "14.0"
 
@@ -1553,12 +1554,12 @@ async def test_end_time_with_microseconds_zeroed(
         hass.states.async_set("binary_sensor.heatpump_compressor_state", "off")
         await async_wait_recording_done(hass)
         async_fire_time_changed(hass, rolled_to_next_day_plus_16_860000)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     rolled_to_next_day_plus_18 = start_of_today + timedelta(days=1, hours=18)
     with freeze_time(rolled_to_next_day_plus_18):
         async_fire_time_changed(hass, rolled_to_next_day_plus_18)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert hass.states.get("sensor.heatpump_compressor_today").state == "16.0"
         assert (
             hass.states.get("sensor.heatpump_compressor_today2").state

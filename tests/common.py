@@ -1,8 +1,8 @@
 """Test the helper method for writing tests."""
+
 from __future__ import annotations
 
 import asyncio
-from collections import OrderedDict
 from collections.abc import AsyncGenerator, Generator, Mapping, Sequence
 from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime, timedelta
@@ -16,7 +16,7 @@ import os
 import pathlib
 import threading
 import time
-from types import ModuleType
+from types import FrameType, ModuleType
 from typing import Any, NoReturn, TypeVar
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -260,14 +260,14 @@ async def async_test_home_assistant(
 
         return orig_async_add_executor_job(target, *args)
 
-    def async_create_task(coroutine, name=None):
+    def async_create_task(coroutine, name=None, eager_start=False):
         """Create task."""
         if isinstance(coroutine, Mock) and not isinstance(coroutine, AsyncMock):
             fut = asyncio.Future()
             fut.set_result(None)
             return fut
 
-        return orig_async_create_task(coroutine, name)
+        return orig_async_create_task(coroutine, name, eager_start)
 
     hass.async_add_job = async_add_job
     hass.async_add_executor_job = async_add_executor_job
@@ -615,27 +615,6 @@ def mock_registry(
         registry.entities[key] = entry
 
     hass.data[er.DATA_REGISTRY] = registry
-    return registry
-
-
-def mock_area_registry(
-    hass: HomeAssistant, mock_entries: dict[str, ar.AreaEntry] | None = None
-) -> ar.AreaRegistry:
-    """Mock the Area Registry.
-
-    This should only be used if you need to mock/re-stage a clean mocked
-    area registry in your current hass object. It can be useful to,
-    for example, pre-load the registry with items.
-
-    This mock will thus replace the existing registry in the running hass.
-
-    If you just need to access the existing registry, use the `area_registry`
-    fixture instead.
-    """
-    registry = ar.AreaRegistry(hass)
-    registry.areas = mock_entries or OrderedDict()
-
-    hass.data[ar.DATA_REGISTRY] = registry
     return registry
 
 
@@ -1075,11 +1054,11 @@ def assert_setup_component(count, domain=None):
     """
     config = {}
 
-    async def mock_psc(hass, config_input, integration):
+    async def mock_psc(hass, config_input, integration, component=None):
         """Mock the prepare_setup_component to capture config."""
         domain_input = integration.domain
         integration_config_info = await async_process_component_config(
-            hass, config_input, integration
+            hass, config_input, integration, component
         )
         res = integration_config_info.config
         config[domain_input] = None if res is None else res.get(domain_input)
@@ -1096,9 +1075,9 @@ def assert_setup_component(count, domain=None):
         yield config
 
     if domain is None:
-        assert len(config) == 1, "assert_setup_component requires DOMAIN: {}".format(
-            list(config.keys())
-        )
+        assert (
+            len(config) == 1
+        ), f"assert_setup_component requires DOMAIN: {list(config.keys())}"
         domain = list(config.keys())[0]
 
     res = config.get(domain)
@@ -1418,6 +1397,7 @@ def mock_integration(
         else f"{loader.PACKAGE_CUSTOM_COMPONENTS}.{module.DOMAIN}",
         pathlib.Path(""),
         module.mock_manifest(),
+        set(),
     )
 
     def mock_import_platform(platform_name: str) -> NoReturn:
@@ -1445,13 +1425,14 @@ def mock_platform(
 
     platform_path is in form hue.config_flow.
     """
-    domain = platform_path.split(".")[0]
+    domain, _, platform_name = platform_path.partition(".")
     integration_cache = hass.data[loader.DATA_INTEGRATIONS]
     module_cache = hass.data[loader.DATA_COMPONENTS]
 
     if domain not in integration_cache:
         mock_integration(hass, MockModule(domain))
 
+    integration_cache[domain]._top_level_files.add(f"{platform_name}.py")
     _LOGGER.info("Adding mock integration platform: %s", platform_path)
     module_cache[platform_path] = module or Mock()
 
@@ -1616,3 +1597,20 @@ def help_test_all(module: ModuleType) -> None:
     assert set(module.__all__) == {
         itm for itm in module.__dir__() if not itm.startswith("_")
     }
+
+
+def extract_stack_to_frame(extract_stack: list[Mock]) -> FrameType:
+    """Convert an extract stack to a frame list."""
+    stack = list(extract_stack)
+    for frame in stack:
+        frame.f_back = None
+        frame.f_code.co_filename = frame.filename
+        frame.f_lineno = int(frame.lineno)
+
+    top_frame = stack.pop()
+    current_frame = top_frame
+    while stack and (next_frame := stack.pop()):
+        current_frame.f_back = next_frame
+        current_frame = next_frame
+
+    return top_frame

@@ -1,4 +1,5 @@
 """Test the Bond config flow."""
+
 from __future__ import annotations
 
 from http import HTTPStatus

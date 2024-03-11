@@ -1,4 +1,5 @@
 """Tests for Google Assistant SDK."""
+
 from datetime import timedelta
 import http
 import time

@@ -1,4 +1,5 @@
 """Support for De Lijn (Flemish public transport) information."""
+
 from __future__ import annotations
 
 from datetime import datetime
