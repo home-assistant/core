@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .deconz_device import DeconzDevice
-from .gateway import get_gateway_from_config_entry
+from .hub import get_gateway_from_config_entry
 
 
 async def async_setup_entry(

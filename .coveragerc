@@ -1184,7 +1184,6 @@ omit =
     homeassistant/components/serial_pm/sensor.py
     homeassistant/components/sesame/lock.py
     homeassistant/components/seven_segments/image_processing.py
-    homeassistant/components/seventeentrack/sensor.py
     homeassistant/components/shodan/sensor.py
     homeassistant/components/sia/__init__.py
     homeassistant/components/sia/alarm_control_panel.py

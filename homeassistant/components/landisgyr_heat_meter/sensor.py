@@ -40,18 +40,11 @@ from . import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class HeatMeterSensorEntityDescriptionMixin:
-    """Mixin for additional Heat Meter sensor description attributes ."""
+@dataclass(frozen=True, kw_only=True)
+class HeatMeterSensorEntityDescription(SensorEntityDescription):
+    """Heat Meter sensor description."""
 
     value_fn: Callable[[HeatMeterResponse], StateType | datetime]
-
-
-@dataclass(frozen=True)
-class HeatMeterSensorEntityDescription(
-    SensorEntityDescription, HeatMeterSensorEntityDescriptionMixin
-):
-    """Heat Meter sensor description."""
 
 
 HEAT_METER_SENSOR_TYPES = (

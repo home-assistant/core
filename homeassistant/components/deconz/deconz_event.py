@@ -26,7 +26,7 @@ from homeassistant.util import slugify
 
 from .const import ATTR_DURATION, ATTR_ROTATION, CONF_ANGLE, CONF_GESTURE, LOGGER
 from .deconz_device import DeconzBase
-from .gateway import DeconzGateway
+from .hub import DeconzHub
 
 CONF_DECONZ_EVENT = "deconz_event"
 CONF_DECONZ_ALARM_EVENT = "deconz_alarm_event"
@@ -55,7 +55,7 @@ RELATIVE_ROTARY_DECONZ_TO_EVENT = {
 }
 
 
-async def async_setup_events(gateway: DeconzGateway) -> None:
+async def async_setup_events(gateway: DeconzHub) -> None:
     """Set up the deCONZ events."""
 
     @callback
@@ -100,7 +100,7 @@ async def async_setup_events(gateway: DeconzGateway) -> None:
 
 
 @callback
-def async_unload_events(gateway: DeconzGateway) -> None:
+def async_unload_events(gateway: DeconzHub) -> None:
     """Unload all deCONZ events."""
     for event in gateway.events:
         event.async_will_remove_from_hass()
@@ -118,7 +118,7 @@ class DeconzEventBase(DeconzBase):
     def __init__(
         self,
         device: AncillaryControl | Presence | RelativeRotary | Switch,
-        gateway: DeconzGateway,
+        gateway: DeconzHub,
     ) -> None:
         """Register callback that will be used for signals."""
         super().__init__(device, gateway)
