@@ -13,6 +13,8 @@ ENV \
 
 ARG QEMU_CPU
 
+# Set shell
+SHELL ["/bin/ash", "-o", "pipefail", "-c"]
 RUN curl --proto '=https' --tlsv1.2 -LsSf https://github.com/astral-sh/uv/releases/download/0.1.17/uv-installer.sh | sh
 
 WORKDIR /usr/src
