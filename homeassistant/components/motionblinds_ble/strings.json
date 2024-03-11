@@ -33,22 +33,5 @@
         "vertical": "Vertical blind"
       }
     }
-  },
-  "entity": {
-    "cover": {
-      "blind": {
-        "state_attributes": {
-          "connection": {
-            "name": "Connected",
-            "state": {
-              "connected": "Yes",
-              "connecting": "Connecting...",
-              "disconnected": "No",
-              "disconnecting": "Disconnecting..."
-            }
-          }
-        }
-      }
-    }
   }
 }
