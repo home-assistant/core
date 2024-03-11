@@ -13,8 +13,8 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import assert_setup_component, load_fixture
 
-BUS_REPLY = json.loads(load_fixture("yandex_transport/bus_reply.json"))
-SUBURBAN_TRAIN_REPLY = json.loads(load_fixture("yandex_transport/suburban_reply.json"))
+BUS_REPLY = json.loads(load_fixture("bus_reply.json", "yandex_transport"))
+SUBURBAN_TRAIN_REPLY = json.loads(load_fixture("suburban_reply.json", "yandex_transport"))
 
 
 @pytest.fixture
