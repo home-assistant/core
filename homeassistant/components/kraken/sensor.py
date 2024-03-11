@@ -33,16 +33,11 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class KrakenRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class KrakenSensorEntityDescription(SensorEntityDescription):
+    """Describes Kraken sensor entity."""
 
     value_fn: Callable[[DataUpdateCoordinator[KrakenResponse], str], float | int]
-
-
-@dataclass(frozen=True)
-class KrakenSensorEntityDescription(SensorEntityDescription, KrakenRequiredKeysMixin):
-    """Describes Kraken sensor entity."""
 
 
 SENSOR_TYPES: tuple[KrakenSensorEntityDescription, ...] = (

@@ -144,10 +144,8 @@ async def async_start(  # noqa: C901
     mqtt_data = get_mqtt_data(hass)
     platform_setup_lock: dict[str, asyncio.Lock] = {}
 
-    async def _async_jit_component_setup(
-        discovery_payload: MQTTDiscoveryPayload,
-    ) -> None:
-        """Perform just in time components set up."""
+    async def _async_component_setup(discovery_payload: MQTTDiscoveryPayload) -> None:
+        """Perform component set up."""
         discovery_hash = discovery_payload.discovery_data[ATTR_DISCOVERY_HASH]
         component, discovery_id = discovery_hash
         platform_setup_lock.setdefault(component, asyncio.Lock())
@@ -166,7 +164,7 @@ async def async_start(  # noqa: C901
 
     mqtt_data.reload_dispatchers.append(
         async_dispatcher_connect(
-            hass, MQTT_DISCOVERY_NEW_COMPONENT, _async_jit_component_setup
+            hass, MQTT_DISCOVERY_NEW_COMPONENT, _async_component_setup
         )
     )
 
