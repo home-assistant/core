@@ -1,4 +1,5 @@
 """Offer event listening automation rules."""
+
 from __future__ import annotations
 
 from collections.abc import ItemsView
@@ -143,6 +144,7 @@ async def async_attach_trigger(
                 }
             },
             event.context,
+            eager_start=True,
         )
 
     removes = [

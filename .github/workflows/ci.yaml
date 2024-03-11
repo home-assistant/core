@@ -37,8 +37,8 @@ env:
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 8
   HA_SHORT_VERSION: "2024.4"
-  DEFAULT_PYTHON: "3.11"
-  ALL_PYTHON_VERSIONS: "['3.11', '3.12']"
+  DEFAULT_PYTHON: "3.12"
+  ALL_PYTHON_VERSIONS: "['3.12']"
   # 10.3 is the oldest supported version
   # - 10.3.32 is the version currently shipped with Synology (as of 17 Feb 2022)
   # 10.6 is the current long-term-support
@@ -56,7 +56,7 @@ env:
   # - 15.2 is the latest (as of 9 Feb 2023)
   POSTGRESQL_VERSIONS: "['postgres:12.14','postgres:15.2']"
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
-  UV_CACHE: /tmp/uv-cache
+  UV_CACHE_DIR: /tmp/uv-cache
   SQLALCHEMY_WARN_20: 1
   PYTHONASYNCIODEBUG: 1
   HASS_CI: 1
@@ -494,10 +494,10 @@ jobs:
           . venv/bin/activate
           python --version
           pip install "$(cat requirements_test.txt | grep uv)"
-          UV_CACHE_DIR=$UV_CACHE uv pip install -U "pip>=21.3.1" setuptools wheel
-          UV_CACHE_DIR=$UV_CACHE uv pip install -r requirements_all.txt
-          UV_CACHE_DIR=$UV_CACHE uv pip install -r requirements_test.txt
-          UV_CACHE_DIR=$UV_CACHE uv pip install -e . --config-settings editable_mode=compat
+          uv pip install -U "pip>=21.3.1" setuptools wheel
+          uv pip install -r requirements_all.txt
+          uv pip install -r requirements_test.txt
+          uv pip install -e . --config-settings editable_mode=compat
 
   hassfest:
     name: Check hassfest
@@ -726,7 +726,7 @@ jobs:
           # However this plugin is fairly new and doesn't run correctly
           # on a non-GitHub environment.
           pip install "$(cat requirements_test.txt | grep uv)"
-          UV_CACHE_DIR=$UV_CACHE uv pip install pytest-github-actions-annotate-failures==0.1.3
+          uv pip install pytest-github-actions-annotate-failures==0.1.3
       - name: Register pytest slow test problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
@@ -880,14 +880,14 @@ jobs:
           # However this plugin is fairly new and doesn't run correctly
           # on a non-GitHub environment.
           pip install "$(cat requirements_test.txt | grep uv)"
-          UV_CACHE_DIR=$UV_CACHE uv pip install pytest-github-actions-annotate-failures==0.1.3
+          uv pip install pytest-github-actions-annotate-failures==0.1.3
       - name: Register pytest slow test problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
       - name: Install SQL Python libraries
         run: |
           . venv/bin/activate
-          UV_CACHE_DIR=$UV_CACHE uv pip install mysqlclient sqlalchemy_utils
+          uv pip install mysqlclient sqlalchemy_utils
       - name: Compile English translations
         run: |
           . venv/bin/activate
@@ -1008,14 +1008,14 @@ jobs:
           # However this plugin is fairly new and doesn't run correctly
           # on a non-GitHub environment.
           pip install "$(cat requirements_test.txt | grep uv)"
-          UV_CACHE_DIR=$UV_CACHE uv pip install pytest-github-actions-annotate-failures==0.1.3
+          uv pip install pytest-github-actions-annotate-failures==0.1.3
       - name: Register pytest slow test problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
       - name: Install SQL Python libraries
         run: |
           . venv/bin/activate
-          UV_CACHE_DIR=$UV_CACHE uv pip install psycopg2 sqlalchemy_utils
+          uv pip install psycopg2 sqlalchemy_utils
       - name: Compile English translations
         run: |
           . venv/bin/activate
@@ -1089,7 +1089,7 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov (full coverage)
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: Wandalen/wretry.action@v1.4.7
+        uses: Wandalen/wretry.action@v1.4.8
         with:
           action: codecov/codecov-action@v3.1.3
           with: |
@@ -1100,7 +1100,7 @@ jobs:
           attempt_delay: 30000
       - name: Upload coverage to Codecov (partial coverage)
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: Wandalen/wretry.action@v1.4.7
+        uses: Wandalen/wretry.action@v1.4.8
         with:
           action: codecov/codecov-action@v3.1.3
           with: |

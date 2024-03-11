@@ -1,4 +1,5 @@
 """Implement the auth feature from Hass.io for Add-ons."""
+
 from http import HTTPStatus
 from ipaddress import ip_address
 import logging

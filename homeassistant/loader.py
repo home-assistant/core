@@ -3,6 +3,7 @@
 This module has quite some complex parts. I have tried to add as much
 documentation as possible to keep it understandable.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -105,6 +106,12 @@ PACKAGE_BUILTIN = "homeassistant.components"
 CUSTOM_WARNING = (
     "We found a custom integration %s which has not "
     "been tested by Home Assistant. This component might "
+    "cause stability problems, be sure to disable it if you "
+    "experience issues with Home Assistant"
+)
+IMPORT_EVENT_LOOP_WARNING = (
+    "We found an integration %s which is configured to "
+    "to import its code in the event loop. This component might "
     "cause stability problems, be sure to disable it if you "
     "experience issues with Home Assistant"
 )
@@ -652,6 +659,9 @@ class Integration:
                 None if is_virtual else set(os.listdir(file_path)),
             )
 
+            if not integration.import_executor:
+                _LOGGER.warning(IMPORT_EVENT_LOOP_WARNING, integration.domain)
+
             if integration.is_built_in:
                 return integration
 
@@ -820,9 +830,13 @@ class Integration:
     def import_executor(self) -> bool:
         """Import integration in the executor."""
         # If the integration does not explicitly set import_executor, we default to
-        # True if it's a built-in integration and False if it's a custom integration.
-        # In the future, we want to default to True for all integrations.
-        return self.manifest.get("import_executor", self.is_built_in)
+        # True.
+        return self.manifest.get("import_executor", True)
+
+    @cached_property
+    def has_translations(self) -> bool:
+        """Return if the integration has translations."""
+        return "translations" in self._top_level_files
 
     @property
     def mqtt(self) -> list[str] | None:

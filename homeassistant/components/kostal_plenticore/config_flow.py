@@ -1,4 +1,5 @@
 """Config flow for Kostal Plenticore Solar Inverter integration."""
+
 import logging
 
 from aiohttp.client_exceptions import ClientError

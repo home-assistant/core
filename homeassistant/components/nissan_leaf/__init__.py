@@ -1,4 +1,5 @@
 """Support for the Nissan Leaf Carwings/Nissan Connect API."""
+
 from __future__ import annotations
 
 import asyncio

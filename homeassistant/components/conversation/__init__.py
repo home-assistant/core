@@ -1,4 +1,5 @@
 """Support for functionality to have conversations with Home Assistant."""
+
 from __future__ import annotations
 
 import asyncio

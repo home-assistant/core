@@ -1,4 +1,5 @@
 """Test Discord config flow."""
+
 import nextcord
 
 from homeassistant import config_entries, data_entry_flow

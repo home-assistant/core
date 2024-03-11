@@ -1,4 +1,5 @@
 """Provides an HTTP API for mobile_app."""
+
 from __future__ import annotations
 
 from contextlib import suppress

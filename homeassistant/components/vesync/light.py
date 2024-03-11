@@ -1,4 +1,5 @@
 """Support for VeSync bulbs and wall dimmers."""
+
 import logging
 from typing import Any
 

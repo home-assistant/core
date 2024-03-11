@@ -1,4 +1,5 @@
 """The tests for the Light component."""
+
 from unittest.mock import MagicMock, mock_open, patch
 
 import pytest

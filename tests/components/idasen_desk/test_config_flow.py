@@ -1,4 +1,5 @@
 """Test the IKEA Idasen Desk config flow."""
+
 from unittest.mock import ANY, patch
 
 from bleak.exc import BleakError

@@ -1,4 +1,5 @@
 """Support the ElkM1 Gold and ElkM1 EZ8 alarm/integration panels."""
+
 from __future__ import annotations
 
 import asyncio

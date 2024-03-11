@@ -1,4 +1,5 @@
 """Http view for the Backup integration."""
+
 from __future__ import annotations
 
 from http import HTTPStatus

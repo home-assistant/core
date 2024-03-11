@@ -1,4 +1,5 @@
 """Tests for the telegram_bot component."""
+
 from unittest.mock import AsyncMock, patch
 
 from telegram import Update

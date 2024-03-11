@@ -1,4 +1,5 @@
 """The tests for the Button component."""
+
 from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import MagicMock

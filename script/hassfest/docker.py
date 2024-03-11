@@ -1,4 +1,5 @@
 """Generate and validate the dockerfile."""
+
 from homeassistant import core
 from homeassistant.util import executor, thread
 

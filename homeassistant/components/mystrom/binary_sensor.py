@@ -1,4 +1,5 @@
 """Support for the myStrom buttons."""
+
 from __future__ import annotations
 
 from http import HTTPStatus

@@ -1,4 +1,5 @@
 """Tests for Starlink diagnostics."""
+
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.starlink.const import DOMAIN

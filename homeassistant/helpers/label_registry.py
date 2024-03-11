@@ -1,4 +1,5 @@
 """Provide a way to label and group anything."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -6,7 +7,7 @@ import dataclasses
 from dataclasses import dataclass
 from typing import Literal, TypedDict, cast
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.util import slugify
 
 from .normalized_name_base_registry import (
@@ -16,7 +17,7 @@ from .normalized_name_base_registry import (
 )
 from .registry import BaseRegistry
 from .storage import Store
-from .typing import UNDEFINED, EventType, UndefinedType
+from .typing import UNDEFINED, UndefinedType
 
 DATA_REGISTRY = "label_registry"
 EVENT_LABEL_REGISTRY_UPDATED = "label_registry_updated"
@@ -31,7 +32,7 @@ class EventLabelRegistryUpdatedData(TypedDict):
     label_id: str
 
 
-EventLabelRegistryUpdated = EventType[EventLabelRegistryUpdatedData]
+EventLabelRegistryUpdated = Event[EventLabelRegistryUpdatedData]
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)

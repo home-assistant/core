@@ -1,4 +1,5 @@
 """Services tests for the Google Mail integration."""
+
 from unittest.mock import patch
 
 from aiohttp.client_exceptions import ClientResponseError

@@ -28,7 +28,7 @@ pytest-timeout==2.2.0
 pytest-unordered==0.5.2
 pytest-picked==0.5.0
 pytest-xdist==3.3.1
-pytest==8.1.0
+pytest==8.1.1
 requests-mock==1.11.0
 respx==0.20.2
 syrupy==4.6.1
@@ -50,4 +50,4 @@ types-pytz==2023.3.1.1
 types-PyYAML==6.0.12.12
 types-requests==2.31.0.3
 types-xmltodict==0.13.0.3
-uv==0.1.15
+uv==0.1.17

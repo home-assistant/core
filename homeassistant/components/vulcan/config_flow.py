@@ -1,4 +1,5 @@
 """Adds config flow for Vulcan."""
+
 from collections.abc import Mapping
 import logging
 from typing import Any

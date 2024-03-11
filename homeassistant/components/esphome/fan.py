@@ -1,4 +1,5 @@
 """Support for ESPHome fans."""
+
 from __future__ import annotations
 
 import math

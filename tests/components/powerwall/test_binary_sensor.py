@@ -1,4 +1,5 @@
 """The binary sensor tests for the powerwall platform."""
+
 from unittest.mock import patch
 
 from homeassistant.components.powerwall.const import DOMAIN

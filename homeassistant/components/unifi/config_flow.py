@@ -5,6 +5,7 @@ Discovery of UniFi Network instances hosted on UDM and UDM Pro devices
 through SSDP. Reauthentication when issue with credentials are reported.
 Configuration of options through options flow.
 """
+
 from __future__ import annotations
 
 from collections.abc import Mapping

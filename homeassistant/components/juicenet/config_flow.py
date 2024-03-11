@@ -1,4 +1,5 @@
 """Config flow for JuiceNet integration."""
+
 import logging
 
 import aiohttp
