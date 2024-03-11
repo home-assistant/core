@@ -150,22 +150,25 @@ async def test_import_flow_cannot_connect_error(
         data=VALID_CONFIG_OLD,
     )
 
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == error
 
 
 async def test_option_flow(hass: HomeAssistant, mock_seventeentrack: AsyncMock) -> None:
     """Test option flow."""
-    entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=VALID_CONFIG,
+        options={
+            CONF_SHOW_ARCHIVED: False,
+            CONF_SHOW_DELIVERED: False,
+        },
+    )
     entry.add_to_hass(hass)
-
-    assert not entry.options
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    result = await hass.config_entries.options.async_init(
-        entry.entry_id,
-        data=None,
-    )
+    result = await hass.config_entries.options.async_init(entry.entry_id)
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"

@@ -146,9 +146,7 @@ class SeventeenTrackSummarySensor(SensorEntity):
         return self._state is not None
 
     @property
-    def native_value(
-        self,
-    ) -> StateType:
+    def native_value(self) -> StateType:
         """Return the state."""
         return self._state
 
@@ -219,9 +217,7 @@ class SeventeenTrackPackageSensor(SensorEntity):
         return f"Seventeentrack Package: {name}"
 
     @property
-    def native_value(
-        self,
-    ) -> StateType:
+    def native_value(self) -> StateType:
         """Return the state."""
         return self._state
 

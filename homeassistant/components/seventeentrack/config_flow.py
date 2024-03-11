@@ -73,10 +73,10 @@ class SeventeenTrackConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if not await client.profile.login(
                     user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
                 ):
-                    errors = {"base": "invalid_credentials"}
+                    errors["base"] = "invalid_auth"
             except SeventeenTrackError as err:
                 _LOGGER.error("There was an error while logging in: %s", err)
-                errors = {"base": "cannot_connect"}
+                errors["base"] = "cannot_connect"
 
             if not errors:
                 account_id = client.profile.account_id
