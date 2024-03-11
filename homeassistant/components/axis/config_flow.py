@@ -267,8 +267,7 @@ class AxisOptionsFlowHandler(OptionsFlowWithConfigEntry):
             and profiles.max_groups > 0
         ):
             stream_profiles = [DEFAULT_STREAM_PROFILE]
-            for profile in vapix.streaming_profiles:
-                stream_profiles.append(profile.name)
+            stream_profiles.extend(profile.name for profile in vapix.streaming_profiles)
 
             schema[
                 vol.Optional(

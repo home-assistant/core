@@ -524,30 +524,43 @@ class HomeAssistant:
         if target is None:
             raise ValueError("Don't call add_job with None")
         if asyncio.iscoroutine(target):
-            self.loop.call_soon_threadsafe(self.async_add_job, target)
+            self.loop.call_soon_threadsafe(
+                functools.partial(self.async_add_job, target, eager_start=True)
+            )
             return
         if TYPE_CHECKING:
             target = cast(Callable[..., Any], target)
-        self.loop.call_soon_threadsafe(self.async_add_job, target, *args)
+        self.loop.call_soon_threadsafe(
+            functools.partial(self.async_add_job, target, *args, eager_start=True)
+        )
 
     @overload
     @callback
     def async_add_job(
-        self, target: Callable[..., Coroutine[Any, Any, _R]], *args: Any
+        self,
+        target: Callable[..., Coroutine[Any, Any, _R]],
+        *args: Any,
+        eager_start: bool = False,
     ) -> asyncio.Future[_R] | None:
         ...
 
     @overload
     @callback
     def async_add_job(
-        self, target: Callable[..., Coroutine[Any, Any, _R] | _R], *args: Any
+        self,
+        target: Callable[..., Coroutine[Any, Any, _R] | _R],
+        *args: Any,
+        eager_start: bool = False,
     ) -> asyncio.Future[_R] | None:
         ...
 
     @overload
     @callback
     def async_add_job(
-        self, target: Coroutine[Any, Any, _R], *args: Any
+        self,
+        target: Coroutine[Any, Any, _R],
+        *args: Any,
+        eager_start: bool = False,
     ) -> asyncio.Future[_R] | None:
         ...
 
@@ -556,6 +569,7 @@ class HomeAssistant:
         self,
         target: Callable[..., Coroutine[Any, Any, _R] | _R] | Coroutine[Any, Any, _R],
         *args: Any,
+        eager_start: bool = False,
     ) -> asyncio.Future[_R] | None:
         """Add a job to be executed by the event loop or by an executor.
 
@@ -571,7 +585,7 @@ class HomeAssistant:
             raise ValueError("Don't call async_add_job with None")
 
         if asyncio.iscoroutine(target):
-            return self.async_create_task(target)
+            return self.async_create_task(target, eager_start=eager_start)
 
         # This code path is performance sensitive and uses
         # if TYPE_CHECKING to avoid the overhead of constructing
@@ -579,7 +593,7 @@ class HomeAssistant:
         # https://github.com/home-assistant/core/pull/71960
         if TYPE_CHECKING:
             target = cast(Callable[..., Coroutine[Any, Any, _R] | _R], target)
-        return self.async_add_hass_job(HassJob(target), *args)
+        return self.async_add_hass_job(HassJob(target), *args, eager_start=eager_start)
 
     @overload
     @callback
@@ -803,8 +817,7 @@ class HomeAssistant:
     def async_run_job(
         self,
         target: Callable[..., Coroutine[Any, Any, _R]],
-        *args: Any,
-        eager_start: bool = False,
+        *args: Any
     ) -> asyncio.Future[_R] | None:
         ...
 
@@ -813,15 +826,14 @@ class HomeAssistant:
     def async_run_job(
         self,
         target: Callable[..., Coroutine[Any, Any, _R] | _R],
-        *args: Any,
-        eager_start: bool = False,
+        *args: Any
     ) -> asyncio.Future[_R] | None:
         ...
 
     @overload
     @callback
     def async_run_job(
-        self, target: Coroutine[Any, Any, _R], *args: Any, eager_start: bool = False
+        self, target: Coroutine[Any, Any, _R], *args: Any
     ) -> asyncio.Future[_R] | None:
         ...
 
@@ -829,8 +841,7 @@ class HomeAssistant:
     def async_run_job(
         self,
         target: Callable[..., Coroutine[Any, Any, _R] | _R] | Coroutine[Any, Any, _R],
-        *args: Any,
-        eager_start: bool = False,
+        *args: Any
     ) -> asyncio.Future[_R] | None:
         """Run a job from within the event loop.
 
@@ -840,7 +851,7 @@ class HomeAssistant:
         args: parameters for method to call.
         """
         if asyncio.iscoroutine(target):
-            return self.async_create_task(target, eager_start=eager_start)
+            return self.async_create_task(target, eager_start=True)
 
         # This code path is performance sensitive and uses
         # if TYPE_CHECKING to avoid the overhead of constructing
@@ -848,7 +859,7 @@ class HomeAssistant:
         # https://github.com/home-assistant/core/pull/71960
         if TYPE_CHECKING:
             target = cast(Callable[..., Coroutine[Any, Any, _R] | _R], target)
-        return self.async_run_hass_job(HassJob(target), *args, eager_start=eager_start)
+        return self.async_run_hass_job(HassJob(target), *args, eager_start=True)
 
     def block_till_done(self) -> None:
         """Block until all pending work is done."""
