@@ -87,8 +87,8 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
-        key="total_space",
-        translation_key="total_space",
+        key="disk_total",
+        translation_key="disk_total",
         native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
@@ -97,8 +97,8 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
-        key="free_space",
-        translation_key="free_space",
+        key="disk_free",
+        translation_key="disk_free",
         native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
@@ -107,8 +107,8 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
-        key="used_space",
-        translation_key="used_space",
+        key="disk_used",
+        translation_key="disk_used",
         native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
@@ -128,7 +128,7 @@ def generate_filesystem_sensor_description(
         WebminFSSensorDescription(
             mountpoint=mountpoint,
             key="total",
-            translation_key="fs_total",
+            translation_key="disk_fs_total",
             native_unit_of_measurement=UnitOfInformation.BYTES,
             suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
             device_class=SensorDeviceClass.DATA_SIZE,
@@ -139,7 +139,7 @@ def generate_filesystem_sensor_description(
         WebminFSSensorDescription(
             mountpoint=mountpoint,
             key="used",
-            translation_key="fs_used",
+            translation_key="disk_fs_used",
             native_unit_of_measurement=UnitOfInformation.BYTES,
             suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
             device_class=SensorDeviceClass.DATA_SIZE,
@@ -150,7 +150,7 @@ def generate_filesystem_sensor_description(
         WebminFSSensorDescription(
             mountpoint=mountpoint,
             key="free",
-            translation_key="fs_free",
+            translation_key="disk_fs_free",
             native_unit_of_measurement=UnitOfInformation.BYTES,
             suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
             device_class=SensorDeviceClass.DATA_SIZE,
@@ -161,28 +161,28 @@ def generate_filesystem_sensor_description(
         WebminFSSensorDescription(
             mountpoint=mountpoint,
             key="itotal",
-            translation_key="fs_itotal",
+            translation_key="disk_fs_itotal",
             state_class=SensorStateClass.MEASUREMENT,
             entity_registry_enabled_default=False,
         ),
         WebminFSSensorDescription(
             mountpoint=mountpoint,
             key="iused",
-            translation_key="fs_iused",
+            translation_key="disk_fs_iused",
             state_class=SensorStateClass.MEASUREMENT,
             entity_registry_enabled_default=False,
         ),
         WebminFSSensorDescription(
             mountpoint=mountpoint,
             key="ifree",
-            translation_key="fs_ifree",
+            translation_key="disk_fs_ifree",
             state_class=SensorStateClass.MEASUREMENT,
             entity_registry_enabled_default=False,
         ),
         WebminFSSensorDescription(
             mountpoint=mountpoint,
             key="used_percent",
-            translation_key="fs_used_percent",
+            translation_key="disk_fs_used_percent",
             native_unit_of_measurement=PERCENTAGE,
             state_class=SensorStateClass.MEASUREMENT,
             entity_registry_enabled_default=False,
@@ -190,7 +190,7 @@ def generate_filesystem_sensor_description(
         WebminFSSensorDescription(
             mountpoint=mountpoint,
             key="iused_percent",
-            translation_key="fs_iused_percent",
+            translation_key="disk_fs_iused_percent",
             native_unit_of_measurement=PERCENTAGE,
             state_class=SensorStateClass.MEASUREMENT,
             entity_registry_enabled_default=False,
@@ -210,7 +210,7 @@ async def async_setup_entry(
         if description.key in coordinator.data
     ]
 
-    for fs, values in coordinator.data["fs"].items():
+    for fs, values in coordinator.data["disk_fs"].items():
         entities += [
             WebminFSSensor(coordinator, description)
             for description in generate_filesystem_sensor_description(fs)
@@ -266,6 +266,6 @@ class WebminFSSensor(CoordinatorEntity[WebminUpdateCoordinator], SensorEntity):
     @property
     def native_value(self) -> int | float:
         """Return the state of the sensor."""
-        return self.coordinator.data["fs"][self.entity_description.mountpoint][
+        return self.coordinator.data["disk_fs"][self.entity_description.mountpoint][
             self.entity_description.key
         ]
