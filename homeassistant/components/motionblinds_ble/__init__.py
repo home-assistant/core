@@ -52,8 +52,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _LOGGER.debug("(%s) Setting up device", entry.data[CONF_MAC_CODE])
 
-    hass.data.setdefault(DOMAIN, {})
-
     ble_device = async_ble_device_from_address(hass, entry.data[CONF_ADDRESS])
     device = MotionDevice(
         ble_device if ble_device is not None else entry.data[CONF_ADDRESS],
@@ -86,7 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         BluetoothScanningMode.ACTIVE,
     )
 
-    hass.data[DOMAIN][entry.entry_id] = device
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = device
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
