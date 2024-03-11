@@ -57,27 +57,23 @@ class PowerviewShadeData:
 
     def update_shade_position(self, shade_id: int, shade_data: ShadePosition) -> None:
         """Update a single shades position."""
-        if shade_id not in self.positions:
-            self.positions[shade_id] = ShadePosition()
-
+        position = self.get_shade_position(shade_id)
         # ShadePosition will return None if the value is not set
         if shade_data.primary is not None:
-            self.positions[shade_id].primary = shade_data.primary
+            position.primary = shade_data.primary
         if shade_data.secondary is not None:
-            self.positions[shade_id].secondary = shade_data.secondary
+            position.secondary = shade_data.secondary
         if shade_data.tilt is not None:
-            self.positions[shade_id].tilt = shade_data.tilt
+            position.tilt = shade_data.tilt
 
     def update_shade_velocity(self, shade_id: int, shade_data: ShadePosition) -> None:
         """Update a single shades velocity."""
-        if shade_id not in self.positions:
-            self.positions[shade_id] = ShadePosition()
-
+        position = self.get_shade_position(shade_id)
         # the hub will always return a velocity of 0 on initial connect,
         # separate definition to store consistent value in HA
         # this value is purely driven from HA
         if shade_data.velocity is not None:
-            self.positions[shade_id].velocity = shade_data.velocity
+            position.velocity = shade_data.velocity
 
     def update_shade_positions(self, data: BaseShade) -> None:
         """Update a shades from data dict."""

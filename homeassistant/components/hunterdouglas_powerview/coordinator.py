@@ -22,6 +22,8 @@ _LOGGER = logging.getLogger(__name__)
 class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData]):
     """DataUpdateCoordinator to gather data from a powerview hub."""
 
+    data: PowerviewShadeData
+
     def __init__(self, hass: HomeAssistant, shades: Shades, hub: Hub) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific Powerview Hub."""
         self.shades = shades
