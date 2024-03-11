@@ -1,4 +1,5 @@
 """Component that will help set the OpenALPR cloud for ALPR processing."""
+
 from __future__ import annotations
 
 import asyncio

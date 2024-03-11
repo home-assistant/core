@@ -1,4 +1,5 @@
 """The tests the for Meraki device tracker."""
+
 from http import HTTPStatus
 import json
 

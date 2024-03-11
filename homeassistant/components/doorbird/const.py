@@ -1,4 +1,5 @@
 """The DoorBird integration constants."""
+
 from homeassistant.const import Platform
 
 DOMAIN = "doorbird"

@@ -1,4 +1,5 @@
 """Support for Overkiz (virtual) numbers."""
+
 from __future__ import annotations
 
 import asyncio
@@ -27,16 +28,11 @@ BOOST_MODE_DURATION_DELAY = 1
 OPERATING_MODE_DELAY = 3
 
 
-@dataclass(frozen=True)
-class OverkizNumberDescriptionMixin:
-    """Define an entity description mixin for number entities."""
+@dataclass(frozen=True, kw_only=True)
+class OverkizNumberDescription(NumberEntityDescription):
+    """Class to describe an Overkiz number."""
 
     command: str
-
-
-@dataclass(frozen=True)
-class OverkizNumberDescription(NumberEntityDescription, OverkizNumberDescriptionMixin):
-    """Class to describe an Overkiz number."""
 
     min_value_state_name: str | None = None
     max_value_state_name: str | None = None

@@ -1,4 +1,5 @@
 """Entity representing a Skybell HD Doorbell."""
+
 from __future__ import annotations
 
 from aioskybell import SkybellDevice

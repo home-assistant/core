@@ -1,4 +1,5 @@
 """Test Hue migration logic."""
+
 from unittest.mock import patch
 
 from homeassistant.components import hue

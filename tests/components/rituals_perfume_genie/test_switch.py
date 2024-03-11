@@ -1,4 +1,5 @@
 """Tests for the Rituals Perfume Genie switch platform."""
+
 from __future__ import annotations
 
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY

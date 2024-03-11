@@ -1,4 +1,5 @@
 """Tests for WebSocket API commands."""
+
 import asyncio
 from copy import deepcopy
 import logging

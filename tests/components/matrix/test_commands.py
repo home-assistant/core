@@ -1,4 +1,5 @@
 """Test MatrixBot's ability to parse and respond to commands in matrix rooms."""
+
 from functools import partial
 from itertools import chain
 from typing import Any

@@ -1,4 +1,5 @@
 """Test to verify that we can load components."""
+
 import asyncio
 import os
 import sys
@@ -1097,7 +1098,7 @@ async def test_async_suggest_report_issue(
 def test_import_executor_default(hass: HomeAssistant) -> None:
     """Test that import_executor defaults."""
     custom_comp = mock_integration(hass, MockModule("any_random"), built_in=False)
-    assert custom_comp.import_executor is False
+    assert custom_comp.import_executor is True
     built_in_comp = mock_integration(hass, MockModule("other_random"), built_in=True)
     assert built_in_comp.import_executor is True
 
@@ -1122,7 +1123,7 @@ async def test_hass_components_use_reported(
     )
     integration_frame = frame.IntegrationFrame(
         custom_integration=True,
-        frame=mock_integration_frame,
+        _frame=mock_integration_frame,
         integration="test_integration_frame",
         module="custom_components.test_integration_frame",
         relative_filename="custom_components/test_integration_frame/__init__.py",
@@ -1674,3 +1675,13 @@ async def test_async_get_platforms_concurrent_loads(
 
     assert imports == [button_module_name]
     assert integration.get_platform_cached("button") is button_module_mock
+
+
+async def test_integration_warnings(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test integration warnings."""
+    await loader.async_get_integration(hass, "test_package_loaded_loop")
+    assert "configured to to import its code in the event loop" in caplog.text

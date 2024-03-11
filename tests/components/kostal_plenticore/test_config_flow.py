@@ -1,4 +1,5 @@
 """Test the Kostal Plenticore Solar Inverter config flow."""
+
 from collections.abc import Generator
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 

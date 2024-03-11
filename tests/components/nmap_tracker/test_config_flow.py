@@ -1,4 +1,5 @@
 """Test the Nmap Tracker config flow."""
+
 from unittest.mock import patch
 
 import pytest

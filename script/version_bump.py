@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Helper script to bump the current version."""
+
 import argparse
 import re
 import subprocess

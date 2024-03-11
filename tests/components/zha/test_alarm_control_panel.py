@@ -1,4 +1,5 @@
 """Test ZHA alarm control panel."""
+
 from unittest.mock import AsyncMock, call, patch, sentinel
 
 import pytest

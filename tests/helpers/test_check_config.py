@@ -1,4 +1,5 @@
 """Test check_config helper."""
+
 import logging
 from unittest.mock import Mock, patch
 
@@ -42,11 +43,9 @@ BAD_CORE_CONFIG = "homeassistant:\n  unit_system: bad\n\n\n"
 
 def log_ha_config(conf):
     """Log the returned config."""
-    cnt = 0
     _LOGGER.debug("CONFIG - %s lines - %s errors", len(conf), len(conf.errors))
-    for key, val in conf.items():
-        _LOGGER.debug("#%s - %s: %s", cnt, key, val)
-        cnt += 1
+    for cnt, (key, val) in enumerate(conf.items()):
+        _LOGGER.debug("#%s - %s: %s", cnt + 1, key, val)
     for cnt, err in enumerate(conf.errors):
         _LOGGER.debug("error[%s] = %s", cnt, err)
 

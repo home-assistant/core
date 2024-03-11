@@ -1,4 +1,5 @@
 """Tests for iZone."""
+
 from unittest.mock import Mock, patch
 
 import pytest

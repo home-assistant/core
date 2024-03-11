@@ -1,4 +1,5 @@
 """Fixtures for Trafikverket Train integration tests."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta

@@ -1,4 +1,5 @@
 """Support for the QNAP QSW buttons."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable

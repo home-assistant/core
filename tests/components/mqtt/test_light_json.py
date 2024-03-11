@@ -78,6 +78,7 @@ light:
   brightness: true
   brightness_scale: 99
 """
+
 import copy
 from typing import Any
 from unittest.mock import call, patch
@@ -95,7 +96,6 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
-    Platform,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.json import json_dumps
@@ -167,13 +167,6 @@ COLOR_MODES_CONFIG = {
         }
     }
 }
-
-
-@pytest.fixture(autouse=True)
-def light_platform_only():
-    """Only setup the light platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT]):
-        yield
 
 
 class JsonValidator:

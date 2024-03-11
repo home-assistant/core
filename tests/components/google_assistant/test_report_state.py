@@ -1,4 +1,5 @@
 """Test Google report state."""
+
 from datetime import datetime, timedelta
 from http import HTTPStatus
 from unittest.mock import AsyncMock, patch

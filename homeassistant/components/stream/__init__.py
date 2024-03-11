@@ -14,6 +14,7 @@ are no active output formats, the background worker is shut down and access
 tokens are expired. Alternatively, a Stream can be configured with keepalive
 to always keep workers active.
 """
+
 from __future__ import annotations
 
 import asyncio

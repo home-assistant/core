@@ -1,4 +1,5 @@
 """Support for the Lovelace UI."""
+
 import logging
 
 import voluptuous as vol
