@@ -1,4 +1,5 @@
 """Support for ESPHome buttons."""
+
 from __future__ import annotations
 
 from aioesphomeapi import ButtonInfo, EntityInfo, EntityState
@@ -54,4 +55,4 @@ class EsphomeButton(EsphomeEntity[ButtonInfo, EntityState], ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        await self._client.button_command(self._key)
+        self._client.button_command(self._key)

@@ -1,4 +1,5 @@
 """Data coordinators for the ring integration."""
+
 from asyncio import TaskGroup
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -75,8 +76,9 @@ class RingDataCoordinator(DataUpdateCoordinator[dict[int, RingDeviceData]]):
                 if device.id in subscribed_device_ids:
                     data[device.id] = RingDeviceData(device=device)
                     try:
+                        history_task = None
                         async with TaskGroup() as tg:
-                            if hasattr(device, "history"):
+                            if device.has_capability("history"):
                                 history_task = tg.create_task(
                                     _call_api(
                                         self.hass,
@@ -95,7 +97,7 @@ class RingDataCoordinator(DataUpdateCoordinator[dict[int, RingDeviceData]]):
                         if history_task:
                             data[device.id].history = history_task.result()
                     except ExceptionGroup as eg:
-                        raise eg.exceptions[0]
+                        raise eg.exceptions[0]  # noqa: B904
 
         return data
 

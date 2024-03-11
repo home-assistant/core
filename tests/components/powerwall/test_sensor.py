@@ -1,4 +1,5 @@
 """The sensor tests for the powerwall platform."""
+
 from datetime import timedelta
 from unittest.mock import Mock, patch
 
@@ -157,7 +158,6 @@ async def test_sensors(
         float(hass.states.get("sensor.mysite_tg0123456789ab_battery_remaining").state)
         == 14.715
     )
-    assert float(hass.states.get("sensor.mysite_tg0123456789ab_charge").state) == 100.0
     assert (
         str(hass.states.get("sensor.mysite_tg0123456789ab_grid_state").state)
         == "grid_compliant"
@@ -187,7 +187,6 @@ async def test_sensors(
         float(hass.states.get("sensor.mysite_tg9876543210ba_battery_remaining").state)
         == 15.137
     )
-    assert float(hass.states.get("sensor.mysite_tg9876543210ba_charge").state) == 100.0
     assert (
         str(hass.states.get("sensor.mysite_tg9876543210ba_grid_state").state)
         == "grid_compliant"

@@ -1,4 +1,5 @@
 """Provides the worker thread needed for processing streams."""
+
 from __future__ import annotations
 
 from collections import defaultdict, deque
@@ -421,8 +422,7 @@ class PeekIterator(Iterator):
         # Items consumed are added to a buffer for future calls to __next__
         # or peek. First iterate over the buffer from previous calls to peek.
         self._next = self._pop_buffer
-        for packet in self._buffer:
-            yield packet
+        yield from self._buffer
         for packet in self._iterator:
             self._buffer.append(packet)
             yield packet

@@ -1,4 +1,5 @@
 """Support for functionality to have conversations with Home Assistant."""
+
 from __future__ import annotations
 
 import asyncio
@@ -349,7 +350,7 @@ async def websocket_hass_agent_debug(
                 },
                 # Slot values that would be received by the intent
                 "slots": {  # direct access to values
-                    entity_key: entity.value
+                    entity_key: entity.text or entity.value
                     for entity_key, entity in result.entities.items()
                 },
                 # Extra slot details, such as the originally matched text
@@ -484,7 +485,7 @@ class ConversationProcessView(http.HomeAssistantView):
     )
     async def post(self, request: web.Request, data: dict[str, str]) -> web.Response:
         """Send a request for processing."""
-        hass = request.app["hass"]
+        hass = request.app[http.KEY_HASS]
 
         result = await async_converse(
             hass,

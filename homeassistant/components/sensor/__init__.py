@@ -1,4 +1,5 @@
 """Component to interface with various sensors that can be monitored."""
+
 from __future__ import annotations
 
 import asyncio
@@ -15,8 +16,6 @@ from typing import TYPE_CHECKING, Any, Final, Self, cast, final
 from typing_extensions import override
 
 from homeassistant.config_entries import ConfigEntry
-
-# pylint: disable-next=hass-deprecated-import
 from homeassistant.const import (  # noqa: F401
     _DEPRECATED_DEVICE_CLASS_AQI,
     _DEPRECATED_DEVICE_CLASS_BATTERY,
@@ -502,6 +501,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         Note:
             suggested_unit_of_measurement is stored in the entity registry the first
             time the entity is seen, and then never updated.
+
         """
         if hasattr(self, "_attr_suggested_unit_of_measurement"):
             return self._attr_suggested_unit_of_measurement

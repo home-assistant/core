@@ -1,11 +1,11 @@
 """Test MQTT diagnostics."""
+
 import json
-from unittest.mock import ANY, patch
+from unittest.mock import ANY
 
 import pytest
 
 from homeassistant.components import mqtt
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -20,16 +20,6 @@ default_config = {
     "birth_message": {},
     "broker": "mock-broker",
 }
-
-
-@pytest.fixture(autouse=True)
-def device_tracker_sensor_only():
-    """Only setup the device_tracker and sensor platforms to speed up tests."""
-    with patch(
-        "homeassistant.components.mqtt.PLATFORMS",
-        [Platform.DEVICE_TRACKER, Platform.SENSOR],
-    ):
-        yield
 
 
 async def test_entry_diagnostics(

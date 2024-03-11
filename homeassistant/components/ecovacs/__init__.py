@@ -1,4 +1,5 @@
 """Support for Ecovacs Deebot vacuums."""
+
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -28,8 +29,11 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.IMAGE,
+    Platform.LAWN_MOWER,
+    Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
+    Platform.SWITCH,
     Platform.VACUUM,
 ]
 

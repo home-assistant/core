@@ -1,4 +1,5 @@
 """Legacy device tracker classes."""
+
 from __future__ import annotations
 
 import asyncio
@@ -714,21 +715,17 @@ class DeviceTracker:
 
         This method is a coroutine.
         """
-
-        async def async_init_single_device(dev: Device) -> None:
-            """Init a single device_tracker entity."""
-            await dev.async_added_to_hass()
-            dev.async_write_ha_state()
-
-        tasks: list[asyncio.Task] = []
         for device in self.devices.values():
             if device.track and not device.last_seen:
-                tasks.append(
-                    self.hass.async_create_task(async_init_single_device(device))
-                )
-
-        if tasks:
-            await asyncio.wait(tasks)
+                # async_added_to_hass is unlikely to suspend so
+                # do not gather here to avoid unnecessary overhead
+                # of creating a task per device.
+                #
+                # We used to have the overhead of potentially loading
+                # restore state for each device here, but RestoreState
+                # is always loaded ahead of time now.
+                await device.async_added_to_hass()
+                device.async_write_ha_state()
 
 
 class Device(RestoreEntity):

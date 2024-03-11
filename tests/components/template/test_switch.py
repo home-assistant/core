@@ -1,4 +1,5 @@
 """The tests for the  Template switch platform."""
+
 import pytest
 
 from homeassistant import setup

@@ -1,4 +1,5 @@
 """The FiveM update coordinator."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping

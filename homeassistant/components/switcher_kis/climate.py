@@ -1,7 +1,7 @@
 """Switcher integration Climate platform."""
+
 from __future__ import annotations
 
-import asyncio
 from typing import Any, cast
 
 from aioswitcher.api import SwitcherBaseResponse, SwitcherType2Api
@@ -86,6 +86,7 @@ class SwitcherClimateEntity(
 
     _attr_has_entity_name = True
     _attr_name = None
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, coordinator: SwitcherDataUpdateCoordinator, remote: SwitcherBreezeRemote
@@ -118,6 +119,10 @@ class SwitcherClimateEntity(
             if features["swing"] and not remote.separated_swing_command:
                 self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
 
+        # There is always support for off + minimum one other mode so no need to check
+        self._attr_supported_features |= (
+            ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+        )
         self._update_data(True)
 
     @callback
@@ -167,7 +172,7 @@ class SwitcherClimateEntity(
                 self.coordinator.data.device_key,
             ) as swapi:
                 response = await swapi.control_breeze_device(self._remote, **kwargs)
-        except (asyncio.TimeoutError, OSError, RuntimeError) as err:
+        except (TimeoutError, OSError, RuntimeError) as err:
             error = repr(err)
 
         if error or not response or not response.successful:

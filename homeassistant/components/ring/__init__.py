@@ -1,4 +1,5 @@
 """Support for Ring Doorbell/Chimes."""
+
 from __future__ import annotations
 
 from functools import partial

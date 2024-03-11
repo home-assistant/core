@@ -1,4 +1,5 @@
 """Provides data updates from the Control4 controller for platforms."""
+
 from collections import defaultdict
 from collections.abc import Set
 import logging

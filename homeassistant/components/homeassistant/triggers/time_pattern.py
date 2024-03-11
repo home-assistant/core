@@ -1,4 +1,5 @@
 """Offer time listening automation rules."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -92,6 +93,7 @@ async def async_attach_trigger(
                     "description": "time pattern",
                 }
             },
+            eager_start=True,
         )
 
     return async_track_time_change(

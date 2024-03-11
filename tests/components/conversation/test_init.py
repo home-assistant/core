@@ -1,4 +1,5 @@
 """The tests for the Conversation component."""
+
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch
@@ -733,7 +734,7 @@ async def test_ws_api(
     assert await async_setup_component(hass, "conversation", {})
     client = await hass_ws_client(hass)
 
-    await client.send_json({"id": 5, "type": "conversation/process", **payload})
+    await client.send_json_auto_id({"type": "conversation/process", **payload})
 
     msg = await client.receive_json()
 
@@ -757,18 +758,14 @@ async def test_ws_prepare(
 
     client = await hass_ws_client(hass)
 
-    msg = {
-        "id": 5,
-        "type": "conversation/prepare",
-    }
+    msg = {"type": "conversation/prepare"}
     if agent_id is not None:
         msg["agent_id"] = agent_id
-    await client.send_json(msg)
+    await client.send_json_auto_id(msg)
 
     msg = await client.receive_json()
 
     assert msg["success"]
-    assert msg["id"] == 5
 
     # Intents should now be load
     assert agent._lang_intents.get(hass.config.language)

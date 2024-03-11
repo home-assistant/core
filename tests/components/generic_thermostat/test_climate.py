@@ -1,4 +1,5 @@
 """The tests for the generic_thermostat."""
+
 import datetime
 from unittest.mock import patch
 
@@ -14,6 +15,7 @@ from homeassistant.components.climate import (
     PRESET_ACTIVITY,
     PRESET_AWAY,
     PRESET_COMFORT,
+    PRESET_ECO,
     PRESET_HOME,
     PRESET_NONE,
     PRESET_SLEEP,
@@ -225,6 +227,7 @@ async def setup_comp_2(hass):
                 "sleep_temp": 17,
                 "home_temp": 19,
                 "comfort_temp": 20,
+                "eco_temp": 18,
                 "activity_temp": 21,
                 "initial_hvac_mode": HVACMode.HEAT,
             }
@@ -312,6 +315,7 @@ async def test_set_target_temp(hass: HomeAssistant, setup_comp_2) -> None:
         (PRESET_NONE, 23),
         (PRESET_AWAY, 16),
         (PRESET_COMFORT, 20),
+        (PRESET_ECO, 18),
         (PRESET_HOME, 19),
         (PRESET_SLEEP, 17),
         (PRESET_ACTIVITY, 21),
@@ -331,6 +335,7 @@ async def test_set_away_mode(hass: HomeAssistant, setup_comp_2, preset, temp) ->
         (PRESET_NONE, 23),
         (PRESET_AWAY, 16),
         (PRESET_COMFORT, 20),
+        (PRESET_ECO, 18),
         (PRESET_HOME, 19),
         (PRESET_SLEEP, 17),
         (PRESET_ACTIVITY, 21),
@@ -358,6 +363,7 @@ async def test_set_away_mode_and_restore_prev_temp(
         (PRESET_NONE, 23),
         (PRESET_AWAY, 16),
         (PRESET_COMFORT, 20),
+        (PRESET_ECO, 18),
         (PRESET_HOME, 19),
         (PRESET_SLEEP, 17),
         (PRESET_ACTIVITY, 21),

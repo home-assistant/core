@@ -1,4 +1,5 @@
 """Support for System Bridge binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -22,10 +23,6 @@ from .entity import SystemBridgeEntity
 @dataclass(frozen=True)
 class SystemBridgeBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Class describing System Bridge binary sensor entities."""
-
-    # SystemBridgeBinarySensor does not support UNDEFINED or None,
-    # restrict the type to str.
-    name: str = ""
 
     value: Callable = round
 

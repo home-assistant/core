@@ -1,4 +1,5 @@
 """TemplateEntity utility class."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -20,6 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     CALLBACK_TYPE,
     Context,
+    Event,
     HomeAssistant,
     State,
     callback,
@@ -46,7 +48,7 @@ from homeassistant.helpers.trigger_template_entity import (
     TEMPLATE_ENTITY_BASE_SCHEMA,
     make_template_entity_base_schema,
 )
-from homeassistant.helpers.typing import ConfigType, EventType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_ATTRIBUTE_TEMPLATES,
@@ -189,7 +191,7 @@ class _TemplateAttribute:
     @callback
     def handle_result(
         self,
-        event: EventType[EventStateChangedData] | None,
+        event: Event[EventStateChangedData] | None,
         template: Template,
         last_result: str | None | TemplateError,
         result: str | TemplateError,
@@ -398,7 +400,7 @@ class TemplateEntity(Entity):
     @callback
     def _handle_results(
         self,
-        event: EventType[EventStateChangedData] | None,
+        event: Event[EventStateChangedData] | None,
         updates: list[TrackTemplateResult],
     ) -> None:
         """Call back the results to the attributes."""

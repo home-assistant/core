@@ -1,4 +1,5 @@
 """The tests for Cover."""
+
 from enum import Enum
 
 import pytest

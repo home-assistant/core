@@ -1,4 +1,5 @@
 """Handle MySensors gateways."""
+
 from __future__ import annotations
 
 import asyncio
@@ -109,7 +110,7 @@ async def try_connect(
             async with asyncio.timeout(GATEWAY_READY_TIMEOUT):
                 await gateway_ready.wait()
                 return True
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.info("Try gateway connect failed with timeout")
             return False
         finally:
@@ -301,7 +302,7 @@ async def _gw_start(
     try:
         async with asyncio.timeout(GATEWAY_READY_TIMEOUT):
             await gateway_ready.wait()
-    except asyncio.TimeoutError:
+    except TimeoutError:
         _LOGGER.warning(
             "Gateway %s not connected after %s secs so continuing with setup",
             entry.data[CONF_DEVICE],

@@ -1,4 +1,5 @@
 """Test the Z-Wave JS sensor platform."""
+
 import copy
 
 import pytest
@@ -731,14 +732,13 @@ NODE_STATISTICS_SUFFIXES = {
 NODE_STATISTICS_SUFFIXES_UNKNOWN = {
     "round_trip_time": 6,
     "rssi": 7,
-    "last_seen": "2024-01-01T00:00:00+00:00",
 }
 
 
-async def test_statistics_sensors(
+async def test_statistics_sensors_no_last_seen(
     hass: HomeAssistant, zp3111, client, integration, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test statistics sensors."""
+    """Test all statistics sensors but last seen which is enabled by default."""
     ent_reg = er.async_get(hass)
 
     for prefix, suffixes in (
@@ -878,6 +878,22 @@ async def test_statistics_sensors(
             *NODE_STATISTICS_SUFFIXES_UNKNOWN,
         ]
     )
+
+
+async def test_last_seen_statistics_sensors(
+    hass: HomeAssistant, zp3111, client, integration
+) -> None:
+    """Test last_seen statistics sensors."""
+    ent_reg = er.async_get(hass)
+
+    entity_id = f"{NODE_STATISTICS_ENTITY_PREFIX}last_seen"
+    entry = ent_reg.async_get(entity_id)
+    assert entry
+    assert not entry.disabled
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "2024-01-01T12:00:00+00:00"
 
 
 ENERGY_PRODUCTION_ENTITY_MAP = {

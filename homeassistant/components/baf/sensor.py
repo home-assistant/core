@@ -1,4 +1,5 @@
 """Support for Big Ass Fans sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -28,19 +29,13 @@ from .entity import BAFEntity
 from .models import BAFData
 
 
-@dataclass(frozen=True)
-class BAFSensorDescriptionMixin:
-    """Required values for BAF sensors."""
-
-    value_fn: Callable[[Device], int | float | str | None]
-
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class BAFSensorDescription(
     SensorEntityDescription,
-    BAFSensorDescriptionMixin,
 ):
     """Class describing BAF sensor entities."""
+
+    value_fn: Callable[[Device], int | float | str | None]
 
 
 AUTO_COMFORT_SENSORS = (

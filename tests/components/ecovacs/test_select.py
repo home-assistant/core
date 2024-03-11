@@ -1,5 +1,6 @@
 """Tests for Ecovacs select entities."""
 
+from deebot_client.capabilities import Capabilities
 from deebot_client.command import Command
 from deebot_client.commands.json import SetWaterInfo
 from deebot_client.event_bus import EventBus
@@ -44,7 +45,7 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
         (
             "yna5x1",
             [
-                "select.ozmo_950_water_amount",
+                "select.ozmo_950_water_flow_level",
             ],
         ),
     ],
@@ -58,12 +59,12 @@ async def test_selects(
     entity_ids: list[str],
 ) -> None:
     """Test that select entity snapshots match."""
-    assert entity_ids == sorted(hass.states.async_entity_ids())
+    assert entity_ids == hass.states.async_entity_ids()
     for entity_id in entity_ids:
         assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"
         assert state.state == STATE_UNKNOWN
 
-    device = controller.devices[0]
+    device = next(controller.devices(Capabilities))
     await notify_events(hass, device.events)
     for entity_id in entity_ids:
         assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"
@@ -74,7 +75,7 @@ async def test_selects(
 
         assert entity_entry.device_id
         assert (device_entry := device_registry.async_get(entity_entry.device_id))
-        assert device_entry.identifiers == {(DOMAIN, device.device_info.did)}
+        assert device_entry.identifiers == {(DOMAIN, device.device_info["did"])}
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -83,7 +84,7 @@ async def test_selects(
     [
         (
             "yna5x1",
-            "select.ozmo_950_water_amount",
+            "select.ozmo_950_water_flow_level",
             "ultrahigh",
             "low",
             SetWaterInfo(WaterAmount.LOW),
@@ -99,7 +100,7 @@ async def test_selects_change(
     command: Command,
 ) -> None:
     """Test that changing select entities works."""
-    device = controller.devices[0]
+    device = next(controller.devices(Capabilities))
     await notify_events(hass, device.events)
 
     assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"

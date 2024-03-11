@@ -1,4 +1,5 @@
 """Support for Roborock time."""
+
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
@@ -25,9 +26,9 @@ from .device import RoborockEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class RoborockTimeDescriptionMixin:
-    """Define an entity description mixin for time entities."""
+@dataclass(frozen=True, kw_only=True)
+class RoborockTimeDescription(TimeEntityDescription):
+    """Class to describe a Roborock time entity."""
 
     # Gets the status of the switch
     cache_key: CacheableAttribute
@@ -35,11 +36,6 @@ class RoborockTimeDescriptionMixin:
     update_value: Callable[[AttributeCache, datetime.time], Coroutine[Any, Any, dict]]
     # Attribute from cache
     get_value: Callable[[AttributeCache], datetime.time]
-
-
-@dataclass(frozen=True)
-class RoborockTimeDescription(TimeEntityDescription, RoborockTimeDescriptionMixin):
-    """Class to describe an Roborock time entity."""
 
 
 TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [

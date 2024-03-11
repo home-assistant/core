@@ -1,4 +1,5 @@
 """Test the Aladdin Connect Sensors."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 

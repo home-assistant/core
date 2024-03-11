@@ -1,4 +1,5 @@
 """Event parser and human readable log generator."""
+
 from __future__ import annotations
 
 import asyncio
@@ -184,8 +185,8 @@ def _generate_stream_message(
     """Generate a logbook stream message response."""
     return {
         "events": events,
-        "start_time": dt_util.utc_to_timestamp(start_day),
-        "end_time": dt_util.utc_to_timestamp(end_day),
+        "start_time": start_day.timestamp(),
+        "end_time": end_day.timestamp(),
     }
 
 

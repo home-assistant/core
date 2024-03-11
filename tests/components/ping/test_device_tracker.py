@@ -1,4 +1,5 @@
 """Test the binary sensor platform of ping."""
+
 from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import patch

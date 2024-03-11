@@ -1,4 +1,5 @@
 """Fixtures for cloud tests."""
+
 from collections.abc import AsyncGenerator, Callable, Coroutine
 from typing import Any
 from unittest.mock import DEFAULT, MagicMock, PropertyMock, patch
@@ -114,6 +115,13 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock, None]:
         is_connected = PropertyMock(side_effect=mock_is_connected)
         type(mock_cloud).is_connected = is_connected
         type(mock_cloud.iot).connected = is_connected
+
+        def mock_username() -> bool:
+            """Return the subscription username."""
+            return "abcdefghjkl"
+
+        username = PropertyMock(side_effect=mock_username)
+        type(mock_cloud).username = username
 
         # Properties that we mock as attributes.
         mock_cloud.expiration_date = utcnow()

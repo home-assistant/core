@@ -1,4 +1,5 @@
 """Support for Lutron lights."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -42,7 +43,7 @@ async def async_setup_entry(
     lights = []
 
     for area_name, device in entry_data.lights:
-        if device.type == "CEILING_FAN_TYPE2":
+        if device.type == "CEILING_FAN_TYPE":
             # If this is a fan, check to see if this entity already exists.
             # If not, do not create a new one.
             entity_id = ent_reg.async_get_entity_id(

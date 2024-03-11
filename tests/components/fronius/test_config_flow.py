@@ -1,4 +1,5 @@
 """Test the Fronius config flow."""
+
 from unittest.mock import patch
 
 from pyfronius import FroniusError
@@ -39,7 +40,7 @@ LOGGER_INFO_RETURN_VALUE = {"unique_identifier": {"value": "123.4567"}}
 MOCK_DHCP_DATA = DhcpServiceInfo(
     hostname="fronius",
     ip="10.2.3.4",
-    macaddress="00:03:ac:11:22:33",
+    macaddress="0003ac112233",
 )
 
 

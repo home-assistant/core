@@ -1,4 +1,5 @@
 """Support for Somfy Smart Thermostat."""
+
 from __future__ import annotations
 
 from typing import Any, cast
@@ -64,6 +65,7 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
     _attr_hvac_modes = [*HVAC_MODES_TO_OVERKIZ]
     _attr_preset_modes = [*PRESET_MODES_TO_OVERKIZ]
     _attr_translation_key = DOMAIN
+    _enable_turn_on_off_backwards_compatibility = False
 
     # Both min and max temp values have been retrieved from the Somfy Application.
     _attr_min_temp = 15.0

@@ -1,0 +1,14 @@
+{
+  "entity": {
+    "sensor": {
+      "utility_meter": {
+        "default": "mdi:counter"
+      }
+    },
+    "select": {
+      "tariff": {
+        "default": "mdi:clock-outline"
+      }
+    }
+  }
+}
