@@ -1,4 +1,5 @@
 """The Govee Light local integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -28,7 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async with asyncio.timeout(delay=5):
             while not coordinator.devices:
                 await asyncio.sleep(delay=1)
-    except asyncio.TimeoutError as ex:
+    except TimeoutError as ex:
         raise ConfigEntryNotReady from ex
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator

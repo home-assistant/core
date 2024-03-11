@@ -1,4 +1,5 @@
 """The tests for the MQTT statestream component."""
+
 from unittest.mock import ANY, call
 
 import pytest
@@ -150,6 +151,7 @@ async def test_state_changed_event_sends_message(
     platform = MockEntityPlatform(hass)
     entity = MockEntity(unique_id="1234")
     await platform.async_add_entities([entity])
+    await hass.async_block_till_done()
 
     mqtt_mock.async_publish.assert_called_with(
         "pub/test_domain/test_platform_1234/state", "unknown", 1, True

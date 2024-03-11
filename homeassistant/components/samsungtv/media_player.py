@@ -1,8 +1,9 @@
 """Support for interface with an Samsung TV."""
+
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine, Sequence
+from collections.abc import Sequence
 from typing import Any
 
 from async_upnp_client.aiohttp import AiohttpNotifyServer, AiohttpSessionRequester
@@ -35,6 +36,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.trigger import PluggableAction
+from homeassistant.util.async_ import create_eager_task
 
 from .bridge import SamsungTVBridge, SamsungTVWSBridge
 from .const import CONF_SSDP_RENDERING_CONTROL_LOCATION, DOMAIN, LOGGER
@@ -171,15 +173,15 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
                 await self._dmr_device.async_unsubscribe_services()
             return
 
-        startup_tasks: list[Coroutine[Any, Any, Any]] = []
+        startup_tasks: list[asyncio.Task[Any]] = []
 
         if not self._app_list_event.is_set():
-            startup_tasks.append(self._async_startup_app_list())
+            startup_tasks.append(create_eager_task(self._async_startup_app_list()))
 
         if self._dmr_device and not self._dmr_device.is_subscribed:
-            startup_tasks.append(self._async_resubscribe_dmr())
+            startup_tasks.append(create_eager_task(self._async_resubscribe_dmr()))
         if not self._dmr_device and self._ssdp_rendering_control_location:
-            startup_tasks.append(self._async_startup_dmr())
+            startup_tasks.append(create_eager_task(self._async_startup_dmr()))
 
         if startup_tasks:
             await asyncio.gather(*startup_tasks)
@@ -219,7 +221,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         try:
             async with asyncio.timeout(APP_LIST_DELAY):
                 await self._app_list_event.wait()
-        except asyncio.TimeoutError as err:
+        except TimeoutError as err:
             # No need to try again
             self._app_list_event.set()
             LOGGER.debug("Failed to load app list from %s: %r", self._host, err)

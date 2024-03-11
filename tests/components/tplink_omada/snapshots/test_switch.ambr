@@ -3,7 +3,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test PoE Switch Port 1 PoE',
-      'icon': 'mdi:ethernet',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_poe_switch_port_1_poe',
@@ -29,16 +28,18 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:ethernet',
+    'original_icon': None,
     'original_name': 'Port 1 PoE',
     'platform': 'tplink_omada',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'poe_control',
     'unique_id': '54-AF-97-00-00-01_000000000000000000000001_poe',
     'unit_of_measurement': None,
   })
@@ -47,7 +48,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test PoE Switch Port 6 PoE',
-      'icon': 'mdi:ethernet',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_poe_switch_port_6_poe',
@@ -73,16 +73,18 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:ethernet',
+    'original_icon': None,
     'original_name': 'Port 6 PoE',
     'platform': 'tplink_omada',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'poe_control',
     'unique_id': '54-AF-97-00-00-01_000000000000000000000006_poe',
     'unit_of_measurement': None,
   })
@@ -91,7 +93,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test PoE Switch Port 7 PoE',
-      'icon': 'mdi:ethernet',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_poe_switch_port_7_poe',
@@ -117,16 +118,18 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:ethernet',
+    'original_icon': None,
     'original_name': 'Port 7 PoE',
     'platform': 'tplink_omada',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'poe_control',
     'unique_id': '54-AF-97-00-00-01_000000000000000000000007_poe',
     'unit_of_measurement': None,
   })
@@ -135,7 +138,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test PoE Switch Port 8 PoE',
-      'icon': 'mdi:ethernet',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_poe_switch_port_8_poe',
@@ -161,16 +163,18 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:ethernet',
+    'original_icon': None,
     'original_name': 'Port 8 PoE',
     'platform': 'tplink_omada',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'poe_control',
     'unique_id': '54-AF-97-00-00-01_000000000000000000000008_poe',
     'unit_of_measurement': None,
   })
@@ -179,7 +183,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test PoE Switch Port 2 PoE',
-      'icon': 'mdi:ethernet',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_poe_switch_port_2_poe',
@@ -205,16 +208,18 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:ethernet',
+    'original_icon': None,
     'original_name': 'Port 2 PoE',
     'platform': 'tplink_omada',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'poe_control',
     'unique_id': '54-AF-97-00-00-01_000000000000000000000002_poe',
     'unit_of_measurement': None,
   })
@@ -223,7 +228,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test PoE Switch Port 3 PoE',
-      'icon': 'mdi:ethernet',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_poe_switch_port_3_poe',
@@ -249,16 +253,18 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:ethernet',
+    'original_icon': None,
     'original_name': 'Port 3 PoE',
     'platform': 'tplink_omada',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'poe_control',
     'unique_id': '54-AF-97-00-00-01_000000000000000000000003_poe',
     'unit_of_measurement': None,
   })
@@ -267,7 +273,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test PoE Switch Port 4 PoE',
-      'icon': 'mdi:ethernet',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_poe_switch_port_4_poe',
@@ -293,16 +298,18 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:ethernet',
+    'original_icon': None,
     'original_name': 'Port 4 PoE',
     'platform': 'tplink_omada',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'poe_control',
     'unique_id': '54-AF-97-00-00-01_000000000000000000000004_poe',
     'unit_of_measurement': None,
   })
@@ -311,7 +318,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test PoE Switch Port 5 PoE',
-      'icon': 'mdi:ethernet',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_poe_switch_port_5_poe',
@@ -337,16 +343,18 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:ethernet',
+    'original_icon': None,
     'original_name': 'Port 5 PoE',
     'platform': 'tplink_omada',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'poe_control',
     'unique_id': '54-AF-97-00-00-01_000000000000000000000005_poe',
     'unit_of_measurement': None,
   })

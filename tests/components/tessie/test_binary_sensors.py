@@ -1,4 +1,6 @@
 """Test the Tessie binary sensor platform."""
+
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -8,6 +10,7 @@ from homeassistant.helpers import entity_registry as er
 from .common import assert_entities, setup_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_binary_sensors(
     hass: HomeAssistant, snapshot: SnapshotAssertion, entity_registry: er.EntityRegistry
 ) -> None:

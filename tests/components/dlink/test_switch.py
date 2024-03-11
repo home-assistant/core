@@ -1,4 +1,5 @@
 """Switch tests for the D-Link Smart Plug integration."""
+
 from unittest.mock import patch
 
 from homeassistant.components.dlink import DOMAIN

@@ -1,4 +1,5 @@
 """Fixtures for harmony tests."""
+
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from aioharmony.const import ClientCallbackType

@@ -1,4 +1,5 @@
 """The test for the NuHeat thermostat module."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -44,7 +45,7 @@ async def test_climate_thermostat_run(hass: HomeAssistant) -> None:
         "min_temp": 5.0,
         "preset_mode": "Run Schedule",
         "preset_modes": ["Run Schedule", "Temporary Hold", "Permanent Hold"],
-        "supported_features": 273,
+        "supported_features": 17,
         "temperature": 22.2,
     }
     # Only test for a subset of attributes in case
@@ -77,7 +78,7 @@ async def test_climate_thermostat_schedule_hold_unavailable(
         "max_temp": 180.6,
         "min_temp": -6.1,
         "preset_modes": ["Run Schedule", "Temporary Hold", "Permanent Hold"],
-        "supported_features": 273,
+        "supported_features": 17,
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
@@ -110,7 +111,7 @@ async def test_climate_thermostat_schedule_hold_available(hass: HomeAssistant) -
         "min_temp": -6.1,
         "preset_mode": "Run Schedule",
         "preset_modes": ["Run Schedule", "Temporary Hold", "Permanent Hold"],
-        "supported_features": 273,
+        "supported_features": 17,
         "temperature": 26.1,
     }
     # Only test for a subset of attributes in case
@@ -144,7 +145,7 @@ async def test_climate_thermostat_schedule_temporary_hold(hass: HomeAssistant) -
         "min_temp": -0.6,
         "preset_mode": "Run Schedule",
         "preset_modes": ["Run Schedule", "Temporary Hold", "Permanent Hold"],
-        "supported_features": 273,
+        "supported_features": 17,
         "temperature": 37.2,
     }
     # Only test for a subset of attributes in case

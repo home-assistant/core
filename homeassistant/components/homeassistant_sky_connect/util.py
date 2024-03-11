@@ -1,4 +1,5 @@
 """Utility functions for Home Assistant SkyConnect integration."""
+
 from __future__ import annotations
 
 from homeassistant.components import usb

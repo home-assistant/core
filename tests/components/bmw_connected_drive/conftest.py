@@ -1,6 +1,5 @@
 """Fixtures for BMW tests."""
 
-
 from collections.abc import Generator
 
 from bimmer_connected.tests import ALL_CHARGING_SETTINGS, ALL_STATES

@@ -1,4 +1,5 @@
 """Representation of ISY/IoX buttons."""
+
 from __future__ import annotations
 
 from pyisy import ISY

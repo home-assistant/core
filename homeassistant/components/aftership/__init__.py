@@ -1,4 +1,5 @@
 """The AfterShip integration."""
+
 from __future__ import annotations
 
 from pyaftership import AfterShip, AfterShipException

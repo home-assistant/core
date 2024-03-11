@@ -1,16 +1,17 @@
 """Define tests for the Notion config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from aionotion.errors import InvalidCredentialsError, NotionError
 import pytest
 
 from homeassistant import data_entry_flow
-from homeassistant.components.notion import DOMAIN
+from homeassistant.components.notion import CONF_REFRESH_TOKEN, CONF_USER_UUID, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .conftest import TEST_PASSWORD, TEST_USERNAME
+from .conftest import TEST_PASSWORD, TEST_REFRESH_TOKEN, TEST_USER_UUID, TEST_USERNAME
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -26,7 +27,6 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 async def test_create_entry(
     hass: HomeAssistant,
     client,
-    config,
     errors,
     get_client_with_exception,
     mock_aionotion,
@@ -40,23 +40,33 @@ async def test_create_entry(
 
     # Test errors that can arise when getting a Notion API client:
     with patch(
-        "homeassistant.components.notion.config_flow.async_get_client",
+        "homeassistant.components.notion.config_flow.async_get_client_with_credentials",
         get_client_with_exception,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=config
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={
+                CONF_USERNAME: TEST_USERNAME,
+                CONF_PASSWORD: TEST_PASSWORD,
+            },
         )
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"] == errors
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=config
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
     )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_USERNAME
     assert result["data"] == {
+        CONF_REFRESH_TOKEN: TEST_REFRESH_TOKEN,
         CONF_USERNAME: TEST_USERNAME,
-        CONF_PASSWORD: TEST_PASSWORD,
+        CONF_USER_UUID: TEST_USER_UUID,
     }
 
 
@@ -99,7 +109,7 @@ async def test_reauth(
 
     # Test errors that can arise when getting a Notion API client:
     with patch(
-        "homeassistant.components.notion.config_flow.async_get_client",
+        "homeassistant.components.notion.config_flow.async_get_client_with_credentials",
         get_client_with_exception,
     ):
         result = await hass.config_entries.flow.async_configure(

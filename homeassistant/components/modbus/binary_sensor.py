@@ -1,4 +1,5 @@
 """Support for Modbus Coil and Discrete Input sensors."""
+
 from __future__ import annotations
 
 from datetime import datetime

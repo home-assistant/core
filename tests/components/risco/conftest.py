@@ -1,4 +1,5 @@
 """Fixtures for Risco tests."""
+
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest

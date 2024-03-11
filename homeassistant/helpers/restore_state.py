@@ -1,4 +1,5 @@
 """Support for restoring entity states on startup."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

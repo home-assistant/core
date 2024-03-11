@@ -1,4 +1,5 @@
 """Tests for the Sonos config flow."""
+
 import asyncio
 from datetime import timedelta
 import logging
@@ -377,7 +378,7 @@ async def test_async_poll_manual_hosts_6(
         with caplog.at_level(logging.DEBUG):
             caplog.clear()
             # The discovery events should not fire, wait with a timeout.
-            with pytest.raises(asyncio.TimeoutError):
+            with pytest.raises(TimeoutError):
                 async with asyncio.timeout(1.0):
                     await speaker_1_activity.event.wait()
             await hass.async_block_till_done()

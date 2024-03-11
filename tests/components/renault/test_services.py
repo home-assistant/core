@@ -1,4 +1,5 @@
 """Tests for Renault sensors."""
+
 from collections.abc import Generator
 from datetime import datetime
 from unittest.mock import patch

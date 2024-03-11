@@ -1,4 +1,5 @@
 """Support for Actions on Google Assistant Smart Home Control."""
+
 from __future__ import annotations
 
 import logging

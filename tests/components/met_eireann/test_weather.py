@@ -1,4 +1,5 @@
 """Test Met Éireann weather entity."""
+
 import datetime
 
 from freezegun.api import FrozenDateTimeFactory

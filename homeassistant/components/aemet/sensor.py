@@ -1,4 +1,5 @@
 """Support for the AEMET OpenData service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -27,7 +28,7 @@ from aemet_opendata.const import (
     AOD_TEMP,
     AOD_TEMP_MAX,
     AOD_TEMP_MIN,
-    AOD_TIMESTAMP,
+    AOD_TIMESTAMP_UTC,
     AOD_TOWN,
     AOD_WEATHER,
     AOD_WIND_DIRECTION,
@@ -171,7 +172,7 @@ FORECAST_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
     ),
     AemetSensorEntityDescription(
         key=f"forecast-daily-{ATTR_API_FORECAST_TIME}",
-        keys=[AOD_TOWN, AOD_FORECAST_DAILY, AOD_FORECAST_CURRENT, AOD_TIMESTAMP],
+        keys=[AOD_TOWN, AOD_FORECAST_DAILY, AOD_FORECAST_CURRENT, AOD_TIMESTAMP_UTC],
         name="Daily forecast time",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=dt_util.parse_datetime,
@@ -179,7 +180,7 @@ FORECAST_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
     AemetSensorEntityDescription(
         entity_registry_enabled_default=False,
         key=f"forecast-hourly-{ATTR_API_FORECAST_TIME}",
-        keys=[AOD_TOWN, AOD_FORECAST_HOURLY, AOD_FORECAST_CURRENT, AOD_TIMESTAMP],
+        keys=[AOD_TOWN, AOD_FORECAST_HOURLY, AOD_FORECAST_CURRENT, AOD_TIMESTAMP_UTC],
         name="Hourly forecast time",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=dt_util.parse_datetime,
@@ -286,7 +287,7 @@ WEATHER_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
     ),
     AemetSensorEntityDescription(
         key=ATTR_API_STATION_TIMESTAMP,
-        keys=[AOD_STATION, AOD_TIMESTAMP],
+        keys=[AOD_STATION, AOD_TIMESTAMP_UTC],
         name="Station timestamp",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=dt_util.parse_datetime,
@@ -326,7 +327,7 @@ WEATHER_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
     ),
     AemetSensorEntityDescription(
         key=ATTR_API_TOWN_TIMESTAMP,
-        keys=[AOD_TOWN, AOD_FORECAST_HOURLY, AOD_TIMESTAMP],
+        keys=[AOD_TOWN, AOD_FORECAST_HOURLY, AOD_TIMESTAMP_UTC],
         name="Town timestamp",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=dt_util.parse_datetime,
@@ -367,20 +368,16 @@ async def async_setup_entry(
     name: str = domain_data[ENTRY_NAME]
     coordinator: WeatherUpdateCoordinator = domain_data[ENTRY_WEATHER_COORDINATOR]
 
-    entities: list[AemetSensor] = []
-
-    for description in FORECAST_SENSORS + WEATHER_SENSORS:
-        if dict_nested_value(coordinator.data["lib"], description.keys) is not None:
-            entities.append(
-                AemetSensor(
-                    name,
-                    coordinator,
-                    description,
-                    config_entry,
-                )
-            )
-
-    async_add_entities(entities)
+    async_add_entities(
+        AemetSensor(
+            name,
+            coordinator,
+            description,
+            config_entry,
+        )
+        for description in FORECAST_SENSORS + WEATHER_SENSORS
+        if dict_nested_value(coordinator.data["lib"], description.keys) is not None
+    )
 
 
 class AemetSensor(AemetEntity, SensorEntity):

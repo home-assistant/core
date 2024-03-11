@@ -1,4 +1,5 @@
 """TOLO Sauna climate controls (main sauna control)."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -58,6 +59,7 @@ class SaunaClimate(ToloSaunaCoordinatorEntity, ClimateEntity):
     )
     _attr_target_temperature_step = 1
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, coordinator: ToloSaunaUpdateCoordinator, entry: ConfigEntry

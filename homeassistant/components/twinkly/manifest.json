@@ -6,6 +6,9 @@
   "dhcp": [
     {
       "hostname": "twinkly_*"
+    },
+    {
+      "hostname": "twinkly-*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/twinkly",

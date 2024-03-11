@@ -1,4 +1,5 @@
 """Helper functions for the Cert Expiry platform."""
+
 import asyncio
 import datetime
 from functools import cache
@@ -55,7 +56,7 @@ async def get_cert_expiry_timestamp(
         cert = await async_get_cert(hass, hostname, port)
     except socket.gaierror as err:
         raise ResolveFailed(f"Cannot resolve hostname: {hostname}") from err
-    except asyncio.TimeoutError as err:
+    except TimeoutError as err:
         raise ConnectionTimeout(
             f"Connection timeout with server: {hostname}:{port}"
         ) from err

@@ -1,4 +1,5 @@
 """Support for Atlantic Electrical Heater (With Adjustable Temperature Setpoint)."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -75,6 +76,7 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
         | ClimateEntityFeature.TURN_ON
     )
     _attr_translation_key = DOMAIN
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator

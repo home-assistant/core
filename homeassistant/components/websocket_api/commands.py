@@ -1,8 +1,8 @@
 """Commands part of Websocket API."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
-import datetime as dt
 from functools import lru_cache, partial
 import json
 import logging
@@ -48,7 +48,6 @@ from homeassistant.helpers.json import (
     json_bytes,
 )
 from homeassistant.helpers.service import async_get_all_descriptions
-from homeassistant.helpers.typing import EventType
 from homeassistant.loader import (
     Integration,
     IntegrationNotFound,
@@ -356,7 +355,9 @@ def _send_handle_get_states_response(
 ) -> None:
     """Send handle get states response."""
     connection.send_message(
-        construct_result_message(msg_id, b"[" + b",".join(serialized_states) + b"]")
+        construct_result_message(
+            msg_id, b"".join((b"[", b",".join(serialized_states), b"]"))
+        )
     )
 
 
@@ -366,7 +367,7 @@ def _forward_entity_changes(
     entity_ids: set[str],
     user: User,
     msg_id: int,
-    event: Event,
+    event: Event[EventStateChangedData],
 ) -> None:
     """Forward entity state changed events to websocket."""
     entity_id = event.data["entity_id"]
@@ -538,13 +539,12 @@ def handle_integration_setup_info(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle integrations command."""
+    setup_time: dict[str, float] = hass.data[DATA_SETUP_TIME]
     connection.send_result(
         msg["id"],
         [
-            {"domain": integration, "seconds": timedelta.total_seconds()}
-            for integration, timedelta in cast(
-                dict[str, dt.timedelta], hass.data[DATA_SETUP_TIME]
-            ).items()
+            {"domain": integration, "seconds": seconds}
+            for integration, seconds in setup_time.items()
         ],
     )
 
@@ -621,7 +621,7 @@ async def handle_render_template(
 
     @callback
     def _template_listener(
-        event: EventType[EventStateChangedData] | None,
+        event: Event[EventStateChangedData] | None,
         updates: list[TrackTemplateResult],
     ) -> None:
         track_template_result = updates.pop()

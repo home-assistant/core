@@ -1,4 +1,5 @@
 """Stock market information from Alpha Vantage."""
+
 from __future__ import annotations
 
 from datetime import timedelta

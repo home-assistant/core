@@ -1,4 +1,5 @@
 """Config flow for solarlog integration."""
+
 import logging
 from urllib.parse import ParseResult, urlparse
 
@@ -6,7 +7,7 @@ from requests.exceptions import HTTPError, Timeout
 from sunwatcher.solarlog.solarlog import SolarLog
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
@@ -24,7 +25,7 @@ def solarlog_entries(hass: HomeAssistant):
     }
 
 
-class SolarLogConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for solarlog."""
 
     VERSION = 1

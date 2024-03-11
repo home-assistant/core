@@ -1,4 +1,5 @@
 """Test the Fully Kiosk Browser switches."""
+
 from unittest.mock import MagicMock
 
 from homeassistant.components.fully_kiosk.const import DOMAIN

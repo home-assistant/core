@@ -1,4 +1,5 @@
 """Platform for siren integration."""
+
 from typing import Any
 
 from devolo_home_control_api.devices.zwave import Zwave
