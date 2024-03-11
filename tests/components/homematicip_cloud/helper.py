@@ -28,7 +28,7 @@ from tests.common import load_fixture
 HAPID = "3014F7110000000000000001"
 HAPPIN = "5678"
 AUTH_TOKEN = "1234"
-FIXTURE_DATA = load_fixture("homematicip_cloud.json", "homeaticip_cloud")
+FIXTURE_DATA = load_fixture("homematicip_cloud.json", "homematicip_cloud")
 
 
 def get_and_check_entity_basics(hass, mock_hap, entity_id, entity_name, device_model):
