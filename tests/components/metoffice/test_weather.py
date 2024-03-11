@@ -379,6 +379,33 @@ async def test_forecast_service(
 
 
 @pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
+async def test_legacy_config_entry_is_removed(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, no_sensor, wavertree_data
+) -> None:
+    """Test the expected entities are created."""
+    # Pre-create the hourly entity
+    entity_registry.async_get_or_create(
+        WEATHER_DOMAIN,
+        DOMAIN,
+        "53.38374_-2.90929",
+        suggested_object_id="met_office_wavertree_3_hourly",
+    )
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=METOFFICE_CONFIG_WAVERTREE,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids("weather")) == 1
+    entry = hass.config_entries.async_entries()[0]
+    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 1
+
+
+@pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
 @pytest.mark.parametrize("forecast_type", ["daily", "hourly"])
 async def test_forecast_subscription(
     hass: HomeAssistant,
