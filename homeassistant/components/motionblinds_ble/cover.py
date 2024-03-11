@@ -115,15 +115,16 @@ class GenericBlind(MotionblindsBLEEntity, CoverEntity):
         tilt: int | None,
     ) -> None:
         """Update the position of the motor."""
-        self._attr_current_cover_position = (
-            100 - position if position is not None else None
-        )
-        self._attr_current_cover_tilt_position = (
-            100 - round(100 * tilt / 180) if tilt is not None else None
-        )
-        self._attr_is_closed = (
-            self._attr_current_cover_position == 0 if position is not None else None
-        )
+        if position is None:
+            self._attr_current_cover_position = None
+            self._attr_is_closed = None
+        else:
+            self._attr_current_cover_position = 100 - position
+            self._attr_is_closed = self._attr_current_cover_position == 0
+        if tilt is None:
+            self._attr_current_cover_tilt_position = None
+        else:
+            self._attr_current_cover_tilt_position = 100 - round(100 * tilt / 180)
         self.async_write_ha_state()
 
 
