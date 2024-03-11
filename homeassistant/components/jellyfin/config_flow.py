@@ -168,5 +168,7 @@ class OptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=OPTIONAL_DATA_SCHEMA,
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONAL_DATA_SCHEMA, self.config_entry.options
+            ),
         )

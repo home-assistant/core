@@ -31,7 +31,7 @@
     "step": {
       "init": {
         "data": {
-          "audio_codec": "Audio Codec"
+          "audio_codec": "Audio codec"
         }
       }
     }
