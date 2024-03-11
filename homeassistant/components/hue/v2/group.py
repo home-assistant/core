@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterable
 from functools import lru_cache
 from typing import Any
 
@@ -138,12 +139,12 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         scenes = {
             x.metadata.name for x in self.api.scenes if x.group.rid == self.group.id
         }
-        light_names: set[str] = set()
-        light_entities: set[str] = set()
-        for light_resource in self.controller.get_lights(self.resource.id):
-            light_names.add(self.controller.get_device(light_resource.id).metadata.name)
-            if entity_id := self._get_entity_id_for_resource_id(light_resource.id):
-                light_entities.add(entity_id)
+        light_resource_ids = (
+            x.id for x in self.controller.get_lights(self.resource.id)
+        )
+        light_names, light_entities = self._get_names_and_entity_id_for_resource_ids(
+            light_resource_ids
+        )
         return {
             "is_hue_group": True,
             "hue_scenes": scenes,
@@ -286,7 +287,17 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
 
     @callback
     @lru_cache
-    def _get_entity_id_for_resource_id(self, resource_id: str) -> str | None:
-        """Return the entity id for the given Hue resource ID."""
+    def _get_names_and_entity_id_for_resource_ids(
+        self, resource_ids: Iterable[str]
+    ) -> tuple[set[str], set[str]]:
+        """Return the names and entity ids for the given Hue (light) resource IDs."""
         ent_reg = get_ent_reg(self.hass)
-        return ent_reg.async_get_entity_id(self.platform.domain, DOMAIN, resource_id)
+        light_names: set[str] = set()
+        light_entities: set[str] = set()
+        for resource_id in resource_ids:
+            light_names.add(self.controller.get_device(resource_id).metadata.name)
+            if entity_id := ent_reg.async_get_entity_id(
+                self.platform.domain, DOMAIN, resource_id
+            ):
+                light_entities.add(entity_id)
+        return light_names, light_entities
