@@ -1,4 +1,5 @@
 """Support for Subaru device tracker."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -47,7 +48,7 @@ class SubaruDeviceTracker(
 ):
     """Class for Subaru device tracker."""
 
-    _attr_icon = "mdi:car"
+    _attr_translation_key = "location"
     _attr_has_entity_name = True
     _attr_name = None
 

@@ -1,4 +1,5 @@
 """Sensor platform for Tessie integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -56,7 +57,6 @@ class TessieSensorEntityDescription(SensorEntityDescription):
 DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
     TessieSensorEntityDescription(
         key="charge_state_charging_state",
-        icon="mdi:ev-station",
         options=list(TessieChargeStates.values()),
         device_class=SensorDeviceClass.ENUM,
         value_fn=lambda value: TessieChargeStates[cast(str, value)],

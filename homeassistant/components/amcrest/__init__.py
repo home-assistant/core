@@ -1,4 +1,5 @@
 """Support for Amcrest IP cameras."""
+
 from __future__ import annotations
 
 import asyncio

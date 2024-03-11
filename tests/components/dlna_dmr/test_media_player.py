@@ -1,4 +1,5 @@
 """Tests for the DLNA DMR media_player module."""
+
 from __future__ import annotations
 
 import asyncio
@@ -1424,7 +1425,7 @@ async def test_become_available(
     domain_data_mock.upnp_factory.async_create_device.reset_mock()
 
     # Send an SSDP notification from the now alive device
-    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
         ssdp.SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
@@ -1497,7 +1498,7 @@ async def test_alive_but_gone(
     domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpError
 
     # Send an SSDP notification from the still missing device
-    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
         ssdp.SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
@@ -1610,7 +1611,7 @@ async def test_multiple_ssdp_alive(
     )
 
     # Send two SSDP notifications with the new device URL
-    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
         ssdp.SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
@@ -1650,7 +1651,7 @@ async def test_ssdp_byebye(
 ) -> None:
     """Test device is disconnected when byebye is received."""
     # First byebye will cause a disconnect
-    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
         ssdp.SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
@@ -1702,7 +1703,7 @@ async def test_ssdp_update_seen_bootid(
     domain_data_mock.upnp_factory.async_create_device.side_effect = None
 
     # Send SSDP alive with boot ID
-    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
         ssdp.SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
@@ -1829,7 +1830,7 @@ async def test_ssdp_update_missed_bootid(
     domain_data_mock.upnp_factory.async_create_device.side_effect = None
 
     # Send SSDP alive with boot ID
-    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
         ssdp.SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
@@ -1906,7 +1907,7 @@ async def test_ssdp_bootid(
     domain_data_mock.upnp_factory.async_create_device.side_effect = None
 
     # Send SSDP alive with boot ID
-    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
         ssdp.SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
@@ -2043,6 +2044,8 @@ async def test_poll_availability(
     # Check that an update will poll the device for availability
     domain_data_mock.upnp_factory.async_create_device.reset_mock()
     await async_update_entity(hass, mock_entity_id)
+    await hass.async_block_till_done()
+
     domain_data_mock.upnp_factory.async_create_device.assert_awaited_once_with(
         MOCK_DEVICE_LOCATION
     )
@@ -2057,6 +2060,8 @@ async def test_poll_availability(
     # Check that an update will notice the device and connect to it
     domain_data_mock.upnp_factory.async_create_device.reset_mock()
     await async_update_entity(hass, mock_entity_id)
+    await hass.async_block_till_done()
+
     domain_data_mock.upnp_factory.async_create_device.assert_awaited_once_with(
         MOCK_DEVICE_LOCATION
     )
@@ -2362,7 +2367,7 @@ async def test_connections_restored(
     domain_data_mock.upnp_factory.async_create_device.reset_mock()
 
     # Send an SSDP notification from the now alive device
-    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
         ssdp.SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,

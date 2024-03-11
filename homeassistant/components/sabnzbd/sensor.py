@@ -1,4 +1,5 @@
 """Support for monitoring an SABnzbd NZB client."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -20,16 +21,11 @@ from . import DOMAIN, SIGNAL_SABNZBD_UPDATED
 from .const import DEFAULT_NAME, KEY_API_DATA
 
 
-@dataclass(frozen=True)
-class SabnzbdRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class SabnzbdSensorEntityDescription(SensorEntityDescription):
+    """Describes Sabnzbd sensor entity."""
 
     key: str
-
-
-@dataclass(frozen=True)
-class SabnzbdSensorEntityDescription(SensorEntityDescription, SabnzbdRequiredKeysMixin):
-    """Describes Sabnzbd sensor entity."""
 
 
 SPEED_KEY = "kbpersec"

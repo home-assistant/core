@@ -1,4 +1,5 @@
 """Support for Freebox alarms."""
+
 from typing import Any
 
 from homeassistant.components.alarm_control_panel import (

@@ -1,4 +1,5 @@
 """Support for the definition of zones."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
@@ -37,7 +38,7 @@ from homeassistant.helpers import (
     service,
     storage,
 )
-from homeassistant.helpers.typing import ConfigType, EventType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.location import distance
 
@@ -165,7 +166,7 @@ def async_setup_track_zone_entity_ids(hass: HomeAssistant) -> None:
 
     @callback
     def _async_add_zone_entity_id(
-        event_: EventType[event.EventStateChangedData],
+        event_: Event[event.EventStateChangedData],
     ) -> None:
         """Add zone entity ID."""
         zone_entity_ids.append(event_.data["entity_id"])
@@ -173,7 +174,7 @@ def async_setup_track_zone_entity_ids(hass: HomeAssistant) -> None:
 
     @callback
     def _async_remove_zone_entity_id(
-        event_: EventType[event.EventStateChangedData],
+        event_: Event[event.EventStateChangedData],
     ) -> None:
         """Remove zone entity ID."""
         zone_entity_ids.remove(event_.data["entity_id"])
@@ -388,7 +389,7 @@ class Zone(collection.CollectionEntity):
 
     @callback
     def _person_state_change_listener(
-        self, evt: EventType[event.EventStateChangedData]
+        self, evt: Event[event.EventStateChangedData]
     ) -> None:
         person_entity_id = evt.data["entity_id"]
         cur_count = len(self._persons_in_zone)

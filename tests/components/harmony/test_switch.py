@@ -1,4 +1,5 @@
 """Test the Logitech Harmony Hub activity switches."""
+
 from datetime import timedelta
 
 from homeassistant.components import automation, script

@@ -1,4 +1,5 @@
 """Test config utils."""
+
 from collections import OrderedDict
 import contextlib
 import copy
@@ -1430,7 +1431,8 @@ async def test_component_config_exceptions(
     # Config validator
     test_integration = Mock(
         domain="test_domain",
-        get_platform=Mock(
+        async_get_component=AsyncMock(),
+        async_get_platform=AsyncMock(
             return_value=Mock(
                 async_validate_config=AsyncMock(side_effect=ValueError("broken"))
             )
@@ -1455,14 +1457,14 @@ async def test_component_config_exceptions(
 
     test_integration = Mock(
         domain="test_domain",
-        get_platform=Mock(
+        async_get_platform=AsyncMock(
             return_value=Mock(
                 async_validate_config=AsyncMock(
                     side_effect=HomeAssistantError("broken")
                 )
             )
         ),
-        get_component=Mock(return_value=Mock(spec=["PLATFORM_SCHEMA_BASE"])),
+        async_get_component=AsyncMock(return_value=Mock(spec=["PLATFORM_SCHEMA_BASE"])),
     )
     caplog.clear()
     assert (
@@ -1482,8 +1484,8 @@ async def test_component_config_exceptions(
     caplog.clear()
     test_integration = Mock(
         domain="test_domain",
-        get_platform=Mock(return_value=None),
-        get_component=Mock(
+        async_get_platform=AsyncMock(return_value=None),
+        async_get_component=AsyncMock(
             return_value=Mock(CONFIG_SCHEMA=Mock(side_effect=ValueError("broken")))
         ),
     )
@@ -1511,8 +1513,8 @@ async def test_component_config_exceptions(
     caplog.clear()
     test_integration = Mock(
         domain="test_domain",
-        get_platform=Mock(return_value=None),
-        get_component=Mock(
+        async_get_platform=AsyncMock(return_value=None),
+        async_get_component=AsyncMock(
             return_value=Mock(
                 spec=["PLATFORM_SCHEMA_BASE"],
                 PLATFORM_SCHEMA_BASE=Mock(side_effect=ValueError("broken")),
@@ -1551,13 +1553,13 @@ async def test_component_config_exceptions(
     caplog.clear()
     test_integration = Mock(
         domain="test_domain",
-        get_platform=Mock(return_value=None),
-        get_component=Mock(return_value=Mock(spec=["PLATFORM_SCHEMA_BASE"])),
+        async_get_platform=AsyncMock(return_value=None),
+        async_get_component=AsyncMock(return_value=Mock(spec=["PLATFORM_SCHEMA_BASE"])),
     )
     with patch(
         "homeassistant.config.async_get_integration_with_requirements",
         return_value=Mock(  # integration that owns platform
-            get_platform=Mock(
+            async_get_platform=AsyncMock(
                 return_value=Mock(  # platform
                     PLATFORM_SCHEMA=Mock(side_effect=ValueError("broken"))
                 )
@@ -1640,12 +1642,12 @@ async def test_component_config_exceptions(
             "for test_domain component with PLATFORM_SCHEMA"
         ) in caplog.text
 
-    # get_platform("domain") raising on ImportError
+    # async_get_platform("domain") raising on ImportError
     caplog.clear()
     test_integration = Mock(
         domain="test_domain",
-        get_platform=Mock(return_value=None),
-        get_component=Mock(return_value=Mock(spec=["PLATFORM_SCHEMA_BASE"])),
+        async_get_platform=AsyncMock(return_value=None),
+        async_get_component=AsyncMock(return_value=Mock(spec=["PLATFORM_SCHEMA_BASE"])),
     )
     import_error = ImportError(
         ("ModuleNotFoundError: No module named 'not_installed_something'"),
@@ -1654,7 +1656,7 @@ async def test_component_config_exceptions(
     with patch(
         "homeassistant.config.async_get_integration_with_requirements",
         return_value=Mock(  # integration that owns platform
-            get_platform=Mock(side_effect=import_error)
+            async_get_platform=AsyncMock(side_effect=import_error)
         ),
     ):
         assert await config_util.async_process_component_and_handle_errors(
@@ -1688,12 +1690,13 @@ async def test_component_config_exceptions(
             "No module named 'not_installed_something'"
         ) in str(ex.value)
 
-    # get_platform("config") raising
+    # async_get_platform("config") raising
     caplog.clear()
     test_integration = Mock(
         pkg_path="homeassistant.components.test_domain",
         domain="test_domain",
-        get_platform=Mock(
+        async_get_component=AsyncMock(),
+        async_get_platform=AsyncMock(
             side_effect=ImportError(
                 ("ModuleNotFoundError: No module named 'not_installed_something'"),
                 name="not_installed_something",
@@ -1729,12 +1732,12 @@ async def test_component_config_exceptions(
         "No module named 'not_installed_something'" in str(ex.value)
     )
 
-    # get_component raising
+    # async_get_component raising
     caplog.clear()
     test_integration = Mock(
         pkg_path="homeassistant.components.test_domain",
         domain="test_domain",
-        get_component=Mock(
+        async_get_component=AsyncMock(
             side_effect=FileNotFoundError("No such file or directory: b'liblibc.a'")
         ),
     )
@@ -2337,3 +2340,34 @@ def test_config_per_platform() -> None:
         (None, 1),
         ("hello 2", config["zone Hallo"][1]),
     ] == list(config_util.config_per_platform(config, "zone"))
+
+
+def test_extract_platform_integrations() -> None:
+    """Test extract_platform_integrations."""
+    config = OrderedDict(
+        [
+            (b"zone", {"platform": "not str"}),
+            ("zone", {"platform": "hello"}),
+            ("zonex", []),
+            ("zoney", ""),
+            ("notzone", {"platform": "nothello"}),
+            ("zoner", None),
+            ("zone Hallo", [1, {"platform": "hello 2"}]),
+            ("zone 100", None),
+            ("i n v a-@@", None),
+            ("i n v a-@@", {"platform": "hello"}),
+            ("zoneq", "pig"),
+            ("zoneempty", {"platform": ""}),
+        ]
+    )
+    assert config_util.extract_platform_integrations(config, {"zone"}) == {
+        "hello",
+        "hello 2",
+    }
+    assert config_util.extract_platform_integrations(config, {"zonex"}) == set()
+    assert config_util.extract_platform_integrations(config, {"zoney"}) == set()
+    assert config_util.extract_platform_integrations(
+        config, {"zone", "not_valid", "notzone"}
+    ) == {"hello", "hello 2", "nothello"}
+    assert config_util.extract_platform_integrations(config, {"zoneq"}) == set()
+    assert config_util.extract_platform_integrations(config, {"zoneempty"}) == set()

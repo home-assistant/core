@@ -1,11 +1,12 @@
 """Config flow for Kostal Plenticore Solar Inverter integration."""
+
 import logging
 
 from aiohttp.client_exceptions import ClientError
 from pykoplenti import ApiClient, AuthenticationException
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -38,7 +39,7 @@ async def test_connection(hass: HomeAssistant, data) -> str:
     return values["scb:network"][hostname_id]
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class KostalPlenticoreConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Kostal Plenticore Solar Inverter."""
 
     VERSION = 1

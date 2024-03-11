@@ -1,4 +1,5 @@
 """Data coordinators for the ring integration."""
+
 from asyncio import TaskGroup
 from collections.abc import Callable
 from dataclasses import dataclass

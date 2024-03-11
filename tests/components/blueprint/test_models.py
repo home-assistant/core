@@ -1,4 +1,5 @@
 """Test blueprint models."""
+
 import logging
 from unittest.mock import AsyncMock, patch
 

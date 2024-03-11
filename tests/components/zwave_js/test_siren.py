@@ -1,4 +1,5 @@
 """Test the Z-Wave JS siren platform."""
+
 from zwave_js_server.event import Event
 
 from homeassistant.components.siren import (

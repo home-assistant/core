@@ -1,4 +1,5 @@
 """Provides device automations for Arcam FMJ Receiver control."""
+
 from __future__ import annotations
 
 import voluptuous as vol

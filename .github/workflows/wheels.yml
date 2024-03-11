@@ -91,12 +91,12 @@ jobs:
         uses: actions/checkout@v4.1.1
 
       - name: Download env_file
-        uses: actions/download-artifact@v4.1.2
+        uses: actions/download-artifact@v4.1.4
         with:
           name: env_file
 
       - name: Download requirements_diff
-        uses: actions/download-artifact@v4.1.2
+        uses: actions/download-artifact@v4.1.4
         with:
           name: requirements_diff
 
@@ -129,12 +129,12 @@ jobs:
         uses: actions/checkout@v4.1.1
 
       - name: Download env_file
-        uses: actions/download-artifact@v4.1.2
+        uses: actions/download-artifact@v4.1.4
         with:
           name: env_file
 
       - name: Download requirements_diff
-        uses: actions/download-artifact@v4.1.2
+        uses: actions/download-artifact@v4.1.4
         with:
           name: requirements_diff
 

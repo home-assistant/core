@@ -1,4 +1,5 @@
 """The Search integration."""
+
 from __future__ import annotations
 
 from collections import defaultdict, deque

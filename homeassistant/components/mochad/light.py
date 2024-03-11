@@ -1,4 +1,5 @@
 """Support for X10 dimmer over Mochad."""
+
 from __future__ import annotations
 
 import logging

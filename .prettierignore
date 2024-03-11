@@ -1,6 +1,5 @@
 *.md
 .strict-typing
-azure-*.yml
 homeassistant/components/*/translations/*.json
 homeassistant/generated/*
 tests/components/lidarr/fixtures/initialize.js

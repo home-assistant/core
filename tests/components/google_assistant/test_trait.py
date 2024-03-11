@@ -1,4 +1,5 @@
 """Tests for the Google Assistant traits."""
+
 from datetime import datetime, timedelta
 from unittest.mock import ANY, patch
 

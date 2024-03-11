@@ -1,4 +1,5 @@
 """Constants for the opentherm_gw integration."""
+
 from __future__ import annotations
 
 import pyotgw.vars as gw_vars

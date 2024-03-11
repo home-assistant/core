@@ -1,4 +1,5 @@
 """Adapter to wrap the rachiopy api for home assistant."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
