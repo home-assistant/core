@@ -1,8 +1,9 @@
 """Test cases for the Shelly component."""
 
 from ipaddress import IPv4Address
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, call, patch
 
+from aioshelly.block_device import COAP
 from aioshelly.exceptions import (
     DeviceConnectionError,
     FirmwareUnsupported,
@@ -60,12 +61,18 @@ async def test_ip_address(
     ), patch(
         "homeassistant.components.network.async_get_enabled_source_ips",
         return_value=[IPv4Address("192.168.1.10"), IPv4Address("10.10.10.10")],
-    ):
+    ), patch(
+        "homeassistant.components.shelly.utils.COAP",
+        autospec=COAP,
+    ) as mock_coap_init:
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"coap_port": 7632}})
         await hass.async_block_till_done()
 
         await init_integration(hass, 1)
         assert "Starting CoAP context with UDP port 7632" in caplog.text
+        assert mock_coap_init.mock_calls[1] == call().initialize(
+            7632, [IPv4Address("192.168.1.10"), IPv4Address("10.10.10.10")]
+        )
 
 
 @pytest.mark.parametrize("gen", [1, 2, 3])
