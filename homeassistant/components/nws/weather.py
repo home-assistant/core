@@ -149,7 +149,7 @@ class NWSWeather(CoordinatorWeatherEntity):
 
         self._attr_unique_id = _calculate_unique_id(entry_data, DAYNIGHT)
         self._attr_device_info = device_info(latitude, longitude)
-        self._attr_name = f"{self.station} {DAYNIGHT.title()}"
+        self._attr_name = self.station
 
     async def async_added_to_hass(self) -> None:
         """Set up a listener and load data."""
