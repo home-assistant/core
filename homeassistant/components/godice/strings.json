@@ -1,0 +1,33 @@
+{
+  "config": {
+    "step": {
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      },
+      "discovery_confirm": {
+        "description": "Setup {name} - {address} ? The device will blink once connected"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "auto_discovery_only": "GoDice devices are auto-discovered. Keep you GoDice closer to the HA hub and observe discovery in Devices menu"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery_level": {
+        "name": "Battery level"
+      },
+      "connection": {
+        "name": "Connection"
+      },
+      "color": {
+        "name": "Color"
+      },
+      "rolled_number": {
+        "name": "Rolled number"
+      }
+    }
+  }
+}

@@ -944,6 +944,9 @@ glances-api==0.5.0
 # homeassistant.components.goalzero
 goalzero==0.2.2
 
+# homeassistant.components.godice
+godice==0.1.0
+
 # homeassistant.components.goodwe
 goodwe==0.2.32
 

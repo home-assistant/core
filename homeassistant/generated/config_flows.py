@@ -192,6 +192,7 @@ FLOWS = {
         "github",
         "glances",
         "goalzero",
+        "godice",
         "gogogate2",
         "goodwe",
         "google",
