@@ -5633,5 +5633,8 @@ async def test_stopping_run_before_starting(
         ]
     )
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+    # Tested directly because we are checking for a race in the internals
+    # where the script is stopped before it is started. Previously this
+    # would hang indefinitely.
     run = script._ScriptRun(hass, script_obj, {}, None, True)
     await run.async_stop()
