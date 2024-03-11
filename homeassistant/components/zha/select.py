@@ -163,8 +163,9 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
     """Representation of a ZHA ZCL enum select entity."""
 
     _attribute_name: str
-    _attr_entity_category = EntityCategory.CONFIG
+    _attr_entity_category: EntityCategory | None = EntityCategory.CONFIG
     _enum: type[Enum]
+    _has_state_translation = False
 
     @classmethod
     def create_entity(
@@ -202,9 +203,13 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
     ) -> None:
         """Init this select entity."""
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
-        if ENTITY_METADATA in kwargs:
-            self._init_from_quirks_metadata(kwargs[ENTITY_METADATA])
-        self._attr_options = [entry.name.replace("_", " ") for entry in self._enum]
+        if QUIRK_METADATA in kwargs:
+            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA])
+        if self._has_state_translation:
+            self._attr_options = [entry.name for entry in self._enum]
+        else:
+            self._attr_options = [entry.name.replace("_", " ") for entry in self._enum]
+
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
 
     def _init_from_quirks_metadata(self, entity_metadata: ZCLEnumMetadata) -> None:
@@ -220,6 +225,8 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
         if option is None:
             return None
         option = self._enum(option)
+        if self._has_state_translation:
+            return option.name
         return option.name.replace("_", " ")
 
     async def async_select_option(self, option: str) -> None:

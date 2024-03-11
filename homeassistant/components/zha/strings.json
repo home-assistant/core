@@ -810,6 +810,17 @@
       },
       "keypad_lockout": {
         "name": "Keypad lockout"
+      },
+      "heat_mode": {
+        "name": "Heat mode",
+        "state": {
+          "comfort": "Comfort",
+          "comfort_minus_1": "Comfort -1 °C",
+          "comfort_minus_2": "Comfort -2 °C",
+          "eco": "Eco",
+          "frost_protection": "Frost protection",
+          "off": "Off"
+        }
       }
     },
     "sensor": {
