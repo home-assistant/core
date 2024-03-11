@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    LIGHT_LUX,
     PERCENTAGE,
     UnitOfEnergy,
     UnitOfSpeed,
@@ -59,6 +60,11 @@ SENSOR_TYPES = (
         key="wind_speed",
         device_class=SensorDeviceClass.WIND_SPEED,
         native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+    ),
+    SensorEntityDescription(
+        key="illuminance",
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        native_unit_of_measurement=LIGHT_LUX,
     ),
 )
 
