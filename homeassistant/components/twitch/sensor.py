@@ -141,6 +141,7 @@ class TwitchSensor(SensorEntity):
             self._session.token["access_token"],
             OAUTH_SCOPES,
             self._session.token["refresh_token"],
+            False,
         )
         followers = await self._client.get_channel_followers(self._channel.id)
 
