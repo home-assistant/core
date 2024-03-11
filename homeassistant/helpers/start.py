@@ -30,7 +30,7 @@ def _async_at_core_state(
     """
     at_start_job = HassJob(at_start_cb)
     if check_state(hass):
-        hass.async_run_hass_job(at_start_job, hass)
+        hass.async_run_hass_job(at_start_job, hass, eager_start=True)
         return lambda: None
 
     unsub: None | CALLBACK_TYPE = None
@@ -38,7 +38,7 @@ def _async_at_core_state(
     @callback
     def _matched_event(event: Event) -> None:
         """Call the callback when Home Assistant started."""
-        hass.async_run_hass_job(at_start_job, hass)
+        hass.async_run_hass_job(at_start_job, hass, eager_start=True)
         nonlocal unsub
         unsub = None
 
