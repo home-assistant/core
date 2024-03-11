@@ -285,6 +285,7 @@ class HKDevice:
                 self.hass.bus.async_listen(
                     EVENT_HOMEASSISTANT_STARTED,
                     self._async_populate_ble_accessory_state,
+                    run_immediately=True,
                 )
             )
         else:
