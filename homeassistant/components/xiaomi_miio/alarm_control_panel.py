@@ -1,4 +1,5 @@
 """Support for Xiomi Gateway alarm control panels."""
+
 from __future__ import annotations
 
 from functools import partial

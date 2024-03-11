@@ -1,4 +1,5 @@
 """Common code for permissions."""
+
 from collections.abc import Mapping
 
 # MyPy doesn't support recursion yet. So writing it out as far as we need.

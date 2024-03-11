@@ -1,4 +1,5 @@
 """Test KNX init."""
+
 from unittest.mock import patch
 
 import pytest

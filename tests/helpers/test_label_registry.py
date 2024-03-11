@@ -1,4 +1,5 @@
 """Tests for the Label Registry."""
+
 import re
 from typing import Any
 

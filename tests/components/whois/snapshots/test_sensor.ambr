@@ -3,7 +3,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'home-assistant.io Admin',
-      'icon': 'mdi:account-star',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_assistant_io_admin',
@@ -35,7 +34,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:account-star',
+    'original_icon': None,
     'original_name': 'Admin',
     'platform': 'whois',
     'previous_unique_id': None,
@@ -156,7 +155,6 @@
     'attributes': ReadOnlyDict({
       'expires': '2023-01-01T00:00:00',
       'friendly_name': 'home-assistant.io Days until expiration',
-      'icon': 'mdi:calendar-clock',
       'name_servers': 'ns1.example.com ns2.example.com',
       'registrar': 'My Registrar',
       'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
@@ -192,7 +190,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:calendar-clock',
+    'original_icon': None,
     'original_name': 'Days until expiration',
     'platform': 'whois',
     'previous_unique_id': None,
@@ -388,7 +386,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'home-assistant.io Owner',
-      'icon': 'mdi:account',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_assistant_io_owner',
@@ -420,7 +417,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:account',
+    'original_icon': None,
     'original_name': 'Owner',
     'platform': 'whois',
     'previous_unique_id': None,
@@ -464,7 +461,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'home-assistant.io Registrant',
-      'icon': 'mdi:account-edit',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_assistant_io_registrant',
@@ -496,7 +492,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:account-edit',
+    'original_icon': None,
     'original_name': 'Registrant',
     'platform': 'whois',
     'previous_unique_id': None,
@@ -540,7 +536,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'home-assistant.io Registrar',
-      'icon': 'mdi:store',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_assistant_io_registrar',
@@ -572,7 +567,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:store',
+    'original_icon': None,
     'original_name': 'Registrar',
     'platform': 'whois',
     'previous_unique_id': None,
@@ -616,7 +611,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'home-assistant.io Reseller',
-      'icon': 'mdi:store',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_assistant_io_reseller',
@@ -648,7 +642,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:store',
+    'original_icon': None,
     'original_name': 'Reseller',
     'platform': 'whois',
     'previous_unique_id': None,

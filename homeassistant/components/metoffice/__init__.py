@@ -1,4 +1,5 @@
 """The Met Office integration."""
+
 from __future__ import annotations
 
 import asyncio

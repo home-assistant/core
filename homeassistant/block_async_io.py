@@ -1,4 +1,5 @@
 """Block blocking calls being done in asyncio."""
+
 from http.client import HTTPConnection
 import time
 

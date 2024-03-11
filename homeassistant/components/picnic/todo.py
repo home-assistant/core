@@ -1,4 +1,5 @@
 """Definition of Picnic shopping cart."""
+
 from __future__ import annotations
 
 import logging
@@ -39,7 +40,6 @@ class PicnicCart(TodoListEntity, CoordinatorEntity[PicnicUpdateCoordinator]):
     """A Picnic Shopping Cart TodoListEntity."""
 
     _attr_has_entity_name = True
-    _attr_icon = "mdi:cart"
     _attr_supported_features = TodoListEntityFeature.CREATE_TODO_ITEM
     _attr_translation_key = "shopping_cart"
 

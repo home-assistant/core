@@ -1,4 +1,4 @@
-""""Unit tests for the Lupusec config flow."""
+"""Unit tests for the Lupusec config flow."""
 
 from json import JSONDecodeError
 from unittest.mock import patch

@@ -1,4 +1,5 @@
 """Coordinators for the Shelly integration."""
+
 from __future__ import annotations
 
 import asyncio

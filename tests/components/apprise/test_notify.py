@@ -1,4 +1,5 @@
 """The tests for the apprise notification platform."""
+
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 

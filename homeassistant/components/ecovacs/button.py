@@ -1,4 +1,5 @@
 """Ecovacs button module."""
+
 from dataclasses import dataclass
 
 from deebot_client.capabilities import (

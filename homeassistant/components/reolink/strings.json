@@ -103,6 +103,9 @@
       "visitor": {
         "name": "Visitor"
       },
+      "package": {
+        "name": "Package"
+      },
       "motion_lens_0": {
         "name": "Motion lens 0"
       },
@@ -124,6 +127,9 @@
       "visitor_lens_0": {
         "name": "Visitor lens 0"
       },
+      "package_lens_0": {
+        "name": "Package lens 0"
+      },
       "motion_lens_1": {
         "name": "Motion lens 1"
       },
@@ -144,6 +150,9 @@
       },
       "visitor_lens_1": {
         "name": "Visitor lens 1"
+      },
+      "package_lens_1": {
+        "name": "Package lens 1"
       }
     },
     "button": {
@@ -261,19 +270,22 @@
       "motion_sensitivity": {
         "name": "Motion sensitivity"
       },
-      "ai_face_sensititvity": {
+      "ai_face_sensitivity": {
         "name": "AI face sensitivity"
       },
-      "ai_person_sensititvity": {
+      "ai_person_sensitivity": {
         "name": "AI person sensitivity"
       },
-      "ai_vehicle_sensititvity": {
+      "ai_vehicle_sensitivity": {
         "name": "AI vehicle sensitivity"
       },
-      "ai_pet_sensititvity": {
+      "ai_package_sensitivity": {
+        "name": "AI package sensitivity"
+      },
+      "ai_pet_sensitivity": {
         "name": "AI pet sensitivity"
       },
-      "ai_animal_sensititvity": {
+      "ai_animal_sensitivity": {
         "name": "AI animal sensitivity"
       },
       "ai_face_delay": {
@@ -284,6 +296,9 @@
       },
       "ai_vehicle_delay": {
         "name": "AI vehicle delay"
+      },
+      "ai_package_delay": {
+        "name": "AI package delay"
       },
       "ai_pet_delay": {
         "name": "AI pet delay"
@@ -348,6 +363,9 @@
       "ptz_preset": {
         "name": "PTZ preset"
       },
+      "play_quick_reply_message": {
+        "name": "Play quick reply message"
+      },
       "auto_quick_reply_message": {
         "name": "Auto quick reply message",
         "state": {
@@ -367,7 +385,8 @@
         "state": {
           "stayoff": "Stay off",
           "auto": "Auto",
-          "alwaysonatnight": "Auto & always on at night"
+          "alwaysonatnight": "Auto & always on at night",
+          "alwayson": "Always on"
         }
       }
     },
@@ -400,8 +419,11 @@
       "auto_focus": {
         "name": "Auto focus"
       },
-      "gaurd_return": {
+      "guard_return": {
         "name": "Guard return"
+      },
+      "ptz_patrol": {
+        "name": "PTZ patrol"
       },
       "email": {
         "name": "Email on event"

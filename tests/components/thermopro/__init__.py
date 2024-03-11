@@ -1,6 +1,5 @@
 """Tests for the ThermoPro integration."""
 
-
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 NOT_THERMOPRO_SERVICE_INFO = BluetoothServiceInfo(

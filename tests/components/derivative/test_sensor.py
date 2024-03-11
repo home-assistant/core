@@ -1,4 +1,5 @@
 """The tests for the derivative sensor platform."""
+
 from datetime import timedelta
 from math import sin
 import random

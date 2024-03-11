@@ -1,4 +1,5 @@
 """Test the NuHeat config flow."""
+
 from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 

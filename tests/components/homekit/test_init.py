@@ -1,4 +1,5 @@
 """Test HomeKit initialization."""
+
 from unittest.mock import patch
 
 import pytest
@@ -33,6 +34,7 @@ async def test_humanify_homekit_changed_event(
     with patch("homeassistant.components.homekit.HomeKit"):
         assert await async_setup_component(hass, "homekit", {"homekit": {}})
     assert await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
 
     event1, event2 = mock_humanify(
         hass,

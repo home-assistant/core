@@ -1,4 +1,5 @@
 """Test floor registry API."""
+
 import pytest
 
 from homeassistant.components.config import floor_registry

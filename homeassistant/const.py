@@ -1,4 +1,5 @@
 """Constants used by Home Assistant components."""
+
 from __future__ import annotations
 
 from enum import StrEnum
@@ -1214,6 +1215,7 @@ CONCENTRATION_PARTS_PER_BILLION: Final = "ppb"
 class UnitOfSpeed(StrEnum):
     """Speed units."""
 
+    BEAUFORT = "Beaufort"
     FEET_PER_SECOND = "ft/s"
     METERS_PER_SECOND = "m/s"
     KILOMETERS_PER_HOUR = "km/h"

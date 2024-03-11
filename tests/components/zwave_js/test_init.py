@@ -1,4 +1,5 @@
 """Test the Z-Wave JS init module."""
+
 import asyncio
 from copy import deepcopy
 import logging

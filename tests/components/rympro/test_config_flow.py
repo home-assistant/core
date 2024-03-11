@@ -1,4 +1,5 @@
 """Test the Read Your Meter Pro config flow."""
+
 from unittest.mock import patch
 
 import pytest

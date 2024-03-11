@@ -1,4 +1,5 @@
 """Home Assistant wrapper for a pyWeMo device."""
+
 from __future__ import annotations
 
 import asyncio
@@ -244,7 +245,7 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-en
 def _create_device_info(wemo: WeMoDevice) -> DeviceInfo:
     """Create device information. Modify if special device."""
     _dev_info = _device_info(wemo)
-    if wemo.model_name == "DLI emulated Belkin Socket":
+    if wemo.model_name.lower() == "dli emulated belkin socket":
         _dev_info[ATTR_CONFIGURATION_URL] = f"http://{wemo.host}"
         _dev_info[ATTR_IDENTIFIERS] = {(DOMAIN, wemo.serial_number[:-1])}
     return _dev_info

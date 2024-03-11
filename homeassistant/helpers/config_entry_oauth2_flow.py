@@ -5,6 +5,7 @@ This module exists of the following parts:
  - OAuth2 implementation that works with local provided client ID/secret
 
 """
+
 from __future__ import annotations
 
 from abc import ABC, ABCMeta, abstractmethod
@@ -455,7 +456,7 @@ class OAuth2AuthorizeCallbackView(http.HomeAssistantView):
         if "state" not in request.query:
             return web.Response(text="Missing state parameter")
 
-        hass = request.app["hass"]
+        hass = request.app[http.KEY_HASS]
 
         state = _decode_jwt(hass, request.query["state"])
 

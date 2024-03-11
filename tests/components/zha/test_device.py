@@ -1,4 +1,5 @@
 """Test ZHA device switch."""
+
 from datetime import timedelta
 import logging
 import time
