@@ -23,25 +23,14 @@ from .const import DOMAIN
 from .coordinator import GitHubDataUpdateCoordinator
 
 
-@dataclass(frozen=True)
-class BaseEntityDescriptionMixin:
-    """Mixin for required GitHub base description keys."""
+@dataclass(frozen=True, kw_only=True)
+class GitHubSensorEntityDescription(SensorEntityDescription):
+    """Describes GitHub issue sensor entity."""
 
     value_fn: Callable[[dict[str, Any]], StateType]
-
-
-@dataclass(frozen=True)
-class BaseEntityDescription(SensorEntityDescription):
-    """Describes GitHub sensor entity default overrides."""
-
     icon: str = "mdi:github"
     attr_fn: Callable[[dict[str, Any]], Mapping[str, Any] | None] = lambda data: None
     avabl_fn: Callable[[dict[str, Any]], bool] = lambda data: True
-
-
-@dataclass(frozen=True)
-class GitHubSensorEntityDescription(BaseEntityDescription, BaseEntityDescriptionMixin):
-    """Describes GitHub issue sensor entity."""
 
 
 SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
