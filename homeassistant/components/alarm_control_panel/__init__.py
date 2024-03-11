@@ -22,6 +22,7 @@ from homeassistant.const import (
     SERVICE_ALARM_TRIGGER,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.deprecation import (
@@ -184,6 +185,21 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
         return self._attr_code_arm_required
 
     @final
+    @callback
+    def check_code_arm_required(self, code: str | None) -> str | None:
+        """Check if code arm required and no code is given raise."""
+        if not (_code := self.add_default_code(code)) and self.code_arm_required:
+            raise ServiceValidationError(
+                f"Arming requires a code but none was given for {self.entity_id}",
+                translation_domain=DOMAIN,
+                translation_key="code_arm_required",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                },
+            )
+        return _code
+
+    @final
     async def async_handle_alarm_disarm(self, code: str | None = None) -> None:
         """Add default code and disarm."""
         await self.async_alarm_disarm(self.add_default_code(code))
@@ -199,7 +215,7 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
     @final
     async def async_handle_alarm_arm_home(self, code: str | None = None) -> None:
         """Add default code and arm home."""
-        await self.async_alarm_arm_home(self.add_default_code(code))
+        await self.async_alarm_arm_home(self.check_code_arm_required(code))
 
     def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
@@ -212,7 +228,7 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
     @final
     async def async_handle_alarm_arm_away(self, code: str | None = None) -> None:
         """Add default code and arm away."""
-        await self.async_alarm_arm_away(self.add_default_code(code))
+        await self.async_alarm_arm_away(self.check_code_arm_required(code))
 
     def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
@@ -225,7 +241,7 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
     @final
     async def async_handle_alarm_arm_night(self, code: str | None = None) -> None:
         """Add default code and arm night."""
-        await self.async_alarm_arm_night(self.add_default_code(code))
+        await self.async_alarm_arm_night(self.check_code_arm_required(code))
 
     def alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
@@ -238,7 +254,7 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
     @final
     async def async_handle_alarm_arm_vacation(self, code: str | None = None) -> None:
         """Add default code and arm vacation."""
-        await self.async_alarm_arm_vacation(self.add_default_code(code))
+        await self.async_alarm_arm_vacation(self.check_code_arm_required(code))
 
     def alarm_arm_vacation(self, code: str | None = None) -> None:
         """Send arm vacation command."""
@@ -261,7 +277,7 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
         self, code: str | None = None
     ) -> None:
         """Add default code and arm custom bypass."""
-        await self.async_alarm_arm_custom_bypass(self.add_default_code(code))
+        await self.async_alarm_arm_custom_bypass(self.check_code_arm_required(code))
 
     def alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send arm custom bypass command."""
