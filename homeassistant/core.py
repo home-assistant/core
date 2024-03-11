@@ -764,7 +764,6 @@ class HomeAssistant:
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R]],
         *args: Any,
-        eager_start: bool = False,
         background: bool = False,
     ) -> asyncio.Future[_R] | None:
         ...
@@ -775,7 +774,6 @@ class HomeAssistant:
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
         *args: Any,
-        eager_start: bool = False,
         background: bool = False,
     ) -> asyncio.Future[_R] | None:
         ...
@@ -785,14 +783,12 @@ class HomeAssistant:
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
         *args: Any,
-        eager_start: bool = True,
         background: bool = False,
     ) -> asyncio.Future[_R] | None:
         """Run a HassJob from within the event loop.
 
         This method must be run in the event loop.
 
-        If eager_start is True, coroutine functions will be scheduled eagerly.
         If background is True, the task will created as a background task.
 
         hassjob: HassJob
@@ -809,7 +805,7 @@ class HomeAssistant:
             return None
 
         return self.async_add_hass_job(
-            hassjob, *args, eager_start=eager_start, background=background
+            hassjob, *args, eager_start=True, background=background
         )
 
     @overload
@@ -847,7 +843,7 @@ class HomeAssistant:
         args: parameters for method to call.
         """
         if asyncio.iscoroutine(target):
-            return self.async_create_task(target)
+            return self.async_create_task(target, eager_start=True)
 
         # This code path is performance sensitive and uses
         # if TYPE_CHECKING to avoid the overhead of constructing
@@ -855,7 +851,7 @@ class HomeAssistant:
         # https://github.com/home-assistant/core/pull/71960
         if TYPE_CHECKING:
             target = cast(Callable[..., Coroutine[Any, Any, _R] | _R], target)
-        return self.async_run_hass_job(HassJob(target), *args, eager_start=True)
+        return self.async_run_hass_job(HassJob(target), *args)
 
     def block_till_done(self) -> None:
         """Block until all pending work is done."""
@@ -1369,7 +1365,7 @@ class EventBus:
                     continue
             if run_immediately:
                 try:
-                    self._hass.async_run_hass_job(job, event, eager_start=True)
+                    self._hass.async_run_hass_job(job, event)
                 except Exception:  # pylint: disable=broad-except
                     _LOGGER.exception("Error running job: %s", job)
             else:
