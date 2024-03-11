@@ -1,4 +1,5 @@
 """Test the Medcom Inspector BLE config flow."""
+
 from unittest.mock import patch
 
 from bleak import BleakError

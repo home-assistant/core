@@ -1,4 +1,5 @@
 """Tests for the devolo Home Network buttons."""
+
 from unittest.mock import AsyncMock
 
 from devolo_plc_api.exceptions.device import DevicePasswordProtected, DeviceUnavailable

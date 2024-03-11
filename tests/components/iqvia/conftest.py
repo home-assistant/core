@@ -1,4 +1,5 @@
 """Define test fixtures for IQVIA."""
+
 import json
 from unittest.mock import patch
 

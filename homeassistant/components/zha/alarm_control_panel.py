@@ -1,4 +1,5 @@
 """Alarm control panels on Zigbee Home Automation networks."""
+
 from __future__ import annotations
 
 import functools
@@ -28,7 +29,7 @@ from .core import discovery
 from .core.cluster_handlers.security import (
     SIGNAL_ALARM_TRIGGERED,
     SIGNAL_ARMED_STATE_CHANGED,
-    IasAce as AceClusterHandler,
+    IasAceClusterHandler,
 )
 from .core.const import (
     CLUSTER_HANDLER_IAS_ACE,
@@ -96,7 +97,7 @@ class ZHAAlarmControlPanel(ZhaEntity, AlarmControlPanelEntity):
         """Initialize the ZHA alarm control device."""
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
         cfg_entry = zha_device.gateway.config_entry
-        self._cluster_handler: AceClusterHandler = cluster_handlers[0]
+        self._cluster_handler: IasAceClusterHandler = cluster_handlers[0]
         self._cluster_handler.panel_code = async_get_zha_config_value(
             cfg_entry, ZHA_ALARM_OPTIONS, CONF_ALARM_MASTER_CODE, "1234"
         )

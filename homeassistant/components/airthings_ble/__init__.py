@@ -1,4 +1,5 @@
 """The Airthings BLE integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -40,10 +41,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Could not find Airthings device with address {address}"
         )
 
+    airthings = AirthingsBluetoothDeviceData(_LOGGER, elevation, is_metric)
+
     async def _async_update_method() -> AirthingsDevice:
         """Get data from Airthings BLE."""
         ble_device = bluetooth.async_ble_device_from_address(hass, address)
-        airthings = AirthingsBluetoothDeviceData(_LOGGER, elevation, is_metric)
 
         try:
             data = await airthings.update_device(ble_device)  # type: ignore[arg-type]

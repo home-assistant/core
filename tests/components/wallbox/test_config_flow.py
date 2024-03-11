@@ -1,4 +1,5 @@
 """Test the Wallbox config flow."""
+
 from http import HTTPStatus
 import json
 
@@ -42,7 +43,7 @@ test_response = json.loads(
 
 async def test_show_set_form(hass: HomeAssistant) -> None:
     """Test that the setup form is served."""
-    flow = config_flow.ConfigFlow()
+    flow = config_flow.WallboxConfigFlow()
     flow.hass = hass
     result = await flow.async_step_user(user_input=None)
 
@@ -188,7 +189,7 @@ async def test_form_reauth_invalid(hass: HomeAssistant, entry: MockConfigEntry) 
     with requests_mock.Mocker() as mock_request:
         mock_request.get(
             "https://user-api.wall-box.com/users/signin",
-            text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
+            text='{"jwt":"fakekeyhere","refresh_token": "refresh_fakekeyhere","user_id":12345,"ttl":145656758,"refresh_token_ttl":145756758,"error":false,"status":200}',
             status_code=200,
         )
         mock_request.get(

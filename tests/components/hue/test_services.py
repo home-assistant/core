@@ -1,4 +1,5 @@
 """Test Hue services."""
+
 from unittest.mock import patch
 
 from homeassistant import config_entries

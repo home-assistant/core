@@ -1,4 +1,5 @@
 """Support for the World Air Quality Index service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -153,17 +154,12 @@ async def async_setup_platform(
         )
 
 
-@dataclass(frozen=True)
-class WAQIMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class WAQISensorEntityDescription(SensorEntityDescription):
+    """Describes WAQI sensor entity."""
 
     available_fn: Callable[[WAQIAirQuality], bool]
     value_fn: Callable[[WAQIAirQuality], StateType]
-
-
-@dataclass(frozen=True)
-class WAQISensorEntityDescription(SensorEntityDescription, WAQIMixin):
-    """Describes WAQI sensor entity."""
 
 
 SENSORS: list[WAQISensorEntityDescription] = [

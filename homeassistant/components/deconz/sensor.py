@@ -54,7 +54,7 @@ import homeassistant.util.dt as dt_util
 
 from .const import ATTR_DARK, ATTR_ON, DOMAIN as DECONZ_DOMAIN
 from .deconz_device import DeconzDevice
-from .gateway import DeconzGateway, get_gateway_from_config_entry
+from .hub import DeconzHub, get_gateway_from_config_entry
 from .util import serial_from_unique_id
 
 PROVIDES_EXTRA_ATTRIBUTES = (
@@ -386,7 +386,7 @@ class DeconzSensor(DeconzDevice[SensorResources], SensorEntity):
     def __init__(
         self,
         device: SensorResources,
-        gateway: DeconzGateway,
+        gateway: DeconzHub,
         description: DeconzSensorDescription,
     ) -> None:
         """Initialize deCONZ sensor."""
@@ -453,7 +453,7 @@ class DeconzBatteryTracker:
     def __init__(
         self,
         sensor_id: str,
-        gateway: DeconzGateway,
+        gateway: DeconzHub,
         description: DeconzSensorDescription,
         async_add_entities: AddEntitiesCallback,
     ) -> None:

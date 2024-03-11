@@ -1,4 +1,5 @@
 """The test for the HERE Travel Time sensor platform."""
+
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
@@ -486,7 +487,7 @@ async def test_route_not_found(
 async def test_restore_state(hass: HomeAssistant) -> None:
     """Test sensor restore state."""
     # Home assistant is not running yet
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     last_reset = "2022-11-29T00:00:00.000000+00:00"
     mock_restore_cache_with_extra_data(
         hass,

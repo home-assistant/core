@@ -1,4 +1,5 @@
 """Support for Melissa climate."""
+
 import melissa
 import voluptuous as vol
 

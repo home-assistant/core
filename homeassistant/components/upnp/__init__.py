@@ -1,4 +1,5 @@
 """UPnP/IGD integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -72,7 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         async with asyncio.timeout(10):
             await device_discovered_event.wait()
-    except asyncio.TimeoutError as err:
+    except TimeoutError as err:
         raise ConfigEntryNotReady(f"Device not discovered: {usn}") from err
     finally:
         cancel_discovered_callback()

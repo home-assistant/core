@@ -1,4 +1,5 @@
 """The Energy integration."""
+
 from __future__ import annotations
 
 from homeassistant.components import frontend

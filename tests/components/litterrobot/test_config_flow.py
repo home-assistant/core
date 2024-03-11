@@ -1,4 +1,5 @@
 """Test the Litter-Robot config flow."""
+
 from unittest.mock import patch
 
 from pylitterbot import Account

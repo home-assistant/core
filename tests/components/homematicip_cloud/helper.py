@@ -1,4 +1,5 @@
 """Helper for HomematicIP Cloud Tests."""
+
 import json
 from unittest.mock import Mock, patch
 

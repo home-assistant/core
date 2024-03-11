@@ -1,4 +1,5 @@
 """YoLink BinarySensor."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -49,7 +50,6 @@ SENSOR_DEVICE_TYPE = [
 SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
     YoLinkBinarySensorEntityDescription(
         key="door_state",
-        icon="mdi:door",
         device_class=BinarySensorDeviceClass.DOOR,
         value=lambda value: value == "open" if value is not None else None,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_DOOR_SENSOR,
@@ -63,7 +63,7 @@ SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
     YoLinkBinarySensorEntityDescription(
         key="leak_state",
         device_class=BinarySensorDeviceClass.MOISTURE,
-        value=lambda value: value == "alert" if value is not None else None,
+        value=lambda value: value in ("alert", "full") if value is not None else None,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_LEAK_SENSOR,
     ),
     YoLinkBinarySensorEntityDescription(

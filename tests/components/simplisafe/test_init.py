@@ -1,4 +1,5 @@
 """Define tests for SimpliSafe setup."""
+
 from unittest.mock import patch
 
 from homeassistant.components.simplisafe import DOMAIN

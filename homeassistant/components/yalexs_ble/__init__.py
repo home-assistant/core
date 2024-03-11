@@ -1,7 +1,6 @@
 """The Yale Access Bluetooth integration."""
-from __future__ import annotations
 
-import asyncio
+from __future__ import annotations
 
 from yalexs_ble import (
     AuthError,
@@ -17,7 +16,7 @@ from yalexs_ble import (
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import (
@@ -75,6 +74,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # We may already have the advertisement, so check for it.
     if service_info := async_find_existing_service_info(hass, local_name, address):
         push_lock.update_advertisement(service_info.device, service_info.advertisement)
+    elif hass.state is CoreState.starting:
+        # If we are starting and the advertisement is not found, do not delay
+        # the setup. We will wait for the advertisement to be found and then
+        # discovery will trigger setup retry.
+        raise ConfigEntryNotReady("{local_name} ({address}) not advertising yet")
 
     entry.async_on_unload(
         bluetooth.async_register_callback(
@@ -89,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await push_lock.wait_for_first_update(DEVICE_TIMEOUT)
     except AuthError as ex:
         raise ConfigEntryAuthFailed(str(ex)) from ex
-    except (YaleXSBLEError, asyncio.TimeoutError) as ex:
+    except (YaleXSBLEError, TimeoutError) as ex:
         raise ConfigEntryNotReady(
             f"{ex}; Try moving the Bluetooth adapter closer to {local_name}"
         ) from ex

@@ -1,4 +1,5 @@
 """Representation of Venstar sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

@@ -1,4 +1,5 @@
 """Test Automation config panel."""
+
 from http import HTTPStatus
 import json
 from unittest.mock import ANY, patch
@@ -7,6 +8,7 @@ import pytest
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
+from homeassistant.components.config import scene
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -27,7 +29,7 @@ async def test_create_scene(
     setup_scene,
 ) -> None:
     """Test creating a scene."""
-    with patch.object(config, "SECTIONS", ["scene"]):
+    with patch.object(config, "SECTIONS", [scene]):
         await async_setup_component(hass, "config", {})
 
     assert sorted(hass.states.async_entity_ids("scene")) == []
@@ -74,7 +76,7 @@ async def test_update_scene(
     setup_scene,
 ) -> None:
     """Test updating a scene."""
-    with patch.object(config, "SECTIONS", ["scene"]):
+    with patch.object(config, "SECTIONS", [scene]):
         await async_setup_component(hass, "config", {})
 
     assert sorted(hass.states.async_entity_ids("scene")) == []
@@ -122,7 +124,7 @@ async def test_bad_formatted_scene(
     setup_scene,
 ) -> None:
     """Test that we handle scene without ID."""
-    with patch.object(config, "SECTIONS", ["scene"]):
+    with patch.object(config, "SECTIONS", [scene]):
         await async_setup_component(hass, "config", {})
 
     assert sorted(hass.states.async_entity_ids("scene")) == []
@@ -192,7 +194,7 @@ async def test_delete_scene(
 
     assert len(entity_registry.entities) == 2
 
-    with patch.object(config, "SECTIONS", ["scene"]):
+    with patch.object(config, "SECTIONS", [scene]):
         assert await async_setup_component(hass, "config", {})
 
     assert sorted(hass.states.async_entity_ids("scene")) == [
@@ -232,7 +234,7 @@ async def test_api_calls_require_admin(
     setup_scene,
 ) -> None:
     """Test scene APIs endpoints do not work as a normal user."""
-    with patch.object(config, "SECTIONS", ["scene"]):
+    with patch.object(config, "SECTIONS", [scene]):
         await async_setup_component(hass, "config", {})
 
     hass_config_store["scenes.yaml"] = [

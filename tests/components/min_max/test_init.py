@@ -1,4 +1,5 @@
 """Test the Min/Max integration."""
+
 import pytest
 
 from homeassistant.components.min_max.const import DOMAIN

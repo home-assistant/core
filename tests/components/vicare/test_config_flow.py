@@ -1,4 +1,5 @@
 """Test the ViCare config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -30,7 +31,7 @@ VALID_CONFIG = {
 DHCP_INFO = dhcp.DhcpServiceInfo(
     ip="1.1.1.1",
     hostname="mock_hostname",
-    macaddress=MOCK_MAC,
+    macaddress=MOCK_MAC.lower().replace(":", ""),
 )
 
 

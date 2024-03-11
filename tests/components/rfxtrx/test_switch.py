@@ -1,4 +1,5 @@
 """The tests for the RFXtrx switch platform."""
+
 from unittest.mock import call
 
 import pytest

@@ -1,4 +1,5 @@
 """Support for Overkiz switches."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -24,18 +25,12 @@ from .const import DOMAIN
 from .entity import OverkizDescriptiveEntity
 
 
-@dataclass(frozen=True)
-class OverkizSwitchDescriptionMixin:
-    """Define an entity description mixin for switch entities."""
+@dataclass(frozen=True, kw_only=True)
+class OverkizSwitchDescription(SwitchEntityDescription):
+    """Class to describe an Overkiz switch."""
 
     turn_on: str
     turn_off: str
-
-
-@dataclass(frozen=True)
-class OverkizSwitchDescription(SwitchEntityDescription, OverkizSwitchDescriptionMixin):
-    """Class to describe an Overkiz switch."""
-
     is_on: Callable[[Callable[[str], OverkizStateType]], bool] | None = None
     turn_on_args: OverkizStateType | list[OverkizStateType] | None = None
     turn_off_args: OverkizStateType | list[OverkizStateType] | None = None

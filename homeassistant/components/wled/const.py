@@ -1,4 +1,5 @@
 """Constants for the WLED integration."""
+
 from datetime import timedelta
 import logging
 

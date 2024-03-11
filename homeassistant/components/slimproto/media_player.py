@@ -1,4 +1,5 @@
 """MediaPlayer platform for SlimProto Player integration."""
+
 from __future__ import annotations
 
 import asyncio
