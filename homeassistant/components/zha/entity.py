@@ -202,6 +202,8 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
             self._attr_entity_category = EntityCategory.CONFIG
         elif entity_metadata.entity_type is EntityType.DIAGNOSTIC:
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        else:
+            self._attr_entity_category = None
 
     @property
     def available(self) -> bool:

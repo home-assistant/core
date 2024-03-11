@@ -85,12 +85,18 @@ QUIRKS_ENTITY_META_TO_ENTITY_CLASS = {
         WriteAttributeButtonMetadata,
         EntityType.CONFIG,
     ): button.ZHAAttributeButton,
+    (
+        Platform.BUTTON,
+        WriteAttributeButtonMetadata,
+        EntityType.STANDARD,
+    ): button.ZHAAttributeButton,
     (Platform.BUTTON, ZCLCommandButtonMetadata, EntityType.CONFIG): button.ZHAButton,
     (
         Platform.BUTTON,
         ZCLCommandButtonMetadata,
         EntityType.DIAGNOSTIC,
     ): button.ZHAButton,
+    (Platform.BUTTON, ZCLCommandButtonMetadata, EntityType.STANDARD): button.ZHAButton,
     (
         Platform.BINARY_SENSOR,
         BinarySensorMetadata,
@@ -111,6 +117,7 @@ QUIRKS_ENTITY_META_TO_ENTITY_CLASS = {
     (Platform.SENSOR, ZCLSensorMetadata, EntityType.DIAGNOSTIC): sensor.Sensor,
     (Platform.SENSOR, ZCLSensorMetadata, EntityType.STANDARD): sensor.Sensor,
     (Platform.SELECT, ZCLEnumMetadata, EntityType.CONFIG): select.ZCLEnumSelectEntity,
+    (Platform.SELECT, ZCLEnumMetadata, EntityType.STANDARD): select.ZCLEnumSelectEntity,
     (
         Platform.SELECT,
         ZCLEnumMetadata,
