@@ -1,4 +1,5 @@
 """The tests for Netatmo device triggers."""
+
 import pytest
 from pytest_unordered import unordered
 

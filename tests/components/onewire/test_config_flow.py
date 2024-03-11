@@ -1,4 +1,5 @@
 """Tests for 1-Wire config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from pyownet import protocol
@@ -156,7 +157,7 @@ async def test_user_options_set_single(
 ) -> None:
     """Test configuring a single device."""
     # Clear config options to certify functionality when starting from scratch
-    config_entry.options = {}
+    hass.config_entries.async_update_entry(config_entry, options={})
 
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

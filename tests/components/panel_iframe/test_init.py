@@ -1,4 +1,5 @@
 """The tests for the panel_iframe component."""
+
 import pytest
 
 from homeassistant.components import frontend

@@ -1,4 +1,5 @@
 """Support forked_daapd media player."""
+
 from __future__ import annotations
 
 import asyncio
@@ -668,7 +669,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         try:
             async with asyncio.timeout(CALLBACK_TIMEOUT):
                 await self._paused_event.wait()  # wait for paused
-        except asyncio.TimeoutError:
+        except TimeoutError:
             self._pause_requested = False
         self._paused_event.clear()
 
@@ -764,7 +765,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             async with asyncio.timeout(TTS_TIMEOUT):
                 await self._tts_playing_event.wait()
             # we have started TTS, now wait for completion
-        except asyncio.TimeoutError:
+        except TimeoutError:
             self._tts_requested = False
             _LOGGER.warning("TTS request timed out")
         await asyncio.sleep(

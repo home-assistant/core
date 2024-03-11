@@ -1,4 +1,5 @@
 """Test the Forecast.Solar config flow."""
+
 from unittest.mock import AsyncMock
 
 from homeassistant.components.forecast_solar.const import (

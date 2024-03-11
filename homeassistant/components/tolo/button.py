@@ -30,7 +30,6 @@ class ToloLampNextColorButton(ToloSaunaCoordinatorEntity, ButtonEntity):
     """Button for switching to the next lamp color."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon = "mdi:palette"
     _attr_translation_key = "next_color"
 
     def __init__(

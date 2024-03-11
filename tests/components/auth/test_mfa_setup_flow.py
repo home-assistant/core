@@ -1,4 +1,5 @@
 """Tests for the mfa setup flow."""
+
 from homeassistant import data_entry_flow
 from homeassistant.auth import auth_manager_from_config
 from homeassistant.components.auth import mfa_setup_flow

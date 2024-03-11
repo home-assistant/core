@@ -1,4 +1,5 @@
 """Platform for update integration."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -26,19 +27,12 @@ from .const import DOMAIN, REGULAR_FIRMWARE
 from .entity import DevoloCoordinatorEntity
 
 
-@dataclass(frozen=True)
-class DevoloUpdateRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class DevoloUpdateEntityDescription(UpdateEntityDescription):
+    """Describes devolo update entity."""
 
     latest_version: Callable[[UpdateFirmwareCheck], str]
     update_func: Callable[[Device], Awaitable[bool]]
-
-
-@dataclass(frozen=True)
-class DevoloUpdateEntityDescription(
-    UpdateEntityDescription, DevoloUpdateRequiredKeysMixin
-):
-    """Describes devolo update entity."""
 
 
 UPDATE_TYPES: dict[str, DevoloUpdateEntityDescription] = {

@@ -1,4 +1,5 @@
 """Plugwise Select component for Home Assistant."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -30,14 +31,12 @@ SELECT_TYPES = (
     PlugwiseSelectEntityDescription(
         key="select_schedule",
         translation_key="select_schedule",
-        icon="mdi:calendar-clock",
         command=lambda api, loc, opt: api.set_schedule_state(loc, STATE_ON, opt),
         options_key="available_schedules",
     ),
     PlugwiseSelectEntityDescription(
         key="select_regulation_mode",
         translation_key="regulation_mode",
-        icon="mdi:hvac",
         entity_category=EntityCategory.CONFIG,
         command=lambda api, loc, opt: api.set_regulation_mode(opt),
         options_key="regulation_modes",
@@ -45,7 +44,6 @@ SELECT_TYPES = (
     PlugwiseSelectEntityDescription(
         key="select_dhw_mode",
         translation_key="dhw_mode",
-        icon="mdi:shower",
         entity_category=EntityCategory.CONFIG,
         command=lambda api, loc, opt: api.set_dhw_mode(opt),
         options_key="dhw_modes",
@@ -53,7 +51,6 @@ SELECT_TYPES = (
     PlugwiseSelectEntityDescription(
         key="select_gateway_mode",
         translation_key="gateway_mode",
-        icon="mdi:cog-outline",
         entity_category=EntityCategory.CONFIG,
         command=lambda api, loc, opt: api.set_gateway_mode(opt),
         options_key="gateway_modes",

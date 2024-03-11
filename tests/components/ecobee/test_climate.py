@@ -1,4 +1,5 @@
 """The test for the Ecobee thermostat module."""
+
 import copy
 from http import HTTPStatus
 from unittest import mock
@@ -98,6 +99,8 @@ async def test_aux_heat_not_supported_by_default(hass: HomeAssistant) -> None:
         | ClimateEntityFeature.TARGET_HUMIDITY
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
 
 
@@ -115,6 +118,8 @@ async def test_aux_heat_supported_with_heat_pump(hass: HomeAssistant) -> None:
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.AUX_HEAT
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
 
 

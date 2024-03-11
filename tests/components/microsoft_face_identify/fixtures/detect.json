@@ -1,0 +1,27 @@
+[
+  {
+    "faceId": "c5c24a82-6845-4031-9d5d-978df9175426",
+    "faceRectangle": {
+      "width": 78,
+      "height": 78,
+      "left": 394,
+      "top": 54
+    },
+    "faceAttributes": {
+      "age": 71.0,
+      "gender": "male",
+      "smile": 0.88,
+      "facialHair": {
+        "mustache": 0.8,
+        "beard": 0.1,
+        "sideburns": 0.02
+      },
+      "glasses": "sunglasses",
+      "headPose": {
+        "roll": 2.1,
+        "yaw": 3,
+        "pitch": 0
+      }
+    }
+  }
+]

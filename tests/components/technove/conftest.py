@@ -1,4 +1,5 @@
 """Fixtures for TechnoVE integration tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -29,6 +30,16 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
         "homeassistant.components.technove.async_setup_entry", return_value=True
     ) as mock_setup:
         yield mock_setup
+
+
+@pytest.fixture
+def mock_onboarding() -> Generator[MagicMock, None, None]:
+    """Mock that Home Assistant is currently onboarding."""
+    with patch(
+        "homeassistant.components.onboarding.async_is_onboarded",
+        return_value=False,
+    ) as mock_onboarding:
+        yield mock_onboarding
 
 
 @pytest.fixture

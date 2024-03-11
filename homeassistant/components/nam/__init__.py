@@ -1,4 +1,5 @@
 """The Nettigo Air Monitor component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -49,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     options = ConnectionOptions(host=host, username=username, password=password)
     try:
         nam = await NettigoAirMonitor.create(websession, options)
-    except (ApiError, ClientError, ClientConnectorError, asyncio.TimeoutError) as err:
+    except (ApiError, ClientError, ClientConnectorError, TimeoutError) as err:
         raise ConfigEntryNotReady from err
 
     try:
@@ -90,7 +91,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class NAMDataUpdateCoordinator(DataUpdateCoordinator[NAMSensors]):
+class NAMDataUpdateCoordinator(DataUpdateCoordinator[NAMSensors]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching Nettigo Air Monitor data."""
 
     def __init__(

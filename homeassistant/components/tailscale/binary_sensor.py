@@ -1,4 +1,5 @@
 """Support for Tailscale binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -38,42 +39,36 @@ BINARY_SENSORS: tuple[TailscaleBinarySensorEntityDescription, ...] = (
     TailscaleBinarySensorEntityDescription(
         key="client_supports_hair_pinning",
         translation_key="client_supports_hair_pinning",
-        icon="mdi:wan",
         entity_category=EntityCategory.DIAGNOSTIC,
         is_on_fn=lambda device: device.client_connectivity.client_supports.hair_pinning,
     ),
     TailscaleBinarySensorEntityDescription(
         key="client_supports_ipv6",
         translation_key="client_supports_ipv6",
-        icon="mdi:wan",
         entity_category=EntityCategory.DIAGNOSTIC,
         is_on_fn=lambda device: device.client_connectivity.client_supports.ipv6,
     ),
     TailscaleBinarySensorEntityDescription(
         key="client_supports_pcp",
         translation_key="client_supports_pcp",
-        icon="mdi:wan",
         entity_category=EntityCategory.DIAGNOSTIC,
         is_on_fn=lambda device: device.client_connectivity.client_supports.pcp,
     ),
     TailscaleBinarySensorEntityDescription(
         key="client_supports_pmp",
         translation_key="client_supports_pmp",
-        icon="mdi:wan",
         entity_category=EntityCategory.DIAGNOSTIC,
         is_on_fn=lambda device: device.client_connectivity.client_supports.pmp,
     ),
     TailscaleBinarySensorEntityDescription(
         key="client_supports_udp",
         translation_key="client_supports_udp",
-        icon="mdi:wan",
         entity_category=EntityCategory.DIAGNOSTIC,
         is_on_fn=lambda device: device.client_connectivity.client_supports.udp,
     ),
     TailscaleBinarySensorEntityDescription(
         key="client_supports_upnp",
         translation_key="client_supports_upnp",
-        icon="mdi:wan",
         entity_category=EntityCategory.DIAGNOSTIC,
         is_on_fn=lambda device: device.client_connectivity.client_supports.upnp,
     ),

@@ -1,4 +1,5 @@
 """Support for HomematicIP Cloud devices."""
+
 import voluptuous as vol
 
 from homeassistant import config_entries

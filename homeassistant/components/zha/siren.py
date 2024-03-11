@@ -1,4 +1,5 @@
 """Support for ZHA sirens."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -22,7 +23,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from .core import discovery
-from .core.cluster_handlers.security import IasWd
+from .core.cluster_handlers.security import IasWdClusterHandler
 from .core.const import (
     CLUSTER_HANDLER_IAS_WD,
     SIGNAL_ADD_ENTITIES,
@@ -101,7 +102,9 @@ class ZHASiren(ZhaEntity, SirenEntity):
             WARNING_DEVICE_MODE_EMERGENCY_PANIC: "Emergency Panic",
         }
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
-        self._cluster_handler: IasWd = cast(IasWd, cluster_handlers[0])
+        self._cluster_handler: IasWdClusterHandler = cast(
+            IasWdClusterHandler, cluster_handlers[0]
+        )
         self._attr_is_on: bool = False
         self._off_listener: Callable[[], None] | None = None
 

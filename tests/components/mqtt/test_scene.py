@@ -1,4 +1,5 @@
 """The tests for the MQTT scene platform."""
+
 import copy
 from typing import Any
 from unittest.mock import patch
@@ -6,7 +7,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import mqtt, scene
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_UNKNOWN, Platform
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 
 from .test_common import (
@@ -48,13 +49,6 @@ DEFAULT_CONFIG = {
         }
     }
 }
-
-
-@pytest.fixture(autouse=True)
-def scene_platform_only():
-    """Only setup the scene platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SCENE]):
-        yield
 
 
 @pytest.mark.parametrize(

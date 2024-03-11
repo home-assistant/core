@@ -1,4 +1,5 @@
 """Support for Lagute LW-12 WiFi LED Controller."""
+
 from __future__ import annotations
 
 import logging

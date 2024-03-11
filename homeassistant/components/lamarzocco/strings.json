@@ -51,6 +51,48 @@
         "name": "Water tank empty"
       }
     },
+    "button": {
+      "start_backflush": {
+        "name": "Start backflush"
+      }
+    },
+    "calendar": {
+      "auto_on_off_schedule": {
+        "name": "Auto on/off schedule"
+      }
+    },
+    "number": {
+      "coffee_temp": {
+        "name": "Coffee target temperature"
+      },
+      "dose_key": {
+        "name": "Dose Key {key}"
+      },
+      "prebrew_on": {
+        "name": "Prebrew on time"
+      },
+      "prebrew_on_key": {
+        "name": "Prebrew on time Key {key}"
+      },
+      "prebrew_off": {
+        "name": "Prebrew off time"
+      },
+      "prebrew_off_key": {
+        "name": "Prebrew off time Key {key}"
+      },
+      "preinfusion_off": {
+        "name": "Preinfusion time"
+      },
+      "preinfusion_off_key": {
+        "name": "Preinfusion time Key {key}"
+      },
+      "steam_temp": {
+        "name": "Steam target temperature"
+      },
+      "tea_water_duration": {
+        "name": "Tea water duration"
+      }
+    },
     "select": {
       "prebrew_infusion_select": {
         "name": "Prebrew/-infusion mode",
@@ -92,6 +134,14 @@
       },
       "steam_boiler": {
         "name": "Steam boiler"
+      }
+    },
+    "update": {
+      "machine_firmware": {
+        "name": "Machine firmware"
+      },
+      "gateway_firmware": {
+        "name": "Gateway firmware"
       }
     }
   }

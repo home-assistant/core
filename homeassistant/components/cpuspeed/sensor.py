@@ -1,4 +1,5 @@
 """Support for displaying the current CPU speed."""
+
 from __future__ import annotations
 
 from cpuinfo import cpuinfo
@@ -33,7 +34,6 @@ class CPUSpeedSensor(SensorEntity):
     """Representation of a CPU sensor."""
 
     _attr_device_class = SensorDeviceClass.FREQUENCY
-    _attr_icon = "mdi:pulse"
     _attr_has_entity_name = True
     _attr_name = None
     _attr_native_unit_of_measurement = UnitOfFrequency.GIGAHERTZ

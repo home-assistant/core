@@ -1,4 +1,5 @@
 """Constants for the HomematicIP Cloud component."""
+
 import logging
 
 from homeassistant.const import Platform

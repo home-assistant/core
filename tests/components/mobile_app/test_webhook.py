@@ -1,4 +1,5 @@
 """Webhook tests for mobile_app."""
+
 from binascii import unhexlify
 from http import HTTPStatus
 from unittest.mock import patch
@@ -318,7 +319,7 @@ async def test_webhook_handle_get_config(
         "unit_system": hass_config["unit_system"],
         "location_name": hass_config["location_name"],
         "time_zone": hass_config["time_zone"],
-        "components": hass_config["components"],
+        "components": set(hass_config["components"]),
         "version": hass_config["version"],
         "theme_color": "#03A9F4",  # Default frontend theme color
         "entities": {
