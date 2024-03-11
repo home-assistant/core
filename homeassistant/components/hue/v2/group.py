@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
 from functools import lru_cache
 from typing import Any
 
@@ -139,7 +138,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         scenes = {
             x.metadata.name for x in self.api.scenes if x.group.rid == self.group.id
         }
-        light_resource_ids = (
+        light_resource_ids = tuple(
             x.id for x in self.controller.get_lights(self.resource.id)
         )
         light_names, light_entities = self._get_names_and_entity_ids_for_resource_ids(
@@ -288,7 +287,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
     @callback
     @lru_cache
     def _get_names_and_entity_ids_for_resource_ids(
-        self, resource_ids: Iterable[str]
+        self, resource_ids: tuple[str]
     ) -> tuple[set[str], set[str]]:
         """Return the names and entity ids for the given Hue (light) resource IDs."""
         ent_reg = get_ent_reg(self.hass)
