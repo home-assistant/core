@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
-from voluptuous.error import MultipleInvalid
+from voluptuous.error import Invalid
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.jellyfin.const import (
@@ -466,7 +466,7 @@ async def test_options_flow(
 
     # Bad
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    with pytest.raises(MultipleInvalid):
+    with pytest.raises(Invalid):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], user_input={CONF_AUDIO_CODEC: "ogg"}
         )
