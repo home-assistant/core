@@ -14,9 +14,12 @@ FROM ${{BUILD_FROM}}
 ENV \
     S6_SERVICES_GRACETIME={timeout} \
     UV_EXTRA_INDEX_URL="https://wheels.home-assistant.io/musllinux-index/" \
-    UV_NO_CACHE=true
+    UV_NO_CACHE=true \
+    PATH="$PATH:/root/.cargo/bin"
 
 ARG QEMU_CPU
+
+RUN curl --proto '=https' --tlsv1.2 -LsSf https://github.com/astral-sh/uv/releases/download/0.1.17/uv-installer.sh | sh
 
 WORKDIR /usr/src
 
