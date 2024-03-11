@@ -82,8 +82,7 @@ class GenericBlind(MotionblindsBLEEntity, CoverEntity):
             entry.data[CONF_BLIND_TYPE],
             BLIND_TYPE_TO_CLASS[entry.data[CONF_BLIND_TYPE]].__name__,
         )
-        MotionblindsBLEEntity.__init__(self, device, entry)
-        CoverEntity.__init__(self)
+        super().__init__(device, entry)
         self.entity_description = COVER_TYPES[entry.data[CONF_BLIND_TYPE]]
         self._device.register_running_callback(self.async_update_running)
         self._device.register_position_callback(self.async_update_position)
