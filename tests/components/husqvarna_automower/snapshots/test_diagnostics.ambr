@@ -69,13 +69,33 @@
       'total_running_time': 4564800,
       'total_searching_time': 370800,
     }),
-    'stay_out_zones': None,
+    'stay_out_zones': dict({
+      'dirty': False,
+      'zones': list([
+        dict({
+          'enabled': True,
+          'id': '81C6EEA2-D139-4FEA-B134-F22A6B3EA403',
+          'name': 'Springflowers',
+        }),
+      ]),
+    }),
     'system': dict({
       'model': '450XH-TEST',
       'name': 'Test Mower 1',
       'serial_number': 123,
     }),
-    'work_areas': None,
+    'work_areas': list([
+      dict({
+        'cutting_height': 50,
+        'name': 'Front lawn',
+        'work_area_id': 123456,
+      }),
+      dict({
+        'cutting_height': 50,
+        'name': '',
+        'work_area_id': 0,
+      }),
+    ]),
   })
 # ---
 # name: test_entry_diagnostics
