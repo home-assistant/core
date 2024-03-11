@@ -13,7 +13,6 @@ from gardena_bluetooth.exceptions import (
 )
 from gardena_bluetooth.parse import Characteristic, CharacteristicType
 
-from homeassistant.components import bluetooth
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
