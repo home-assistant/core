@@ -240,8 +240,8 @@ async def silent_ssdp_scanner(hass):
 def discover_fixture(soco):
     """Create a mock soco discover fixture."""
 
-    async def do_callback(hass, callback, *args, **kwargs):
-        await callback(
+    def do_callback(hass, callback, *args, **kwargs):
+        callback(
             ssdp.SsdpServiceInfo(
                 ssdp_location=f"http://{soco.ip_address}/",
                 ssdp_st="urn:schemas-upnp-org:device:ZonePlayer:1",
