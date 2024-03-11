@@ -57,6 +57,7 @@ async def async_setup_entry(
 
     pv_entry: PowerviewEntryData = hass.data[DOMAIN][entry.entry_id]
     coordinator: PowerviewShadeUpdateCoordinator = pv_entry.coordinator
+    shade_data = coordinator.data
 
     async def _async_initial_refresh() -> None:
         """Force position refresh shortly after adding.
@@ -73,10 +74,10 @@ async def async_setup_entry(
                 async with asyncio.timeout(10):
                     _LOGGER.debug("Initial refresh of shade: %s", shade.name)
                     await shade.refresh()
+                    shade_data.update_shade_position(shade.id, shade.current_position)
 
     entities: list[ShadeEntity] = []
     for shade in pv_entry.shade_data.values():
-        coordinator.data.update_shade_position(shade.id, shade.current_position)
         room_name = getattr(pv_entry.room_data.get(shade.room_id), ATTR_NAME, "")
         entities.extend(
             create_powerview_shade_entity(
