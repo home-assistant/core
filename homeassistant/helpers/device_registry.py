@@ -260,6 +260,11 @@ class DeviceEntry:
         """Return if entry is disabled."""
         return self.disabled_by is not None
 
+    @cached_property
+    def normalized_name(self) -> str | None:
+        """Return the normalized name."""
+        return normalize_device_name(self.name_by_user or self.name)
+
     @property
     def dict_repr(self) -> dict[str, Any]:
         """Return a dict representation of the entry."""
@@ -475,6 +480,7 @@ class DeviceRegistry(BaseRegistry):
             atomic_writes=True,
             minor_version=STORAGE_VERSION_MINOR,
         )
+        self._normalized_name_device_idx: dict[str, list[str]] = {}
 
     @callback
     def async_get(self, device_id: str) -> DeviceEntry | None:
@@ -493,6 +499,43 @@ class DeviceRegistry(BaseRegistry):
     ) -> DeviceEntry | None:
         """Check if device is registered."""
         return self.devices.get_entry(identifiers, connections)
+
+    @callback
+    def async_get_devices_by_name(self, name: str) -> list[DeviceEntry] | None:
+        """Get device by name."""
+        normalized_name = normalize_device_name(name)
+        if normalized_name not in self._normalized_name_device_idx:
+            return None
+        return [
+            self.devices[device_id]
+            for device_id in self._normalized_name_device_idx[normalized_name]
+        ]
+
+    def _async_add_device_by_name(
+        self, device_id: str, device_name: str | None
+    ) -> None:
+        """Add a device to the search index."""
+        if device_name is None:
+            return None
+
+        if (normalized_name := normalize_device_name(device_name)) is not None:
+            if normalized_name in self._normalized_name_device_idx:
+                self._normalized_name_device_idx[normalized_name].append(device_id)
+            else:
+                self._normalized_name_device_idx.update({normalized_name: [device_id]})
+
+    def _async_remove_device_by_name_from_index(
+        self, device_id: str, device_name: str | None
+    ) -> None:
+        """Remove a device name from the search index."""
+        if device_name is None:
+            return None
+
+        normalized_name = normalize_device_name(device_name)
+        if normalized_name in self._normalized_name_device_idx:
+            self._normalized_name_device_idx[normalized_name].remove(device_id)
+            if not self._normalized_name_device_idx[normalized_name]:
+                self._normalized_name_device_idx.pop(normalized_name)
 
     def _async_get_deleted_device(
         self,
@@ -623,6 +666,7 @@ class DeviceRegistry(BaseRegistry):
                     config_entry_id, connections, identifiers
                 )
             self.devices[device.id] = device
+            self._async_add_device_by_name(device.id, device.normalized_name)
             # If creating a new device, default to the config entry name
             if device_info_type == "primary" and (not name or name is UNDEFINED):
                 name = config_entry.title
@@ -802,6 +846,17 @@ class DeviceRegistry(BaseRegistry):
         if not new_values:
             return old
 
+        if new_values.get("name_by_user") != getattr(
+            old, "name_by_user"
+        ) or new_values.get("name") != getattr(old, "name"):
+            old_normalized_name = normalize_device_name(old.name_by_user or old.name)
+            new_normalized_name = normalize_device_name(
+                new_values.get("name_by_user", new_values.get("name", old.name))
+            )
+
+            self._async_remove_device_by_name_from_index(device_id, old_normalized_name)
+            self._async_add_device_by_name(device_id, new_normalized_name)
+
         new = attr.evolve(old, **new_values)
         self.devices[device_id] = new
 
@@ -830,6 +885,7 @@ class DeviceRegistry(BaseRegistry):
     def async_remove_device(self, device_id: str) -> None:
         """Remove a device from the device registry."""
         device = self.devices.pop(device_id)
+        self._async_remove_device_by_name_from_index(device_id, device.normalized_name)
         self.deleted_devices[device_id] = DeletedDeviceEntry(
             config_entries=device.config_entries,
             connections=device.connections,
@@ -856,7 +912,7 @@ class DeviceRegistry(BaseRegistry):
 
         if data is not None:
             for device in data["devices"]:
-                devices[device["id"]] = DeviceEntry(
+                device_entry = DeviceEntry(
                     area_id=device["area_id"],
                     config_entries=set(device["config_entries"]),
                     configuration_url=device["configuration_url"],
@@ -885,6 +941,10 @@ class DeviceRegistry(BaseRegistry):
                     serial_number=device["serial_number"],
                     sw_version=device["sw_version"],
                     via_device_id=device["via_device_id"],
+                )
+                devices[device["id"]] = device_entry
+                self._async_add_device_by_name(
+                    device_entry.id, device_entry.normalized_name
                 )
             # Introduced in 0.111
             for device in data["deleted_devices"]:
@@ -1204,6 +1264,13 @@ def _normalize_connections(connections: set[tuple[str, str]]) -> set[tuple[str, 
         (key, format_mac(value)) if key == CONNECTION_NETWORK_MAC else (key, value)
         for key, value in connections
     }
+
+
+def normalize_device_name(device_name: str | None) -> str | None:
+    """Normalize a device name by removing whitespace and case folding."""
+    if device_name is None or not isinstance(device_name, str):
+        return None
+    return device_name.casefold().replace(" ", "")
 
 
 # These can be removed if no deprecated constant are in this module anymore
