@@ -1,4 +1,5 @@
 """Native Home Assistant iOS app component."""
+
 import datetime
 from http import HTTPStatus
 from typing import Any
@@ -7,7 +8,7 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -348,7 +349,7 @@ class iOSIdentifyDeviceView(HomeAssistantView):
         except ValueError:
             return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
 
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
 
         data[ATTR_LAST_SEEN_AT] = datetime.datetime.now().isoformat()
 

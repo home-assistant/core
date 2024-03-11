@@ -1,4 +1,5 @@
 """Onboarding views."""
+
 from __future__ import annotations
 
 import asyncio
@@ -14,7 +15,7 @@ from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
 from homeassistant.components import person
 from homeassistant.components.auth import indieauth
-from homeassistant.components.http import KEY_HASS_REFRESH_TOKEN_ID
+from homeassistant.components.http import KEY_HASS, KEY_HASS_REFRESH_TOKEN_ID
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
@@ -85,7 +86,7 @@ class InstallationTypeOnboardingView(HomeAssistantView):
         if self._data["done"]:
             raise HTTPUnauthorized()
 
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
         info = await async_get_system_info(hass)
         return self.json({"installation_type": info["installation_type"]})
 
@@ -136,7 +137,7 @@ class UserOnboardingView(_BaseOnboardingView):
     )
     async def post(self, request: web.Request, data: dict[str, str]) -> web.Response:
         """Handle user creation, area creation."""
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
 
         async with self._lock:
             if self._async_is_done():
@@ -190,7 +191,7 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
 
     async def post(self, request: web.Request) -> web.Response:
         """Handle finishing core config step."""
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
 
         async with self._lock:
             if self._async_is_done():
@@ -250,7 +251,7 @@ class IntegrationOnboardingView(_BaseOnboardingView):
     )
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle token creation."""
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
         refresh_token_id = request[KEY_HASS_REFRESH_TOKEN_ID]
 
         async with self._lock:
@@ -263,7 +264,7 @@ class IntegrationOnboardingView(_BaseOnboardingView):
 
             # Validate client ID and redirect uri
             if not await indieauth.verify_redirect_uri(
-                request.app["hass"], data["client_id"], data["redirect_uri"]
+                request.app[KEY_HASS], data["client_id"], data["redirect_uri"]
             ):
                 return self.json_message(
                     "invalid client id or redirect uri", HTTPStatus.BAD_REQUEST
@@ -294,7 +295,7 @@ class AnalyticsOnboardingView(_BaseOnboardingView):
 
     async def post(self, request: web.Request) -> web.Response:
         """Handle finishing analytics step."""
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
 
         async with self._lock:
             if self._async_is_done():

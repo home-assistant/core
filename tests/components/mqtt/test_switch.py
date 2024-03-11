@@ -1,4 +1,5 @@
 """The tests for the MQTT switch platform."""
+
 import copy
 from typing import Any
 from unittest.mock import patch
@@ -12,7 +13,6 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
-    Platform,
 )
 from homeassistant.core import HomeAssistant, State
 
@@ -54,13 +54,6 @@ from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {switch.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
 }
-
-
-@pytest.fixture(autouse=True)
-def switch_platform_only():
-    """Only setup the switch platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SWITCH]):
-        yield
 
 
 @pytest.mark.parametrize(

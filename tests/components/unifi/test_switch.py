@@ -1,4 +1,5 @@
 """UniFi Network switch platform tests."""
+
 from copy import deepcopy
 from datetime import timedelta
 

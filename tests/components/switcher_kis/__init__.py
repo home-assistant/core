@@ -1,4 +1,5 @@
 """Test cases and object for the Switcher integration tests."""
+
 from homeassistant.components.switcher_kis.const import DOMAIN
 from homeassistant.core import HomeAssistant
 

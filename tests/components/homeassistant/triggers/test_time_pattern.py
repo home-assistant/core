@@ -1,4 +1,5 @@
 """The tests for the time_pattern automation."""
+
 from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory

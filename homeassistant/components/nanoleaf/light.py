@@ -1,4 +1,5 @@
 """Support for Nanoleaf Lights."""
+
 from __future__ import annotations
 
 import math

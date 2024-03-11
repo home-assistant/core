@@ -1,4 +1,5 @@
 """Test the SiteSage Emonitor config flow."""
+
 from unittest.mock import MagicMock, patch
 
 from aioemonitor.monitor import EmonitorNetwork, EmonitorStatus

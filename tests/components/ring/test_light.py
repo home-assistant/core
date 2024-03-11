@@ -1,4 +1,5 @@
 """The tests for the Ring light platform."""
+
 import requests_mock
 
 from homeassistant.const import Platform

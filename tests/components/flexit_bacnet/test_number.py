@@ -1,4 +1,5 @@
 """Tests for the Flexit Nordic (BACnet) number entities."""
+
 from unittest.mock import AsyncMock
 
 from flexit_bacnet import DecodingError

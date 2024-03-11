@@ -1,4 +1,5 @@
 """The tests for the Homematic notification platform."""
+
 import homeassistant.components.notify as notify_comp
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component

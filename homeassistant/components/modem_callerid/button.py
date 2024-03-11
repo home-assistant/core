@@ -1,4 +1,5 @@
 """Support for Phone Modem button."""
+
 from __future__ import annotations
 
 from phone_modem import PhoneModem

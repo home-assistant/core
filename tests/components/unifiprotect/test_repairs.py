@@ -1,4 +1,5 @@
 """Test repairs for unifiprotect."""
+
 from __future__ import annotations
 
 from copy import copy

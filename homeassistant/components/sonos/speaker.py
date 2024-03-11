@@ -1,4 +1,5 @@
 """Base class for common speaker tasks."""
+
 from __future__ import annotations
 
 import asyncio

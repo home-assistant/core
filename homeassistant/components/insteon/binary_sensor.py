@@ -1,4 +1,5 @@
 """Support for INSTEON dimmers via PowerLinc Modem."""
+
 from pyinsteon.groups import (
     CO_SENSOR,
     DOOR_SENSOR,

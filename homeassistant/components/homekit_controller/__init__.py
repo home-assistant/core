@@ -1,4 +1,5 @@
 """Support for Homekit device discovery."""
+
 from __future__ import annotations
 
 import asyncio

@@ -1,4 +1,5 @@
 """The Network Configuration integration."""
+
 from __future__ import annotations
 
 from ipaddress import IPv4Address, IPv6Address, ip_interface

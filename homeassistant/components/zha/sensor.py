@@ -1,4 +1,5 @@
 """Sensors on Zigbee Home Automation networks."""
+
 from __future__ import annotations
 
 import asyncio

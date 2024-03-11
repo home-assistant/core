@@ -1,4 +1,5 @@
 """Test the Network Configuration."""
+
 from ipaddress import IPv4Address
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch

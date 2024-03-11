@@ -1,4 +1,5 @@
 """Test ipma system health."""
+
 import asyncio
 
 from homeassistant.components.ipma.system_health import IPMA_API_URL

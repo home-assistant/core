@@ -1,4 +1,5 @@
 """Support for OpenCV classification on images."""
+
 from __future__ import annotations
 
 from datetime import timedelta

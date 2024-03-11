@@ -1,4 +1,5 @@
 """Support for TPLink Omada device firmware updates."""
+
 from __future__ import annotations
 
 from datetime import timedelta

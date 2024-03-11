@@ -1,4 +1,5 @@
 """Test config validators."""
+
 from collections import OrderedDict
 from datetime import date, datetime, timedelta
 import enum
