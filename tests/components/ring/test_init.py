@@ -263,6 +263,6 @@ async def test_issue_deprecated_service_ring_update(
 
     assert (
         "Detected use of service 'ring.update'. "
-        "This is deprecated and will stop working in Home Assistant 2024.7. "
+        "This is deprecated and will stop working in Home Assistant 2024.10. "
         "Use 'homeassistant.update_entity' instead which updates all ring entities"
     ) in caplog.text

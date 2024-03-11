@@ -65,14 +65,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Refresh all ring data."""
         _LOGGER.warning(
             "Detected use of service 'ring.update'. "
-            "This is deprecated and will stop working in Home Assistant 2024.7. "
+            "This is deprecated and will stop working in Home Assistant 2024.10. "
             "Use 'homeassistant.update_entity' instead which updates all ring entities",
         )
         async_create_issue(
             hass,
             DOMAIN,
             "deprecated_service_ring_update",
-            breaks_in_ha_version="2024.7.0",
+            breaks_in_ha_version="2024.10.0",
             is_fixable=True,
             is_persistent=False,
             issue_domain=DOMAIN,
