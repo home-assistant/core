@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/jewish_calendar",
   "iot_class": "calculated",
   "loggers": ["hdate"],
-  "requirements": ["hdate==0.10.4"]
+  "requirements": ["hdate==0.10.8"]
 }
