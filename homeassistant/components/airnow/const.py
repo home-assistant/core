@@ -1,4 +1,5 @@
 """Constants for the AirNow integration."""
+
 ATTR_API_AQI = "AQI"
 ATTR_API_AQI_LEVEL = "Category.Number"
 ATTR_API_AQI_DESCRIPTION = "Category.Name"

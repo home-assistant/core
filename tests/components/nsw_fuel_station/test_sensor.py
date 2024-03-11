@@ -1,4 +1,5 @@
 """The tests for the NSW Fuel Station sensor platform."""
+
 from unittest.mock import patch
 
 from nsw_fuel import FuelCheckError

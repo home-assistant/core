@@ -1,4 +1,5 @@
 """Test the Vilfo Router config flow."""
+
 from unittest.mock import Mock, patch
 
 import vilfo

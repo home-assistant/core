@@ -1,4 +1,5 @@
 """Test the flume config flow."""
+
 from unittest.mock import MagicMock, patch
 
 import requests.exceptions

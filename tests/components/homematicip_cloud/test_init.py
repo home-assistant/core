@@ -1,4 +1,5 @@
 """Test HomematicIP Cloud setup process."""
+
 from unittest.mock import AsyncMock, Mock, patch
 
 from homematicip.base.base_connection import HmipConnectionError

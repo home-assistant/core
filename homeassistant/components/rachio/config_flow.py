@@ -1,4 +1,5 @@
 """Config flow for Rachio integration."""
+
 from __future__ import annotations
 
 from http import HTTPStatus

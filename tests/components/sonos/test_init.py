@@ -1,4 +1,5 @@
 """Tests for the Sonos config flow."""
+
 import asyncio
 from datetime import timedelta
 import logging

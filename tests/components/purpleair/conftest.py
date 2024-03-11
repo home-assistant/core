@@ -1,4 +1,5 @@
 """Define fixtures for PurpleAir tests."""
+
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiopurpleair.endpoints.sensors import NearbySensorResult

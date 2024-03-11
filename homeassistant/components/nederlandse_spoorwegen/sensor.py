@@ -1,4 +1,5 @@
 """Support for Nederlandse Spoorwegen public transport."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta

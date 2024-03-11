@@ -1,4 +1,5 @@
 """Config flow for World Air Quality Index (WAQI) integration."""
+
 from __future__ import annotations
 
 import logging

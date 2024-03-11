@@ -1,4 +1,5 @@
 """Websocket tests for Voice Assistant integration."""
+
 import asyncio
 import base64
 from typing import Any

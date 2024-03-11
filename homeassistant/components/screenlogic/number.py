@@ -1,4 +1,5 @@
 """Support for a ScreenLogic number entity."""
+
 from dataclasses import dataclass
 import logging
 

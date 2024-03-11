@@ -1,4 +1,5 @@
 """Test the Z-Wave JS Websocket API."""
+
 from copy import deepcopy
 from http import HTTPStatus
 import json

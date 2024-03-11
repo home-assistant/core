@@ -1,4 +1,5 @@
 """Config flow for Gogogate2."""
+
 from __future__ import annotations
 
 import dataclasses

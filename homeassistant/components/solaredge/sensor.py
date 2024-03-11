@@ -1,4 +1,5 @@
 """Support for SolarEdge Monitoring API."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

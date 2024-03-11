@@ -1,4 +1,5 @@
 """Support for Motionblinds sensors."""
+
 from motionblinds import DEVICE_TYPES_WIFI
 from motionblinds.motion_blinds import DEVICE_TYPE_TDBU
 

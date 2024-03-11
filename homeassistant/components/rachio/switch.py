@@ -1,4 +1,5 @@
 """Integration with the Rachio Iro sprinkler system controller."""
+
 from abc import abstractmethod
 from contextlib import suppress
 from datetime import timedelta

@@ -1,4 +1,5 @@
 """Alexa state report code."""
+
 from __future__ import annotations
 
 from asyncio import timeout

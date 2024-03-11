@@ -1,4 +1,5 @@
 """Test configuration for the ZHA component."""
+
 from collections.abc import Callable, Generator
 import itertools
 import time

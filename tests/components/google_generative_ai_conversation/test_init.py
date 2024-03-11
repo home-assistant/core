@@ -1,4 +1,5 @@
 """Tests for the Google Generative AI Conversation integration."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from google.api_core.exceptions import ClientError

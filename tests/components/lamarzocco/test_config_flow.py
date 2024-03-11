@@ -1,4 +1,5 @@
 """Test the La Marzocco config flow."""
+
 from unittest.mock import MagicMock
 
 from lmcloud.exceptions import AuthFail, RequestNotSuccessful

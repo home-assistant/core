@@ -1,4 +1,5 @@
 """Tests for the diagnostics data provided by the Withings integration."""
+
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory

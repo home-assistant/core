@@ -1,4 +1,5 @@
 """Common methods used across tests for Abode."""
+
 from unittest.mock import patch
 
 from homeassistant.components.abode import DOMAIN as ABODE_DOMAIN

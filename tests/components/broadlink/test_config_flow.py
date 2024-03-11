@@ -1,4 +1,5 @@
 """Test the Broadlink config flow."""
+
 import errno
 import socket
 from unittest.mock import call, patch

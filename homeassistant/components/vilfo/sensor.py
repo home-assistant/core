@@ -1,4 +1,5 @@
 """Support for Vilfo Router sensors."""
+
 from dataclasses import dataclass
 
 from homeassistant.components.sensor import (
