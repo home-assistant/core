@@ -53,6 +53,7 @@ async def test_if_fires_on_event(hass: HomeAssistant, calls, setup_comp) -> None
         "process",
         {
             "text": "Ha ha ha",
+            "device_id": "1234",
         },
         blocking=True,
         return_response=True,
@@ -69,6 +70,7 @@ async def test_if_fires_on_event(hass: HomeAssistant, calls, setup_comp) -> None
         "sentence": "Ha ha ha",
         "slots": {},
         "details": {},
+        "device_id": "1234",
     }
 
 
@@ -160,6 +162,7 @@ async def test_response_same_sentence(hass: HomeAssistant, calls, setup_comp) ->
         "sentence": "test sentence",
         "slots": {},
         "details": {},
+        "device_id": None,
     }
 
 
@@ -311,6 +314,7 @@ async def test_same_trigger_multiple_sentences(
         "sentence": "hello",
         "slots": {},
         "details": {},
+        "device_id": None,
     }
 
 
@@ -488,4 +492,5 @@ async def test_wildcards(hass: HomeAssistant, calls, setup_comp) -> None:
                 "value": "the beatles",
             },
         },
+        "device_id": None,
     }

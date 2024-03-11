@@ -1365,6 +1365,26 @@
     }),
   })
 # ---
+# name: test_ws_api[payload6]
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'code': 'no_intent_match',
+      }),
+      'language': 'en',
+      'response_type': 'error',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': "Sorry, I couldn't understand that",
+        }),
+      }),
+    }),
+  })
+# ---
 # name: test_ws_get_agent_info
   dict({
     'attribution': None,

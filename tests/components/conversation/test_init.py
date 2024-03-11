@@ -535,9 +535,12 @@ async def test_turn_on_intent(
 
 async def test_service_fails(hass: HomeAssistant, init_components) -> None:
     """Test calling the turn on intent."""
-    with pytest.raises(HomeAssistantError), patch(
-        "homeassistant.components.conversation.async_converse",
-        side_effect=intent.IntentHandleError,
+    with (
+        pytest.raises(HomeAssistantError),
+        patch(
+            "homeassistant.components.conversation.async_converse",
+            side_effect=intent.IntentHandleError,
+        ),
     ):
         await hass.services.async_call(
             "conversation",
@@ -720,6 +723,10 @@ async def test_custom_agent(
         {
             "text": "Test Text",
             "agent_id": "homeassistant",
+        },
+        {
+            "text": "Test Text",
+            "device_id": "1234",
         },
     ],
 )
