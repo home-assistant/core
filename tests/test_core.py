@@ -1169,6 +1169,21 @@ async def test_eventbus_run_immediately_coro(hass: HomeAssistant) -> None:
     unsub()
 
 
+async def test_eventbus_listen_once_run_immediately_coro(hass: HomeAssistant) -> None:
+    """Test we can call events immediately with a coro."""
+    calls = []
+
+    async def listener(event):
+        """Mock listener."""
+        calls.append(event)
+
+    hass.bus.async_listen_once("test", listener, run_immediately=True)
+
+    hass.bus.async_fire("test", {"event": True})
+    # No async_block_till_done here
+    assert len(calls) == 1
+
+
 async def test_eventbus_unsubscribe_listener(hass: HomeAssistant) -> None:
     """Test unsubscribe listener from returned function."""
     calls = []
