@@ -125,7 +125,18 @@ async def test_config_flow_manual_error_no_bluetooth_adapter(
 ) -> None:
     """No Bluetooth adapter error flow manually initialized by the user."""
 
-    # Initialize
+    # Try step_user with zero Bluetooth adapters
+    with patch(
+        "homeassistant.components.motionblinds_ble.config_flow.bluetooth.async_scanner_count",
+        return_value=0,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == const.ERROR_NO_BLUETOOTH_ADAPTER
+
+    # Try discovery with zero Bluetooth adapters
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -133,7 +144,6 @@ async def test_config_flow_manual_error_no_bluetooth_adapter(
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    # Try with zero Bluetooth adapters
     with patch(
         "homeassistant.components.motionblinds_ble.config_flow.bluetooth.async_scanner_count",
         return_value=0,
