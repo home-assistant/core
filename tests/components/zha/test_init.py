@@ -1,4 +1,5 @@
 """Tests for ZHA integration init."""
+
 import asyncio
 import typing
 from unittest.mock import AsyncMock, Mock, patch

@@ -93,7 +93,7 @@ omit =
     homeassistant/components/aseko_pool_live/entity.py
     homeassistant/components/aseko_pool_live/sensor.py
     homeassistant/components/asterisk_cdr/mailbox.py
-    homeassistant/components/asterisk_mbox/*
+    homeassistant/components/asterisk_mbox/mailbox.py
     homeassistant/components/aten_pe/*
     homeassistant/components/atome/*
     homeassistant/components/aurora/__init__.py
@@ -192,6 +192,7 @@ omit =
     homeassistant/components/comelit/const.py
     homeassistant/components/comelit/cover.py
     homeassistant/components/comelit/coordinator.py
+    homeassistant/components/comelit/humidifier.py
     homeassistant/components/comelit/light.py
     homeassistant/components/comelit/sensor.py
     homeassistant/components/comelit/switch.py
@@ -544,7 +545,9 @@ omit =
     homeassistant/components/homematic/notify.py
     homeassistant/components/homematic/sensor.py
     homeassistant/components/homematic/switch.py
-    homeassistant/components/homeworks/*
+    homeassistant/components/homeworks/__init__.py
+    homeassistant/components/homeworks/button.py
+    homeassistant/components/homeworks/light.py
     homeassistant/components/horizon/media_player.py
     homeassistant/components/hp_ilo/sensor.py
     homeassistant/components/huawei_lte/__init__.py
@@ -772,6 +775,7 @@ omit =
     homeassistant/components/microbees/__init__.py
     homeassistant/components/microbees/api.py
     homeassistant/components/microbees/application_credentials.py
+    homeassistant/components/microbees/button.py
     homeassistant/components/microbees/const.py
     homeassistant/components/microbees/coordinator.py
     homeassistant/components/microbees/entity.py
@@ -986,7 +990,9 @@ omit =
     homeassistant/components/pandora/media_player.py
     homeassistant/components/pencom/switch.py
     homeassistant/components/permobil/__init__.py
+    homeassistant/components/permobil/binary_sensor.py
     homeassistant/components/permobil/coordinator.py
+    homeassistant/components/permobil/entity.py
     homeassistant/components/permobil/sensor.py
     homeassistant/components/philips_js/__init__.py
     homeassistant/components/philips_js/light.py
@@ -1177,7 +1183,6 @@ omit =
     homeassistant/components/serial_pm/sensor.py
     homeassistant/components/sesame/lock.py
     homeassistant/components/seven_segments/image_processing.py
-    homeassistant/components/seventeentrack/sensor.py
     homeassistant/components/shodan/sensor.py
     homeassistant/components/sia/__init__.py
     homeassistant/components/sia/alarm_control_panel.py
@@ -1588,6 +1593,10 @@ omit =
     homeassistant/components/weatherflow/__init__.py
     homeassistant/components/weatherflow/const.py
     homeassistant/components/weatherflow/sensor.py
+    homeassistant/components/weatherflow_cloud/__init__.py
+    homeassistant/components/weatherflow_cloud/const.py
+    homeassistant/components/weatherflow_cloud/coordinator.py
+    homeassistant/components/weatherflow_cloud/weather.py
     homeassistant/components/wiffi/__init__.py
     homeassistant/components/wiffi/binary_sensor.py
     homeassistant/components/wiffi/sensor.py

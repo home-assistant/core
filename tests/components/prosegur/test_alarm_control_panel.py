@@ -1,4 +1,5 @@
 """Tests for the Prosegur alarm control panel device."""
+
 from unittest.mock import AsyncMock, patch
 
 from pyprosegur.installation import Status

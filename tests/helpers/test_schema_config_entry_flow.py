@@ -1,4 +1,5 @@
 """Tests for the schema based data entry flows."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping

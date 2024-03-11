@@ -1,4 +1,5 @@
 """Integrate with NO-IP Dynamic DNS service."""
+
 import asyncio
 import base64
 from datetime import datetime, timedelta

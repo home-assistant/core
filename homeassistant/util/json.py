@@ -1,4 +1,5 @@
 """JSON utility functions."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -79,12 +80,12 @@ def load_json(
     except FileNotFoundError:
         # This is not a fatal error
         _LOGGER.debug("JSON file not found: %s", filename)
-    except ValueError as error:
+    except JSON_DECODE_EXCEPTIONS as error:
         _LOGGER.exception("Could not parse JSON content: %s", filename)
-        raise HomeAssistantError(error) from error
+        raise HomeAssistantError(f"Error while loading {filename}: {error}") from error
     except OSError as error:
         _LOGGER.exception("JSON file reading failed: %s", filename)
-        raise HomeAssistantError(error) from error
+        raise HomeAssistantError(f"Error while loading {filename}: {error}") from error
     return {} if default is _SENTINEL else default
 
 

@@ -1,4 +1,5 @@
 """Tests for the init module."""
+
 import asyncio
 from unittest.mock import Mock, patch
 

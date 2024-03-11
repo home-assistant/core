@@ -1,4 +1,5 @@
 """Tests for Shelly cover platform."""
+
 from unittest.mock import Mock
 
 import pytest

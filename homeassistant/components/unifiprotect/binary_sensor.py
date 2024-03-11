@@ -1,4 +1,5 @@
 """Component providing binary sensors for UniFi Protect."""
+
 from __future__ import annotations
 
 import dataclasses
@@ -271,6 +272,15 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="can_detect_glass_break",
         ufp_value="is_glass_break_detection_on",
+        ufp_perm=PermRequired.NO_WRITE,
+    ),
+    ProtectBinaryEntityDescription(
+        key="track_person",
+        name="Tracking: Person",
+        icon="mdi:walk",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        ufp_required_field="is_ptz",
+        ufp_value="is_person_tracking_enabled",
         ufp_perm=PermRequired.NO_WRITE,
     ),
 )

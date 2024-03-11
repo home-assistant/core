@@ -1,4 +1,5 @@
 """Expose Synology DSM as a media source."""
+
 from __future__ import annotations
 
 import mimetypes

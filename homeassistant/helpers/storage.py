@@ -1,4 +1,5 @@
 """Helper to help store data."""
+
 from __future__ import annotations
 
 import asyncio
@@ -21,7 +22,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.loader import MAX_LOAD_CONCURRENTLY, bind_hass
+from homeassistant.loader import bind_hass
 from homeassistant.util import json as json_util
 import homeassistant.util.dt as dt_util
 from homeassistant.util.file import WriteError
@@ -36,6 +37,7 @@ else:
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-warn-return-any
 # mypy: no-check-untyped-defs
+MAX_LOAD_CONCURRENTLY = 6
 
 STORAGE_DIR = ".storage"
 _LOGGER = logging.getLogger(__name__)
@@ -133,12 +135,16 @@ class Store(Generic[_T]):
         Will ensure that when a call comes in while another one is in progress,
         the second call will wait and return the result of the first call.
         """
-        if self._load_task is None:
-            self._load_task = self.hass.async_create_task(
-                self._async_load(), f"Storage load {self.key}"
-            )
+        if self._load_task:
+            return await self._load_task
 
-        return await self._load_task
+        load_task = self.hass.async_create_task(
+            self._async_load(), f"Storage load {self.key}", eager_start=True
+        )
+        if not load_task.done():
+            # Only set the load task if it didn't complete immediately
+            self._load_task = load_task
+        return await load_task
 
     async def _async_load(self) -> _T | None:
         """Load the data and ensure the task is removed."""
@@ -318,7 +324,9 @@ class Store(Generic[_T]):
             # wrote. Reschedule the timer to the next write time.
             self._async_reschedule_delayed_write(self._next_write_time)
             return
-        self.hass.async_create_task(self._async_callback_delayed_write())
+        self.hass.async_create_task(
+            self._async_callback_delayed_write(), eager_start=True
+        )
 
     @callback
     def _async_ensure_final_write_listener(self) -> None:

@@ -1,4 +1,5 @@
 """The tests for the TTS component."""
+
 import asyncio
 from http import HTTPStatus
 from typing import Any

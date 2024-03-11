@@ -1,4 +1,5 @@
 """Helper to check the configuration file."""
+
 from __future__ import annotations
 
 from collections import OrderedDict
@@ -199,7 +200,7 @@ async def async_check_ha_config_file(  # noqa: C901
         # Check if the integration has a custom config validator
         config_validator = None
         try:
-            config_validator = integration.get_platform("config")
+            config_validator = await integration.async_get_platform("config")
         except ImportError as err:
             # Filter out import error of the config platform.
             # If the config platform contains bad imports, make sure
@@ -270,7 +271,7 @@ async def async_check_ha_config_file(  # noqa: C901
                 p_integration = await async_get_integration_with_requirements(
                     hass, p_name
                 )
-                platform = p_integration.get_platform(domain)
+                platform = await p_integration.async_get_platform(domain)
             except loader.IntegrationNotFound as ex:
                 # We get this error if an integration is not found. In recovery mode and
                 # safe mode, this currently happens for all custom integrations. Don't

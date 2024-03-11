@@ -1,4 +1,5 @@
 """Provides the worker thread needed for processing streams."""
+
 from __future__ import annotations
 
 from collections import defaultdict, deque

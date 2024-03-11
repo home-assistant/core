@@ -1,4 +1,5 @@
 """Test the services for the Switcher integration."""
+
 from unittest.mock import patch
 
 from aioswitcher.api import Command

@@ -1,4 +1,5 @@
 """Authentication for HTTP component."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -20,13 +21,13 @@ from homeassistant.auth.const import GROUP_ID_READ_ONLY
 from homeassistant.auth.models import User
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.http import current_request
 from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.network import is_cloud_connection
 from homeassistant.helpers.storage import Store
 from homeassistant.util.network import is_local
 
 from .const import KEY_AUTHENTICATED, KEY_HASS_REFRESH_TOKEN_ID, KEY_HASS_USER
-from .request_context import current_request
 
 _LOGGER = logging.getLogger(__name__)
 

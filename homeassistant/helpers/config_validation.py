@@ -1,4 +1,5 @@
 """Helpers for config validation using voluptuous."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Hashable
@@ -10,7 +11,6 @@ from datetime import (
     timedelta,
 )
 from enum import Enum, StrEnum
-import inspect
 import logging
 from numbers import Number
 import os
@@ -103,6 +103,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.util.yaml.objects import NodeStrClass
 
 from . import script_variables as script_variables_helper, template as template_helper
+from .frame import get_integration_logger
 
 TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'"
 
@@ -890,28 +891,21 @@ def _deprecated_or_removed(
         - No warning if neither key nor replacement_key are provided
             - Adds replacement_key with default value in this case
     """
-    module = inspect.getmodule(inspect.stack(context=0)[2].frame)
-    if module is not None:
-        module_name = module.__name__
-    else:
-        # If Python is unable to access the sources files, the call stack frame
-        # will be missing information, so let's guard.
-        # https://github.com/home-assistant/core/issues/24982
-        module_name = __name__
-    if option_removed:
-        logger_func = logging.getLogger(module_name).error
-        option_status = "has been removed"
-    else:
-        logger_func = logging.getLogger(module_name).warning
-        option_status = "is deprecated"
 
     def validator(config: dict) -> dict:
         """Check if key is in config and log warning or error."""
         if key in config:
+            if option_removed:
+                level = logging.ERROR
+                option_status = "has been removed"
+            else:
+                level = logging.WARNING
+                option_status = "is deprecated"
+
             try:
                 near = (
                     f"near {config.__config_file__}"  # type: ignore[attr-defined]
-                    f":{config.__line__} "
+                    f":{config.__line__} "  # type: ignore[attr-defined]
                 )
             except AttributeError:
                 near = ""
@@ -928,7 +922,7 @@ def _deprecated_or_removed(
             if raise_if_present:
                 raise vol.Invalid(warning % arguments)
 
-            logger_func(warning, *arguments)
+            get_integration_logger(__name__).log(level, warning, *arguments)
             value = config[key]
             if replacement_key or option_removed:
                 config.pop(key)
@@ -1112,19 +1106,9 @@ def expand_condition_shorthand(value: Any | None) -> Any:
 def empty_config_schema(domain: str) -> Callable[[dict], dict]:
     """Return a config schema which logs if there are configuration parameters."""
 
-    module = inspect.getmodule(inspect.stack(context=0)[2].frame)
-    if module is not None:
-        module_name = module.__name__
-    else:
-        # If Python is unable to access the sources files, the call stack frame
-        # will be missing information, so let's guard.
-        # https://github.com/home-assistant/core/issues/24982
-        module_name = __name__
-    logger_func = logging.getLogger(module_name).error
-
     def validator(config: dict) -> dict:
         if domain in config and config[domain]:
-            logger_func(
+            get_integration_logger(__name__).error(
                 (
                     "The %s integration does not support any configuration parameters, "
                     "got %s. Please remove the configuration parameters from your "
@@ -1146,16 +1130,6 @@ def _no_yaml_config_schema(
 ) -> Callable[[dict], dict]:
     """Return a config schema which logs if attempted to setup from YAML."""
 
-    module = inspect.getmodule(inspect.stack(context=0)[2].frame)
-    if module is not None:
-        module_name = module.__name__
-    else:
-        # If Python is unable to access the sources files, the call stack frame
-        # will be missing information, so let's guard.
-        # https://github.com/home-assistant/core/issues/24982
-        module_name = __name__
-    logger_func = logging.getLogger(module_name).error
-
     def raise_issue() -> None:
         # pylint: disable-next=import-outside-toplevel
         from .issue_registry import IssueSeverity, async_create_issue
@@ -1176,7 +1150,7 @@ def _no_yaml_config_schema(
 
     def validator(config: dict) -> dict:
         if domain in config:
-            logger_func(
+            get_integration_logger(__name__).error(
                 (
                     "The %s integration does not support YAML setup, please remove it "
                     "from your configuration file"
@@ -1262,9 +1236,7 @@ TARGET_SERVICE_FIELDS = {
 }
 
 
-def make_entity_service_schema(
-    schema: dict, *, extra: int = vol.PREVENT_EXTRA
-) -> vol.Schema:
+def _make_entity_service_schema(schema: dict, extra: int) -> vol.Schema:
     """Create an entity service schema."""
     return vol.Schema(
         vol.All(
@@ -1280,6 +1252,21 @@ def make_entity_service_schema(
             has_at_least_one_key(*ENTITY_SERVICE_FIELDS),
         )
     )
+
+
+BASE_ENTITY_SCHEMA = _make_entity_service_schema({}, vol.PREVENT_EXTRA)
+
+
+def make_entity_service_schema(
+    schema: dict, *, extra: int = vol.PREVENT_EXTRA
+) -> vol.Schema:
+    """Create an entity service schema."""
+    if not schema and extra == vol.PREVENT_EXTRA:
+        # If the schema is empty and we don't allow extra keys, we can return
+        # the base schema and avoid compiling a new schema which is the case
+        # for ~50% of services.
+        return BASE_ENTITY_SCHEMA
+    return _make_entity_service_schema(schema, extra)
 
 
 SCRIPT_CONVERSATION_RESPONSE_SCHEMA = vol.Any(template, None)

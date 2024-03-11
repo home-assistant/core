@@ -1,4 +1,5 @@
 """Support for Ubiquiti's UniFi Protect NVR."""
+
 from __future__ import annotations
 
 from collections.abc import Generator

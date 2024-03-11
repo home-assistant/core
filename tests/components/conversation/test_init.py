@@ -1,4 +1,5 @@
 """The tests for the Conversation component."""
+
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch

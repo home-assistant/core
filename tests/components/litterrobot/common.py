@@ -1,4 +1,5 @@
 """Common utils for Litter-Robot tests."""
+
 from homeassistant.components.litterrobot import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 

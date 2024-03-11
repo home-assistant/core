@@ -674,7 +674,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by EnergyZero',
       'friendly_name': 'Energy market price Hours priced equal or lower than current - today',
-      'icon': 'mdi:clock',
       'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
@@ -707,7 +706,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:clock',
+    'original_icon': None,
     'original_name': 'Hours priced equal or lower than current - today',
     'platform': 'energyzero',
     'previous_unique_id': None,
