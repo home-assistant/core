@@ -305,11 +305,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     @property
     def _has_switch(self) -> bool:
         """Return, if a switch is in the hmip heating group."""
-        for device in self._device.devices:
-            if isinstance(device, Switch):
-                return True
-
-        return False
+        return any(isinstance(device, Switch) for device in self._device.devices)
 
     @property
     def _has_radiator_thermostat(self) -> bool:

@@ -221,7 +221,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==23.1.0
+aioesphomeapi==23.1.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -344,7 +344,7 @@ aioshelly==8.1.1
 aioskybell==22.7.0
 
 # homeassistant.components.slimproto
-aioslimproto==2.3.3
+aioslimproto==3.0.0
 
 # homeassistant.components.steamist
 aiosteamist==0.3.2
@@ -451,7 +451,7 @@ auroranoaa==0.0.3
 aurorapy==0.2.7
 
 # homeassistant.components.axis
-axis==52
+axis==53
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
@@ -508,7 +508,7 @@ bluetooth-data-tools==1.19.0
 bond-async==0.2.1
 
 # homeassistant.components.bosch_shc
-boschshcpy==0.2.75
+boschshcpy==0.2.82
 
 # homeassistant.components.bring
 bring-api==0.5.6
@@ -526,7 +526,7 @@ brottsplatskartan==1.0.5
 brunt==1.2.0
 
 # homeassistant.components.bthome
-bthome-ble==3.7.0
+bthome-ble==3.8.0
 
 # homeassistant.components.buienradar
 buienradar==1.0.5
@@ -902,7 +902,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.google
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
-ical==7.0.0
+ical==7.0.1
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -2177,7 +2177,7 @@ watchdog==2.3.1
 weatherflow4py==0.1.14
 
 # homeassistant.components.webmin
-webmin-xmlrpc==0.0.1
+webmin-xmlrpc==0.0.2
 
 # homeassistant.components.assist_pipeline
 webrtc-noise-gain==1.2.3

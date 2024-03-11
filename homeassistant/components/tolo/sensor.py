@@ -27,19 +27,12 @@ from . import ToloSaunaCoordinatorEntity, ToloSaunaUpdateCoordinator
 from .const import DOMAIN
 
 
-@dataclass(frozen=True)
-class ToloSensorEntityDescriptionBase:
-    """Required values when describing TOLO Sensor entities."""
+@dataclass(frozen=True, kw_only=True)
+class ToloSensorEntityDescription(SensorEntityDescription):
+    """Class describing TOLO Sensor entities."""
 
     getter: Callable[[StatusInfo], int | None]
     availability_checker: Callable[[SettingsInfo, StatusInfo], bool] | None
-
-
-@dataclass(frozen=True)
-class ToloSensorEntityDescription(
-    SensorEntityDescription, ToloSensorEntityDescriptionBase
-):
-    """Class describing TOLO Sensor entities."""
 
     state_class = SensorStateClass.MEASUREMENT
 
