@@ -1,4 +1,5 @@
 """Test the Airthings BLE config flow."""
+
 from unittest.mock import patch
 
 from airthings_ble import AirthingsDevice

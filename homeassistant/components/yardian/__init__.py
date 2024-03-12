@@ -1,4 +1,5 @@
 """The Yardian integration."""
+
 from __future__ import annotations
 
 from pyyardian import AsyncYardianClient

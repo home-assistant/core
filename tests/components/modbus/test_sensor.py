@@ -1,4 +1,5 @@
 """The tests for the Modbus sensor component."""
+
 import struct
 
 import pytest

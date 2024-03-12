@@ -1,4 +1,5 @@
 """Test service helpers."""
+
 import asyncio
 from collections.abc import Iterable
 from copy import deepcopy
@@ -34,6 +35,7 @@ from homeassistant.helpers import (
     template,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -563,13 +565,28 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
     """Test async_get_all_descriptions."""
     group = hass.components.group
     group_config = {group.DOMAIN: {}}
-    await async_setup_component(hass, group.DOMAIN, group_config)
-    descriptions = await service.async_get_all_descriptions(hass)
+    assert await async_setup_component(hass, group.DOMAIN, group_config)
+    assert await async_setup_component(hass, "system_health", {})
+
+    with patch(
+        "homeassistant.helpers.service._load_services_files",
+        side_effect=service._load_services_files,
+    ) as proxy_load_services_files:
+        descriptions = await service.async_get_all_descriptions(hass)
+
+    # Test we only load services.yaml for integrations with services.yaml
+    # And system_health has no services
+    assert proxy_load_services_files.mock_calls[0][1][1] == [
+        await async_get_integration(hass, "group")
+    ]
 
     assert len(descriptions) == 1
 
     assert "description" in descriptions["group"]["reload"]
     assert "fields" in descriptions["group"]["reload"]
+
+    # Does not have services
+    assert "system_health" not in descriptions
 
     logger = hass.components.logger
     logger_config = {logger.DOMAIN: {}}

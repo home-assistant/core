@@ -1,4 +1,5 @@
 """Test for Trafikverket Ferry component Init."""
+
 from __future__ import annotations
 
 from datetime import datetime

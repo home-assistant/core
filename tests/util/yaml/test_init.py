@@ -1,4 +1,5 @@
 """Test Home Assistant yaml loader."""
+
 from collections.abc import Generator
 import importlib
 import io

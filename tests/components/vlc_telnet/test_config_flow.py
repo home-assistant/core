@@ -1,4 +1,5 @@
 """Test the VLC media player Telnet config flow."""
+
 from __future__ import annotations
 
 from typing import Any

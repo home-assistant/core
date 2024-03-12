@@ -1,4 +1,5 @@
 """Test the Yeelight light."""
+
 from datetime import timedelta
 import logging
 import socket
@@ -856,7 +857,6 @@ async def test_device_types(
             state = hass.states.get(f"{entity_id}_nightlight")
             assert state.state == "on"
             nightlight_entity_properties["friendly_name"] = f"{name} Nightlight"
-            nightlight_entity_properties["icon"] = "mdi:weather-night"
             nightlight_entity_properties["flowing"] = False
             nightlight_entity_properties["night_light"] = True
             nightlight_entity_properties["music_mode"] = False

@@ -1,4 +1,5 @@
 """Component providing support to the Ring Door Bell camera."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -7,7 +8,6 @@ import logging
 from typing import Optional
 
 from haffmpeg.camera import CameraMjpeg
-import requests
 
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import Camera
@@ -19,7 +19,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, RING_DEVICES, RING_DEVICES_COORDINATOR
 from .coordinator import RingDataCoordinator
-from .entity import RingEntity
+from .entity import RingEntity, exception_wrap
 
 FORCE_REFRESH_INTERVAL = timedelta(minutes=3)
 
@@ -144,17 +144,11 @@ class RingCam(RingEntity, Camera):
         if self._last_video_id != self._last_event["id"]:
             self._image = None
 
-        try:
-            video_url = await self.hass.async_add_executor_job(
-                self._device.recording_url, self._last_event["id"]
-            )
-        except requests.Timeout:
-            _LOGGER.warning(
-                "Time out fetching recording url for camera %s", self.entity_id
-            )
-            video_url = None
+        self._video_url = await self.hass.async_add_executor_job(self._get_video)
 
-        if video_url:
-            self._last_video_id = self._last_event["id"]
-            self._video_url = video_url
-            self._expires_at = FORCE_REFRESH_INTERVAL + utcnow
+        self._last_video_id = self._last_event["id"]
+        self._expires_at = FORCE_REFRESH_INTERVAL + utcnow
+
+    @exception_wrap
+    def _get_video(self) -> str:
+        return self._device.recording_url(self._last_event["id"])

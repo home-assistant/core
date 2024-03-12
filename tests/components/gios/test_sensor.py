@@ -1,4 +1,5 @@
 """Test sensor of GIOS integration."""
+
 from datetime import timedelta
 import json
 from unittest.mock import patch

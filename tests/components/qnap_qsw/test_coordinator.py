@@ -103,7 +103,7 @@ async def test_coordinator_client_connector_error(
         mock_system_sensor.side_effect = QswError
         freezer.tick(DATA_SCAN_INTERVAL)
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         mock_system_sensor.assert_called_once()
         mock_users_verification.assert_called()
@@ -115,7 +115,7 @@ async def test_coordinator_client_connector_error(
         mock_firmware_update_check.side_effect = APIError
         freezer.tick(FW_SCAN_INTERVAL)
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         mock_firmware_update_check.assert_called_once()
         mock_firmware_update_check.reset_mock()
@@ -123,7 +123,7 @@ async def test_coordinator_client_connector_error(
         mock_firmware_update_check.side_effect = QswError
         freezer.tick(FW_SCAN_INTERVAL)
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         mock_firmware_update_check.assert_called_once()
 

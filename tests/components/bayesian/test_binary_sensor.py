@@ -1,4 +1,5 @@
 """The test for the bayesian sensor platform."""
+
 import json
 from unittest.mock import patch
 

@@ -1,4 +1,5 @@
 """Tests for the Freebox binary sensors."""
+
 from copy import deepcopy
 from unittest.mock import Mock
 

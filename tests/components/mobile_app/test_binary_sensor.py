@@ -1,4 +1,5 @@
 """Entity tests for mobile_app."""
+
 from http import HTTPStatus
 
 import pytest

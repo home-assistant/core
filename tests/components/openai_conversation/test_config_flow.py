@@ -1,4 +1,5 @@
 """Test the OpenAI Conversation config flow."""
+
 from unittest.mock import patch
 
 from httpx import Response

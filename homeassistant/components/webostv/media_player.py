@@ -1,4 +1,5 @@
 """Support for interface with an LG webOS Smart TV."""
+
 from __future__ import annotations
 
 import asyncio

@@ -1,4 +1,5 @@
 """Test configuration and mocks for LCN component."""
+
 import json
 from unittest.mock import AsyncMock, patch
 

@@ -1,4 +1,5 @@
 """Test the System Bridge config flow."""
+
 from unittest.mock import patch
 
 from systembridgeconnector.exceptions import (

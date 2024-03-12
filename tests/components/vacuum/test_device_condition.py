@@ -1,4 +1,5 @@
 """The tests for Vacuum device conditions."""
+
 import pytest
 from pytest_unordered import unordered
 

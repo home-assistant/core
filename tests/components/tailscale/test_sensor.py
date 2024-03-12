@@ -1,4 +1,5 @@
 """Tests for the sensors provided by the Tailscale integration."""
+
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.tailscale.const import DOMAIN
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, EntityCategory

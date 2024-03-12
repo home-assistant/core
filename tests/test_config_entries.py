@@ -1,4 +1,5 @@
 """Test the config manager."""
+
 from __future__ import annotations
 
 import asyncio
@@ -4332,7 +4333,12 @@ async def test_task_tracking(hass: HomeAssistant) -> None:
     await asyncio.sleep(0)
     hass.loop.call_soon(event.set)
     await entry._async_process_on_unload(hass)
-    assert results == ["on_unload", "background", "background", "normal"]
+    assert results == [
+        "on_unload",
+        "background",
+        "background",
+        "normal",
+    ]
 
 
 async def test_preview_supported(

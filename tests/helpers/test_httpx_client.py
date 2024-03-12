@@ -1,4 +1,5 @@
 """Test the httpx client helper."""
+
 from unittest.mock import Mock, patch
 
 import httpx

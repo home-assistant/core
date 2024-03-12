@@ -1,4 +1,5 @@
 """Tests for the Subaru component config flow."""
+
 from copy import deepcopy
 from unittest import mock
 from unittest.mock import PropertyMock, patch

@@ -1,4 +1,5 @@
 """Support for Axis switches."""
+
 from typing import Any
 
 from axis.models.event import Event, EventOperation, EventTopic

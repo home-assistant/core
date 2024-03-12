@@ -1,4 +1,5 @@
 """The tests for WS66i Media player platform."""
+
 from collections import defaultdict
 from unittest.mock import patch
 
