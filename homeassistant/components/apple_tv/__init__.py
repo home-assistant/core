@@ -247,7 +247,12 @@ class AppleTVManager(DeviceListener):
     def _start_connect_loop(self) -> None:
         """Start background connect loop to device."""
         if not self._task and self.atv is None and self.is_on:
-            self._task = asyncio.create_task(self._connect_loop())
+            self._task = self.config_entry.async_create_background_task(
+                self.hass,
+                self._connect_loop(),
+                name=f"apple_tv connect loop {self.config_entry.title}",
+                eager_start=True,
+            )
         else:
             _LOGGER.debug(
                 "Not starting connect loop (%s, %s)", self.atv is None, self.is_on
