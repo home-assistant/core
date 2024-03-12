@@ -1,4 +1,5 @@
 """sensor integration microBees."""
+
 from microBeesPy import Sensor
 
 from homeassistant.components.sensor import (
@@ -66,15 +67,13 @@ async def async_setup_entry(
 ) -> None:
     """Config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id].coordinator
-    sensors = []
-    for bee_id, bee in coordinator.data.bees.items():
-        for sensor in bee.sensors:
-            if (entity_description := SENSOR_TYPES.get(sensor.device_type)) is not None:
-                sensors.append(
-                    MBSensor(coordinator, entity_description, bee_id, sensor.id)
-                )
 
-    async_add_entities(sensors)
+    async_add_entities(
+        MBSensor(coordinator, desc, bee_id, sensor.id)
+        for bee_id, bee in coordinator.data.bees.items()
+        for sensor in bee.sensors
+        if (desc := SENSOR_TYPES.get(sensor.device_type)) is not None
+    )
 
 
 class MBSensor(MicroBeesEntity, SensorEntity):
@@ -100,7 +99,7 @@ class MBSensor(MicroBeesEntity, SensorEntity):
 
     @property
     def native_value(self) -> float | None:
-        """Return the value reported by the sensor, or None if the relevant sensor can't produce a current measurement."""
+        """Return the state of the sensor."""
         return self.sensor.value
 
     @property

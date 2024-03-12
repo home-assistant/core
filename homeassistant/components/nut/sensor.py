@@ -1,4 +1,5 @@
 """Provides a sensor to track various status aspects of a UPS."""
+
 from __future__ import annotations
 
 from dataclasses import asdict

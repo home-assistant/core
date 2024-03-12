@@ -1,4 +1,5 @@
 """Test the Firmata config flow."""
+
 from unittest.mock import patch
 
 from pymata_express.pymata_express_serial import serial

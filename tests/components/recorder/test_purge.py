@@ -1,4 +1,5 @@
 """Test data purging."""
+
 from datetime import datetime, timedelta
 import json
 import sqlite3

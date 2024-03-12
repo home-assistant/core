@@ -1,4 +1,5 @@
 """The tests for sensor recorder platform."""
+
 import datetime
 from datetime import timedelta
 from statistics import fmean

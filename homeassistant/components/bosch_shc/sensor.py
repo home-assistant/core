@@ -1,4 +1,5 @@
 """Platform for sensor integration."""
+
 from __future__ import annotations
 
 from boschshcpy import SHCSession
@@ -199,7 +200,6 @@ class PuritySensor(SHCEntity, SensorEntity):
     """Representation of an SHC purity reporting sensor."""
 
     _attr_translation_key = "purity"
-    _attr_icon = "mdi:molecule-co2"
     _attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
 
     def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
@@ -256,7 +256,6 @@ class CommunicationQualitySensor(SHCEntity, SensorEntity):
     """Representation of an SHC communication quality reporting sensor."""
 
     _attr_translation_key = "communication_quality"
-    _attr_icon = "mdi:wifi"
 
     def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
         """Initialize an SHC communication quality reporting sensor."""
@@ -339,7 +338,6 @@ class EnergySensor(SHCEntity, SensorEntity):
 class ValveTappetSensor(SHCEntity, SensorEntity):
     """Representation of an SHC valve tappet reporting sensor."""
 
-    _attr_icon = "mdi:gauge"
     _attr_translation_key = "valvetappet"
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = PERCENTAGE

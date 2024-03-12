@@ -1,4 +1,5 @@
 """Support for xiaomi ble sensors."""
+
 from __future__ import annotations
 
 from xiaomi_ble import DeviceClass, SensorUpdate, Units
@@ -131,22 +132,30 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    # Used for e.g. consumable sensor on WX08ZM and M1S-T500
+    # E.g. consumable sensor on WX08ZM and M1S-T500
     (ExtendedSensorDeviceClass.CONSUMABLE, Units.PERCENTAGE): SensorEntityDescription(
         key=str(ExtendedSensorDeviceClass.CONSUMABLE),
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # Used for score after brushing with a toothbrush
+    # Score after brushing with a toothbrush
     (ExtendedSensorDeviceClass.SCORE, None): SensorEntityDescription(
         key=str(ExtendedSensorDeviceClass.SCORE),
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # Used for counting during brushing
+    # Counting during brushing
     (ExtendedSensorDeviceClass.COUNTER, Units.TIME_SECONDS): SensorEntityDescription(
         key=str(ExtendedSensorDeviceClass.COUNTER),
         native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Key id for locks and fingerprint readers
+    (ExtendedSensorDeviceClass.KEY_ID, None): SensorEntityDescription(
+        key=str(ExtendedSensorDeviceClass.KEY_ID), icon="mdi:identifier"
+    ),
+    # Lock method for locks
+    (ExtendedSensorDeviceClass.LOCK_METHOD, None): SensorEntityDescription(
+        key=str(ExtendedSensorDeviceClass.LOCK_METHOD), icon="mdi:key-variant"
     ),
 }
 

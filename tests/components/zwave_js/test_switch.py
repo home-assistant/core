@@ -1,4 +1,5 @@
 """Test the Z-Wave JS switch platform."""
+
 import pytest
 from zwave_js_server.const import CURRENT_VALUE_PROPERTY, CommandClass
 from zwave_js_server.event import Event

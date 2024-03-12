@@ -1,4 +1,5 @@
 """The tests for the device tracker component."""
+
 from datetime import datetime, timedelta
 import json
 import logging

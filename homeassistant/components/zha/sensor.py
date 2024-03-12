@@ -1,15 +1,20 @@
 """Sensors on Zigbee Home Automation networks."""
+
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import enum
 import functools
+import logging
 import numbers
 import random
 from typing import TYPE_CHECKING, Any, Self
 
 from zigpy import types
+from zigpy.quirks.v2 import EntityMetadata, ZCLEnumMetadata, ZCLSensorMetadata
+from zigpy.state import Counter, State
 from zigpy.zcl.clusters.closures import WindowCovering
 from zigpy.zcl.clusters.general import Basic
 
@@ -66,12 +71,13 @@ from .core.const import (
     CLUSTER_HANDLER_TEMPERATURE,
     CLUSTER_HANDLER_THERMOSTAT,
     DATA_ZHA,
+    QUIRK_METADATA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
 from .core.helpers import get_zha_data
 from .core.registries import SMARTTHINGS_HUMIDITY_CLUSTER, ZHA_ENTITIES
-from .entity import ZhaEntity
+from .entity import BaseZhaEntity, ZhaEntity
 
 if TYPE_CHECKING:
     from .core.cluster_handlers import ClusterHandler
@@ -92,6 +98,8 @@ BATTERY_SIZES = {
     11: "CR1632",
     255: "Unknown",
 }
+
+_LOGGER = logging.getLogger(__name__)
 
 CLUSTER_HANDLER_ST_HUMIDITY_CLUSTER = (
     f"cluster_handler_0x{SMARTTHINGS_HUMIDITY_CLUSTER:04x}"
@@ -133,17 +141,6 @@ class Sensor(ZhaEntity, SensorEntity):
     _divisor: int = 1
     _multiplier: int | float = 1
 
-    def __init__(
-        self,
-        unique_id: str,
-        zha_device: ZHADevice,
-        cluster_handlers: list[ClusterHandler],
-        **kwargs: Any,
-    ) -> None:
-        """Init this sensor."""
-        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
-        self._cluster_handler: ClusterHandler = cluster_handlers[0]
-
     @classmethod
     def create_entity(
         cls,
@@ -157,13 +154,43 @@ class Sensor(ZhaEntity, SensorEntity):
         Return entity if it is a supported configuration, otherwise return None
         """
         cluster_handler = cluster_handlers[0]
-        if (
+        if QUIRK_METADATA not in kwargs and (
             cls._attribute_name in cluster_handler.cluster.unsupported_attributes
             or cls._attribute_name not in cluster_handler.cluster.attributes_by_name
         ):
+            _LOGGER.debug(
+                "%s is not supported - skipping %s entity creation",
+                cls._attribute_name,
+                cls.__name__,
+            )
             return None
 
         return cls(unique_id, zha_device, cluster_handlers, **kwargs)
+
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZHADevice,
+        cluster_handlers: list[ClusterHandler],
+        **kwargs: Any,
+    ) -> None:
+        """Init this sensor."""
+        self._cluster_handler: ClusterHandler = cluster_handlers[0]
+        if QUIRK_METADATA in kwargs:
+            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA])
+        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
+
+    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
+        """Init this entity from the quirks metadata."""
+        super()._init_from_quirks_metadata(entity_metadata)
+        sensor_metadata: ZCLSensorMetadata = entity_metadata.entity_metadata
+        self._attribute_name = sensor_metadata.attribute_name
+        if sensor_metadata.divisor is not None:
+            self._divisor = sensor_metadata.divisor
+        if sensor_metadata.multiplier is not None:
+            self._multiplier = sensor_metadata.multiplier
+        if sensor_metadata.unit is not None:
+            self._attr_native_unit_of_measurement = sensor_metadata.unit
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
@@ -244,12 +271,96 @@ class PollableSensor(Sensor):
             )
 
 
+class DeviceCounterSensor(BaseZhaEntity, SensorEntity):
+    """Device counter sensor."""
+
+    _attr_should_poll = True
+    _attr_state_class: SensorStateClass = SensorStateClass.TOTAL
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
+
+    @classmethod
+    def create_entity(
+        cls,
+        unique_id: str,
+        zha_device: ZHADevice,
+        counter_groups: str,
+        counter_group: str,
+        counter: str,
+        **kwargs: Any,
+    ) -> Self | None:
+        """Entity Factory.
+
+        Return entity if it is a supported configuration, otherwise return None
+        """
+        return cls(
+            unique_id, zha_device, counter_groups, counter_group, counter, **kwargs
+        )
+
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZHADevice,
+        counter_groups: str,
+        counter_group: str,
+        counter: str,
+        **kwargs: Any,
+    ) -> None:
+        """Init this sensor."""
+        super().__init__(unique_id, zha_device, **kwargs)
+        state: State = self._zha_device.gateway.application_controller.state
+        self._zigpy_counter: Counter = (
+            getattr(state, counter_groups).get(counter_group, {}).get(counter, None)
+        )
+        self._attr_name: str = self._zigpy_counter.name
+        self.remove_future: asyncio.Future
+
+    @property
+    def available(self) -> bool:
+        """Return entity availability."""
+        return self._zha_device.available
+
+    async def async_added_to_hass(self) -> None:
+        """Run when about to be added to hass."""
+        self.remove_future = self.hass.loop.create_future()
+        self._zha_device.gateway.register_entity_reference(
+            self._zha_device.ieee,
+            self.entity_id,
+            self._zha_device,
+            {},
+            self.device_info,
+            self.remove_future,
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect entity object when removed."""
+        await super().async_will_remove_from_hass()
+        self.zha_device.gateway.remove_entity_reference(self)
+        self.remove_future.set_result(True)
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the entity."""
+        return self._zigpy_counter.value
+
+    async def async_update(self) -> None:
+        """Retrieve latest state."""
+        self.async_write_ha_state()
+
+
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class EnumSensor(Sensor):
     """Sensor with value from enum."""
 
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.ENUM
     _enum: type[enum.Enum]
+
+    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
+        """Init this entity from the quirks metadata."""
+        ZhaEntity._init_from_quirks_metadata(self, entity_metadata)  # pylint: disable=protected-access
+        sensor_metadata: ZCLEnumMetadata = entity_metadata.entity_metadata
+        self._attribute_name = sensor_metadata.attribute_name
+        self._enum = sensor_metadata.enum
 
     def formatter(self, value: int) -> str | None:
         """Use name of enum."""

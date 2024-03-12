@@ -1,4 +1,5 @@
 """Test Modem Caller ID integration."""
+
 from unittest.mock import patch
 
 from phone_modem import exceptions

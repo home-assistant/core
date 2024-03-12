@@ -1,4 +1,5 @@
 """Tests for the Backup integration."""
+
 from unittest.mock import patch
 
 import pytest

@@ -1,4 +1,5 @@
 """Test UniFi Network."""
+
 from copy import deepcopy
 from datetime import timedelta
 from http import HTTPStatus
@@ -255,7 +256,7 @@ async def test_hub_setup(
         )
         hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
-    entry = hub.config_entry
+    entry = hub.config.entry
     assert len(forward_entry_setup.mock_calls) == len(PLATFORMS)
     assert forward_entry_setup.mock_calls[0][1] == (entry, BUTTON_DOMAIN)
     assert forward_entry_setup.mock_calls[1][1] == (entry, TRACKER_DOMAIN)
@@ -263,17 +264,17 @@ async def test_hub_setup(
     assert forward_entry_setup.mock_calls[3][1] == (entry, SENSOR_DOMAIN)
     assert forward_entry_setup.mock_calls[4][1] == (entry, SWITCH_DOMAIN)
 
-    assert hub.host == ENTRY_CONFIG[CONF_HOST]
+    assert hub.config.host == ENTRY_CONFIG[CONF_HOST]
     assert hub.is_admin == (SITE[0]["role"] == "admin")
 
-    assert hub.option_allow_bandwidth_sensors == DEFAULT_ALLOW_BANDWIDTH_SENSORS
-    assert hub.option_allow_uptime_sensors == DEFAULT_ALLOW_UPTIME_SENSORS
-    assert isinstance(hub.option_block_clients, list)
-    assert hub.option_track_clients == DEFAULT_TRACK_CLIENTS
-    assert hub.option_track_devices == DEFAULT_TRACK_DEVICES
-    assert hub.option_track_wired_clients == DEFAULT_TRACK_WIRED_CLIENTS
-    assert hub.option_detection_time == timedelta(seconds=DEFAULT_DETECTION_TIME)
-    assert isinstance(hub.option_ssid_filter, set)
+    assert hub.config.option_allow_bandwidth_sensors == DEFAULT_ALLOW_BANDWIDTH_SENSORS
+    assert hub.config.option_allow_uptime_sensors == DEFAULT_ALLOW_UPTIME_SENSORS
+    assert isinstance(hub.config.option_block_clients, list)
+    assert hub.config.option_track_clients == DEFAULT_TRACK_CLIENTS
+    assert hub.config.option_track_devices == DEFAULT_TRACK_DEVICES
+    assert hub.config.option_track_wired_clients == DEFAULT_TRACK_WIRED_CLIENTS
+    assert hub.config.option_detection_time == timedelta(seconds=DEFAULT_DETECTION_TIME)
+    assert isinstance(hub.config.option_ssid_filter, set)
 
     assert hub.signal_reachable == "unifi-reachable-1"
     assert hub.signal_options_update == "unifi-options-1"
@@ -434,7 +435,7 @@ async def test_reconnect_mechanism_exceptions(
     await setup_unifi_integration(hass, aioclient_mock)
 
     with patch("aiounifi.Controller.login", side_effect=exception), patch(
-        "homeassistant.components.unifi.hub.UnifiHub.reconnect"
+        "homeassistant.components.unifi.hub.hub.UnifiWebsocket.reconnect"
     ) as mock_reconnect:
         await websocket_mock.disconnect()
 

@@ -1,4 +1,5 @@
 """Config flow for MQTT."""
+
 from __future__ import annotations
 
 from collections import OrderedDict
@@ -14,7 +15,12 @@ import voluptuous as vol
 
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.components.hassio import HassioServiceInfo
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_DISCOVERY,
@@ -26,7 +32,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.selector import (
@@ -171,7 +176,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -180,7 +185,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_broker(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm the setup."""
         errors: dict[str, str] = {}
         fields: OrderedDict[Any, Any] = OrderedDict()
@@ -211,7 +216,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="broker", data_schema=vol.Schema(fields), errors=errors
         )
 
-    async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
+    async def async_step_hassio(
+        self, discovery_info: HassioServiceInfo
+    ) -> ConfigFlowResult:
         """Receive a Hass.io discovery."""
         await self._async_handle_discovery_without_unique_id()
 
@@ -221,7 +228,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_hassio_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm a Hass.io discovery."""
         errors: dict[str, str] = {}
         if TYPE_CHECKING:
@@ -265,13 +272,13 @@ class MQTTOptionsFlowHandler(OptionsFlow):
         self.broker_config: dict[str, str | int] = {}
         self.options = config_entry.options
 
-    async def async_step_init(self, user_input: None = None) -> FlowResult:
+    async def async_step_init(self, user_input: None = None) -> ConfigFlowResult:
         """Manage the MQTT options."""
         return await self.async_step_broker()
 
     async def async_step_broker(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the MQTT broker configuration."""
         errors: dict[str, str] = {}
         fields: OrderedDict[Any, Any] = OrderedDict()
@@ -304,7 +311,7 @@ class MQTTOptionsFlowHandler(OptionsFlow):
 
     async def async_step_options(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the MQTT options."""
         errors = {}
         current_config = self.config_entry.data

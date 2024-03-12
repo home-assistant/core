@@ -1,4 +1,5 @@
 """Tests for the storage helper."""
+
 import asyncio
 from datetime import timedelta
 import json
@@ -6,6 +7,7 @@ import os
 from typing import Any, NamedTuple
 from unittest.mock import Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import py
 import pytest
 
@@ -19,7 +21,11 @@ from homeassistant.helpers import issue_registry as ir, storage
 from homeassistant.util import dt as dt_util
 from homeassistant.util.color import RGBColor
 
-from tests.common import async_fire_time_changed, async_test_home_assistant
+from tests.common import (
+    async_fire_time_changed,
+    async_fire_time_changed_exact,
+    async_test_home_assistant,
+)
 
 MOCK_VERSION = 1
 MOCK_VERSION_2 = 2
@@ -110,12 +116,12 @@ async def test_loading_parallel(
     results = await asyncio.gather(store.async_load(), store.async_load())
 
     assert results[0] == MOCK_DATA
-    assert results[0] is results[1]
+    assert results[1] == MOCK_DATA
     assert caplog.text.count(f"Loading data for {store.key}")
 
 
 async def test_saving_with_delay(
-    hass: HomeAssistant, store, hass_storage: dict[str, Any]
+    hass: HomeAssistant, store: storage.Store, hass_storage: dict[str, Any]
 ) -> None:
     """Test saving data after a delay."""
     store.async_delay_save(lambda: MOCK_DATA, 1)
@@ -129,6 +135,88 @@ async def test_saving_with_delay(
         "key": MOCK_KEY,
         "data": MOCK_DATA,
     }
+
+
+async def test_saving_with_delay_churn_reduction(
+    hass: HomeAssistant,
+    store: storage.Store,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test saving data after a delay with timer churn reduction."""
+    store.async_delay_save(lambda: MOCK_DATA, 1)
+    assert store.key not in hass_storage
+
+    freezer.tick(0.2)
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+    assert store.key not in hass_storage
+
+    freezer.tick(1)
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+    assert hass_storage[store.key] == {
+        "version": MOCK_VERSION,
+        "minor_version": 1,
+        "key": MOCK_KEY,
+        "data": MOCK_DATA,
+    }
+
+    del hass_storage[store.key]
+    # Simulate what some of the registries do when they add 100 entities
+    for _ in range(100):
+        store.async_delay_save(lambda: MOCK_DATA, 1)
+
+    freezer.tick(0.2)
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+    assert store.key not in hass_storage
+    store.async_delay_save(lambda: MOCK_DATA, 1)
+
+    freezer.tick(1)
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+    assert store.key in hass_storage
+
+    del hass_storage[store.key]
+
+    store.async_delay_save(lambda: MOCK_DATA, 1)
+    freezer.tick(0.5)
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+    assert store.key not in hass_storage
+
+    store.async_delay_save(lambda: MOCK_DATA, 1)
+    freezer.tick(0.8)
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+    assert store.key not in hass_storage
+
+    store.async_delay_save(lambda: MOCK_DATA, 1)
+    freezer.tick(0.8)
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+    assert store.key not in hass_storage
+
+    freezer.tick(0.2)
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+    assert store.key in hass_storage
+
+    # Make sure if we do another delayed save
+    # and one with a shorter delay, the shorter delay wins
+    del hass_storage[store.key]
+    store.async_delay_save(lambda: MOCK_DATA, 2)
+    freezer.tick(0.2)
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+    assert store.key not in hass_storage
+
+    store.async_delay_save(lambda: MOCK_DATA, 1)
+    freezer.tick(1.0)
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+    assert store.key in hass_storage
 
 
 async def test_saving_on_final_write(
@@ -279,6 +367,23 @@ async def test_multiple_delay_save_calls(
 
     data = await store.async_load()
     assert data == {"delay": "no"}
+
+
+async def test_delay_save_zero(
+    hass: HomeAssistant, store: storage.Store, hass_storage: dict[str, Any]
+) -> None:
+    """Test async_delay_save accepts 0."""
+    store.async_delay_save(lambda: {"delay": "0"}, 0)
+    # sleep is to run one event loop to get the task scheduled
+    await asyncio.sleep(0)
+    await hass.async_block_till_done()
+    assert store.key in hass_storage
+    assert hass_storage[store.key] == {
+        "version": MOCK_VERSION,
+        "minor_version": 1,
+        "key": MOCK_KEY,
+        "data": {"delay": "0"},
+    }
 
 
 async def test_multiple_save_calls(
@@ -602,8 +707,8 @@ async def test_loading_corrupt_core_file(
         assert issue_entry.translation_placeholders["storage_key"] == storage_key
         assert issue_entry.issue_domain == HOMEASSISTANT_DOMAIN
         assert (
-            issue_entry.translation_placeholders["error"]
-            == "unexpected character: line 1 column 1 (char 0)"
+            "unexpected character: line 1 column 1 (char 0)"
+            in issue_entry.translation_placeholders["error"]
         )
 
         files = await hass.async_add_executor_job(
@@ -663,8 +768,8 @@ async def test_loading_corrupt_file_known_domain(
         assert issue_entry.translation_placeholders["storage_key"] == storage_key
         assert issue_entry.issue_domain == "testdomain"
         assert (
-            issue_entry.translation_placeholders["error"]
-            == "unexpected content after document: line 1 column 17 (char 16)"
+            "unexpected content after document: line 1 column 17 (char 16)"
+            in issue_entry.translation_placeholders["error"]
         )
 
         files = await hass.async_add_executor_job(
@@ -691,6 +796,25 @@ async def test_os_error_is_fatal(tmpdir: py.path.local) -> None:
         ):
             await store.async_load()
 
+        # Verify second load is also failing
+        with pytest.raises(OSError), patch(
+            "homeassistant.helpers.storage.json_util.load_json", side_effect=OSError
+        ):
+            await store.async_load()
+
+        await hass.async_stop(force=True)
+
+
+async def test_json_load_failure(tmpdir: py.path.local) -> None:
+    """Test json load raising HomeAssistantError."""
+    async with async_test_home_assistant() as hass:
+        tmp_storage = await hass.async_add_executor_job(tmpdir.mkdir, "temp_storage")
+        hass.config.config_dir = tmp_storage
+
+        store = storage.Store(
+            hass, MOCK_VERSION_2, MOCK_KEY, minor_version=MOCK_MINOR_VERSION_1
+        )
+        await store.async_save({"hello": "world"})
         base_os_error = OSError()
         base_os_error.errno = 30
         home_assistant_error = HomeAssistantError()
@@ -706,7 +830,7 @@ async def test_os_error_is_fatal(tmpdir: py.path.local) -> None:
 
 
 async def test_read_only_store(
-    hass: HomeAssistant, read_only_store, hass_storage: dict[str, Any]
+    hass: HomeAssistant, read_only_store: storage.Store, hass_storage: dict[str, Any]
 ) -> None:
     """Test store opened in read only mode does not save."""
     read_only_store.async_delay_save(lambda: MOCK_DATA, 1)

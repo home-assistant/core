@@ -1,4 +1,5 @@
 """Tests for the kraken config_flow."""
+
 from unittest.mock import patch
 
 from homeassistant.components.kraken.const import CONF_TRACKED_ASSET_PAIRS, DOMAIN

@@ -1,4 +1,5 @@
 """Support for Roku binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -19,18 +20,11 @@ from .const import DOMAIN
 from .entity import RokuEntity
 
 
-@dataclass(frozen=True)
-class RokuBinarySensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class RokuBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes a Roku binary sensor entity."""
 
     value_fn: Callable[[RokuDevice], bool | None]
-
-
-@dataclass(frozen=True)
-class RokuBinarySensorEntityDescription(
-    BinarySensorEntityDescription, RokuBinarySensorEntityDescriptionMixin
-):
-    """Describes a Roku binary sensor entity."""
 
 
 BINARY_SENSORS: tuple[RokuBinarySensorEntityDescription, ...] = (

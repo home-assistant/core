@@ -1,4 +1,5 @@
 """Common methods used across tests for VeSync."""
+
 import json
 
 import requests_mock

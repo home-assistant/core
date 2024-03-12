@@ -1,7 +1,13 @@
 """Ecovacs button module."""
+
 from dataclasses import dataclass
 
-from deebot_client.capabilities import CapabilityExecute, CapabilityLifeSpan
+from deebot_client.capabilities import (
+    Capabilities,
+    CapabilityExecute,
+    CapabilityLifeSpan,
+    VacuumCapabilities,
+)
 from deebot_client.events import LifeSpan
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
@@ -13,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN, SUPPORTED_LIFESPANS
 from .controller import EcovacsController
 from .entity import (
+    CapabilityDevice,
     EcovacsCapabilityEntityDescription,
     EcovacsDescriptionEntity,
     EcovacsEntity,
@@ -37,6 +44,7 @@ class EcovacsLifespanButtonEntityDescription(ButtonEntityDescription):
 
 ENTITY_DESCRIPTIONS: tuple[EcovacsButtonEntityDescription, ...] = (
     EcovacsButtonEntityDescription(
+        device_capabilities=VacuumCapabilities,
         capability_fn=lambda caps: caps.map.relocation if caps.map else None,
         key="relocate",
         translation_key="relocate",
@@ -66,7 +74,7 @@ async def async_setup_entry(
     entities: list[EcovacsEntity] = get_supported_entitites(
         controller, EcovacsButtonEntity, ENTITY_DESCRIPTIONS
     )
-    for device in controller.devices:
+    for device in controller.devices(Capabilities):
         lifespan_capability = device.capabilities.life_span
         for description in LIFESPAN_ENTITY_DESCRIPTIONS:
             if description.component in lifespan_capability.types:
@@ -81,7 +89,7 @@ async def async_setup_entry(
 
 
 class EcovacsButtonEntity(
-    EcovacsDescriptionEntity[CapabilityExecute],
+    EcovacsDescriptionEntity[CapabilityDevice, CapabilityExecute],
     ButtonEntity,
 ):
     """Ecovacs button entity."""
@@ -94,7 +102,7 @@ class EcovacsButtonEntity(
 
 
 class EcovacsResetLifespanButtonEntity(
-    EcovacsDescriptionEntity[CapabilityLifeSpan],
+    EcovacsDescriptionEntity[Capabilities, CapabilityLifeSpan],
     ButtonEntity,
 ):
     """Ecovacs reset lifespan button entity."""

@@ -1,9 +1,12 @@
 """Ecovacs util functions."""
+
 from __future__ import annotations
 
 import random
 import string
 from typing import TYPE_CHECKING
+
+from deebot_client.capabilities import Capabilities
 
 from .entity import (
     EcovacsCapabilityEntityDescription,
@@ -30,9 +33,11 @@ def get_supported_entitites(
     """Return all supported entities for all devices."""
     entities: list[EcovacsEntity] = []
 
-    for device in controller.devices:
+    for device in controller.devices(Capabilities):
         for description in descriptions:
-            if capability := description.capability_fn(device.capabilities):
+            if isinstance(device.capabilities, description.device_capabilities) and (
+                capability := description.capability_fn(device.capabilities)
+            ):
                 entities.append(entity_class(device, capability, description))
 
     return entities

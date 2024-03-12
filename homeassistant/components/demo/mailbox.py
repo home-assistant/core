@@ -1,4 +1,5 @@
 """Support for a demo mailbox."""
+
 from __future__ import annotations
 
 from hashlib import sha1

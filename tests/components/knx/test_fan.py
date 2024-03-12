@@ -1,4 +1,5 @@
 """Test KNX fan."""
+
 from homeassistant.components.knx.const import KNX_ADDRESS
 from homeassistant.components.knx.schema import FanSchema
 from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON

@@ -1,4 +1,5 @@
 """Test Traccar Server diagnostics."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock
 

@@ -1,4 +1,5 @@
 """Support for Qingping sensors."""
+
 from __future__ import annotations
 
 from qingping_ble import (

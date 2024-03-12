@@ -1,4 +1,5 @@
 """Test the SlimProto Player config flow."""
+
 from unittest.mock import AsyncMock
 
 from homeassistant.components.slimproto.const import DEFAULT_NAME, DOMAIN

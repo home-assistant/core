@@ -1,4 +1,5 @@
 """The myUplink integration."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -22,6 +23,7 @@ from .coordinator import MyUplinkDataCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
+    Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,

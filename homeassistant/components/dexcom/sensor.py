@@ -1,4 +1,5 @@
 """Support for Dexcom sensors."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity
@@ -12,7 +13,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import COORDINATOR, DOMAIN, GLUCOSE_TREND_ICON, GLUCOSE_VALUE_ICON, MG_DL
+from .const import DOMAIN, GLUCOSE_TREND_ICON, MG_DL
 
 
 async def async_setup_entry(
@@ -21,7 +22,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Dexcom sensors."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
     username = config_entry.data[CONF_USERNAME]
     unit_of_measurement = config_entry.options[CONF_UNIT_OF_MEASUREMENT]
     async_add_entities(
@@ -31,7 +32,6 @@ async def async_setup_entry(
                 coordinator, username, config_entry.entry_id, unit_of_measurement
             ),
         ],
-        False,
     )
 
 
@@ -55,7 +55,6 @@ class DexcomSensorEntity(CoordinatorEntity, SensorEntity):
 class DexcomGlucoseValueSensor(DexcomSensorEntity):
     """Representation of a Dexcom glucose value sensor."""
 
-    _attr_icon = GLUCOSE_VALUE_ICON
     _attr_translation_key = "glucose_value"
 
     def __init__(

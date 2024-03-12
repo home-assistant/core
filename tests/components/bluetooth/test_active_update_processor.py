@@ -1,4 +1,5 @@
 """Tests for the Bluetooth integration PassiveBluetoothDataUpdateCoordinator."""
+
 from __future__ import annotations
 
 import asyncio
@@ -329,7 +330,7 @@ async def test_second_poll_needed(
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
 
     await hass.async_block_till_done()
-    assert async_handle_update.mock_calls[-1] == call({"testdata": 1})
+    assert async_handle_update.mock_calls[1] == call({"testdata": 1})
 
     cancel()
 

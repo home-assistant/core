@@ -1,4 +1,5 @@
 """Support for esphome entities."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -21,7 +22,6 @@ from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -65,10 +65,8 @@ def async_static_info_updated(
         device_info = entry_data.device_info
         if TYPE_CHECKING:
             assert device_info is not None
-        hass.async_create_task(
-            entry_data.async_remove_entities(
-                hass, current_infos.values(), device_info.mac_address
-            )
+        entry_data.async_remove_entities(
+            hass, current_infos.values(), device_info.mac_address
         )
 
     # Then update the actual info
@@ -206,31 +204,19 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         entry_data = self._entry_data
-        hass = self.hass
-        key = self._key
-        static_info = self._static_info
-
         self.async_on_remove(
-            entry_data.async_register_key_static_info_remove_callback(
-                static_info,
-                functools.partial(self.async_remove, force_remove=True),
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                hass,
-                entry_data.signal_device_updated,
+            entry_data.async_subscribe_device_updated(
                 self._on_device_update,
             )
         )
         self.async_on_remove(
             entry_data.async_subscribe_state_update(
-                self._state_type, key, self._on_state_update
+                self._state_type, self._key, self._on_state_update
             )
         )
         self.async_on_remove(
             entry_data.async_register_key_static_info_updated_callback(
-                static_info, self._on_static_info_update
+                self._static_info, self._on_static_info_update
             )
         )
         self._update_state_from_entry_data()
