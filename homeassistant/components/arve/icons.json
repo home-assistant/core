@@ -1,0 +1,27 @@
+{
+  "entity": {
+    "sensor": {
+      "humidity_value": {
+        "default": "mdi:water-percent"
+      },
+      "co2_value": {
+        "default": "mdi:molecule-co2"
+      },
+      "aqi_value": {
+        "default": "mdi:scale"
+      },
+      "pm10_value": {
+        "default": "mdi:molecule"
+      },
+      "pm25_value": {
+        "default": "mdi:molecule"
+      },
+      "temperature_value": {
+        "default": "mdi:thermometer"
+      },
+      "tvoc_value": {
+        "default": "mdi:flask"
+      }
+    }
+  }
+}
