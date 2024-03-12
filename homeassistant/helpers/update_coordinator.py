@@ -255,7 +255,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         ).cancel
 
     @callback
-    def __wrap_handle_refresh_interval(self) -> None:
+    def __wrap_handle_refresh_interval(self, _now: datetime | None = None) -> None:
         """Handle a refresh interval occurrence."""
         if self.config_entry:
             self.config_entry.async_create_background_task(

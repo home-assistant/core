@@ -1,5 +1,5 @@
 """Tests for the update coordinator."""
-
+import asyncio
 from datetime import timedelta
 import logging
 from unittest.mock import AsyncMock, Mock, patch
@@ -14,7 +14,7 @@ from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import update_coordinator
+from homeassistant.helpers import event, update_coordinator
 from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -448,6 +448,20 @@ async def test_coordinator_entity(
     assert len(crd._listeners) == 1
     _on_remove_callback()
     assert len(crd._listeners) == 0
+
+
+async def test_schedule_refresh_point_in_utc_time(
+    hass: HomeAssistant,
+    crd: update_coordinator.DataUpdateCoordinator[int],
+) -> None:
+    """Test that subclasses overriding _schedule_refresh with async_track_point_in_utc_time continue to work."""
+    crd._handle_refresh_interval = AsyncMock()
+    event.async_track_point_in_utc_time(crd.hass, crd._job, utcnow())
+
+    # wait until the handler is called
+    await asyncio.sleep(0)
+    await hass.async_block_till_done()
+    crd._handle_refresh_interval.assert_called_once()
 
 
 async def test_async_set_updated_data(
