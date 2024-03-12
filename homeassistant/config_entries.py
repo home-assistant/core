@@ -1,4 +1,5 @@
 """Manage config entries in Home Assistant."""
+
 from __future__ import annotations
 
 import asyncio
@@ -1026,7 +1027,13 @@ class ConfigEntry:
 
         Background tasks are automatically canceled when config entry is unloaded.
 
-        target: target to call.
+        A background task is different from a normal task:
+
+          - Will not block startup
+          - Will be automatically cancelled on shutdown
+          - Calls to async_block_till_done will not wait for completion
+
+        This method must be run in the event loop.
         """
         task = hass.async_create_background_task(target, name, eager_start)
         if task.done():
@@ -1045,7 +1052,7 @@ class FlowCancelledError(Exception):
     """Error to indicate that a flow has been cancelled."""
 
 
-class ConfigEntriesFlowManager(data_entry_flow.BaseFlowManager[ConfigFlowResult]):
+class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult, str]):
     """Manage all the config entry flows that are in progress."""
 
     _flow_result = ConfigFlowResult
@@ -1170,7 +1177,9 @@ class ConfigEntriesFlowManager(data_entry_flow.BaseFlowManager[ConfigFlowResult]
         self._discovery_debouncer.async_shutdown()
 
     async def async_finish_flow(
-        self, flow: data_entry_flow.BaseFlowHandler, result: ConfigFlowResult
+        self,
+        flow: data_entry_flow.FlowHandler[ConfigFlowResult, str],
+        result: ConfigFlowResult,
     ) -> ConfigFlowResult:
         """Finish a config flow and add an entry."""
         flow = cast(ConfigFlow, flow)
@@ -1290,7 +1299,9 @@ class ConfigEntriesFlowManager(data_entry_flow.BaseFlowManager[ConfigFlowResult]
         return flow
 
     async def async_post_init(
-        self, flow: data_entry_flow.BaseFlowHandler, result: ConfigFlowResult
+        self,
+        flow: data_entry_flow.FlowHandler[ConfigFlowResult, str],
+        result: ConfigFlowResult,
     ) -> None:
         """After a flow is initialised trigger new flow notifications."""
         source = flow.context["source"]
@@ -1936,7 +1947,7 @@ def _async_abort_entries_match(
             raise data_entry_flow.AbortFlow("already_configured")
 
 
-class ConfigEntryBaseFlow(data_entry_flow.BaseFlowHandler[ConfigFlowResult]):
+class ConfigEntryBaseFlow(data_entry_flow.FlowHandler[ConfigFlowResult, str]):
     """Base class for config and option flows."""
 
     _flow_result = ConfigFlowResult
@@ -2288,7 +2299,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         return self.async_abort(reason=reason)
 
 
-class OptionsFlowManager(data_entry_flow.BaseFlowManager[ConfigFlowResult]):
+class OptionsFlowManager(data_entry_flow.FlowManager[ConfigFlowResult, str]):
     """Flow to set options for a configuration entry."""
 
     _flow_result = ConfigFlowResult
@@ -2317,7 +2328,9 @@ class OptionsFlowManager(data_entry_flow.BaseFlowManager[ConfigFlowResult]):
         return handler.async_get_options_flow(entry)
 
     async def async_finish_flow(
-        self, flow: data_entry_flow.BaseFlowHandler, result: ConfigFlowResult
+        self,
+        flow: data_entry_flow.FlowHandler[ConfigFlowResult, str],
+        result: ConfigFlowResult,
     ) -> ConfigFlowResult:
         """Finish an options flow and update options for configuration entry.
 
@@ -2337,7 +2350,9 @@ class OptionsFlowManager(data_entry_flow.BaseFlowManager[ConfigFlowResult]):
         result["result"] = True
         return result
 
-    async def _async_setup_preview(self, flow: data_entry_flow.BaseFlowHandler) -> None:
+    async def _async_setup_preview(
+        self, flow: data_entry_flow.FlowHandler[ConfigFlowResult, str]
+    ) -> None:
         """Set up preview for an option flow handler."""
         entry = self._async_get_config_entry(flow.handler)
         await _load_integration(self.hass, entry.domain, {})

@@ -1,4 +1,5 @@
 """Tests for the EntityPlatform helper."""
+
 import asyncio
 from collections.abc import Iterable
 from datetime import timedelta
@@ -71,7 +72,7 @@ async def test_polling_only_updates_entities_it_should_poll(
     poll_ent.async_update.reset_mock()
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=20))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert not no_poll_ent.async_update.called
     assert poll_ent.async_update.called
@@ -120,7 +121,7 @@ async def test_polling_updates_entities_with_exception(hass: HomeAssistant) -> N
     update_err.clear()
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=20))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(update_ok) == 3
     assert len(update_err) == 1
@@ -139,7 +140,7 @@ async def test_update_state_adds_entities(hass: HomeAssistant) -> None:
     ent2.update = lambda *_: component.add_entities([ent1])
 
     async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(hass.states.async_entity_ids()) == 2
 
@@ -200,7 +201,7 @@ async def test_set_scan_interval_via_platform(
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    component.setup({DOMAIN: {"platform": "platform"}})
+    await component.async_setup({DOMAIN: {"platform": "platform"}})
 
     await hass.async_block_till_done()
     assert mock_track.called

@@ -1,4 +1,5 @@
 """Support for hunter douglas shades."""
+
 from __future__ import annotations
 
 import asyncio

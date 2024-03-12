@@ -1,4 +1,5 @@
 """Helper to handle a set of topics to subscribe to."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine

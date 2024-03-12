@@ -1,4 +1,5 @@
 """Support for Tuya Alarm."""
+
 from __future__ import annotations
 
 from enum import StrEnum
@@ -87,7 +88,6 @@ async def async_setup_entry(
 class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
     """Tuya Alarm Entity."""
 
-    _attr_icon = "mdi:security"
     _attr_name = None
 
     def __init__(

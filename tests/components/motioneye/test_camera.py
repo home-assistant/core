@@ -1,4 +1,5 @@
 """Test the motionEye camera."""
+
 import copy
 from typing import Any, cast
 from unittest.mock import AsyncMock, Mock, call

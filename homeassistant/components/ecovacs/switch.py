@@ -1,4 +1,5 @@
 """Ecovacs switch module."""
+
 from dataclasses import dataclass
 from typing import Any
 

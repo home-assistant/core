@@ -1,11 +1,12 @@
 """Support for the Torque OBD application."""
+
 from __future__ import annotations
 
 import re
 
 import voluptuous as vol
 
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_EMAIL, CONF_NAME, DEGREE
 from homeassistant.core import HomeAssistant, callback
@@ -74,7 +75,7 @@ class TorqueReceiveDataView(HomeAssistantView):
     @callback
     def get(self, request):
         """Handle Torque data request."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
         data = request.query
 
         if self.email is not None and self.email != data[SENSOR_EMAIL_FIELD]:

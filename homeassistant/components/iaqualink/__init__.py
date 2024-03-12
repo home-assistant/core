@@ -1,4 +1,5 @@
 """Component to embed Aqualink devices."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine

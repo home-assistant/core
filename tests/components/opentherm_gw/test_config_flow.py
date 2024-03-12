@@ -1,4 +1,5 @@
 """Test the Opentherm Gateway config flow."""
+
 from unittest.mock import patch
 
 from pyotgw.vars import OTGW, OTGW_ABOUT

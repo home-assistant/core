@@ -1,4 +1,5 @@
 """Support for Tado hot water zones."""
+
 import logging
 from typing import Any
 

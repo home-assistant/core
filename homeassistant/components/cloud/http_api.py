@@ -1,4 +1,5 @@
 """The HTTP api to control the cloud integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -25,7 +26,7 @@ from homeassistant.components.alexa import (
 )
 from homeassistant.components.google_assistant import helpers as google_helpers
 from homeassistant.components.homeassistant import exposed_entities
-from homeassistant.components.http import HomeAssistantView, require_admin
+from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import HomeAssistant, callback
@@ -197,7 +198,7 @@ class GoogleActionsSyncView(HomeAssistantView):
     @_handle_cloud_errors
     async def post(self, request: web.Request) -> web.Response:
         """Trigger a Google Actions sync."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
         cloud: Cloud[CloudClient] = hass.data[DOMAIN]
         gconf = await cloud.client.get_google_config()
         status = await gconf.async_sync_entities(gconf.agent_user_id)
@@ -217,7 +218,7 @@ class CloudLoginView(HomeAssistantView):
     )
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle login request."""
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
         cloud: Cloud[CloudClient] = hass.data[DOMAIN]
         await cloud.login(data["email"], data["password"])
 
@@ -235,7 +236,7 @@ class CloudLogoutView(HomeAssistantView):
     @_handle_cloud_errors
     async def post(self, request: web.Request) -> web.Response:
         """Handle logout request."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
         cloud: Cloud[CloudClient] = hass.data[DOMAIN]
 
         async with asyncio.timeout(REQUEST_TIMEOUT):
@@ -262,7 +263,7 @@ class CloudRegisterView(HomeAssistantView):
     )
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle registration request."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
         cloud: Cloud[CloudClient] = hass.data[DOMAIN]
 
         client_metadata = None
@@ -299,7 +300,7 @@ class CloudResendConfirmView(HomeAssistantView):
     @RequestDataValidator(vol.Schema({vol.Required("email"): str}))
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle resending confirm email code request."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
         cloud: Cloud[CloudClient] = hass.data[DOMAIN]
 
         async with asyncio.timeout(REQUEST_TIMEOUT):
@@ -319,7 +320,7 @@ class CloudForgotPasswordView(HomeAssistantView):
     @RequestDataValidator(vol.Schema({vol.Required("email"): str}))
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle forgot password request."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
         cloud: Cloud[CloudClient] = hass.data[DOMAIN]
 
         async with asyncio.timeout(REQUEST_TIMEOUT):
@@ -648,16 +649,14 @@ async def google_assistant_list(
     gconf = await cloud.client.get_google_config()
     entities = google_helpers.async_get_entities(hass, gconf)
 
-    result = []
-
-    for entity in entities:
-        result.append(
-            {
-                "entity_id": entity.entity_id,
-                "traits": [trait.name for trait in entity.traits()],
-                "might_2fa": entity.might_2fa_traits(),
-            }
-        )
+    result = [
+        {
+            "entity_id": entity.entity_id,
+            "traits": [trait.name for trait in entity.traits()],
+            "might_2fa": entity.might_2fa_traits(),
+        }
+        for entity in entities
+    ]
 
     connection.send_result(msg["id"], result)
 
@@ -742,16 +741,14 @@ async def alexa_list(
     alexa_config = await cloud.client.get_alexa_config()
     entities = alexa_entities.async_get_entities(hass, alexa_config)
 
-    result = []
-
-    for entity in entities:
-        result.append(
-            {
-                "entity_id": entity.entity_id,
-                "display_categories": entity.default_display_categories(),
-                "interfaces": [ifc.name() for ifc in entity.interfaces()],
-            }
-        )
+    result = [
+        {
+            "entity_id": entity.entity_id,
+            "display_categories": entity.default_display_categories(),
+            "interfaces": [ifc.name() for ifc in entity.interfaces()],
+        }
+        for entity in entities
+    ]
 
     connection.send_result(msg["id"], result)
 

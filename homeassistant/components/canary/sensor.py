@@ -1,4 +1,5 @@
 """Support for Canary sensors."""
+
 from __future__ import annotations
 
 from typing import Final
@@ -74,11 +75,11 @@ async def async_setup_entry(
         for device in location.devices:
             if device.is_online:
                 device_type = device.device_type
-                for sensor_type in SENSOR_TYPES:
-                    if device_type.get("name") in sensor_type[4]:
-                        sensors.append(
-                            CanarySensor(coordinator, sensor_type, location, device)
-                        )
+                sensors.extend(
+                    CanarySensor(coordinator, sensor_type, location, device)
+                    for sensor_type in SENSOR_TYPES
+                    if device_type.get("name") in sensor_type[4]
+                )
 
     async_add_entities(sensors, True)
 

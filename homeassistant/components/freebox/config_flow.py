@@ -1,4 +1,5 @@
 """Config flow to configure the Freebox integration."""
+
 import logging
 from typing import Any
 

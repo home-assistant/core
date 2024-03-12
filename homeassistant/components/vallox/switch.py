@@ -1,4 +1,5 @@
 """Support for Vallox ventilation unit switches."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -61,23 +62,17 @@ class ValloxSwitchEntity(ValloxEntity, SwitchEntity):
         await self.coordinator.async_request_refresh()
 
 
-@dataclass(frozen=True)
-class ValloxMetricKeyMixin:
-    """Dataclass to allow defining metric_key without a default value."""
+@dataclass(frozen=True, kw_only=True)
+class ValloxSwitchEntityDescription(SwitchEntityDescription):
+    """Describes Vallox switch entity."""
 
     metric_key: str
-
-
-@dataclass(frozen=True)
-class ValloxSwitchEntityDescription(SwitchEntityDescription, ValloxMetricKeyMixin):
-    """Describes Vallox switch entity."""
 
 
 SWITCH_ENTITIES: tuple[ValloxSwitchEntityDescription, ...] = (
     ValloxSwitchEntityDescription(
         key="bypass_locked",
         translation_key="bypass_locked",
-        icon="mdi:arrow-horizontal-lock",
         metric_key="A_CYC_BYPASS_LOCKED",
     ),
 )
@@ -93,10 +88,8 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        [
-            ValloxSwitchEntity(
-                data["name"], data["coordinator"], description, data["client"]
-            )
-            for description in SWITCH_ENTITIES
-        ]
+        ValloxSwitchEntity(
+            data["name"], data["coordinator"], description, data["client"]
+        )
+        for description in SWITCH_ENTITIES
     )

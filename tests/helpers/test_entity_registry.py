@@ -1,4 +1,5 @@
 """Tests for the Entity Registry."""
+
 from datetime import timedelta
 from typing import Any
 from unittest.mock import patch

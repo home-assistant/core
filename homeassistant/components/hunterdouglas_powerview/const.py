@@ -1,6 +1,5 @@
 """Constants for Hunter Douglas Powerview hub."""
 
-
 from aiohttp.client_exceptions import ServerDisconnectedError
 from aiopvapi.helpers.aiorequest import (
     PvApiConnectionError,
