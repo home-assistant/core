@@ -566,8 +566,8 @@ build.json @home-assistant/supervisor
 /tests/components/homekit/ @bdraco
 /homeassistant/components/homekit_controller/ @Jc2k @bdraco
 /tests/components/homekit_controller/ @Jc2k @bdraco
-/homeassistant/components/homematic/ @pvizeli @danielperna84
-/tests/components/homematic/ @pvizeli @danielperna84
+/homeassistant/components/homematic/ @pvizeli
+/tests/components/homematic/ @pvizeli
 /homeassistant/components/homewizard/ @DCSBL
 /tests/components/homewizard/ @DCSBL
 /homeassistant/components/honeywell/ @rdfurman @mkmer
