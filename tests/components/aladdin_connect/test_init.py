@@ -1,4 +1,5 @@
 """Test for Aladdin Connect init logic."""
+
 from unittest.mock import MagicMock, patch
 
 from AIOAladdinConnect.session_manager import InvalidPasswordError

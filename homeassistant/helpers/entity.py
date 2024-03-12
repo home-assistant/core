@@ -1,4 +1,5 @@
 """An abstract class for entities."""
+
 from __future__ import annotations
 
 from abc import ABCMeta
@@ -46,8 +47,11 @@ from homeassistant.const import (
 from homeassistant.core import (
     CALLBACK_TYPE,
     Context,
+    Event,
+    HassJobType,
     HomeAssistant,
     callback,
+    get_hassjob_callable_job_type,
     get_release_channel,
 )
 from homeassistant.exceptions import (
@@ -65,7 +69,7 @@ from .event import (
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
 )
-from .typing import UNDEFINED, EventType, StateType, UndefinedType
+from .typing import UNDEFINED, StateType, UndefinedType
 
 if TYPE_CHECKING:
     from functools import cached_property
@@ -524,6 +528,8 @@ class Entity(
     __combined_unrecorded_attributes: frozenset[str] = (
         _entity_component_unrecorded_attributes | _unrecorded_attributes
     )
+    # Job type cache
+    _job_types: dict[str, HassJobType] | None = None
 
     # StateInfo. Set by EntityPlatform by calling async_internal_added_to_hass
     # While not purely typed, it makes typehinting more useful for us
@@ -564,6 +570,20 @@ class Entity(
         cls.__combined_unrecorded_attributes = (
             cls._entity_component_unrecorded_attributes | cls._unrecorded_attributes
         )
+
+    def get_hassjob_type(self, function_name: str) -> HassJobType:
+        """Get the job type function for the given name.
+
+        This is used for entity service calls to avoid
+        figuring out the job type each time.
+        """
+        if not self._job_types:
+            self._job_types = {}
+        if function_name not in self._job_types:
+            self._job_types[function_name] = get_hassjob_callable_job_type(
+                getattr(self, function_name)
+            )
+        return self._job_types[function_name]
 
     @cached_property
     def should_poll(self) -> bool:
@@ -607,7 +627,7 @@ class Entity(
 
     def _device_class_name_helper(
         self,
-        component_translations: dict[str, Any],
+        component_translations: dict[str, str],
     ) -> str | None:
         """Return a translated name of the entity based on its device class."""
         if not self.has_entity_name:
@@ -672,7 +692,7 @@ class Entity(
     def _name_internal(
         self,
         device_class_name: str | None,
-        platform_translations: dict[str, Any],
+        platform_translations: dict[str, str],
     ) -> str | UndefinedType | None:
         """Return the name of the entity."""
         if hasattr(self, "_attr_name"):
@@ -682,8 +702,6 @@ class Entity(
             and (name_translation_key := self._name_translation_key)
             and (name := platform_translations.get(name_translation_key))
         ):
-            if TYPE_CHECKING:
-                assert isinstance(name, str)
             return self._substitute_name_placeholders(name)
         if hasattr(self, "entity_description"):
             description_name = self.entity_description.name
@@ -1430,7 +1448,10 @@ class Entity(
 
             self.async_on_remove(
                 async_track_entity_registry_updated_event(
-                    self.hass, self.entity_id, self._async_registry_updated
+                    self.hass,
+                    self.entity_id,
+                    self._async_registry_updated,
+                    job_type=HassJobType.Callback,
                 )
             )
             self._async_subscribe_device_updates()
@@ -1449,7 +1470,7 @@ class Entity(
 
     @callback
     def _async_registry_updated(
-        self, event: EventType[er.EventEntityRegistryUpdatedData]
+        self, event: Event[er.EventEntityRegistryUpdatedData]
     ) -> None:
         """Handle entity registry update."""
         action = event.data["action"]
@@ -1457,11 +1478,11 @@ class Entity(
         self._removed_from_registry = is_remove
         if action == "update" or is_remove:
             self.hass.async_create_task(
-                self._async_process_registry_update_or_remove(event)
+                self._async_process_registry_update_or_remove(event), eager_start=True
             )
 
     async def _async_process_registry_update_or_remove(
-        self, event: EventType[er.EventEntityRegistryUpdatedData]
+        self, event: Event[er.EventEntityRegistryUpdatedData]
     ) -> None:
         """Handle entity registry update or remove."""
         data = event.data
@@ -1514,7 +1535,7 @@ class Entity(
 
     @callback
     def _async_device_registry_updated(
-        self, event: EventType[EventDeviceRegistryUpdatedData]
+        self, event: Event[EventDeviceRegistryUpdatedData]
     ) -> None:
         """Handle device registry update."""
         data = event.data
@@ -1545,6 +1566,7 @@ class Entity(
             self.hass,
             device_id,
             self._async_device_registry_updated,
+            job_type=HassJobType.Callback,
         )
         if (
             not self._on_remove

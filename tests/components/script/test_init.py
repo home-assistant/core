@@ -1,4 +1,5 @@
 """The tests for the Script component."""
+
 import asyncio
 from datetime import timedelta
 from typing import Any
@@ -898,6 +899,7 @@ async def test_logbook_humanify_script_started_event(hass: HomeAssistant) -> Non
     hass.config.components.add("recorder")
     await async_setup_component(hass, DOMAIN, {})
     await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
 
     event1, event2 = mock_humanify(
         hass,

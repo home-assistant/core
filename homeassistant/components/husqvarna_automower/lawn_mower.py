@@ -1,4 +1,5 @@
 """Husqvarna Automower lawn mower entity."""
+
 import logging
 
 from aioautomower.exceptions import ApiException

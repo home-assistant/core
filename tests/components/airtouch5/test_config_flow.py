@@ -1,4 +1,5 @@
 """Test the Airtouch 5 config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 import pytest

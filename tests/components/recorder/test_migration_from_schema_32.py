@@ -1,4 +1,5 @@
 """The tests for the recorder filter matching the EntityFilter component."""
+
 import datetime
 import importlib
 import sys

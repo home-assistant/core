@@ -1,4 +1,5 @@
 """Config flow for Schlage integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -8,10 +9,8 @@ import pyschlage
 from pyschlage.exceptions import NotAuthorizedError
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN, LOGGER
 
@@ -21,7 +20,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SchlageConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Schlage."""
 
     VERSION = 1
@@ -30,7 +29,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self._show_user_form({})
@@ -45,13 +44,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(user_id)
         return self.async_create_entry(title=username, data=user_input)
 
-    def _show_user_form(self, errors: dict[str, str]) -> FlowResult:
+    def _show_user_form(self, errors: dict[str, str]) -> ConfigFlowResult:
         """Show the user form."""
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle reauth upon an API authentication error."""
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -60,7 +61,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         assert self.reauth_entry is not None
         if user_input is None:
@@ -85,7 +86,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
         return self.async_abort(reason="reauth_successful")
 
-    def _show_reauth_form(self, errors: dict[str, str]) -> FlowResult:
+    def _show_reauth_form(self, errors: dict[str, str]) -> ConfigFlowResult:
         """Show the reauth form."""
         return self.async_show_form(
             step_id="reauth_confirm",

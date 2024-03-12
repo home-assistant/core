@@ -1,4 +1,5 @@
 """Backup platform for the ZHA integration."""
+
 import logging
 
 from homeassistant.core import HomeAssistant

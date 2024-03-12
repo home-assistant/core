@@ -1,4 +1,5 @@
 """Tests for the Freebox config flow."""
+
 from ipaddress import ip_address
 from unittest.mock import Mock, patch
 

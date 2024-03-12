@@ -1,4 +1,5 @@
 """Support for Abode Security System cameras."""
+
 from __future__ import annotations
 
 from datetime import timedelta

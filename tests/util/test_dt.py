@@ -1,4 +1,5 @@
 """Test Home Assistant date util methods."""
+
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta

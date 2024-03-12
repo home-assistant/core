@@ -1,4 +1,5 @@
 """Manifest validation."""
+
 from __future__ import annotations
 
 from enum import IntEnum
@@ -265,6 +266,7 @@ INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
         vol.Optional("loggers"): [str],
         vol.Optional("disabled"): str,
         vol.Optional("iot_class"): vol.In(SUPPORTED_IOT_CLASSES),
+        vol.Optional("single_config_entry"): bool,
     }
 )
 
@@ -291,6 +293,7 @@ def manifest_schema(value: dict[str, Any]) -> vol.Schema:
 CUSTOM_INTEGRATION_MANIFEST_SCHEMA = INTEGRATION_MANIFEST_SCHEMA.extend(
     {
         vol.Optional("version"): vol.All(str, verify_version),
+        vol.Optional("import_executor"): bool,
     }
 )
 

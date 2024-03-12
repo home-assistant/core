@@ -1,4 +1,5 @@
 """Test the Sense config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 import pytest

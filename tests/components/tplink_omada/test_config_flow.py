@@ -1,13 +1,14 @@
 """Test the TP-Link Omada config flows."""
+
 from unittest.mock import patch
 
+from tplink_omada_client import OmadaSite
 from tplink_omada_client.exceptions import (
     ConnectionFailed,
     LoginFailed,
     OmadaClientException,
     UnsupportedControllerVersion,
 )
-from tplink_omada_client.omadaclient import OmadaSite
 
 from homeassistant import config_entries
 from homeassistant.components.tplink_omada.config_flow import (

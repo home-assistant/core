@@ -1,4 +1,5 @@
 """Support for AlarmDecoder sensors (Shows Panel Display)."""
+
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -20,7 +21,7 @@ async def async_setup_entry(
 class AlarmDecoderSensor(SensorEntity):
     """Representation of an AlarmDecoder keypad."""
 
-    _attr_icon = "mdi:alarm-check"
+    _attr_translation_key = "alarm_panel_display"
     _attr_name = "Alarm Panel Display"
     _attr_should_poll = False
 

@@ -1,4 +1,5 @@
 """Web socket API for Zigbee Home Automation devices."""
+
 from __future__ import annotations
 
 import asyncio

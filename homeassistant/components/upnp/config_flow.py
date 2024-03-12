@@ -1,4 +1,5 @@
 """Config flow for UPNP."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -7,11 +8,10 @@ from urllib.parse import urlparse
 
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.ssdp import SsdpServiceInfo
+from homeassistant.config_entries import SOURCE_IGNORE, ConfigFlow, ConfigFlowResult
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONFIG_ENTRY_HOST,
@@ -74,7 +74,7 @@ def _is_igd_device(discovery_info: ssdp.SsdpServiceInfo) -> bool:
     return root_device_info.get(ssdp.ATTR_UPNP_DEVICE_TYPE) in {ST_IGD_V1, ST_IGD_V2}
 
 
-class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a UPnP/IGD config flow."""
 
     VERSION = 1
@@ -100,7 +100,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: Mapping[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow start."""
         LOGGER.debug("async_step_user: user_input: %s", user_input)
 
@@ -151,7 +151,9 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=data_schema,
         )
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
+    async def async_step_ssdp(
+        self, discovery_info: ssdp.SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a discovered UPnP/IGD device.
 
         This flow is triggered by the SSDP component. It will check if the
@@ -201,7 +203,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 # Check ssdp_st to prevent swapping between IGDv1 and IGDv2.
                 continue
 
-            if entry.source == config_entries.SOURCE_IGNORE:
+            if entry.source == SOURCE_IGNORE:
                 # Host was already ignored. Don't update ignored entries.
                 return self.async_abort(reason="discovery_ignored")
 
@@ -225,7 +227,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp_confirm(
         self, user_input: Mapping[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm integration via SSDP."""
         LOGGER.debug("async_step_ssdp_confirm: user_input: %s", user_input)
         if user_input is None:
@@ -235,7 +237,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         discovery = self._remove_discovery(self.unique_id)
         return await self._async_create_entry_from_discovery(discovery)
 
-    async def async_step_ignore(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_ignore(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Ignore this config flow."""
         usn = user_input["unique_id"]
         discovery = self._remove_discovery(usn)
@@ -255,7 +257,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_create_entry_from_discovery(
         self,
         discovery: SsdpServiceInfo,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Create an entry from discovery."""
         LOGGER.debug(
             "_async_create_entry_from_discovery: discovery: %s",

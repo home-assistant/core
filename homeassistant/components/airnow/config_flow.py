@@ -1,4 +1,5 @@
 """Config flow for AirNow integration."""
+
 import logging
 from typing import Any
 
@@ -6,16 +7,15 @@ from pyairnow import WebServiceAPI
 from pyairnow.errors import AirNowError, EmptyResponseError, InvalidKeyError
 import voluptuous as vol
 
-from homeassistant import core
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
+    ConfigFlowResult,
     OptionsFlow,
     OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -62,7 +62,7 @@ class AirNowConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -117,7 +117,7 @@ class AirNowConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     @staticmethod
-    @core.callback
+    @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlow:
@@ -130,7 +130,7 @@ class AirNowOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(data=user_input)

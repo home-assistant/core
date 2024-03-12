@@ -1,4 +1,5 @@
 """Handler for Hass.io."""
+
 from __future__ import annotations
 
 import asyncio
@@ -589,7 +590,7 @@ class HassIO:
                 timeout=aiohttp.ClientTimeout(total=timeout),
             )
 
-            if request.status not in (HTTPStatus.OK, HTTPStatus.BAD_REQUEST):
+            if request.status != HTTPStatus.OK:
                 _LOGGER.error("%s return code %d", command, request.status)
                 raise HassioAPIError()
 

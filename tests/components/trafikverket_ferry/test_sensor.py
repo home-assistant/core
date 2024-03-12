@@ -1,4 +1,5 @@
 """The test for the Trafikverket sensor platform."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -27,9 +28,7 @@ async def test_sensor(
     assert state1.state == "Harbor 1"
     assert state2.state == "Harbor 2"
     assert state3.state == str(dt_util.now().year + 1) + "-05-01T12:00:00+00:00"
-    assert state1.attributes["icon"] == "mdi:ferry"
     assert state1.attributes["other_information"] == [""]
-    assert state2.attributes["icon"] == "mdi:ferry"
 
     monkeypatch.setattr(get_ferries[0], "other_information", ["Nothing exiting"])
 

@@ -1,4 +1,5 @@
 """Numeric derivative of data coming from a source sensor over time."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -18,7 +19,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -30,7 +31,7 @@ from homeassistant.helpers.event import (
     EventStateChangedData,
     async_track_state_change_event,
 )
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CONF_ROUND_DIGITS,
@@ -211,7 +212,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                 _LOGGER.warning("Could not restore last state: %s", err)
 
         @callback
-        def calc_derivative(event: EventType[EventStateChangedData]) -> None:
+        def calc_derivative(event: Event[EventStateChangedData]) -> None:
             """Handle the sensor state changes."""
             if (
                 (old_state := event.data["old_state"]) is None

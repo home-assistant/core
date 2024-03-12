@@ -1,4 +1,5 @@
 """Errors for media source."""
+
 from homeassistant.exceptions import HomeAssistantError
 
 

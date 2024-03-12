@@ -1,4 +1,5 @@
 """Tests for the Zodiac config flow."""
+
 from unittest.mock import patch
 
 import pytest

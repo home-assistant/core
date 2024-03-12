@@ -1,4 +1,5 @@
 """Tests for the Bluetooth integration manager."""
+
 from collections.abc import Generator
 from datetime import timedelta
 import time

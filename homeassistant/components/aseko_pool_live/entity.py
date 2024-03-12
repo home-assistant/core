@@ -1,4 +1,5 @@
 """Aseko entity."""
+
 from aioaseko import Unit
 
 from homeassistant.helpers.device_registry import DeviceInfo

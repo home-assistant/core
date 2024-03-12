@@ -1,4 +1,5 @@
 """Support for Aqualink temperature sensors."""
+
 from __future__ import annotations
 
 from iaqualink.device import AqualinkBinarySensor

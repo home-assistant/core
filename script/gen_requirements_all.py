@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Generate updated constraint and requirements files."""
+
 from __future__ import annotations
 
 import difflib
@@ -100,7 +101,7 @@ regex==2021.8.28
 # requirements so we can directly link HA versions to these library versions.
 anyio==4.1.0
 h11==0.14.0
-httpcore==1.0.2
+httpcore==1.0.4
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
@@ -151,13 +152,9 @@ faust-cchardet>=2.1.18
 # https://github.com/aaugustin/websockets/issues/1329
 websockets>=11.0.1
 
-# pyasn1 0.5.0 has breaking changes which cause pysnmplib to fail
-# until they are resolved, we need to pin pyasn1 to 0.4.8 and
-# pysnmplib to 5.0.21 to avoid the issue.
-# https://github.com/pyasn1/pyasn1/pull/30#issuecomment-1517564335
-# https://github.com/pysnmp/pysnmp/issues/51
-pyasn1==0.4.8
-pysnmplib==5.0.21
+# pysnmplib is no longer maintained and does not work with newer
+# python
+pysnmplib==1000000000.0.0
 # pysnmp is no longer maintained and does not work with newer
 # python
 pysnmp==1000000000.0.0

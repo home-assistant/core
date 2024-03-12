@@ -1,8 +1,9 @@
 """Provide a way to connect entities belonging to one device."""
+
 from __future__ import annotations
 
 from collections import UserDict
-from collections.abc import ValuesView
+from collections.abc import Mapping, ValuesView
 from enum import StrEnum
 from functools import lru_cache, partial
 import logging
@@ -15,12 +16,13 @@ from yarl import URL
 
 from homeassistant.backports.functools import cached_property
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback, get_release_channel
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util.json import format_unserializable_data
 import homeassistant.util.uuid as uuid_util
 
-from . import storage
+from . import storage, translation
 from .debounce import Debouncer
 from .deprecation import (
     DeprecatedConstantEnum,
@@ -30,6 +32,7 @@ from .deprecation import (
 )
 from .frame import report
 from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes
+from .registry import BaseRegistry
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
@@ -44,7 +47,7 @@ EVENT_DEVICE_REGISTRY_UPDATED = "device_registry_updated"
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION_MAJOR = 1
 STORAGE_VERSION_MINOR = 5
-SAVE_DELAY = 10
+
 CLEANUP_DELAY = 10
 
 CONNECTION_BLUETOOTH = "bluetooth"
@@ -94,6 +97,8 @@ class DeviceInfo(TypedDict, total=False):
     suggested_area: str | None
     sw_version: str | None
     hw_version: str | None
+    translation_key: str | None
+    translation_placeholders: Mapping[str, str] | None
     via_device: tuple[str, str]
 
 
@@ -453,7 +458,7 @@ class DeviceRegistryItems(UserDict[str, _EntryTypeT]):
         return None
 
 
-class DeviceRegistry:
+class DeviceRegistry(BaseRegistry):
     """Class to hold a registry of devices."""
 
     devices: DeviceRegistryItems[DeviceEntry]
@@ -497,6 +502,33 @@ class DeviceRegistry:
         """Check if device is deleted."""
         return self.deleted_devices.get_entry(identifiers, connections)
 
+    def _substitute_name_placeholders(
+        self,
+        domain: str,
+        name: str,
+        translation_placeholders: Mapping[str, str],
+    ) -> str:
+        """Substitute placeholders in entity name."""
+        try:
+            return name.format(**translation_placeholders)
+        except KeyError as err:
+            if get_release_channel() != "stable":
+                raise HomeAssistantError("Missing placeholder %s" % err) from err
+            report_issue = async_suggest_report_issue(
+                self.hass, integration_domain=domain
+            )
+            _LOGGER.warning(
+                (
+                    "Device from integration %s has translation placeholders '%s' "
+                    "which do not match the name '%s', please %s"
+                ),
+                domain,
+                translation_placeholders,
+                name,
+                report_issue,
+            )
+            return name
+
     @callback
     def async_get_or_create(
         self,
@@ -518,11 +550,31 @@ class DeviceRegistry:
         serial_number: str | None | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
         sw_version: str | None | UndefinedType = UNDEFINED,
+        translation_key: str | None = None,
+        translation_placeholders: Mapping[str, str] | None = None,
         via_device: tuple[str, str] | None | UndefinedType = UNDEFINED,
     ) -> DeviceEntry:
         """Get device. Create if it doesn't exist."""
         if configuration_url is not UNDEFINED:
             configuration_url = _validate_configuration_url(configuration_url)
+
+        config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
+        if config_entry is None:
+            raise HomeAssistantError(
+                f"Can't link device to unknown config entry {config_entry_id}"
+            )
+
+        if translation_key:
+            full_translation_key = (
+                f"component.{config_entry.domain}.device.{translation_key}.name"
+            )
+            translations = translation.async_get_cached_translations(
+                self.hass, self.hass.config.language, "device", config_entry.domain
+            )
+            translated_name = translations.get(full_translation_key, translation_key)
+            name = self._substitute_name_placeholders(
+                config_entry.domain, translated_name, translation_placeholders or {}
+            )
 
         # Reconstruct a DeviceInfo dict from the arguments.
         # When we upgrade to Python 3.12, we can change this method to instead
@@ -549,11 +601,6 @@ class DeviceRegistry:
                 continue
             device_info[key] = val  # type: ignore[literal-required]
 
-        config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
-        if config_entry is None:
-            raise HomeAssistantError(
-                f"Can't link device to unknown config entry {config_entry_id}"
-            )
         device_info_type = _validate_device_info(config_entry, device_info)
 
         if identifiers is None or identifiers is UNDEFINED:
@@ -854,11 +901,6 @@ class DeviceRegistry:
         self._device_data = devices.data
 
     @callback
-    def async_schedule_save(self) -> None:
-        """Schedule saving the device registry."""
-        self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
-
-    @callback
     def _data_to_save(self) -> dict[str, list[dict[str, Any]]]:
         """Return data of device registry to store in a file."""
         data: dict[str, list[dict[str, Any]]] = {}
@@ -1045,7 +1087,7 @@ def async_cleanup(
 ) -> None:
     """Clean up device registry."""
     # Find all devices that are referenced by a config_entry.
-    config_entry_ids = {entry.entry_id for entry in hass.config_entries.async_entries()}
+    config_entry_ids = set(hass.config_entries.async_entry_ids())
     references_config_entries = {
         device.id
         for device in dev_reg.devices.values()
@@ -1054,9 +1096,13 @@ def async_cleanup(
     }
 
     # Find all devices that are referenced in the entity registry.
-    references_entities = {entry.device_id for entry in ent_reg.entities.values()}
+    device_ids_referenced_by_entities = set(ent_reg.entities.get_device_ids())
 
-    orphan = set(dev_reg.devices) - references_entities - references_config_entries
+    orphan = (
+        set(dev_reg.devices)
+        - device_ids_referenced_by_entities
+        - references_config_entries
+    )
 
     for dev_id in orphan:
         dev_reg.async_remove_device(dev_id)
@@ -1095,8 +1141,8 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
 
     hass.bus.async_listen(
         event_type=lr.EVENT_LABEL_REGISTRY_UPDATED,
-        event_filter=_label_removed_from_registry_filter,  # type: ignore[arg-type]
-        listener=_handle_label_registry_update,  # type: ignore[arg-type]
+        event_filter=_label_removed_from_registry_filter,
+        listener=_handle_label_registry_update,
     )
 
     @callback

@@ -1,4 +1,5 @@
 """The tests for the Pilight sensor platform."""
+
 import logging
 
 import pytest
