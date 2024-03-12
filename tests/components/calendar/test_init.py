@@ -1,4 +1,5 @@
 """The tests for the calendar component."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -21,7 +22,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.issue_registry import IssueRegistry
 import homeassistant.util.dt as dt_util
 
-from .conftest import TEST_DOMAIN, MockCalendarEntity, create_mock_platform
+from .conftest import TEST_DOMAIN, MockCalendarEntity, MockConfigEntry
 
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
@@ -51,10 +52,11 @@ async def mock_setup_platform(
     set_time_zone: Any,
     frozen_time: Any,
     mock_setup_integration: Any,
-    test_entities: list[MockCalendarEntity],
+    config_entry: MockConfigEntry,
 ) -> None:
     """Fixture to setup platforms used in the test and fixtures are set up in the right order."""
-    await create_mock_platform(hass, test_entities)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
 
 async def test_events_http_api(

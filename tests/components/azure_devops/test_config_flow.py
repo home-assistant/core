@@ -1,4 +1,5 @@
 """Test the Azure DevOps config flow."""
+
 from unittest.mock import patch
 
 from aioazuredevops.core import DevOpsProject

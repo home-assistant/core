@@ -1,4 +1,5 @@
 """Test the Flexit Nordic (BACnet) config flow."""
+
 import asyncio.exceptions
 
 from flexit_bacnet import DecodingError

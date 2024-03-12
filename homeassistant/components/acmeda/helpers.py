@@ -1,4 +1,5 @@
 """Helper functions for Acmeda Pulse."""
+
 from __future__ import annotations
 
 from aiopulse import Roller

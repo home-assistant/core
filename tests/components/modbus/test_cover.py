@@ -1,4 +1,5 @@
 """The tests for the Modbus cover component."""
+
 from pymodbus.exceptions import ModbusException
 import pytest
 

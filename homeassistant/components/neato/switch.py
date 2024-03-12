@@ -1,4 +1,5 @@
 """Support for Neato Connected Vacuums switches."""
+
 from __future__ import annotations
 
 from datetime import timedelta

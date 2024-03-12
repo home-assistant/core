@@ -1,4 +1,5 @@
 """Tests for the wemo component."""
+
 import asyncio
 from datetime import timedelta
 from unittest.mock import create_autospec, patch

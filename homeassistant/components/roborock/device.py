@@ -1,4 +1,5 @@
 """Support for Roborock device base class."""
+
 from typing import Any
 
 from roborock.api import AttributeCache, RoborockClient

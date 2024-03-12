@@ -1,4 +1,5 @@
 """Support for Homekit sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -358,7 +359,7 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
     CharacteristicsTypes.VENDOR_EVE_THERMO_VALVE_POSITION: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.VENDOR_EVE_THERMO_VALVE_POSITION,
         name="Valve position",
-        icon="mdi:pipe-valve",
+        translation_key="valve_position",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
@@ -520,7 +521,7 @@ class HomeKitBatterySensor(HomeKitSensor):
 
     @property
     def is_charging(self) -> bool:
-        """Return true if currently charing."""
+        """Return true if currently charging."""
         # 0 = not charging
         # 1 = charging
         # 2 = not chargeable

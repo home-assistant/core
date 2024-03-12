@@ -1,4 +1,5 @@
 """Support for HERE travel time sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -24,7 +25,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -139,11 +139,6 @@ class HERETravelTimeSensor(
         """Wait for start so origin and destination entities can be resolved."""
         await self._async_restore_state()
         await super().async_added_to_hass()
-
-        async def _update_at_start(_: HomeAssistant) -> None:
-            await self.async_update()
-
-        self.async_on_remove(async_at_started(self.hass, _update_at_start))
 
     @callback
     def _handle_coordinator_update(self) -> None:

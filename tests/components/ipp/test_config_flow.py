@@ -1,4 +1,5 @@
 """Tests for the IPP config flow."""
+
 import dataclasses
 from ipaddress import ip_address
 import json

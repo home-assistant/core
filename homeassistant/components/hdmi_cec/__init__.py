@@ -1,4 +1,5 @@
 """Support for HDMI CEC."""
+
 from __future__ import annotations
 
 from functools import reduce

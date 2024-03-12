@@ -1,4 +1,5 @@
 """Support for Rheem EcoNet thermostats."""
+
 from typing import Any
 
 from pyeconet.equipment import EquipmentType

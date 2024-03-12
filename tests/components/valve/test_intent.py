@@ -6,7 +6,6 @@ from homeassistant.components.valve import (
     SERVICE_CLOSE_VALVE,
     SERVICE_OPEN_VALVE,
     SERVICE_SET_VALVE_POSITION,
-    intent as valve_intent,
 )
 from homeassistant.const import STATE_CLOSED, STATE_OPEN
 from homeassistant.core import HomeAssistant
@@ -60,7 +59,7 @@ async def test_close_valve_intent(hass: HomeAssistant) -> None:
 
 async def test_set_valve_position(hass: HomeAssistant) -> None:
     """Test HassSetPosition intent for valves."""
-    await valve_intent.async_setup_intents(hass)
+    assert await async_setup_component(hass, "intent", {})
 
     entity_id = f"{DOMAIN}.test_valve"
     hass.states.async_set(
