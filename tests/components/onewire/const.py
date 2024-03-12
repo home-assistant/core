@@ -224,6 +224,29 @@ MOCK_OWPROXY_DEVICES = {
             {ATTR_INJECT_READS: b"    29.123"},
         ],
     },
+    "A6.111111111111": {
+        ATTR_INJECT_READS: [
+            b"DS2438",  # read device type
+        ],
+        Platform.SENSOR: [
+            {ATTR_INJECT_READS: b"    25.123"},
+            {ATTR_INJECT_READS: b"    72.7563"},
+            {ATTR_INJECT_READS: b"    73.7563"},
+            {ATTR_INJECT_READS: b"    74.7563"},
+            {ATTR_INJECT_READS: b"    75.7563"},
+            {
+                ATTR_INJECT_READS: ProtocolError,
+            },
+            {ATTR_INJECT_READS: b"    969.265"},
+            {ATTR_INJECT_READS: b"    65.8839"},
+            {ATTR_INJECT_READS: b"     2.97"},
+            {ATTR_INJECT_READS: b"    4.74"},
+            {ATTR_INJECT_READS: b"    0.12"},
+        ],
+        Platform.SWITCH: [
+            {ATTR_INJECT_READS: b"    1"},
+        ],
+    },
     "EF.111111111111": {
         ATTR_INJECT_READS: [
             b"HobbyBoards_EF",  # read type
