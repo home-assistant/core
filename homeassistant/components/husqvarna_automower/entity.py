@@ -13,7 +13,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-HUSQVARNA_URL = "https://developer.husqvarnagroup.cloud/"
+HUSQVARNA_URL = "https://developer.husqvarnagroup.cloud"
 
 
 class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
