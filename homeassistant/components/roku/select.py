@@ -19,15 +19,6 @@ from .entity import RokuEntity
 from .helpers import format_channel_name, roku_exception_handler
 
 
-@dataclass(frozen=True)
-class RokuSelectEntityDescriptionMixin:
-    """Mixin for required keys."""
-
-    options_fn: Callable[[RokuDevice], list[str]]
-    value_fn: Callable[[RokuDevice], str | None]
-    set_fn: Callable[[RokuDevice, Roku, str], Awaitable[None]]
-
-
 def _get_application_name(device: RokuDevice) -> str | None:
     if device.app is None or device.app.name is None:
         return None
@@ -86,11 +77,13 @@ async def _tune_channel(device: RokuDevice, roku: Roku, value: str) -> None:
         await roku.tune(_channel.number)
 
 
-@dataclass(frozen=True)
-class RokuSelectEntityDescription(
-    SelectEntityDescription, RokuSelectEntityDescriptionMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class RokuSelectEntityDescription(SelectEntityDescription):
     """Describes Roku select entity."""
+
+    options_fn: Callable[[RokuDevice], list[str]]
+    value_fn: Callable[[RokuDevice], str | None]
+    set_fn: Callable[[RokuDevice, Roku, str], Awaitable[None]]
 
 
 ENTITIES: tuple[RokuSelectEntityDescription, ...] = (

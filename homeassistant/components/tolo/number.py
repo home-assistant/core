@@ -19,19 +19,12 @@ from . import ToloSaunaCoordinatorEntity, ToloSaunaUpdateCoordinator
 from .const import DOMAIN, FAN_TIMER_MAX, POWER_TIMER_MAX, SALT_BATH_TIMER_MAX
 
 
-@dataclass(frozen=True)
-class ToloNumberEntityDescriptionBase:
-    """Required values when describing TOLO Number entities."""
+@dataclass(frozen=True, kw_only=True)
+class ToloNumberEntityDescription(NumberEntityDescription):
+    """Class describing TOLO Number entities."""
 
     getter: Callable[[SettingsInfo], int | None]
     setter: Callable[[ToloClient, int | None], Any]
-
-
-@dataclass(frozen=True)
-class ToloNumberEntityDescription(
-    NumberEntityDescription, ToloNumberEntityDescriptionBase
-):
-    """Class describing TOLO Number entities."""
 
     entity_category = EntityCategory.CONFIG
     native_min_value = 0
