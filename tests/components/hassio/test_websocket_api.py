@@ -172,6 +172,7 @@ async def test_websocket_supervisor_api_error(
     aioclient_mock.get(
         "http://127.0.0.1/ping",
         json={"result": "error", "message": "example error"},
+        status=400,
     )
 
     await websocket_client.send_json(
