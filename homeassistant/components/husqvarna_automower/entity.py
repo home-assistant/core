@@ -1,12 +1,10 @@
 """Platform for Husqvarna Automower base entity."""
 
 import logging
-from typing import cast
 
 from aioautomower.model import MowerAttributes
 from aioautomower.utils import structure_token
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -31,7 +29,7 @@ class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
         """Initialize AutomowerEntity."""
         super().__init__(coordinator)
         self.mower_id = mower_id
-        entry = cast(ConfigEntry, self.coordinator.config_entry)
+        entry = self.coordinator.config_entry
         structured_token = structure_token(entry.data["token"]["access_token"])
         self._attr_device_info = DeviceInfo(
             configuration_url=f"{HUSQVARNA_URL}/applications/{structured_token.client_id}",
