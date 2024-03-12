@@ -392,6 +392,7 @@ class _ScriptRun:
         self._context = context
         self._log_exceptions = log_exceptions
         self._step = -1
+        self._started = False
         self._stop = asyncio.Event()
         self._stopped = asyncio.Event()
         self._conversation_response: str | None | UndefinedType = UNDEFINED
@@ -420,6 +421,7 @@ class _ScriptRun:
 
     async def async_run(self) -> ScriptRunResult | None:
         """Run script."""
+        self._started = True
         # Push the script to the script execution stack
         if (script_stack := script_stack_cv.get()) is None:
             script_stack = []
@@ -501,7 +503,12 @@ class _ScriptRun:
     async def async_stop(self) -> None:
         """Stop script run."""
         self._stop.set()
-        await self._stopped.wait()
+        # If the script was never started
+        # the stopped event will never be
+        # set because the script will never
+        # start running
+        if self._started:
+            await self._stopped.wait()
 
     def _handle_exception(
         self, exception: Exception, continue_on_error: bool, log_exceptions: bool
@@ -1593,7 +1600,7 @@ class Script:
             await self.async_stop(update_state=False, spare=run)
 
         if started_action:
-            self._hass.async_run_job(started_action)
+            started_action()
         self.last_triggered = utcnow()
         self._changed()
 
