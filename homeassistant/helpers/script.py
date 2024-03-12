@@ -1600,7 +1600,7 @@ class Script:
             await self.async_stop(update_state=False, spare=run)
 
         if started_action:
-            self._hass.async_run_job(started_action)
+            started_action()
         self.last_triggered = utcnow()
         self._changed()
 
