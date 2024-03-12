@@ -159,7 +159,7 @@ script_stack_cv: ContextVar[list[int] | None] = ContextVar("script_stack", defau
 
 def _clear_timeout_future(timeout_future: asyncio.Future[None]) -> None:
     """Clear the exception retrieved from the timeout future."""
-    with suppress(asyncio.CancelledError, TimeoutError):
+    with suppress(asyncio.CancelledError):
         timeout_future.result()
 
 
@@ -167,12 +167,6 @@ def _set_result_unless_done(future: asyncio.Future[None]) -> None:
     """Set result of future unless it is done."""
     if not future.done():
         future.set_result(None)
-
-
-def _set_timeout_unless_done(future: asyncio.Future[None]) -> None:
-    """Set timeout of future unless it is done."""
-    if not future.done():
-        future.set_exception(asyncio.TimeoutError)
 
 
 def action_trace_append(variables, path):
@@ -618,7 +612,7 @@ class _ScriptRun:
         loop = self._hass.loop
         timeout_future = loop.create_future()
         timeout_handle = loop.call_later(
-            delay_seconds, _set_timeout_unless_done, timeout_future
+            delay_seconds, _set_result_unless_done, timeout_future
         )
         try:
             await asyncio.wait(
@@ -659,7 +653,7 @@ class _ScriptRun:
         if timeout:
             timeout_future = loop.create_future()
             timeout_handle = loop.call_later(
-                timeout, _set_timeout_unless_done, timeout_future
+                timeout, _set_result_unless_done, timeout_future
             )
             futures.append(timeout_future)
 
@@ -687,7 +681,7 @@ class _ScriptRun:
                 if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
                     self._log(_TIMEOUT_MSG)
                     trace_set_result(wait=self._variables["wait"], timeout=True)
-                    raise _AbortScript from timeout_future.exception()
+                    raise _AbortScript from TimeoutError()
         finally:
             if timeout_handle and not timeout_future.done():
                 timeout_handle.cancel()
@@ -1035,7 +1029,7 @@ class _ScriptRun:
         if timeout:
             timeout_future = self._hass.loop.create_future()
             timeout_handle = self._hass.loop.call_later(
-                timeout, _set_timeout_unless_done, timeout_future
+                timeout, _set_result_unless_done, timeout_future
             )
             futures.append(timeout_future)
 
@@ -1073,7 +1067,7 @@ class _ScriptRun:
                 if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
                     self._log(_TIMEOUT_MSG)
                     trace_set_result(wait=self._variables["wait"], timeout=True)
-                    raise _AbortScript from timeout_future.exception()
+                    raise _AbortScript from TimeoutError()
         finally:
             if timeout_handle and not timeout_future.done():
                 timeout_handle.cancel()
