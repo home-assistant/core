@@ -633,10 +633,9 @@ class _ScriptRun:
 
     async def _async_wait_template_step(self):
         """Handle a wait template."""
+        timeout: float | None
         if CONF_TIMEOUT in self._action:
-            timeout: float | None = self._get_pos_time_period_template(
-                CONF_TIMEOUT
-            ).total_seconds()
+            timeout = self._get_pos_time_period_template(CONF_TIMEOUT).total_seconds()
         else:
             timeout = None
 
@@ -1017,10 +1016,9 @@ class _ScriptRun:
 
     async def _async_wait_for_trigger_step(self):
         """Wait for a trigger event."""
+        timeout: float | None
         if CONF_TIMEOUT in self._action:
-            timeout: float | None = self._get_pos_time_period_template(
-                CONF_TIMEOUT
-            ).total_seconds()
+            timeout = self._get_pos_time_period_template(CONF_TIMEOUT).total_seconds()
         else:
             timeout = None
 
