@@ -590,7 +590,7 @@ class HassIO:
                 timeout=aiohttp.ClientTimeout(total=timeout),
             )
 
-            if response.status == HTTPStatus.BAD_REQUEST:
+            if response.status != HTTPStatus.OK:
                 error = await response.json(encoding="utf-8")
                 if error.get(ATTR_RESULT) == "error":
                     raise HassioAPIError(error.get(ATTR_MESSAGE))
