@@ -1,17 +1,16 @@
 """Test ESPHome numbers."""
 
 import math
-from unittest.mock import call, Mock
-
-import pytest
+from unittest.mock import Mock, call
 
 from aioesphomeapi import (
     APIClient,
+    APIConnectionError,
     NumberInfo,
     NumberMode as ESPHomeNumberMode,
     NumberState,
-    APIConnectionError,
 )
+import pytest
 
 from homeassistant.components.number import (
     ATTR_VALUE,
