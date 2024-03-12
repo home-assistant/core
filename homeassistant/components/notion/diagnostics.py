@@ -10,8 +10,8 @@ from homeassistant.const import CONF_EMAIL, CONF_UNIQUE_ID, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import NotionData
 from .const import CONF_REFRESH_TOKEN, CONF_USER_UUID, DOMAIN
+from .coordinator import NotionData
 
 CONF_DEVICE_KEY = "device_key"
 CONF_HARDWARE_ID = "hardware_id"

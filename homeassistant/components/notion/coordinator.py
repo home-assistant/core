@@ -5,8 +5,8 @@ from dataclasses import dataclass, field
 from datetime import timedelta
 from typing import Any
 
-from aionotion.client import Client
 from aionotion.bridge.models import Bridge
+from aionotion.client import Client
 from aionotion.errors import InvalidCredentialsError, NotionError
 from aionotion.listener.models import Listener
 from aionotion.sensor.models import Sensor
