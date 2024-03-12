@@ -185,6 +185,7 @@ async def test_websocket_supervisor_api_error(
     )
 
     msg = await websocket_client.receive_json()
+    assert msg["error"]["code"] == "unknown_error"
     assert msg["error"]["message"] == "example error"
 
 
