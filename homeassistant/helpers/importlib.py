@@ -1,4 +1,4 @@
-"""Class to reload platforms."""
+"""Helper to import modules from asyncio."""
 
 from __future__ import annotations
 
