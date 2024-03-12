@@ -77,7 +77,6 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.util import slugify
-from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.dt import utcnow
 
 from . import condition, config_validation as cv, service, template
@@ -1665,7 +1664,7 @@ class Script:
         # asyncio.shield as asyncio.shield yields to the event loop, which would cause
         # us to wait for script runs added after the call to async_stop.
         aws = [
-            create_eager_task(run.async_stop()) for run in self._runs if run != spare
+            asyncio.create_task(run.async_stop()) for run in self._runs if run != spare
         ]
         if not aws:
             return
