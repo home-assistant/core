@@ -100,7 +100,7 @@ class DexcomGlucoseTrendSensor(DexcomSensorEntity):
 
     _attr_translation_key = "glucose_trend"
     _attr_device_class = SensorDeviceClass.ENUM
-    _attr_options = [*trends.values()]
+    _attr_options = list(TRENDS.values())
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, username: str, entry_id: str
