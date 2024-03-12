@@ -41,6 +41,7 @@ SAFE_QUERY_PARAMS: Final = ["height", "width"]
 STORAGE_VERSION = 1
 STORAGE_KEY = "http.auth"
 CONTENT_USER_NAME = "Home Assistant Content"
+STRICT_CONNECTION_EXCLUDED_PATH = "/api/webhook/"
 
 
 @callback
@@ -232,6 +233,7 @@ async def async_setup_auth(
         if (
             not authenticated
             and strict_connection_enabled
+            and not request.path.startswith(STRICT_CONNECTION_EXCLUDED_PATH)
             and not await hass.auth.session.async_validate_strict_connection_session(
                 request
             )
