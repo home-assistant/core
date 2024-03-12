@@ -3,7 +3,6 @@ from __future__ import annotations  # noqa: D100
 from datetime import timedelta
 import logging
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -25,9 +24,15 @@ class TrestDataCoordinator(DataUpdateCoordinator[SolarHistory]):
             name="Trest Solar Controller",
             update_interval=timedelta(seconds=REFRESH_INTERVAL),
         )
-        self.trest_solar_service = CloudSolarTrestService(
-            hass, CONF_USERNAME, CONF_PASSWORD
-        )
+
+        if self.config_entry is not None:
+            self.trest_solar_service = CloudSolarTrestService(
+                hass,
+                self.config_entry.data["username"],
+                self.config_entry.data["password"],
+            )
+        else:
+            raise MissingConfigEntryException("Missing config entry")
 
     async def _async_update_data(self) -> SolarHistory:
         """Fetch data from Trest Cloud."""
@@ -38,3 +43,7 @@ class TrestDataCoordinator(DataUpdateCoordinator[SolarHistory]):
         solar_history = SolarHistory(response)
 
         return solar_history
+
+
+class MissingConfigEntryException(Exception):
+    """Missing the config entry."""
