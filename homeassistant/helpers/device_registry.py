@@ -263,6 +263,9 @@ class DeviceEntry:
     @property
     def dict_repr(self) -> dict[str, Any]:
         """Return a dict representation of the entry."""
+        # Convert sets and tuples to lists
+        # so the JSON serializer does not have to do
+        # it every time
         return {
             "area_id": self.area_id,
             "configuration_url": self.configuration_url,
