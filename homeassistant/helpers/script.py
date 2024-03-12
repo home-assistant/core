@@ -703,15 +703,19 @@ class _ScriptRun:
                 await long_task
 
         # Wait for long task while monitoring for a stop request.
-        await asyncio.wait([self._stop, long_task], return_when=asyncio.FIRST_COMPLETED)
-        # If our task is cancelled, then cancel long task, too. Note that if long task
-        # is cancelled otherwise the CancelledError exception will not be raised to
-        # here due to the call to asyncio.wait(). Rather we'll check for that below.
-        if self._stop.done():
-            # Stop requested, cancel long task and return None.
-            await async_cancel_long_task()
-            raise asyncio.CancelledError()
-        if long_task.cancelled():
+        try:
+            await asyncio.wait(
+                [self._stop, long_task], return_when=asyncio.FIRST_COMPLETED
+            )
+        finally:
+            # If our task is cancelled, then cancel long task, too. Note that if long task
+            # is cancelled otherwise the CancelledError exception will not be raised to
+            # here due to the call to asyncio.wait(). Rather we'll check for that below.
+            if self._stop.done():
+                # Stop requested, cancel long task and return None.
+                await async_cancel_long_task()
+
+        if long_task.cancelled() or self._stop.done():
             raise asyncio.CancelledError()
         if long_task.done():
             # Propagate any exceptions that occurred.
