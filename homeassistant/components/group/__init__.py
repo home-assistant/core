@@ -185,13 +185,9 @@ def groups_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
     if DOMAIN not in hass.data:
         return []
 
-    groups = []
-
-    for group in hass.data[DOMAIN].entities:
-        if entity_id in group.tracking:
-            groups.append(group.entity_id)
-
-    return groups
+    return [
+        group for group in hass.data[DOMAIN].entities if entity_id in group.tracking
+    ]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

@@ -85,23 +85,19 @@ async def async_setup_entry(
 
     pv_entry: PowerviewEntryData = hass.data[DOMAIN][entry.entry_id]
 
-    entities: list[PowerViewSensor] = []
-    for shade in pv_entry.shade_data.values():
-        room_name = getattr(pv_entry.room_data.get(shade.room_id), ATTR_NAME, "")
-        for description in SENSORS:
-            if description.create_entity_fn(shade):
-                entities.append(
-                    PowerViewSensor(
-                        pv_entry.coordinator,
-                        pv_entry.device_info,
-                        room_name,
-                        shade,
-                        shade.name,
-                        description,
-                    )
-                )
-
-    async_add_entities(entities)
+    async_add_entities(
+        PowerViewSensor(
+            pv_entry.coordinator,
+            pv_entry.device_info,
+            getattr(pv_entry.room_data.get(shade.room_id), ATTR_NAME, ""),
+            shade,
+            shade.name,
+            description,
+        )
+        for shade in pv_entry.shade_data.values()
+        for description in SENSORS
+        if description.create_entity_fn(shade)
+    )
 
 
 class PowerViewSensor(ShadeEntity, SensorEntity):

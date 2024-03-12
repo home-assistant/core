@@ -171,15 +171,9 @@ class HomeTemplate(Home):
 
     def _generate_mocks(self):
         """Generate mocks for groups and devices."""
-        mock_devices = []
-        for device in self.devices:
-            mock_devices.append(_get_mock(device))
-        self.devices = mock_devices
+        self.devices = [_get_mock(device) for device in self.devices]
 
-        mock_groups = []
-        for group in self.groups:
-            mock_groups.append(_get_mock(group))
-        self.groups = mock_groups
+        self.groups = [_get_mock(group) for group in self.groups]
 
     def download_configuration(self):
         """Return the initial json config."""
