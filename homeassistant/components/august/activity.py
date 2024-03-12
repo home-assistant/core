@@ -78,7 +78,8 @@ class ActivityStream(AugustSubscriberMixin):
                 _LOGGER,
                 cooldown=ACTIVITY_DEBOUNCE_COOLDOWN,
                 immediate=True,
-                function=partial(self._async_background_update_house_id, house_id),
+                function=partial(self._async_update_house_id, house_id),
+                background=True,
             )
             update_debounce[house_id] = debouncer
             update_debounce_jobs[house_id] = HassJob(
@@ -153,14 +154,6 @@ class ActivityStream(AugustSubscriberMixin):
                     job,
                 )
             )
-
-    @callback
-    def _async_background_update_house_id(self, house_id: str) -> None:
-        """Update device activities for a house."""
-        self._hass.async_create_background_task(
-            self._async_update_house_id(house_id),
-            name=f"august background update for {house_id}",
-        )
 
     async def _async_update_house_id(self, house_id: str) -> None:
         """Update device activities for a house."""
