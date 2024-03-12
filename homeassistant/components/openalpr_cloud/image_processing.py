@@ -142,8 +142,7 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
 
         # Send events
         for i_plate in new_plates:
-            self.hass.async_add_job(
-                self.hass.bus.async_fire,
+            self.hass.bus.async_fire(
                 EVENT_FOUND_PLATE,
                 {
                     ATTR_PLATE: i_plate,
