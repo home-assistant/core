@@ -7,13 +7,15 @@ from typing import NamedTuple
 from awattar import AsyncAwattarClient, AwattarConnectionError, MarketItem
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_COUNTRY
+from homeassistant.const import CONF_COUNTRY_CODE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, LOGGER, SCAN_INTERVAL
+from .const import DOMAIN, LOGGER
+
+SCAN_INTERVAL = timedelta(hours=1)
 
 
 class AwattarData(NamedTuple):
@@ -39,7 +41,7 @@ class AwattarDataUpdateCoordinator(DataUpdateCoordinator[AwattarData]):
 
         self.awattar = AsyncAwattarClient(
             session=async_get_clientsession(hass),
-            country=self.config_entry.data[CONF_COUNTRY],
+            country=self.config_entry.data[CONF_COUNTRY_CODE],
         )
 
     async def _async_update_data(self) -> AwattarData:
@@ -48,7 +50,7 @@ class AwattarDataUpdateCoordinator(DataUpdateCoordinator[AwattarData]):
         try:
             now = dt_util.now()
             start = now.replace(minute=0, second=0, microsecond=0)
-            LOGGER.info(f"Updating from {start} ...")
+            LOGGER.debug(f"Updating from {start} ...")
             energy = await self.awattar.request(
                 start_time=start, end_time=start + timedelta(days=2)
             )
