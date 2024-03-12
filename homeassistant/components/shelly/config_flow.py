@@ -49,10 +49,14 @@ from .utils import (
     get_rpc_device_wakeup_period,
     get_ws_context,
     mac_address_from_name,
-    parse_host,
 )
 
-HOST_SCHEMA: Final = vol.Schema({vol.Required(CONF_HOST): str})
+HOST_SCHEMA: Final = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_PORT, default=DEFAULT_HTTP_PORT): vol.Coerce(int),
+    }
+)
 
 
 BLE_SCANNER_OPTIONS = [
@@ -137,8 +141,9 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            host = user_input[CONF_HOST]
+            port = user_input[CONF_PORT]
             try:
-                host, port = await parse_host(user_input[CONF_HOST])
                 self.info = await self._async_get_info(host, port)
             except DeviceConnectionError:
                 errors["base"] = "cannot_connect"
@@ -168,12 +173,11 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "unknown"
                 else:
                     if device_info["model"]:
-                        host, port = await parse_host(user_input[CONF_HOST])
                         return self.async_create_entry(
                             title=device_info["title"],
                             data={
-                                CONF_HOST: host,
-                                CONF_PORT: port,
+                                CONF_HOST: user_input[CONF_HOST],
+                                CONF_PORT: user_input[CONF_PORT],
                                 CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
                                 "model": device_info["model"],
                                 CONF_GEN: device_info[CONF_GEN],
