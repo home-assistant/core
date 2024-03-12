@@ -163,15 +163,16 @@ class Debouncer(Generic[_R_co]):
     def _on_debounce(self) -> None:
         """Create job task, but only if pending."""
         self._timer_task = None
-        if self._execute_at_end_of_timer:
-            self._execute_at_end_of_timer = False
-            name = f"debouncer {self._job} finish cooldown={self.cooldown}, immediate={self.immediate}"
-            if self._background:
-                self.hass.async_create_background_task(
-                    self._handle_timer_finish(), name, eager_start=True
-                )
-            else:
-                self.hass.async_create_task(self._handle_timer_finish(), name)
+        if not self._execute_at_end_of_timer:
+            return
+        self._execute_at_end_of_timer = False
+        name = f"debouncer {self._job} finish cooldown={self.cooldown}, immediate={self.immediate}"
+        if not self._background:
+            self.hass.async_create_task(self._handle_timer_finish(), name)
+            return
+        self.hass.async_create_background_task(
+            self._handle_timer_finish(), name, eager_start=True
+        )
 
     @callback
     def _schedule_timer(self) -> None:
