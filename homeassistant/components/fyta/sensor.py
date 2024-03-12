@@ -121,7 +121,7 @@ async def async_setup_entry(
     """Set up the FYTA sensors."""
     coordinator: FytaCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    plant_entities: list[CoordinatorEntity] = [
+    plant_entities = [
         FytaPlantSensor(coordinator, entry, sensor, plant_id)
         for plant_id in coordinator.fyta.plant_list
         for sensor in SENSORS
