@@ -130,7 +130,7 @@ async def test_generic_number_with_unit_of_measurement_as_empty_string(
 async def test_generic_number_entity_set_when_disconnected(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device,
+    mock_generic_device_entry,
 ) -> None:
     """Test a generic number entity."""
     entity_info = [
@@ -147,15 +147,13 @@ async def test_generic_number_entity_set_when_disconnected(
     ]
     states = [NumberState(key=1, state=50)]
     user_service = []
-    mock_device = await mock_esphome_device(
+    await mock_generic_device_entry(
         mock_client=mock_client,
         entity_info=entity_info,
         user_service=user_service,
         states=states,
-        device_info={"has_deep_sleep": True},
     )
 
-    await mock_device.mock_disconnect(True)
     mock_client.number_command = Mock(side_effect=APIConnectionError("Not connected"))
 
     with pytest.raises(HomeAssistantError):
