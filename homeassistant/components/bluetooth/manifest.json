@@ -5,7 +5,6 @@
   "config_flow": true,
   "dependencies": ["usb"],
   "documentation": "https://www.home-assistant.io/integrations/bluetooth",
-  "import_executor": true,
   "iot_class": "local_push",
   "loggers": [
     "btsocket",

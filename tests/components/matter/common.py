@@ -1,4 +1,5 @@
 """Provide common test tools."""
+
 from __future__ import annotations
 
 from functools import cache

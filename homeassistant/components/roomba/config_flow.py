@@ -1,4 +1,5 @@
 """Config flow to configure roomba component."""
+
 from __future__ import annotations
 
 import asyncio

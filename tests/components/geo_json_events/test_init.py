@@ -1,4 +1,5 @@
 """Define tests for the GeoJSON Events general setup."""
+
 from unittest.mock import patch
 
 from homeassistant.components.geo_json_events.const import DOMAIN

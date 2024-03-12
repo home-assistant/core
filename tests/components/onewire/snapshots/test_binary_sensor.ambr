@@ -1235,6 +1235,46 @@
   list([
   ])
 # ---
+# name: test_binary_sensors[A6.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          'A6.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS2438',
+      'name': 'A6.111111111111',
+      'name_by_user': None,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_binary_sensors[A6.111111111111].1
+  list([
+  ])
+# ---
+# name: test_binary_sensors[A6.111111111111].2
+  list([
+  ])
+# ---
 # name: test_binary_sensors[EF.111111111111]
   list([
     DeviceRegistryEntrySnapshot({

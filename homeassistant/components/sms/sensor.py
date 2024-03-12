@@ -1,4 +1,5 @@
 """Support for SMS dongle sensor."""
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,

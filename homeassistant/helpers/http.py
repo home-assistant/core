@@ -1,4 +1,5 @@
 """Helper to track the current http request."""
+
 from __future__ import annotations
 
 import asyncio
@@ -10,13 +11,13 @@ from typing import Any, Final
 
 from aiohttp import web
 from aiohttp.typedefs import LooseHeaders
-from aiohttp.web import Request
+from aiohttp.web import AppKey, Request
 from aiohttp.web_exceptions import (
     HTTPBadRequest,
     HTTPInternalServerError,
     HTTPUnauthorized,
 )
-from aiohttp.web_urldispatcher import AbstractRoute
+from aiohttp.web_urldispatcher import AbstractResource, AbstractRoute
 import voluptuous as vol
 
 from homeassistant import exceptions
@@ -29,7 +30,11 @@ from .json import find_paths_unserializable_data, json_bytes, json_dumps
 _LOGGER = logging.getLogger(__name__)
 
 
+AllowCorsType = Callable[[AbstractRoute | AbstractResource], None]
 KEY_AUTHENTICATED: Final = "ha_authenticated"
+KEY_ALLOW_ALL_CORS = AppKey[AllowCorsType]("allow_all_cors")
+KEY_ALLOW_CONFIGRED_CORS = AppKey[AllowCorsType]("allow_configured_cors")
+KEY_HASS: AppKey[HomeAssistant] = AppKey("hass")
 
 current_request: ContextVar[Request | None] = ContextVar(
     "current_request", default=None
@@ -175,9 +180,9 @@ class HomeAssistantView:
 
         # Use `get` because CORS middleware is not be loaded in emulated_hue
         if self.cors_allowed:
-            allow_cors = app.get("allow_all_cors")
+            allow_cors = app.get(KEY_ALLOW_ALL_CORS)
         else:
-            allow_cors = app.get("allow_configured_cors")
+            allow_cors = app.get(KEY_ALLOW_CONFIGRED_CORS)
 
         if allow_cors:
             for route in routes:

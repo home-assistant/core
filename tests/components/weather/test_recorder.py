@@ -1,4 +1,5 @@
 """The tests for weather recorder."""
+
 from __future__ import annotations
 
 from datetime import timedelta

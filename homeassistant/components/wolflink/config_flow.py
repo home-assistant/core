@@ -1,4 +1,5 @@
 """Config flow for Wolf SmartSet Service integration."""
+
 import logging
 
 from httpcore import ConnectError

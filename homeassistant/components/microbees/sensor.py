@@ -1,4 +1,5 @@
 """sensor integration microBees."""
+
 from microBeesPy import Sensor
 
 from homeassistant.components.sensor import (

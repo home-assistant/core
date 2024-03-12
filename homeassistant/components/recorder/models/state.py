@@ -1,4 +1,5 @@
 """Models states in for Recorder."""
+
 from __future__ import annotations
 
 from datetime import datetime

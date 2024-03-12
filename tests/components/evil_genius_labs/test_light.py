@@ -1,4 +1,5 @@
 """Test Evil Genius Labs light."""
+
 from unittest.mock import patch
 
 import pytest

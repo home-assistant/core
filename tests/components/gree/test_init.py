@@ -1,4 +1,5 @@
 """Tests for the Gree Integration."""
+
 from unittest.mock import patch
 
 from homeassistant.components.gree.const import DOMAIN as GREE_DOMAIN

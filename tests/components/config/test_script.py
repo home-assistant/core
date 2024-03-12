@@ -1,4 +1,5 @@
 """Tests for config/script."""
+
 from http import HTTPStatus
 import json
 from typing import Any

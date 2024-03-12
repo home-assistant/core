@@ -31,20 +31,13 @@ async def async_setup_entry(
     )
 
 
-@dataclass(frozen=True)
-class StarlinkSwitchEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class StarlinkSwitchEntityDescription(SwitchEntityDescription):
+    """Describes a Starlink switch entity."""
 
     value_fn: Callable[[StarlinkData], bool | None]
     turn_on_fn: Callable[[StarlinkUpdateCoordinator], Awaitable[None]]
     turn_off_fn: Callable[[StarlinkUpdateCoordinator], Awaitable[None]]
-
-
-@dataclass(frozen=True)
-class StarlinkSwitchEntityDescription(
-    SwitchEntityDescription, StarlinkSwitchEntityDescriptionMixin
-):
-    """Describes a Starlink switch entity."""
 
 
 class StarlinkSwitchEntity(StarlinkEntity, SwitchEntity):

@@ -1,4 +1,5 @@
 """Test the OVO Energy config flow."""
+
 from unittest.mock import patch
 
 import aiohttp

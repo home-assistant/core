@@ -1,4 +1,5 @@
 """Test the bootstrapping."""
+
 import asyncio
 from collections.abc import Generator, Iterable
 import glob
@@ -844,10 +845,10 @@ async def test_warning_logged_on_wrap_up_timeout(
 
     def gen_domain_setup(domain):
         async def async_setup(hass, config):
-            async def _background_task():
+            async def _not_marked_background_task():
                 await asyncio.sleep(0.2)
 
-            hass.async_create_task(_background_task())
+            hass.async_create_task(_not_marked_background_task())
             return True
 
         return async_setup
@@ -865,7 +866,86 @@ async def test_warning_logged_on_wrap_up_timeout(
         await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
         await hass.async_block_till_done()
 
-    assert "Setup timed out for bootstrap - moving forward" in caplog.text
+    assert "Setup timed out for bootstrap" in caplog.text
+    assert "waiting on" in caplog.text
+    assert "_not_marked_background_task" in caplog.text
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_tasks_logged_that_block_stage_1(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we log tasks that delay stage 1 startup."""
+
+    def gen_domain_setup(domain):
+        async def async_setup(hass, config):
+            async def _not_marked_background_task():
+                await asyncio.sleep(0.2)
+
+            hass.async_create_task(_not_marked_background_task())
+            await asyncio.sleep(0.1)
+            return True
+
+        return async_setup
+
+    mock_integration(
+        hass,
+        MockModule(
+            domain="normal_integration",
+            async_setup=gen_domain_setup("normal_integration"),
+            partial_manifest={},
+        ),
+    )
+
+    original_stage_1 = bootstrap.STAGE_1_INTEGRATIONS
+    with patch.object(bootstrap, "STAGE_1_TIMEOUT", 0), patch.object(
+        bootstrap, "COOLDOWN_TIME", 0
+    ), patch.object(
+        bootstrap, "STAGE_1_INTEGRATIONS", [*original_stage_1, "normal_integration"]
+    ):
+        await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
+        await hass.async_block_till_done()
+
+    assert "Setup timed out for stage 1 waiting on" in caplog.text
+    assert "waiting on" in caplog.text
+    assert "_not_marked_background_task" in caplog.text
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_tasks_logged_that_block_stage_2(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we log tasks that delay stage 2 startup."""
+
+    def gen_domain_setup(domain):
+        async def async_setup(hass, config):
+            async def _not_marked_background_task():
+                await asyncio.sleep(0.2)
+
+            hass.async_create_task(_not_marked_background_task())
+            await asyncio.sleep(0.1)
+            return True
+
+        return async_setup
+
+    mock_integration(
+        hass,
+        MockModule(
+            domain="normal_integration",
+            async_setup=gen_domain_setup("normal_integration"),
+            partial_manifest={},
+        ),
+    )
+
+    with patch.object(bootstrap, "STAGE_2_TIMEOUT", 0), patch.object(
+        bootstrap, "COOLDOWN_TIME", 0
+    ):
+        await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
+        await hass.async_block_till_done()
+
+    assert "Setup timed out for stage 2 waiting on" in caplog.text
+    assert "waiting on" in caplog.text
+    assert "_not_marked_background_task" in caplog.text
 
 
 @pytest.mark.parametrize("load_registries", [False])

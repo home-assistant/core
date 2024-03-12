@@ -1,4 +1,5 @@
 """The tests for the InfluxDB sensor."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

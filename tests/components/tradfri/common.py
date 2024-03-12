@@ -1,4 +1,5 @@
 """Common tools used for the Tradfri test suite."""
+
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any
