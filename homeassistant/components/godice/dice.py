@@ -54,6 +54,7 @@ class DiceConnectionHandler:
         """Set default values required for connection establishment."""
         self.mac = entry.data["address"]
         self.hass: HomeAssistant = hass
+        self.config_entry = entry
         self._bledev: BLEDevice | None = None
         self._client = None
         self._bledev_upd_cancel = bluetooth.async_register_callback(
@@ -66,44 +67,59 @@ class DiceConnectionHandler:
         self._disconnect_handler = self._on_connection_lost_while_connecting_handler
         self.observer: DiceConnectionObserver | None = None
 
-    async def connect(self, _name="connect"):
+    async def connect(self):
         """Start connection process."""
         async with self._conn_lock:
-            _LOGGER.debug("Connecting")
-            await self._notify_reconnecting()
-            self._bledev = self._bledev or bluetooth.async_ble_device_from_address(
-                self.hass, self.mac
+            await self._do_connect()
+
+    async def reconnect(self, _name="reconnect"):
+        """Start reconnection process."""
+        try:
+            async with self._conn_lock:
+                await self._do_connect()
+        except BleakError:
+            self.hass.create_task(
+                self.hass.config_entries.async_reload(self.config_entry.entry_id)
             )
-            try:
-                self._client = await establish_connection(
-                    client_class=BleakClient,
-                    device=self._bledev,
-                    name=self.mac,
-                    disconnected_callback=self._on_disconnected_handler,
-                    max_attempts=4,
-                    use_services_cache=True,
-                )
-                await self._notify_connected(self._client)
-                self._disconnect_handler = (
-                    self._on_connection_lost_after_connected_handler
-                )
-                _LOGGER.debug("Connection completed")
-            except BleakError:
-                _LOGGER.debug("Connection attempts timed out")
-                await close_stale_connections(self._bledev)
-                await self._notify_disconnected()
 
     async def disconnect(self):
         """Disconnect the device."""
-        _LOGGER.debug("Disconnect called")
         async with self._conn_lock:
-            if self._client:
-                _LOGGER.debug("Disconnect started")
-                self._disconnect_handler = self._on_disconnected_by_request_handler
-                await self._client.disconnect()
-                await self._notify_disconnected()
+            await self._do_disconnect()
+
+    async def _do_connect(self):
+        _LOGGER.debug("Connecting")
+        await self._notify_reconnecting()
+        self._bledev = self._bledev or bluetooth.async_ble_device_from_address(
+            self.hass, self.mac
+        )
+        try:
+            self._client = await establish_connection(
+                client_class=BleakClient,
+                device=self._bledev,
+                name=self.mac,
+                disconnected_callback=self._on_disconnected_handler,
+                max_attempts=3,
+                use_services_cache=True,
+            )
+            await self._notify_connected(self._client)
+            self._disconnect_handler = self._on_connection_lost_after_connected_handler
+            _LOGGER.debug("Connection completed")
+        except BleakError as e:
+            _LOGGER.debug("Connection attempts timed out")
             await close_stale_connections(self._bledev)
-            self._client = None
+            await self._notify_disconnected()
+            raise e
+
+    async def _do_disconnect(self):
+        _LOGGER.debug("Disconnect called")
+        if self._client:
+            _LOGGER.debug("Disconnect started")
+            self._disconnect_handler = self._on_disconnected_by_request_handler
+            await self._client.disconnect()
+            await self._notify_disconnected()
+        await close_stale_connections(self._bledev)
+        self._client = None
 
     def _on_connection_lost_while_connecting_handler(self, _data):
         _LOGGER.debug("Connection lost while connecting. Reconnection is skipped")
@@ -111,7 +127,7 @@ class DiceConnectionHandler:
     def _on_connection_lost_after_connected_handler(self, _data):
         _LOGGER.debug("Connection lost. Reconnection started")
         self._disconnect_handler = self._on_connection_lost_while_connecting_handler
-        self.hass.create_task(self.connect())
+        self.hass.create_task(self.reconnect())
 
     def _on_disconnected_by_request_handler(self, _data):
         _LOGGER.debug("Disconnected by request. Reconnection is skipped")
