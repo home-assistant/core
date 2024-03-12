@@ -150,7 +150,13 @@ from homeassistant.components.http.auth import (
 from homeassistant.components.http.ban import log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2AuthorizeCallbackView
 from homeassistant.helpers.typing import ConfigType
@@ -160,6 +166,7 @@ from homeassistant.util import dt as dt_util
 from . import indieauth, login_flow, mfa_setup_flow
 
 DOMAIN = "auth"
+STRICT_CONNECTION_URL = "/auth/strict_connection/temp_token"
 
 StoreResultType = Callable[[str, Credentials], str]
 RetrieveResultType = Callable[[str, str], Credentials | None]
@@ -185,6 +192,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_view(RevokeTokenView())
     hass.http.register_view(LinkUserView(retrieve_result))
     hass.http.register_view(OAuth2AuthorizeCallbackView())
+    hass.http.register_view(StrictConnectionTempTokenView())
 
     websocket_api.async_register_command(hass, websocket_current_user)
     websocket_api.async_register_command(hass, websocket_create_long_lived_access_token)
@@ -195,6 +203,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await login_flow.async_setup(hass, store_result)
     await mfa_setup_flow.async_setup(hass)
+
+    async def create_temporary_strict_connection_url(
+        _: ServiceCall,
+    ) -> ServiceResponse:
+        """Create a strict connection url and return it."""
+        # todo check if enabled
+        url = async_sign_path(
+            hass, STRICT_CONNECTION_URL, timedelta(hours=1), use_content_user=True
+        )
+        return {"url": url}
+
+    hass.services.async_register(
+        DOMAIN,
+        "create_temporary_strict_connection_url",
+        create_temporary_strict_connection_url,
+        supports_response=SupportsResponse.ONLY,
+    )
 
     return True
 
@@ -435,6 +460,21 @@ class LinkUserView(HomeAssistantView):
         if linked_user != user:
             await hass.auth.async_link_user(user, credentials)
         return self.json_message("User linked")
+
+
+class StrictConnectionTempTokenView(HomeAssistantView):
+    """View to get temporary strict connection token."""
+
+    url = STRICT_CONNECTION_URL
+    name = "api:auth:strict_connection:temp_token"
+    requires_auth = False
+    cors_allowed = True
+
+    async def post(self, request: web.Request) -> web.Response:
+        """Get a temporary token and redirect to main page."""
+        hass: HomeAssistant = request.app["hass"]
+        await hass.auth.session.async_create_temp_unauthorized_session(request)
+        raise web.HTTPSeeOther(location="/")
 
 
 @callback

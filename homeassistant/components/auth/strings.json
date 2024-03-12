@@ -37,5 +37,11 @@
       "title": "The legacy API password is deprecated",
       "description": "The legacy API password authentication provider is deprecated and will be removed. Please remove it from your YAML configuration and use the default Home Assistant authentication provider instead."
     }
+  },
+  "services": {
+    "create_temporary_strict_connection_url": {
+      "name": "Create a tempoary strict connection URL",
+      "description": "Create tempoary strict connection URL, which can be used to login on an other device."
+    }
   }
 }
