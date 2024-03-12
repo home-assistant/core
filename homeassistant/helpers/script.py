@@ -15,7 +15,6 @@ import logging
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, TypedDict, TypeVar, cast
 
-import async_interrupt
 import voluptuous as vol
 
 from homeassistant import exceptions
@@ -156,10 +155,6 @@ SCRIPT_DEBUG_CONTINUE_STOP = "script_debug_continue_stop_{}_{}"
 SCRIPT_DEBUG_CONTINUE_ALL = "script_debug_continue_all"
 
 script_stack_cv: ContextVar[list[int] | None] = ContextVar("script_stack", default=None)
-
-
-class ScriptStoppedError(Exception):
-    """Error to indicate that the script has been stopped."""
 
 
 def _clear_timeout_future(timeout_future: asyncio.Future[None]) -> None:
@@ -708,15 +703,16 @@ class _ScriptRun:
                 await long_task
 
         # Wait for long task while monitoring for a stop request.
-        try:
-            async with async_interrupt.interrupt(self._stop, ScriptStoppedError, None):
-                await long_task
+        await asyncio.wait([self._stop, long_task], return_when=asyncio.FIRST_COMPLETED)
         # If our task is cancelled, then cancel long task, too. Note that if long task
         # is cancelled otherwise the CancelledError exception will not be raised to
         # here due to the call to asyncio.wait(). Rather we'll check for that below.
-        except ScriptStoppedError as ex:
-            raise asyncio.CancelledError() from ex
-
+        if self._stop.done():
+            # Stop requested, cancel long task and return None.
+            await async_cancel_long_task()
+            raise asyncio.CancelledError()
+        if long_task.cancelled():
+            raise asyncio.CancelledError()
         if long_task.done():
             # Propagate any exceptions that occurred.
             return long_task.result()
