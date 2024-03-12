@@ -1,5 +1,7 @@
 """Tests for the importlib helper."""
 
+import time
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -22,6 +24,18 @@ async def test_async_import_module(hass: HomeAssistant) -> None:
     assert module is mock_module
 
 
+async def test_async_import_module_on_helper(hass: HomeAssistant) -> None:
+    """Test importing the importlib helper."""
+    module = await importlib.async_import_module(
+        hass, "homeassistant.helpers.importlib"
+    )
+    assert module is importlib
+    module = await importlib.async_import_module(
+        hass, "homeassistant.helpers.importlib"
+    )
+    assert module is importlib
+
+
 async def test_async_import_module_failures(hass: HomeAssistant) -> None:
     """Test importing a module fails."""
     with patch(
@@ -39,19 +53,26 @@ async def test_async_import_module_failures(hass: HomeAssistant) -> None:
         await importlib.async_import_module(hass, "test.module")
 
 
-async def test_async_import_module_concurrency(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("eager_start", [True, False])
+async def test_async_import_module_concurrency(
+    hass: HomeAssistant, eager_start: bool
+) -> None:
     """Test importing a module with concurrency."""
     mock_module = MockModule()
 
+    def _mock_import(name: str, *args: Any) -> MockModule:
+        time.sleep(0.1)
+        return mock_module
+
     with patch(
         "homeassistant.helpers.importlib.importlib.import_module",
-        return_value=mock_module,
+        _mock_import,
     ):
         task1 = hass.async_create_task(
-            importlib.async_import_module(hass, "test.module")
+            importlib.async_import_module(hass, "test.module"), eager_start=eager_start
         )
         task2 = hass.async_create_task(
-            importlib.async_import_module(hass, "test.module")
+            importlib.async_import_module(hass, "test.module"), eager_start=eager_start
         )
         module1 = await task1
         module2 = await task2
