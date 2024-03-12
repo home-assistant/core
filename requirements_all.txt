@@ -218,7 +218,7 @@ aiobotocore==2.9.1
 aiocomelit==0.9.0
 
 # homeassistant.components.dhcp
-aiodhcpwatcher==0.8.0
+aiodhcpwatcher==0.8.1
 
 # homeassistant.components.dhcp
 aiodiscover==1.6.1
@@ -511,7 +511,7 @@ aurorapy==0.2.7
 # avion==0.10
 
 # homeassistant.components.axis
-axis==53
+axis==54
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
@@ -1247,7 +1247,7 @@ logi-circle==0.2.3
 london-tube-status==0.5
 
 # homeassistant.components.loqed
-loqedAPI==2.1.8
+loqedAPI==2.1.10
 
 # homeassistant.components.luftdaten
 luftdaten==0.7.4
@@ -2421,7 +2421,7 @@ raspyrfm-client==1.2.8
 refoss-ha==1.2.0
 
 # homeassistant.components.rainmachine
-regenmaschine==2024.01.0
+regenmaschine==2024.03.0
 
 # homeassistant.components.renault
 renault-api==0.2.1
@@ -2463,7 +2463,7 @@ roombapy==1.6.13
 roonapi==0.1.6
 
 # homeassistant.components.rova
-rova==0.4.0
+rova==0.4.1
 
 # homeassistant.components.rpi_power
 rpi-bad-power==0.1.0
