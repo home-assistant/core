@@ -6,12 +6,11 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_COUNTRY
-from homeassistant.helpers.selector import CountrySelector, CountrySelectorConfig
+from homeassistant.const import CONF_COUNTRY_CODE
 
 from .const import DOMAIN
 
-SUPPORTED_COUNTRIES = ["AT", "DE"]
+COUNTRY_CODES = ["AT", "DE"]
 
 
 class AwattarFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -35,12 +34,8 @@ class AwattarFlowHandler(ConfigFlow, domain=DOMAIN):
 
         user_schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_COUNTRY, default=self.hass.config.country
-                ): CountrySelector(
-                    CountrySelectorConfig(
-                        countries=SUPPORTED_COUNTRIES,
-                    )
+                vol.Required(CONF_COUNTRY_CODE, default=COUNTRY_CODES[0]): vol.In(
+                    COUNTRY_CODES
                 ),
             }
         )

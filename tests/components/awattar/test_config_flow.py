@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 
 from homeassistant.components.awattar.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_COUNTRY
+from homeassistant.const import CONF_COUNTRY_CODE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -23,11 +23,11 @@ async def test_full_user_flow(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_COUNTRY: "AT"},
+        user_input={CONF_COUNTRY_CODE: "AT"},
     )
 
     assert result2.get("type") == FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "aWATTar"
-    assert result2.get("data") == {CONF_COUNTRY: "AT"}
+    assert result2.get("data") == {CONF_COUNTRY_CODE: "AT"}
 
     assert len(mock_setup_entry.mock_calls) == 1
