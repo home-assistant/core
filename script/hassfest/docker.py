@@ -16,7 +16,8 @@ ENV \
     S6_SERVICES_GRACETIME={timeout} \
     UV_EXTRA_INDEX_URL="https://wheels.home-assistant.io/musllinux-index/" \
     UV_NO_CACHE=true \
-    PATH="$PATH:/root/.cargo/bin"
+    PATH="$PATH:/root/.cargo/bin" \
+    UV_SYSTEM_PYTHON=true
 
 ARG QEMU_CPU
 
@@ -29,33 +30,29 @@ WORKDIR /usr/src
 ## Setup Home Assistant Core dependencies
 COPY requirements.txt homeassistant/
 COPY homeassistant/package_constraints.txt homeassistant/homeassistant/
-RUN pip3 install uv
 RUN \
     uv pip install \
-        --system \
         --no-build \
         -r homeassistant/requirements.txt
 
 COPY requirements_all.txt home_assistant_frontend-* home_assistant_intents-* homeassistant/
 RUN \
     if ls homeassistant/home_assistant_frontend*.whl 1> /dev/null 2>&1; then \
-        uv pip install --system homeassistant/home_assistant_frontend-*.whl; \
+        uv pip install homeassistant/home_assistant_frontend-*.whl; \
     fi \
     && if ls homeassistant/home_assistant_intents*.whl 1> /dev/null 2>&1; then \
-        uv pip install --system homeassistant/home_assistant_intents-*.whl; \
+        uv pip install homeassistant/home_assistant_intents-*.whl; \
     fi \
     && if [ "${{BUILD_ARCH}}" = "i386" ]; then \
         LD_PRELOAD="/usr/local/lib/libjemalloc.so.2" \
         MALLOC_CONF="background_thread:true,metadata_thp:auto,dirty_decay_ms:20000,muzzy_decay_ms:20000" \
         linux32 uv pip install \
-            --system \
             --no-build \
             -r homeassistant/requirements_all.txt; \
     else \
         LD_PRELOAD="/usr/local/lib/libjemalloc.so.2" \
         MALLOC_CONF="background_thread:true,metadata_thp:auto,dirty_decay_ms:20000,muzzy_decay_ms:20000" \
         uv pip install \
-            --system \
             --no-build \
             -r homeassistant/requirements_all.txt; \
     fi
@@ -64,7 +61,6 @@ RUN \
 COPY . homeassistant/
 RUN \
     uv pip install \
-        --system \
         -e ./homeassistant \
     && python3 -m compileall \
         homeassistant/homeassistant

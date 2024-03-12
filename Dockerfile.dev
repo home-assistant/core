@@ -36,21 +36,23 @@ RUN \
 
 WORKDIR /usr/src
 
+ENV UV_SYSTEM_PYTHON=true
+
 # Install uv
 RUN pip3 install uv
 
 # Setup hass-release
 RUN git clone --depth 1 https://github.com/home-assistant/hass-release \
-    && uv pip install --system -e hass-release/
+    && uv pip install -e hass-release/
 
 WORKDIR /workspaces
 
 # Install Python dependencies from requirements
 COPY requirements.txt ./
 COPY homeassistant/package_constraints.txt homeassistant/package_constraints.txt
-RUN uv pip install --system -r requirements.txt
+RUN uv pip install -r requirements.txt
 COPY requirements_test.txt requirements_test_pre_commit.txt ./
-RUN uv pip install --system -r requirements_test.txt
+RUN uv pip install -r requirements_test.txt
 RUN rm -rf requirements.txt requirements_test.txt requirements_test_pre_commit.txt homeassistant/
 
 # Set the default shell to bash instead of sh
