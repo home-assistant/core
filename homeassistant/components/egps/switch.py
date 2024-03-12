@@ -43,14 +43,14 @@ class EGPowerStripSocket(SwitchEntity):
         self._socket = socket
         self._state = STATE_OFF
 
-        self._attr_name = f"Socket {self._socket}"
+        self._attr_name = f"Socket {socket}"
 
-        self._attr_unique_id = f"{self._dev.device_id}_{self._socket}"
+        self._attr_unique_id = f"{dev.device_id}_{socket}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._dev.device_id)},
-            name=self._dev.name,
-            manufacturer=self._dev.manufacturer,
-            model=self._dev.name,
+            identifiers={(DOMAIN, dev.device_id)},
+            name=dev.name,
+            manufacturer=dev.manufacturer,
+            model=dev.name,
             sw_version=PYEGPS_VERSION,
         )
 
@@ -61,11 +61,17 @@ class EGPowerStripSocket(SwitchEntity):
 
     def turn_on(self, **kwargs: Any) -> None:
         """Switch the socket on."""
-        self._dev.switch_on(self._socket)
+        try:
+            self._dev.switch_on(self._socket)
+        except EgpsException as err:
+            LOGGER.error("Couldn't access USB device: %s", err)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Switch the socket off."""
-        self._dev.switch_off(self._socket)
+        try:
+            self._dev.switch_off(self._socket)
+        except EgpsException as err:
+            LOGGER.error("Couldn't access USB device: %s", err)
 
     def update(self) -> None:
         """Read the current state from the device."""

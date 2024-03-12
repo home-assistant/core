@@ -1,5 +1,4 @@
 """ConfigFlow for EGPS devices."""
-import logging
 from typing import Any
 
 from pyegps import get_device, search_for_devices
@@ -8,9 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 
-from .const import CONF_DEVICE_API_ID, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import CONF_DEVICE_API_ID, DOMAIN, LOGGER
 
 
 class ConfigFLow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -38,7 +35,8 @@ class ConfigFLow(config_entries.ConfigFlow, domain=DOMAIN):
         currently_configured = self._async_current_ids(include_ignore=True)
         try:
             found_devices = search_for_devices()
-        except (MissingLibrary, UsbError):
+        except (MissingLibrary, UsbError) as err:
+            LOGGER.error("Unable to access USB devices: %s", err)
             return self.async_abort(reason="usb_error")
 
         devices = [
