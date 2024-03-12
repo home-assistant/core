@@ -838,6 +838,11 @@ class Integration:
         """Return if the integration has translations."""
         return "translations" in self._top_level_files
 
+    @cached_property
+    def has_services(self) -> bool:
+        """Return if the integration has services."""
+        return "services.yaml" in self._top_level_files
+
     @property
     def mqtt(self) -> list[str] | None:
         """Return Integration MQTT entries."""
