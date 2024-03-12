@@ -1,4 +1,5 @@
 """The tests for the Ring switch platform."""
+import pytest
 import requests_mock
 
 from homeassistant.const import Platform
@@ -24,27 +25,27 @@ async def test_entity_registry(
     assert entry.unique_id == 345678
 
 
-async def test_camera_motion_detection_off_reports_correctly(
-    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+@pytest.mark.parametrize(
+    ("entity_name", "expected_state", "friendly_name"),
+    [
+        ("camera.internal", True, "Internal"),
+        ("camera.front", None, "Front"),
+    ],
+    ids=["On", "Off"],
+)
+async def test_camera_motion_detection_state_reports_correctly(
+    hass: HomeAssistant,
+    requests_mock: requests_mock.Mocker,
+    entity_name,
+    expected_state,
+    friendly_name,
 ) -> None:
     """Tests that the initial state of a device that should be off is correct."""
     await setup_platform(hass, Platform.CAMERA)
 
-    state = hass.states.get("camera.front")
-    assert state.attributes.get("motion_detection") is not True
-    assert state.attributes.get("friendly_name") == "Front"
-
-
-async def test_camera_motion_detection_on_reports_correctly(
-    hass: HomeAssistant,
-    requests_mock: requests_mock.Mocker,
-) -> None:
-    """Tests that the initial state of a device that should be on is correct."""
-    await setup_platform(hass, Platform.CAMERA)
-
-    state = hass.states.get("camera.internal")
-    assert state.attributes.get("motion_detection") is True
-    assert state.attributes.get("friendly_name") == "Internal"
+    state = hass.states.get(entity_name)
+    assert state.attributes.get("motion_detection") is expected_state
+    assert state.attributes.get("friendly_name") == friendly_name
 
 
 async def test_camera_motion_detection_can_be_turned_on(
