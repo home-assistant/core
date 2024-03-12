@@ -15,6 +15,7 @@ import logging
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, TypedDict, TypeVar, cast
 
+import async_interrupt
 import voluptuous as vol
 
 from homeassistant import exceptions
@@ -76,6 +77,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.util import slugify
+from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.dt import utcnow
 
 from . import condition, config_validation as cv, service, template
@@ -157,6 +159,28 @@ SCRIPT_DEBUG_CONTINUE_ALL = "script_debug_continue_all"
 script_stack_cv: ContextVar[list[int] | None] = ContextVar("script_stack", default=None)
 
 
+class ScriptStoppedError(Exception):
+    """Error to indicate that the script has been stopped."""
+
+
+def _clear_timeout_future(timeout_future: asyncio.Future[None]) -> None:
+    """Clear the exception retrieved from the timeout future."""
+    with suppress(asyncio.CancelledError, TimeoutError):
+        timeout_future.result()
+
+
+def _set_result_unless_done(future: asyncio.Future[None]) -> None:
+    """Set result of future unless it is done."""
+    if not future.done():
+        future.set_result(None)
+
+
+def _set_timeout_unless_done(future: asyncio.Future[None]) -> None:
+    """Set timeout of future unless it is done."""
+    if not future.done():
+        future.set_exception(asyncio.TimeoutError)
+
+
 def action_trace_append(variables, path):
     """Append a TraceElement to trace[path]."""
     trace_element = TraceElement(variables, path)
@@ -168,7 +192,7 @@ def action_trace_append(variables, path):
 async def trace_action(
     hass: HomeAssistant,
     script_run: _ScriptRun,
-    stop: asyncio.Event,
+    stop: asyncio.Future[None],
     variables: dict[str, Any],
 ) -> AsyncGenerator[TraceElement, None]:
     """Trace action execution."""
@@ -199,13 +223,13 @@ async def trace_action(
         ):
             async_dispatcher_send(hass, SCRIPT_BREAKPOINT_HIT, key, run_id, path)
 
-            done = asyncio.Event()
+            done = hass.loop.create_future()
 
             @callback
             def async_continue_stop(command=None):
                 if command == "stop":
-                    stop.set()
-                done.set()
+                    _set_result_unless_done(stop)
+                _set_result_unless_done(done)
 
             signal = SCRIPT_DEBUG_CONTINUE_STOP.format(key, run_id)
             remove_signal1 = async_dispatcher_connect(hass, signal, async_continue_stop)
@@ -213,10 +237,7 @@ async def trace_action(
                 hass, SCRIPT_DEBUG_CONTINUE_ALL, async_continue_stop
             )
 
-            tasks = [hass.async_create_task(flag.wait()) for flag in (stop, done)]
-            await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
-            for task in tasks:
-                task.cancel()
+            await asyncio.wait([stop, done], return_when=asyncio.FIRST_COMPLETED)
             remove_signal1()
             remove_signal2()
 
@@ -393,12 +414,12 @@ class _ScriptRun:
         self._log_exceptions = log_exceptions
         self._step = -1
         self._started = False
-        self._stop = asyncio.Event()
+        self._stop = hass.loop.create_future()
         self._stopped = asyncio.Event()
         self._conversation_response: str | None | UndefinedType = UNDEFINED
 
     def _changed(self) -> None:
-        if not self._stop.is_set():
+        if not self._stop.done():
             self._script._changed()  # pylint: disable=protected-access
 
     async def _async_get_condition(self, config):
@@ -432,7 +453,7 @@ class _ScriptRun:
         try:
             self._log("Running %s", self._script.running_description)
             for self._step, self._action in enumerate(self._script.sequence):
-                if self._stop.is_set():
+                if self._stop.done():
                     script_execution_set("cancelled")
                     break
                 await self._async_step(log_exceptions=False)
@@ -471,7 +492,7 @@ class _ScriptRun:
             async with trace_action(
                 self._hass, self, self._stop, self._variables
             ) as trace_element:
-                if self._stop.is_set():
+                if self._stop.done():
                     return
 
                 action = cv.determine_script_action(self._action)
@@ -483,8 +504,8 @@ class _ScriptRun:
                     trace_set_result(enabled=False)
                     return
 
+                handler = f"_async_{action}_step"
                 try:
-                    handler = f"_async_{action}_step"
                     await getattr(self, handler)()
                 except Exception as ex:  # pylint: disable=broad-except
                     self._handle_exception(
@@ -502,7 +523,7 @@ class _ScriptRun:
 
     async def async_stop(self) -> None:
         """Stop script run."""
-        self._stop.set()
+        _set_result_unless_done(self._stop)
         # If the script was never started
         # the stopped event will never be
         # set because the script will never
@@ -576,9 +597,9 @@ class _ScriptRun:
             level=level,
         )
 
-    def _get_pos_time_period_template(self, key):
+    def _get_pos_time_period_template(self, key: str) -> timedelta:
         try:
-            return cv.positive_time_period(
+            return cv.positive_time_period(  # type: ignore[no-any-return]
                 template.render_complex(self._action[key], self._variables)
             )
         except (exceptions.TemplateError, vol.Invalid) as ex:
@@ -597,19 +618,29 @@ class _ScriptRun:
 
         self._step_log(f"delay {delay}")
 
-        delay = delay.total_seconds()
+        delay_seconds = delay.total_seconds()
         self._changed()
-        trace_set_result(delay=delay, done=False)
-        try:
-            async with asyncio.timeout(delay):
-                await self._stop.wait()
-        except TimeoutError:
-            trace_set_result(delay=delay, done=True)
+        trace_set_result(delay=delay_seconds, done=False)
+        loop = self._hass.loop
+        timeout_future = loop.create_future()
+        timeout_handle = loop.call_later(
+            delay_seconds, _set_timeout_unless_done, timeout_future
+        )
+        await asyncio.wait(
+            [self._stop, timeout_future], return_when=asyncio.FIRST_COMPLETED
+        )
+        if timeout_future.done():
+            _clear_timeout_future(timeout_future)
+            trace_set_result(delay=delay_seconds, done=True)
+        else:
+            timeout_handle.cancel()
 
     async def _async_wait_template_step(self):
         """Handle a wait template."""
         if CONF_TIMEOUT in self._action:
-            timeout = self._get_pos_time_period_template(CONF_TIMEOUT).total_seconds()
+            timeout: float | None = self._get_pos_time_period_template(
+                CONF_TIMEOUT
+            ).total_seconds()
         else:
             timeout = None
 
@@ -626,40 +657,46 @@ class _ScriptRun:
             self._variables["wait"]["completed"] = True
             return
 
+        loop = self._hass.loop
+        done = loop.create_future()
+        futures: list[asyncio.Future[None]] = [self._stop, done]
+        timeout_handle: asyncio.TimerHandle | None = None
+        if timeout:
+            timeout_future = loop.create_future()
+            timeout_handle = loop.call_later(
+                timeout, _set_timeout_unless_done, timeout_future
+            )
+            futures.append(timeout_future)
+
         @callback
         def async_script_wait(entity_id, from_s, to_s):
             """Handle script after template condition is true."""
             # pylint: disable=protected-access
             wait_var = self._variables["wait"]
-            if to_context and to_context._when:
-                wait_var["remaining"] = to_context._when - self._hass.loop.time()
+            if timeout_handle and timeout_handle._when:
+                wait_var["remaining"] = timeout_handle._when - self._hass.loop.time()
             else:
                 wait_var["remaining"] = timeout
             wait_var["completed"] = True
-            done.set()
+            _set_result_unless_done(done)
 
-        to_context = None
         unsub = async_track_template(
             self._hass, wait_template, async_script_wait, self._variables
         )
-
         self._changed()
-        done = asyncio.Event()
-        tasks = [
-            self._hass.async_create_task(flag.wait()) for flag in (self._stop, done)
-        ]
+        await asyncio.wait(futures, return_when=asyncio.FIRST_COMPLETED)
         try:
-            async with asyncio.timeout(timeout) as to_context:
-                await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
-        except TimeoutError as ex:
-            self._variables["wait"]["remaining"] = 0.0
-            if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
-                self._log(_TIMEOUT_MSG)
-                trace_set_result(wait=self._variables["wait"], timeout=True)
-                raise _AbortScript from ex
+            if timeout_handle and timeout_future.done():
+                _clear_timeout_future(timeout_future)
+                self._variables["wait"]["remaining"] = 0.0
+                if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
+                    self._log(_TIMEOUT_MSG)
+                    trace_set_result(wait=self._variables["wait"], timeout=True)
+                    raise _AbortScript from timeout_future.exception()
         finally:
-            for task in tasks:
-                task.cancel()
+            if timeout_handle and not timeout_future.done():
+                timeout_handle.cancel()
+
             unsub()
 
     async def _async_run_long_action(self, long_task: asyncio.Task[_T]) -> _T | None:
@@ -672,22 +709,15 @@ class _ScriptRun:
                 await long_task
 
         # Wait for long task while monitoring for a stop request.
-        stop_task = self._hass.async_create_task(self._stop.wait())
         try:
-            await asyncio.wait(
-                {long_task, stop_task}, return_when=asyncio.FIRST_COMPLETED
-            )
+            async with async_interrupt.interrupt(self._stop, ScriptStoppedError, None):
+                await long_task
         # If our task is cancelled, then cancel long task, too. Note that if long task
         # is cancelled otherwise the CancelledError exception will not be raised to
         # here due to the call to asyncio.wait(). Rather we'll check for that below.
-        except asyncio.CancelledError:
-            await async_cancel_long_task()
-            raise
-        finally:
-            stop_task.cancel()
+        except ScriptStoppedError as ex:
+            raise asyncio.CancelledError() from ex
 
-        if long_task.cancelled():
-            raise asyncio.CancelledError
         if long_task.done():
             # Propagate any exceptions that occurred.
             return long_task.result()
@@ -735,7 +765,8 @@ class _ScriptRun:
                     blocking=True,
                     context=self._context,
                     return_response=return_response,
-                )
+                ),
+                eager_start=True,
             ),
         )
         if response_variable:
@@ -866,7 +897,7 @@ class _ScriptRun:
             for iteration in range(1, count + 1):
                 set_repeat_var(iteration, count)
                 await async_run_sequence(iteration, extra_msg)
-                if self._stop.is_set():
+                if self._stop.done():
                     break
 
         elif CONF_FOR_EACH in repeat:
@@ -894,7 +925,7 @@ class _ScriptRun:
             for iteration, item in enumerate(items, 1):
                 set_repeat_var(iteration, count, item)
                 extra_msg = f" of {count} with item: {repr(item)}"
-                if self._stop.is_set():
+                if self._stop.done():
                     break
                 await async_run_sequence(iteration, extra_msg)
 
@@ -905,7 +936,7 @@ class _ScriptRun:
             for iteration in itertools.count(1):
                 set_repeat_var(iteration)
                 try:
-                    if self._stop.is_set():
+                    if self._stop.done():
                         break
                     if not self._test_conditions(conditions, "while"):
                         break
@@ -923,7 +954,7 @@ class _ScriptRun:
                 set_repeat_var(iteration)
                 await async_run_sequence(iteration)
                 try:
-                    if self._stop.is_set():
+                    if self._stop.done():
                         break
                     if self._test_conditions(conditions, "until") in [True, None]:
                         break
@@ -986,7 +1017,9 @@ class _ScriptRun:
     async def _async_wait_for_trigger_step(self):
         """Wait for a trigger event."""
         if CONF_TIMEOUT in self._action:
-            timeout = self._get_pos_time_period_template(CONF_TIMEOUT).total_seconds()
+            timeout: float | None = self._get_pos_time_period_template(
+                CONF_TIMEOUT
+            ).total_seconds()
         else:
             timeout = None
 
@@ -996,22 +1029,30 @@ class _ScriptRun:
         self._variables["wait"] = {"remaining": timeout, "trigger": None}
         trace_set_result(wait=self._variables["wait"])
 
-        done = asyncio.Event()
+        loop = self._hass.loop
+        done = loop.create_future()
+        timeout_handle: asyncio.TimerHandle | None = None
+        futures: list[asyncio.Future[None]] = [self._stop, done]
+        if timeout:
+            timeout_future = self._hass.loop.create_future()
+            timeout_handle = self._hass.loop.call_later(
+                timeout, _set_timeout_unless_done, timeout_future
+            )
+            futures.append(timeout_future)
 
         async def async_done(variables, context=None):
             # pylint: disable=protected-access
             wait_var = self._variables["wait"]
-            if to_context and to_context._when:
-                wait_var["remaining"] = to_context._when - self._hass.loop.time()
+            if timeout_handle:
+                wait_var["remaining"] = timeout_handle._when - loop.time()
             else:
                 wait_var["remaining"] = timeout
             wait_var["trigger"] = variables["trigger"]
-            done.set()
+            _set_result_unless_done(done)
 
         def log_cb(level, msg, **kwargs):
             self._log(msg, level=level, **kwargs)
 
-        to_context = None
         remove_triggers = await async_initialize_triggers(
             self._hass,
             self._action[CONF_WAIT_FOR_TRIGGER],
@@ -1025,21 +1066,19 @@ class _ScriptRun:
             return
 
         self._changed()
-        tasks = [
-            self._hass.async_create_task(flag.wait()) for flag in (self._stop, done)
-        ]
+        await asyncio.wait(futures, return_when=asyncio.FIRST_COMPLETED)
         try:
-            async with asyncio.timeout(timeout) as to_context:
-                await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
-        except TimeoutError as ex:
-            self._variables["wait"]["remaining"] = 0.0
-            if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
-                self._log(_TIMEOUT_MSG)
-                trace_set_result(wait=self._variables["wait"], timeout=True)
-                raise _AbortScript from ex
+            if timeout_handle and timeout_future.done():
+                _clear_timeout_future(timeout_future)
+                self._variables["wait"]["remaining"] = 0.0
+                if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
+                    self._log(_TIMEOUT_MSG)
+                    trace_set_result(wait=self._variables["wait"], timeout=True)
+                    raise _AbortScript from timeout_future.exception()
         finally:
-            for task in tasks:
-                task.cancel()
+            if timeout_handle and not timeout_future.done():
+                timeout_handle.cancel()
+
             remove_triggers()
 
     async def _async_variables_step(self):
@@ -1107,7 +1146,8 @@ class _ScriptRun:
         """Execute a script."""
         result = await self._async_run_long_action(
             self._hass.async_create_task(
-                script.async_run(self._variables, self._context)
+                script.async_run(self._variables, self._context),
+                eager_start=True,
             )
         )
         if result and result.conversation_response is not UNDEFINED:
@@ -1124,12 +1164,12 @@ class _QueuedScriptRun(_ScriptRun):
         # Wait for previous run, if any, to finish by attempting to acquire the script's
         # shared lock. At the same time monitor if we've been told to stop.
         lock_task = self._hass.async_create_task(
-            self._script._queue_lck.acquire()  # pylint: disable=protected-access
+            self._script._queue_lck.acquire(),  # pylint: disable=protected-access
+            eager_start=True,
         )
-        stop_task = self._hass.async_create_task(self._stop.wait())
         try:
             await asyncio.wait(
-                {lock_task, stop_task}, return_when=asyncio.FIRST_COMPLETED
+                [lock_task, self._stop], return_when=asyncio.FIRST_COMPLETED
             )
         except asyncio.CancelledError:
             self._finish()
@@ -1138,11 +1178,10 @@ class _QueuedScriptRun(_ScriptRun):
             self.lock_acquired = lock_task.done() and not lock_task.cancelled()
         finally:
             lock_task.cancel()
-            stop_task.cancel()
 
         # If we've been told to stop, then just finish up. Otherwise, we've acquired the
         # lock so we can go ahead and start the run.
-        if self._stop.is_set():
+        if self._stop.done():
             self._finish()
         else:
             await super().async_run()
@@ -1626,7 +1665,7 @@ class Script:
         # asyncio.shield as asyncio.shield yields to the event loop, which would cause
         # us to wait for script runs added after the call to async_stop.
         aws = [
-            asyncio.create_task(run.async_stop()) for run in self._runs if run != spare
+            create_eager_task(run.async_stop()) for run in self._runs if run != spare
         ]
         if not aws:
             return
