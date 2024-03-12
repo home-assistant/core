@@ -15,6 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_IMPORT_CACHE = "import_cache"
 DATA_IMPORT_FUTURES = "import_futures"
+DATA_IMPORT_FAILURES = "import_failures"
 
 
 def _get_module(cache: dict[str, ModuleType], name: str) -> ModuleType:
@@ -28,6 +29,12 @@ async def async_import_module(hass: HomeAssistant, name: str) -> ModuleType:
     cache: dict[str, ModuleType] = hass.data.setdefault(DATA_IMPORT_CACHE, {})
     if module := cache.get(name):
         return module
+
+    failure_cache: dict[str, BaseException] = hass.data.setdefault(
+        DATA_IMPORT_FAILURES, {}
+    )
+    if exception := failure_cache.get(name):
+        raise exception
 
     import_futures: dict[str, asyncio.Future[ModuleType]]
     import_futures = hass.data.setdefault(DATA_IMPORT_FUTURES, {})
@@ -44,6 +51,7 @@ async def async_import_module(hass: HomeAssistant, name: str) -> ModuleType:
         module = await hass.async_add_import_executor_job(_get_module, cache, name)
         import_future.set_result(module)
     except BaseException as ex:
+        failure_cache[name] = ex
         import_future.set_exception(ex)
         with suppress(BaseException):
             # Set the exception retrieved flag on the future since

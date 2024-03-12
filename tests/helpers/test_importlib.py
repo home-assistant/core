@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import importlib
 
@@ -20,8 +22,25 @@ async def test_async_import_module(hass: HomeAssistant) -> None:
     assert module is mock_module
 
 
+async def test_async_import_module_failures(hass: HomeAssistant) -> None:
+    """Test importing a module fails."""
+    with patch(
+        "homeassistant.helpers.importlib.importlib.import_module",
+        side_effect=ImportError,
+    ), pytest.raises(ImportError):
+        await importlib.async_import_module(hass, "test.module")
+
+    mock_module = MockModule()
+    # The failure should be cached
+    with pytest.raises(ImportError), patch(
+        "homeassistant.helpers.importlib.importlib.import_module",
+        return_value=mock_module,
+    ):
+        await importlib.async_import_module(hass, "test.module")
+
+
 async def test_async_import_module_concurrency(hass: HomeAssistant) -> None:
-    """Test importing a module."""
+    """Test importing a module with concurrency."""
     mock_module = MockModule()
 
     with patch(
