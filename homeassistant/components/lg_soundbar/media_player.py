@@ -1,4 +1,5 @@
 """Support for LG soundbars."""
+
 from __future__ import annotations
 
 import temescal

@@ -1,4 +1,5 @@
 """Test Ambient PWS diagnostics."""
+
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.ambient_station import DOMAIN

@@ -1,4 +1,5 @@
 """Tests for the sensors provided by the PVOutput integration."""
+
 from homeassistant.components.pvoutput.const import DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,

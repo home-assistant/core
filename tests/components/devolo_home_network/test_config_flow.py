@@ -1,4 +1,5 @@
 """Test the devolo Home Network config flow."""
+
 from __future__ import annotations
 
 from typing import Any

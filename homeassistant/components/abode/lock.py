@@ -1,4 +1,5 @@
 """Support for the Abode Security System locks."""
+
 from typing import Any
 
 from jaraco.abode.devices.lock import Lock as AbodeLK

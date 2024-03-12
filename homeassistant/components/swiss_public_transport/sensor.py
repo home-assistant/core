@@ -1,4 +1,5 @@
 """Support for transport.opendata.ch."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta

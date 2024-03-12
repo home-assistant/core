@@ -1,4 +1,5 @@
 """The imap integration."""
+
 from __future__ import annotations
 
 from aioimaplib import IMAP4_SSL, AioImapException

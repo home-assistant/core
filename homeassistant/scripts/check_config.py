@@ -1,4 +1,5 @@
 """Script to check the configuration file."""
+
 from __future__ import annotations
 
 import argparse

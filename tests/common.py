@@ -1,4 +1,5 @@
 """Test the helper method for writing tests."""
+
 from __future__ import annotations
 
 import asyncio
@@ -233,7 +234,7 @@ async def async_test_home_assistant(
     orig_async_create_task = hass.async_create_task
     orig_tz = dt_util.DEFAULT_TIME_ZONE
 
-    def async_add_job(target, *args):
+    def async_add_job(target, *args, eager_start: bool = False):
         """Add job."""
         check_target = target
         while isinstance(check_target, ft.partial):
@@ -244,7 +245,7 @@ async def async_test_home_assistant(
             fut.set_result(target(*args))
             return fut
 
-        return orig_async_add_job(target, *args)
+        return orig_async_add_job(target, *args, eager_start=eager_start)
 
     def async_add_executor_job(target, *args):
         """Add executor job."""
@@ -1074,9 +1075,9 @@ def assert_setup_component(count, domain=None):
         yield config
 
     if domain is None:
-        assert len(config) == 1, "assert_setup_component requires DOMAIN: {}".format(
-            list(config.keys())
-        )
+        assert (
+            len(config) == 1
+        ), f"assert_setup_component requires DOMAIN: {list(config.keys())}"
         domain = list(config.keys())[0]
 
     res = config.get(domain)

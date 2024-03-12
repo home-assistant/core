@@ -1,4 +1,5 @@
 """Support for Konnected devices."""
+
 import copy
 import hmac
 from http import HTTPStatus

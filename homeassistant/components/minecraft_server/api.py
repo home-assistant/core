@@ -1,6 +1,5 @@
 """API for the Minecraft Server integration."""
 
-
 from dataclasses import dataclass
 from enum import StrEnum
 import logging

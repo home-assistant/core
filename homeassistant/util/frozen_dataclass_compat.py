@@ -3,6 +3,7 @@
 This module enabled a non-breaking transition from mutable to frozen dataclasses
 derived from EntityDescription and sub classes thereof.
 """
+
 from __future__ import annotations
 
 import dataclasses

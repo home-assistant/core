@@ -1,4 +1,5 @@
 """Test integration platform helpers."""
+
 from collections.abc import Callable
 from types import ModuleType
 from unittest.mock import Mock, patch

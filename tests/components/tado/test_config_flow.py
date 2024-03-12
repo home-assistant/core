@@ -1,4 +1,5 @@
 """Test the Tado config flow."""
+
 from http import HTTPStatus
 from ipaddress import ip_address
 from unittest.mock import MagicMock, patch

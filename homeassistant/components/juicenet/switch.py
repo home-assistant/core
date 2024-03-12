@@ -1,4 +1,5 @@
 """Support for monitoring juicenet/juicepoint/juicebox based EVSE switches."""
+
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity

@@ -1,4 +1,5 @@
 """Entity representing a Blue Current charge point."""
+
 from abc import abstractmethod
 
 from homeassistant.const import ATTR_NAME

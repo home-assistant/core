@@ -1,4 +1,5 @@
 """Test UniFi Network."""
+
 from copy import deepcopy
 from datetime import timedelta
 from http import HTTPStatus

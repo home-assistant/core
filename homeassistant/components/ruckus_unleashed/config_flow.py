@@ -1,4 +1,5 @@
 """Config flow for Ruckus Unleashed integration."""
+
 from collections.abc import Mapping
 import logging
 from typing import Any

@@ -1,4 +1,5 @@
 """Test Mikrotik setup process."""
+
 from unittest.mock import MagicMock, patch
 
 from librouteros.exceptions import ConnectionClosed, LibRouterosError

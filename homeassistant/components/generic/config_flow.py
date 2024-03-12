@@ -1,4 +1,5 @@
 """Config flow for generic (IP Camera)."""
+
 from __future__ import annotations
 
 import asyncio

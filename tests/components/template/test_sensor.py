@@ -1,4 +1,5 @@
 """The test for the Template sensor platform."""
+
 from asyncio import Event
 from datetime import datetime, timedelta
 from unittest.mock import ANY, patch

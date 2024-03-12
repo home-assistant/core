@@ -1,4 +1,5 @@
 """Tests for Shelly coordinator."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, patch
 
