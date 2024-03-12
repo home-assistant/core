@@ -16,6 +16,7 @@
           'thursday': False,
           'tuesday': False,
           'wednesday': True,
+          'work_area_id': None,
         }),
         dict({
           'duration': 480,
@@ -27,6 +28,7 @@
           'thursday': True,
           'tuesday': True,
           'wednesday': False,
+          'work_area_id': None,
         }),
       ]),
     }),
@@ -47,7 +49,8 @@
     'mower': dict({
       'activity': 'PARKED_IN_CS',
       'error_code': 0,
-      'error_code_dateteime': None,
+      'error_dateteime': None,
+      'error_key': None,
       'mode': 'MAIN_AREA',
       'state': 'RESTRICTED',
     }),
@@ -71,31 +74,28 @@
     }),
     'stay_out_zones': dict({
       'dirty': False,
-      'zones': list([
-        dict({
+      'zones': dict({
+        '81C6EEA2-D139-4FEA-B134-F22A6B3EA403': dict({
           'enabled': True,
-          'id': '81C6EEA2-D139-4FEA-B134-F22A6B3EA403',
           'name': 'Springflowers',
         }),
-      ]),
+      }),
     }),
     'system': dict({
       'model': '450XH-TEST',
       'name': 'Test Mower 1',
       'serial_number': 123,
     }),
-    'work_areas': list([
-      dict({
+    'work_areas': dict({
+      '0': dict({
+        'cutting_height': 50,
+        'name': None,
+      }),
+      '123456': dict({
         'cutting_height': 50,
         'name': 'Front lawn',
-        'work_area_id': 123456,
       }),
-      dict({
-        'cutting_height': 50,
-        'name': '',
-        'work_area_id': 0,
-      }),
-    ]),
+    }),
   })
 # ---
 # name: test_entry_diagnostics
