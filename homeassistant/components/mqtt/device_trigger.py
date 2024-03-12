@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING, Any
@@ -24,6 +25,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util.async_ import create_eager_task
 
 from . import debug_info, trigger as mqtt_trigger
 from .config import MQTT_BASE_SCHEMA
@@ -173,9 +175,15 @@ class Trigger:
         # Unsubscribe+subscribe if this trigger is in use and topic has changed
         # If topic is same unsubscribe+subscribe will execute in the wrong order
         # because unsubscribe is done with help of async_create_task
-        if topic_changed:
-            for trig in self.trigger_instances:
-                await trig.async_attach_trigger()
+        if not topic_changed:
+            return
+        await asyncio.gather(
+            *[
+                create_eager_task(trig.async_attach_trigger())
+                for trig in self.trigger_instances
+                if topic_changed
+            ]
+        )
 
     def detach_trigger(self) -> None:
         """Remove MQTT device trigger."""
@@ -336,16 +344,19 @@ async def async_removed_from_device(hass: HomeAssistant, device_id: str) -> None
     """Handle Mqtt removed from a device."""
     mqtt_data = get_mqtt_data(hass)
     triggers = await async_get_triggers(hass, device_id)
-    for trig in triggers:
-        trigger_id = f"{device_id}_{trig[CONF_TYPE]}_{trig[CONF_SUBTYPE]}"
-        if trigger_id in mqtt_data.device_triggers:
-            device_trigger = mqtt_data.device_triggers.pop(trigger_id)
-            device_trigger.detach_trigger()
-            discovery_data = device_trigger.discovery_data
-            if TYPE_CHECKING:
-                assert discovery_data is not None
-            discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
-            debug_info.remove_trigger_discovery_data(hass, discovery_hash)
+    device_triggers = [
+        mqtt_data.device_triggers.pop(trigger_id)
+        for trig in triggers
+        if (trigger_id := f"{device_id}_{trig[CONF_TYPE]}_{trig[CONF_SUBTYPE]}")
+        in mqtt_data.device_triggers
+    ]
+    for device_trigger in device_triggers:
+        device_trigger.detach_trigger()
+        discovery_data = device_trigger.discovery_data
+        if TYPE_CHECKING:
+            assert discovery_data is not None
+        discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
+        debug_info.remove_trigger_discovery_data(hass, discovery_hash)
 
 
 async def async_get_triggers(
@@ -353,24 +364,20 @@ async def async_get_triggers(
 ) -> list[dict[str, str]]:
     """List device triggers for MQTT devices."""
     mqtt_data = get_mqtt_data(hass)
-    triggers: list[dict[str, str]] = []
 
     if not mqtt_data.device_triggers:
-        return triggers
+        return []
 
-    for trig in mqtt_data.device_triggers.values():
-        if trig.device_id != device_id or trig.topic is None:
-            continue
-
-        trigger = {
+    return [
+        {
             **MQTT_TRIGGER_BASE,
             "device_id": device_id,
             "type": trig.type,
             "subtype": trig.subtype,
         }
-        triggers.append(trigger)
-
-    return triggers
+        for trig in mqtt_data.device_triggers.values()
+        if trig.device_id == device_id and trig.topic is not None
+    ]
 
 
 async def async_attach_trigger(
