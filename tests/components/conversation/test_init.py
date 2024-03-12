@@ -724,10 +724,6 @@ async def test_custom_agent(
             "text": "Test Text",
             "agent_id": "homeassistant",
         },
-        {
-            "text": "Test Text",
-            "device_id": "1234",
-        },
     ],
 )
 async def test_ws_api(

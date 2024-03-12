@@ -22,7 +22,7 @@ from homeassistant import core
 from homeassistant.components import http, websocket_api
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DEVICE_ID, MATCH_ALL
+from homeassistant.const import MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, intent, singleton
@@ -81,7 +81,6 @@ SERVICE_PROCESS_SCHEMA = vol.Schema(
         vol.Optional(ATTR_LANGUAGE): cv.string,
         vol.Optional(ATTR_AGENT_ID): agent_id_validator,
         vol.Optional(ATTR_CONVERSATION_ID): cv.string,
-        vol.Optional(ATTR_DEVICE_ID): cv.string,
     }
 )
 
@@ -184,7 +183,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 context=service.context,
                 language=service.data.get(ATTR_LANGUAGE),
                 agent_id=service.data.get(ATTR_AGENT_ID),
-                device_id=service.data.get(ATTR_DEVICE_ID),
             )
         except intent.IntentHandleError as err:
             raise HomeAssistantError(f"Error processing {text}: {err}") from err
@@ -225,7 +223,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         vol.Optional("conversation_id"): vol.Any(str, None),
         vol.Optional("language"): str,
         vol.Optional("agent_id"): agent_id_validator,
-        vol.Optional("device_id"): str,
     }
 )
 @websocket_api.async_response
@@ -242,7 +239,6 @@ async def websocket_process(
         context=connection.context(msg),
         language=msg.get("language"),
         agent_id=msg.get("agent_id"),
-        device_id=msg.get("device_id"),
     )
     connection.send_result(msg["id"], result.as_dict())
 
