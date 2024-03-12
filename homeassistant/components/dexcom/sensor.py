@@ -17,7 +17,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import DOMAIN, MG_DL
 
-trends = {
+TRENDS = {
     1: "rising_quickly",
     2: "rising",
     3: "rising_slightly",
