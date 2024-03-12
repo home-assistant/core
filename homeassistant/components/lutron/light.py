@@ -118,14 +118,6 @@ class LutronLight(LutronDevice, LightEntity):
         super().__init__(area_name, lutron_device, controller)
         self._is_fan = lutron_device.type == "CEILING_FAN_TYPE"
 
-    async def _set_brightness(self, brightness, **kwargs):
-        args = {}
-        if ATTR_TRANSITION in kwargs:
-            args["fade_time_seconds"] = kwargs[ATTR_TRANSITION]
-        args["new_level"] = brightness
-
-        await self._lutron_device.set_level(**args)
-
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         if self._is_fan:
@@ -149,7 +141,10 @@ class LutronLight(LutronDevice, LightEntity):
             else:
                 brightness = self._prev_brightness
             self._prev_brightness = brightness
-            self._set_brightness(brightness, **kwargs)
+            args = {"new_level": brightness}
+            if ATTR_TRANSITION in kwargs:
+                args["fade_time_seconds"] = kwargs[ATTR_TRANSITION]
+            self._lutron_device.set_level(**args)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
@@ -164,7 +159,10 @@ class LutronLight(LutronDevice, LightEntity):
                 severity=IssueSeverity.WARNING,
                 translation_key="deprecated_light_fan_off",
             )
-        self._set_brightness(0, **kwargs)
+        args = {"new_level": 0}
+        if ATTR_TRANSITION in kwargs:
+            args["fade_time_seconds"] = kwargs[ATTR_TRANSITION]
+        self._lutron_device.set_level(**args)
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
