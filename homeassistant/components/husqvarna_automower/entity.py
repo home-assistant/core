@@ -29,7 +29,7 @@ class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
         """Initialize AutomowerEntity."""
         super().__init__(coordinator)
         self.mower_id = mower_id
-        entry = self.coordinator.config_entry
+        entry = coordinator.config_entry
         structured_token = structure_token(entry.data["token"]["access_token"])
         self._attr_device_info = DeviceInfo(
             configuration_url=f"{HUSQVARNA_URL}/applications/{structured_token.client_id}",
