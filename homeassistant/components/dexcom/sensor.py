@@ -112,7 +112,7 @@ class DexcomGlucoseTrendSensor(DexcomSensorEntity):
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
         if self.coordinator.data:
-            return trends.get(self.coordinator.data.trend)
+            return TRENDS.get(self.coordinator.data.trend)
         return None
 
     @property
