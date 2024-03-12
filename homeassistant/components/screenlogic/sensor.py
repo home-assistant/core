@@ -45,7 +45,7 @@ class ScreenLogicSensorDescription(
     value_mod: Callable[[int | str], int | str] | None = None
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class ScreenLogicPushSensorDescription(
     ScreenLogicSensorDescription, ScreenLogicPushEntityDescription
 ):
