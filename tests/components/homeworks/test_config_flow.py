@@ -301,12 +301,13 @@ async def test_reconfigure_flow(
                 "addr": "[02:08:02:01]",
                 "buttons": [
                     {
+                        "led": True,
                         "name": "Morning",
                         "number": 1,
                         "release_delay": None,
                     },
-                    {"name": "Relax", "number": 2, "release_delay": None},
-                    {"name": "Dim up", "number": 3, "release_delay": 0.2},
+                    {"led": True, "name": "Relax", "number": 2, "release_delay": None},
+                    {"led": False, "name": "Dim up", "number": 3, "release_delay": 0.2},
                 ],
                 "name": "Foyer Keypad",
             },
@@ -760,12 +761,13 @@ async def test_options_edit_light_no_lights_flow(
                 "addr": "[02:08:02:01]",
                 "buttons": [
                     {
+                        "led": True,
                         "name": "Morning",
                         "number": 1,
                         "release_delay": None,
                     },
-                    {"name": "Relax", "number": 2, "release_delay": None},
-                    {"name": "Dim up", "number": 3, "release_delay": 0.2},
+                    {"led": True, "name": "Relax", "number": 2, "release_delay": None},
+                    {"led": False, "name": "Dim up", "number": 3, "release_delay": 0.2},
                 ],
                 "name": "Foyer Keypad",
             }
