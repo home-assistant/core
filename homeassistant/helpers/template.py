@@ -84,7 +84,7 @@ from . import (
     area_registry,
     device_registry,
     entity_registry,
-    issue_registry as ir,
+    issue_registry,
     location as loc_helper,
 )
 from .singleton import singleton
@@ -2322,17 +2322,17 @@ def relative_time(hass: HomeAssistant, value: Any) -> Any:
     """
 
     def warn_relative_time_deprecated() -> None:
-        issue_registry = ir.async_get(hass)
+        ir = issue_registry.async_get(hass)
         issue_id = "template_function_relative_time_deprecated"
-        if issue_registry.async_get_issue(HA_DOMAIN, issue_id):
+        if ir.async_get_issue(HA_DOMAIN, issue_id):
             return
-        ir.async_create_issue(
+        issue_registry.async_create_issue(
             hass,
             HA_DOMAIN,
             issue_id,
             breaks_in_ha_version="2024.9.0",
             is_fixable=False,
-            severity=ir.IssueSeverity.WARNING,
+            severity=issue_registry.IssueSeverity.WARNING,
             translation_key=issue_id,
         )
         _LOGGER.warning("Template function 'relative_time' is deprecated")
