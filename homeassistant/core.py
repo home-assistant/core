@@ -811,27 +811,21 @@ class HomeAssistant:
     @overload
     @callback
     def async_run_job(
-        self,
-        target: Callable[..., Coroutine[Any, Any, _R]],
-        *args: Any,
-        eager_start: bool = False,
+        self, target: Callable[..., Coroutine[Any, Any, _R]], *args: Any
     ) -> asyncio.Future[_R] | None:
         ...
 
     @overload
     @callback
     def async_run_job(
-        self,
-        target: Callable[..., Coroutine[Any, Any, _R] | _R],
-        *args: Any,
-        eager_start: bool = False,
+        self, target: Callable[..., Coroutine[Any, Any, _R] | _R], *args: Any
     ) -> asyncio.Future[_R] | None:
         ...
 
     @overload
     @callback
     def async_run_job(
-        self, target: Coroutine[Any, Any, _R], *args: Any, eager_start: bool = False
+        self, target: Coroutine[Any, Any, _R], *args: Any
     ) -> asyncio.Future[_R] | None:
         ...
 
@@ -840,7 +834,6 @@ class HomeAssistant:
         self,
         target: Callable[..., Coroutine[Any, Any, _R] | _R] | Coroutine[Any, Any, _R],
         *args: Any,
-        eager_start: bool = False,
     ) -> asyncio.Future[_R] | None:
         """Run a job from within the event loop.
 
@@ -858,7 +851,7 @@ class HomeAssistant:
         # https://github.com/home-assistant/core/pull/71960
         if TYPE_CHECKING:
             target = cast(Callable[..., Coroutine[Any, Any, _R] | _R], target)
-        return self.async_run_hass_job(HassJob(target), *args, eager_start=eager_start)
+        return self.async_run_hass_job(HassJob(target), *args)
 
     def block_till_done(self) -> None:
         """Block until all pending work is done."""
@@ -1273,7 +1266,6 @@ class _OneTimeListener:
     hass: HomeAssistant
     listener: Callable[[Event], Coroutine[Any, Any, None] | None]
     remove: CALLBACK_TYPE | None = None
-    run_immediately: bool = False
 
     @callback
     def __call__(self, event: Event) -> None:
@@ -1283,7 +1275,7 @@ class _OneTimeListener:
             return
         self.remove()
         self.remove = None
-        self.hass.async_run_job(self.listener, event, eager_start=self.run_immediately)
+        self.hass.async_run_job(self.listener, event)
 
     def __repr__(self) -> str:
         """Return the representation of the listener and source module."""
@@ -1480,9 +1472,7 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        one_time_listener = _OneTimeListener(
-            self._hass, listener, None, run_immediately
-        )
+        one_time_listener = _OneTimeListener(self._hass, listener)
         remove = self._async_listen_filterable_job(
             event_type,
             (
