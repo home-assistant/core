@@ -8,8 +8,6 @@ import logging
 from typing import Optional
 
 from haffmpeg.camera import CameraMjpeg
-import requests
-import ring_doorbell
 
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import Camera
@@ -21,7 +19,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, RING_DEVICES, RING_DEVICES_COORDINATOR
 from .coordinator import RingDataCoordinator
-from .entity import RingEntity
+from .entity import RingEntity, exception_wrap
 
 FORCE_REFRESH_INTERVAL = timedelta(minutes=3)
 MOTION_DETECTION_CAPABILITY = "motion_detection"
@@ -156,36 +154,26 @@ class RingCam(RingEntity, Camera):
         if self._last_video_id != self._last_event["id"]:
             self._image = None
 
-        try:
-            video_url = await self.hass.async_add_executor_job(
-                self._device.recording_url, self._last_event["id"]
-            )
-        except requests.Timeout:
-            _LOGGER.warning(
-                "Time out fetching recording url for camera %s", self.entity_id
-            )
-            video_url = None
+        self._video_url = await self.hass.async_add_executor_job(self._get_video)
 
-        if video_url:
-            self._last_video_id = self._last_event["id"]
-            self._video_url = video_url
-            self._expires_at = FORCE_REFRESH_INTERVAL + utcnow
+        self._last_video_id = self._last_event["id"]
+        self._expires_at = FORCE_REFRESH_INTERVAL + utcnow
 
+    @exception_wrap
+    def _get_video(self) -> str:
+        return self._device.recording_url(self._last_event["id"])
+
+    @exception_wrap
     def _set_motion_detection_enabled(self, new_state):
         if not self._device.has_capability(MOTION_DETECTION_CAPABILITY):
             _LOGGER.error(
                 "Entity %s does not have motion detection capability", self.entity_id
             )
             return
-        try:
-            self._device.motion_detection = new_state
-            self._attr_motion_detection_enabled = new_state
-            self.schedule_update_ha_state(False)
-        except ring_doorbell.RingError:
-            _LOGGER.error(
-                "Error setting %s motion detection to %s", self.entity_id, new_state
-            )
-            return
+
+        self._device.motion_detection = new_state
+        self._attr_motion_detection_enabled = new_state
+        self.schedule_update_ha_state(False)
 
     def enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""

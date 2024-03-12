@@ -1685,3 +1685,11 @@ async def test_integration_warnings(
     """Test integration warnings."""
     await loader.async_get_integration(hass, "test_package_loaded_loop")
     assert "configured to to import its code in the event loop" in caplog.text
+
+
+async def test_has_services(hass: HomeAssistant, enable_custom_integrations) -> None:
+    """Test has_services."""
+    integration = await loader.async_get_integration(hass, "test")
+    assert integration.has_services is False
+    integration = await loader.async_get_integration(hass, "test_with_services")
+    assert integration.has_services is True

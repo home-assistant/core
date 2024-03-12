@@ -187,7 +187,6 @@ async def async_attach_trigger(
                     }
                 },
                 to_s.context,
-                eager_start=True,
             )
 
         @callback

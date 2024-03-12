@@ -118,8 +118,8 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
     data_type = config[CONF_DATA_TYPE]
     if data_type == "int":
         data_type = config[CONF_DATA_TYPE] = DataType.INT16
-    count = config.get(CONF_COUNT, None)
-    structure = config.get(CONF_STRUCTURE, None)
+    count = config.get(CONF_COUNT)
+    structure = config.get(CONF_STRUCTURE)
     slave_count = config.get(CONF_SLAVE_COUNT, config.get(CONF_VIRTUAL_COUNT))
     validator = DEFAULT_STRUCT_FORMAT[data_type].validate_parm
     swap_type = config.get(CONF_SWAP)
@@ -148,6 +148,8 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
             raise vol.Invalid(error)
 
     if config[CONF_DATA_TYPE] == DataType.CUSTOM:
+        assert isinstance(structure, str)
+        assert isinstance(count, int)
         try:
             size = struct.calcsize(structure)
         except struct.error as err:
@@ -332,7 +334,7 @@ def check_config(config: dict) -> dict:
         ):
             if conf_type in entity:
                 addr += f"_{entity[conf_type]}"
-        inx = entity.get(CONF_SLAVE, None) or entity.get(CONF_DEVICE_ADDRESS, 0)
+        inx = entity.get(CONF_SLAVE) or entity.get(CONF_DEVICE_ADDRESS, 0)
         addr += f"_{inx}"
         loc_addr: set[str] = {addr}
 
