@@ -6,6 +6,7 @@ import datetime
 import logging
 
 from aioautomower.model import MowerAttributes, MowerModes
+from aioautomower.utils import error_key_list
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -131,6 +132,13 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         translation_key="next_start_timestamp",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: data.planner.next_start_dateteime,
+    ),
+    AutomowerSensorEntityDescription(
+        key="error",
+        translation_key="error",
+        device_class=SensorDeviceClass.ENUM,
+        value_fn=lambda data: data.mower.error_key,
+        options=error_key_list(),
     ),
 )
 

@@ -1,6 +1,9 @@
 {
   "entity": {
     "sensor": {
+      "error": {
+        "default": "mdi:alert-circle-outline"
+      },
       "number_of_charging_cycles": {
         "default": "mdi:battery-sync-outline"
       },
