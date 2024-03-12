@@ -171,7 +171,7 @@ async def test_integration_import_error(hass: HomeAssistant) -> None:
     # Make sure they don't exist
     files = {YAML_CONFIG_FILE: BASE_CONFIG + "light:"}
     with patch(
-        "homeassistant.loader.Integration.get_component",
+        "homeassistant.loader.Integration.async_get_component",
         side_effect=ImportError("blablabla"),
     ), patch("os.path.isfile", return_value=True), patch_yaml_files(files):
         res = await async_check_ha_config_file(hass)
