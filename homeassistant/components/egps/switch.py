@@ -34,6 +34,8 @@ class EGPowerStripSocket(SwitchEntity):
     """Represents a socket of an Energenie-Socket-Strip."""
 
     _attr_device_class = SwitchDeviceClass.OUTLET
+    _attr_should_poll = True
+    _attr_has_entity_name = True
 
     def __init__(self, dev: PowerStrip, socket: int) -> None:
         """Initiate a new socket."""
@@ -41,22 +43,12 @@ class EGPowerStripSocket(SwitchEntity):
         self._socket = socket
         self._state = STATE_OFF
 
-    @property
-    def unique_id(self) -> str:
-        """Return the unique id for a socket."""
-        return f"{self._dev.device_id}_{self._socket}"
+        self._attr_name = f"Socket {self._socket}"
 
-    @property
-    def name(self) -> str:
-        """Return the display name of this socket."""
-        return f"{self._dev.name} Socket {self._socket}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
+        self._attr_unique_id = f"{self._dev.device_id}_{self._socket}"
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._dev.device_id)},
-            name=f"{self._dev.name} ({self._dev.device_id})",
+            name=self._dev.name,
             manufacturer=self._dev.manufacturer,
             model=self._dev.name,
             sw_version=PYEGPS_VERSION,
@@ -74,11 +66,6 @@ class EGPowerStripSocket(SwitchEntity):
     def turn_off(self, **kwargs: Any) -> None:
         """Switch the socket off."""
         self._dev.switch_off(self._socket)
-
-    @property
-    def should_poll(self) -> bool:
-        """Return True, as this device uses polling."""
-        return True
 
     def update(self) -> None:
         """Read the current state from the device."""

@@ -2,12 +2,11 @@
 import logging
 from typing import Any
 
-from pyegps import Device, get_device, search_for_devices
+from pyegps import get_device, search_for_devices
 from pyegps.exceptions import MissingLibrary, UsbError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_DEVICE_API_ID, DOMAIN
 
@@ -17,17 +16,15 @@ _LOGGER = logging.getLogger(__name__)
 class ConfigFLow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle the config flow for EGPM devices."""
 
-    VERSION = 1
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Initiate user flow."""
 
         if user_input is not None:
             if CONF_DEVICE_API_ID in user_input:
                 devId = user_input[CONF_DEVICE_API_ID]
-                dev: Device | None = get_device(device_id=devId)
+                dev = get_device(device_id=devId)
                 if dev is not None:
                     await self.async_set_unique_id(dev.device_id)
                     self._abort_if_unique_id_configured()

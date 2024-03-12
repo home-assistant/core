@@ -6,7 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/egps",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "issue_tracker": "https://github.com/gnumpi/pyegps/issues",
   "loggers": ["pyegps"],
   "requirements": ["pyegps==0.2.3"]
 }

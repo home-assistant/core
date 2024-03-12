@@ -3,21 +3,20 @@ from pyegps import PowerStripUSB, get_device
 from pyegps.exceptions import MissingLibrary, UsbError
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, IntegrationError
 
 from .const import CONF_DEVICE_API_ID, DOMAIN
 
-PLATFORMS: list[str] = ["switch"]
+PLATFORMS = [Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Energenie Powerstrip."""
-
-    config = entry.data
-
     try:
-        powerstrip: PowerStripUSB | None = get_device(config[CONF_DEVICE_API_ID])
+        powerstrip: PowerStripUSB | None = get_device(entry.data[CONF_DEVICE_API_ID])
+
     except (MissingLibrary, UsbError) as ex:
         raise IntegrationError("Can't access usb devices.") from ex
 
