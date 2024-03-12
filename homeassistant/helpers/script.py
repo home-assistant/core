@@ -718,7 +718,7 @@ class _ScriptRun:
                 await async_cancel_long_task()
 
         if long_task.cancelled() or self._stop.done():
-            raise asyncio.CancelledError()
+            raise asyncio.CancelledError
         if long_task.done():
             # Propagate any exceptions that occurred.
             return long_task.result()
