@@ -594,11 +594,9 @@ class HassIO:
                 error = await response.json(encoding="utf-8")
                 if error.get(ATTR_RESULT) == "error":
                     raise HassioAPIError(error.get(ATTR_MESSAGE))
-                raise HassioAPIError()
 
-            if response.status != HTTPStatus.OK:
                 _LOGGER.error(
-                    "Request to %s method %s returned with unexpected code %d",
+                    "Request to %s method %s returned with code %d",
                     command,
                     method,
                     response.status,
