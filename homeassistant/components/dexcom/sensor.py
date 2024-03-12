@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pydexcom import GlucoseReading
+
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME
@@ -45,13 +47,19 @@ async def async_setup_entry(
     )
 
 
-class DexcomSensorEntity(CoordinatorEntity, SensorEntity):
+class DexcomSensorEntity(
+    CoordinatorEntity[DataUpdateCoordinator[GlucoseReading]], SensorEntity
+):
     """Base Dexcom sensor entity."""
 
     _attr_has_entity_name = True
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, username: str, entry_id: str, key: str
+        self,
+        coordinator: DataUpdateCoordinator[GlucoseReading],
+        username: str,
+        entry_id: str,
+        key: str,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -110,4 +118,6 @@ class DexcomGlucoseTrendSensor(DexcomSensorEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and self.coordinator.data.trend != 9
+        return super().available and (
+            self.coordinator.data is None or self.coordinator.data.trend != 9
+        )
