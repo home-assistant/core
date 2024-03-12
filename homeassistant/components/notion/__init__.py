@@ -186,7 +186,6 @@ class NotionEntity(CoordinatorEntity[NotionDataUpdateCoordinator]):
         listener_id: str,
         sensor_id: str,
         bridge_id: int,
-        system_id: str,
         description: EntityDescription,
     ) -> None:
         """Initialize the entity."""
@@ -210,7 +209,6 @@ class NotionEntity(CoordinatorEntity[NotionDataUpdateCoordinator]):
         self._bridge_id = bridge_id
         self._listener_id = listener_id
         self._sensor_id = sensor_id
-        self._system_id = system_id
         self.entity_description = description
 
     @property
