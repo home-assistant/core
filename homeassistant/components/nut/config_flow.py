@@ -210,7 +210,7 @@ class OptionsFlowHandler(OptionsFlow):
 
         base_schema = {
             vol.Optional(CONF_SCAN_INTERVAL, default=scan_interval): vol.All(
-                vol.Coerce(int), vol.Clamp(min=10, max=300)
+                vol.Coerce(int), vol.Clamp(min=1, max=300)
             )
         }
 
