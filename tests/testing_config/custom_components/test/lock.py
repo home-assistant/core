@@ -2,6 +2,7 @@
 
 Call init before using it in your tests to ensure clean test data.
 """
+
 from homeassistant.components.lock import LockEntity, LockEntityFeature
 
 from tests.common import MockEntity

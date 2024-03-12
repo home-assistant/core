@@ -1,4 +1,5 @@
 """Tests for the Bluetooth integration scanners."""
+
 import asyncio
 from datetime import timedelta
 import time

@@ -1,6 +1,5 @@
 """Constants and mock for the twinkly component tests."""
 
-
 from aiohttp.client_exceptions import ClientConnectionError
 
 from homeassistant.components.twinkly.const import DEV_NAME

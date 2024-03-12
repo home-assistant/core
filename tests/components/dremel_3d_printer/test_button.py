@@ -1,4 +1,5 @@
 """Button tests for the Dremel 3D Printer integration."""
+
 from unittest.mock import AsyncMock, patch
 
 import pytest

@@ -1,4 +1,5 @@
 """The tests for the Ring binary sensor platform."""
+
 from time import time
 from unittest.mock import patch
 

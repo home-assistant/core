@@ -1,4 +1,5 @@
 """Support for Calendar event device sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
@@ -187,6 +188,11 @@ def _validate_rrule(value: Any) -> str:
         raise vol.Invalid(f"Invalid frequency for rule: {value}")
 
     return str(value)
+
+
+def _empty_as_none(value: str | None) -> str | None:
+    """Convert any empty string values to None."""
+    return value or None
 
 
 CREATE_EVENT_SERVICE = "create_event"
@@ -734,7 +740,9 @@ async def handle_calendar_event_create(
         vol.Required("type"): "calendar/event/delete",
         vol.Required("entity_id"): cv.entity_id,
         vol.Required(EVENT_UID): cv.string,
-        vol.Optional(EVENT_RECURRENCE_ID): cv.string,
+        vol.Optional(EVENT_RECURRENCE_ID): vol.Any(
+            vol.All(cv.string, _empty_as_none), None
+        ),
         vol.Optional(EVENT_RECURRENCE_RANGE): cv.string,
     }
 )
@@ -778,7 +786,9 @@ async def handle_calendar_event_delete(
         vol.Required("type"): "calendar/event/update",
         vol.Required("entity_id"): cv.entity_id,
         vol.Required(EVENT_UID): cv.string,
-        vol.Optional(EVENT_RECURRENCE_ID): cv.string,
+        vol.Optional(EVENT_RECURRENCE_ID): vol.Any(
+            vol.All(cv.string, _empty_as_none), None
+        ),
         vol.Optional(EVENT_RECURRENCE_RANGE): cv.string,
         vol.Required(CONF_EVENT): WEBSOCKET_EVENT_SCHEMA,
     }

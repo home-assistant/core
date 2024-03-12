@@ -1,9 +1,10 @@
 """Config flow to add the integration via the UI."""
+
 from collections.abc import Mapping
 import logging
 from typing import Any
 
-from aioautomower.utils import async_structure_token
+from aioautomower.utils import structure_token
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
@@ -33,7 +34,7 @@ class HusqvarnaConfigFlowHandler(
             if self.reauth_entry.unique_id != user_id:
                 return self.async_abort(reason="wrong_account")
             return self.async_update_reload_and_abort(self.reauth_entry, data=data)
-        structured_token = await async_structure_token(token[CONF_ACCESS_TOKEN])
+        structured_token = structure_token(token[CONF_ACCESS_TOKEN])
         first_name = structured_token.user.first_name
         last_name = structured_token.user.last_name
         await self.async_set_unique_id(user_id)

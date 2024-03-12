@@ -1,4 +1,5 @@
 """Tests for the storage helper."""
+
 import asyncio
 from datetime import timedelta
 import json

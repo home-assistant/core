@@ -1,4 +1,5 @@
 """Test the onboarding views."""
+
 import asyncio
 from http import HTTPStatus
 import os

@@ -1,4 +1,5 @@
 """Config flow for the Vallox integration."""
+
 from __future__ import annotations
 
 import logging

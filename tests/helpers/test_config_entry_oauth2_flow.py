@@ -1,4 +1,5 @@
 """Tests for the Somfy config flow."""
+
 from http import HTTPStatus
 import logging
 import time

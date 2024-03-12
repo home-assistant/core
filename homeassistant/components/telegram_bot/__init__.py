@@ -1,4 +1,5 @@
 """Support to send and receive Telegram messages."""
+
 from __future__ import annotations
 
 import asyncio

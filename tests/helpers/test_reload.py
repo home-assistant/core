@@ -1,4 +1,5 @@
 """Tests for the reload helper."""
+
 import logging
 from unittest.mock import AsyncMock, Mock, patch
 

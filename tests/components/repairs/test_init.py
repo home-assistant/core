@@ -1,4 +1,5 @@
 """Test the repairs websocket API."""
+
 from unittest.mock import AsyncMock, Mock
 
 from freezegun.api import FrozenDateTimeFactory

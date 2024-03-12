@@ -1,4 +1,5 @@
 """Tests for the Cast config flow."""
+
 from unittest.mock import ANY, patch
 
 import pytest

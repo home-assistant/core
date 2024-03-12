@@ -1,4 +1,5 @@
 """The SRP Energy integration."""
+
 from srpenergy.client import SrpEnergyClient
 
 from homeassistant.config_entries import ConfigEntry

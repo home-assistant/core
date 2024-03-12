@@ -1,4 +1,5 @@
 """Config flow for SRP Energy."""
+
 from __future__ import annotations
 
 from typing import Any

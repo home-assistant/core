@@ -1,4 +1,5 @@
 """Test data validator decorator."""
+
 from http import HTTPStatus
 from unittest.mock import Mock
 

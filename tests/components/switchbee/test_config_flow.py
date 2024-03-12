@@ -1,4 +1,5 @@
 """Test the SwitchBee Smart Home config flow."""
+
 import json
 from unittest.mock import patch
 

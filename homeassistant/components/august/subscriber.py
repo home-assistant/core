@@ -1,4 +1,5 @@
 """Base class for August entity."""
+
 from __future__ import annotations
 
 from abc import abstractmethod

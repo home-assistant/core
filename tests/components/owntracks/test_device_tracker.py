@@ -1,4 +1,5 @@
 """The tests for the Owntracks device tracker."""
+
 import json
 from unittest.mock import patch
 

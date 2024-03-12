@@ -1,4 +1,5 @@
 """Config flow for Universal Devices ISY/IoX integration."""
+
 from __future__ import annotations
 
 import asyncio

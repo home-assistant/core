@@ -1,4 +1,5 @@
 """Configuration for Ring tests."""
+
 from collections.abc import Generator
 import re
 from unittest.mock import AsyncMock, Mock, patch
@@ -134,5 +135,12 @@ def requests_mock_fixture():
         mock.get(
             "https://api.ring.com/clients_api/doorbots/185036587/history",
             text=load_fixture("intercom_history.json", "ring"),
+        )
+        # Mocks the response for setting properties in settings (i.e. motion_detection)
+        mock.patch(
+            re.compile(
+                r"https:\/\/api\.ring\.com\/devices\/v1\/devices\/\d+\/settings"
+            ),
+            text="ok",
         )
         yield mock

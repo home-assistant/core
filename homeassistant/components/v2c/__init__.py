@@ -1,4 +1,5 @@
 """The V2C integration."""
+
 from __future__ import annotations
 
 from pytrydan import Trydan

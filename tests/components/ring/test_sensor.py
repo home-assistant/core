@@ -1,4 +1,5 @@
 """The tests for the Ring sensor platform."""
+
 import logging
 
 from freezegun.api import FrozenDateTimeFactory

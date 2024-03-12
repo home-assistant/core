@@ -1,4 +1,5 @@
 """Support for Volvo On Call sensors."""
+
 from __future__ import annotations
 
 from volvooncall.dashboard import Instrument

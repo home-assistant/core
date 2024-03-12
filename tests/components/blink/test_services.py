@@ -1,4 +1,5 @@
 """Test the Blink services."""
+
 from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest

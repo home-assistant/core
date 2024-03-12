@@ -1,4 +1,5 @@
 """Switch platform for Sensibo integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -24,22 +25,15 @@ from .entity import SensiboDeviceBaseEntity, async_handle_api_call
 PARALLEL_UPDATES = 0
 
 
-@dataclass(frozen=True)
-class DeviceBaseEntityDescriptionMixin:
-    """Mixin for required Sensibo Device description keys."""
+@dataclass(frozen=True, kw_only=True)
+class SensiboDeviceSwitchEntityDescription(SwitchEntityDescription):
+    """Describes Sensibo Switch entity."""
 
     value_fn: Callable[[SensiboDevice], bool | None]
     extra_fn: Callable[[SensiboDevice], dict[str, str | bool | None]] | None
     command_on: str
     command_off: str
     data_key: str
-
-
-@dataclass(frozen=True)
-class SensiboDeviceSwitchEntityDescription(
-    SwitchEntityDescription, DeviceBaseEntityDescriptionMixin
-):
-    """Describes Sensibo Switch entity."""
 
 
 DEVICE_SWITCH_TYPES: tuple[SensiboDeviceSwitchEntityDescription, ...] = (

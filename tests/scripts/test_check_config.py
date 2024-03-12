@@ -1,4 +1,5 @@
 """Test check_config script."""
+
 import logging
 from unittest.mock import patch
 

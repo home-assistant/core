@@ -1,4 +1,5 @@
 """Offer MQTT listening automation rules."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

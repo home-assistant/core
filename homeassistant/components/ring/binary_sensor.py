@@ -1,4 +1,5 @@
 """Component providing HA sensor support for Ring Door Bell/Chimes."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -19,18 +20,11 @@ from .coordinator import RingNotificationsCoordinator
 from .entity import RingEntity
 
 
-@dataclass(frozen=True)
-class RingRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class RingBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes Ring binary sensor entity."""
 
     category: list[str]
-
-
-@dataclass(frozen=True)
-class RingBinarySensorEntityDescription(
-    BinarySensorEntityDescription, RingRequiredKeysMixin
-):
-    """Describes Ring binary sensor entity."""
 
 
 BINARY_SENSOR_TYPES: tuple[RingBinarySensorEntityDescription, ...] = (

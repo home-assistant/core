@@ -1,4 +1,5 @@
 """Component to interface with cameras."""
+
 from __future__ import annotations
 
 import asyncio
