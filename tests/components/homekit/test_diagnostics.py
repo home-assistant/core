@@ -1,4 +1,5 @@
 """Test homekit diagnostics."""
+
 from unittest.mock import ANY, MagicMock, patch
 
 from homeassistant.components.homekit.const import (

@@ -1,4 +1,5 @@
 """Support for a ScreenLogic heating device."""
+
 from dataclasses import dataclass
 import logging
 from typing import Any
@@ -68,7 +69,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ScreenLogicClimateDescription(
     ClimateEntityDescription, ScreenLogicPushEntityDescription
 ):

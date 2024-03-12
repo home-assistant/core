@@ -1,4 +1,5 @@
 """The test for remote device automation."""
+
 from datetime import timedelta
 
 import pytest

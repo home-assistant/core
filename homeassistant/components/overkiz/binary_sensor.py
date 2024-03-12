@@ -1,4 +1,5 @@
 """Support for Overkiz binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -22,18 +23,11 @@ from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
 from .entity import OverkizDescriptiveEntity
 
 
-@dataclass(frozen=True)
-class OverkizBinarySensorDescriptionMixin:
-    """Define an entity description mixin for binary sensor entities."""
+@dataclass(frozen=True, kw_only=True)
+class OverkizBinarySensorDescription(BinarySensorEntityDescription):
+    """Class to describe an Overkiz binary sensor."""
 
     value_fn: Callable[[OverkizStateType], bool]
-
-
-@dataclass(frozen=True)
-class OverkizBinarySensorDescription(
-    BinarySensorEntityDescription, OverkizBinarySensorDescriptionMixin
-):
-    """Class to describe an Overkiz binary sensor."""
 
 
 BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [

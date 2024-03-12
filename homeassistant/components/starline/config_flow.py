@@ -1,4 +1,5 @@
 """Config flow to configure StarLine component."""
+
 from __future__ import annotations
 
 from starline import StarlineAuth

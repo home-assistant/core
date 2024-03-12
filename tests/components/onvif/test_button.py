@@ -1,4 +1,5 @@
 """Test button of ONVIF integration."""
+
 from unittest.mock import AsyncMock
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonDeviceClass

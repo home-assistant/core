@@ -1,4 +1,5 @@
 """The test for light device automation."""
+
 from unittest.mock import AsyncMock, Mock, patch
 
 import attr

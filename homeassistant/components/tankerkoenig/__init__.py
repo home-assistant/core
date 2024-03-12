@@ -1,4 +1,5 @@
 """Ask tankerkoenig.de for petrol price information."""
+
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry

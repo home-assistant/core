@@ -1,4 +1,5 @@
 """Test the Z-Wave JS lock platform."""
+
 import pytest
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.lock import (

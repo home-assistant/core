@@ -1,4 +1,5 @@
 """Component for handling Air Quality data for your location."""
+
 from __future__ import annotations
 
 from datetime import timedelta

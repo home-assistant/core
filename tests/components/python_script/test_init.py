@@ -1,4 +1,5 @@
 """Test the python_script component."""
+
 import logging
 from unittest.mock import mock_open, patch
 

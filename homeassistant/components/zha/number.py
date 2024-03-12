@@ -1,4 +1,5 @@
 """Support for ZHA AnalogOutput cluster."""
+
 from __future__ import annotations
 
 import functools

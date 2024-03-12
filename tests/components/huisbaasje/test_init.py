@@ -1,4 +1,5 @@
 """Test cases for the initialisation of the Huisbaasje integration."""
+
 from unittest.mock import patch
 
 from energyflip import EnergyFlipException

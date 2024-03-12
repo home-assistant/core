@@ -1,4 +1,5 @@
 """Config flow for Smart Meter Texas integration."""
+
 import logging
 
 from aiohttp import ClientError

@@ -1,4 +1,5 @@
 """Tests for the Start.ca sensor platform."""
+
 from http import HTTPStatus
 
 from homeassistant.bootstrap import async_setup_component

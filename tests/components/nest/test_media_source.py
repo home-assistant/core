@@ -3,6 +3,7 @@
 These tests simulate recent camera events received by the subscriber exposed
 as media in the media source.
 """
+
 from collections.abc import Generator
 import datetime
 from http import HTTPStatus

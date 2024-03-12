@@ -1,4 +1,5 @@
 """Test the Tessie sensor platform."""
+
 from datetime import timedelta
 
 from homeassistant.components.tessie import PLATFORMS

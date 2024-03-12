@@ -1,4 +1,5 @@
 """Support for SMS dongle sensor."""
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -25,7 +26,6 @@ SIGNAL_SENSORS = (
     ),
     SensorEntityDescription(
         key="SignalPercent",
-        icon="mdi:signal-cellular-3",
         translation_key="signal_percent",
         native_unit_of_measurement=PERCENTAGE,
         entity_registry_enabled_default=True,
@@ -62,7 +62,6 @@ NETWORK_SENSORS = (
     SensorEntityDescription(
         key="CID",
         translation_key="cid",
-        icon="mdi:radio-tower",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),

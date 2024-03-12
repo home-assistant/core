@@ -1,4 +1,5 @@
 """Config flow for Airzone Cloud."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -93,6 +94,7 @@ class AirZoneCloudConfigFlow(ConfigFlow, domain=DOMAIN):
                 ConnectionOptions(
                     user_input[CONF_USERNAME],
                     user_input[CONF_PASSWORD],
+                    False,
                 ),
             )
 
