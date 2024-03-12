@@ -92,7 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
         else:
             # If a password doesn't exist in the config entry data, we can safely assume
-            # that arefresh token and user UUID do, so we use them to get the client:
+            # that a refresh token and user UUID do, so we use them to get the client:
             client = await async_get_client_with_refresh_token(
                 hass,
                 entry.data[CONF_USER_UUID],
