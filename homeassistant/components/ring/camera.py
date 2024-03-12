@@ -22,6 +22,7 @@ from .coordinator import RingDataCoordinator
 from .entity import RingEntity, exception_wrap
 
 FORCE_REFRESH_INTERVAL = timedelta(minutes=3)
+MOTION_DETECTION_CAPABILITY = "motion_detection"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,6 +68,8 @@ class RingCam(RingEntity, Camera):
         self._image = None
         self._expires_at = dt_util.utcnow() - FORCE_REFRESH_INTERVAL
         self._attr_unique_id = device.id
+        if device.has_capability(MOTION_DETECTION_CAPABILITY):
+            self._attr_motion_detection_enabled = device.motion_detection
 
     @callback
     def _handle_coordinator_update(self):
@@ -131,6 +134,13 @@ class RingCam(RingEntity, Camera):
 
     async def async_update(self) -> None:
         """Update camera entity and refresh attributes."""
+        if (
+            self._device.has_capability(MOTION_DETECTION_CAPABILITY)
+            and self._attr_motion_detection_enabled != self._device.motion_detection
+        ):
+            self._attr_motion_detection_enabled = self._device.motion_detection
+            self.async_write_ha_state()
+
         if self._last_event is None:
             return
 
@@ -152,3 +162,23 @@ class RingCam(RingEntity, Camera):
     @exception_wrap
     def _get_video(self) -> str:
         return self._device.recording_url(self._last_event["id"])
+
+    @exception_wrap
+    def _set_motion_detection_enabled(self, new_state):
+        if not self._device.has_capability(MOTION_DETECTION_CAPABILITY):
+            _LOGGER.error(
+                "Entity %s does not have motion detection capability", self.entity_id
+            )
+            return
+
+        self._device.motion_detection = new_state
+        self._attr_motion_detection_enabled = new_state
+        self.schedule_update_ha_state(False)
+
+    def enable_motion_detection(self) -> None:
+        """Enable motion detection in the camera."""
+        self._set_motion_detection_enabled(True)
+
+    def disable_motion_detection(self) -> None:
+        """Disable motion detection in camera."""
+        self._set_motion_detection_enabled(False)
