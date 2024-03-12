@@ -2,6 +2,7 @@
   "domain": "torque",
   "name": "Torque",
   "codeowners": [],
+  "config_flow": true,
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/torque",
   "iot_class": "local_push"

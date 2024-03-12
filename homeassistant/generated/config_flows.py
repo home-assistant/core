@@ -540,6 +540,7 @@ FLOWS = {
         "tolo",
         "tomorrowio",
         "toon",
+        "torque",
         "totalconnect",
         "tplink",
         "tplink_omada",
