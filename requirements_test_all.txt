@@ -873,7 +873,7 @@ holidays==0.44
 home-assistant-frontend==20240307.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.3.6
+home-assistant-intents==2024.3.12
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -2134,7 +2134,7 @@ uvcclient==0.11.0
 vacuum-map-parser-roborock==0.1.1
 
 # homeassistant.components.vallox
-vallox-websocket-api==5.1.0
+vallox-websocket-api==5.1.1
 
 # homeassistant.components.rdw
 vehicle==2.2.1
@@ -2243,7 +2243,7 @@ youless-api==1.0.1
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp==2023.11.16
+yt-dlp==2024.03.10
 
 # homeassistant.components.zamg
 zamg==0.3.6

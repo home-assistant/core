@@ -136,11 +136,12 @@ EntityOptionsType = Mapping[str, Mapping[str, Any]]
 ReadOnlyEntityOptionsType = ReadOnlyDict[str, ReadOnlyDict[str, Any]]
 
 DISPLAY_DICT_OPTIONAL = (
-    ("ai", "area_id"),
-    ("lb", "labels"),
-    ("di", "device_id"),
-    ("ic", "icon"),
-    ("tk", "translation_key"),
+    # key, attr_name, convert_to_list
+    ("ai", "area_id", False),
+    ("lb", "labels", True),
+    ("di", "device_id", False),
+    ("ic", "icon", False),
+    ("tk", "translation_key", False),
 )
 
 
@@ -213,9 +214,12 @@ class RegistryEntry:
         Returns None if there's no data needed for display.
         """
         display_dict: dict[str, Any] = {"ei": self.entity_id, "pl": self.platform}
-        for key, attr_name in DISPLAY_DICT_OPTIONAL:
+        for key, attr_name, convert_list in DISPLAY_DICT_OPTIONAL:
             if (attr_val := getattr(self, attr_name)) is not None:
-                display_dict[key] = attr_val
+                # Convert sets and tuples to lists
+                # so the JSON serializer does not have to do
+                # it every time
+                display_dict[key] = list(attr_val) if convert_list else attr_val
         if (category := self.entity_category) is not None:
             display_dict["ec"] = ENTITY_CATEGORY_VALUE_TO_INDEX[category]
         if self.hidden_by is not None:
@@ -253,6 +257,9 @@ class RegistryEntry:
     @cached_property
     def as_partial_dict(self) -> dict[str, Any]:
         """Return a partial dict representation of the entry."""
+        # Convert sets and tuples to lists
+        # so the JSON serializer does not have to do
+        # it every time
         return {
             "area_id": self.area_id,
             "config_entry_id": self.config_entry_id,
@@ -264,7 +271,7 @@ class RegistryEntry:
             "hidden_by": self.hidden_by,
             "icon": self.icon,
             "id": self.id,
-            "labels": self.labels,
+            "labels": list(self.labels),
             "name": self.name,
             "options": self.options,
             "original_name": self.original_name,
@@ -276,9 +283,12 @@ class RegistryEntry:
     @cached_property
     def extended_dict(self) -> dict[str, Any]:
         """Return a extended dict representation of the entry."""
+        # Convert sets and tuples to lists
+        # so the JSON serializer does not have to do
+        # it every time
         return {
             **self.as_partial_dict,
-            "aliases": self.aliases,
+            "aliases": list(self.aliases),
             "capabilities": self.capabilities,
             "device_class": self.device_class,
             "original_device_class": self.original_device_class,
