@@ -24,6 +24,7 @@ from .const import (
     CONF_COUNTED_QUANTITY,
     CONF_COUNTED_QUANTITY_PER_PULSE,
     CONF_MONITORS,
+    CONF_NET_METERING,
     CONF_NUMBER,
     CONF_PULSE_COUNTERS,
     CONF_SERIAL_NUMBER,
@@ -63,7 +64,12 @@ async def async_setup_platform(
         if monitor_config:
             channel_configs = monitor_config[CONF_CHANNELS]
             entities: list[GEMSensor] = [
-                CurrentSensor(monitor, sensor[CONF_NUMBER], sensor[CONF_NAME], False)
+                CurrentSensor(
+                    monitor,
+                    sensor[CONF_NUMBER],
+                    sensor[CONF_NAME],
+                    sensor[CONF_NET_METERING],
+                )
                 for sensor in channel_configs
             ]
 
