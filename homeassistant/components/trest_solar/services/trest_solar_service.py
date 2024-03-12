@@ -16,7 +16,7 @@ class CloudSolarTrestService:
         self.trest_identity_service = TrestIdentityService(hass, username, password)
 
     async def get_latest_solar_history_async(self) -> str:
-        """Get the latest solar histoy from the Api."""
+        """Get the latest solar history from the Api."""
         await self.trest_identity_service.renew_token_async()
 
         headers = {"X-Token": self.trest_identity_service.token}

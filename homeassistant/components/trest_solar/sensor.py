@@ -27,14 +27,6 @@ async def async_setup_entry(
     """Add a Trest Solar Controller entry."""
     coordinator: TrestDataCoordinator = hass.data[DOMAIN][entry.entry_id]
     descriptions = [
-        # SensorEntityDescription(
-        #    key="id",
-        #    name="ID",
-        # ),
-        # SensorEntityDescription(
-        #    key="serial_number",
-        #    name="Serial Number",
-        # ),
         SensorEntityDescription(
             key="battery_discharge",
             name="Battery Discharge",
@@ -77,7 +69,6 @@ async def async_setup_entry(
     entities = [
         TrestSolarControllerSensor(coordinator, entry.entry_id, description)
         for description in descriptions
-        # for description in descriptions
     ]
 
     async_add_entities(entities)

@@ -1417,6 +1417,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/trend/ @jpbede
 /tests/components/trend/ @jpbede
 /homeassistant/components/trest_solar/ @LordMax2
+/tests/components/trest_solar/ @LordMax2
 /homeassistant/components/tts/ @home-assistant/core
 /tests/components/tts/ @home-assistant/core
 /homeassistant/components/tuya/ @Tuya @zlinoliver @frenck
