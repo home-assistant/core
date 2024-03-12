@@ -357,17 +357,13 @@ class CachedProperties(type):
             def _setter(o: Any, val: Any) -> None:
                 """Set an _attr_ property to the backing __attr attribute.
 
-                Also invalidates the corresponding cached_property by calling
-                delattr on it.
+                Also set the corresponding cached_property by updating
+                __dict__ directly.
                 """
                 if getattr(o, private_attr_name, _SENTINEL) == val:
                     return
                 setattr(o, private_attr_name, val)
-                if name in o.__dict__:
-                    try:  # noqa: SIM105  suppress is much slower
-                        delattr(o, name)
-                    except AttributeError:
-                        pass
+                o.__dict__[name] = val
 
             return _setter
 
