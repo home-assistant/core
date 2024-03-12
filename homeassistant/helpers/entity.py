@@ -363,10 +363,11 @@ class CachedProperties(type):
                 if getattr(o, private_attr_name, _SENTINEL) == val:
                     return
                 setattr(o, private_attr_name, val)
-                try:  # noqa: SIM105  suppress is much slower
-                    delattr(o, name)
-                except AttributeError:
-                    pass
+                if name in o.__dict__:
+                    try:  # noqa: SIM105  suppress is much slower
+                        delattr(o, name)
+                    except AttributeError:
+                        pass
 
             return _setter
 
