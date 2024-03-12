@@ -157,6 +157,8 @@ SERVICE_PLAY_MEDIA = "play_media"
 SERVICE_SELECT_SOUND_MODE = "select_sound_mode"
 SERVICE_SELECT_SOURCE = "select_source"
 SERVICE_UNJOIN = "unjoin"
+SERVICE_SEND_COMMAND = "send_command"
+
 
 
 class RepeatMode(StrEnum):
@@ -173,6 +175,34 @@ REPEAT_MODE_ALL = "all"
 REPEAT_MODE_OFF = "off"
 REPEAT_MODE_ONE = "one"
 REPEAT_MODES = [REPEAT_MODE_OFF, REPEAT_MODE_ALL, REPEAT_MODE_ONE]
+
+
+class MediaPlayerEntityCommands(StrEnum):
+    """Additional commands for media player entities."""
+    CURSOR_UP = "cursor_up"
+    CURSOR_DOWN = "cursor_down"
+    CURSOR_LEFT = "cursor_left"
+    CURSOR_RIGHT = "cursor_right"
+    CURSOR_ENTER = "cursor_enter"
+    HOME = "home"
+    MENU = "menu"
+    CONTEXT_MENU = "context_menu"
+    INFO = "info"
+    BACK = "back"
+    DIGIT_0 = "digit_0"
+    DIGIT_1 = "digit_1"
+    DIGIT_2 = "digit_2"
+    DIGIT_3 = "digit_3"
+    DIGIT_4 = "digit_4"
+    DIGIT_5 = "digit_5"
+    DIGIT_6 = "digit_6"
+    DIGIT_7 = "digit_7"
+    DIGIT_8 = "digit_8"
+    DIGIT_9 = "digit_9"
+    RECORD = "record"
+    RECORDINGS = "recordings"
+    NEXT_AUDIO_LANGUAGE = "next_audio_language"
+    NEXT_SUBTITLES = "next_subtitles"
 
 
 class MediaPlayerEntityFeature(IntFlag):
@@ -200,6 +230,14 @@ class MediaPlayerEntityFeature(IntFlag):
     GROUPING = 524288
     MEDIA_ANNOUNCE = 1048576
     MEDIA_ENQUEUE = 2097152
+
+    DPAD = 4194304  # Directional pad navigation up / down / left / right / enter commands
+    NUMPAD = 8388608  # Number pad DIGIT_0 to DIGIT_9 commands
+    MENU_NAVIGATION = 16777216  # Home / main menu / context menu / back / info commands
+    RECORD = 33554432 # record, my recordings
+    LANGUAGE_SELECTION = 67108864 # subtitles and audio language selection
+
+    SEND_COMMAND = 134217728 # Send custom command like remote entity
 
 
 # These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.

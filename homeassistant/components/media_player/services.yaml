@@ -248,3 +248,47 @@ unjoin:
       domain: media_player
       supported_features:
         - media_player.MediaPlayerEntityFeature.GROUPING
+
+send_command:
+  target:
+    entity:
+      domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.DPAD
+        - media_player.MediaPlayerEntityFeature.NUMPAD
+        - media_player.MediaPlayerEntityFeature.MENU_NAVIGATION
+        - media_player.MediaPlayerEntityFeature.SEND_COMMAND
+        - media_player.MediaPlayerEntityFeature.RECORD
+        - media_player.MediaPlayerEntityFeature.LANGUAGE_SELECTION
+  fields:
+    device:
+      example: "32756745"
+      selector:
+        text:
+    command:
+      required: true
+      example: "cursor_right"
+      selector:
+        object:
+    num_repeats:
+      default: 1
+      selector:
+        number:
+          min: 0
+          max: 255
+    delay_secs:
+      default: 0.4
+      selector:
+        number:
+          min: 0
+          max: 60
+          step: 0.1
+          unit_of_measurement: seconds
+    hold_secs:
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 60
+          step: 0.1
+          unit_of_measurement: seconds

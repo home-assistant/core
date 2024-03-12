@@ -14,7 +14,7 @@ import hashlib
 from http import HTTPStatus
 import logging
 import secrets
-from typing import TYPE_CHECKING, Any, Final, Required, TypedDict, final
+from typing import TYPE_CHECKING, Any, Final, Required, TypedDict, final, Iterable
 from urllib.parse import quote, urlparse
 
 from aiohttp import web
@@ -48,7 +48,7 @@ from homeassistant.const import (  # noqa: F401
     STATE_IDLE,
     STATE_OFF,
     STATE_PLAYING,
-    STATE_STANDBY,
+    STATE_STANDBY, ATTR_COMMAND,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -129,7 +129,7 @@ from .const import (  # noqa: F401
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
-    RepeatMode,
+    RepeatMode, SERVICE_SEND_COMMAND,
 )
 from .errors import BrowseError
 
@@ -148,8 +148,16 @@ CACHE_LOCK: Final = "lock"
 CACHE_URL: Final = "url"
 CACHE_CONTENT: Final = "content"
 
+ATTR_DEVICE = "device"
+ATTR_NUM_REPEATS = "num_repeats"
+ATTR_DELAY_SECS = "delay_secs"
+ATTR_HOLD_SECS = "hold_secs"
+
 SCAN_INTERVAL = dt.timedelta(seconds=10)
 
+DEFAULT_NUM_REPEATS = 1
+DEFAULT_DELAY_SECS = 0.4
+DEFAULT_HOLD_SECS = 0
 
 class MediaPlayerEnqueue(StrEnum):
     """Enqueue types for playing media."""
@@ -387,6 +395,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         {vol.Required(ATTR_SOUND_MODE): cv.string},
         "async_select_sound_mode",
         [MediaPlayerEntityFeature.SELECT_SOUND_MODE],
+    )
+
+    component.async_register_entity_service(
+        SERVICE_SEND_COMMAND,
+        {
+            vol.Required(ATTR_COMMAND): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(ATTR_DEVICE): cv.string,
+            vol.Optional(
+                ATTR_NUM_REPEATS, default=DEFAULT_NUM_REPEATS
+            ): cv.positive_int,
+            vol.Optional(ATTR_DELAY_SECS): vol.Coerce(float),
+            vol.Optional(ATTR_HOLD_SECS, default=DEFAULT_HOLD_SECS): vol.Coerce(float),
+        },
+        "async_send_command",
+        [MediaPlayerEntityFeature.DPAD | MediaPlayerEntityFeature.NUMPAD
+         | MediaPlayerEntityFeature.MENU_NAVIGATION | MediaPlayerEntityFeature.SEND_COMMAND
+         | MediaPlayerEntityFeature.RECORD | MediaPlayerEntityFeature.LANGUAGE_SELECTION]
     )
 
     # Remove in Home Assistant 2022.9
@@ -1205,6 +1230,15 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         return str(URL(url_path).with_query(url_query))
 
+    def send_command(self, command: Iterable[str], **kwargs: Any) -> None:
+        """Send commands to a device."""
+        raise NotImplementedError()
+
+    async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
+        """Send commands to a device."""
+        await self.hass.async_add_executor_job(
+            ft.partial(self.send_command, command, **kwargs)
+        )
 
 class MediaPlayerImageView(HomeAssistantView):
     """Media player view to serve an image."""

@@ -314,6 +314,32 @@
     "unjoin": {
       "name": "Unjoin",
       "description": "Removes the player from a group. Only works on platforms which support player groups."
+    },
+    "send_command": {
+      "name": "Send command",
+      "description": "Sends a command or a list of commands to a device.",
+      "fields": {
+        "device": {
+          "name": "Device",
+          "description": "Device ID to send command to."
+        },
+        "command": {
+          "name": "Command",
+          "description": "A single command or a list of commands to send."
+        },
+        "num_repeats": {
+          "name": "Repeats",
+          "description": "The number of times you want to repeat the commands."
+        },
+        "delay_secs": {
+          "name": "Delay seconds",
+          "description": "The time you want to wait in between repeated commands."
+        },
+        "hold_secs": {
+          "name": "Hold seconds",
+          "description": "The time you want to have it held before the release is send."
+        }
+      }
     }
   },
   "selector": {
