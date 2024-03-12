@@ -1694,7 +1694,7 @@ pyswitchbee==1.8.0
 pytautulli==23.1.1
 
 # homeassistant.components.tedee
-pytedee-async==0.2.15
+pytedee-async==0.2.16
 
 # homeassistant.components.motionmount
 python-MotionMount==0.3.1
@@ -2134,7 +2134,7 @@ uvcclient==0.11.0
 vacuum-map-parser-roborock==0.1.1
 
 # homeassistant.components.vallox
-vallox-websocket-api==5.1.0
+vallox-websocket-api==5.1.1
 
 # homeassistant.components.rdw
 vehicle==2.2.1
