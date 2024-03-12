@@ -85,8 +85,10 @@ def setup_platform(
             dev.append(CupsSensor(data, printer))
 
             if "marker-names" in data.attributes[printer]:
-                for marker in data.attributes[printer]["marker-names"]:
-                    dev.append(MarkerSensor(data, printer, marker, True))
+                dev.extend(
+                    MarkerSensor(data, printer, marker, True)
+                    for marker in data.attributes[printer]["marker-names"]
+                )
 
         add_entities(dev, True)
         return

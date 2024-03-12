@@ -100,10 +100,11 @@ async def async_setup_entry(
     """Set up BAF fan sensors."""
     data: BAFData = hass.data[DOMAIN][entry.entry_id]
     device = data.device
-    sensors_descriptions: list[BAFSensorDescription] = []
-    for description in DEFINED_ONLY_SENSORS:
-        if getattr(device, description.key):
-            sensors_descriptions.append(description)
+    sensors_descriptions: list[BAFSensorDescription] = [
+        description
+        for description in DEFINED_ONLY_SENSORS
+        if getattr(device, description.key)
+    ]
     if device.has_auto_comfort:
         sensors_descriptions.extend(AUTO_COMFORT_SENSORS)
     if device.has_fan:
