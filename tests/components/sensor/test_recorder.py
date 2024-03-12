@@ -1,4 +1,5 @@
 """The tests for sensor recorder platform."""
+
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import math
@@ -988,6 +989,7 @@ async def test_compile_hourly_sum_statistics_amount(
         ("monetary", "SEK", "SEK", "SEK", None, 1),
         ("gas", "m³", "m³", "m³", "volume", 1),
         ("gas", "ft³", "ft³", "ft³", "volume", 1),
+        ("weight", "kg", "kg", "kg", "mass", 1),
     ],
 )
 def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
@@ -1457,6 +1459,7 @@ def test_compile_hourly_sum_statistics_negative_state(
         ("monetary", "SEK", "SEK", "SEK", None, 1),
         ("gas", "m³", "m³", "m³", "volume", 1),
         ("gas", "ft³", "ft³", "ft³", "volume", 1),
+        ("weight", "kg", "kg", "kg", "mass", 1),
     ],
 )
 def test_compile_hourly_sum_statistics_total_no_reset(
@@ -1569,6 +1572,7 @@ def test_compile_hourly_sum_statistics_total_no_reset(
         ("energy", "Wh", "Wh", "Wh", "energy", 1),
         ("gas", "m³", "m³", "m³", "volume", 1),
         ("gas", "ft³", "ft³", "ft³", "volume", 1),
+        ("weight", "kg", "kg", "kg", "mass", 1),
     ],
 )
 def test_compile_hourly_sum_statistics_total_increasing(
@@ -1679,7 +1683,10 @@ def test_compile_hourly_sum_statistics_total_increasing(
         "unit_class",
         "factor",
     ),
-    [("energy", "kWh", "kWh", "kWh", "energy", 1)],
+    [
+        ("energy", "kWh", "kWh", "kWh", "energy", 1),
+        ("weight", "kg", "kg", "kg", "mass", 1),
+    ],
 )
 def test_compile_hourly_sum_statistics_total_increasing_small_dip(
     hass_recorder: Callable[..., HomeAssistant],

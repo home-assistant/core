@@ -1,4 +1,5 @@
 """Sensor for checking the status of London Underground tube lines."""
+
 from __future__ import annotations
 
 import logging

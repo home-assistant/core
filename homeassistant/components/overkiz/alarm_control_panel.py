@@ -1,4 +1,5 @@
 """Support for Overkiz alarm control panel."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -35,19 +36,12 @@ from .coordinator import OverkizDataUpdateCoordinator
 from .entity import OverkizDescriptiveEntity
 
 
-@dataclass(frozen=True)
-class OverkizAlarmDescriptionMixin:
-    """Define an entity description mixin for switch entities."""
+@dataclass(frozen=True, kw_only=True)
+class OverkizAlarmDescription(AlarmControlPanelEntityDescription):
+    """Class to describe an Overkiz alarm control panel."""
 
     supported_features: AlarmControlPanelEntityFeature
     fn_state: Callable[[Callable[[str], OverkizStateType]], str]
-
-
-@dataclass(frozen=True)
-class OverkizAlarmDescription(
-    AlarmControlPanelEntityDescription, OverkizAlarmDescriptionMixin
-):
-    """Class to describe an Overkiz alarm control panel."""
 
     alarm_disarm: str | None = None
     alarm_disarm_args: OverkizStateType | list[OverkizStateType] = None

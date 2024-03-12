@@ -1,4 +1,5 @@
 """Tests for ScreenLogic integration init."""
+
 from dataclasses import dataclass
 from unittest.mock import DEFAULT, patch
 

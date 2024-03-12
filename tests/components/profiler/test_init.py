@@ -1,4 +1,5 @@
 """Test the Profiler config flow."""
+
 from datetime import timedelta
 from functools import lru_cache
 import os

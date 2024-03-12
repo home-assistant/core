@@ -1,4 +1,5 @@
 """Tests for the Risco event sensors."""
+
 from datetime import timedelta
 from unittest.mock import MagicMock, PropertyMock, patch
 

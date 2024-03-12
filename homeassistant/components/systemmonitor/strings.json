@@ -22,7 +22,25 @@
       }
     }
   },
+  "issues": {
+    "process_sensor": {
+      "title": "Process sensors are deprecated and will be removed",
+      "fix_flow": {
+        "step": {
+          "migrate_process_sensor": {
+            "title": "Process sensors have been setup as binary sensors",
+            "description": "Process sensors `{processes}` have been created as binary sensors and the sensors will be removed in 2024.9.0.\n\nPlease update all automations, scripts, dashboards or other things depending on these sensors to use the newly created binary sensors instead and press **Submit** to fix this issue."
+          }
+        }
+      }
+    }
+  },
   "entity": {
+    "binary_sensor": {
+      "process": {
+        "name": "Process {process}"
+      }
+    },
     "sensor": {
       "disk_free": {
         "name": "Disk free {mount_point}"

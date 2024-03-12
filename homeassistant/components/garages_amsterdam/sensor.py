@@ -1,4 +1,5 @@
 """Sensor platform for Garages Amsterdam."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity
@@ -11,10 +12,10 @@ from . import get_coordinator
 from .entity import GaragesAmsterdamEntity
 
 SENSORS = {
-    "free_space_short": "mdi:car",
-    "free_space_long": "mdi:car",
-    "short_capacity": "mdi:car",
-    "long_capacity": "mdi:car",
+    "free_space_short",
+    "free_space_long",
+    "short_capacity",
+    "long_capacity",
 }
 
 
@@ -50,7 +51,6 @@ class GaragesAmsterdamSensor(GaragesAmsterdamEntity, SensorEntity):
         """Initialize garages amsterdam sensor."""
         super().__init__(coordinator, garage_name, info_type)
         self._attr_translation_key = info_type
-        self._attr_icon = SENSORS[info_type]
 
     @property
     def available(self) -> bool:

@@ -603,6 +603,11 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "local_name": "TP96*",
     },
     {
+        "connectable": False,
+        "domain": "thermopro",
+        "local_name": "TP97*",
+    },
+    {
         "domain": "tilt_ble",
         "manufacturer_data_start": [
             2,

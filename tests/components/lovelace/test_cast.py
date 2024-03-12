@@ -1,4 +1,5 @@
 """Test the Lovelace Cast platform."""
+
 from time import time
 from unittest.mock import patch
 

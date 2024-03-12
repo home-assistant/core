@@ -1,4 +1,5 @@
 """The tests for the location automation."""
+
 import pytest
 
 from homeassistant.components import automation, zone

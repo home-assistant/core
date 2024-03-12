@@ -1,4 +1,5 @@
 """The tests the History component."""
+
 from datetime import timedelta
 from http import HTTPStatus
 import json

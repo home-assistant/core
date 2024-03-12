@@ -1,12 +1,12 @@
 """Support for climates."""
+
 from __future__ import annotations
 
-import asyncio
 from enum import StrEnum
 from typing import Any
 
 from aiocomelit import ComelitSerialBridgeObject
-from aiocomelit.const import CLIMATE, SLEEP_BETWEEN_CALLS
+from aiocomelit.const import CLIMATE
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -191,7 +191,6 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
         await self.coordinator.api.set_clima_status(
             self._device.index, ClimaAction.MANUAL
         )
-        await asyncio.sleep(SLEEP_BETWEEN_CALLS)
         await self.coordinator.api.set_clima_status(
             self._device.index, ClimaAction.SET, target_temp
         )
@@ -203,7 +202,6 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
             await self.coordinator.api.set_clima_status(
                 self._device.index, ClimaAction.ON
             )
-            await asyncio.sleep(SLEEP_BETWEEN_CALLS)
         await self.coordinator.api.set_clima_status(
             self._device.index, MODE_TO_ACTION[hvac_mode]
         )

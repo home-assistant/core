@@ -1,4 +1,5 @@
 """Support for Broadlink devices."""
+
 from contextlib import suppress
 from functools import partial
 import logging

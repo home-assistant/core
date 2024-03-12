@@ -1,4 +1,5 @@
 """Support for hive water heaters."""
+
 from datetime import timedelta
 
 import voluptuous as vol

@@ -1,4 +1,5 @@
 """Support for SmartThings Cloud."""
+
 from __future__ import annotations
 
 import asyncio

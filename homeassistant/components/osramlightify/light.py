@@ -1,4 +1,5 @@
 """Support for Osram Lightify."""
+
 from __future__ import annotations
 
 import logging

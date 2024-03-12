@@ -1,4 +1,5 @@
 """Test the PECO Outage Counter sensors."""
+
 from unittest.mock import patch
 
 from peco import AlertResults, OutageResults

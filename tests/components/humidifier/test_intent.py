@@ -1,4 +1,5 @@
 """Tests for the humidifier intents."""
+
 import pytest
 
 from homeassistant.components.humidifier import (

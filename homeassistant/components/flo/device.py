@@ -1,4 +1,5 @@
 """Flo device object."""
+
 from __future__ import annotations
 
 import asyncio
@@ -7,6 +8,7 @@ from typing import Any
 
 from aioflo.api import API
 from aioflo.errors import RequestError
+from orjson import JSONDecodeError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -46,7 +48,7 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=
                 await self._update_device()
                 await self._update_consumption_data()
                 self._failure_count = 0
-        except RequestError as error:
+        except (RequestError, TimeoutError, JSONDecodeError) as error:
             self._failure_count += 1
             if self._failure_count > 3:
                 raise UpdateFailed(error) from error

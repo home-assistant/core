@@ -1,4 +1,5 @@
 """Test Subaru locks."""
+
 from unittest.mock import patch
 
 import pytest

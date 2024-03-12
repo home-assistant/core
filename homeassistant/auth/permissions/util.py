@@ -1,4 +1,5 @@
 """Helpers to deal with permissions."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

@@ -1,4 +1,5 @@
 """Support for Honeywell Lyric sensor platform."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -41,19 +42,12 @@ LYRIC_SETPOINT_STATUS_NAMES = {
 }
 
 
-@dataclass(frozen=True)
-class LyricSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class LyricSensorEntityDescription(SensorEntityDescription):
+    """Class describing Honeywell Lyric sensor entities."""
 
     value_fn: Callable[[LyricDevice], StateType | datetime]
     suitable_fn: Callable[[LyricDevice], bool]
-
-
-@dataclass(frozen=True)
-class LyricSensorEntityDescription(
-    SensorEntityDescription, LyricSensorEntityDescriptionMixin
-):
-    """Class describing Honeywell Lyric sensor entities."""
 
 
 DEVICE_SENSORS: list[LyricSensorEntityDescription] = [
@@ -105,7 +99,6 @@ DEVICE_SENSORS: list[LyricSensorEntityDescription] = [
     LyricSensorEntityDescription(
         key="setpoint_status",
         translation_key="setpoint_status",
-        icon="mdi:thermostat",
         value_fn=lambda device: get_setpoint_status(
             device.changeableValues.thermostatSetpointStatus,
             device.changeableValues.nextPeriodTime,

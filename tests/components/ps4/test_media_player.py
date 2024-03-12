@@ -1,4 +1,5 @@
 """Tests for the PS4 media player platform."""
+
 from unittest.mock import MagicMock, patch
 
 from pyps4_2ndscreen.credential import get_ddp_message
