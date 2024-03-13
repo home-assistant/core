@@ -52,9 +52,11 @@ from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-from .const import CONF_HIDE_MEMBERS
+from .const import (
+    CONF_HIDE_MEMBERS,
+    DOMAIN,  # noqa: F401
+)
 
-DOMAIN = "group"
 GROUP_ORDER = "group_order"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
