@@ -89,7 +89,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.2
       - name: Generate partial Python venv restore key
         id: generate_python_cache_key
         run: >-
@@ -222,7 +222,7 @@ jobs:
       - info
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.0.0
@@ -268,7 +268,7 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v5.0.0
         id: python
@@ -308,7 +308,7 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v5.0.0
         id: python
@@ -347,7 +347,7 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v5.0.0
         id: python
@@ -441,7 +441,7 @@ jobs:
         python-version: ${{ fromJSON(needs.info.outputs.python_versions) }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.2
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v5.0.0
@@ -510,7 +510,7 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.0.0
@@ -542,7 +542,7 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.0.0
@@ -575,7 +575,7 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.0.0
@@ -619,7 +619,7 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.0.0
@@ -701,7 +701,7 @@ jobs:
             bluez \
             ffmpeg
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.2
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v5.0.0
@@ -719,14 +719,6 @@ jobs:
       - name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
-      - name: Install Pytest Annotation plugin
-        run: |
-          . venv/bin/activate
-          # Ideally this should be part of our dependencies
-          # However this plugin is fairly new and doesn't run correctly
-          # on a non-GitHub environment.
-          pip install "$(cat requirements_test.txt | grep uv)"
-          uv pip install pytest-github-actions-annotate-failures==0.1.3
       - name: Register pytest slow test problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
@@ -800,10 +792,11 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
       - name: Upload pytest output
         if: success() || failure() && (steps.pytest-full.conclusion == 'failure' || steps.pytest-partial.conclusion == 'failure')
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4.3.1
         with:
-          name: pytest-${{ github.run_number }}
+          name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{ matrix.group }}
           path: pytest-*.txt
+          overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
         uses: actions/upload-artifact@v4.3.1
@@ -855,7 +848,7 @@ jobs:
             ffmpeg \
             libmariadb-dev-compat
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.2
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v5.0.0
@@ -873,14 +866,6 @@ jobs:
       - name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
-      - name: Install Pytest Annotation plugin
-        run: |
-          . venv/bin/activate
-          # Ideally this should be part of our dependencies
-          # However this plugin is fairly new and doesn't run correctly
-          # on a non-GitHub environment.
-          pip install "$(cat requirements_test.txt | grep uv)"
-          uv pip install pytest-github-actions-annotate-failures==0.1.3
       - name: Register pytest slow test problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
@@ -927,10 +912,12 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${mariadb}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4.3.1
         with:
-          name: pytest-${{ github.run_number }}
+          name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{
+            steps.pytest-partial.outputs.mariadb }}
           path: pytest-*.txt
+          overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
         uses: actions/upload-artifact@v4.3.1
@@ -983,7 +970,7 @@ jobs:
             ffmpeg \
             postgresql-server-dev-14
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.2
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v5.0.0
@@ -1001,14 +988,6 @@ jobs:
       - name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
-      - name: Install Pytest Annotation plugin
-        run: |
-          . venv/bin/activate
-          # Ideally this should be part of our dependencies
-          # However this plugin is fairly new and doesn't run correctly
-          # on a non-GitHub environment.
-          pip install "$(cat requirements_test.txt | grep uv)"
-          uv pip install pytest-github-actions-annotate-failures==0.1.3
       - name: Register pytest slow test problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
@@ -1056,10 +1035,12 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${postgresql}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4.3.1
         with:
-          name: pytest-${{ github.run_number }}
+          name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{
+            steps.pytest-partial.outputs.postgresql }}
           path: pytest-*.txt
+          overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
         uses: actions/upload-artifact@v4.3.1
@@ -1082,14 +1063,14 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.2
       - name: Download all coverage artifacts
         uses: actions/download-artifact@v4.1.4
         with:
           pattern: coverage-*
       - name: Upload coverage to Codecov (full coverage)
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: Wandalen/wretry.action@v1.4.9
+        uses: Wandalen/wretry.action@v1.4.10
         with:
           action: codecov/codecov-action@v3.1.3
           with: |
@@ -1100,7 +1081,7 @@ jobs:
           attempt_delay: 30000
       - name: Upload coverage to Codecov (partial coverage)
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: Wandalen/wretry.action@v1.4.9
+        uses: Wandalen/wretry.action@v1.4.10
         with:
           action: codecov/codecov-action@v3.1.3
           with: |
