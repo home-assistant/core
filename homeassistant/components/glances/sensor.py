@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import cast
 
@@ -212,6 +213,39 @@ SENSOR_TYPES = {
         translation_key="raid_used",
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    ("gpu", "mem"): GlancesSensorEntityDescription(
+        key="mem",
+        type="gpu",
+        translation_key="gpu_memory_usage",
+        icon="mdi:memory",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("gpu", "proc"): GlancesSensorEntityDescription(
+        key="proc",
+        type="gpu",
+        translation_key="gpu_processor_usage",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:expansion-card",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("gpu", "temperature"): GlancesSensorEntityDescription(
+        key="temperature",
+        type="gpu",
+        translation_key="temperature",
+        icon="mdi:thermometer",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("gpu", "fan_speed"): GlancesSensorEntityDescription(
+        key="fan_speed",
+        type="gpu",
+        translation_key="fan_speed",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:fan",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 }
 
 
@@ -223,20 +257,13 @@ async def async_setup_entry(
     """Set up the Glances sensors."""
 
     coordinator: GlancesDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    entities = []
+    entities: list[GlancesSensor] = []
 
-    for sensor_type, sensors in coordinator.data.items():
+    for sensor_type, sensors in (items := coordinator.data.items()):
         if sensor_type in ["fs", "sensors", "raid"]:
-            for sensor_label, params in sensors.items():
-                for param in params:
-                    if sensor_description := SENSOR_TYPES.get((sensor_type, param)):
-                        entities.append(
-                            GlancesSensor(
-                                coordinator,
-                                sensor_description,
-                                sensor_label,
-                            )
-                        )
+            _add_custom_sensors(coordinator, entities, sensor_type, sensors)
+        elif sensor_type == "gpu":
+            _add_gpu_sensors(coordinator, entities, sensor_type, sensors)
         else:
             for sensor in sensors:
                 if sensor_description := SENSOR_TYPES.get((sensor_type, sensor)):
@@ -248,6 +275,49 @@ async def async_setup_entry(
                     )
 
     async_add_entities(entities)
+
+
+def _add_gpu_sensors(
+    coordinator: GlancesDataUpdateCoordinator,
+    entities: list[GlancesSensor],
+    sensor_type: str,
+    sensors: dict,
+) -> None:
+    if len(sensors) == 1:
+        (sensor_label,) = sensors.keys()
+        sensor_label = sensor_label.removeprefix("GPU_0__")
+        (params,) = sensors.values()
+        _add_params_for_sensor(coordinator, entities, sensor_type, sensor_label, params)
+    else:
+        _add_custom_sensors(coordinator, entities, sensor_type, sensors)
+
+
+def _add_custom_sensors(
+    coordinator: GlancesDataUpdateCoordinator,
+    entities: list[GlancesSensor],
+    sensor_type: str,
+    sensors: dict,
+) -> None:
+    for sensor_label, params in sensors.items():
+        _add_params_for_sensor(coordinator, entities, sensor_type, sensor_label, params)
+
+
+def _add_params_for_sensor(
+    coordinator: GlancesDataUpdateCoordinator,
+    entities: list[GlancesSensor],
+    sensor_type: str,
+    sensor_label: str,
+    params: Iterable[str],
+) -> None:
+    for param in params:
+        if sensor_description := SENSOR_TYPES.get((sensor_type, param)):
+            entities.append(
+                GlancesSensor(
+                    coordinator,
+                    sensor_description,
+                    sensor_label,
+                )
+            )
 
 
 class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntity):
