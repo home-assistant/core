@@ -63,14 +63,19 @@ SERVICE_WRITE_SCHEMA = vol.Schema(
 
 
 def _figure_out_source(
-    record: logging.LogRecord, paths_re: re.Pattern[str]
+    record: logging.LogRecord,
+    paths_re: re.Pattern[str],
+    extracted_tb: traceback.StackSummary | None = None,
 ) -> tuple[str, int]:
     """Figure out where a log message came from."""
     # If a stack trace exists, extract file names from the entire call stack.
     # The other case is when a regular "log" is made (without an attached
     # exception). In that case, just use the file where the log was made from.
     if record.exc_info:
-        stack = [(x[0], x[1]) for x in traceback.extract_tb(record.exc_info[2])]
+        stack = [
+            (x[0], x[1])
+            for x in (extracted_tb or traceback.extract_tb(record.exc_info[2]))
+        ]
         for i, (filename, _) in enumerate(stack):
             # Slice the stack to the first frame that matches
             # the record pathname.
@@ -161,13 +166,19 @@ class LogEntry:
         "level",
         "message",
         "exception",
+        "extracted_tb",
         "root_cause",
         "source",
         "count",
         "key",
     )
 
-    def __init__(self, record: logging.LogRecord, source: tuple[str, int]) -> None:
+    def __init__(
+        self,
+        record: logging.LogRecord,
+        paths_re: re.Pattern,
+        figure_out_source: bool = False,
+    ) -> None:
         """Initialize a log entry."""
         self.first_occurred = self.timestamp = record.created
         self.name = record.name
@@ -176,16 +187,21 @@ class LogEntry:
         # This must be manually tested when changing the code.
         self.message = deque([_safe_get_message(record)], maxlen=5)
         self.exception = ""
-        self.root_cause = None
+        self.root_cause: str | None = None
+        extracted_tb: traceback.StackSummary | None = None
         if record.exc_info:
             self.exception = "".join(traceback.format_exception(*record.exc_info))
-            _, _, tb = record.exc_info
-            # Last line of traceback contains the root cause of the exception
-            if extracted := traceback.extract_tb(tb):
+            if extracted := traceback.extract_tb(record.exc_info[2]):
+                # Last line of traceback contains the root cause of the exception
+                extracted_tb = extracted
                 self.root_cause = str(extracted[-1])
-        self.source = source
+        if figure_out_source:
+            self.source = _figure_out_source(record, paths_re, extracted_tb)
+        else:
+            self.source = (record.pathname, record.lineno)
         self.count = 1
-        self.key = (self.name, source, self.root_cause)
+        self.extracted_tb = extracted_tb
+        self.key = (self.name, self.source, self.root_cause)
 
     def to_dict(self) -> dict[str, Any]:
         """Convert object into dict to maintain backward compatibility."""
@@ -259,7 +275,7 @@ class LogErrorHandler(logging.Handler):
         default upper limit is set to 50 (older entries are discarded) but can
         be changed if needed.
         """
-        entry = LogEntry(record, _figure_out_source(record, self.paths_re))
+        entry = LogEntry(record, self.paths_re, figure_out_source=True)
         self.records.add_entry(entry)
         if self.fire_event:
             self.hass.bus.fire(EVENT_SYSTEM_LOG, entry.to_dict())

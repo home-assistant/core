@@ -416,7 +416,7 @@ aioymaps==1.2.2
 airly==1.1.0
 
 # homeassistant.components.airthings_ble
-airthings-ble==0.6.1
+airthings-ble==0.7.1
 
 # homeassistant.components.airthings
 airthings-cloud==0.2.0
@@ -1468,7 +1468,7 @@ opensensemap-api==0.2.0
 openwebifpy==4.2.4
 
 # homeassistant.components.luci
-openwrt-luci-rpc==1.1.16
+openwrt-luci-rpc==1.1.17
 
 # homeassistant.components.ubus
 openwrt-ubus-rpc==0.0.2
@@ -2403,7 +2403,7 @@ qnapstats==0.4.0
 quantum-gateway==0.0.8
 
 # homeassistant.components.radio_browser
-radios==0.2.0
+radios==0.3.1
 
 # homeassistant.components.radiotherm
 radiotherm==2.1.0
@@ -2451,7 +2451,7 @@ rjpl==0.3.6
 rocketchat-API==0.6.1
 
 # homeassistant.components.roku
-rokuecp==0.19.1
+rokuecp==0.19.2
 
 # homeassistant.components.romy
 romy==0.0.7
@@ -2833,7 +2833,7 @@ watchdog==2.3.1
 waterfurnace==1.1.0
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==0.1.14
+weatherflow4py==0.1.17
 
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.2

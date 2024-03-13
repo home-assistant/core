@@ -389,7 +389,7 @@ aioymaps==1.2.2
 airly==1.1.0
 
 # homeassistant.components.airthings_ble
-airthings-ble==0.6.1
+airthings-ble==0.7.1
 
 # homeassistant.components.airthings
 airthings-cloud==0.2.0
@@ -1852,7 +1852,7 @@ qingping-ble==0.10.0
 qnapstats==0.4.0
 
 # homeassistant.components.radio_browser
-radios==0.2.0
+radios==0.3.1
 
 # homeassistant.components.radiotherm
 radiotherm==2.1.0
@@ -1882,7 +1882,7 @@ rflink==0.0.66
 ring-doorbell[listen]==0.8.7
 
 # homeassistant.components.roku
-rokuecp==0.19.1
+rokuecp==0.19.2
 
 # homeassistant.components.romy
 romy==0.0.7
@@ -2174,7 +2174,7 @@ wallbox==0.6.0
 watchdog==2.3.1
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==0.1.14
+weatherflow4py==0.1.17
 
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.2
