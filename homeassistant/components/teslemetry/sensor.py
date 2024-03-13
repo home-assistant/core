@@ -398,7 +398,6 @@ WALL_CONNECTOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="vin",
-        icon="mdi:car-electric",
     ),
 )
 

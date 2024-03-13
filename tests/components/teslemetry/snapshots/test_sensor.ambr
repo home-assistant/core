@@ -4496,7 +4496,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:car-electric',
+    'original_icon': None,
     'original_name': 'Vehicle',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -4510,7 +4510,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Wall Connector Vehicle',
-      'icon': 'mdi:car-electric',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_vehicle',
@@ -4542,7 +4541,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:car-electric',
+    'original_icon': None,
     'original_name': 'Vehicle',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -4556,7 +4555,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Wall Connector Vehicle',
-      'icon': 'mdi:car-electric',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_vehicle_2',
