@@ -45,9 +45,9 @@ SENSORS: tuple[AwattarSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=4,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
-        value_fn=lambda data: data.awattar.for_timestamp(
-            dt_util.now() + timedelta(0, 3600)
-        ).price_per_kWh,
+        value_fn=lambda data: (
+            data.awattar.for_timestamp(dt_util.now() + timedelta(0, 3600)).price_per_kWh
+        ),
     ),
     AwattarSensorEntityDescription(
         key="average_price",
