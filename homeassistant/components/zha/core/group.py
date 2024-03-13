@@ -176,13 +176,12 @@ class ZHAGroup(LogMixin):
     async def async_add_members(self, members: list[GroupMember]) -> None:
         """Add members to this group."""
         if len(members) > 1:
-            tasks = []
-            for member in members:
-                tasks.append(
-                    self._zha_gateway.devices[member.ieee].async_add_endpoint_to_group(
-                        member.endpoint_id, self.group_id
-                    )
+            tasks = [
+                self._zha_gateway.devices[member.ieee].async_add_endpoint_to_group(
+                    member.endpoint_id, self.group_id
                 )
+                for member in members
+            ]
             await asyncio.gather(*tasks)
         else:
             await self._zha_gateway.devices[
@@ -192,15 +191,12 @@ class ZHAGroup(LogMixin):
     async def async_remove_members(self, members: list[GroupMember]) -> None:
         """Remove members from this group."""
         if len(members) > 1:
-            tasks = []
-            for member in members:
-                tasks.append(
-                    self._zha_gateway.devices[
-                        member.ieee
-                    ].async_remove_endpoint_from_group(
-                        member.endpoint_id, self.group_id
-                    )
+            tasks = [
+                self._zha_gateway.devices[member.ieee].async_remove_endpoint_from_group(
+                    member.endpoint_id, self.group_id
                 )
+                for member in members
+            ]
             await asyncio.gather(*tasks)
         else:
             await self._zha_gateway.devices[
