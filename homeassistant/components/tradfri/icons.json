@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "aqi": {
+        "default": "mdi:air-filter"
+      },
+      "filter_life_remaining": {
+        "default": "mdi:clock-outline"
+      }
+    }
+  }
+}

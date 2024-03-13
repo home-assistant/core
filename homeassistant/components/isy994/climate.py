@@ -1,4 +1,5 @@
 """Support for Insteon Thermostats via ISY Platform."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -82,9 +83,12 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
         ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_target_temperature_step = 1.0
     _attr_fan_modes = [FAN_AUTO, FAN_ON]
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, node: Node, device_info: DeviceInfo | None = None) -> None:
         """Initialize the ISY Thermostat entity."""

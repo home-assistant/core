@@ -1,4 +1,5 @@
 """WiZ integration light platform."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -16,6 +17,7 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    filter_supported_color_modes,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -72,21 +74,24 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
     """Representation of WiZ Light bulb."""
 
     _attr_name = None
+    _fixed_color_mode: ColorMode | None = None
 
     def __init__(self, wiz_data: WizData, name: str) -> None:
         """Initialize an WiZLight."""
         super().__init__(wiz_data, name)
         bulb_type: BulbType = self._device.bulbtype
         features: Features = bulb_type.features
-        self._attr_supported_color_modes: set[ColorMode | str] = set()
+        color_modes = {ColorMode.ONOFF}
         if features.color:
-            self._attr_supported_color_modes.add(
-                RGB_WHITE_CHANNELS_COLOR_MODE[bulb_type.white_channels]
-            )
+            color_modes.add(RGB_WHITE_CHANNELS_COLOR_MODE[bulb_type.white_channels])
         if features.color_tmp:
-            self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
-        if not self._attr_supported_color_modes and features.brightness:
-            self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
+            color_modes.add(ColorMode.COLOR_TEMP)
+        if features.brightness:
+            color_modes.add(ColorMode.BRIGHTNESS)
+        self._attr_supported_color_modes = filter_supported_color_modes(color_modes)
+        if len(self._attr_supported_color_modes) == 1:
+            # If the light supports only a single color mode, set it now
+            self._attr_color_mode = next(iter(self._attr_supported_color_modes))
         self._attr_effect_list = wiz_data.scenes
         if bulb_type.bulb_type != BulbClass.DW:
             kelvin = bulb_type.kelvin_range
@@ -117,8 +122,6 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         elif ColorMode.RGBW in color_modes and (rgbw := state.get_rgbw()) is not None:
             self._attr_rgbw_color = rgbw
             self._attr_color_mode = ColorMode.RGBW
-        else:
-            self._attr_color_mode = ColorMode.BRIGHTNESS
         self._attr_effect = state.get_scene()
         super()._async_update_attrs()
 

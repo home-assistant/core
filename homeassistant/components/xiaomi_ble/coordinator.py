@@ -1,4 +1,5 @@
 """The Xiaomi BLE integration."""
+
 from collections.abc import Callable, Coroutine
 from logging import Logger
 from typing import Any
@@ -35,7 +36,7 @@ class XiaomiActiveBluetoothProcessorCoordinator(ActiveBluetoothProcessorCoordina
         update_method: Callable[[BluetoothServiceInfoBleak], Any],
         needs_poll_method: Callable[[BluetoothServiceInfoBleak, float | None], bool],
         device_data: XiaomiBluetoothDeviceData,
-        discovered_device_classes: set[str],
+        discovered_event_classes: set[str],
         poll_method: Callable[
             [BluetoothServiceInfoBleak],
             Coroutine[Any, Any, Any],
@@ -57,7 +58,7 @@ class XiaomiActiveBluetoothProcessorCoordinator(ActiveBluetoothProcessorCoordina
             poll_debouncer=poll_debouncer,
             connectable=connectable,
         )
-        self.discovered_device_classes = discovered_device_classes
+        self.discovered_event_classes = discovered_event_classes
         self.device_data = device_data
         self.entry = entry
 

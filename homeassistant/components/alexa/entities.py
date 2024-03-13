@@ -1,4 +1,5 @@
 """Alexa entity adapters."""
+
 from __future__ import annotations
 
 from collections.abc import Generator, Iterable
@@ -478,6 +479,14 @@ class ClimateCapabilities(AlexaEntity):
             self.entity.domain == climate.DOMAIN
             and climate.HVACMode.OFF
             in (self.entity.attributes.get(climate.ATTR_HVAC_MODES) or [])
+            or self.entity.domain == climate.DOMAIN
+            and (
+                supported_features
+                & (
+                    climate.ClimateEntityFeature.TURN_ON
+                    | climate.ClimateEntityFeature.TURN_OFF
+                )
+            )
             or self.entity.domain == water_heater.DOMAIN
             and (supported_features & water_heater.WaterHeaterEntityFeature.ON_OFF)
         ):

@@ -1,4 +1,5 @@
 """Test reproduce state for Lock."""
+
 import pytest
 
 from homeassistant.core import HomeAssistant, State

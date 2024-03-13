@@ -1,4 +1,5 @@
 """Test Notion diagnostics."""
+
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.notion import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -21,7 +22,11 @@ async def test_entry_diagnostics(
             "minor_version": 1,
             "domain": DOMAIN,
             "title": REDACTED,
-            "data": {"username": REDACTED, "password": REDACTED},
+            "data": {
+                "refresh_token": REDACTED,
+                "user_uuid": REDACTED,
+                "username": REDACTED,
+            },
             "options": {},
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
@@ -33,31 +38,7 @@ async def test_entry_diagnostics(
             "bridges": [
                 {
                     "id": 12345,
-                    "name": "Bridge 1",
-                    "mode": "home",
-                    "hardware_id": REDACTED,
-                    "hardware_revision": 4,
-                    "firmware_version": {
-                        "wifi": "0.121.0",
-                        "wifi_app": "3.3.0",
-                        "silabs": "1.1.2",
-                        "ti": None,
-                    },
-                    "missing_at": None,
-                    "created_at": "2019-06-27T00:18:44.337000+00:00",
-                    "updated_at": "2023-03-19T03:20:16.061000+00:00",
-                    "system_id": 11111,
-                    "firmware": {
-                        "wifi": "0.121.0",
-                        "wifi_app": "3.3.0",
-                        "silabs": "1.1.2",
-                        "ti": None,
-                    },
-                    "links": {"system": 11111},
-                },
-                {
-                    "id": 67890,
-                    "name": "Bridge 2",
+                    "name": "Laundry Closet",
                     "mode": "home",
                     "hardware_id": REDACTED,
                     "hardware_revision": 4,
@@ -69,45 +50,41 @@ async def test_entry_diagnostics(
                     },
                     "missing_at": None,
                     "created_at": "2019-04-30T01:43:50.497000+00:00",
-                    "updated_at": "2023-01-02T19:09:58.251000+00:00",
-                    "system_id": 11111,
+                    "updated_at": "2023-12-12T22:33:01.073000+00:00",
+                    "system_id": 12345,
                     "firmware": {
                         "wifi": "0.121.0",
                         "wifi_app": "3.3.0",
                         "silabs": "1.1.2",
                         "ti": None,
                     },
-                    "links": {"system": 11111},
-                },
+                    "links": {"system": 12345},
+                }
             ],
             "listeners": [
                 {
                     "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-                    "listener_kind": {
-                        "__type": "<enum 'ListenerKind'>",
-                        "repr": "<ListenerKind.SMOKE: 7>",
-                    },
-                    "created_at": "2019-07-10T22:40:48.847000+00:00",
-                    "device_type": "sensor",
-                    "model_version": "3.1",
+                    "definition_id": 24,
+                    "created_at": "2019-06-17T03:29:45.722000+00:00",
+                    "model_version": "1.0",
                     "sensor_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                    "status_localized": {
+                        "state": "Idle",
+                        "description": "Jun 18 at 12:17am",
+                    },
                     "insights": {
                         "primary": {
-                            "origin": {"type": None, "id": None},
-                            "value": "no_alarm",
-                            "data_received_at": "2019-06-28T22:12:49.516000+00:00",
+                            "origin": {
+                                "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                                "type": "Sensor",
+                            },
+                            "value": "idle",
+                            "data_received_at": "2023-06-18T06:17:00.697000+00:00",
                         }
                     },
                     "configuration": {},
-                    "pro_monitoring_status": "eligible",
-                    "status": {
-                        "trigger_value": "no_alarm",
-                        "data_received_at": "2019-06-28T22:12:49.516000+00:00",
-                    },
-                    "status_localized": {
-                        "state": "No Sound",
-                        "description": "Jun 28 at 4:12pm",
-                    },
+                    "pro_monitoring_status": "ineligible",
+                    "device_type": "sensor",
                 }
             ],
             "sensors": [
@@ -125,12 +102,12 @@ async def test_entry_diagnostics(
                     "firmware_version": "1.1.2",
                     "device_key": REDACTED,
                     "encryption_key": True,
-                    "installed_at": "2019-06-28T22:12:51.209000+00:00",
-                    "calibrated_at": "2023-03-07T19:51:56.838000+00:00",
-                    "last_reported_at": "2023-04-19T18:09:40.479000+00:00",
+                    "installed_at": "2019-06-17T03:30:27.766000+00:00",
+                    "calibrated_at": "2024-01-19T00:38:15.372000+00:00",
+                    "last_reported_at": "2024-01-21T00:00:46.705000+00:00",
                     "missing_at": None,
-                    "updated_at": "2023-03-28T13:33:33.801000+00:00",
-                    "created_at": "2019-06-28T22:12:20.256000+00:00",
+                    "updated_at": "2024-01-19T00:38:16.856000+00:00",
+                    "created_at": "2019-06-17T03:29:45.506000+00:00",
                     "signal_strength": 4,
                     "firmware": {"status": "valid"},
                     "surface_type": None,

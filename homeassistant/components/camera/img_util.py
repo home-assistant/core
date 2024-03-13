@@ -1,4 +1,5 @@
 """Image processing for cameras."""
+
 from __future__ import annotations
 
 import logging
@@ -98,6 +99,6 @@ class TurboJPEGSingleton:
             TurboJPEGSingleton.__instance = TurboJPEG()
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
-                "Error loading libturbojpeg; Cameras may impact HomeKit performance"
+                "Error loading libturbojpeg; Camera snapshot performance will be sub-optimal"
             )
             TurboJPEGSingleton.__instance = False

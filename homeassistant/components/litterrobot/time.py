@@ -1,4 +1,5 @@
 """Support for Litter-Robot time."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine

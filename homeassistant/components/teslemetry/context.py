@@ -13,4 +13,4 @@ def handle_command():
     try:
         yield
     except TeslaFleetError as e:
-        raise HomeAssistantError from e
+        raise HomeAssistantError("Teslemetry command failed") from e

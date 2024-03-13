@@ -1,4 +1,5 @@
 """Config flow for Ruuvi Gateway integration."""
+
 from __future__ import annotations
 
 import logging
@@ -7,10 +8,9 @@ from typing import Any
 import aioruuvigateway.api as gw_api
 from aioruuvigateway.excs import CannotConnect, InvalidAuth
 
-from homeassistant import config_entries
 from homeassistant.components import dhcp
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_TOKEN
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.httpx_client import get_async_client
 
@@ -20,7 +20,7 @@ from .schemata import CONFIG_SCHEMA, get_config_schema_with_default_host
 _LOGGER = logging.getLogger(__name__)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class RuuviConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ruuvi Gateway."""
 
     VERSION = 1
@@ -33,7 +33,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_validate(
         self,
         user_input: dict[str, Any],
-    ) -> tuple[FlowResult | None, dict[str, str]]:
+    ) -> tuple[ConfigFlowResult | None, dict[str, str]]:
         """Validate configuration (either discovered or user input)."""
         errors: dict[str, str] = {}
 
@@ -67,7 +67,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle requesting or validating user input."""
         if user_input is not None:
             result, errors = await self._async_validate(user_input)
@@ -81,7 +81,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=(errors or None),
         )
 
-    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Prepare configuration for a DHCP discovered Ruuvi Gateway."""
         await self.async_set_unique_id(format_mac(discovery_info.macaddress))
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})

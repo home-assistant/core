@@ -1,4 +1,5 @@
 """Test the Dormakaba dKey config flow."""
+
 from unittest.mock import patch
 
 from bleak.exc import BleakError

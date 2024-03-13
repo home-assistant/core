@@ -1,4 +1,5 @@
 """The Philips TV integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -85,7 +86,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
+class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module
     """Coordinator to update data."""
 
     config_entry: ConfigEntry

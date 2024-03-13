@@ -1,4 +1,5 @@
 """The Thread integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -16,11 +17,14 @@ from homeassistant.core import HomeAssistant
 _LOGGER = logging.getLogger(__name__)
 
 KNOWN_BRANDS: dict[str | None, str] = {
+    "Amazon": "amazon",
     "Apple Inc.": "apple",
     "eero": "eero",
     "Google Inc.": "google",
     "HomeAssistant": "homeassistant",
     "Home Assistant": "homeassistant",
+    "Nanoleaf": "nanoleaf",
+    "OpenThread": "openthread",
 }
 THREAD_TYPE = "_meshcop._udp.local."
 CLASS_IN = 1

@@ -1,4 +1,5 @@
 """Test configuration for Nibe Heat Pump."""
+
 from collections.abc import Generator
 from contextlib import ExitStack
 from unittest.mock import AsyncMock, Mock, patch

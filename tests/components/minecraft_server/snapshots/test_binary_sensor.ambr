@@ -4,7 +4,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
       'friendly_name': 'Minecraft Server Status',
-      'icon': 'mdi:lan',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.minecraft_server_status',
@@ -18,7 +17,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
       'friendly_name': 'Minecraft Server Status',
-      'icon': 'mdi:lan',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.minecraft_server_status',
@@ -32,7 +30,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
       'friendly_name': 'Minecraft Server Status',
-      'icon': 'mdi:lan',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.minecraft_server_status',
@@ -46,7 +43,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
       'friendly_name': 'Minecraft Server Status',
-      'icon': 'mdi:lan',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.minecraft_server_status',

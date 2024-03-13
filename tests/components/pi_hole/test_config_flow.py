@@ -1,4 +1,5 @@
 """Test pi_hole config flow."""
+
 from homeassistant.components import pi_hole
 from homeassistant.components.pi_hole.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER

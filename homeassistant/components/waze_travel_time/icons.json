@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "waze_travel_time": {
+        "default": "mdi:car"
+      }
+    }
+  }
+}

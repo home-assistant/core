@@ -146,6 +146,20 @@
       "battery_export": {
         "name": "Battery export"
       },
+      "battery_capacity": {
+        "name": "Battery capacity"
+      },
+      "battery_remaining": {
+        "name": "Battery remaining"
+      },
+      "grid_state": {
+        "name": "Grid state",
+        "state": {
+          "grid_compliant": "Compliant",
+          "grid_qualifying": "Qualifying",
+          "grid_uncompliant": "Uncompliant"
+        }
+      },
       "load_import": {
         "name": "Load import"
       },

@@ -1,4 +1,5 @@
 """Support for NuHeat thermostats."""
+
 import logging
 from typing import Any
 
@@ -78,6 +79,7 @@ class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_preset_modes = PRESET_MODES
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator, thermostat, temperature_unit):
         """Initialize the thermostat."""

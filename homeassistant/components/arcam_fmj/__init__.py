@@ -1,4 +1,5 @@
 """Arcam component."""
+
 import asyncio
 from asyncio import timeout
 import logging
@@ -83,7 +84,7 @@ async def _run_client(hass: HomeAssistant, client: Client, interval: float) -> N
 
         except ConnectionFailed:
             await asyncio.sleep(interval)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             continue
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception, aborting arcam client")

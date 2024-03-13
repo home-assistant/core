@@ -3,12 +3,18 @@
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
 """
+
 from __future__ import annotations
 
 from typing import Any
 
-from zigpy.zcl.clusters import hvac
-from zigpy.zcl.clusters.hvac import Fan, Thermostat
+from zigpy.zcl.clusters.hvac import (
+    Dehumidification,
+    Fan,
+    Pump,
+    Thermostat,
+    UserInterface,
+)
 
 from homeassistant.core import callback
 
@@ -26,8 +32,8 @@ REPORT_CONFIG_CLIMATE_DEMAND = (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 5)
 REPORT_CONFIG_CLIMATE_DISCRETE = (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 1)
 
 
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(hvac.Dehumidification.cluster_id)
-class Dehumidification(ClusterHandler):
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(Dehumidification.cluster_id)
+class DehumidificationClusterHandler(ClusterHandler):
     """Dehumidification cluster handler."""
 
 
@@ -75,8 +81,8 @@ class FanClusterHandler(ClusterHandler):
             )
 
 
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(hvac.Pump.cluster_id)
-class Pump(ClusterHandler):
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(Pump.cluster_id)
+class PumpClusterHandler(ClusterHandler):
     """Pump cluster handler."""
 
 
@@ -141,6 +147,7 @@ class ThermostatClusterHandler(ClusterHandler):
         Thermostat.AttributeDefs.min_cool_setpoint_limit.name: True,
         Thermostat.AttributeDefs.min_heat_setpoint_limit.name: True,
         Thermostat.AttributeDefs.local_temperature_calibration.name: True,
+        Thermostat.AttributeDefs.setpoint_change_source.name: True,
     }
 
     @property
@@ -333,6 +340,8 @@ class ThermostatClusterHandler(ClusterHandler):
         return bool(self.occupancy)
 
 
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(hvac.UserInterface.cluster_id)
-class UserInterface(ClusterHandler):
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(UserInterface.cluster_id)
+class UserInterfaceClusterHandler(ClusterHandler):
     """User interface (thermostat) cluster handler."""
+
+    ZCL_INIT_ATTRS = {UserInterface.AttributeDefs.keypad_lockout.name: True}

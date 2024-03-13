@@ -1,4 +1,5 @@
 """Tests for IPMA config flow."""
+
 from unittest.mock import patch
 
 from pyipma import IPMAException
@@ -91,7 +92,7 @@ async def test_config_flow_failures(hass: HomeAssistant) -> None:
     }
 
 
-async def test_flow_entry_already_exists(hass: HomeAssistant, config_entry) -> None:
+async def test_flow_entry_already_exists(hass: HomeAssistant, init_integration) -> None:
     """Test user input for config_entry that already exists.
 
     Test when the form should show when user puts existing location

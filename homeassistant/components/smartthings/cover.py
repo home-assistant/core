@@ -1,4 +1,5 @@
 """Support for covers through the SmartThings cloud API."""
+
 from __future__ import annotations
 
 from collections.abc import Sequence
