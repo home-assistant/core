@@ -1,11 +1,11 @@
 """Base entity for ROMY."""
 
+from romy import RomyRobot
+
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
-from .coordinator import RomyVacuumCoordinator
-
 
 class RomyEntity(CoordinatorEntity[RomyVacuumCoordinator]):
     """Base ROMY entity."""
