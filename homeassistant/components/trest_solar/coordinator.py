@@ -3,12 +3,12 @@ from __future__ import annotations  # noqa: D100
 from datetime import timedelta
 import logging
 
+from trest_solar import CloudSolarTrestService, SolarHistory
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import REFRESH_INTERVAL
-from .models.solar_history import SolarHistory
-from .services.trest_solar_service import CloudSolarTrestService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +27,6 @@ class TrestDataCoordinator(DataUpdateCoordinator[SolarHistory]):
 
         if self.config_entry is not None:
             self.trest_solar_service = CloudSolarTrestService(
-                hass,
                 self.config_entry.data["username"],
                 self.config_entry.data["password"],
             )
