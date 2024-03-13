@@ -192,7 +192,9 @@ class SchemaCommonFlowHandler:
             assert entry
             return cast(
                 SchemaConfigFlowHandler, self.parent_handler
-            ).async_update_reload_and_abort(entry, options=user_input)
+            ).async_update_reload_and_abort(
+                entry, options={**entry.options, **user_input}
+            )
 
         if user_input is not None or form_step.schema is None:
             return await self._show_next_step_or_create_entry(form_step)

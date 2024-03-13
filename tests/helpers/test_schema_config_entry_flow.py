@@ -768,7 +768,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
     mock_platform(hass, "test.config_flow", None)
     config_entry = MockConfigEntry(
         domain=TEST_DOMAIN,
-        options={"username": "test", "password": "test1"},
+        options={"username": "test", "password": "test1", "test": 1},
     )
     config_entry.add_to_hass(hass)
 
@@ -783,7 +783,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    assert config_entry.options == {"username": "test", "password": "test2"}
+    assert config_entry.options == {"username": "test", "password": "test2", "test": 1}
     assert config_entry.state == config_entries.ConfigEntryState.LOADED
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
