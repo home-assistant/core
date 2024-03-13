@@ -94,7 +94,7 @@ async def test_form(
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": f"1.1.1.1:{port}"},
+            {"host": "1.1.1.1", "port": port},
         )
         await hass.async_block_till_done()
 
@@ -109,35 +109,6 @@ async def test_form(
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_wrong_syntax(
-    hass: HomeAssistant,
-    mock_block_device: Mock,
-) -> None:
-    """Test we get the form."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["errors"] == {}
-
-    with patch(
-        "homeassistant.components.shelly.config_flow.get_info",
-        return_value={
-            "mac": "test-mac",
-            "type": MODEL_1,
-            "auth": False,
-            "gen": 1,
-            "port": 1100,
-        },
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"host": "1.1.1.1:"},
-        )
-
-    assert result2["errors"]["base"] == "unknown"
 
 
 async def test_form_gen1_custom_port(
@@ -160,7 +131,7 @@ async def test_form_gen1_custom_port(
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "1.1.1.1:1100"},
+            {"host": "1.1.1.1", "port": "1100"},
         )
 
         assert result2["type"] == data_entry_flow.FlowResultType.FORM
