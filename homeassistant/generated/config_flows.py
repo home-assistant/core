@@ -437,6 +437,7 @@ FLOWS = {
         "roborock",
         "roku",
         "romy",
+        "room_occupancy",
         "roomba",
         "roon",
         "rpi_power",

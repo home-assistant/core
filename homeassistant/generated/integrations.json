@@ -5024,6 +5024,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "room_occupancy": {
+      "name": "Room Occupancy",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "calculated"
+    },
     "roomba": {
       "name": "iRobot Roomba and Braava",
       "integration_type": "hub",

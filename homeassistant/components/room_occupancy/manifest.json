@@ -1,0 +1,10 @@
+{
+  "domain": "room_occupancy",
+  "name": "Room Occupancy",
+  "codeowners": ["@maxgeilert"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/maxgeilert/room_occupancy",
+  "iot_class": "calculated",
+  "requirements": []
+}
