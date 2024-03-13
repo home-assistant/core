@@ -1,4 +1,5 @@
 """Test ZHA sensor."""
+
 from datetime import timedelta
 import math
 from unittest.mock import MagicMock, patch
@@ -1117,7 +1118,7 @@ async def test_elec_measurement_sensor_polling(
     # let the polling happen
     future = dt_util.utcnow() + timedelta(seconds=90)
     async_fire_time_changed(hass, future)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # ensure the state has been updated to 6.0
     state = hass.states.get(entity_id)

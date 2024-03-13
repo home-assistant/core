@@ -30,7 +30,7 @@
       }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': 'mdi:home-battery',
+    'original_icon': None,
     'original_name': 'Battery power',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -45,7 +45,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Energy Site Battery power',
-      'icon': 'mdi:home-battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
@@ -87,7 +86,7 @@
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY_STORAGE: 'energy_storage'>,
-    'original_icon': 'mdi:battery',
+    'original_icon': None,
     'original_name': 'Energy left',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -102,7 +101,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy_storage',
       'friendly_name': 'Energy Site Energy left',
-      'icon': 'mdi:battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -144,7 +142,7 @@
       }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': 'mdi:generator-stationary',
+    'original_icon': None,
     'original_name': 'Generator power',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -159,7 +157,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Energy Site Generator power',
-      'icon': 'mdi:generator-stationary',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
@@ -201,7 +198,7 @@
       }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': 'mdi:transmission-tower',
+    'original_icon': None,
     'original_name': 'Grid power',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -216,7 +213,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Energy Site Grid power',
-      'icon': 'mdi:transmission-tower',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
@@ -258,7 +254,7 @@
       }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': 'mdi:transmission-tower',
+    'original_icon': None,
     'original_name': 'Grid services power',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -273,7 +269,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Energy Site Grid services power',
-      'icon': 'mdi:transmission-tower',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
@@ -315,7 +310,7 @@
       }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': 'mdi:power-plug',
+    'original_icon': None,
     'original_name': 'Load power',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -330,7 +325,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Energy Site Load power',
-      'icon': 'mdi:power-plug',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
@@ -425,7 +419,7 @@
       }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': 'mdi:solar-power',
+    'original_icon': None,
     'original_name': 'Solar power',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -440,7 +434,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Energy Site Solar power',
-      'icon': 'mdi:solar-power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
@@ -482,7 +475,7 @@
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY_STORAGE: 'energy_storage'>,
-    'original_icon': 'mdi:battery-high',
+    'original_icon': None,
     'original_name': 'Total pack energy',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -497,7 +490,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy_storage',
       'friendly_name': 'Energy Site Total pack energy',
-      'icon': 'mdi:battery-high',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -893,7 +885,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:map-marker',
+    'original_icon': None,
     'original_name': 'Destination',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -907,7 +899,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Destination',
-      'icon': 'mdi:map-marker',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_destination',
@@ -1317,7 +1308,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:car-shift-pattern',
+    'original_icon': None,
     'original_name': 'Shift state',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -1332,7 +1323,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Test Shift state',
-      'icon': 'mdi:car-shift-pattern',
       'options': list([
         'p',
         'd',
@@ -1839,7 +1829,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:ev-station',
+    'original_icon': None,
     'original_name': 'Fault state code',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -1853,7 +1843,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Wall Connector Fault state code',
-      'icon': 'mdi:ev-station',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_fault_state_code',
@@ -1885,7 +1874,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:ev-station',
+    'original_icon': None,
     'original_name': 'Fault state code',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -1899,7 +1888,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Wall Connector Fault state code',
-      'icon': 'mdi:ev-station',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_fault_state_code_2',
@@ -1939,7 +1927,7 @@
       }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': 'mdi:ev-station',
+    'original_icon': None,
     'original_name': 'Power',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -1954,7 +1942,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Wall Connector Power',
-      'icon': 'mdi:ev-station',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
@@ -1996,7 +1983,7 @@
       }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': 'mdi:ev-station',
+    'original_icon': None,
     'original_name': 'Power',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -2011,7 +1998,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Wall Connector Power',
-      'icon': 'mdi:ev-station',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
@@ -2045,7 +2031,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:ev-station',
+    'original_icon': None,
     'original_name': 'State code',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -2059,7 +2045,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Wall Connector State code',
-      'icon': 'mdi:ev-station',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_state_code',
@@ -2091,7 +2076,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:ev-station',
+    'original_icon': None,
     'original_name': 'State code',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -2105,7 +2090,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Wall Connector State code',
-      'icon': 'mdi:ev-station',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_state_code_2',
@@ -2137,7 +2121,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:car-electric',
+    'original_icon': None,
     'original_name': 'Vehicle',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -2151,7 +2135,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Wall Connector Vehicle',
-      'icon': 'mdi:car-electric',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_vehicle',
@@ -2183,7 +2166,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:car-electric',
+    'original_icon': None,
     'original_name': 'Vehicle',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -2197,7 +2180,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Wall Connector Vehicle',
-      'icon': 'mdi:car-electric',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_vehicle_2',

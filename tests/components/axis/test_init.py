@@ -1,4 +1,5 @@
 """Test Axis component setup process."""
+
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest

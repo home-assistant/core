@@ -1,4 +1,5 @@
 """Test the AEH config flow."""
+
 import logging
 from unittest.mock import AsyncMock
 

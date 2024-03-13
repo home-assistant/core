@@ -1,4 +1,5 @@
 """Config flow for OurGroceries integration."""
+
 from __future__ import annotations
 
 import logging

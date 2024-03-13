@@ -1,4 +1,5 @@
 """Test different accessory types: Triggers (Programmable Switches)."""
+
 from unittest.mock import MagicMock
 
 from homeassistant.components.device_automation import DeviceAutomationType

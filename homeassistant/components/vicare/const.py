@@ -1,4 +1,5 @@
 """Constants for the ViCare integration."""
+
 import enum
 
 from homeassistant.const import Platform

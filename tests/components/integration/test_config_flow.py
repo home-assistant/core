@@ -1,4 +1,5 @@
 """Test the Integration - Riemann sum integral config flow."""
+
 from unittest.mock import patch
 
 import pytest

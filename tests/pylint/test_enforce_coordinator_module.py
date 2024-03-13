@@ -1,4 +1,5 @@
 """Tests for pylint hass_enforce_coordinator_module plugin."""
+
 from __future__ import annotations
 
 import astroid

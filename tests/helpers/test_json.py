@@ -1,4 +1,5 @@
 """Test Home Assistant remote methods and classes."""
+
 import datetime
 from functools import partial
 import json

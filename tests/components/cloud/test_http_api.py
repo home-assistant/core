@@ -1,4 +1,5 @@
 """Tests for the HTTP API for the cloud component."""
+
 from copy import deepcopy
 from http import HTTPStatus
 from typing import Any

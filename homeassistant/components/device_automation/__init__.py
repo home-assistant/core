@@ -1,4 +1,5 @@
 """Helpers for device automations."""
+
 from __future__ import annotations
 
 import asyncio

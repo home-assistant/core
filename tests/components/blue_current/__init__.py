@@ -1,4 +1,5 @@
 """Tests for the Blue Current integration."""
+
 from __future__ import annotations
 
 from asyncio import Event, Future

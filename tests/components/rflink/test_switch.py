@@ -4,6 +4,7 @@ Test setup of rflink switch component/platform. State tracking and
 control of Rflink switch devices.
 
 """
+
 from homeassistant.components.rflink import EVENT_BUTTON_PRESSED
 from homeassistant.const import (
     ATTR_ENTITY_ID,

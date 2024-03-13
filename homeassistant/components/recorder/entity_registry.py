@@ -1,4 +1,5 @@
 """Recorder entity registry helper."""
+
 import logging
 
 from homeassistant.core import Event, HomeAssistant, callback
@@ -6,7 +7,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.start import async_at_start
 
 from .core import Recorder
-from .util import get_instance, session_scope
+from .util import filter_unique_constraint_integrity_error, get_instance, session_scope
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,7 +62,10 @@ def update_states_metadata(
         )
         return
 
-    with session_scope(session=instance.get_session()) as session:
+    with session_scope(
+        session=instance.get_session(),
+        exception_filter=filter_unique_constraint_integrity_error(instance, "state"),
+    ) as session:
         if not states_meta_manager.update_metadata(session, entity_id, new_entity_id):
             _LOGGER.warning(
                 "Cannot migrate history for entity_id `%s` to `%s` "

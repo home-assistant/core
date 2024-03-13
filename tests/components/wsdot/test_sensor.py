@@ -1,4 +1,5 @@
 """The tests for the WSDOT platform."""
+
 from datetime import datetime, timedelta, timezone
 import re
 
@@ -49,7 +50,7 @@ async def test_setup(hass: HomeAssistant, requests_mock: requests_mock.Mocker) -
             entities.append(entity)
 
     uri = re.compile(RESOURCE + "*")
-    requests_mock.get(uri, text=load_fixture("wsdot.json"))
+    requests_mock.get(uri, text=load_fixture("wsdot/wsdot.json"))
     wsdot.setup_platform(hass, config, add_entities)
     assert len(entities) == 1
     sensor = entities[0]

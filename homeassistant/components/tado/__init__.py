@@ -1,4 +1,5 @@
 """Support for the (unofficial) Tado API."""
+
 from datetime import timedelta
 import logging
 

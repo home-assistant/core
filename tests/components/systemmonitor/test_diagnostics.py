@@ -1,4 +1,5 @@
 """Tests for the diagnostics data provided by the System Monitor integration."""
+
 from unittest.mock import Mock
 
 from syrupy import SnapshotAssertion

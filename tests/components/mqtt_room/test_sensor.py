@@ -1,4 +1,5 @@
 """The tests for the MQTT room presence sensor."""
+
 import datetime
 import json
 from unittest.mock import patch

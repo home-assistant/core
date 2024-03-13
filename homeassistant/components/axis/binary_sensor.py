@@ -1,4 +1,5 @@
 """Support for Axis binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -93,13 +94,13 @@ class AxisBinarySensor(AxisEventEntity, BinarySensorEntity):
             self.cancel_scheduled_update()
             self.cancel_scheduled_update = None
 
-        if self.is_on or self.hub.option_trigger_time == 0:
+        if self.is_on or self.hub.config.trigger_time == 0:
             self.async_write_ha_state()
             return
 
         self.cancel_scheduled_update = async_call_later(
             self.hass,
-            timedelta(seconds=self.hub.option_trigger_time),
+            timedelta(seconds=self.hub.config.trigger_time),
             scheduled_update,
         )
 

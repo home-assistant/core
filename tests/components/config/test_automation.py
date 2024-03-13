@@ -1,4 +1,5 @@
 """Test Automation config panel."""
+
 from http import HTTPStatus
 import json
 from typing import Any

@@ -1,5 +1,6 @@
 """Test UPnP/IGD config flow."""
 
+import copy
 from copy import deepcopy
 from unittest.mock import patch
 
@@ -111,6 +112,7 @@ async def test_flow_ssdp_incomplete_discovery(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_SSDP},
         data=ssdp.SsdpServiceInfo(
             ssdp_usn=TEST_USN,
+            # ssdp_udn=TEST_UDN,  # Not provided.
             ssdp_st=TEST_ST,
             ssdp_location=TEST_LOCATION,
             upnp={
@@ -132,12 +134,12 @@ async def test_flow_ssdp_non_igd_device(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_SSDP},
         data=ssdp.SsdpServiceInfo(
             ssdp_usn=TEST_USN,
+            ssdp_udn=TEST_UDN,
             ssdp_st=TEST_ST,
             ssdp_location=TEST_LOCATION,
             ssdp_all_locations=[TEST_LOCATION],
             upnp={
                 ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:WFADevice:1",  # Non-IGD
-                ssdp.ATTR_UPNP_UDN: TEST_UDN,
             },
         ),
     )
@@ -442,3 +444,40 @@ async def test_flow_user_no_discovery(hass: HomeAssistant) -> None:
     )
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
+
+
+@pytest.mark.usefixtures(
+    "ssdp_instant_discovery",
+    "mock_setup_entry",
+    "mock_get_source_ip",
+    "mock_mac_address_from_host",
+)
+async def test_flow_ssdp_with_mismatched_udn(hass: HomeAssistant) -> None:
+    """Test config flow: discovered + configured through ssdp, where the UDN differs in the SSDP-discovery vs device description."""
+    # Discovered via step ssdp.
+    test_discovery = copy.deepcopy(TEST_DISCOVERY)
+    test_discovery.upnp[ssdp.ATTR_UPNP_UDN] = "uuid:another_udn"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=test_discovery,
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "ssdp_confirm"
+
+    # Confirm via step ssdp_confirm.
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_FRIENDLY_NAME
+    assert result["data"] == {
+        CONFIG_ENTRY_ST: TEST_ST,
+        CONFIG_ENTRY_UDN: TEST_UDN,
+        CONFIG_ENTRY_ORIGINAL_UDN: TEST_UDN,
+        CONFIG_ENTRY_LOCATION: TEST_LOCATION,
+        CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
+        CONFIG_ENTRY_HOST: TEST_HOST,
+    }

@@ -1,4 +1,5 @@
 """Support for Modbus."""
+
 from __future__ import annotations
 
 import asyncio
@@ -50,11 +51,9 @@ from .const import (
     CALL_TYPE_WRITE_REGISTERS,
     CONF_BAUDRATE,
     CONF_BYTESIZE,
-    CONF_CLOSE_COMM_ON_ERROR,
     CONF_MSG_WAIT,
     CONF_PARITY,
     CONF_RETRIES,
-    CONF_RETRY_ON_EMPTY,
     CONF_STOPBITS,
     DEFAULT_HUB,
     MODBUS_DOMAIN as DOMAIN,
@@ -272,42 +271,6 @@ class ModbusHub:
             )
         else:
             client_config[CONF_RETRIES] = 3
-        if CONF_CLOSE_COMM_ON_ERROR in client_config:
-            async_create_issue(
-                hass,
-                DOMAIN,
-                "deprecated_close_comm_config",
-                breaks_in_ha_version="2024.4.0",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_close_comm_config",
-                translation_placeholders={
-                    "config_key": "close_comm_on_error",
-                    "integration": DOMAIN,
-                    "url": "https://www.home-assistant.io/integrations/modbus",
-                },
-            )
-            _LOGGER.warning(
-                "`close_comm_on_error`: is deprecated and will be removed in version 2024.4"
-            )
-        if CONF_RETRY_ON_EMPTY in client_config:
-            async_create_issue(
-                hass,
-                DOMAIN,
-                "deprecated_retry_on_empty",
-                breaks_in_ha_version="2024.4.0",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_retry_on_empty",
-                translation_placeholders={
-                    "config_key": "retry_on_empty",
-                    "integration": DOMAIN,
-                    "url": "https://www.home-assistant.io/integrations/modbus",
-                },
-            )
-            _LOGGER.warning(
-                "`retry_on_empty`: is deprecated and will be removed in version 2024.4"
-            )
         # generic configuration
         self._client: ModbusBaseClient | None = None
         self._async_cancel_listener: Callable[[], None] | None = None

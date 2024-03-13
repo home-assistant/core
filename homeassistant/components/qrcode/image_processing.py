@@ -1,4 +1,5 @@
 """Support for the QR code image processing."""
+
 from __future__ import annotations
 
 import io

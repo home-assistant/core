@@ -1,4 +1,5 @@
 """The tests for the image component."""
+
 import datetime
 from http import HTTPStatus
 import ssl
@@ -305,22 +306,35 @@ async def test_image_stream(
 
     client = await hass_client()
 
-    with patch.object(mock_image, "async_image", return_value=b""):
-        resp = await client.get("/api/image_proxy_stream/image.test")
-        assert not resp.closed
-        assert resp.status == HTTPStatus.OK
+    close_future = hass.loop.create_future()
+    original_get_still_stream = image.async_get_still_stream
 
-        mock_image.image_last_updated = datetime.datetime.now()
-        mock_image.async_write_ha_state()
-        # Two blocks to ensure the frame is written
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
+    async def _wrap_async_get_still_stream(*args, **kwargs):
+        result = await original_get_still_stream(*args, **kwargs)
+        hass.loop.call_soon(close_future.set_result, None)
+        return result
 
-    with patch.object(mock_image, "async_image", return_value=None):
-        mock_image.image_last_updated = datetime.datetime.now()
-        mock_image.async_write_ha_state()
-        # Two blocks to ensure the frame is written
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.image.async_get_still_stream",
+        _wrap_async_get_still_stream,
+    ):
+        with patch.object(mock_image, "async_image", return_value=b""):
+            resp = await client.get("/api/image_proxy_stream/image.test")
+            assert not resp.closed
+            assert resp.status == HTTPStatus.OK
 
+            mock_image.image_last_updated = datetime.datetime.now()
+            mock_image.async_write_ha_state()
+            # Two blocks to ensure the frame is written
+            await hass.async_block_till_done()
+            await hass.async_block_till_done()
+
+        with patch.object(mock_image, "async_image", return_value=None):
+            mock_image.image_last_updated = datetime.datetime.now()
+            mock_image.async_write_ha_state()
+            # Two blocks to ensure the frame is written
+            await hass.async_block_till_done()
+            await hass.async_block_till_done()
+
+    await close_future
     assert resp.closed

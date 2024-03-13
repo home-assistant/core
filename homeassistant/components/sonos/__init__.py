@@ -1,4 +1,5 @@
 """Support to embed Sonos."""
+
 from __future__ import annotations
 
 import asyncio
@@ -492,7 +493,8 @@ class SonosDiscoveryManager:
                     self.hass, f"{SONOS_SPEAKER_ACTIVITY}-{uid}", source
                 )
 
-    async def _async_ssdp_discovered_player(
+    @callback
+    def _async_ssdp_discovered_player(
         self, info: ssdp.SsdpServiceInfo, change: ssdp.SsdpChange
     ) -> None:
         uid = info.upnp[ssdp.ATTR_UPNP_UDN]

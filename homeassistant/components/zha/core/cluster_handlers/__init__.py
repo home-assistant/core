@@ -1,4 +1,5 @@
 """Cluster handlers module for Zigbee Home Automation."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine, Iterator

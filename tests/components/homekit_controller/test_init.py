@@ -1,4 +1,5 @@
 """Tests for homekit_controller init."""
+
 from datetime import timedelta
 import pathlib
 from unittest.mock import patch

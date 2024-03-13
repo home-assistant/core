@@ -1,4 +1,5 @@
 """BleBox button entities implementation."""
+
 from __future__ import annotations
 
 from blebox_uniapi.box import Box

@@ -1,4 +1,5 @@
 """Constants for the cloud component."""
+
 from __future__ import annotations
 
 from typing import Any

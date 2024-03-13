@@ -1,4 +1,5 @@
 """Data UpdateCoordinator for the Husqvarna Automower integration."""
+
 import asyncio
 from datetime import timedelta
 import logging
@@ -19,6 +20,8 @@ MAX_WS_RECONNECT_TIME = 600
 
 class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttributes]]):
     """Class to manage fetching Husqvarna data."""
+
+    config_entry: ConfigEntry
 
     def __init__(
         self, hass: HomeAssistant, api: AutomowerSession, entry: ConfigEntry

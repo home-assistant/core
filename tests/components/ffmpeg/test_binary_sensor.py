@@ -1,4 +1,5 @@
 """The tests for Home Assistant ffmpeg binary sensor."""
+
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START
