@@ -20,7 +20,7 @@ from homeassistant.components.remote import (
     RemoteEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HassJob, HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -117,11 +117,11 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
         self.async_on_remove(
             self._data.async_subscribe(
                 HarmonyCallback(
-                    connected=self.async_got_connected,
-                    disconnected=self.async_got_disconnected,
-                    config_updated=self.async_new_config,
-                    activity_starting=self.async_new_activity,
-                    activity_started=self.async_new_activity_finished,
+                    connected=HassJob(self.async_got_connected),
+                    disconnected=HassJob(self.async_got_disconnected),
+                    config_updated=HassJob(self.async_new_config),
+                    activity_starting=HassJob(self.async_new_activity),
+                    activity_started=HassJob(self.async_new_activity_finished),
                 )
             )
         )
