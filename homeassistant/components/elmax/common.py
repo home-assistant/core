@@ -1,4 +1,5 @@
 """Elmax integration common classes and utilities."""
+
 from __future__ import annotations
 
 from asyncio import timeout

@@ -1,4 +1,5 @@
 """The tests for the notify demo platform."""
+
 import logging
 from unittest.mock import patch
 

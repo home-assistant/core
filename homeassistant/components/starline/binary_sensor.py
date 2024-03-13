@@ -1,4 +1,5 @@
 """Reads vehicle status from StarLine API."""
+
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
@@ -19,7 +20,6 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key="hbrake",
         translation_key="hand_brake",
-        icon="mdi:car-brake-parking",
     ),
     BinarySensorEntityDescription(
         key="hood",
@@ -45,19 +45,16 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
         key="hfree",
         translation_key="handsfree",
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:hand-back-right",
     ),
     BinarySensorEntityDescription(
         key="neutral",
         translation_key="neutral",
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:car-shift-pattern",
     ),
     BinarySensorEntityDescription(
         key="arm_moving_pb",
         translation_key="moving_ban",
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:car-off",
     ),
 )
 

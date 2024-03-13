@@ -1,4 +1,5 @@
 """Tests for the WLED button platform."""
+
 from unittest.mock import MagicMock
 
 import pytest

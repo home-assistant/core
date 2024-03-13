@@ -1,4 +1,5 @@
 """Tests for Sonos services."""
+
 from unittest.mock import Mock, patch
 
 import pytest

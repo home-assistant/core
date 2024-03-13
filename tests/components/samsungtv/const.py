@@ -1,4 +1,5 @@
 """Constants for the samsungtv tests."""
+
 from samsungtvws.event import ED_INSTALLED_APP_EVENT
 
 from homeassistant.components import ssdp

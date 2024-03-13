@@ -1,4 +1,5 @@
 """Test the Derivative integration."""
+
 import pytest
 
 from homeassistant.components.derivative.const import DOMAIN

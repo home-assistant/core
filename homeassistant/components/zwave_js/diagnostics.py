@@ -1,4 +1,5 @@
 """Provides diagnostics for Z-Wave JS."""
+
 from __future__ import annotations
 
 from copy import deepcopy

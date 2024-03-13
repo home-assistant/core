@@ -1,4 +1,5 @@
 """Test LIFX diagnostics."""
+
 from homeassistant.components import lifx
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant

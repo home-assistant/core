@@ -1,4 +1,5 @@
 """The tests for the climate component."""
+
 from __future__ import annotations
 
 from enum import Enum
@@ -156,11 +157,12 @@ async def test_sync_turn_off(hass: HomeAssistant) -> None:
 
 
 def _create_tuples(enum: Enum, constant_prefix: str) -> list[tuple[Enum, str]]:
-    result = []
-    for enum in enum:
-        if enum not in [ClimateEntityFeature.TURN_ON, ClimateEntityFeature.TURN_OFF]:
-            result.append((enum, constant_prefix))
-    return result
+    return [
+        (enum_field, constant_prefix)
+        for enum_field in enum
+        if enum_field
+        not in [ClimateEntityFeature.TURN_ON, ClimateEntityFeature.TURN_OFF]
+    ]
 
 
 @pytest.mark.parametrize(

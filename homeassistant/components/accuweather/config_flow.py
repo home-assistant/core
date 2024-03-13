@@ -1,4 +1,5 @@
 """Adds config flow for AccuWeather."""
+
 from __future__ import annotations
 
 from asyncio import timeout
@@ -40,11 +41,6 @@ class AccuWeatherFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        # Under the terms of use of the API, one user can use one free API key. Due to
-        # the small number of requests allowed, we only allow one integration instance.
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         errors = {}
 
         if user_input is not None:

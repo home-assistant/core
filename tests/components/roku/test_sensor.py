@@ -1,4 +1,5 @@
 """Tests for the sensors provided by the Roku integration."""
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -7,7 +8,6 @@ from homeassistant.components.roku.const import DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
     STATE_UNKNOWN,
     EntityCategory,
 )
@@ -35,7 +35,6 @@ async def test_roku_sensors(
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
     assert state.state == "Roku"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Roku 3 Active app"
-    assert state.attributes.get(ATTR_ICON) == "mdi:application"
     assert ATTR_DEVICE_CLASS not in state.attributes
 
     state = hass.states.get("sensor.my_roku_3_active_app_id")
@@ -46,7 +45,6 @@ async def test_roku_sensors(
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Roku 3 Active app ID"
-    assert state.attributes.get(ATTR_ICON) == "mdi:application-cog"
     assert ATTR_DEVICE_CLASS not in state.attributes
 
     assert entry.device_id
@@ -84,7 +82,6 @@ async def test_rokutv_sensors(
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
     assert state.state == "Antenna TV"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == '58" Onn Roku TV Active app'
-    assert state.attributes.get(ATTR_ICON) == "mdi:application"
     assert ATTR_DEVICE_CLASS not in state.attributes
 
     state = hass.states.get("sensor.58_onn_roku_tv_active_app_id")
@@ -95,7 +92,6 @@ async def test_rokutv_sensors(
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
     assert state.state == "tvinput.dtv"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == '58" Onn Roku TV Active app ID'
-    assert state.attributes.get(ATTR_ICON) == "mdi:application-cog"
     assert ATTR_DEVICE_CLASS not in state.attributes
 
     assert entry.device_id

@@ -1,4 +1,5 @@
 """Test the Google Translate text-to-speech config flow."""
+
 from unittest.mock import AsyncMock
 
 import pytest

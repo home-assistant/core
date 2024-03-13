@@ -1,4 +1,5 @@
 """Shelly entity helper."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -278,20 +279,15 @@ class BlockEntityDescription(EntityDescription):
     extra_state_attributes: Callable[[Block], dict | None] | None = None
 
 
-@dataclass(frozen=True)
-class RpcEntityRequiredKeysMixin:
-    """Class for RPC entity required keys."""
-
-    sub_key: str
-
-
-@dataclass(frozen=True)
-class RpcEntityDescription(EntityDescription, RpcEntityRequiredKeysMixin):
+@dataclass(frozen=True, kw_only=True)
+class RpcEntityDescription(EntityDescription):
     """Class to describe a RPC entity."""
 
     # BlockEntity does not support UNDEFINED or None,
     # restrict the type to str.
     name: str = ""
+
+    sub_key: str
 
     value: Callable[[Any, Any], Any] | None = None
     available: Callable[[dict], bool] | None = None

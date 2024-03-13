@@ -1,4 +1,5 @@
 """Support for Google Assistant SDK broadcast notifications."""
+
 from __future__ import annotations
 
 from typing import Any

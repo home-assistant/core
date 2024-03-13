@@ -1,4 +1,5 @@
 """The tests for calendar recorder."""
+
 from datetime import timedelta
 from typing import Any
 

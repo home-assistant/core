@@ -1,4 +1,5 @@
 """Test BMW diagnostics."""
+
 import datetime
 import os
 import time
