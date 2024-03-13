@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/iammeter",
   "iot_class": "local_polling",
   "loggers": ["iammeter"],
-  "requirements": ["iammeter==0.1.7"]
+  "requirements": ["iammeter==0.2.1"]
 }

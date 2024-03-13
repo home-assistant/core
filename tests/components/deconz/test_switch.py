@@ -119,13 +119,14 @@ async def test_power_plugs(
 
 
 async def test_remove_legacy_on_off_output_as_light(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that switch platform cleans up legacy light entities."""
     unique_id = "00:00:00:00:00:00:00:00-00"
 
-    registry = er.async_get(hass)
-    switch_light_entity = registry.async_get_or_create(
+    switch_light_entity = entity_registry.async_get_or_create(
         LIGHT_DOMAIN, DECONZ_DOMAIN, unique_id
     )
 
@@ -144,6 +145,6 @@ async def test_remove_legacy_on_off_output_as_light(
     with patch.dict(DECONZ_WEB_REQUEST, data):
         await setup_deconz_integration(hass, aioclient_mock)
 
-    assert not registry.async_get("light.on_off_output_device")
-    assert registry.async_get("switch.on_off_output_device")
+    assert not entity_registry.async_get("light.on_off_output_device")
+    assert entity_registry.async_get("switch.on_off_output_device")
     assert len(hass.states.async_all()) == 1

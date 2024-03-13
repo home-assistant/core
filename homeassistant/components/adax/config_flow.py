@@ -36,7 +36,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         data_schema = vol.Schema(
             {
@@ -59,7 +61,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_local()
         return await self.async_step_cloud()
 
-    async def async_step_local(self, user_input=None):
+    async def async_step_local(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the local step."""
         data_schema = vol.Schema(
             {vol.Required(WIFI_SSID): str, vol.Required(WIFI_PSWD): str}

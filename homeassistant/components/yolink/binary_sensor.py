@@ -28,7 +28,7 @@ from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class YoLinkBinarySensorEntityDescription(BinarySensorEntityDescription):
     """YoLink BinarySensorEntityDescription."""
 
@@ -63,7 +63,7 @@ SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
     YoLinkBinarySensorEntityDescription(
         key="leak_state",
         device_class=BinarySensorDeviceClass.MOISTURE,
-        value=lambda value: value == "alert" if value is not None else None,
+        value=lambda value: value in ("alert", "full") if value is not None else None,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_LEAK_SENSOR,
     ),
     YoLinkBinarySensorEntityDescription(
@@ -136,3 +136,8 @@ class YoLinkBinarySensorEntity(YoLinkEntity, BinarySensorEntity):
             state.get(self.entity_description.state_key)
         )
         self.async_write_ha_state()
+
+    @property
+    def available(self) -> bool:
+        """Return true is device is available."""
+        return super().available and self.coordinator.dev_online

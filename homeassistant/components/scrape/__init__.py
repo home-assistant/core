@@ -18,8 +18,9 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import discovery
+from homeassistant.helpers import discovery, entity_registry as er
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
     TEMPLATE_SENSOR_BASE_SCHEMA,
@@ -120,3 +121,17 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: ConfigEntry, device: DeviceEntry
+) -> bool:
+    """Remove Scrape config entry from a device."""
+    entity_registry = er.async_get(hass)
+    for identifier in device.identifiers:
+        if identifier[0] == DOMAIN and entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, identifier[1]
+        ):
+            return False
+
+    return True

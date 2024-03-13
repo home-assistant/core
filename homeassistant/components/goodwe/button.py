@@ -18,14 +18,14 @@ from .const import DOMAIN, KEY_DEVICE_INFO, KEY_INVERTER
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class GoodweButtonEntityDescriptionRequired:
     """Required attributes of GoodweButtonEntityDescription."""
 
     action: Callable[[Inverter], Awaitable[None]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class GoodweButtonEntityDescription(
     ButtonEntityDescription, GoodweButtonEntityDescriptionRequired
 ):
@@ -35,7 +35,6 @@ class GoodweButtonEntityDescription(
 SYNCHRONIZE_CLOCK = GoodweButtonEntityDescription(
     key="synchronize_clock",
     translation_key="synchronize_clock",
-    icon="mdi:clock-check-outline",
     entity_category=EntityCategory.CONFIG,
     action=lambda inv: inv.write_setting("time", datetime.now()),
 )

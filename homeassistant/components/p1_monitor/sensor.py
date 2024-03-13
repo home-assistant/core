@@ -321,4 +321,4 @@ class P1MonitorSensorEntity(
         )
         if isinstance(value, str):
             return value.lower()
-        return value
+        return value  # type: ignore[no-any-return]

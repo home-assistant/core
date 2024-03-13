@@ -9,7 +9,10 @@ import zigpy.zcl
 import zigpy.zcl.foundation as zcl_f
 
 import homeassistant.components.zha.core.const as zha_const
-from homeassistant.components.zha.core.helpers import async_get_zha_config_value
+from homeassistant.components.zha.core.helpers import (
+    async_get_zha_config_value,
+    get_zha_gateway,
+)
 from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
@@ -51,7 +54,6 @@ def patch_cluster(cluster):
     cluster.configure_reporting_multiple = AsyncMock(
         return_value=zcl_f.ConfigureReportingResponse.deserialize(b"\x00")[0]
     )
-    cluster.deserialize = Mock()
     cluster.handle_cluster_request = Mock()
     cluster.read_attributes = AsyncMock(wraps=cluster.read_attributes)
     cluster.read_attributes_raw = AsyncMock(side_effect=_read_attribute_raw)
@@ -83,11 +85,6 @@ def update_attribute_cache(cluster):
         attribute_reports=attrs
     )
     cluster.handle_message(hdr, msg)
-
-
-def get_zha_gateway(hass):
-    """Return ZHA gateway from hass.data."""
-    return hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
 
 
 def make_attribute(attrid, value, status=0):

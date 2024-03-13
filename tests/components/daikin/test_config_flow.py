@@ -1,5 +1,5 @@
 """Tests for the Daikin config flow."""
-import asyncio
+from ipaddress import ip_address
 from unittest.mock import PropertyMock, patch
 
 from aiohttp import ClientError, web_exceptions
@@ -80,7 +80,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant, mock_daikin) -> None:
 @pytest.mark.parametrize(
     ("s_effect", "reason"),
     [
-        (asyncio.TimeoutError, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
         (ClientError, "cannot_connect"),
         (web_exceptions.HTTPForbidden, "invalid_auth"),
         (DaikinException, "unknown"),
@@ -119,8 +119,8 @@ async def test_api_password_abort(hass: HomeAssistant) -> None:
         (
             SOURCE_ZEROCONF,
             zeroconf.ZeroconfServiceInfo(
-                host=HOST,
-                addresses=[HOST],
+                ip_address=ip_address(HOST),
+                ip_addresses=[ip_address(HOST)],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,

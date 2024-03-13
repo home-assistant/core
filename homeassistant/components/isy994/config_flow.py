@@ -276,10 +276,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except InvalidAuth:
                 errors[CONF_PASSWORD] = "invalid_auth"
             else:
-                cfg_entries = self.hass.config_entries
-                cfg_entries.async_update_entry(existing_entry, data=new_data)
-                await cfg_entries.async_reload(existing_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
+                return self.async_update_reload_and_abort(
+                    self._existing_entry, data=new_data
+                )
 
         self.context["title_placeholders"] = {
             CONF_NAME: existing_entry.title,

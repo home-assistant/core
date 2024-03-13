@@ -6,9 +6,10 @@ from collections.abc import Mapping
 from datetime import datetime, timedelta
 import email
 from email.header import decode_header, make_header
+from email.message import Message
 from email.utils import parseaddr, parsedate_to_datetime
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aioimaplib import AUTH, IMAP4_SSL, NONAUTH, SELECTED, AioImapException
 
@@ -29,6 +30,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 from homeassistant.util.ssl import (
     SSLCipherList,
     client_context,
@@ -56,12 +58,14 @@ EVENT_IMAP = "imap_content"
 MAX_ERRORS = 3
 MAX_EVENT_DATA_BYTES = 32168
 
+DIAGNOSTICS_ATTRIBUTES = ["date", "initial"]
+
 
 async def connect_to_server(data: Mapping[str, Any]) -> IMAP4_SSL:
     """Connect to imap server and return client."""
     ssl_cipher_list: str = data.get(CONF_SSL_CIPHER_LIST, SSLCipherList.PYTHON_DEFAULT)
     if data.get(CONF_VERIFY_SSL, True):
-        ssl_context = client_context(ssl_cipher_list=ssl_cipher_list)
+        ssl_context = client_context(ssl_cipher_list=SSLCipherList(ssl_cipher_list))
     else:
         ssl_context = create_no_verify_ssl_context()
     client = IMAP4_SSL(data[CONF_SERVER], data[CONF_PORT], ssl_context=ssl_context)
@@ -100,6 +104,23 @@ class ImapMessage:
         """Initialize IMAP message."""
         self.email_message = email.message_from_bytes(raw_message)
 
+    @staticmethod
+    def _decode_payload(part: Message) -> str:
+        """Try to decode text payloads.
+
+        Common text encodings are quoted-printable or base64.
+        Falls back to the raw content part if decoding fails.
+        """
+        try:
+            decoded_payload: Any = part.get_payload(decode=True)
+            if TYPE_CHECKING:
+                assert isinstance(decoded_payload, bytes)
+            content_charset = part.get_content_charset() or "utf-8"
+            return decoded_payload.decode(content_charset)
+        except ValueError:
+            # return undecoded payload
+            return str(part.get_payload())
+
     @property
     def headers(self) -> dict[str, tuple[str,]]:
         """Get the email headers."""
@@ -109,6 +130,15 @@ class ImapMessage:
             if header_base.setdefault(key, header_instances) != header_instances:
                 header_base[key] += header_instances  # type: ignore[assignment]
         return header_base
+
+    @property
+    def message_id(self) -> str | None:
+        """Get the message ID."""
+        value: str
+        for header, value in self.email_message.items():
+            if header == "Message-ID":
+                return value
+        return None
 
     @property
     def date(self) -> datetime | None:
@@ -142,24 +172,25 @@ class ImapMessage:
     def text(self) -> str:
         """Get the message text from the email.
 
-        Will look for text/plain or use text/html if not found.
+        Will look for text/plain or use/ text/html if not found.
         """
         message_text: str | None = None
         message_html: str | None = None
         message_untyped_text: str | None = None
 
+        part: Message
         for part in self.email_message.walk():
             if part.get_content_type() == CONTENT_TYPE_TEXT_PLAIN:
                 if message_text is None:
-                    message_text = part.get_payload()
+                    message_text = self._decode_payload(part)
             elif part.get_content_type() == "text/html":
                 if message_html is None:
-                    message_html = part.get_payload()
+                    message_html = self._decode_payload(part)
             elif (
                 part.get_content_type().startswith("text")
                 and message_untyped_text is None
             ):
-                message_untyped_text = part.get_payload()
+                message_untyped_text = str(part.get_payload())
 
         if message_text is not None:
             return message_text
@@ -189,8 +220,10 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
         """Initiate imap client."""
         self.imap_client = imap_client
         self.auth_errors: int = 0
+        self._last_message_uid: str | None = None
         self._last_message_id: str | None = None
         self.custom_event_template = None
+        self._diagnostics_data: dict[str, Any] = {}
         _custom_event_template = entry.data.get(CONF_CUSTOM_EVENT_DATA_TEMPLATE)
         if _custom_event_template is not None:
             self.custom_event_template = Template(_custom_event_template, hass=hass)
@@ -209,16 +242,22 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
         if self.imap_client is None:
             self.imap_client = await connect_to_server(self.config_entry.data)
 
-    async def _async_process_event(self, last_message_id: str) -> None:
+    async def _async_process_event(self, last_message_uid: str) -> None:
         """Send a event for the last message if the last message was changed."""
-        response = await self.imap_client.fetch(last_message_id, "BODY.PEEK[]")
+        response = await self.imap_client.fetch(last_message_uid, "BODY.PEEK[]")
         if response.result == "OK":
             message = ImapMessage(response.lines[1])
+            # Set `initial` to `False` if the last message is triggered again
+            initial: bool = True
+            if (message_id := message.message_id) == self._last_message_id:
+                initial = False
+            self._last_message_id = message_id
             data = {
                 "server": self.config_entry.data[CONF_SERVER],
                 "username": self.config_entry.data[CONF_USERNAME],
                 "search": self.config_entry.data[CONF_SEARCH],
                 "folder": self.config_entry.data[CONF_FOLDER],
+                "initial": initial,
                 "date": message.date,
                 "text": message.text,
                 "sender": message.sender,
@@ -231,18 +270,20 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                         data, parse_result=True
                     )
                     _LOGGER.debug(
-                        "imap custom template (%s) for msgid %s rendered to: %s",
+                        "IMAP custom template (%s) for msguid %s (%s) rendered to: %s, initial: %s",
                         self.custom_event_template,
-                        last_message_id,
+                        last_message_uid,
+                        message_id,
                         data["custom"],
+                        initial,
                     )
                 except TemplateError as err:
                     data["custom"] = None
                     _LOGGER.error(
-                        "Error rendering imap custom template (%s) for msgid %s "
+                        "Error rendering IMAP custom template (%s) for msguid %s "
                         "failed with message: %s",
                         self.custom_event_template,
-                        last_message_id,
+                        last_message_uid,
                         err,
                     )
             data["text"] = message.text[
@@ -250,6 +291,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                     CONF_MAX_MESSAGE_SIZE, DEFAULT_MAX_MESSAGE_SIZE
                 )
             ]
+            self._update_diagnostics(data)
             if (size := len(json_bytes(data))) > MAX_EVENT_DATA_BYTES:
                 _LOGGER.warning(
                     "Custom imap_content event skipped, size (%s) exceeds "
@@ -263,10 +305,12 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
 
             self.hass.bus.fire(EVENT_IMAP, data)
             _LOGGER.debug(
-                "Message with id %s processed, sender: %s, subject: %s",
-                last_message_id,
+                "Message with id %s (%s) processed, sender: %s, subject: %s, initial: %s",
+                last_message_uid,
+                message_id,
                 message.sender,
                 message.subject,
+                initial,
             )
 
     async def _async_fetch_number_of_messages(self) -> int | None:
@@ -282,20 +326,20 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                 f"Invalid response for search '{self.config_entry.data[CONF_SEARCH]}': {result} / {lines[0]}"
             )
         if not (count := len(message_ids := lines[0].split())):
-            self._last_message_id = None
+            self._last_message_uid = None
             return 0
-        last_message_id = (
+        last_message_uid = (
             str(message_ids[-1:][0], encoding=self.config_entry.data[CONF_CHARSET])
             if count
             else None
         )
         if (
             count
-            and last_message_id is not None
-            and self._last_message_id != last_message_id
+            and last_message_uid is not None
+            and self._last_message_uid != last_message_uid
         ):
-            self._last_message_id = last_message_id
-            await self._async_process_event(last_message_id)
+            self._last_message_uid = last_message_uid
+            await self._async_process_event(last_message_uid)
 
         return count
 
@@ -308,7 +352,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                 await self.imap_client.stop_wait_server_push()
                 await self.imap_client.close()
                 await self.imap_client.logout()
-            except (AioImapException, asyncio.TimeoutError):
+            except (AioImapException, TimeoutError):
                 if log_error:
                     _LOGGER.debug("Error while cleaning up imap connection")
             finally:
@@ -317,6 +361,23 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
     async def shutdown(self, *_: Any) -> None:
         """Close resources."""
         await self._cleanup(log_error=True)
+
+    def _update_diagnostics(self, data: dict[str, Any]) -> None:
+        """Update the diagnostics."""
+        self._diagnostics_data.update(
+            {key: value for key, value in data.items() if key in DIAGNOSTICS_ATTRIBUTES}
+        )
+        custom: Any | None = data.get("custom")
+        self._diagnostics_data["custom_template_data_type"] = str(type(custom))
+        self._diagnostics_data["custom_template_result_length"] = (
+            None if custom is None else len(f"{custom}")
+        )
+        self._diagnostics_data["event_time"] = dt_util.now().isoformat()
+
+    @property
+    def diagnostics_data(self) -> dict[str, Any]:
+        """Return diagnostics info."""
+        return self._diagnostics_data
 
 
 class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
@@ -340,7 +401,7 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
         except (
             AioImapException,
             UpdateFailed,
-            asyncio.TimeoutError,
+            TimeoutError,
         ) as ex:
             await self._cleanup()
             self.async_set_update_error(ex)
@@ -412,7 +473,7 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
             except (
                 UpdateFailed,
                 AioImapException,
-                asyncio.TimeoutError,
+                TimeoutError,
             ) as ex:
                 await self._cleanup()
                 self.async_set_update_error(ex)
@@ -428,8 +489,7 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                 async with asyncio.timeout(10):
                     await idle
 
-            # From python 3.11 asyncio.TimeoutError is an alias of TimeoutError
-            except (AioImapException, asyncio.TimeoutError):
+            except (AioImapException, TimeoutError):
                 _LOGGER.debug(
                     "Lost %s (will attempt to reconnect after %s s)",
                     self.config_entry.data[CONF_SERVER],

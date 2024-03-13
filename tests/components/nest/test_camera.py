@@ -8,6 +8,7 @@ from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
+from freezegun import freeze_time
 from google_nest_sdm.event import EventMessage
 import pytest
 
@@ -173,7 +174,7 @@ async def async_get_image(hass, width=None, height=None):
 
 async def fire_alarm(hass, point_in_time):
     """Fire an alarm and wait for callbacks to run."""
-    with patch("homeassistant.util.dt.utcnow", return_value=point_in_time):
+    with freeze_time(point_in_time):
         async_fire_time_changed(hass, point_in_time)
         await hass.async_block_till_done()
 

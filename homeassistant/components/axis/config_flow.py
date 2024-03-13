@@ -249,7 +249,10 @@ class AxisOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
 
         # Stream profiles
 
-        if vapix.stream_profiles or vapix.params.stream_profiles_max_groups > 0:
+        if vapix.stream_profiles or (
+            (profiles := vapix.params.stream_profile_handler.get("0"))
+            and profiles.max_groups > 0
+        ):
             stream_profiles = [DEFAULT_STREAM_PROFILE]
             for profile in vapix.streaming_profiles:
                 stream_profiles.append(profile.name)
@@ -262,14 +265,17 @@ class AxisOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
 
         # Video sources
 
-        if vapix.params.image_nbrofviews > 0:
-            await vapix.params.update_image()
-
-            video_sources = {DEFAULT_VIDEO_SOURCE: DEFAULT_VIDEO_SOURCE}
-            for idx, video_source in vapix.params.image_sources.items():
-                if not video_source["Enabled"]:
+        if (
+            properties := vapix.params.property_handler.get("0")
+        ) and properties.image_number_of_views > 0:
+            await vapix.params.image_handler.update()
+            video_sources: dict[int | str, str] = {
+                DEFAULT_VIDEO_SOURCE: DEFAULT_VIDEO_SOURCE
+            }
+            for idx, video_source in vapix.params.image_handler.items():
+                if not video_source.enabled:
                     continue
-                video_sources[idx + 1] = video_source["Name"]
+                video_sources[int(idx) + 1] = video_source.name
 
             schema[
                 vol.Optional(CONF_VIDEO_SOURCE, default=self.device.option_video_source)

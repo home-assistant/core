@@ -146,11 +146,7 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 configure_unique_id=False
             )
             if not errors:
-                hass = self.hass
-                entry_id = entry.entry_id
-                hass.config_entries.async_update_entry(entry, data=self.onvif_config)
-                hass.async_create_task(hass.config_entries.async_reload(entry_id))
-                return self.async_abort(reason="reauth_successful")
+                return self.async_update_reload_and_abort(entry, data=self.onvif_config)
 
         username = (user_input or {}).get(CONF_USERNAME) or entry.data[CONF_USERNAME]
         return self.async_show_form(

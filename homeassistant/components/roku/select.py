@@ -18,7 +18,7 @@ from .entity import RokuEntity
 from .helpers import format_channel_name, roku_exception_handler
 
 
-@dataclass
+@dataclass(frozen=True)
 class RokuSelectEntityDescriptionMixin:
     """Mixin for required keys."""
 
@@ -85,7 +85,7 @@ async def _tune_channel(device: RokuDevice, roku: Roku, value: str) -> None:
         await roku.tune(_channel.number)
 
 
-@dataclass
+@dataclass(frozen=True)
 class RokuSelectEntityDescription(
     SelectEntityDescription, RokuSelectEntityDescriptionMixin
 ):

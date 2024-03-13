@@ -1,7 +1,6 @@
 """Config flow for imap integration."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 import ssl
 from typing import Any
@@ -10,13 +9,7 @@ from aioimaplib import AioImapException
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import config_validation as cv
@@ -114,7 +107,7 @@ async def validate_input(
         # See https://github.com/bamthomas/aioimaplib/issues/91
         # This handler is added to be able to supply a better error message
         errors["base"] = "ssl_error"
-    except (asyncio.TimeoutError, AioImapException, ConnectionRefusedError):
+    except (TimeoutError, AioImapException, ConnectionRefusedError):
         errors["base"] = "cannot_connect"
     else:
         if result != "OK":
@@ -131,28 +124,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     _reauth_entry: config_entries.ConfigEntry | None
-
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
-        """Handle the import from imap_email_content integration."""
-        data = CONFIG_SCHEMA(
-            {
-                CONF_SERVER: user_input[CONF_SERVER],
-                CONF_PORT: user_input[CONF_PORT],
-                CONF_USERNAME: user_input[CONF_USERNAME],
-                CONF_PASSWORD: user_input[CONF_PASSWORD],
-                CONF_FOLDER: user_input[CONF_FOLDER],
-            }
-        )
-        self._async_abort_entries_match(
-            {
-                key: data[key]
-                for key in (CONF_USERNAME, CONF_SERVER, CONF_FOLDER, CONF_SEARCH)
-            }
-        )
-        title = user_input[CONF_NAME]
-        if await validate_input(self.hass, data):
-            raise AbortFlow("cannot_connect")
-        return self.async_create_entry(title=title, data=data)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -197,11 +168,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             user_input = {**self._reauth_entry.data, **user_input}
             if not (errors := await validate_input(self.hass, user_input)):
-                self.hass.config_entries.async_update_entry(
+                return self.async_update_reload_and_abort(
                     self._reauth_entry, data=user_input
                 )
-                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             description_placeholders={

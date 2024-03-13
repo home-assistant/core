@@ -202,7 +202,7 @@ async def async_multi_execute_lifx_with_retries(
     a response again.
 
     If we don't get a result after all attempts, we will raise an
-    asyncio.TimeoutError exception.
+    TimeoutError exception.
     """
     loop = asyncio.get_running_loop()
     futures: list[asyncio.Future] = [loop.create_future() for _ in methods]
@@ -236,8 +236,6 @@ async def async_multi_execute_lifx_with_retries(
 
     if failed:
         failed_methods = ", ".join(failed)
-        raise asyncio.TimeoutError(
-            f"{failed_methods} timed out after {attempts} attempts"
-        )
+        raise TimeoutError(f"{failed_methods} timed out after {attempts} attempts")
 
     return results

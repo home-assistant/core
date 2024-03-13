@@ -1,9 +1,11 @@
 """Config flow to configure Met Éireann component."""
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN, HOME_LOCATION_NAME
@@ -14,10 +16,10 @@ class MetEireannFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
-        errors = {}
-
         if user_input is not None:
             # Check if an identical entity is already configured
             await self.async_set_unique_id(
@@ -41,6 +43,5 @@ class MetEireannFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         ): int,
                     }
                 ),
-                errors=errors,
             )
         return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)

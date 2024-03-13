@@ -5,6 +5,7 @@
   "config_flow": true,
   "dependencies": ["airvisual_pro"],
   "documentation": "https://www.home-assistant.io/integrations/airvisual",
+  "import_executor": true,
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["pyairvisual", "pysmb"],

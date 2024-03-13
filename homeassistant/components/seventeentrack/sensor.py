@@ -21,6 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     aiohttp_client,
     config_validation as cv,
+    entity,
     entity_registry as er,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -293,6 +294,7 @@ class SeventeenTrackData:
 
     async def _async_update(self):
         """Get updated data from 17track.net."""
+        entities: list[entity.Entity] = []
 
         try:
             packages = await self._client.profile.packages(
@@ -306,12 +308,9 @@ class SeventeenTrackData:
 
             _LOGGER.debug("Will add new tracking numbers: %s", to_add)
             if to_add:
-                self._async_add_entities(
-                    [
-                        SeventeenTrackPackageSensor(self, new_packages[tracking_number])
-                        for tracking_number in to_add
-                    ],
-                    True,
+                entities.extend(
+                    SeventeenTrackPackageSensor(self, new_packages[tracking_number])
+                    for tracking_number in to_add
                 )
 
             self.packages = new_packages
@@ -327,15 +326,13 @@ class SeventeenTrackData:
             # creating summary sensors on first update
             if self.first_update:
                 self.first_update = False
-
-                self._async_add_entities(
-                    [
-                        SeventeenTrackSummarySensor(self, status, quantity)
-                        for status, quantity in self.summary.items()
-                    ],
-                    True,
+                entities.extend(
+                    SeventeenTrackSummarySensor(self, status, quantity)
+                    for status, quantity in self.summary.items()
                 )
 
         except SeventeenTrackError as err:
             _LOGGER.error("There was an error retrieving the summary: %s", err)
             self.summary = {}
+
+        self._async_add_entities(entities, True)

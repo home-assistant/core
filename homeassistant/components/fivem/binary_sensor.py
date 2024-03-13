@@ -14,7 +14,7 @@ from .const import DOMAIN, NAME_STATUS
 from .entity import FiveMEntity, FiveMEntityDescription
 
 
-@dataclass
+@dataclass(frozen=True)
 class FiveMBinarySensorEntityDescription(
     BinarySensorEntityDescription, FiveMEntityDescription
 ):

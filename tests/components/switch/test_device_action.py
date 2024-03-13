@@ -111,12 +111,21 @@ async def test_get_actions_hidden_auxiliary(
 
 async def test_action(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls,
     enable_custom_integrations: None,
 ) -> None:
     """Test for turn_on and turn_off actions."""
-    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
 
     assert await async_setup_component(
         hass,
@@ -127,7 +136,7 @@ async def test_action(
                     "trigger": {"platform": "event", "event_type": "test_off"},
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "turn_off",
                     },
@@ -136,7 +145,7 @@ async def test_action(
                     "trigger": {"platform": "event", "event_type": "test_on"},
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "turn_on",
                     },
@@ -145,7 +154,7 @@ async def test_action(
                     "trigger": {"platform": "event", "event_type": "test_toggle"},
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "toggle",
                     },
@@ -177,12 +186,21 @@ async def test_action(
 
 async def test_action_legacy(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls,
     enable_custom_integrations: None,
 ) -> None:
     """Test for turn_on and turn_off actions."""
-    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
 
     assert await async_setup_component(
         hass,
@@ -193,7 +211,7 @@ async def test_action_legacy(
                     "trigger": {"platform": "event", "event_type": "test_off"},
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "turn_off",
                     },

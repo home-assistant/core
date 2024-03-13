@@ -1,0 +1,49 @@
+{
+  "config": {
+    "flow_title": "[%key:component::bluetooth::config::flow_title%]",
+    "step": {
+      "user": {
+        "description": "[%key:component::bluetooth::config::step::user::description%]",
+        "data": {
+          "address": "[%key:common::config_flow::data::device%]"
+        }
+      },
+      "bluetooth_confirm": {
+        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
+      },
+      "identify": {
+        "description": "The device is now identifying itself, for example by blinking or beeping."
+      },
+      "main_menu": {
+        "description": "Choose next step.",
+        "menu_options": {
+          "identify": "Identify device",
+          "provision": "Connect device to a Wi-Fi network"
+        }
+      },
+      "provision": {
+        "description": "Enter Wi-Fi credentials to connect the device to your network.",
+        "data": {
+          "password": "Password",
+          "ssid": "SSID"
+        }
+      }
+    },
+    "progress": {
+      "authorize": "The device requires authorization, please press its authorization button or consult the device's manual for how to proceed.",
+      "provisioning": "The device is connecting to the Wi-Fi network."
+    },
+    "error": {
+      "unable_to_connect": "The device could not connect to the Wi-Fi network. Check that the SSID and password are correct and try again."
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "characteristic_missing": "The device is either already connected to Wi-Fi, or no longer able to connect to Wi-Fi. If you want to connect it to another network, try factory resetting it first.",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "provision_successful": "The device has successfully connected to the Wi-Fi network.",
+      "provision_successful_url": "The device has successfully connected to the Wi-Fi network.\n\nPlease visit {url} to finish setup.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  }
+}

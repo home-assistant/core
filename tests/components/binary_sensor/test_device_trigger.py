@@ -235,6 +235,7 @@ async def test_get_trigger_capabilities_legacy(
 
 async def test_if_fires_on_state_change(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls,
     enable_custom_integrations: None,
@@ -245,10 +246,17 @@ async def test_if_fires_on_state_change(
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
     entry = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         platform.ENTITIES["battery"].unique_id,
+        device_id=device_entry.id,
     )
 
     assert await async_setup_component(
@@ -260,7 +268,7 @@ async def test_if_fires_on_state_change(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "bat_low",
                     },
@@ -284,7 +292,7 @@ async def test_if_fires_on_state_change(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "not_bat_low",
                     },
@@ -329,6 +337,7 @@ async def test_if_fires_on_state_change(
 
 async def test_if_fires_on_state_change_with_for(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls,
     enable_custom_integrations: None,
@@ -340,10 +349,17 @@ async def test_if_fires_on_state_change_with_for(
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
     entry = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         platform.ENTITIES["battery"].unique_id,
+        device_id=device_entry.id,
     )
 
     assert await async_setup_component(
@@ -355,7 +371,7 @@ async def test_if_fires_on_state_change_with_for(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "turned_off",
                         "for": {"seconds": 5},
@@ -398,6 +414,7 @@ async def test_if_fires_on_state_change_with_for(
 
 async def test_if_fires_on_state_change_legacy(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls,
     enable_custom_integrations: None,
@@ -409,10 +426,17 @@ async def test_if_fires_on_state_change_legacy(
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
     entry = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         platform.ENTITIES["battery"].unique_id,
+        device_id=device_entry.id,
     )
 
     assert await async_setup_component(
@@ -424,7 +448,7 @@ async def test_if_fires_on_state_change_legacy(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": device_entry.id,
                         "entity_id": entry.entity_id,
                         "type": "turned_off",
                     },

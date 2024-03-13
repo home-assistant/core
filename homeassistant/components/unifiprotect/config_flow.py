@@ -256,7 +256,8 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         nvr_data = None
         try:
-            nvr_data = await protect.get_nvr()
+            bootstrap = await protect.get_bootstrap()
+            nvr_data = bootstrap.nvr
         except NotAuthorized as ex:
             _LOGGER.debug(ex)
             errors[CONF_PASSWORD] = "invalid_auth"
@@ -271,6 +272,10 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     MIN_REQUIRED_PROTECT_V,
                 )
                 errors["base"] = "protect_version"
+
+            auth_user = bootstrap.users.get(bootstrap.auth_user_id)
+            if auth_user and auth_user.cloud_account:
+                errors["base"] = "cloud_user"
 
         return nvr_data, errors
 
@@ -295,9 +300,7 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # validate login data
             _, errors = await self._async_get_nvr_data(form_data)
             if not errors:
-                self.hass.config_entries.async_update_entry(self.entry, data=form_data)
-                await self.hass.config_entries.async_reload(self.entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
+                return self.async_update_reload_and_abort(self.entry, data=form_data)
 
         self.context["title_placeholders"] = {
             "name": self.entry.title,

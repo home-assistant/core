@@ -2,7 +2,31 @@
 
 from unittest.mock import patch
 
+from bleak_retry_connector import bleak_manager
+from dbus_fast.aio import message_bus
+import habluetooth.util as habluetooth_utils
 import pytest
+
+
+@pytest.fixture(name="disable_bluez_manager_socket", autouse=True, scope="session")
+def disable_bluez_manager_socket():
+    """Mock the bluez manager socket."""
+    with patch.object(bleak_manager, "get_global_bluez_manager_with_timeout"):
+        yield
+
+
+@pytest.fixture(name="disable_dbus_socket", autouse=True, scope="session")
+def disable_dbus_socket():
+    """Mock the dbus message bus to avoid creating a socket."""
+    with patch.object(message_bus, "MessageBus"):
+        yield
+
+
+@pytest.fixture(name="disable_bluetooth_auto_recovery", autouse=True, scope="session")
+def disable_bluetooth_auto_recovery():
+    """Mock out auto recovery."""
+    with patch.object(habluetooth_utils, "recover_adapter"):
+        yield
 
 
 @pytest.fixture(name="operating_system_85")
@@ -47,13 +71,15 @@ def mock_operating_system_90():
 def macos_adapter():
     """Fixture that mocks the macos adapter."""
     with patch("bleak.get_platform_scanner_backend_type"), patch(
-        "homeassistant.components.bluetooth.platform.system", return_value="Darwin"
-    ), patch(
-        "homeassistant.components.bluetooth.scanner.platform.system",
+        "homeassistant.components.bluetooth.platform.system",
         return_value="Darwin",
     ), patch(
-        "bluetooth_adapters.systems.platform.system", return_value="Darwin"
-    ):
+        "habluetooth.scanner.platform.system",
+        return_value="Darwin",
+    ), patch(
+        "bluetooth_adapters.systems.platform.system",
+        return_value="Darwin",
+    ), patch("habluetooth.scanner.SYSTEM", "Darwin"):
         yield
 
 
@@ -63,7 +89,7 @@ def windows_adapter():
     with patch(
         "bluetooth_adapters.systems.platform.system",
         return_value="Windows",
-    ):
+    ), patch("habluetooth.scanner.SYSTEM", "Windows"):
         yield
 
 
@@ -71,14 +97,16 @@ def windows_adapter():
 def no_adapter_fixture():
     """Fixture that mocks no adapters on Linux."""
     with patch(
-        "homeassistant.components.bluetooth.platform.system", return_value="Linux"
-    ), patch(
-        "homeassistant.components.bluetooth.scanner.platform.system",
+        "homeassistant.components.bluetooth.platform.system",
         return_value="Linux",
     ), patch(
-        "bluetooth_adapters.systems.platform.system", return_value="Linux"
+        "habluetooth.scanner.platform.system",
+        return_value="Linux",
     ), patch(
-        "bluetooth_adapters.systems.linux.LinuxAdapters.refresh"
+        "bluetooth_adapters.systems.platform.system",
+        return_value="Linux",
+    ), patch("habluetooth.scanner.SYSTEM", "Linux"), patch(
+        "bluetooth_adapters.systems.linux.LinuxAdapters.refresh",
     ), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
         {},
@@ -90,14 +118,16 @@ def no_adapter_fixture():
 def one_adapter_fixture():
     """Fixture that mocks one adapter on Linux."""
     with patch(
-        "homeassistant.components.bluetooth.platform.system", return_value="Linux"
-    ), patch(
-        "homeassistant.components.bluetooth.scanner.platform.system",
+        "homeassistant.components.bluetooth.platform.system",
         return_value="Linux",
     ), patch(
-        "bluetooth_adapters.systems.platform.system", return_value="Linux"
+        "habluetooth.scanner.platform.system",
+        return_value="Linux",
     ), patch(
-        "bluetooth_adapters.systems.linux.LinuxAdapters.refresh"
+        "bluetooth_adapters.systems.platform.system",
+        return_value="Linux",
+    ), patch("habluetooth.scanner.SYSTEM", "Linux"), patch(
+        "bluetooth_adapters.systems.linux.LinuxAdapters.refresh",
     ), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
         {
@@ -122,11 +152,9 @@ def two_adapters_fixture():
     with patch(
         "homeassistant.components.bluetooth.platform.system", return_value="Linux"
     ), patch(
-        "homeassistant.components.bluetooth.scanner.platform.system",
+        "habluetooth.scanner.platform.system",
         return_value="Linux",
-    ), patch(
-        "bluetooth_adapters.systems.platform.system", return_value="Linux"
-    ), patch(
+    ), patch("bluetooth_adapters.systems.platform.system", return_value="Linux"), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.refresh"
     ), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
@@ -164,11 +192,9 @@ def one_adapter_old_bluez():
     with patch(
         "homeassistant.components.bluetooth.platform.system", return_value="Linux"
     ), patch(
-        "homeassistant.components.bluetooth.scanner.platform.system",
+        "habluetooth.scanner.platform.system",
         return_value="Linux",
-    ), patch(
-        "bluetooth_adapters.systems.platform.system", return_value="Linux"
-    ), patch(
+    ), patch("bluetooth_adapters.systems.platform.system", return_value="Linux"), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.refresh"
     ), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",

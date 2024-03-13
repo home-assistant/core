@@ -22,12 +22,12 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_switch_state(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test the creation and values of the Modern Forms switches."""
     await init_integration(hass, aioclient_mock)
-
-    entity_registry = er.async_get(hass)
 
     state = hass.states.get("switch.modernformsfan_away_mode")
     assert state

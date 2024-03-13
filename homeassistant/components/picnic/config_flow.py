@@ -12,10 +12,15 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_COUNTRY_CODE,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import CONF_COUNTRY_CODE, COUNTRY_CODES, DOMAIN
+from .const import COUNTRY_CODES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,7 +112,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Abort if we're adding a new config and the unique id is already in use, else create the entry
             if self.source != SOURCE_REAUTH:
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=info["title"], data=data)
+                return self.async_create_entry(title="Picnic", data=data)
 
             # In case of re-auth, only continue if an exiting account exists with the same unique id
             if existing_entry:

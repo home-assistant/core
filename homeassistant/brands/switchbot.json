@@ -1,0 +1,5 @@
+{
+  "domain": "switchbot",
+  "name": "SwitchBot",
+  "integrations": ["switchbot", "switchbot_cloud"]
+}

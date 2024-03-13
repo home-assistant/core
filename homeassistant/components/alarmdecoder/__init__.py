@@ -39,8 +39,8 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
-    Platform.SENSOR,
     Platform.BINARY_SENSOR,
+    Platform.SENSOR,
 ]
 
 

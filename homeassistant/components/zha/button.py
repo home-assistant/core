@@ -1,10 +1,15 @@
 """Support for ZHA button."""
 from __future__ import annotations
 
-import abc
 import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
+
+from zigpy.quirks.v2 import (
+    EntityMetadata,
+    WriteAttributeButtonMetadata,
+    ZCLCommandButtonMetadata,
+)
 
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
@@ -14,7 +19,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
-from .core.const import CLUSTER_HANDLER_IDENTIFY, DATA_ZHA, SIGNAL_ADD_ENTITIES
+from .core.const import CLUSTER_HANDLER_IDENTIFY, QUIRK_METADATA, SIGNAL_ADD_ENTITIES
+from .core.helpers import get_zha_data
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
@@ -38,7 +44,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Zigbee Home Automation button from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][Platform.BUTTON]
+    zha_data = get_zha_data(hass)
+    entities_to_create = zha_data.platforms[Platform.BUTTON]
 
     unsub = async_dispatcher_connect(
         hass,
@@ -56,6 +63,8 @@ class ZHAButton(ZhaEntity, ButtonEntity):
     """Defines a ZHA button."""
 
     _command_name: str
+    _args: list[Any]
+    _kwargs: dict[str, Any]
 
     def __init__(
         self,
@@ -65,18 +74,33 @@ class ZHAButton(ZhaEntity, ButtonEntity):
         **kwargs: Any,
     ) -> None:
         """Init this button."""
-        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
+        if QUIRK_METADATA in kwargs:
+            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA])
+        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
 
-    @abc.abstractmethod
+    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
+        """Init this entity from the quirks metadata."""
+        super()._init_from_quirks_metadata(entity_metadata)
+        button_metadata: ZCLCommandButtonMetadata = entity_metadata.entity_metadata
+        self._command_name = button_metadata.command_name
+        self._args = button_metadata.args
+        self._kwargs = button_metadata.kwargs
+
     def get_args(self) -> list[Any]:
         """Return the arguments to use in the command."""
+        return list(self._args) if self._args else []
+
+    def get_kwargs(self) -> dict[str, Any]:
+        """Return the keyword arguments to use in the command."""
+        return self._kwargs
 
     async def async_press(self) -> None:
         """Send out a update command."""
         command = getattr(self._cluster_handler, self._command_name)
-        arguments = self.get_args()
-        await command(*arguments)
+        arguments = self.get_args() or []
+        kwargs = self.get_kwargs() or {}
+        await command(*arguments, **kwargs)
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_IDENTIFY)
@@ -103,13 +127,9 @@ class ZHAIdentifyButton(ZHAButton):
 
     _attr_device_class = ButtonDeviceClass.IDENTIFY
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_name = "Identify"
     _command_name = "identify"
-
-    def get_args(self) -> list[Any]:
-        """Return the arguments to use in the command."""
-
-        return [DEFAULT_DURATION]
+    _kwargs = {}
+    _args = [DEFAULT_DURATION]
 
 
 class ZHAAttributeButton(ZhaEntity, ButtonEntity):
@@ -126,8 +146,17 @@ class ZHAAttributeButton(ZhaEntity, ButtonEntity):
         **kwargs: Any,
     ) -> None:
         """Init this button."""
-        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
+        if QUIRK_METADATA in kwargs:
+            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA])
+        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
+
+    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
+        """Init this entity from the quirks metadata."""
+        super()._init_from_quirks_metadata(entity_metadata)
+        button_metadata: WriteAttributeButtonMetadata = entity_metadata.entity_metadata
+        self._attribute_name = button_metadata.attribute_name
+        self._attribute_value = button_metadata.attribute_value
 
     async def async_press(self) -> None:
         """Write attribute with defined value."""
@@ -143,47 +172,49 @@ class ZHAAttributeButton(ZhaEntity, ButtonEntity):
         "_TZE200_htnnfasr",
     },
 )
-class FrostLockResetButton(ZHAAttributeButton, id_suffix="reset_frost_lock"):
+class FrostLockResetButton(ZHAAttributeButton):
     """Defines a ZHA frost lock reset button."""
 
+    _unique_id_suffix = "reset_frost_lock"
     _attribute_name = "frost_lock_reset"
-    _attr_name = "Frost lock reset"
     _attribute_value = 0
     _attr_device_class = ButtonDeviceClass.RESTART
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "reset_frost_lock"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="opple_cluster", models={"lumi.motion.ac01"}
 )
-class NoPresenceStatusResetButton(
-    ZHAAttributeButton, id_suffix="reset_no_presence_status"
-):
+class NoPresenceStatusResetButton(ZHAAttributeButton):
     """Defines a ZHA no presence status reset button."""
 
+    _unique_id_suffix = "reset_no_presence_status"
     _attribute_name = "reset_no_presence_status"
-    _attr_name = "Presence status reset"
     _attribute_value = 1
     _attr_device_class = ButtonDeviceClass.RESTART
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "reset_no_presence_status"
 
 
 @MULTI_MATCH(cluster_handler_names="opple_cluster", models={"aqara.feeder.acn001"})
-class AqaraPetFeederFeedButton(ZHAAttributeButton, id_suffix="feeding"):
+class AqaraPetFeederFeedButton(ZHAAttributeButton):
     """Defines a feed button for the aqara c1 pet feeder."""
 
+    _unique_id_suffix = "feeding"
     _attribute_name = "feeding"
-    _attr_name = "Feed"
     _attribute_value = 1
+    _attr_translation_key = "feed"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="opple_cluster", models={"lumi.sensor_smoke.acn03"}
 )
-class AqaraSelfTestButton(ZHAAttributeButton, id_suffix="self_test"):
+class AqaraSelfTestButton(ZHAAttributeButton):
     """Defines a ZHA self-test button for Aqara smoke sensors."""
 
+    _unique_id_suffix = "self_test"
     _attribute_name = "self_test"
-    _attr_name = "Self-test"
     _attribute_value = 1
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "self_test"

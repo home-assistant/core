@@ -19,6 +19,7 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -123,15 +124,15 @@ WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_API_RAIN,
         name="Rain",
-        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
-        device_class=SensorDeviceClass.PRECIPITATION,
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=ATTR_API_SNOW,
         name="Snow",
-        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
-        device_class=SensorDeviceClass.PRECIPITATION,
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(

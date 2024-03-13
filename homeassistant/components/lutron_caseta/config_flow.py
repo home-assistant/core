@@ -117,7 +117,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             assets = None
             try:
                 assets = await async_pair(self.data[CONF_HOST])
-            except (asyncio.TimeoutError, OSError):
+            except (TimeoutError, OSError):
                 errors["base"] = "cannot_connect"
 
             if not errors:
@@ -227,7 +227,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             async with asyncio.timeout(BRIDGE_TIMEOUT):
                 await bridge.connect()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.error(
                 "Timeout while trying to connect to bridge at %s",
                 self.data[CONF_HOST],

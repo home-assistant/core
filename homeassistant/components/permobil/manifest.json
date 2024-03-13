@@ -1,0 +1,9 @@
+{
+  "domain": "permobil",
+  "name": "MyPermobil",
+  "codeowners": ["@IsakNyberg"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/permobil",
+  "iot_class": "cloud_polling",
+  "requirements": ["mypermobil==0.1.8"]
+}

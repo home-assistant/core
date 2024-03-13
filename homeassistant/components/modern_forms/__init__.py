@@ -1,8 +1,10 @@
 """The Modern Forms integration."""
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from aiomodernforms import (
     ModernFormsConnectionError,
@@ -24,11 +26,16 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import DOMAIN
 
+_ModernFormsDeviceEntityT = TypeVar(
+    "_ModernFormsDeviceEntityT", bound="ModernFormsDeviceEntity"
+)
+_P = ParamSpec("_P")
+
 SCAN_INTERVAL = timedelta(seconds=5)
 PLATFORMS = [
     Platform.BINARY_SENSOR,
-    Platform.LIGHT,
     Platform.FAN,
+    Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
@@ -64,14 +71,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-def modernforms_exception_handler(func):
+def modernforms_exception_handler(
+    func: Callable[Concatenate[_ModernFormsDeviceEntityT, _P], Any],
+) -> Callable[Concatenate[_ModernFormsDeviceEntityT, _P], Coroutine[Any, Any, None]]:
     """Decorate Modern Forms calls to handle Modern Forms exceptions.
 
     A decorator that wraps the passed in function, catches Modern Forms errors,
     and handles the availability of the device in the data coordinator.
     """
 
-    async def handler(self, *args, **kwargs):
+    async def handler(
+        self: _ModernFormsDeviceEntityT, *args: _P.args, **kwargs: _P.kwargs
+    ) -> None:
         try:
             await func(self, *args, **kwargs)
             self.coordinator.async_update_listeners()
@@ -87,7 +98,7 @@ def modernforms_exception_handler(func):
     return handler
 
 
-class ModernFormsDataUpdateCoordinator(DataUpdateCoordinator[ModernFormsDeviceState]):
+class ModernFormsDataUpdateCoordinator(DataUpdateCoordinator[ModernFormsDeviceState]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching Modern Forms data from single endpoint."""
 
     def __init__(

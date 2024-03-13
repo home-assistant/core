@@ -49,11 +49,12 @@ SCENE_RESPONSE = {
 async def test_hue_activate_scene(hass: HomeAssistant, mock_api_v1) -> None:
     """Test successful hue_activate_scene."""
     config_entry = config_entries.ConfigEntry(
-        1,
-        hue.DOMAIN,
-        "Mock Title",
-        {"host": "1.2.3.4", "api_key": "mock-api-key", "api_version": 1},
-        "test",
+        version=1,
+        minor_version=1,
+        domain=hue.DOMAIN,
+        title="Mock Title",
+        data={"host": "1.2.3.4", "api_key": "mock-api-key", "api_version": 1},
+        source="test",
         options={CONF_ALLOW_HUE_GROUPS: True, CONF_ALLOW_UNREACHABLE: False},
     )
 
@@ -85,11 +86,12 @@ async def test_hue_activate_scene(hass: HomeAssistant, mock_api_v1) -> None:
 async def test_hue_activate_scene_transition(hass: HomeAssistant, mock_api_v1) -> None:
     """Test successful hue_activate_scene with transition."""
     config_entry = config_entries.ConfigEntry(
-        1,
-        hue.DOMAIN,
-        "Mock Title",
-        {"host": "1.2.3.4", "api_key": "mock-api-key", "api_version": 1},
-        "test",
+        version=1,
+        minor_version=1,
+        domain=hue.DOMAIN,
+        title="Mock Title",
+        data={"host": "1.2.3.4", "api_key": "mock-api-key", "api_version": 1},
+        source="test",
         options={CONF_ALLOW_HUE_GROUPS: True, CONF_ALLOW_UNREACHABLE: False},
     )
 
@@ -123,11 +125,12 @@ async def test_hue_activate_scene_group_not_found(
 ) -> None:
     """Test failed hue_activate_scene due to missing group."""
     config_entry = config_entries.ConfigEntry(
-        1,
-        hue.DOMAIN,
-        "Mock Title",
-        {"host": "1.2.3.4", "api_key": "mock-api-key", "api_version": 1},
-        "test",
+        version=1,
+        minor_version=1,
+        domain=hue.DOMAIN,
+        title="Mock Title",
+        data={"host": "1.2.3.4", "api_key": "mock-api-key", "api_version": 1},
+        source="test",
         options={CONF_ALLOW_HUE_GROUPS: True, CONF_ALLOW_UNREACHABLE: False},
     )
 
@@ -156,11 +159,12 @@ async def test_hue_activate_scene_scene_not_found(
 ) -> None:
     """Test failed hue_activate_scene due to missing scene."""
     config_entry = config_entries.ConfigEntry(
-        1,
-        hue.DOMAIN,
-        "Mock Title",
-        {"host": "1.2.3.4", "api_key": "mock-api-key", "api_version": 1},
-        "test",
+        version=1,
+        minor_version=1,
+        domain=hue.DOMAIN,
+        title="Mock Title",
+        data={"host": "1.2.3.4", "api_key": "mock-api-key", "api_version": 1},
+        source="test",
         options={CONF_ALLOW_HUE_GROUPS: True, CONF_ALLOW_UNREACHABLE: False},
     )
 

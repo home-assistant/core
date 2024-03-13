@@ -15,12 +15,18 @@ from subarulink.const import COUNTRY_CAN, COUNTRY_USA
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_DEVICE_ID, CONF_PASSWORD, CONF_PIN, CONF_USERNAME
+from homeassistant.const import (
+    CONF_COUNTRY,
+    CONF_DEVICE_ID,
+    CONF_PASSWORD,
+    CONF_PIN,
+    CONF_USERNAME,
+)
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-from .const import CONF_COUNTRY, CONF_UPDATE_ENABLED, DOMAIN
+from .const import CONF_UPDATE_ENABLED, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 CONF_CONTACT_METHOD = "contact_method"

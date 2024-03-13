@@ -195,6 +195,8 @@ class TemplateFan(TemplateEntity, FanEntity):
         if self._direction_template:
             self._attr_supported_features |= FanEntityFeature.DIRECTION
 
+        self._attr_assumed_state = self._template is None
+
     @property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
@@ -280,15 +282,6 @@ class TemplateFan(TemplateEntity, FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset_mode of the fan."""
-        if self.preset_modes and preset_mode not in self.preset_modes:
-            _LOGGER.error(
-                "Received invalid preset_mode: %s for entity %s. Expected: %s",
-                preset_mode,
-                self.entity_id,
-                self.preset_modes,
-            )
-            return
-
         self._preset_mode = preset_mode
 
         if self._set_preset_mode_script:
@@ -467,8 +460,3 @@ class TemplateFan(TemplateEntity, FanEntity):
                 ", ".join(_VALID_DIRECTIONS),
             )
             self._direction = None
-
-    @property
-    def assumed_state(self) -> bool:
-        """State is assumed, if no template given."""
-        return self._template is None

@@ -1,6 +1,6 @@
 """Config flow for Nightscout integration."""
-from asyncio import TimeoutError as AsyncIOTimeoutError
 import logging
+from typing import Any
 
 from aiohttp import ClientError, ClientResponseError
 from py_nightscout import Api as NightscoutAPI
@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_API_KEY, CONF_URL
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 from .utils import hash_from_url
@@ -17,10 +18,10 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_URL): str, vol.Optional(CONF_API_KEY): str})
 
 
-async def _validate_input(data):
+async def _validate_input(data: dict[str, Any]) -> dict[str, str]:
     """Validate the user input allows us to connect."""
-    url = data[CONF_URL]
-    api_key = data.get(CONF_API_KEY)
+    url: str = data[CONF_URL]
+    api_key: str | None = data.get(CONF_API_KEY)
     try:
         api = NightscoutAPI(url, api_secret=api_key)
         status = await api.get_server_status()
@@ -28,7 +29,7 @@ async def _validate_input(data):
             await api.get_sgvs()
     except ClientResponseError as error:
         raise InputValidationError("invalid_auth") from error
-    except (ClientError, AsyncIOTimeoutError, OSError) as error:
+    except (ClientError, TimeoutError, OSError) as error:
         raise InputValidationError("cannot_connect") from error
 
     # Return info to be stored in the config entry.
@@ -40,9 +41,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             unique_id = hash_from_url(user_input[CONF_URL])

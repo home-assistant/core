@@ -11,7 +11,7 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "jewish_calendar"
-PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BINARY_SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 CONF_DIASPORA = "diaspora"
 CONF_LANGUAGE = "language"

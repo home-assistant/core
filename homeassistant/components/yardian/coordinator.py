@@ -39,7 +39,6 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianDeviceState]):
             hass,
             _LOGGER,
             name=entry.title,
-            update_method=self._async_update_data,
             update_interval=SCAN_INTERVAL,
             always_update=False,
         )
@@ -65,7 +64,7 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianDeviceState]):
             async with asyncio.timeout(10):
                 return await self.controller.fetch_device_state()
 
-        except asyncio.TimeoutError as e:
+        except TimeoutError as e:
             raise UpdateFailed("Communication with Device was time out") from e
         except NotAuthorizedException as e:
             raise UpdateFailed("Invalid access token") from e

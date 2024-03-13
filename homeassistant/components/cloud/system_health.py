@@ -37,6 +37,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
         data["google_enabled"] = client.prefs.google_enabled
         data["remote_server"] = cloud.remote.snitun_server
         data["certificate_status"] = cloud.remote.certificate_status
+        data["instance_id"] = client.prefs.instance_id
 
     data["can_reach_cert_server"] = system_health.async_check_can_reach_url(
         hass, f"https://{cloud.acme_server}/directory"

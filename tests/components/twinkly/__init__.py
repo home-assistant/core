@@ -1,6 +1,5 @@
-"""Constants and mock for the twkinly component tests."""
+"""Constants and mock for the twinkly component tests."""
 
-from uuid import uuid4
 
 from aiohttp.client_exceptions import ClientConnectionError
 
@@ -8,6 +7,7 @@ from homeassistant.components.twinkly.const import DEV_NAME
 
 TEST_HOST = "test.twinkly.com"
 TEST_ID = "twinkly_test_device_id"
+TEST_UID = "4c8fccf5-e08a-4173-92d5-49bf479252a2"
 TEST_NAME = "twinkly_test_device_name"
 TEST_NAME_ORIGINAL = "twinkly_test_original_device_name"  # the original (deprecated) name stored in the conf
 TEST_MODEL = "twinkly_test_device_model"
@@ -28,10 +28,10 @@ class ClientMock:
         self.mode = None
         self.version = "2.8.10"
 
-        self.id = str(uuid4())
+        self.id = TEST_UID
         self.device_info = {
             "uuid": self.id,
-            "device_name": self.id,  # we make sure that entity id is different for each test
+            "device_name": TEST_NAME,
             "product_code": TEST_MODEL,
         }
 

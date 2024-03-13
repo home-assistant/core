@@ -34,7 +34,8 @@ from tests.common import (
     MockConfigEntry,
     async_capture_events,
     async_fire_mqtt_message,
-    mock_entity_platform,
+    mock_config_flow,
+    mock_platform,
 )
 from tests.typing import (
     MqttMockHAClientGenerator,
@@ -120,6 +121,48 @@ async def test_invalid_json(
         await hass.async_block_till_done()
         assert "Unable to parse JSON" in caplog.text
         assert not mock_dispatcher_send.called
+
+
+@pytest.mark.parametrize("domain", [*list(mqtt.PLATFORMS), "device_automation", "tag"])
+@pytest.mark.no_fail_on_log_exception
+async def test_discovery_schema_error(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+    domain: Platform | str,
+) -> None:
+    """Test unexpected error JSON config."""
+    with patch(
+        f"homeassistant.components.mqtt.{domain}.DISCOVERY_SCHEMA",
+        side_effect=AttributeError("Attribute abc not found"),
+    ):
+        await mqtt_mock_entry()
+        async_fire_mqtt_message(
+            hass,
+            f"homeassistant/{domain}/bla/config",
+            '{"name": "Beer", "some_topic": "bla"}',
+        )
+        await hass.async_block_till_done()
+        assert "AttributeError: Attribute abc not found" in caplog.text
+
+
+@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.ALARM_CONTROL_PANEL])
+async def test_invalid_config(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test sending in JSON that violates the platform schema."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/alarm_control_panel/bla/config",
+        '{"name": "abc", "state_topic": "home/alarm", '
+        '"command_topic": "home/alarm/set", '
+        '"qos": "some_invalid_value"}',
+    )
+    await hass.async_block_till_done()
+    assert "Error 'expected int for dictionary value @ data['qos']'" in caplog.text
 
 
 async def test_only_valid_components(
@@ -438,11 +481,11 @@ async def test_discover_alarm_control_panel(
             "vacuum",
         ),
         (
-            "homeassistant/vacuum/object/bla/config",
-            '{ "name": "Hello World 17", "obj_id": "hello_id", "state_topic": "test-topic", "schema": "legacy" }',
-            "vacuum.hello_id",
+            "homeassistant/valve/object/bla/config",
+            '{ "name": "Hello World 17", "obj_id": "hello_id", "state_topic": "test-topic" }',
+            "valve.hello_id",
             "Hello World 17",
-            "vacuum",
+            "valve",
         ),
         (
             "homeassistant/lock/object/bla/config",
@@ -1457,7 +1500,7 @@ async def test_mqtt_integration_discovery_subscribe_unsubscribe(
 ) -> None:
     """Check MQTT integration discovery subscribe and unsubscribe."""
     mqtt_mock = await mqtt_mock_entry()
-    mock_entity_platform(hass, "config_flow.comp", None)
+    mock_platform(hass, "comp.config_flow", None)
 
     entry = hass.config_entries.async_entries("mqtt")[0]
     mqtt_mock().connected = True
@@ -1480,21 +1523,20 @@ async def test_mqtt_integration_discovery_subscribe_unsubscribe(
             """Test mqtt step."""
             return self.async_abort(reason="already_configured")
 
-    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
-        await asyncio.sleep(0.1)
-        assert ("comp/discovery/#", 0) in help_all_subscribe_calls(mqtt_client_mock)
-        assert not mqtt_client_mock.unsubscribe.called
+    assert not mqtt_client_mock.unsubscribe.called
 
+    wait_unsub = asyncio.Event()
+
+    def _mock_unsubscribe(topics: list[str]) -> tuple[int, int]:
+        wait_unsub.set()
+        return (0, 0)
+
+    with mock_config_flow("comp", TestFlow), patch.object(
+        mqtt_client_mock, "unsubscribe", side_effect=_mock_unsubscribe
+    ):
         async_fire_mqtt_message(hass, "comp/discovery/bla/config", "")
-        await asyncio.sleep(0.1)
-        await hass.async_block_till_done()
+        await wait_unsub.wait()
         mqtt_client_mock.unsubscribe.assert_called_once_with(["comp/discovery/#"])
-        mqtt_client_mock.unsubscribe.reset_mock()
-
-        async_fire_mqtt_message(hass, "comp/discovery/bla/config", "")
-        await asyncio.sleep(0.1)
-        await hass.async_block_till_done()
-        assert not mqtt_client_mock.unsubscribe.called
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
@@ -1508,7 +1550,7 @@ async def test_mqtt_discovery_unsubscribe_once(
 ) -> None:
     """Check MQTT integration discovery unsubscribe once."""
     mqtt_mock = await mqtt_mock_entry()
-    mock_entity_platform(hass, "config_flow.comp", None)
+    mock_platform(hass, "comp.config_flow", None)
 
     entry = hass.config_entries.async_entries("mqtt")[0]
     mqtt_mock().connected = True
@@ -1531,7 +1573,7 @@ async def test_mqtt_discovery_unsubscribe_once(
             """Test mqtt step."""
             return self.async_abort(reason="already_configured")
 
-    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+    with mock_config_flow("comp", TestFlow):
         async_fire_mqtt_message(hass, "comp/discovery/bla/config", "")
         async_fire_mqtt_message(hass, "comp/discovery/bla/config", "")
         await asyncio.sleep(0.1)

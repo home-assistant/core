@@ -9,7 +9,6 @@ from typing import Any
 from pytrafikverket import TrafikverketTrain
 from pytrafikverket.exceptions import (
     InvalidAuthentication,
-    MultipleTrainAnnouncementFound,
     MultipleTrainStationsFound,
     NoTrainAnnouncementFound,
     NoTrainStationFound,
@@ -107,8 +106,6 @@ async def validate_input(
         errors["base"] = "more_stations"
     except NoTrainAnnouncementFound:
         errors["base"] = "no_trains"
-    except MultipleTrainAnnouncementFound:
-        errors["base"] = "multiple_trains"
     except UnknownError as error:
         _LOGGER.error("Unknown error occurred during validation %s", str(error))
         errors["base"] = "cannot_connect"

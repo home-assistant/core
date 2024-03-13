@@ -71,6 +71,7 @@ class HueButtonEventEntity(HueBaseEntity, EventEntity):
         key="button",
         device_class=EventDeviceClass.BUTTON,
         translation_key="button",
+        has_entity_name=True,
     )
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -85,11 +86,9 @@ class HueButtonEventEntity(HueBaseEntity, EventEntity):
         ):
             event_types.append(event_type.value)
         self._attr_event_types = event_types
-
-    @property
-    def name(self) -> str:
-        """Return name for the entity."""
-        return f"{super().name} {self.resource.metadata.control_id}"
+        self._attr_translation_placeholders = {
+            "button_id": self.resource.metadata.control_id
+        }
 
     @callback
     def _handle_event(self, event_type: EventType, resource: Button) -> None:
@@ -112,6 +111,7 @@ class HueRotaryEventEntity(HueBaseEntity, EventEntity):
             RelativeRotaryDirection.CLOCK_WISE.value,
             RelativeRotaryDirection.COUNTER_CLOCK_WISE.value,
         ],
+        has_entity_name=True,
     )
 
     @callback

@@ -6,7 +6,7 @@ from fullykiosk import FullyKiosk
 from fullykiosk.exceptions import FullyKioskError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -19,11 +19,14 @@ class FullyKioskDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize."""
+        self.use_ssl = entry.data.get(CONF_SSL, False)
         self.fully = FullyKiosk(
             async_get_clientsession(hass),
             entry.data[CONF_HOST],
             DEFAULT_PORT,
             entry.data[CONF_PASSWORD],
+            use_ssl=self.use_ssl,
+            verify_ssl=entry.data.get(CONF_VERIFY_SSL, False),
         )
         super().__init__(
             hass,

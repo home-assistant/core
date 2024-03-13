@@ -588,10 +588,6 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
         return_type=["dict[str, Any]", None],
     ),
     TypeHintMatch(
-        function_name="device_state_attributes",
-        return_type=["Mapping[str, Any]", None],
-    ),
-    TypeHintMatch(
         function_name="extra_state_attributes",
         return_type=["Mapping[str, Any]", None],
     ),
@@ -630,10 +626,6 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="supported_features",
         return_type=["int", None],
-    ),
-    TypeHintMatch(
-        function_name="context_recent_time",
-        return_type="timedelta",
     ),
     TypeHintMatch(
         function_name="entity_registry_enabled_default",
@@ -2428,6 +2420,54 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
+    "todo": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="TodoListEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="todo_items",
+                    return_type=["list[TodoItem]", None],
+                ),
+                TypeHintMatch(
+                    function_name="async_create_todo_item",
+                    arg_types={
+                        1: "TodoItem",
+                    },
+                    return_type="None",
+                ),
+                TypeHintMatch(
+                    function_name="async_update_todo_item",
+                    arg_types={
+                        1: "TodoItem",
+                    },
+                    return_type="None",
+                ),
+                TypeHintMatch(
+                    function_name="async_delete_todo_items",
+                    arg_types={
+                        1: "list[str]",
+                    },
+                    return_type="None",
+                ),
+                TypeHintMatch(
+                    function_name="async_move_todo_item",
+                    arg_types={
+                        1: "str",
+                        2: "str | None",
+                    },
+                    return_type="None",
+                ),
+            ],
+        ),
+    ],
     "tts": [
         ClassTypeHintMatch(
             base_class="Provider",
@@ -3014,7 +3054,7 @@ def _is_test_function(module_name: str, node: nodes.FunctionDef) -> bool:
     return module_name.startswith("tests.") and node.name.startswith("test_")
 
 
-class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
+class HassTypeHintChecker(BaseChecker):
     """Checker for setup type hints."""
 
     name = "hass_enforce_type_hints"

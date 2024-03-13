@@ -240,8 +240,10 @@ async def setup_lights(hass, entities):
     await hass.async_block_till_done()
 
     light_1, light_2 = entities
-    light_1.supported_color_modes = ["brightness"]
-    light_2.supported_color_modes = ["brightness"]
+    light_1._attr_supported_color_modes = {"brightness"}
+    light_2._attr_supported_color_modes = {"brightness"}
+    light_1._attr_color_mode = "brightness"
+    light_2._attr_color_mode = "brightness"
 
     await turn_off_lights(hass, [light_1.entity_id, light_2.entity_id])
     assert not light.is_on(hass, light_1.entity_id)

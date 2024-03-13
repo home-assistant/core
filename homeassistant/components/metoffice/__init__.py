@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
 
 from .const import (
     DEFAULT_SCAN_INTERVAL,
@@ -105,7 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             fetch_data, connection, site, MODE_DAILY
         )
 
-    metoffice_hourly_coordinator = DataUpdateCoordinator(
+    metoffice_hourly_coordinator = TimestampDataUpdateCoordinator(
         hass,
         _LOGGER,
         name=f"MetOffice Hourly Coordinator for {site_name}",
@@ -113,7 +113,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=DEFAULT_SCAN_INTERVAL,
     )
 
-    metoffice_daily_coordinator = DataUpdateCoordinator(
+    metoffice_daily_coordinator = TimestampDataUpdateCoordinator(
         hass,
         _LOGGER,
         name=f"MetOffice Daily Coordinator for {site_name}",

@@ -1,0 +1,11 @@
+{
+  "domain": "lamarzocco",
+  "name": "La Marzocco",
+  "codeowners": ["@zweckj"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/lamarzocco",
+  "integration_type": "device",
+  "iot_class": "cloud_polling",
+  "loggers": ["lmcloud"],
+  "requirements": ["lmcloud==0.4.35"]
+}

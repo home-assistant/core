@@ -2,5 +2,4 @@
 
 DOMAIN = "airthings"
 
-CONF_ID = "id"
 CONF_SECRET = "secret"

@@ -17,8 +17,11 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "host": "[%key:common::config_flow::data::host%]",
-          "name": "Device Name",
+          "name": "Device name",
           "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your DoorBird device."
         }
       }
     },

@@ -1,5 +1,5 @@
 """Test the AirNow config flow."""
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from pyairnow.errors import AirNowError, EmptyResponseError, InvalidKeyError
 import pytest
@@ -142,12 +142,18 @@ async def test_options_flow(hass: HomeAssistant, setup_airnow) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_RADIUS: 25},
-    )
+    with patch(
+        "homeassistant.components.airnow.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_RADIUS: 25},
+        )
+        await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         CONF_RADIUS: 25,
     }
+    assert len(mock_setup_entry.mock_calls) == 1

@@ -29,6 +29,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -36,6 +38,7 @@
     'original_icon': 'mdi:ethernet',
     'original_name': 'Port 1 PoE',
     'platform': 'tplink_omada',
+    'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '54-AF-97-00-00-01_000000000000000000000001_poe',
@@ -72,6 +75,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -79,6 +84,7 @@
     'original_icon': 'mdi:ethernet',
     'original_name': 'Port 6 PoE',
     'platform': 'tplink_omada',
+    'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '54-AF-97-00-00-01_000000000000000000000006_poe',
@@ -115,6 +121,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -122,6 +130,7 @@
     'original_icon': 'mdi:ethernet',
     'original_name': 'Port 7 PoE',
     'platform': 'tplink_omada',
+    'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '54-AF-97-00-00-01_000000000000000000000007_poe',
@@ -158,6 +167,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -165,6 +176,7 @@
     'original_icon': 'mdi:ethernet',
     'original_name': 'Port 8 PoE',
     'platform': 'tplink_omada',
+    'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '54-AF-97-00-00-01_000000000000000000000008_poe',
@@ -201,6 +213,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -208,6 +222,7 @@
     'original_icon': 'mdi:ethernet',
     'original_name': 'Port 2 PoE',
     'platform': 'tplink_omada',
+    'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '54-AF-97-00-00-01_000000000000000000000002_poe',
@@ -244,6 +259,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -251,6 +268,7 @@
     'original_icon': 'mdi:ethernet',
     'original_name': 'Port 3 PoE',
     'platform': 'tplink_omada',
+    'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '54-AF-97-00-00-01_000000000000000000000003_poe',
@@ -287,6 +305,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -294,6 +314,7 @@
     'original_icon': 'mdi:ethernet',
     'original_name': 'Port 4 PoE',
     'platform': 'tplink_omada',
+    'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '54-AF-97-00-00-01_000000000000000000000004_poe',
@@ -330,6 +351,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -337,6 +360,7 @@
     'original_icon': 'mdi:ethernet',
     'original_name': 'Port 5 PoE',
     'platform': 'tplink_omada',
+    'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '54-AF-97-00-00-01_000000000000000000000005_poe',

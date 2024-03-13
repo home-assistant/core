@@ -12,13 +12,12 @@ from voluptuous import Required, Schema
 
 from homeassistant.components import onboarding, zeroconf
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PATH
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
     CONF_API_ENABLED,
-    CONF_PATH,
     CONF_PRODUCT_NAME,
     CONF_PRODUCT_TYPE,
     CONF_SERIAL,
@@ -62,7 +61,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 self._abort_if_unique_id_configured(updates=user_input)
                 return self.async_create_entry(
-                    title=f"{device_info.product_name} ({device_info.serial})",
+                    title=f"{device_info.product_name}",
                     data=user_input,
                 )
 
@@ -121,14 +120,18 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors = {"base": ex.error_code}
             else:
                 return self.async_create_entry(
-                    title=f"{self.discovery.product_name} ({self.discovery.serial})",
+                    title=self.discovery.product_name,
                     data={CONF_IP_ADDRESS: self.discovery.ip},
                 )
 
         self._set_confirm_only()
-        self.context["title_placeholders"] = {
-            "name": f"{self.discovery.product_name} ({self.discovery.serial})"
-        }
+
+        # We won't be adding mac/serial to the title for devices
+        # that users generally don't have multiple of.
+        name = self.discovery.product_name
+        if self.discovery.product_type not in ["HWE-P1", "HWE-WTR"]:
+            name = f"{name} ({self.discovery.serial})"
+        self.context["title_placeholders"] = {"name": name}
 
         return self.async_show_form(
             step_id="discovery_confirm",

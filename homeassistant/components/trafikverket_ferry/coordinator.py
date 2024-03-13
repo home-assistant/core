@@ -77,8 +77,7 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator):
             if self._time
             else dt_util.now()
         )
-        if current_time > when:
-            when = current_time
+        when = max(when, current_time)
 
         try:
             routedata: list[

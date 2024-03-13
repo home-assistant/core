@@ -38,7 +38,7 @@ def get_state(data: dict[str, float], key: str) -> str | float:
     return round(kb_spd, 2 if kb_spd < 0.1 else 1)
 
 
-@dataclass
+@dataclass(frozen=True)
 class DelugeSensorEntityDescription(SensorEntityDescription):
     """Class to describe a Deluge sensor."""
 

@@ -20,14 +20,14 @@ from .entity import EzvizEntity
 PARALLEL_UPDATES = 1
 
 
-@dataclass
+@dataclass(frozen=True)
 class EzvizSelectEntityDescriptionMixin:
     """Mixin values for EZVIZ Select entities."""
 
     supported_switch: int
 
 
-@dataclass
+@dataclass(frozen=True)
 class EzvizSelectEntityDescription(
     SelectEntityDescription, EzvizSelectEntityDescriptionMixin
 ):

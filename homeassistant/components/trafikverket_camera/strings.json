@@ -15,6 +15,15 @@
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "location": "[%key:common::config_flow::data::location%]"
+        },
+        "data_description": {
+          "location": "Equal or part of name, description or camera id. Be as specific as possible to avoid getting multiple cameras as result"
+        }
+      },
+      "multiple_cameras": {
+        "description": "Result came back with multiple cameras",
+        "data": {
+          "id": "Choose camera"
         }
       }
     }
@@ -45,6 +54,31 @@
             "name": "Camera type"
           }
         }
+      }
+    },
+    "binary_sensor": {
+      "active": {
+        "name": "Active"
+      }
+    },
+    "sensor": {
+      "direction": {
+        "name": "Direction"
+      },
+      "modified": {
+        "name": "Modified"
+      },
+      "photo_time": {
+        "name": "Photo time"
+      },
+      "photo_url": {
+        "name": "Photo url"
+      },
+      "status": {
+        "name": "Status"
+      },
+      "camera_type": {
+        "name": "Camera type"
       }
     }
   }

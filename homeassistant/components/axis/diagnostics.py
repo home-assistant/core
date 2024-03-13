@@ -33,13 +33,13 @@ async def async_get_config_entry_diagnostics(
 
     if device.api.vapix.basic_device_info:
         diag["basic_device_info"] = async_redact_data(
-            {attr.id: attr.raw for attr in device.api.vapix.basic_device_info.values()},
+            device.api.vapix.basic_device_info["0"],
             REDACT_BASIC_DEVICE_INFO,
         )
 
     if device.api.vapix.params:
         diag["params"] = async_redact_data(
-            {param.id: param.raw for param in device.api.vapix.params.values()},
+            device.api.vapix.params.items(),
             REDACT_VAPIX_PARAMS,
         )
 

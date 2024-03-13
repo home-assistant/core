@@ -30,7 +30,7 @@ PARALLEL_UPDATES = 0
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class EzvizNumberEntityDescriptionMixin:
     """Mixin values for EZVIZ Number entities."""
 
@@ -38,7 +38,7 @@ class EzvizNumberEntityDescriptionMixin:
     supported_ext_value: list
 
 
-@dataclass
+@dataclass(frozen=True)
 class EzvizNumberEntityDescription(
     NumberEntityDescription, EzvizNumberEntityDescriptionMixin
 ):

@@ -37,6 +37,8 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
         self.fritz: Fritzhome = hass.data[DOMAIN][self.entry.entry_id][CONF_CONNECTIONS]
         self.configuration_url = self.fritz.get_prefixed_host()
         self.has_templates = has_templates
+        self.new_devices: set[str] = set()
+        self.new_templates: set[str] = set()
 
         super().__init__(
             hass,
@@ -44,6 +46,8 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
             name=entry.entry_id,
             update_interval=timedelta(seconds=30),
         )
+
+        self.data = FritzboxCoordinatorData({}, {})
 
     def _update_fritz_devices(self) -> FritzboxCoordinatorData:
         """Update all fritzbox device data."""
@@ -86,6 +90,9 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
             templates = self.fritz.get_templates()
             for template in templates:
                 template_data[template.ain] = template
+
+        self.new_devices = device_data.keys() - self.data.devices.keys()
+        self.new_templates = template_data.keys() - self.data.templates.keys()
 
         return FritzboxCoordinatorData(devices=device_data, templates=template_data)
 

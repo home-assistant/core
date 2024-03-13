@@ -22,7 +22,7 @@ from .coordinator import BMWDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class BMWRequiredKeysMixin:
     """Mixin for required keys."""
 
@@ -30,7 +30,7 @@ class BMWRequiredKeysMixin:
     remote_service: Callable[[MyBMWVehicle, str], Coroutine[Any, Any, Any]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class BMWSelectEntityDescription(SelectEntityDescription, BMWRequiredKeysMixin):
     """Describes BMW sensor entity."""
 
@@ -44,13 +44,13 @@ SELECT_TYPES: dict[str, BMWSelectEntityDescription] = {
         translation_key="ac_limit",
         is_available=lambda v: v.is_remote_set_ac_limit_enabled,
         dynamic_options=lambda v: [
-            str(lim) for lim in v.charging_profile.ac_available_limits  # type: ignore[union-attr]
+            str(lim)
+            for lim in v.charging_profile.ac_available_limits  # type: ignore[union-attr]
         ],
         current_option=lambda v: str(v.charging_profile.ac_current_limit),  # type: ignore[union-attr]
         remote_service=lambda v, o: v.remote_services.trigger_charging_settings_update(
             ac_limit=int(o)
         ),
-        icon="mdi:current-ac",
         unit_of_measurement=UnitOfElectricCurrent.AMPERE,
     ),
     "charging_mode": BMWSelectEntityDescription(
@@ -62,7 +62,6 @@ SELECT_TYPES: dict[str, BMWSelectEntityDescription] = {
         remote_service=lambda v, o: v.remote_services.trigger_charging_profile_update(
             charging_mode=ChargingMode(o)
         ),
-        icon="mdi:vector-point-select",
     ),
 }
 

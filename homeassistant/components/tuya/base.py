@@ -7,7 +7,7 @@ import json
 import struct
 from typing import Any, Literal, Self, overload
 
-from tuya_iot import TuyaDevice, TuyaDeviceManager
+from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -171,11 +171,15 @@ class InkbirdB64TypeData:
                 elif data[0] == "F":
                     temperature_unit = UnitOfTemperature.FAHRENHEIT
                 decoded_bytes = base64.b64decode(data)
-                _temperature, _humidity = struct.Struct("<hH").unpack(
-                    decoded_bytes[1:5]
-                )
-                (temperature, humidity) = _temperature / 10.0, _humidity / 10.0
-                battery = int.from_bytes(decoded_bytes[9:10], "little")
+                # _temperature, _humidity = struct.Struct("<hH").unpack(
+                #     decoded_bytes[1:5]
+                # )
+                # (temperature, humidity) = _temperature / 10.0, _humidity / 10.0
+                # battery = int.from_bytes(decoded_bytes[9:10], "little")
+                _temperature, _humidity, skipped, battery = struct.Struct(
+                    "<hHIb"
+                ).unpack(decoded_bytes[1:11])
+                temperature, humidity = _temperature / 10.0, _humidity / 10.0
             except Exception as e:
                 LOGGER.error("InkbirdB64TypeData.from_raw: %s", e)
                 raise ValueError(f"Invalid data: '{data}'") from e
@@ -194,9 +198,11 @@ class TuyaEntity(Entity):
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(self, device: TuyaDevice, device_manager: TuyaDeviceManager) -> None:
+    def __init__(self, device: CustomerDevice, device_manager: Manager) -> None:
         """Init TuyaHaEntity."""
         self._attr_unique_id = f"tuya.{device.id}"
+        # TuyaEntity initialize mq can subscribe
+        device.set_up = True
         self.device = device
         self.device_manager = device_manager
 

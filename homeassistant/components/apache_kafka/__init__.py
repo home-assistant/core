@@ -1,6 +1,9 @@
 """Support for Apache Kafka."""
+from __future__ import annotations
+
 from datetime import datetime
 import json
+from typing import Any, Literal
 
 from aiokafka import AIOKafkaProducer
 import voluptuous as vol
@@ -15,10 +18,11 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entityfilter import FILTER_SCHEMA
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.entityfilter import FILTER_SCHEMA, EntityFilter
+from homeassistant.helpers.event import EventStateChangedData
+from homeassistant.helpers.typing import ConfigType, EventType
 from homeassistant.util import ssl as ssl_util
 
 DOMAIN = "apache_kafka"
@@ -75,11 +79,11 @@ class DateTimeJSONEncoder(json.JSONEncoder):
     Additionally add encoding for datetime objects as isoformat.
     """
 
-    def default(self, o):
+    def default(self, o: Any) -> str:
         """Implement encoding logic."""
         if isinstance(o, datetime):
             return o.isoformat()
-        return super().default(o)
+        return super().default(o)  # type: ignore[no-any-return]
 
 
 class KafkaManager:
@@ -87,15 +91,15 @@ class KafkaManager:
 
     def __init__(
         self,
-        hass,
-        ip_address,
-        port,
-        topic,
-        entities_filter,
-        security_protocol,
-        username,
-        password,
-    ):
+        hass: HomeAssistant,
+        ip_address: str,
+        port: int,
+        topic: str,
+        entities_filter: EntityFilter,
+        security_protocol: Literal["PLAINTEXT", "SASL_SSL"],
+        username: str | None,
+        password: str | None,
+    ) -> None:
         """Initialize."""
         self._encoder = DateTimeJSONEncoder()
         self._entities_filter = entities_filter
@@ -112,30 +116,30 @@ class KafkaManager:
         )
         self._topic = topic
 
-    def _encode_event(self, event):
+    def _encode_event(self, event: EventType[EventStateChangedData]) -> bytes | None:
         """Translate events into a binary JSON payload."""
-        state = event.data.get("new_state")
+        state = event.data["new_state"]
         if (
             state is None
             or state.state in (STATE_UNKNOWN, "", STATE_UNAVAILABLE)
             or not self._entities_filter(state.entity_id)
         ):
-            return
+            return None
 
         return json.dumps(obj=state.as_dict(), default=self._encoder.encode).encode(
             "utf-8"
         )
 
-    async def start(self):
+    async def start(self) -> None:
         """Start the Kafka manager."""
-        self._hass.bus.async_listen(EVENT_STATE_CHANGED, self.write)
+        self._hass.bus.async_listen(EVENT_STATE_CHANGED, self.write)  # type: ignore[arg-type]
         await self._producer.start()
 
-    async def shutdown(self, _):
+    async def shutdown(self, _: Event) -> None:
         """Shut the manager down."""
         await self._producer.stop()
 
-    async def write(self, event):
+    async def write(self, event: EventType[EventStateChangedData]) -> None:
         """Write a binary payload to Kafka."""
         payload = self._encode_event(event)
 

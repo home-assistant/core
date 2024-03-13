@@ -11,9 +11,9 @@ from systembridgeconnector.exceptions import (
     ConnectionClosedException,
     ConnectionErrorException,
 )
-from systembridgeconnector.models.get_data import GetData
-from systembridgeconnector.models.system import System
 from systembridgeconnector.websocket_client import WebSocketClient
+from systembridgemodels.get_data import GetData
+from systembridgemodels.system import System
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
@@ -75,7 +75,7 @@ async def _validate_input(
             "Connection error when connecting to %s: %s", data[CONF_HOST], exception
         )
         raise CannotConnect from exception
-    except asyncio.TimeoutError as exception:
+    except TimeoutError as exception:
         _LOGGER.warning("Timed out connecting to %s: %s", data[CONF_HOST], exception)
         raise CannotConnect from exception
     except ValueError as exception:

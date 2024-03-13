@@ -1,5 +1,5 @@
 """Test the baf config flow."""
-import asyncio
+from ipaddress import ip_address
 from unittest.mock import patch
 
 from homeassistant import config_entries
@@ -54,7 +54,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with _patch_device_config_flow(asyncio.TimeoutError):
+    with _patch_device_config_flow(TimeoutError):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_IP_ADDRESS: "127.0.0.1"},
@@ -87,8 +87,8 @@ async def test_zeroconf_discovery(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="127.0.0.1",
-            addresses=["127.0.0.1"],
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
             name="testfan",
             port=None,
@@ -125,8 +125,8 @@ async def test_zeroconf_updates_existing_ip(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="127.0.0.1",
-            addresses=["127.0.0.1"],
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
             name="testfan",
             port=None,
@@ -145,8 +145,8 @@ async def test_zeroconf_rejects_ipv6(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="fd00::b27c:63bb:cc85:4ea0",
-            addresses=["fd00::b27c:63bb:cc85:4ea0"],
+            ip_address=ip_address("fd00::b27c:63bb:cc85:4ea0"),
+            ip_addresses=[ip_address("fd00::b27c:63bb:cc85:4ea0")],
             hostname="mock_hostname",
             name="testfan",
             port=None,
@@ -164,8 +164,8 @@ async def test_user_flow_is_not_blocked_by_discovery(hass: HomeAssistant) -> Non
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="127.0.0.1",
-            addresses=["127.0.0.1"],
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
             name="testfan",
             port=None,

@@ -51,10 +51,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self._username: str | None = None
 
-    async def async_step_import(self, import_info: dict[str, Any] | None) -> FlowResult:
-        """Set the config entry up from yaml."""
-        return await self.async_step_user(import_info)
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -118,6 +114,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
+            description_placeholders={"username": self._username},
             data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
             errors=errors,
         )

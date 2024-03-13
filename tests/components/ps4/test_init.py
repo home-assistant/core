@@ -44,6 +44,7 @@ MOCK_DATA = {CONF_TOKEN: MOCK_CREDS, "devices": [MOCK_DEVICE]}
 
 MOCK_FLOW_RESULT = {
     "version": VERSION,
+    "minor_version": 1,
     "handler": DOMAIN,
     "type": data_entry_flow.FlowResultType.CREATE_ENTRY,
     "title": "test_ps4",

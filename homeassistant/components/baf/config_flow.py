@@ -1,7 +1,6 @@
 """Config flow for baf."""
 from __future__ import annotations
 
-import asyncio
 from asyncio import timeout
 import logging
 from typing import Any
@@ -14,7 +13,6 @@ from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.util.network import is_ipv6_address
 
 from .const import DOMAIN, RUN_TIMEOUT
 from .models import BAFDiscovery
@@ -29,7 +27,7 @@ async def async_try_connect(ip_address: str) -> Device:
     try:
         async with timeout(RUN_TIMEOUT):
             await device.async_wait_available()
-    except asyncio.TimeoutError as ex:
+    except TimeoutError as ex:
         raise CannotConnect from ex
     finally:
         run_future.cancel()
@@ -49,10 +47,10 @@ class BAFFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
+        if discovery_info.ip_address.version == 6:
+            return self.async_abort(reason="ipv6_not_supported")
         properties = discovery_info.properties
         ip_address = discovery_info.host
-        if is_ipv6_address(ip_address):
-            return self.async_abort(reason="ipv6_not_supported")
         uuid = properties["uuid"]
         model = properties["model"]
         name = properties["name"]

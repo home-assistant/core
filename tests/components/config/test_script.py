@@ -281,7 +281,10 @@ async def test_update_remove_key_script_config(
     ),
 )
 async def test_delete_script(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, hass_config_store
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
+    hass_config_store,
 ) -> None:
     """Test deleting a script."""
     with patch.object(config, "SECTIONS", ["script"]):
@@ -292,8 +295,7 @@ async def test_delete_script(
         "script.two",
     ]
 
-    ent_reg = er.async_get(hass)
-    assert len(ent_reg.entities) == 2
+    assert len(entity_registry.entities) == 2
 
     client = await hass_client()
 
@@ -313,7 +315,7 @@ async def test_delete_script(
 
     assert hass_config_store["scripts.yaml"] == {"one": {}}
 
-    assert len(ent_reg.entities) == 1
+    assert len(entity_registry.entities) == 1
 
 
 @pytest.mark.parametrize("script_config", ({},))

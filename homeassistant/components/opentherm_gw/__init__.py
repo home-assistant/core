@@ -114,7 +114,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     try:
         async with asyncio.timeout(CONNECTION_TIMEOUT):
             await gateway.connect_and_subscribe()
-    except (asyncio.TimeoutError, ConnectionError, SerialException) as ex:
+    except (TimeoutError, ConnectionError, SerialException) as ex:
         await gateway.cleanup()
         raise ConfigEntryNotReady(
             f"Could not connect to gateway at {gateway.device_path}: {ex}"
@@ -163,8 +163,7 @@ def register_services(hass: HomeAssistant) -> None:
             vol.Required(ATTR_GW_ID): vol.All(
                 cv.string, vol.In(hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS])
             ),
-            # pylint: disable=unnecessary-lambda
-            vol.Optional(ATTR_DATE, default=lambda: date.today()): cv.date,
+            vol.Optional(ATTR_DATE, default=date.today): cv.date,
             vol.Optional(ATTR_TIME, default=lambda: datetime.now().time()): cv.time,
         }
     )

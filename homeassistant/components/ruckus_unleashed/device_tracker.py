@@ -18,6 +18,7 @@ from .const import (
     KEY_SYS_CLIENTS,
     UNDO_UPDATE_LISTENERS,
 )
+from .coordinator import RuckusUnleashedDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -65,14 +66,19 @@ def add_new_entities(coordinator, async_add_entities, tracked):
 
 
 @callback
-def restore_entities(registry, coordinator, entry, async_add_entities, tracked):
+def restore_entities(
+    registry: er.EntityRegistry,
+    coordinator: RuckusUnleashedDataUpdateCoordinator,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+    tracked: set[str],
+) -> None:
     """Restore clients that are not a part of active clients list."""
-    missing = []
+    missing: list[RuckusUnleashedDevice] = []
 
-    for entity in registry.entities.values():
+    for entity in registry.entities.get_entries_for_config_entry_id(entry.entry_id):
         if (
-            entity.config_entry_id == entry.entry_id
-            and entity.platform == DOMAIN
+            entity.platform == DOMAIN
             and entity.unique_id not in coordinator.data[KEY_SYS_CLIENTS]
         ):
             missing.append(
@@ -103,20 +109,16 @@ class RuckusUnleashedDevice(CoordinatorEntity, ScannerEntity):
     @property
     def name(self) -> str:
         """Return the name."""
-        return (
-            self._name
-            if not self.is_connected
-            else self.coordinator.data[KEY_SYS_CLIENTS][self._mac][API_CLIENT_HOSTNAME]
-        )
+        if not self.is_connected:
+            return self._name
+        return self.coordinator.data[KEY_SYS_CLIENTS][self._mac][API_CLIENT_HOSTNAME]
 
     @property
-    def ip_address(self) -> str:
+    def ip_address(self) -> str | None:
         """Return the ip address."""
-        return (
-            self.coordinator.data[KEY_SYS_CLIENTS][self._mac][API_CLIENT_IP]
-            if self.is_connected
-            else None
-        )
+        if not self.is_connected:
+            return None
+        return self.coordinator.data[KEY_SYS_CLIENTS][self._mac][API_CLIENT_IP]
 
     @property
     def is_connected(self) -> bool:

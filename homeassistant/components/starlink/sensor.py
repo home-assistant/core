@@ -40,14 +40,14 @@ async def async_setup_entry(
     )
 
 
-@dataclass
+@dataclass(frozen=True)
 class StarlinkSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[StarlinkData], datetime | StateType]
 
 
-@dataclass
+@dataclass(frozen=True)
 class StarlinkSensorEntityDescription(
     SensorEntityDescription, StarlinkSensorEntityDescriptionMixin
 ):

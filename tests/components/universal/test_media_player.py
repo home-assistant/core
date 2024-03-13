@@ -159,7 +159,7 @@ class MockMediaPlayer(media_player.MediaPlayerEntity):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        return self._supported_features
+        return MediaPlayerEntityFeature(self._supported_features)
 
     @property
     def media_image_url(self):

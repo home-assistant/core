@@ -275,16 +275,9 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
         }
         if self._reauth_entry:
-            entry = self._reauth_entry
-            self.hass.config_entries.async_update_entry(
-                entry, data=self._reauth_entry.data | config_data
+            return self.async_update_reload_and_abort(
+                self._reauth_entry, data=self._reauth_entry.data | config_data
             )
-            # Reload the config entry to notify of updated config
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(entry.entry_id)
-            )
-
-            return self.async_abort(reason="reauth_successful")
 
         assert self._name is not None
         return self.async_create_entry(

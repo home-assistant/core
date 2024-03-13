@@ -1,0 +1,26 @@
+# serializer version: 1
+# name: test_sensor
+  ReadOnlyDict({
+    'device_class': 'pm25',
+    'friendly_name': 'Kitchen PM2.5',
+    'icon': 'mdi:air-filter',
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    'unit_of_measurement': 'µg/m³',
+  })
+# ---
+# name: test_sensor.1
+  ReadOnlyDict({
+    'device_class': 'temperature',
+    'fanlevel': 'low',
+    'friendly_name': 'Hallway Climate React low temperature threshold',
+    'horizontalswing': 'stopped',
+    'light': 'on',
+    'mode': 'heat',
+    'on': True,
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    'swing': 'stopped',
+    'targettemperature': 21,
+    'temperatureunit': 'c',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---

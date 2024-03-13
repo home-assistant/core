@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import logging
+import sys
 
 import voluptuous as vol
-from webexteamssdk import ApiError, WebexTeamsAPI, exceptions
 
 from homeassistant.components.notify import (
     ATTR_TITLE,
@@ -13,8 +13,13 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+if sys.version_info < (3, 12):
+    from webexteamssdk import ApiError, WebexTeamsAPI, exceptions
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,6 +36,10 @@ def get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> CiscoWebexTeamsNotificationService | None:
     """Get the CiscoWebexTeams notification service."""
+    if sys.version_info >= (3, 12):
+        raise HomeAssistantError(
+            "Cisco Webex Teams is not supported on Python 3.12. Please use Python 3.11."
+        )
 
     client = WebexTeamsAPI(access_token=config[CONF_TOKEN])
     try:

@@ -171,12 +171,36 @@ class SchemaCommonFlowHandler:
 
         if user_input is not None:
             # User input was validated successfully, update options
-            self._options.update(user_input)
+            self._update_and_remove_omitted_optional_keys(
+                self._options, user_input, data_schema
+            )
 
         if user_input is not None or form_step.schema is None:
             return await self._show_next_step_or_create_entry(form_step)
 
         return await self._show_next_step(step_id)
+
+    def _update_and_remove_omitted_optional_keys(
+        self,
+        values: dict[str, Any],
+        user_input: dict[str, Any],
+        data_schema: vol.Schema | None,
+    ) -> None:
+        values.update(user_input)
+        if data_schema and data_schema.schema:
+            for key in data_schema.schema:
+                if (
+                    isinstance(key, vol.Optional)
+                    and key not in user_input
+                    and not (
+                        # don't remove advanced keys, if they are hidden
+                        key.description
+                        and key.description.get("advanced")
+                        and not self._handler.show_advanced_options
+                    )
+                ):
+                    # Key not present, delete keys old value (if present) too
+                    values.pop(key, None)
 
     async def _show_next_step_or_create_entry(
         self, form_step: SchemaFlowFormStep
@@ -221,7 +245,9 @@ class SchemaCommonFlowHandler:
         if user_input:
             # We don't want to mutate the existing options
             suggested_values = copy.deepcopy(suggested_values)
-            suggested_values.update(user_input)
+            self._update_and_remove_omitted_optional_keys(
+                suggested_values, user_input, await self._get_schema(form_step)
+            )
 
         if data_schema.schema:
             # Make a copy of the schema with suggested values set to saved options
@@ -305,7 +331,12 @@ class SchemaConfigFlowHandler(config_entries.ConfigFlow, ABC):
         return cls.options_flow is not None
 
     @staticmethod
-    def _async_step(step_id: str) -> Callable:
+    def _async_step(
+        step_id: str,
+    ) -> Callable[
+        [SchemaConfigFlowHandler, dict[str, Any] | None],
+        Coroutine[Any, Any, FlowResult],
+    ]:
         """Generate a step handler."""
 
         async def _async_step(
@@ -395,7 +426,12 @@ class SchemaOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
             setattr(self, "async_setup_preview", async_setup_preview)
 
     @staticmethod
-    def _async_step(step_id: str) -> Callable:
+    def _async_step(
+        step_id: str,
+    ) -> Callable[
+        [SchemaConfigFlowHandler, dict[str, Any] | None],
+        Coroutine[Any, Any, FlowResult],
+    ]:
         """Generate a step handler."""
 
         async def _async_step(

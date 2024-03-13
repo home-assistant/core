@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 from base64 import b64decode
-import functools
 import logging
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -20,7 +20,11 @@ from . import subscription
 from .config import MQTT_BASE_SCHEMA
 from .const import CONF_QOS, CONF_TOPIC
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_setup_entity_entry_helper,
+)
 from .models import ReceiveMessage
 from .util import valid_subscribe_topic
 
@@ -60,21 +64,15 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT camera through YAML and through MQTT discovery."""
-    setup = functools.partial(
-        _async_setup_entity, hass, async_add_entities, config_entry=config_entry
+    await async_setup_entity_entry_helper(
+        hass,
+        config_entry,
+        MqttCamera,
+        camera.DOMAIN,
+        async_add_entities,
+        DISCOVERY_SCHEMA,
+        PLATFORM_SCHEMA_MODERN,
     )
-    await async_setup_entry_helper(hass, camera.DOMAIN, setup, DISCOVERY_SCHEMA)
-
-
-async def _async_setup_entity(
-    hass: HomeAssistant,
-    async_add_entities: AddEntitiesCallback,
-    config: ConfigType,
-    config_entry: ConfigEntry,
-    discovery_data: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the MQTT Camera."""
-    async_add_entities([MqttCamera(hass, config, config_entry, discovery_data)])
 
 
 class MqttCamera(MqttEntity, Camera):
@@ -83,6 +81,7 @@ class MqttCamera(MqttEntity, Camera):
     _default_name = DEFAULT_NAME
     _entity_id_format: str = camera.ENTITY_ID_FORMAT
     _attributes_extra_blocked: frozenset[str] = MQTT_CAMERA_ATTRIBUTES_BLOCKED
+    _last_image: bytes | None = None
 
     def __init__(
         self,
@@ -92,8 +91,6 @@ class MqttCamera(MqttEntity, Camera):
         discovery_data: DiscoveryInfoType | None,
     ) -> None:
         """Initialize the MQTT Camera."""
-        self._last_image: bytes | None = None
-
         Camera.__init__(self)
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
@@ -112,7 +109,8 @@ class MqttCamera(MqttEntity, Camera):
             if CONF_IMAGE_ENCODING in self._config:
                 self._last_image = b64decode(msg.payload)
             else:
-                assert isinstance(msg.payload, bytes)
+                if TYPE_CHECKING:
+                    assert isinstance(msg.payload, bytes)
                 self._last_image = msg.payload
 
         self._sub_state = subscription.async_prepare_subscribe_topics(

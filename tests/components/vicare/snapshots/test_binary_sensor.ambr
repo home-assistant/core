@@ -1,0 +1,42 @@
+# serializer version: 1
+# name: test_binary_sensors[burner]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'model0 Burner',
+      'icon': 'mdi:gas-burner',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.model0_burner',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_binary_sensors[circulation_pump]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'model0 Circulation pump',
+      'icon': 'mdi:pump',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.model0_circulation_pump',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_binary_sensors[frost_protection]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'model0 Frost protection',
+      'icon': 'mdi:snowflake',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.model0_frost_protection',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---

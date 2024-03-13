@@ -50,7 +50,7 @@ from .coordinator import QswDataCoordinator
 from .entity import QswEntityDescription, QswEntityType, QswSensorEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class QswSensorEntityDescription(SensorEntityDescription, QswEntityDescription):
     """A class that describes QNAP QSW sensor entities."""
 

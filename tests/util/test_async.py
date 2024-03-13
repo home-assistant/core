@@ -1,5 +1,6 @@
 """Tests for async util methods from Python source."""
 import asyncio
+import sys
 import time
 from unittest.mock import MagicMock, Mock, patch
 
@@ -48,7 +49,7 @@ async def test_check_loop_async() -> None:
 async def test_check_loop_async_integration(caplog: pytest.LogCaptureFixture) -> None:
     """Test check_loop detects and raises when called from event loop from integration context."""
     with pytest.raises(RuntimeError), patch(
-        "homeassistant.util.async_.extract_stack",
+        "homeassistant.helpers.frame.extract_stack",
         return_value=[
             Mock(
                 filename="/home/paulus/homeassistant/core.py",
@@ -69,10 +70,10 @@ async def test_check_loop_async_integration(caplog: pytest.LogCaptureFixture) ->
     ):
         hasync.check_loop(banned_function)
     assert (
-        "Detected blocking call to banned_function inside the event loop. This is "
-        "causing stability issues. Please report issue for hue doing blocking calls at "
-        "homeassistant/components/hue/light.py, line 23: self.light.is_on"
-        in caplog.text
+        "Detected blocking call to banned_function inside the event loop by integration"
+        " 'hue' at homeassistant/components/hue/light.py, line 23: self.light.is_on, "
+        "please create a bug report at https://github.com/home-assistant/core/issues?"
+        "q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+hue%22" in caplog.text
     )
 
 
@@ -81,7 +82,7 @@ async def test_check_loop_async_integration_non_strict(
 ) -> None:
     """Test check_loop detects when called from event loop from integration context."""
     with patch(
-        "homeassistant.util.async_.extract_stack",
+        "homeassistant.helpers.frame.extract_stack",
         return_value=[
             Mock(
                 filename="/home/paulus/homeassistant/core.py",
@@ -102,17 +103,17 @@ async def test_check_loop_async_integration_non_strict(
     ):
         hasync.check_loop(banned_function, strict=False)
     assert (
-        "Detected blocking call to banned_function inside the event loop. This is "
-        "causing stability issues. Please report issue for hue doing blocking calls at "
-        "homeassistant/components/hue/light.py, line 23: self.light.is_on"
-        in caplog.text
+        "Detected blocking call to banned_function inside the event loop by integration"
+        " 'hue' at homeassistant/components/hue/light.py, line 23: self.light.is_on, "
+        "please create a bug report at https://github.com/home-assistant/core/issues?"
+        "q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+hue%22" in caplog.text
     )
 
 
 async def test_check_loop_async_custom(caplog: pytest.LogCaptureFixture) -> None:
     """Test check_loop detects when called from event loop with custom component context."""
     with pytest.raises(RuntimeError), patch(
-        "homeassistant.util.async_.extract_stack",
+        "homeassistant.helpers.frame.extract_stack",
         return_value=[
             Mock(
                 filename="/home/paulus/homeassistant/core.py",
@@ -133,10 +134,10 @@ async def test_check_loop_async_custom(caplog: pytest.LogCaptureFixture) -> None
     ):
         hasync.check_loop(banned_function)
     assert (
-        "Detected blocking call to banned_function inside the event loop. This is"
-        " causing stability issues. Please report issue to the custom integration"
-        " author for hue doing blocking calls at custom_components/hue/light.py, line"
-        " 23: self.light.is_on"
+        "Detected blocking call to banned_function inside the event loop by custom "
+        "integration 'hue' at custom_components/hue/light.py, line 23: self.light.is_on"
+        ", please create a bug report at https://github.com/home-assistant/core/issues?"
+        "q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+hue%22"
     ) in caplog.text
 
 
@@ -183,8 +184,8 @@ async def test_protect_loop_debugger_sleep(caplog: pytest.LogCaptureFixture) -> 
     assert "Detected blocking call inside the event loop" not in caplog.text
 
 
-async def test_gather_with_concurrency() -> None:
-    """Test gather_with_concurrency limits the number of running tasks."""
+async def test_gather_with_limited_concurrency() -> None:
+    """Test gather_with_limited_concurrency limits the number of running tasks."""
 
     runs = 0
     now_time = time.time()
@@ -198,7 +199,7 @@ async def test_gather_with_concurrency() -> None:
         await asyncio.sleep(0.1)
         return runs
 
-    results = await hasync.gather_with_concurrency(
+    results = await hasync.gather_with_limited_concurrency(
         2, *(_increment_runs_if_in_time() for i in range(4))
     )
 
@@ -246,3 +247,53 @@ async def test_callback_is_always_scheduled(hass: HomeAssistant) -> None:
         hasync.run_callback_threadsafe(hass.loop, callback)
 
     mock_call_soon_threadsafe.assert_called_once()
+
+
+@pytest.mark.skipif(sys.version_info < (3, 12), reason="Test requires Python 3.12+")
+async def test_create_eager_task_312(hass: HomeAssistant) -> None:
+    """Test create_eager_task schedules a task eagerly in the event loop.
+
+    For Python 3.12+, the task is scheduled eagerly in the event loop.
+    """
+    events = []
+
+    async def _normal_task():
+        events.append("normal")
+
+    async def _eager_task():
+        events.append("eager")
+
+    task1 = hasync.create_eager_task(_eager_task())
+    task2 = asyncio.create_task(_normal_task())
+
+    assert events == ["eager"]
+
+    await asyncio.sleep(0)
+    assert events == ["eager", "normal"]
+    await task1
+    await task2
+
+
+@pytest.mark.skipif(sys.version_info >= (3, 12), reason="Test requires < Python 3.12")
+async def test_create_eager_task_pre_312(hass: HomeAssistant) -> None:
+    """Test create_eager_task schedules a task in the event loop.
+
+    For older python versions, the task is scheduled normally.
+    """
+    events = []
+
+    async def _normal_task():
+        events.append("normal")
+
+    async def _eager_task():
+        events.append("eager")
+
+    task1 = hasync.create_eager_task(_eager_task())
+    task2 = asyncio.create_task(_normal_task())
+
+    assert events == []
+
+    await asyncio.sleep(0)
+    assert events == ["eager", "normal"]
+    await task1
+    await task2

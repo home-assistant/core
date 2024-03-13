@@ -20,7 +20,7 @@ from .const import DOMAIN
 from .coordinator import Coordinator, GardenaBluetoothDescriptorEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class GardenaBluetoothBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Description of entity."""
 

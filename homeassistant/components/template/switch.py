@@ -113,6 +113,7 @@ class SwitchTemplate(TemplateEntity, SwitchEntity, RestoreEntity):
         self._on_script = Script(hass, config[ON_ACTION], friendly_name, DOMAIN)
         self._off_script = Script(hass, config[OFF_ACTION], friendly_name, DOMAIN)
         self._state: bool | None = False
+        self._attr_assumed_state = self._template is None
 
     @callback
     def _update_state(self, result):
@@ -168,8 +169,3 @@ class SwitchTemplate(TemplateEntity, SwitchEntity, RestoreEntity):
         if self._template is None:
             self._state = False
             self.async_write_ha_state()
-
-    @property
-    def assumed_state(self) -> bool:
-        """State is assumed, if no template given."""
-        return self._template is None

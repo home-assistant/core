@@ -57,7 +57,7 @@ from .const import (
     KNXConfigEntryData,
 )
 from .helpers.keyring import DEFAULT_KNX_KEYRING_FILENAME, save_uploaded_knxkeys_file
-from .schema import ia_validator, ip_v4_validator
+from .validation import ia_validator, ip_v4_validator
 
 CONF_KNX_GATEWAY: Final = "gateway"
 CONF_MAX_RATE_LIMIT: Final = 60
@@ -237,10 +237,7 @@ class KNXCommonFlow(ABC, FlowHandler):
                 tunnel_endpoint_ia=None,
             )
             if connection_type == CONF_KNX_TUNNELING_TCP_SECURE:
-                return self.async_show_menu(
-                    step_id="secure_key_source",
-                    menu_options=["secure_knxkeys", "secure_tunnel_manual"],
-                )
+                return await self.async_step_secure_key_source_menu_tunnel()
             self.new_title = f"Tunneling @ {self._selected_tunnel}"
             return self.finish_flow()
 
@@ -295,9 +292,7 @@ class KNXCommonFlow(ABC, FlowHandler):
                 else:
                     if bool(self._selected_tunnel.tunnelling_requires_secure) is not (
                         selected_tunnelling_type == CONF_KNX_TUNNELING_TCP_SECURE
-                    ):
-                        errors[CONF_KNX_TUNNELING_TYPE] = "unsupported_tunnel_type"
-                    elif (
+                    ) or (
                         selected_tunnelling_type == CONF_KNX_TUNNELING_TCP
                         and not self._selected_tunnel.supports_tunnelling_tcp
                     ):
@@ -317,10 +312,7 @@ class KNXCommonFlow(ABC, FlowHandler):
                 )
 
                 if selected_tunnelling_type == CONF_KNX_TUNNELING_TCP_SECURE:
-                    return self.async_show_menu(
-                        step_id="secure_key_source",
-                        menu_options=["secure_knxkeys", "secure_tunnel_manual"],
-                    )
+                    return await self.async_step_secure_key_source_menu_tunnel()
                 self.new_title = (
                     "Tunneling "
                     f"{'UDP' if selected_tunnelling_type == CONF_KNX_TUNNELING else 'TCP'} "
@@ -680,10 +672,7 @@ class KNXCommonFlow(ABC, FlowHandler):
                 )
                 if connection_type == CONF_KNX_ROUTING_SECURE:
                     self.new_title = f"Secure Routing as {_individual_address}"
-                    return self.async_show_menu(
-                        step_id="secure_key_source",
-                        menu_options=["secure_knxkeys", "secure_routing_manual"],
-                    )
+                    return await self.async_step_secure_key_source_menu_routing()
                 self.new_title = f"Routing as {_individual_address}"
                 return self.finish_flow()
 
@@ -710,6 +699,24 @@ class KNXCommonFlow(ABC, FlowHandler):
 
         return self.async_show_form(
             step_id="routing", data_schema=vol.Schema(fields), errors=errors
+        )
+
+    async def async_step_secure_key_source_menu_tunnel(
+        self, user_input: dict | None = None
+    ) -> FlowResult:
+        """Show the key source menu."""
+        return self.async_show_menu(
+            step_id="secure_key_source_menu_tunnel",
+            menu_options=["secure_knxkeys", "secure_tunnel_manual"],
+        )
+
+    async def async_step_secure_key_source_menu_routing(
+        self, user_input: dict | None = None
+    ) -> FlowResult:
+        """Show the key source menu."""
+        return self.async_show_menu(
+            step_id="secure_key_source_menu_routing",
+            menu_options=["secure_knxkeys", "secure_routing_manual"],
         )
 
 
@@ -770,7 +777,7 @@ class KNXOptionsFlow(KNXCommonFlow, OptionsFlow):
     ) -> FlowResult:
         """Manage KNX options."""
         return self.async_show_menu(
-            step_id="options_init",
+            step_id="init",
             menu_options=[
                 "connection_type",
                 "communication_settings",

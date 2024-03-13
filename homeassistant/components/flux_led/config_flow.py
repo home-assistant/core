@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import contextlib
-from typing import Any, Final, cast
+from typing import Any, cast
 
 from flux_led.const import (
     ATTR_ID,
@@ -17,7 +17,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import device_registry as dr
@@ -46,8 +46,6 @@ from .discovery import (
     async_update_entry_from_discovery,
 )
 from .util import format_as_flux_mac, mac_matches_by_one
-
-CONF_DEVICE: Final = "device"
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -127,9 +125,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     config_entries.ConfigEntryState.NOT_LOADED,
                 )
             ) or entry.state == config_entries.ConfigEntryState.SETUP_RETRY:
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(entry.entry_id)
-                )
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
             else:
                 async_dispatcher_send(
                     self.hass,

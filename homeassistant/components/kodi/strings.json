@@ -8,6 +8,9 @@
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
           "ssl": "[%key:common::config_flow::data::ssl%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the system hosting your Kodi server."
         }
       },
       "discovery_confirm": {
@@ -43,8 +46,8 @@
   },
   "device_automation": {
     "trigger_type": {
-      "turn_on": "[%key:common::device_automation::action_type::turn_on%]",
-      "turn_off": "[%key:common::device_automation::action_type::turn_off%]"
+      "turn_on": "[%key:common::device_automation::trigger_type::turned_on%]",
+      "turn_off": "[%key:common::device_automation::trigger_type::turned_off%]"
     }
   },
   "services": {

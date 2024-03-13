@@ -109,7 +109,7 @@ async def async_setup_entry(
 
 @callback
 def async_create_preview_media_player(
-    name: str, validated_config: dict[str, Any]
+    hass: HomeAssistant, name: str, validated_config: dict[str, Any]
 ) -> MediaPlayerGroup:
     """Create a preview sensor."""
     return MediaPlayerGroup(
@@ -121,6 +121,8 @@ def async_create_preview_media_player(
 
 class MediaPlayerGroup(MediaPlayerEntity):
     """Representation of a Media Group."""
+
+    _unrecorded_attributes = frozenset({ATTR_ENTITY_ID})
 
     _attr_available: bool = False
     _attr_should_poll = False
@@ -234,7 +236,8 @@ class MediaPlayerGroup(MediaPlayerEntity):
         ) -> None:
             """Handle child updates."""
             self.async_update_group_state()
-            preview_callback(*self._async_generate_attributes())
+            calculated_state = self._async_calculate_state()
+            preview_callback(calculated_state.state, calculated_state.attributes)
 
         async_state_changed_listener(None)
         return async_track_state_change_event(

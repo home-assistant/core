@@ -19,7 +19,6 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import async_get_device_automations, async_mock_service
 
-MOCK_DEVICE_ID = "some-device-id"
 DATA_MESSAGE = {"message": "service-called"}
 
 
@@ -96,12 +95,12 @@ async def test_get_triggers(hass: HomeAssistant, wemo_entity) -> None:
     assert triggers == unordered(expected_triggers)
 
 
-async def test_fires_on_long_press(hass: HomeAssistant) -> None:
+async def test_fires_on_long_press(hass: HomeAssistant, wemo_entity) -> None:
     """Test wemo long press trigger firing."""
-    assert await setup_automation(hass, MOCK_DEVICE_ID, EVENT_TYPE_LONG_PRESS)
+    assert await setup_automation(hass, wemo_entity.device_id, EVENT_TYPE_LONG_PRESS)
     calls = async_mock_service(hass, "test", "automation")
 
-    message = {CONF_DEVICE_ID: MOCK_DEVICE_ID, CONF_TYPE: EVENT_TYPE_LONG_PRESS}
+    message = {CONF_DEVICE_ID: wemo_entity.device_id, CONF_TYPE: EVENT_TYPE_LONG_PRESS}
     hass.bus.async_fire(WEMO_SUBSCRIPTION_EVENT, message)
     await hass.async_block_till_done()
     assert len(calls) == 1

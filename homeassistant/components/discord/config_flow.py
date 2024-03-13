@@ -36,11 +36,9 @@ class DiscordFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input:
             error, info = await _async_try_connect(user_input[CONF_API_TOKEN])
             if info and (entry := await self.async_set_unique_id(str(info.id))):
-                self.hass.config_entries.async_update_entry(
+                return self.async_update_reload_and_abort(
                     entry, data=entry.data | user_input
                 )
-                await self.hass.config_entries.async_reload(entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
             if error:
                 errors["base"] = error
 

@@ -29,7 +29,7 @@ from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class YoLinkSwitchEntityDescription(SwitchEntityDescription):
     """YoLink SwitchEntityDescription."""
 

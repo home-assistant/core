@@ -115,11 +115,15 @@ async def async_attach_trigger(
 
             if event_context_items:
                 # Fast path for simple items comparison
-                if not (event.context.as_dict().items() >= event_context_items):
+                # This is safe because we do not mutate the event context
+                # pylint: disable-next=protected-access
+                if not (event.context._as_dict.items() >= event_context_items):
                     return False
             elif event_context_schema:
                 # Slow path for schema validation
-                event_context_schema(dict(event.context.as_dict()))
+                # This is safe because we make a copy of the event context
+                # pylint: disable-next=protected-access
+                event_context_schema(dict(event.context._as_dict))
         except vol.Invalid:
             # If event doesn't match, skip event
             return False
@@ -142,7 +146,9 @@ async def async_attach_trigger(
         )
 
     removes = [
-        hass.bus.async_listen(event_type, handle_event, event_filter=filter_event)
+        hass.bus.async_listen(
+            event_type, handle_event, event_filter=filter_event, run_immediately=True
+        )
         for event_type in event_types
     ]
 

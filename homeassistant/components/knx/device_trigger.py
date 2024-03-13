@@ -9,11 +9,12 @@ from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEM
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import selector
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from . import KNXModule
-from .const import DOMAIN
+from .const import DOMAIN, SIGNAL_KNX_TELEGRAM_DICT
 from .project import KNXProject
 from .schema import ga_list_validator
 from .telegrams import TelegramDict
@@ -87,7 +88,6 @@ async def async_attach_trigger(
     trigger_data = trigger_info["trigger_data"]
     dst_addresses: list[str] = config.get(EXTRA_FIELD_DESTINATION, [])
     job = HassJob(action, f"KNX device trigger {trigger_info}")
-    knx: KNXModule = hass.data[DOMAIN]
 
     @callback
     def async_call_trigger_action(telegram: TelegramDict) -> None:
@@ -99,6 +99,8 @@ async def async_attach_trigger(
             {"trigger": {**trigger_data, **telegram}},
         )
 
-    return knx.telegrams.async_listen_telegram(
-        async_call_trigger_action, name="KNX device trigger call"
+    return async_dispatcher_connect(
+        hass,
+        signal=SIGNAL_KNX_TELEGRAM_DICT,
+        target=async_call_trigger_action,
     )

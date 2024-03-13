@@ -32,8 +32,6 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
             entry.data[CONF_PASSWORD],
             get_region_from_name(entry.data[CONF_REGION]),
             observer_position=GPSPosition(hass.config.latitude, hass.config.longitude),
-            # Force metric system as BMW API apparently only returns metric values now
-            use_metric_units=True,
         )
         self.read_only = entry.options[CONF_READ_ONLY]
         self._entry = entry

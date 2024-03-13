@@ -1,15 +1,17 @@
 """Test the DSMR config flow."""
-import asyncio
 from itertools import chain, repeat
 import os
+from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, MagicMock, patch, sentinel
 
+import pytest
 import serial
 import serial.tools.list_ports
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.dsmr import DOMAIN, config_flow
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -123,9 +125,68 @@ async def test_setup_network_rfxtrx(
     assert result["data"] == {**entry_data, **SERIAL_DATA}
 
 
+@pytest.mark.parametrize(
+    ("version", "entry_data"),
+    [
+        (
+            "2.2",
+            {
+                "port": "/dev/ttyUSB1234",
+                "dsmr_version": "2.2",
+                "protocol": "dsmr_protocol",
+                "serial_id": "12345678",
+                "serial_id_gas": "123456789",
+            },
+        ),
+        (
+            "5B",
+            {
+                "port": "/dev/ttyUSB1234",
+                "dsmr_version": "5B",
+                "protocol": "dsmr_protocol",
+                "serial_id": "12345678",
+                "serial_id_gas": "123456789",
+            },
+        ),
+        (
+            "5L",
+            {
+                "port": "/dev/ttyUSB1234",
+                "dsmr_version": "5L",
+                "protocol": "dsmr_protocol",
+                "serial_id": "12345678",
+                "serial_id_gas": "123456789",
+            },
+        ),
+        (
+            "5S",
+            {
+                "port": "/dev/ttyUSB1234",
+                "dsmr_version": "5S",
+                "protocol": "dsmr_protocol",
+                "serial_id": None,
+                "serial_id_gas": None,
+            },
+        ),
+        (
+            "Q3D",
+            {
+                "port": "/dev/ttyUSB1234",
+                "dsmr_version": "Q3D",
+                "protocol": "dsmr_protocol",
+                "serial_id": "12345678",
+                "serial_id_gas": None,
+            },
+        ),
+    ],
+)
 @patch("serial.tools.list_ports.comports", return_value=[com_port()])
 async def test_setup_serial(
-    com_mock, hass: HomeAssistant, dsmr_connection_send_validate_fixture
+    com_mock,
+    hass: HomeAssistant,
+    dsmr_connection_send_validate_fixture,
+    version: str,
+    entry_data: dict[str, Any],
 ) -> None:
     """Test we can setup serial."""
     port = com_port()
@@ -134,7 +195,7 @@ async def test_setup_serial(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] is None
 
@@ -143,26 +204,20 @@ async def test_setup_serial(
         {"type": "Serial"},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {}
 
     with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"port": port.device, "dsmr_version": "2.2"},
+            {"port": port.device, "dsmr_version": version},
         )
         await hass.async_block_till_done()
 
-    entry_data = {
-        "port": port.device,
-        "dsmr_version": "2.2",
-        "protocol": "dsmr_protocol",
-    }
-
-    assert result["type"] == "create_entry"
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == port.device
-    assert result["data"] == {**entry_data, **SERIAL_DATA}
+    assert result["data"] == entry_data
 
 
 @patch("serial.tools.list_ports.comports", return_value=[com_port()])
@@ -213,137 +268,6 @@ async def test_setup_serial_rfxtrx(
     assert result["type"] == "create_entry"
     assert result["title"] == port.device
     assert result["data"] == {**entry_data, **SERIAL_DATA}
-
-
-@patch("serial.tools.list_ports.comports", return_value=[com_port()])
-async def test_setup_5L(
-    com_mock, hass: HomeAssistant, dsmr_connection_send_validate_fixture
-) -> None:
-    """Test we can setup serial."""
-    port = com_port()
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert result["errors"] is None
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"type": "Serial"},
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "setup_serial"
-    assert result["errors"] == {}
-
-    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"port": port.device, "dsmr_version": "5L"},
-        )
-        await hass.async_block_till_done()
-
-    entry_data = {
-        "port": port.device,
-        "dsmr_version": "5L",
-        "protocol": "dsmr_protocol",
-        "serial_id": "12345678",
-        "serial_id_gas": "123456789",
-    }
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == port.device
-    assert result["data"] == entry_data
-
-
-@patch("serial.tools.list_ports.comports", return_value=[com_port()])
-async def test_setup_5S(
-    com_mock, hass: HomeAssistant, dsmr_connection_send_validate_fixture
-) -> None:
-    """Test we can setup serial."""
-    port = com_port()
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert result["errors"] is None
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"type": "Serial"},
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "setup_serial"
-    assert result["errors"] == {}
-
-    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"port": port.device, "dsmr_version": "5S"}
-        )
-        await hass.async_block_till_done()
-
-    entry_data = {
-        "port": port.device,
-        "dsmr_version": "5S",
-        "protocol": "dsmr_protocol",
-        "serial_id": None,
-        "serial_id_gas": None,
-    }
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == port.device
-    assert result["data"] == entry_data
-
-
-@patch("serial.tools.list_ports.comports", return_value=[com_port()])
-async def test_setup_Q3D(
-    com_mock, hass: HomeAssistant, dsmr_connection_send_validate_fixture
-) -> None:
-    """Test we can setup serial."""
-    port = com_port()
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert result["errors"] is None
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"type": "Serial"},
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "setup_serial"
-    assert result["errors"] == {}
-
-    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"port": port.device, "dsmr_version": "Q3D"},
-        )
-        await hass.async_block_till_done()
-
-    entry_data = {
-        "port": port.device,
-        "dsmr_version": "Q3D",
-        "protocol": "dsmr_protocol",
-        "serial_id": "12345678",
-        "serial_id_gas": None,
-    }
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == port.device
-    assert result["data"] == entry_data
 
 
 @patch("serial.tools.list_ports.comports", return_value=[com_port()])
@@ -410,7 +334,7 @@ async def test_setup_serial_fail(
     # override the mock to have it fail the first time and succeed after
     first_fail_connection_factory = AsyncMock(
         return_value=(transport, protocol),
-        side_effect=chain([serial.serialutil.SerialException], repeat(DEFAULT)),
+        side_effect=chain([serial.SerialException], repeat(DEFAULT)),
     )
 
     assert result["type"] == "form"
@@ -463,13 +387,13 @@ async def test_setup_serial_timeout(
 
     first_timeout_wait_closed = AsyncMock(
         return_value=True,
-        side_effect=chain([asyncio.TimeoutError], repeat(DEFAULT)),
+        side_effect=chain([TimeoutError], repeat(DEFAULT)),
     )
     protocol.wait_closed = first_timeout_wait_closed
 
     first_timeout_wait_closed = AsyncMock(
         return_value=True,
-        side_effect=chain([asyncio.TimeoutError], repeat(DEFAULT)),
+        side_effect=chain([TimeoutError], repeat(DEFAULT)),
     )
     rfxtrx_protocol.wait_closed = first_timeout_wait_closed
 
@@ -549,8 +473,6 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "2.2",
-        "precision": 4,
-        "reconnect_interval": 30,
     }
 
     entry = MockConfigEntry(

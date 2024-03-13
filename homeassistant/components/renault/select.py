@@ -18,7 +18,7 @@ from .entity import RenaultDataEntity, RenaultDataEntityDescription
 from .renault_hub import RenaultHub
 
 
-@dataclass
+@dataclass(frozen=True)
 class RenaultSelectRequiredKeysMixin:
     """Mixin for required keys."""
 
@@ -26,7 +26,7 @@ class RenaultSelectRequiredKeysMixin:
     icon_lambda: Callable[[RenaultSelectEntity], str]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RenaultSelectEntityDescription(
     SelectEntityDescription,
     RenaultDataEntityDescription,

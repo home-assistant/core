@@ -45,7 +45,7 @@ def mock_zha_config_flow_setup() -> Generator[None, None, None]:
     with patch(
         "bellows.zigbee.application.ControllerApplication.probe", side_effect=mock_probe
     ), patch(
-        "homeassistant.components.zha.radio_manager.ZhaRadioManager._connect_zigpy_app",
+        "homeassistant.components.zha.radio_manager.ZhaRadioManager.connect_zigpy_app",
         return_value=mock_connect_app,
     ):
         yield
@@ -147,7 +147,7 @@ async def test_setup_zha(
     assert config_entry.data == {
         "device": {
             "baudrate": 115200,
-            "flow_control": "software",
+            "flow_control": None,
             "path": CONFIG_ENTRY_DATA["device"],
         },
         "radio_type": "ezsp",
@@ -200,14 +200,14 @@ async def test_setup_zha_multipan(
     config_entry = hass.config_entries.async_entries("zha")[0]
     assert config_entry.data == {
         "device": {
-            "baudrate": 57600,  # ZHA default
-            "flow_control": "software",  # ZHA default
+            "baudrate": 115200,
+            "flow_control": None,
             "path": "socket://core-silabs-multiprotocol:9999",
         },
         "radio_type": "ezsp",
     }
     assert config_entry.options == {}
-    assert config_entry.title == "SkyConnect Multi-PAN"
+    assert config_entry.title == "SkyConnect Multiprotocol"
 
 
 async def test_setup_zha_multipan_other_device(
@@ -255,7 +255,7 @@ async def test_setup_zha_multipan_other_device(
     assert config_entry.data == {
         "device": {
             "baudrate": 115200,
-            "flow_control": "software",
+            "flow_control": None,
             "path": CONFIG_ENTRY_DATA["device"],
         },
         "radio_type": "ezsp",

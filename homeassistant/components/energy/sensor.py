@@ -317,6 +317,11 @@ class EnergyCostSensor(SensorEntity):
             try:
                 energy_price = float(energy_price_state.state)
             except ValueError:
+                if self._last_energy_sensor_state is None:
+                    # Initialize as it's the first time all required entities except
+                    # price are in place. This means that the cost will update the first
+                    # time the energy is updated after the price entity is in place.
+                    self._reset(energy_state)
                 return
 
             energy_price_unit: str | None = energy_price_state.attributes.get(
@@ -350,20 +355,19 @@ class EnergyCostSensor(SensorEntity):
             return
 
         if (
-            state_class != SensorStateClass.TOTAL_INCREASING
-            and energy_state.attributes.get(ATTR_LAST_RESET)
-            != self._last_energy_sensor_state.attributes.get(ATTR_LAST_RESET)
-        ):
-            # Energy meter was reset, reset cost sensor too
-            energy_state_copy = copy.copy(energy_state)
-            energy_state_copy.state = "0.0"
-            self._reset(energy_state_copy)
-        elif state_class == SensorStateClass.TOTAL_INCREASING and reset_detected(
-            self.hass,
-            cast(str, self._config[self._adapter.stat_energy_key]),
-            energy,
-            float(self._last_energy_sensor_state.state),
-            self._last_energy_sensor_state,
+            (
+                state_class != SensorStateClass.TOTAL_INCREASING
+                and energy_state.attributes.get(ATTR_LAST_RESET)
+                != self._last_energy_sensor_state.attributes.get(ATTR_LAST_RESET)
+            )
+            or state_class == SensorStateClass.TOTAL_INCREASING
+            and reset_detected(
+                self.hass,
+                cast(str, self._config[self._adapter.stat_energy_key]),
+                energy,
+                float(self._last_energy_sensor_state.state),
+                self._last_energy_sensor_state,
+            )
         ):
             # Energy meter was reset, reset cost sensor too
             energy_state_copy = copy.copy(energy_state)

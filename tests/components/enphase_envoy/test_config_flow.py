@@ -1,12 +1,14 @@
 """Test the Enphase Envoy config flow."""
+from ipaddress import ip_address
 from unittest.mock import AsyncMock
 
 from pyenphase import EnvoyAuthenticationError, EnvoyError
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.components.enphase_envoy.const import DOMAIN
+from homeassistant.components.enphase_envoy.const import DOMAIN, PLATFORMS
 from homeassistant.core import HomeAssistant
 
 
@@ -175,8 +177,8 @@ async def test_zeroconf_pre_token_firmware(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.1.1.1",
-            addresses=["1.1.1.1"],
+            ip_address=ip_address("1.1.1.1"),
+            ip_addresses=[ip_address("1.1.1.1")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -216,8 +218,8 @@ async def test_zeroconf_token_firmware(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.1.1.1",
-            addresses=["1.1.1.1"],
+            ip_address=ip_address("1.1.1.1"),
+            ip_addresses=[ip_address("1.1.1.1")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -248,26 +250,67 @@ async def test_zeroconf_token_firmware(
     }
 
 
+@pytest.mark.parametrize(
+    "mock_authenticate",
+    [
+        AsyncMock(
+            side_effect=[
+                None,
+                EnvoyAuthenticationError("fail authentication"),
+                None,
+            ]
+        ),
+    ],
+)
 async def test_form_host_already_exists(
     hass: HomeAssistant, config_entry, setup_enphase_envoy
 ) -> None:
-    """Test host already exists."""
+    """Test changing credentials for existing host."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
     assert result["errors"] == {}
 
+    # existing config
+    assert config_entry.data["host"] == "1.1.1.1"
+    assert config_entry.data["username"] == "test-username"
+    assert config_entry.data["password"] == "test-password"
+
+    # mock failing authentication on first try
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            "host": "1.1.1.1",
+            "host": "1.1.1.2",
             "username": "test-username",
-            "password": "test-password",
+            "password": "wrong-password",
         },
     )
-    assert result2["type"] == "abort"
-    assert result2["reason"] == "already_configured"
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "invalid_auth"}
+
+    # still original config after failure
+    assert config_entry.data["host"] == "1.1.1.1"
+    assert config_entry.data["username"] == "test-username"
+    assert config_entry.data["password"] == "test-password"
+
+    # mock successful authentication and update of credentials
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "host": "1.1.1.2",
+            "username": "test-username",
+            "password": "changed-password",
+        },
+    )
+    await hass.async_block_till_done()
+    assert result3["type"] == "abort"
+    assert result3["reason"] == "reauth_successful"
+
+    # updated config with new ip and changed pw
+    assert config_entry.data["host"] == "1.1.1.2"
+    assert config_entry.data["username"] == "test-username"
+    assert config_entry.data["password"] == "changed-password"
 
 
 async def test_zeroconf_serial_already_exists(
@@ -278,8 +321,8 @@ async def test_zeroconf_serial_already_exists(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="4.4.4.4",
-            addresses=["4.4.4.4"],
+            ip_address=ip_address("4.4.4.4"),
+            ip_addresses=[ip_address("4.4.4.4")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -301,8 +344,8 @@ async def test_zeroconf_serial_already_exists_ignores_ipv6(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="fd00::b27c:63bb:cc85:4ea0",
-            addresses=["fd00::b27c:63bb:cc85:4ea0"],
+            ip_address=ip_address("fd00::b27c:63bb:cc85:4ea0"),
+            ip_addresses=[ip_address("fd00::b27c:63bb:cc85:4ea0")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -325,8 +368,8 @@ async def test_zeroconf_host_already_exists(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.1.1.1",
-            addresses=["1.1.1.1"],
+            ip_address=ip_address("1.1.1.1"),
+            ip_addresses=[ip_address("1.1.1.1")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -360,3 +403,8 @@ async def test_reauth(hass: HomeAssistant, config_entry, setup_enphase_envoy) ->
     )
     assert result2["type"] == "abort"
     assert result2["reason"] == "reauth_successful"
+
+
+async def test_platforms(snapshot: SnapshotAssertion) -> None:
+    """Test if platform list changed and requires more tests."""
+    assert snapshot == PLATFORMS

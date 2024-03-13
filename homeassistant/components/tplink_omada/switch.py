@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from typing import Any
 
+from tplink_omada_client import SwitchPortOverrides
 from tplink_omada_client.definitions import PoEMode
 from tplink_omada_client.devices import OmadaSwitch, OmadaSwitchPortDetails
-from tplink_omada_client.omadasiteclient import SwitchPortOverrides
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry

@@ -1,5 +1,5 @@
 """Tests for Philips Hue config flow."""
-import asyncio
+from ipaddress import ip_address
 from unittest.mock import Mock, patch
 
 from aiohue.discovery import URL_NUPNP
@@ -253,7 +253,7 @@ async def test_flow_timeout_discovery(hass: HomeAssistant) -> None:
     """Test config flow ."""
     with patch(
         "homeassistant.components.hue.config_flow.discover_nupnp",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -416,8 +416,8 @@ async def test_bridge_homekit(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="0.0.0.0",
-            addresses=["0.0.0.0"],
+            ip_address=ip_address("0.0.0.0"),
+            ip_addresses=[ip_address("0.0.0.0")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -466,8 +466,8 @@ async def test_bridge_homekit_already_configured(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="0.0.0.0",
-            addresses=["0.0.0.0"],
+            ip_address=ip_address("0.0.0.0"),
+            ip_addresses=[ip_address("0.0.0.0")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -526,7 +526,10 @@ def _get_schema_default(schema, key_name):
     raise KeyError(f"{key_name} not found in schema")
 
 
-async def test_options_flow_v2(hass: HomeAssistant) -> None:
+async def test_options_flow_v2(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test options config flow for a V2 bridge."""
     entry = MockConfigEntry(
         domain="hue",
@@ -535,9 +538,8 @@ async def test_options_flow_v2(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    dev_reg = dr.async_get(hass)
     mock_dev_id = "aabbccddee"
-    dev_reg.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id, identifiers={(const.DOMAIN, mock_dev_id)}
     )
 
@@ -568,8 +570,8 @@ async def test_bridge_zeroconf(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="192.168.1.217",
-            addresses=["192.168.1.217"],
+            ip_address=ip_address("192.168.1.217"),
+            ip_addresses=[ip_address("192.168.1.217")],
             port=443,
             hostname="Philips-hue.local",
             type="_hue._tcp.local.",
@@ -604,8 +606,8 @@ async def test_bridge_zeroconf_already_exists(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="192.168.1.217",
-            addresses=["192.168.1.217"],
+            ip_address=ip_address("192.168.1.217"),
+            ip_addresses=[ip_address("192.168.1.217")],
             port=443,
             hostname="Philips-hue.local",
             type="_hue._tcp.local.",
@@ -629,8 +631,8 @@ async def test_bridge_zeroconf_ipv6(hass: HomeAssistant) -> None:
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="fd00::eeb5:faff:fe84:b17d",
-            addresses=["fd00::eeb5:faff:fe84:b17d"],
+            ip_address=ip_address("fd00::eeb5:faff:fe84:b17d"),
+            ip_addresses=[ip_address("fd00::eeb5:faff:fe84:b17d")],
             port=443,
             hostname="Philips-hue.local",
             type="_hue._tcp.local.",
@@ -677,8 +679,8 @@ async def test_bridge_connection_failed(
             const.DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="blah",
-                addresses=["1.2.3.4"],
+                ip_address=ip_address("1.2.3.4"),
+                ip_addresses=[ip_address("1.2.3.4")],
                 port=443,
                 hostname="Philips-hue.local",
                 type="_hue._tcp.local.",
@@ -698,8 +700,8 @@ async def test_bridge_connection_failed(
             const.DOMAIN,
             context={"source": config_entries.SOURCE_HOMEKIT},
             data=zeroconf.ZeroconfServiceInfo(
-                host="0.0.0.0",
-                addresses=["0.0.0.0"],
+                ip_address=ip_address("0.0.0.0"),
+                ip_addresses=[ip_address("0.0.0.0")],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,

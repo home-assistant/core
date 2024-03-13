@@ -6,9 +6,11 @@ from collections.abc import Mapping
 import contextlib
 from dataclasses import asdict, dataclass
 from enum import StrEnum
+from functools import lru_cache
 import logging
 from typing import Any, cast
 
+from homeassistant.const import EVENT_LOGGING_CHANGED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
@@ -16,7 +18,6 @@ from homeassistant.loader import IntegrationNotFound, async_get_integration
 
 from .const import (
     DOMAIN,
-    EVENT_LOGGING_CHANGED,
     LOGGER_DEFAULT,
     LOGGER_LOGS,
     LOGSEVERITY,
@@ -216,3 +217,11 @@ class LoggerSettings:
                 )
 
         return dict(combined_logs)
+
+
+get_logger = lru_cache(maxsize=256)(logging.getLogger)
+"""Get a logger.
+
+getLogger uses a threading.RLock, so we cache the result to avoid
+locking the threads every time the integrations page is loaded.
+"""

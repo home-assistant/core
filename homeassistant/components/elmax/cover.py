@@ -18,13 +18,11 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-_COMMAND_BY_MOTION_STATUS = (
-    {  # Maps the stop command to use for every cover motion status
-        CoverStatus.DOWN: CoverCommand.DOWN,
-        CoverStatus.UP: CoverCommand.UP,
-        CoverStatus.IDLE: None,
-    }
-)
+_COMMAND_BY_MOTION_STATUS = {  # Maps the stop command to use for every cover motion status
+    CoverStatus.DOWN: CoverCommand.DOWN,
+    CoverStatus.UP: CoverCommand.UP,
+    CoverStatus.IDLE: None,
+}
 
 
 async def async_setup_entry(

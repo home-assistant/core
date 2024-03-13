@@ -26,7 +26,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import convert
 
-from . import FIBARO_DEVICES, FibaroDevice
+from . import FibaroController, FibaroDevice
 from .const import DOMAIN
 
 # List of known sensors which represents a fibaro device
@@ -107,7 +107,9 @@ async def async_setup_entry(
     """Set up the Fibaro controller devices."""
     entities: list[SensorEntity] = []
 
-    for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][Platform.SENSOR]:
+    controller: FibaroController = hass.data[DOMAIN][entry.entry_id]
+
+    for device in controller.fibaro_devices[Platform.SENSOR]:
         entity_description = MAIN_SENSOR_TYPES.get(device.type)
 
         # main sensors are created even if the entity type is not known
@@ -122,7 +124,7 @@ async def async_setup_entry(
         Platform.SENSOR,
         Platform.SWITCH,
     ):
-        for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][platform]:
+        for device in controller.fibaro_devices[platform]:
             for entity_description in ADDITIONAL_SENSOR_TYPES:
                 if entity_description.key in device.properties:
                     entities.append(FibaroAdditionalSensor(device, entity_description))

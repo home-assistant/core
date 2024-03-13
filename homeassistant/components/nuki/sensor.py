@@ -9,19 +9,18 @@ from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import NukiEntity
-from .const import ATTR_NUKI_ID, DATA_COORDINATOR, DATA_LOCKS, DOMAIN as NUKI_DOMAIN
+from . import NukiEntity, NukiEntryData
+from .const import ATTR_NUKI_ID, DOMAIN as NUKI_DOMAIN
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Nuki lock sensor."""
-    data = hass.data[NUKI_DOMAIN][entry.entry_id]
-    coordinator = data[DATA_COORDINATOR]
+    entry_data: NukiEntryData = hass.data[NUKI_DOMAIN][entry.entry_id]
 
     async_add_entities(
-        NukiBatterySensor(coordinator, lock) for lock in data[DATA_LOCKS]
+        NukiBatterySensor(entry_data.coordinator, lock) for lock in entry_data.locks
     )
 
 

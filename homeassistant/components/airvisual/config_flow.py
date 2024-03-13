@@ -19,6 +19,7 @@ from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_COUNTRY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_SHOW_ON_MAP,
@@ -35,7 +36,6 @@ from homeassistant.helpers.schema_config_entry_flow import (
 from . import async_get_geography_id
 from .const import (
     CONF_CITY,
-    CONF_COUNTRY,
     CONF_INTEGRATION_TYPE,
     DOMAIN,
     INTEGRATION_TYPE_GEOGRAPHY_COORDS,

@@ -9,6 +9,7 @@ from aiolivisi import AioLivisi, LivisiEvent, Websocket
 from aiolivisi.errors import TokenExpiredException
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -17,8 +18,6 @@ from .const import (
     AVATAR,
     AVATAR_PORT,
     CLASSIC_PORT,
-    CONF_HOST,
-    CONF_PASSWORD,
     DEVICE_POLLING_DELAY,
     LIVISI_REACHABILITY_CHANGE,
     LIVISI_STATE_CHANGE,

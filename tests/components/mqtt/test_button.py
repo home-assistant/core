@@ -443,7 +443,7 @@ async def test_entity_debug_info_message(
             mqtt.DOMAIN: {
                 button.DOMAIN: {
                     "name": "test",
-                    "state_topic": "test-topic",
+                    "command_topic": "test-topic",
                     "device_class": "foobarnotreal",
                 }
             }
@@ -451,11 +451,13 @@ async def test_entity_debug_info_message(
     ],
 )
 async def test_invalid_device_class(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test device_class option with invalid value."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
+    assert await mqtt_mock_entry()
+    assert "expected ButtonDeviceClass" in caplog.text
 
 
 @pytest.mark.parametrize(

@@ -38,17 +38,17 @@ class ValloxBinarySensorEntity(ValloxEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        return self.coordinator.data.get_metric(self.entity_description.metric_key) == 1
+        return self.coordinator.data.get(self.entity_description.metric_key) == 1
 
 
-@dataclass
+@dataclass(frozen=True)
 class ValloxMetricKeyMixin:
     """Dataclass to allow defining metric_key without a default value."""
 
     metric_key: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class ValloxBinarySensorEntityDescription(
     BinarySensorEntityDescription, ValloxMetricKeyMixin
 ):

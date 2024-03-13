@@ -3,8 +3,10 @@
 
 import time
 
-from homeassistant.components.bluetooth.advertisement_tracker import (
-    ADVERTISING_TIMES_NEEDED,
+from habluetooth.advertisement_tracker import ADVERTISING_TIMES_NEEDED
+
+from homeassistant.components.bluetooth.api import (
+    async_get_fallback_availability_interval,
 )
 from homeassistant.core import HomeAssistant
 
@@ -181,3 +183,23 @@ async def test_old_tracker_leave_home(
     state = hass.states.get("device_tracker.private_ble_device_000000")
     assert state
     assert state.state == "not_home"
+
+
+async def test_mac_rotation(
+    hass: HomeAssistant,
+    enable_bluetooth: None,
+    entity_registry_enabled_by_default: None,
+) -> None:
+    """Test sensors get value when we receive a broadcast."""
+    await async_mock_config_entry(hass)
+
+    assert async_get_fallback_availability_interval(hass, MAC_RPA_VALID_1) is None
+    assert async_get_fallback_availability_interval(hass, MAC_RPA_VALID_2) is None
+
+    for i in range(ADVERTISING_TIMES_NEEDED):
+        await async_inject_broadcast(
+            hass, MAC_RPA_VALID_1, mfr_data=bytes(i), broadcast_time=i * 10
+        )
+
+    await async_inject_broadcast(hass, MAC_RPA_VALID_2)
+    assert async_get_fallback_availability_interval(hass, MAC_RPA_VALID_2) == 10
