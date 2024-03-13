@@ -219,14 +219,17 @@ async def get_coap_context(hass: HomeAssistant) -> COAP:
 
     ipv4: list[IPv4Address] = []
     if not network.async_only_default_interface_enabled(adapters):
-        for address in await network.async_get_enabled_source_ips(hass):
-            if address.version == 4 and not (
+        ipv4.extend(
+            address
+            for address in await network.async_get_enabled_source_ips(hass)
+            if address.version == 4
+            and not (
                 address.is_link_local
                 or address.is_loopback
                 or address.is_multicast
                 or address.is_unspecified
-            ):
-                ipv4.append(address)
+            )
+        )
     LOGGER.debug("Network IPv4 addresses: %s", ipv4)
     if DOMAIN in hass.data:
         port = hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT)
