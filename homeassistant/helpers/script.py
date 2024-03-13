@@ -1141,10 +1141,9 @@ class _QueuedScriptRun(_ScriptRun):
         """Run script."""
         # Wait for previous run, if any, to finish by attempting to acquire the script's
         # shared lock. At the same time monitor if we've been told to stop.
-        lock = self._script._queue_lck  # pylint: disable=protected-access
         try:
             async with async_interrupt.interrupt(self._stop, ScriptStoppedError, None):
-                await lock.acquire()
+                await self._script._queue_lck.acquire()  # pylint: disable=protected-access
         except ScriptStoppedError as ex:
             # If we've been told to stop, then just finish up.
             self._finish()
