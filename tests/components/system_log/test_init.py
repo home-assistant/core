@@ -467,6 +467,7 @@ async def test__figure_out_source(hass: HomeAssistant) -> None:
     file, line_no = system_log._figure_out_source(
         mock_record,
         re.compile(regex_str),
+        traceback.extract_tb(exc_info[2]),
     )
     assert file == __file__
     assert line_no != 5

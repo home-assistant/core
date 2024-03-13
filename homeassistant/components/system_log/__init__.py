@@ -72,16 +72,16 @@ def _figure_out_source(
     # The other case is when a regular "log" is made (without an attached
     # exception). In that case, just use the file where the log was made from.
     if extracted_tb:
-        stack: list[traceback.FrameSummary] = []
-        for i, (filename, _, _) in enumerate(extracted_tb):
+        stack = [(x[0], x[1]) for x in extracted_tb]
+        for i, (filename, _) in enumerate(stack):
             # Slice the stack to the first frame that matches
             # the record pathname.
             if filename == record.pathname:
-                stack = extracted_tb[0 : i + 1]
+                stack = stack[0 : i + 1]
                 break
         # Iterate through the stack call (in reverse) and find the last call from
         # a file in Home Assistant. Try to figure out where error happened.
-        for path, line_number in reversed(stack or extracted_tb):
+        for path, line_number in reversed(stack):
             # Try to match with a file within Home Assistant
             if match := paths_re.match(path):
                 return (cast(str, match.group(1)), line_number)
