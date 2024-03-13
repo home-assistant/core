@@ -206,6 +206,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ssl_key=ssl_key,
         trusted_proxies=trusted_proxies,
         ssl_profile=ssl_profile,
+        strict_connection_enabled_non_cloud=conf[CONF_STRICT_CONNECTION],
     )
     await server.async_initialize(
         cors_origins=cors_origins,
@@ -213,7 +214,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         login_threshold=login_threshold,
         is_ban_enabled=is_ban_enabled,
         use_x_frame_options=use_x_frame_options,
-        strict_connection=conf[CONF_STRICT_CONNECTION],
     )
 
     async def stop_server(event: Event) -> None:
@@ -293,6 +293,7 @@ class HomeAssistantHTTP:
         server_port: int,
         trusted_proxies: list[IPv4Network | IPv6Network],
         ssl_profile: str,
+        strict_connection_enabled_non_cloud: bool = False,
     ) -> None:
         """Initialize the HTTP Home Assistant server."""
         self.app = HomeAssistantApplication(
@@ -318,6 +319,9 @@ class HomeAssistantHTTP:
         self.runner: web.AppRunner | None = None
         self.site: HomeAssistantTCPSite | None = None
         self.context: ssl.SSLContext | None = None
+        self.strict_connection_enabled_non_cloud: Final = (
+            strict_connection_enabled_non_cloud
+        )
 
     async def async_initialize(
         self,
@@ -327,7 +331,6 @@ class HomeAssistantHTTP:
         login_threshold: int,
         is_ban_enabled: bool,
         use_x_frame_options: bool,
-        strict_connection: bool,
     ) -> None:
         """Initialize the server."""
         self.app[KEY_HASS] = self.hass
@@ -344,7 +347,9 @@ class HomeAssistantHTTP:
         if is_ban_enabled:
             setup_bans(self.hass, self.app, login_threshold)
 
-        await async_setup_auth(self.hass, self.app, strict_connection)
+        await async_setup_auth(
+            self.hass, self.app, self.strict_connection_enabled_non_cloud
+        )
 
         setup_headers(self.app, use_x_frame_options)
         setup_cors(self.app, cors_origins)

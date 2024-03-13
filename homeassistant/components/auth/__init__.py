@@ -159,6 +159,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2AuthorizeCallbackView
 from homeassistant.helpers.typing import ConfigType
@@ -210,6 +211,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _: ServiceCall,
     ) -> ServiceResponse:
         """Create a strict connection url and return it."""
+        if not hass.http.strict_connection_enabled_non_cloud:
+            raise ServiceValidationError(
+                "Strict connection is not enabled for non-cloud requests"
+            )
+
         url = async_sign_path(
             hass, STRICT_CONNECTION_URL, timedelta(hours=1), use_content_user=True
         )
