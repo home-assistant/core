@@ -153,6 +153,7 @@ class TwitchMock:
         self,
         token: str,
         scope: list[AuthScope],
+        refresh_token: str | None = None,
         validate: bool = True,
     ) -> None:
         """Set user authentication."""
