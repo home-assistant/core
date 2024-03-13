@@ -1,4 +1,5 @@
 """Constants for the DSMR integration."""
+
 from __future__ import annotations
 
 import logging
@@ -11,9 +12,6 @@ LOGGER = logging.getLogger(__package__)
 
 PLATFORMS = [Platform.SENSOR]
 CONF_DSMR_VERSION = "dsmr_version"
-CONF_PROTOCOL = "protocol"
-CONF_RECONNECT_INTERVAL = "reconnect_interval"
-CONF_PRECISION = "precision"
 CONF_TIME_BETWEEN_UPDATE = "time_between_update"
 
 CONF_SERIAL_ID = "serial_id"
@@ -29,6 +27,7 @@ DATA_TASK = "task"
 
 DEVICE_NAME_ELECTRICITY = "Electricity Meter"
 DEVICE_NAME_GAS = "Gas Meter"
+DEVICE_NAME_WATER = "Water Meter"
 
 DSMR_VERSIONS = {"2.2", "4", "5", "5B", "5L", "5S", "Q3D"}
 

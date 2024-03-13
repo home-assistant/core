@@ -1,4 +1,5 @@
 """Test the HVV Departures config flow."""
+
 import json
 from unittest.mock import patch
 

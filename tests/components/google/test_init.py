@@ -1,4 +1,5 @@
 """The tests for the Google Calendar component."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -699,7 +700,11 @@ async def test_add_event_location(
 
 @pytest.mark.parametrize(
     "config_entry_token_expiry",
-    [datetime.datetime.max.replace(tzinfo=UTC).timestamp() + 1],
+    [
+        (datetime.datetime.max.replace(tzinfo=UTC).timestamp() + 1),
+        (utcnow().replace(tzinfo=None).timestamp()),
+    ],
+    ids=["max_timestamp", "timestamp_naive"],
 )
 async def test_invalid_token_expiry_in_config_entry(
     hass: HomeAssistant,

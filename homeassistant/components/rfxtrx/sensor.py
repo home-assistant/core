@@ -1,4 +1,5 @@
 """Support for RFXtrx sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -58,7 +59,7 @@ def _rssi_convert(value: int | None) -> str | None:
     return f"{value*8-120}"
 
 
-@dataclass
+@dataclass(frozen=True)
 class RfxtrxSensorEntityDescription(SensorEntityDescription):
     """Description of sensor entities."""
 

@@ -1,0 +1,10 @@
+{
+  "domain": "tessie",
+  "name": "Tessie",
+  "codeowners": ["@Bre77"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/tessie",
+  "iot_class": "cloud_polling",
+  "loggers": ["tessie"],
+  "requirements": ["tessie-api==0.0.9"]
+}

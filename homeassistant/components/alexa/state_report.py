@@ -1,7 +1,7 @@
 """Alexa state report code."""
+
 from __future__ import annotations
 
-import asyncio
 from asyncio import timeout
 from http import HTTPStatus
 import json
@@ -34,6 +34,7 @@ from .const import (
     DOMAIN,
     Cause,
 )
+from .diagnostics import async_redact_auth_data
 from .entities import ENTITY_ADAPTERS, AlexaEntity, generate_alexa_id
 from .errors import AlexaInvalidEndpointError, NoTokenAvailable, RequireRelink
 
@@ -42,6 +43,8 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 DEFAULT_TIMEOUT = 10
+
+TO_REDACT = {"correlationToken", "token"}
 
 
 class AlexaDirective:
@@ -372,14 +375,16 @@ async def async_send_changereport_message(
                 allow_redirects=True,
             )
 
-    except (asyncio.TimeoutError, aiohttp.ClientError):
+    except (TimeoutError, aiohttp.ClientError):
         _LOGGER.error("Timeout sending report to Alexa for %s", alexa_entity.entity_id)
         return
 
     response_text = await response.text()
 
     if _LOGGER.isEnabledFor(logging.DEBUG):
-        _LOGGER.debug("Sent: %s", json.dumps(message_serialized))
+        _LOGGER.debug(
+            "Sent: %s", json.dumps(async_redact_auth_data(message_serialized))
+        )
         _LOGGER.debug("Received (%s): %s", response.status, response_text)
 
     if response.status == HTTPStatus.ACCEPTED:
@@ -526,14 +531,16 @@ async def async_send_doorbell_event_message(
                 allow_redirects=True,
             )
 
-    except (asyncio.TimeoutError, aiohttp.ClientError):
+    except (TimeoutError, aiohttp.ClientError):
         _LOGGER.error("Timeout sending report to Alexa for %s", alexa_entity.entity_id)
         return
 
     response_text = await response.text()
 
     if _LOGGER.isEnabledFor(logging.DEBUG):
-        _LOGGER.debug("Sent: %s", json.dumps(message_serialized))
+        _LOGGER.debug(
+            "Sent: %s", json.dumps(async_redact_auth_data(message_serialized))
+        )
         _LOGGER.debug("Received (%s): %s", response.status, response_text)
 
     if response.status == HTTPStatus.ACCEPTED:

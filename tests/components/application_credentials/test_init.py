@@ -1,4 +1,5 @@
 """Test the Developer Credentials integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Generator
@@ -479,7 +480,7 @@ async def test_config_flow(
     resp = await client.cmd("delete", {"application_credentials_id": ID})
     assert not resp.get("success")
     assert "error" in resp
-    assert resp["error"].get("code") == "unknown_error"
+    assert resp["error"].get("code") == "home_assistant_error"
     assert (
         resp["error"].get("message")
         == "Cannot delete credential in use by integration fake_integration"

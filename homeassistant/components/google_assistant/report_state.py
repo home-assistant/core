@@ -1,4 +1,5 @@
 """Google Report State implementation."""
+
 from __future__ import annotations
 
 from collections import deque
@@ -80,7 +81,15 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
         ):
             return
 
-        if (notifications := entity.notifications_serialize()) is not None:
+        # We only trigger notifications on changes in the state value, not attributes.
+        # This is mainly designed for our event entity types
+        # We need to synchronize notifications using a `SYNC` response,
+        # together with other state changes.
+        if (
+            old_state
+            and old_state.state != new_state.state
+            and (notifications := entity.notifications_serialize()) is not None
+        ):
             event_id = uuid4().hex
             payload = {
                 "devices": {"notifications": {entity.state.entity_id: notifications}}

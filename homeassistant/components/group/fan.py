@@ -1,4 +1,5 @@
 """Platform allowing several fans to be grouped into one fan."""
+
 from __future__ import annotations
 
 from functools import reduce
@@ -91,7 +92,9 @@ async def async_setup_entry(
 
 
 @callback
-def async_create_preview_fan(name: str, validated_config: dict[str, Any]) -> FanGroup:
+def async_create_preview_fan(
+    hass: HomeAssistant, name: str, validated_config: dict[str, Any]
+) -> FanGroup:
     """Create a preview sensor."""
     return FanGroup(
         None,

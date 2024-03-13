@@ -1,4 +1,5 @@
 """Support for the AccuWeather service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -45,19 +46,11 @@ from .const import (
 PARALLEL_UPDATES = 1
 
 
-@dataclass
-class AccuWeatherSensorDescriptionMixin:
-    """Mixin for AccuWeather sensor."""
-
-    value_fn: Callable[[dict[str, Any]], str | int | float | None]
-
-
-@dataclass
-class AccuWeatherSensorDescription(
-    SensorEntityDescription, AccuWeatherSensorDescriptionMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class AccuWeatherSensorDescription(SensorEntityDescription):
     """Class describing AccuWeather sensor entities."""
 
+    value_fn: Callable[[dict[str, Any]], str | int | float | None]
     attr_fn: Callable[[dict[str, Any]], dict[str, Any]] = lambda _: {}
     day: int | None = None
 

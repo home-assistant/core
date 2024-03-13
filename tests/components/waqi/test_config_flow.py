@@ -1,4 +1,5 @@
 """Test the World Air Quality Index (WAQI) config flow."""
+
 import json
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -235,9 +236,9 @@ async def test_error_in_second_step(
 
     with patch(
         "aiowaqi.WAQIClient.authenticate",
-    ), patch(
-        "aiowaqi.WAQIClient.get_by_coordinates", side_effect=exception
-    ), patch("aiowaqi.WAQIClient.get_by_station_number", side_effect=exception):
+    ), patch("aiowaqi.WAQIClient.get_by_coordinates", side_effect=exception), patch(
+        "aiowaqi.WAQIClient.get_by_station_number", side_effect=exception
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             payload,

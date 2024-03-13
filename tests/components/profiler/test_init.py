@@ -1,11 +1,12 @@
 """Test the Profiler config flow."""
+
 from datetime import timedelta
 from functools import lru_cache
 import os
 from pathlib import Path
 from unittest.mock import patch
 
-from lru import LRU  # pylint: disable=no-name-in-module
+from lru import LRU
 import pytest
 
 from homeassistant.components.profiler import (

@@ -1,4 +1,5 @@
 """Tests for the Plugwise Climate integration."""
+
 from unittest.mock import MagicMock
 
 from plugwise.exceptions import (

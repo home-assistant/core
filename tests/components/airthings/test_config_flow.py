@@ -1,10 +1,12 @@
 """Test the Airthings config flow."""
+
 from unittest.mock import patch
 
 import airthings
 
 from homeassistant import config_entries
-from homeassistant.components.airthings.const import CONF_ID, CONF_SECRET, DOMAIN
+from homeassistant.components.airthings.const import CONF_SECRET, DOMAIN
+from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 

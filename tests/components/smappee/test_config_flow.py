@@ -1,4 +1,5 @@
 """Test the Smappee component config flow module."""
+
 from http import HTTPStatus
 from ipaddress import ip_address
 from unittest.mock import patch
@@ -146,9 +147,7 @@ async def test_user_local_connection_error(hass: HomeAssistant) -> None:
         "pysmappee.mqtt.SmappeeLocalMqtt.start_attempt", return_value=True
     ), patch("pysmappee.mqtt.SmappeeLocalMqtt.start", return_value=True), patch(
         "pysmappee.mqtt.SmappeeLocalMqtt.stop", return_value=True
-    ), patch(
-        "pysmappee.mqtt.SmappeeLocalMqtt.is_config_ready", return_value=None
-    ):
+    ), patch("pysmappee.mqtt.SmappeeLocalMqtt.is_config_ready", return_value=None):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -474,9 +473,7 @@ async def test_full_zeroconf_flow(hass: HomeAssistant) -> None:
     ), patch(
         "pysmappee.api.SmappeeLocalApi.load_instantaneous",
         return_value=[{"key": "phase0ActivePower", "value": 0}],
-    ), patch(
-        "homeassistant.components.smappee.async_setup_entry", return_value=True
-    ):
+    ), patch("homeassistant.components.smappee.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
@@ -516,9 +513,7 @@ async def test_full_user_local_flow(hass: HomeAssistant) -> None:
     ), patch(
         "pysmappee.api.SmappeeLocalApi.load_instantaneous",
         return_value=[{"key": "phase0ActivePower", "value": 0}],
-    ), patch(
-        "homeassistant.components.smappee.async_setup_entry", return_value=True
-    ):
+    ), patch("homeassistant.components.smappee.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},

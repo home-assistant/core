@@ -1,4 +1,5 @@
 """Component for interacting with a Lutron Caseta system."""
+
 from __future__ import annotations
 
 import asyncio
@@ -91,12 +92,12 @@ CONFIG_SCHEMA = vol.Schema(
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.COVER,
     Platform.FAN,
     Platform.LIGHT,
     Platform.SCENE,
     Platform.SWITCH,
-    Platform.BUTTON,
 ]
 
 
@@ -171,7 +172,7 @@ async def async_setup_entry(
         return False
 
     timed_out = True
-    with contextlib.suppress(asyncio.TimeoutError):
+    with contextlib.suppress(TimeoutError):
         async with asyncio.timeout(BRIDGE_TIMEOUT):
             await bridge.connect()
             timed_out = False
@@ -322,7 +323,7 @@ def _async_setup_keypads(
 
 @callback
 def _async_build_trigger_schemas(
-    keypad_button_names_to_leap: dict[int, dict[str, int]]
+    keypad_button_names_to_leap: dict[int, dict[str, int]],
 ) -> dict[int, vol.Schema]:
     """Build device trigger schemas."""
 

@@ -1,6 +1,5 @@
 """Deduplicate translations in strings.json."""
 
-
 import argparse
 import json
 from pathlib import Path
@@ -9,7 +8,7 @@ from homeassistant.const import Platform
 
 from . import upload
 from .develop import flatten_translations
-from .util import get_base_arg_parser
+from .util import get_base_arg_parser, load_json_from_path
 
 
 def get_arguments() -> argparse.Namespace:
@@ -101,7 +100,7 @@ def run():
 
     for component in components:
         comp_strings_path = Path(STRINGS_PATH.format(component))
-        strings[component] = json.loads(comp_strings_path.read_text(encoding="utf-8"))
+        strings[component] = load_json_from_path(comp_strings_path)
 
     for path, value in update_keys.items():
         parts = path.split("::")

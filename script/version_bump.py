@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Helper script to bump the current version."""
+
 import argparse
 import re
 import subprocess
@@ -177,7 +178,7 @@ def main():
     if not arguments.commit:
         return
 
-    subprocess.run(["git", "commit", "-nam", f"Bumped version to {bumped}"], check=True)
+    subprocess.run(["git", "commit", "-nam", f"Bump version to {bumped}"], check=True)
 
 
 def test_bump_version():

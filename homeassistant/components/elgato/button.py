@@ -1,4 +1,5 @@
 """Support for Elgato button."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -23,18 +24,11 @@ from .coordinator import ElgatoDataUpdateCoordinator
 from .entity import ElgatoEntity
 
 
-@dataclass
-class ElgatoButtonEntityDescriptionMixin:
-    """Mixin values for Elgato entities."""
+@dataclass(frozen=True, kw_only=True)
+class ElgatoButtonEntityDescription(ButtonEntityDescription):
+    """Class describing Elgato button entities."""
 
     press_fn: Callable[[Elgato], Awaitable[Any]]
-
-
-@dataclass
-class ElgatoButtonEntityDescription(
-    ButtonEntityDescription, ElgatoButtonEntityDescriptionMixin
-):
-    """Class describing Elgato button entities."""
 
 
 BUTTONS = [

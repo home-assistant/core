@@ -1,4 +1,5 @@
 """Support for Xiaomi Miio binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
@@ -11,13 +12,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MODEL, EntityCategory
+from homeassistant.const import CONF_DEVICE, CONF_MODEL, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VacuumCoordinatorDataAttributes
 from .const import (
-    CONF_DEVICE,
     CONF_FLOW_TYPE,
     DOMAIN,
     KEY_COORDINATOR,
@@ -45,7 +45,7 @@ ATTR_WATER_BOX_ATTACHED = "is_water_box_attached"
 ATTR_WATER_SHORTAGE = "is_water_shortage"
 
 
-@dataclass
+@dataclass(frozen=True)
 class XiaomiMiioBinarySensorDescription(BinarySensorEntityDescription):
     """A class that describes binary sensor entities."""
 

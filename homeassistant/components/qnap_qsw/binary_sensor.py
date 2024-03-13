@@ -1,4 +1,5 @@
 """Support for the QNAP QSW binary sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
@@ -30,7 +31,7 @@ from .coordinator import QswDataCoordinator
 from .entity import QswEntityDescription, QswEntityType, QswSensorEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class QswBinarySensorEntityDescription(
     BinarySensorEntityDescription, QswEntityDescription
 ):

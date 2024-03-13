@@ -8,9 +8,8 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_UDN,
     SsdpServiceInfo,
 )
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
@@ -25,7 +24,9 @@ def _is_complete_discovery(discovery_info: SsdpServiceInfo) -> bool:
 class OpenhomeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle an Openhome config flow."""
 
-    async def async_step_ssdp(self, discovery_info: SsdpServiceInfo) -> FlowResult:
+    async def async_step_ssdp(
+        self, discovery_info: SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
         _LOGGER.debug("async_step_ssdp: started")
 
@@ -51,7 +52,7 @@ class OpenhomeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle user-confirmation of discovered node."""
 
         if user_input is not None:

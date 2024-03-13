@@ -1,4 +1,5 @@
 """The tests for local file sensor platform."""
+
 from unittest.mock import Mock, patch
 
 from homeassistant.const import STATE_UNKNOWN

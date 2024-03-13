@@ -1,4 +1,5 @@
 """Test for the LCN switch platform."""
+
 from unittest.mock import patch
 
 from pypck.inputs import ModStatusOutput, ModStatusRelays
@@ -39,9 +40,10 @@ async def test_setup_lcn_switch(hass: HomeAssistant, lcn_connection) -> None:
         assert state.state == STATE_OFF
 
 
-async def test_entity_attributes(hass: HomeAssistant, entry, lcn_connection) -> None:
+async def test_entity_attributes(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, entry, lcn_connection
+) -> None:
     """Test the attributes of an entity."""
-    entity_registry = er.async_get(hass)
 
     entity_output = entity_registry.async_get(SWITCH_OUTPUT1)
 

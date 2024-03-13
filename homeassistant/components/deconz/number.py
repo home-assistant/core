@@ -25,26 +25,21 @@ import homeassistant.helpers.entity_registry as er
 
 from .const import DOMAIN as DECONZ_DOMAIN
 from .deconz_device import DeconzDevice
-from .gateway import DeconzGateway, get_gateway_from_config_entry
+from .hub import DeconzHub, get_gateway_from_config_entry
 from .util import serial_from_unique_id
 
 T = TypeVar("T", Presence, PydeconzSensorBase)
 
 
-@dataclass
-class DeconzNumberDescriptionMixin(Generic[T]):
-    """Required values when describing deCONZ number entities."""
+@dataclass(frozen=True, kw_only=True)
+class DeconzNumberDescription(Generic[T], NumberEntityDescription):
+    """Class describing deCONZ number entities."""
 
     instance_check: type[T]
     name_suffix: str
     set_fn: Callable[[DeconzSession, str, int], Coroutine[Any, Any, dict[str, Any]]]
     update_key: str
     value_fn: Callable[[T], float | None]
-
-
-@dataclass
-class DeconzNumberDescription(NumberEntityDescription, DeconzNumberDescriptionMixin[T]):
-    """Class describing deCONZ number entities."""
 
 
 ENTITY_DESCRIPTIONS: tuple[DeconzNumberDescription, ...] = (
@@ -134,7 +129,7 @@ class DeconzNumber(DeconzDevice[SensorResources], NumberEntity):
     def __init__(
         self,
         device: SensorResources,
-        gateway: DeconzGateway,
+        gateway: DeconzHub,
         description: DeconzNumberDescription,
     ) -> None:
         """Initialize deCONZ number entity."""

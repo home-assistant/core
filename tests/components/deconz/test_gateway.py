@@ -1,5 +1,5 @@
 """Test deCONZ gateway."""
-import asyncio
+
 from copy import deepcopy
 from unittest.mock import patch
 
@@ -18,8 +18,8 @@ from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.deconz.config_flow import DECONZ_MANUFACTURERURL
 from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.errors import AuthenticationRequired, CannotConnect
-from homeassistant.components.deconz.gateway import (
-    get_deconz_session,
+from homeassistant.components.deconz.hub import (
+    get_deconz_api,
     get_gateway_from_config_entry,
 )
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
@@ -139,7 +139,9 @@ async def setup_deconz_integration(
 
 
 async def test_gateway_setup(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Successful setup."""
     with patch(
@@ -178,7 +180,6 @@ async def test_gateway_setup(
         assert forward_entry_setup.mock_calls[12][1] == (config_entry, SIREN_DOMAIN)
         assert forward_entry_setup.mock_calls[13][1] == (config_entry, SWITCH_DOMAIN)
 
-    device_registry = dr.async_get(hass)
     gateway_entry = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, gateway.bridgeid)}
     )
@@ -188,7 +189,9 @@ async def test_gateway_setup(
 
 
 async def test_gateway_device_configuration_url_when_addon(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Successful setup."""
     with patch(
@@ -200,7 +203,6 @@ async def test_gateway_device_configuration_url_when_addon(
         )
         gateway = get_gateway_from_config_entry(hass, config_entry)
 
-    device_registry = dr.async_get(hass)
     gateway_entry = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, gateway.bridgeid)}
     )
@@ -286,22 +288,22 @@ async def test_reset_after_successful_setup(
     assert result is True
 
 
-async def test_get_deconz_session(hass: HomeAssistant) -> None:
+async def test_get_deconz_api(hass: HomeAssistant) -> None:
     """Successful call."""
     with patch("pydeconz.DeconzSession.refresh_state", return_value=True):
-        assert await get_deconz_session(hass, ENTRY_CONFIG)
+        assert await get_deconz_api(hass, ENTRY_CONFIG)
 
 
 @pytest.mark.parametrize(
     ("side_effect", "raised_exception"),
     [
-        (asyncio.TimeoutError, CannotConnect),
+        (TimeoutError, CannotConnect),
         (pydeconz.RequestError, CannotConnect),
         (pydeconz.ResponseError, CannotConnect),
         (pydeconz.Unauthorized, AuthenticationRequired),
     ],
 )
-async def test_get_deconz_session_fails(
+async def test_get_deconz_api_fails(
     hass: HomeAssistant, side_effect, raised_exception
 ) -> None:
     """Failed call."""
@@ -309,4 +311,4 @@ async def test_get_deconz_session_fails(
         "pydeconz.DeconzSession.refresh_state",
         side_effect=side_effect,
     ), pytest.raises(raised_exception):
-        assert await get_deconz_session(hass, ENTRY_CONFIG)
+        assert await get_deconz_api(hass, ENTRY_CONFIG)

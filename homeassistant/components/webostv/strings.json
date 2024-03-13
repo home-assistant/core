@@ -3,11 +3,13 @@
     "flow_title": "LG webOS Smart TV",
     "step": {
       "user": {
-        "title": "Connect to webOS TV",
         "description": "Turn on TV, fill the following fields click submit",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your webOS TV."
         }
       },
       "pairing": {

@@ -1,4 +1,5 @@
 """Philips Hue scene platform tests for V2 bridge/api."""
+
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -8,7 +9,10 @@ from .const import FAKE_SCENE
 
 
 async def test_scene(
-    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_bridge_v2,
+    v2_resources_test_data,
 ) -> None:
     """Test if (config) scenes get created."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
@@ -57,13 +61,12 @@ async def test_scene(
     assert test_entity.attributes["is_active"] is True
 
     # scene entities should have be assigned to the room/zone device/service
-    ent_reg = er.async_get(hass)
     for entity_id in (
         "scene.test_zone_dynamic_test_scene",
         "scene.test_room_regular_test_scene",
         "scene.test_room_smart_test_scene",
     ):
-        entity_entry = ent_reg.async_get(entity_id)
+        entity_entry = entity_registry.async_get(entity_id)
         assert entity_entry
         assert entity_entry.device_id is not None
 
@@ -186,7 +189,7 @@ async def test_scene_updates(
     )
     await hass.async_block_till_done()
     test_entity = hass.states.get(test_entity_id)
-    assert test_entity.name == "Test Room 2 Mocked Scene"
+    assert test_entity.attributes["group_name"] == "Test Room 2"
 
     # # test delete
     mock_bridge_v2.api.emit_event("delete", updated_resource)

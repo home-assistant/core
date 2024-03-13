@@ -1,4 +1,5 @@
 """The tests for the Tasmota sensor platform."""
+
 import copy
 import datetime
 from datetime import timedelta
@@ -28,6 +29,8 @@ from .test_common import (
     help_test_availability_discovery_update,
     help_test_availability_poll_state,
     help_test_availability_when_connection_lost,
+    help_test_deep_sleep_availability,
+    help_test_deep_sleep_availability_when_connection_lost,
     help_test_discovery_device_remove,
     help_test_discovery_removal,
     help_test_discovery_update_unchanged,
@@ -1222,6 +1225,26 @@ async def test_availability_when_connection_lost(
     )
 
 
+async def test_deep_sleep_availability_when_connection_lost(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
+) -> None:
+    """Test availability after MQTT disconnection."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    sensor_config = copy.deepcopy(DEFAULT_SENSOR_CONFIG)
+    await help_test_deep_sleep_availability_when_connection_lost(
+        hass,
+        mqtt_client_mock,
+        mqtt_mock,
+        Platform.SENSOR,
+        config,
+        sensor_config,
+        "tasmota_dht11_temperature",
+    )
+
+
 async def test_availability(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
 ) -> None:
@@ -1229,6 +1252,22 @@ async def test_availability(
     config = copy.deepcopy(DEFAULT_CONFIG)
     sensor_config = copy.deepcopy(DEFAULT_SENSOR_CONFIG)
     await help_test_availability(
+        hass,
+        mqtt_mock,
+        Platform.SENSOR,
+        config,
+        sensor_config,
+        "tasmota_dht11_temperature",
+    )
+
+
+async def test_deep_sleep_availability(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
+    """Test availability."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    sensor_config = copy.deepcopy(DEFAULT_SENSOR_CONFIG)
+    await help_test_deep_sleep_availability(
         hass,
         mqtt_mock,
         Platform.SENSOR,

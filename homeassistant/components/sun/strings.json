@@ -28,7 +28,8 @@
       "next_rising": { "name": "Next rising" },
       "next_setting": { "name": "Next setting" },
       "solar_azimuth": { "name": "Solar azimuth" },
-      "solar_elevation": { "name": "Solar elevation" }
+      "solar_elevation": { "name": "Solar elevation" },
+      "solar_rising": { "name": "Solar rising" }
     }
   }
 }

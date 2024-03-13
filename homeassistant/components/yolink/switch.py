@@ -1,4 +1,5 @@
 """YoLink Switch."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -29,7 +30,7 @@ from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class YoLinkSwitchEntityDescription(SwitchEntityDescription):
     """YoLink SwitchEntityDescription."""
 
@@ -46,8 +47,8 @@ DEVICE_TYPES: tuple[YoLinkSwitchEntityDescription, ...] = (
     ),
     YoLinkSwitchEntityDescription(
         key="manipulator_state",
+        translation_key="manipulator_state",
         name=None,
-        icon="mdi:pipe",
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_MANIPULATOR,
     ),
     YoLinkSwitchEntityDescription(

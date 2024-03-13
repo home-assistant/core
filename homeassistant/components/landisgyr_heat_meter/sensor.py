@@ -1,4 +1,5 @@
 """Platform for sensor integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -39,18 +40,11 @@ from . import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class HeatMeterSensorEntityDescriptionMixin:
-    """Mixin for additional Heat Meter sensor description attributes ."""
+@dataclass(frozen=True, kw_only=True)
+class HeatMeterSensorEntityDescription(SensorEntityDescription):
+    """Heat Meter sensor description."""
 
     value_fn: Callable[[HeatMeterResponse], StateType | datetime]
-
-
-@dataclass
-class HeatMeterSensorEntityDescription(
-    SensorEntityDescription, HeatMeterSensorEntityDescriptionMixin
-):
-    """Heat Meter sensor description."""
 
 
 HEAT_METER_SENSOR_TYPES = (
@@ -316,7 +310,9 @@ class HeatMeterSensor(
         """Set up the sensor with the initial values."""
         super().__init__(coordinator)
         self.key = description.key
-        self._attr_unique_id = f"{coordinator.config_entry.data['device_number']}_{description.key}"  # type: ignore[union-attr]
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.data['device_number']}_{description.key}"  # type: ignore[union-attr]
+        )
         self._attr_name = f"Heat Meter {description.name}"
         self.entity_description = description
         self._attr_device_info = device

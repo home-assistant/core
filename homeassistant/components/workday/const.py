@@ -1,4 +1,5 @@
 """Add constants for Workday integration."""
+
 from __future__ import annotations
 
 import logging
@@ -12,7 +13,6 @@ ALLOWED_DAYS = WEEKDAYS + ["holiday"]
 DOMAIN = "workday"
 PLATFORMS = [Platform.BINARY_SENSOR]
 
-CONF_COUNTRY = "country"
 CONF_PROVINCE = "province"
 CONF_WORKDAYS = "workdays"
 CONF_EXCLUDES = "excludes"

@@ -1,4 +1,5 @@
 """Support for Xiaomi Smart WiFi Socket and Smart Power Strip."""
+
 from __future__ import annotations
 
 import asyncio
@@ -21,6 +22,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
     ATTR_TEMPERATURE,
+    CONF_DEVICE,
     CONF_HOST,
     CONF_MODEL,
     CONF_TOKEN,
@@ -31,7 +33,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    CONF_DEVICE,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
     DOMAIN,
@@ -219,20 +220,13 @@ MODEL_TO_FEATURES_MAP = {
 }
 
 
-@dataclass
-class XiaomiMiioSwitchRequiredKeyMixin:
+@dataclass(frozen=True, kw_only=True)
+class XiaomiMiioSwitchDescription(SwitchEntityDescription):
     """A class that describes switch entities."""
 
     feature: int
     method_on: str
     method_off: str
-
-
-@dataclass
-class XiaomiMiioSwitchDescription(
-    SwitchEntityDescription, XiaomiMiioSwitchRequiredKeyMixin
-):
-    """A class that describes switch entities."""
 
     available_with_device_off: bool = True
 

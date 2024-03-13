@@ -1,9 +1,10 @@
 """Test deCONZ component setup process."""
+
 import asyncio
 from unittest.mock import patch
 
 from homeassistant.components.deconz import (
-    DeconzGateway,
+    DeconzHub,
     async_setup_entry,
     async_unload_entry,
     async_update_group_unique_id,
@@ -38,8 +39,8 @@ ENTRY2_UUID = "789ACE"
 
 async def setup_entry(hass, entry):
     """Test that setup entry works."""
-    with patch.object(DeconzGateway, "async_setup", return_value=True), patch.object(
-        DeconzGateway, "async_update_device_registry", return_value=True
+    with patch.object(DeconzHub, "async_setup", return_value=True), patch.object(
+        DeconzHub, "async_update_device_registry", return_value=True
     ):
         assert await async_setup_entry(hass, entry) is True
 
@@ -58,7 +59,7 @@ async def test_setup_entry_successful(
 async def test_setup_entry_fails_config_entry_not_ready(hass: HomeAssistant) -> None:
     """Failed authentication trigger a reauthentication flow."""
     with patch(
-        "homeassistant.components.deconz.get_deconz_session",
+        "homeassistant.components.deconz.get_deconz_api",
         side_effect=CannotConnect,
     ):
         await setup_deconz_integration(hass)
@@ -69,7 +70,7 @@ async def test_setup_entry_fails_config_entry_not_ready(hass: HomeAssistant) -> 
 async def test_setup_entry_fails_trigger_reauth_flow(hass: HomeAssistant) -> None:
     """Failed authentication trigger a reauthentication flow."""
     with patch(
-        "homeassistant.components.deconz.get_deconz_session",
+        "homeassistant.components.deconz.get_deconz_api",
         side_effect=AuthenticationRequired,
     ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
         await setup_deconz_integration(hass)
@@ -159,7 +160,9 @@ async def test_unload_entry_multiple_gateways_parallel(
     assert len(hass.data[DECONZ_DOMAIN]) == 0
 
 
-async def test_update_group_unique_id(hass: HomeAssistant) -> None:
+async def test_update_group_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test successful migration of entry data."""
     old_unique_id = "123"
     new_unique_id = "1234"
@@ -173,10 +176,10 @@ async def test_update_group_unique_id(hass: HomeAssistant) -> None:
             CONF_PORT: "3",
         },
     )
+    entry.add_to_hass(hass)
 
-    registry = er.async_get(hass)
     # Create entity entry to migrate to new unique ID
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         LIGHT_DOMAIN,
         DECONZ_DOMAIN,
         f"{old_unique_id}-OLD",
@@ -184,7 +187,7 @@ async def test_update_group_unique_id(hass: HomeAssistant) -> None:
         config_entry=entry,
     )
     # Create entity entry with new unique ID
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         LIGHT_DOMAIN,
         DECONZ_DOMAIN,
         f"{new_unique_id}-NEW",
@@ -195,11 +198,19 @@ async def test_update_group_unique_id(hass: HomeAssistant) -> None:
     await async_update_group_unique_id(hass, entry)
 
     assert entry.data == {CONF_API_KEY: "1", CONF_HOST: "2", CONF_PORT: "3"}
-    assert registry.async_get(f"{LIGHT_DOMAIN}.old").unique_id == f"{new_unique_id}-OLD"
-    assert registry.async_get(f"{LIGHT_DOMAIN}.new").unique_id == f"{new_unique_id}-NEW"
+    assert (
+        entity_registry.async_get(f"{LIGHT_DOMAIN}.old").unique_id
+        == f"{new_unique_id}-OLD"
+    )
+    assert (
+        entity_registry.async_get(f"{LIGHT_DOMAIN}.new").unique_id
+        == f"{new_unique_id}-NEW"
+    )
 
 
-async def test_update_group_unique_id_no_legacy_group_id(hass: HomeAssistant) -> None:
+async def test_update_group_unique_id_no_legacy_group_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test migration doesn't trigger without old legacy group id in entry data."""
     old_unique_id = "123"
     new_unique_id = "1234"
@@ -209,9 +220,8 @@ async def test_update_group_unique_id_no_legacy_group_id(hass: HomeAssistant) ->
         data={},
     )
 
-    registry = er.async_get(hass)
     # Create entity entry to migrate to new unique ID
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         LIGHT_DOMAIN,
         DECONZ_DOMAIN,
         f"{old_unique_id}-OLD",
@@ -221,4 +231,7 @@ async def test_update_group_unique_id_no_legacy_group_id(hass: HomeAssistant) ->
 
     await async_update_group_unique_id(hass, entry)
 
-    assert registry.async_get(f"{LIGHT_DOMAIN}.old").unique_id == f"{old_unique_id}-OLD"
+    assert (
+        entity_registry.async_get(f"{LIGHT_DOMAIN}.old").unique_id
+        == f"{old_unique_id}-OLD"
+    )

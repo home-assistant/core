@@ -1,4 +1,5 @@
 """Component that will help set the OpenALPR cloud for ALPR processing."""
+
 from __future__ import annotations
 
 import asyncio
@@ -141,8 +142,7 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
 
         # Send events
         for i_plate in new_plates:
-            self.hass.async_add_job(
-                self.hass.bus.async_fire,
+            self.hass.bus.async_fire(
                 EVENT_FOUND_PLATE,
                 {
                     ATTR_PLATE: i_plate,
@@ -209,7 +209,7 @@ class OpenAlprCloudEntity(ImageProcessingAlprEntity):
                     _LOGGER.error("Error %d -> %s", request.status, data.get("error"))
                     return
 
-        except (asyncio.TimeoutError, aiohttp.ClientError):
+        except (TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Timeout for OpenALPR API")
             return
 

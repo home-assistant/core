@@ -1,4 +1,5 @@
 """Fully Kiosk Browser sensor."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -40,7 +41,7 @@ def truncate_url(value: StateType) -> tuple[StateType, dict[str, Any]]:
     return (url, extra_state_attributes)
 
 
-@dataclass
+@dataclass(frozen=True)
 class FullySensorEntityDescription(SensorEntityDescription):
     """Fully Kiosk Browser sensor description."""
 

@@ -1,4 +1,5 @@
 """Set up the demo environment that mimics interaction with devices."""
+
 from __future__ import annotations
 
 import asyncio
@@ -48,6 +49,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     Platform.UPDATE,
     Platform.VACUUM,
     Platform.WATER_HEATER,
+    Platform.WEATHER,
 ]
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
@@ -56,7 +58,6 @@ COMPONENTS_WITH_DEMO_PLATFORM = [
     Platform.NOTIFY,
     Platform.IMAGE_PROCESSING,
     Platform.DEVICE_TRACKER,
-    Platform.WEATHER,
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)

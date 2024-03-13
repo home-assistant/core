@@ -1,4 +1,5 @@
 """Generic Z-Wave Entity Class."""
+
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -206,7 +207,7 @@ class ZWaveBaseEntity(Entity):
         ):
             name += f" ({primary_value.endpoint})"
 
-        return name
+        return name.strip()
 
     @property
     def available(self) -> bool:

@@ -1,4 +1,5 @@
 """Test the Lovelace Cast platform."""
+
 from time import time
 from unittest.mock import patch
 
@@ -44,7 +45,7 @@ async def mock_yaml_dashboard(hass):
     )
 
     with patch(
-        "homeassistant.components.lovelace.dashboard.load_yaml",
+        "homeassistant.components.lovelace.dashboard.load_yaml_dict",
         return_value={
             "title": "YAML Title",
             "views": [

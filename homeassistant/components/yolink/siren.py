@@ -1,4 +1,5 @@
 """YoLink Siren."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -23,7 +24,7 @@ from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class YoLinkSirenEntityDescription(SirenEntityDescription):
     """YoLink SirenEntityDescription."""
 

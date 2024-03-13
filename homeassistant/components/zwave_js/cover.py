@@ -1,4 +1,5 @@
 """Support for Z-Wave cover devices."""
+
 from __future__ import annotations
 
 from typing import Any, cast
@@ -18,7 +19,7 @@ from zwave_js_server.const.command_class.multilevel_switch import (
 from zwave_js_server.const.command_class.window_covering import (
     NO_POSITION_PROPERTY_KEYS,
     NO_POSITION_SUFFIX,
-    WINDOW_COVERING_OPEN_PROPERTY,
+    WINDOW_COVERING_LEVEL_CHANGE_UP_PROPERTY,
     SlatStates,
 )
 from zwave_js_server.model.driver import Driver
@@ -370,7 +371,7 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
                 set_values_func(
                     value,
                     stop_value=self.get_zwave_value(
-                        WINDOW_COVERING_OPEN_PROPERTY,
+                        WINDOW_COVERING_LEVEL_CHANGE_UP_PROPERTY,
                         value_property_key=value.property_key,
                     ),
                 )

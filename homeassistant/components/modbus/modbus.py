@@ -1,4 +1,5 @@
 """Support for Modbus."""
+
 from __future__ import annotations
 
 import asyncio
@@ -7,12 +8,8 @@ from collections.abc import Callable
 import logging
 from typing import Any
 
-from pymodbus.client import (
-    ModbusBaseClient,
-    ModbusSerialClient,
-    ModbusTcpClient,
-    ModbusUdpClient,
-)
+from pymodbus.client import ModbusSerialClient, ModbusTcpClient, ModbusUdpClient
+from pymodbus.client.base import ModbusBaseClient
 from pymodbus.exceptions import ModbusException
 from pymodbus.pdu import ModbusResponse
 from pymodbus.transaction import ModbusAsciiFramer, ModbusRtuFramer, ModbusSocketFramer
@@ -54,11 +51,9 @@ from .const import (
     CALL_TYPE_WRITE_REGISTERS,
     CONF_BAUDRATE,
     CONF_BYTESIZE,
-    CONF_CLOSE_COMM_ON_ERROR,
     CONF_MSG_WAIT,
     CONF_PARITY,
     CONF_RETRIES,
-    CONF_RETRY_ON_EMPTY,
     CONF_STOPBITS,
     DEFAULT_HUB,
     MODBUS_DOMAIN as DOMAIN,
@@ -176,9 +171,7 @@ async def async_modbus_setup(
             slave = int(float(service.data[ATTR_SLAVE]))
         address = int(float(service.data[ATTR_ADDRESS]))
         value = service.data[ATTR_VALUE]
-        hub = hub_collect[
-            service.data[ATTR_HUB] if ATTR_HUB in service.data else DEFAULT_HUB
-        ]
+        hub = hub_collect[service.data.get(ATTR_HUB, DEFAULT_HUB)]
         if isinstance(value, list):
             await hub.async_pb_call(
                 slave,
@@ -200,9 +193,7 @@ async def async_modbus_setup(
             slave = int(float(service.data[ATTR_SLAVE]))
         address = service.data[ATTR_ADDRESS]
         state = service.data[ATTR_STATE]
-        hub = hub_collect[
-            service.data[ATTR_HUB] if ATTR_HUB in service.data else DEFAULT_HUB
-        ]
+        hub = hub_collect[service.data.get(ATTR_HUB, DEFAULT_HUB)]
         if isinstance(state, list):
             await hub.async_pb_call(slave, address, state, CALL_TYPE_WRITE_COILS)
         else:
@@ -260,42 +251,26 @@ class ModbusHub:
     def __init__(self, hass: HomeAssistant, client_config: dict[str, Any]) -> None:
         """Initialize the Modbus hub."""
 
-        if CONF_CLOSE_COMM_ON_ERROR in client_config:
+        if CONF_RETRIES in client_config:
             async_create_issue(
                 hass,
                 DOMAIN,
-                "deprecated_close_comm_config",
-                breaks_in_ha_version="2024.4.0",
+                "deprecated_retries",
+                breaks_in_ha_version="2024.7.0",
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,
-                translation_key="deprecated_close_comm_config",
+                translation_key="deprecated_retries",
                 translation_placeholders={
-                    "config_key": "close_comm_on_error",
+                    "config_key": "retries",
                     "integration": DOMAIN,
                     "url": "https://www.home-assistant.io/integrations/modbus",
                 },
             )
             _LOGGER.warning(
-                "`close_comm_on_error`: is deprecated and will be removed in version 2024.4"
+                "`retries`: is deprecated and will be removed in version 2024.7"
             )
-        if CONF_RETRY_ON_EMPTY in client_config:
-            async_create_issue(
-                hass,
-                DOMAIN,
-                "deprecated_retry_on_empty",
-                breaks_in_ha_version="2024.4.0",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_retry_on_empty",
-                translation_placeholders={
-                    "config_key": "retry_on_empty",
-                    "integration": DOMAIN,
-                    "url": "https://www.home-assistant.io/integrations/modbus",
-                },
-            )
-            _LOGGER.warning(
-                "`retry_on_empty`: is deprecated and will be removed in version 2024.4"
-            )
+        else:
+            client_config[CONF_RETRIES] = 3
         # generic configuration
         self._client: ModbusBaseClient | None = None
         self._async_cancel_listener: Callable[[], None] | None = None
@@ -315,7 +290,7 @@ class ModbusHub:
         self._pb_params = {
             "port": client_config[CONF_PORT],
             "timeout": client_config[CONF_TIMEOUT],
-            "retries": client_config[CONF_RETRIES],
+            "retries": 3,
             "retry_on_empty": True,
         }
         if self._config_type == SERIAL:
@@ -435,16 +410,24 @@ class ModbusHub:
         try:
             result: ModbusResponse = entry.func(address, value, **kwargs)
         except ModbusException as exception_error:
-            self._log_error(str(exception_error))
+            error = (
+                f"Error: device: {slave} address: {address} -> {str(exception_error)}"
+            )
+            self._log_error(error)
             return None
         if not result:
-            self._log_error("Error: pymodbus returned None")
+            error = (
+                f"Error: device: {slave} address: {address} -> pymodbus returned None"
+            )
+            self._log_error(error)
             return None
         if not hasattr(result, entry.attr):
-            self._log_error(str(result))
+            error = f"Error: device: {slave} address: {address} -> {str(result)}"
+            self._log_error(error)
             return None
-        if result.isError():  # type: ignore[no-untyped-call]
-            self._log_error("Error: pymodbus returned isError True")
+        if result.isError():
+            error = f"Error: device: {slave} address: {address} -> pymodbus returned isError True"
+            self._log_error(error)
             return None
         self._in_error = False
         return result

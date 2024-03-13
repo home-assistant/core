@@ -1,15 +1,21 @@
 """Constants for Lovelace."""
+
 from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_ICON, CONF_MODE, CONF_TYPE, CONF_URL
+from homeassistant.const import (
+    CONF_ICON,
+    CONF_MODE,
+    CONF_TYPE,
+    CONF_URL,
+    EVENT_LOVELACE_UPDATED,  # noqa: F401
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import slugify
 
 DOMAIN = "lovelace"
-EVENT_LOVELACE_UPDATED = "lovelace_updated"
 
 DEFAULT_ICON = "hass:view-dashboard"
 

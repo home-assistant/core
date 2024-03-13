@@ -1,4 +1,5 @@
 """Support for Overkiz (virtual) buttons."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -17,7 +18,7 @@ from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
 from .entity import OverkizDescriptiveEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class OverkizButtonDescription(ButtonEntityDescription):
     """Class to describe an Overkiz button."""
 

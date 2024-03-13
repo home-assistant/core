@@ -1,4 +1,5 @@
 """Generate mypy config."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -35,7 +36,6 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     "show_error_codes": "true",
     "follow_imports": "silent",
     # Enable some checks globally.
-    "ignore_missing_imports": "true",
     "local_partial_types": "true",
     "strict_equality": "true",
     "no_implicit_optional": "true",
@@ -50,7 +50,13 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
             "truthy-iterable",
         ]
     ),
-    "disable_error_code": ", ".join(["annotation-unchecked"]),
+    "disable_error_code": ", ".join(
+        [
+            "annotation-unchecked",
+            "import-not-found",
+            "import-untyped",
+        ]
+    ),
     # Impractical in real code
     # E.g. this breaks passthrough ParamSpec typing with Concatenate
     "extra_checks": "false",

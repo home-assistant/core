@@ -1,17 +1,19 @@
 """Support for August sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Generic, TypeVar
+from typing import Any, Generic, TypeVar, cast
 
-from yalexs.activity import ActivityType
+from yalexs.activity import ActivityType, LockOperationActivity
 from yalexs.doorbell import Doorbell
 from yalexs.keypad import KeypadDetail
 from yalexs.lock import Lock, LockDetail
 
 from homeassistant.components.sensor import (
+    RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -27,7 +29,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import AugustData
 from .const import (
@@ -63,14 +64,14 @@ def _retrieve_linked_keypad_battery_state(detail: KeypadDetail) -> int | None:
 _T = TypeVar("_T", LockDetail, KeypadDetail)
 
 
-@dataclass
+@dataclass(frozen=True)
 class AugustRequiredKeysMixin(Generic[_T]):
     """Mixin for required keys."""
 
     value_fn: Callable[[_T], int | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class AugustSensorEntityDescription(
     SensorEntityDescription, AugustRequiredKeysMixin[_T]
 ):
@@ -150,15 +151,14 @@ async def async_setup_entry(
         entities.append(keypad_battery_sensor)
         migrate_unique_id_devices.append(keypad_battery_sensor)
 
-    for device in operation_sensors:
-        entities.append(AugustOperatorSensor(data, device))
+    entities.extend(AugustOperatorSensor(data, device) for device in operation_sensors)
 
     await _async_migrate_old_unique_ids(hass, migrate_unique_id_devices)
 
     async_add_entities(entities)
 
 
-async def _async_migrate_old_unique_ids(hass, devices):
+async def _async_migrate_old_unique_ids(hass: HomeAssistant, devices) -> None:
     """Keypads now have their own serial number."""
     registry = er.async_get(hass)
     for device in devices:
@@ -174,28 +174,27 @@ async def _async_migrate_old_unique_ids(hass, devices):
             registry.async_update_entity(old_entity_id, new_unique_id=device.unique_id)
 
 
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
-class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
+class AugustOperatorSensor(AugustEntityMixin, RestoreSensor):
     """Representation of an August lock operation sensor."""
 
     _attr_translation_key = "operator"
 
-    def __init__(self, data, device):
+    def __init__(self, data: AugustData, device) -> None:
         """Initialize the sensor."""
         super().__init__(data, device)
         self._data = data
         self._device = device
-        self._operated_remote = None
-        self._operated_keypad = None
-        self._operated_manual = None
-        self._operated_tag = None
-        self._operated_autorelock = None
+        self._operated_remote: bool | None = None
+        self._operated_keypad: bool | None = None
+        self._operated_manual: bool | None = None
+        self._operated_tag: bool | None = None
+        self._operated_autorelock: bool | None = None
         self._operated_time = None
         self._attr_unique_id = f"{self._device_id}_lock_operator"
         self._update_from_data()
 
     @callback
-    def _update_from_data(self):
+    def _update_from_data(self) -> None:
         """Get the latest state of the sensor and update activity."""
         lock_activity = self._data.activity_stream.get_latest_device_activity(
             self._device_id, {ActivityType.LOCK_OPERATION}
@@ -203,6 +202,7 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
 
         self._attr_available = True
         if lock_activity is not None:
+            lock_activity = cast(LockOperationActivity, lock_activity)
             self._attr_native_value = lock_activity.operated_by
             self._operated_remote = lock_activity.operated_remote
             self._operated_keypad = lock_activity.operated_keypad
@@ -212,9 +212,9 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
             self._attr_entity_picture = lock_activity.operator_thumbnail_url
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""
-        attributes = {}
+        attributes: dict[str, Any] = {}
 
         if self._operated_remote is not None:
             attributes[ATTR_OPERATION_REMOTE] = self._operated_remote
@@ -247,10 +247,15 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
         await super().async_added_to_hass()
 
         last_state = await self.async_get_last_state()
-        if not last_state or last_state.state == STATE_UNAVAILABLE:
+        last_sensor_state = await self.async_get_last_sensor_data()
+        if (
+            not last_state
+            or not last_sensor_state
+            or last_state.state == STATE_UNAVAILABLE
+        ):
             return
 
-        self._attr_native_value = last_state.state
+        self._attr_native_value = last_sensor_state.native_value
         if ATTR_ENTITY_PICTURE in last_state.attributes:
             self._attr_entity_picture = last_state.attributes[ATTR_ENTITY_PICTURE]
         if ATTR_OPERATION_REMOTE in last_state.attributes:
@@ -287,7 +292,7 @@ class AugustBatterySensor(AugustEntityMixin, SensorEntity, Generic[_T]):
         self._update_from_data()
 
     @callback
-    def _update_from_data(self):
+    def _update_from_data(self) -> None:
         """Get the latest state of the sensor."""
         self._attr_native_value = self.entity_description.value_fn(self._detail)
         self._attr_available = self._attr_native_value is not None

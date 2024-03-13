@@ -1,4 +1,5 @@
 """Support for Goal Zero Yeti Sensors."""
+
 from __future__ import annotations
 
 from typing import cast
@@ -21,23 +22,21 @@ PARALLEL_UPDATES = 0
 BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key="backlight",
-        name="Backlight",
-        icon="mdi:clock-digital",
+        translation_key="backlight",
     ),
     BinarySensorEntityDescription(
         key="app_online",
-        name="App online",
+        translation_key="app_online",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BinarySensorEntityDescription(
         key="isCharging",
-        name="Charging",
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
     ),
     BinarySensorEntityDescription(
         key="inputDetected",
-        name="Input detected",
+        translation_key="input_detected",
         device_class=BinarySensorDeviceClass.POWER,
     ),
 )

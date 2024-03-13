@@ -1,4 +1,5 @@
 """Support for deCONZ binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -31,7 +32,7 @@ import homeassistant.helpers.entity_registry as er
 
 from .const import ATTR_DARK, ATTR_ON, DOMAIN as DECONZ_DOMAIN
 from .deconz_device import DeconzDevice
-from .gateway import DeconzGateway, get_gateway_from_config_entry
+from .hub import DeconzHub, get_gateway_from_config_entry
 from .util import serial_from_unique_id
 
 _SensorDeviceT = TypeVar("_SensorDeviceT", bound=PydeconzSensorBase)
@@ -65,24 +66,15 @@ T = TypeVar(
 )
 
 
-@dataclass
-class DeconzBinarySensorDescriptionMixin(Generic[T]):
-    """Required values when describing secondary sensor attributes."""
-
-    update_key: str
-    value_fn: Callable[[T], bool | None]
-
-
-@dataclass
-class DeconzBinarySensorDescription(
-    BinarySensorEntityDescription,
-    DeconzBinarySensorDescriptionMixin[T],
-):
+@dataclass(frozen=True, kw_only=True)
+class DeconzBinarySensorDescription(Generic[T], BinarySensorEntityDescription):
     """Class describing deCONZ binary sensor entities."""
 
     instance_check: type[T] | None = None
     name_suffix: str = ""
     old_unique_id_suffix: str = ""
+    update_key: str
+    value_fn: Callable[[T], bool | None]
 
 
 ENTITY_DESCRIPTIONS: tuple[DeconzBinarySensorDescription, ...] = (
@@ -233,7 +225,7 @@ class DeconzBinarySensor(DeconzDevice[SensorResources], BinarySensorEntity):
     def __init__(
         self,
         device: SensorResources,
-        gateway: DeconzGateway,
+        gateway: DeconzHub,
         description: DeconzBinarySensorDescription,
     ) -> None:
         """Initialize deCONZ binary sensor."""

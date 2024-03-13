@@ -81,7 +81,11 @@ def patch_lifx_state_settle_delay():
         yield
 
 
-async def test_light_unique_id(hass: HomeAssistant) -> None:
+async def test_light_unique_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test a light unique id."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "1.2.3.4"}, unique_id=SERIAL
@@ -95,17 +99,19 @@ async def test_light_unique_id(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     entity_id = "light.my_bulb"
-    entity_registry = er.async_get(hass)
     assert entity_registry.async_get(entity_id).unique_id == SERIAL
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, SERIAL)}
     )
     assert device.identifiers == {(DOMAIN, SERIAL)}
 
 
-async def test_light_unique_id_new_firmware(hass: HomeAssistant) -> None:
+async def test_light_unique_id_new_firmware(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test a light unique id with newer firmware."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "1.2.3.4"}, unique_id=SERIAL
@@ -119,9 +125,7 @@ async def test_light_unique_id_new_firmware(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     entity_id = "light.my_bulb"
-    entity_registry = er.async_get(hass)
     assert entity_registry.async_get(entity_id).unique_id == SERIAL
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)},
     )
@@ -659,6 +663,7 @@ async def test_extended_multizone_messages(hass: HomeAssistant) -> None:
         )
 
 
+@pytest.mark.usefixtures("mock_discovery")
 async def test_matrix_flame_morph_effects(hass: HomeAssistant) -> None:
     """Test the firmware flame and morph effects on a matrix device."""
     config_entry = MockConfigEntry(
@@ -717,7 +722,7 @@ async def test_matrix_flame_morph_effects(hass: HomeAssistant) -> None:
         ],
     }
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
@@ -773,7 +778,7 @@ async def test_matrix_flame_morph_effects(hass: HomeAssistant) -> None:
         ],
     }
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
@@ -799,6 +804,7 @@ async def test_matrix_flame_morph_effects(hass: HomeAssistant) -> None:
     bulb.set_power.reset_mock()
 
 
+@pytest.mark.usefixtures("mock_discovery")
 async def test_lightstrip_move_effect(hass: HomeAssistant) -> None:
     """Test the firmware move effect on a light strip."""
     config_entry = MockConfigEntry(
@@ -855,7 +861,7 @@ async def test_lightstrip_move_effect(hass: HomeAssistant) -> None:
     bulb.power_level = 65535
     bulb.effect = {"name": "MOVE", "speed": 4.5, "direction": "Left"}
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
@@ -1115,7 +1121,10 @@ async def test_white_bulb(hass: HomeAssistant) -> None:
     bulb.set_color.reset_mock()
 
 
-async def test_config_zoned_light_strip_fails(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("mock_discovery")
+async def test_config_zoned_light_strip_fails(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test we handle failure to update zones."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=SERIAL
@@ -1144,16 +1153,17 @@ async def test_config_zoned_light_strip_fails(hass: HomeAssistant) -> None:
     with _patch_discovery(device=light_strip), _patch_device(device=light_strip):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
-        entity_registry = er.async_get(hass)
         assert entity_registry.async_get(entity_id).unique_id == SERIAL
         assert hass.states.get(entity_id).state == STATE_OFF
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
-async def test_legacy_zoned_light_strip(hass: HomeAssistant) -> None:
+async def test_legacy_zoned_light_strip(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test we handle failure to update zones."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=SERIAL
@@ -1183,7 +1193,6 @@ async def test_legacy_zoned_light_strip(hass: HomeAssistant) -> None:
     with _patch_discovery(device=light_strip), _patch_device(device=light_strip):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
-        entity_registry = er.async_get(hass)
         assert entity_registry.async_get(entity_id).unique_id == SERIAL
         assert hass.states.get(entity_id).state == STATE_OFF
         # 1 to get the number of zones
@@ -1197,7 +1206,9 @@ async def test_legacy_zoned_light_strip(hass: HomeAssistant) -> None:
         assert get_color_zones_mock.call_count == 5
 
 
-async def test_white_light_fails(hass: HomeAssistant) -> None:
+async def test_white_light_fails(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test we handle failure to power on off."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=SERIAL
@@ -1211,7 +1222,6 @@ async def test_white_light_fails(hass: HomeAssistant) -> None:
     with _patch_discovery(device=bulb), _patch_device(device=bulb):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
-        entity_registry = er.async_get(hass)
         assert entity_registry.async_get(entity_id).unique_id == SERIAL
         assert hass.states.get(entity_id).state == STATE_OFF
         with pytest.raises(HomeAssistantError):

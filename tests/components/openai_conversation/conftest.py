@@ -1,4 +1,5 @@
 """Tests helpers."""
+
 from unittest.mock import patch
 
 import pytest
@@ -25,7 +26,7 @@ def mock_config_entry(hass):
 async def mock_init_component(hass, mock_config_entry):
     """Initialize integration."""
     with patch(
-        "openai.Engine.list",
+        "openai.resources.models.AsyncModels.list",
     ):
         assert await async_setup_component(hass, "openai_conversation", {})
         await hass.async_block_till_done()

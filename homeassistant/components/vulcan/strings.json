@@ -4,7 +4,7 @@
       "already_configured": "That student has already been added.",
       "all_student_already_configured": "All students have already been added.",
       "reauth_successful": "Reauth successful",
-      "no_matching_entries": "No matching entries found, please use different account or remove integration with outdated student.."
+      "no_matching_entries": "No matching entries found, please use different account or remove integration with outdated student."
     },
     "error": {
       "unknown": "[%key:common::config_flow::error::unknown%]",
@@ -29,7 +29,7 @@
         "data": {
           "token": "Token",
           "region": "[%key:component::vulcan::config::step::auth::data::region%]",
-          "pin": "[%key:component::vulcan::config::step::auth::data::pin%]"
+          "pin": "[%key:common::config_flow::data::pin%]"
         }
       },
       "select_student": {
@@ -49,6 +49,13 @@
         "data": {
           "use_saved_credentials": "Use saved credentials"
         }
+      }
+    }
+  },
+  "entity": {
+    "calendar": {
+      "calendar": {
+        "name": "[%key:component::calendar::title%]"
       }
     }
   }

@@ -1,4 +1,5 @@
 """Interface implementation for cloud client."""
+
 from __future__ import annotations
 
 import asyncio
@@ -6,10 +7,10 @@ from datetime import datetime
 from http import HTTPStatus
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import aiohttp
-from hass_nabucasa.client import CloudClient as Interface
+from hass_nabucasa.client import CloudClient as Interface, RemoteActivationNotAllowed
 
 from homeassistant.components import google_assistant, persistent_notification, webhook
 from homeassistant.components.alexa import (
@@ -19,13 +20,22 @@ from homeassistant.components.alexa import (
 from homeassistant.components.google_assistant import smart_home as ga
 from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import Context, HassJob, HomeAssistant, callback
+from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util.aiohttp import MockRequest, serialize_response
 
 from . import alexa_config, google_config
 from .const import DISPATCHER_REMOTE_UPDATE, DOMAIN
 from .prefs import CloudPreferences
+
+_LOGGER = logging.getLogger(__name__)
+
+VALID_REPAIR_TRANSLATION_KEYS = {
+    "warn_bad_custom_domain_configuration",
+    "reset_bad_custom_domain_configuration",
+}
 
 
 class CloudClient(Interface):
@@ -87,6 +97,11 @@ class CloudClient(Interface):
         return self._prefs.remote_enabled
 
     @property
+    def client_name(self) -> str:
+        """Return the client name that will be used for API calls."""
+        return SERVER_SOFTWARE
+
+    @property
     def relayer_region(self) -> str | None:
         """Return the connected relayer region."""
         return self._relayer_region
@@ -137,6 +152,7 @@ class CloudClient(Interface):
 
     async def cloud_connected(self) -> None:
         """When cloud is connected."""
+        _LOGGER.debug("cloud_connected")
         is_new_user = await self.prefs.async_set_username(self.cloud.username)
 
         async def enable_alexa(_: Any) -> None:
@@ -184,6 +200,9 @@ class CloudClient(Interface):
 
     async def cloud_disconnected(self) -> None:
         """When cloud disconnected."""
+        _LOGGER.debug("cloud_disconnected")
+        if self._google_config:
+            self._google_config.async_disable_local_sdk()
 
     async def cloud_started(self) -> None:
         """When cloud is started."""
@@ -195,6 +214,12 @@ class CloudClient(Interface):
         """Cleanup some stuff after logout."""
         await self.prefs.async_set_username(None)
 
+        if self._alexa_config:
+            self._alexa_config.async_deinitialize()
+        self._alexa_config = None
+
+        if self._google_config:
+            self._google_config.async_deinitialize()
         self._google_config = None
 
     @callback
@@ -210,6 +235,8 @@ class CloudClient(Interface):
 
     async def async_cloud_connect_update(self, connect: bool) -> None:
         """Process cloud remote message to client."""
+        if not self._prefs.remote_allow_remote_enable:
+            raise RemoteActivationNotAllowed
         await self._prefs.async_update(remote_enabled=connect)
 
     async def async_cloud_connection_info(
@@ -218,12 +245,14 @@ class CloudClient(Interface):
         """Process cloud connection info message to client."""
         return {
             "remote": {
+                "can_enable": self._prefs.remote_allow_remote_enable,
                 "connected": self.cloud.remote.is_connected,
                 "enabled": self._prefs.remote_enabled,
                 "instance_domain": self.cloud.remote.instance_domain,
                 "alias": self.cloud.remote.alias,
             },
             "version": HA_VERSION,
+            "instance_id": self.prefs.instance_id,
         }
 
     async def async_alexa_message(self, payload: dict[Any, Any]) -> dict[Any, Any]:
@@ -242,13 +271,23 @@ class CloudClient(Interface):
         """Process cloud google message to client."""
         gconf = await self.get_google_config()
 
+        msgid: Any = "<UNKNOWN>"
+        if isinstance(payload, dict):
+            msgid = payload.get("requestId")
+        _LOGGER.debug("Received cloud message %s", msgid)
+
         if not self._prefs.google_enabled:
             return ga.api_disabled_response(  # type: ignore[no-any-return, no-untyped-call]
                 payload, gconf.agent_user_id
             )
 
         return await ga.async_handle_message(  # type: ignore[no-any-return, no-untyped-call]
-            self._hass, gconf, gconf.cloud_user, payload, google_assistant.SOURCE_CLOUD
+            self._hass,
+            gconf,
+            gconf.agent_user_id,
+            gconf.cloud_user,
+            payload,
+            google_assistant.SOURCE_CLOUD,
         )
 
     async def async_webhook_message(self, payload: dict[Any, Any]) -> dict[Any, Any]:
@@ -295,3 +334,24 @@ class CloudClient(Interface):
     ) -> None:
         """Update local list of cloudhooks."""
         await self._prefs.async_update(cloudhooks=data)
+
+    async def async_create_repair_issue(
+        self,
+        identifier: str,
+        translation_key: str,
+        *,
+        placeholders: dict[str, str] | None = None,
+        severity: Literal["error", "warning"] = "warning",
+    ) -> None:
+        """Create a repair issue."""
+        if translation_key not in VALID_REPAIR_TRANSLATION_KEYS:
+            raise ValueError(f"Invalid translation key {translation_key}")
+        async_create_issue(
+            hass=self._hass,
+            domain=DOMAIN,
+            issue_id=identifier,
+            translation_key=translation_key,
+            translation_placeholders=placeholders,
+            severity=IssueSeverity(severity),
+            is_fixable=False,
+        )

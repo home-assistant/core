@@ -1,4 +1,5 @@
 """Support for LaMetric sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -21,25 +22,17 @@ from .coordinator import LaMetricDataUpdateCoordinator
 from .entity import LaMetricEntity
 
 
-@dataclass
-class LaMetricEntityDescriptionMixin:
-    """Mixin values for LaMetric entities."""
+@dataclass(frozen=True, kw_only=True)
+class LaMetricSensorEntityDescription(SensorEntityDescription):
+    """Class describing LaMetric sensor entities."""
 
     value_fn: Callable[[Device], int | None]
-
-
-@dataclass
-class LaMetricSensorEntityDescription(
-    SensorEntityDescription, LaMetricEntityDescriptionMixin
-):
-    """Class describing LaMetric sensor entities."""
 
 
 SENSORS = [
     LaMetricSensorEntityDescription(
         key="rssi",
         translation_key="rssi",
-        icon="mdi:wifi",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=PERCENTAGE,

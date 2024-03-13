@@ -1,4 +1,5 @@
 """Support for script and automation tracing and debugging."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -44,7 +45,7 @@ TraceData = dict[str, LimitedSizeDict[str, BaseTrace]]
 
 @callback
 def _get_data(hass: HomeAssistant) -> TraceData:
-    return hass.data[DATA_TRACE]
+    return hass.data[DATA_TRACE]  # type: ignore[no-any-return]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

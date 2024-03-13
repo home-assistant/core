@@ -2,12 +2,15 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connect to the NUT server",
+        "description": "Connect to the NUT server",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your NUT server."
         }
       },
       "ups": {
@@ -163,7 +166,9 @@
       "ups_delay_reboot": { "name": "UPS reboot delay" },
       "ups_delay_shutdown": { "name": "UPS shutdown delay" },
       "ups_delay_start": { "name": "Load restart delay" },
-      "ups_display_language": { "name": "Language" },
+      "ups_display_language": {
+        "name": "[%key:common::config_flow::data::language%]"
+      },
       "ups_efficiency": { "name": "Efficiency" },
       "ups_id": { "name": "System identifier" },
       "ups_load": { "name": "Load" },

@@ -1,4 +1,5 @@
 """Intents for the cover integration."""
+
 from homeassistant.const import SERVICE_CLOSE_COVER, SERVICE_OPEN_COVER
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent

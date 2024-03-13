@@ -1,4 +1,5 @@
 """Collection of useful functions for the HomeKit component."""
+
 from __future__ import annotations
 
 import io
@@ -37,11 +38,10 @@ from homeassistant.const import (
     CONF_TYPE,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, State, callback, split_entity_id
+from homeassistant.core import Event, HomeAssistant, State, callback, split_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import EventStateChangedData
 from homeassistant.helpers.storage import STORAGE_DIR
-from homeassistant.helpers.typing import EventType
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
@@ -86,8 +86,6 @@ from .const import (
     FEATURE_PLAY_PAUSE,
     FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE,
-    HOMEKIT_PAIRING_QR,
-    HOMEKIT_PAIRING_QR_SECRET,
     MAX_NAME_LENGTH,
     TYPE_FAUCET,
     TYPE_OUTLET,
@@ -100,6 +98,7 @@ from .const import (
     VIDEO_CODEC_H264_V4L2M2M,
     VIDEO_CODEC_LIBX264,
 )
+from .models import HomeKitEntryData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -352,8 +351,10 @@ def async_show_setup_message(
     url.svg(buffer, scale=5, module_color="#000", background="#FFF")
     pairing_secret = secrets.token_hex(32)
 
-    hass.data[DOMAIN][entry_id][HOMEKIT_PAIRING_QR] = buffer.getvalue()
-    hass.data[DOMAIN][entry_id][HOMEKIT_PAIRING_QR_SECRET] = pairing_secret
+    entry_data: HomeKitEntryData = hass.data[DOMAIN][entry_id]
+
+    entry_data.pairing_qr = buffer.getvalue()
+    entry_data.pairing_qr_secret = pairing_secret
 
     message = (
         f"To set up {bridge_name} in the Home App, "
@@ -622,7 +623,7 @@ def state_needs_accessory_mode(state: State) -> bool:
     )
 
 
-def state_changed_event_is_same_state(event: EventType[EventStateChangedData]) -> bool:
+def state_changed_event_is_same_state(event: Event[EventStateChangedData]) -> bool:
     """Check if a state changed event is the same state."""
     event_data = event.data
     old_state = event_data["old_state"]

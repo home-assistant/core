@@ -18,23 +18,19 @@ async def async_setup_entry(
     """Set up the Identify button."""
     coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     if coordinator.supports_identify():
-        async_add_entities([HomeWizardIdentifyButton(coordinator, entry)])
+        async_add_entities([HomeWizardIdentifyButton(coordinator)])
 
 
 class HomeWizardIdentifyButton(HomeWizardEntity, ButtonEntity):
     """Representation of a identify button."""
 
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_device_class = ButtonDeviceClass.IDENTIFY
 
-    def __init__(
-        self,
-        coordinator: HWEnergyDeviceUpdateCoordinator,
-        entry: ConfigEntry,
-    ) -> None:
+    def __init__(self, coordinator: HWEnergyDeviceUpdateCoordinator) -> None:
         """Initialize button."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{entry.unique_id}_identify"
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_identify"
 
     @homewizard_exception_handler
     async def async_press(self) -> None:

@@ -1,4 +1,5 @@
 """Constants used for Insteon test cases."""
+
 from homeassistant.components.insteon.const import (
     CONF_CAT,
     CONF_DIM_STEPS,
@@ -36,6 +37,10 @@ MOCK_X10_STEPS = 10
 
 MOCK_USER_INPUT_PLM = {
     CONF_DEVICE: MOCK_DEVICE,
+}
+
+MOCK_USER_INPUT_PLM_MANUAL = {
+    CONF_DEVICE: "manual",
 }
 
 MOCK_USER_INPUT_HUB_V2 = {

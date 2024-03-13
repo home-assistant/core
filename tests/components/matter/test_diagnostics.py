@@ -1,4 +1,5 @@
 """Test the Matter diagnostics platform."""
+
 from __future__ import annotations
 
 import json
@@ -81,6 +82,7 @@ async def test_config_entry_diagnostics(
 async def test_device_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    device_registry: dr.DeviceRegistry,
     matter_client: MagicMock,
     config_entry_diagnostics: dict[str, Any],
     device_diagnostics: dict[str, Any],
@@ -102,8 +104,9 @@ async def test_device_diagnostics(
     )
     matter_client.get_diagnostics.return_value = server_diagnostics
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-    dev_reg = dr.async_get(hass)
-    device = dr.async_entries_for_config_entry(dev_reg, config_entry.entry_id)[0]
+    device = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)[
+        0
+    ]
     assert device
 
     diagnostics = await get_diagnostics_for_device(

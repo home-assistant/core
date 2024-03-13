@@ -2050,37 +2050,53 @@
     "type": "temperature"
   },
   {
+    "id": "9ad57767-e622-4f91-9086-2e5573bc781b",
+    "type": "behavior_instance",
+    "script_id": "e73bc72d-96b1-46f8-aa57-729861f80c78",
+    "enabled": true,
+    "state": {
+      "timer_state": "stopped"
+    },
     "configuration": {
-      "end_state": "last_state",
+      "duration": {
+        "seconds": 60
+      },
+      "what": [
+        {
+          "group": {
+            "rid": "5e799732-e82e-46ab-b5d9-52b701bd7cbc",
+            "rtype": "room"
+          },
+          "recall": {
+            "rid": "732ff1d9-76a7-4630-aad0-c8acc499bb0b",
+            "rtype": "recipe"
+          }
+        }
+      ],
       "where": [
         {
           "group": {
-            "rid": "c14cf1cf-6c7a-4984-b8bb-c5b71aeb70fc",
-            "rtype": "entertainment_configuration"
+            "rid": "5e799732-e82e-46ab-b5d9-52b701bd7cbc",
+            "rtype": "room"
           }
         }
       ]
     },
     "dependees": [
       {
-        "level": "critical",
         "target": {
-          "rid": "c14cf1cf-6c7a-4984-b8bb-c5b71aeb70fc",
-          "rtype": "entertainment_configuration"
+          "rid": "5e799732-e82e-46ab-b5d9-52b701bd7cbc",
+          "rtype": "room"
         },
+        "level": "critical",
         "type": "ResourceDependee"
       }
     ],
-    "enabled": true,
-    "id": "0670cfb1-2bd7-4237-a0e3-1827a44d7231",
+    "status": "running",
     "last_error": "",
     "metadata": {
-      "name": "state_after_streaming"
-    },
-    "migrated_from": "/resourcelinks/47450",
-    "script_id": "7719b841-6b3d-448d-a0e7-601ae9edb6a2",
-    "status": "running",
-    "type": "behavior_instance"
+      "name": "Timer Test"
+    }
   },
   {
     "configuration_schema": {

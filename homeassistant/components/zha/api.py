@@ -10,8 +10,8 @@ from zigpy.types import Channels
 from zigpy.util import pick_optimal_channel
 
 from .core.const import CONF_RADIO_TYPE, DOMAIN, RadioType
-from .core.gateway import ZHAGateway
-from .core.helpers import get_zha_data, get_zha_gateway
+from .core.helpers import get_zha_gateway
+from .radio_manager import ZhaRadioManager
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
@@ -55,19 +55,13 @@ async def async_get_last_network_settings(
     if config_entry is None:
         config_entry = _get_config_entry(hass)
 
-    config = get_zha_data(hass).yaml_config
-    zha_gateway = ZHAGateway(hass, config, config_entry)
+    radio_mgr = ZhaRadioManager.from_config_entry(hass, config_entry)
 
-    app_controller_cls, app_config = zha_gateway.get_application_controller_data()
-    app = app_controller_cls(app_config)
-
-    try:
-        await app._load_db()  # pylint: disable=protected-access
-        settings = max(app.backups, key=lambda b: b.backup_time)
-    except ValueError:
-        settings = None
-    finally:
-        await app.shutdown()
+    async with radio_mgr.connect_zigpy_app() as app:
+        try:
+            settings = max(app.backups, key=lambda b: b.backup_time)
+        except ValueError:
+            settings = None
 
     return settings
 

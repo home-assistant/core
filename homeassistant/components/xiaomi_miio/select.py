@@ -1,4 +1,5 @@
 """Support led_brightness for Mi Air Humidifier."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -29,12 +30,11 @@ from miio.integrations.humidifier.zhimi.airhumidifier_miot import (
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MODEL, EntityCategory
+from homeassistant.const import CONF_DEVICE, CONF_MODEL, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    CONF_DEVICE,
     CONF_FLOW_TYPE,
     DOMAIN,
     KEY_COORDINATOR,
@@ -72,7 +72,7 @@ ATTR_MODE = "mode"
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class XiaomiMiioSelectDescription(SelectEntityDescription):
     """A class that describes select entities."""
 

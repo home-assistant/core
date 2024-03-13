@@ -1,4 +1,5 @@
 """Fixtures for RDW integration tests."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -38,7 +39,7 @@ def mock_rdw_config_flow() -> Generator[None, MagicMock, None]:
         "homeassistant.components.rdw.config_flow.RDW", autospec=True
     ) as rdw_mock:
         rdw = rdw_mock.return_value
-        rdw.vehicle.return_value = Vehicle.parse_raw(load_fixture("rdw/11ZKZ3.json"))
+        rdw.vehicle.return_value = Vehicle.from_json(load_fixture("rdw/11ZKZ3.json"))
         yield rdw
 
 
@@ -49,7 +50,7 @@ def mock_rdw(request: pytest.FixtureRequest) -> Generator[None, MagicMock, None]
     if hasattr(request, "param") and request.param:
         fixture = request.param
 
-    vehicle = Vehicle.parse_raw(load_fixture(fixture))
+    vehicle = Vehicle.from_json(load_fixture(fixture))
     with patch("homeassistant.components.rdw.RDW", autospec=True) as rdw_mock:
         rdw = rdw_mock.return_value
         rdw.vehicle.return_value = vehicle

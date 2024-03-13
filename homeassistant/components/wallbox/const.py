@@ -1,7 +1,9 @@
 """Constants for the Wallbox integration."""
+
 from enum import StrEnum
 
 DOMAIN = "wallbox"
+UPDATE_INTERVAL = 30
 
 BIDIRECTIONAL_MODEL_PREFIXES = ["QS"]
 

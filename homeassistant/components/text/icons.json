@@ -1,0 +1,10 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:form-textbox"
+    }
+  },
+  "services": {
+    "set_value": "mdi:form-textbox"
+  }
+}

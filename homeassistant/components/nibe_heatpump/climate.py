@@ -1,6 +1,8 @@
 """The Nibe Heat Pump climate."""
+
 from __future__ import annotations
 
+from datetime import date
 from typing import Any
 
 from nibe.coil import Coil
@@ -24,11 +26,9 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import Coordinator
 from .const import (
     DOMAIN,
     LOGGER,
@@ -37,6 +37,7 @@ from .const import (
     VALUES_PRIORITY_COOLING,
     VALUES_PRIORITY_HEATING,
 )
+from .coordinator import Coordinator
 
 
 async def async_setup_entry(
@@ -48,10 +49,7 @@ async def async_setup_entry(
 
     coordinator: Coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    main_unit = UNIT_COILGROUPS.get(coordinator.series, {}).get("main")
-    if not main_unit:
-        LOGGER.debug("Skipping climates - no main unit found")
-        return
+    main_unit = UNIT_COILGROUPS[coordinator.series]["main"]
 
     def climate_systems():
         for key, group in CLIMATE_COILGROUPS.get(coordinator.series, ()).items():
@@ -75,6 +73,7 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
     _attr_target_temperature_step = 0.5
     _attr_max_temp = 35.0
     _attr_min_temp = 5.0
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -128,10 +127,7 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        if not self.coordinator.data:
-            return
-
-        def _get_value(coil: Coil) -> int | str | float | None:
+        def _get_value(coil: Coil) -> int | str | float | date | None:
             return self.coordinator.get_coil_value(coil)
 
         def _get_float(coil: Coil) -> float | None:
@@ -179,7 +175,7 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
             else:
                 self._attr_hvac_action = HVACAction.IDLE
         else:
-            self._attr_hvac_action = None
+            self._attr_hvac_action = HVACAction.OFF
 
         self.async_write_ha_state()
 
@@ -247,4 +243,4 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
             )
             await coordinator.async_write_coil(self._coil_use_room_sensor, "OFF")
         else:
-            raise HomeAssistantError(f"{hvac_mode} mode not supported for {self.name}")
+            raise ValueError(f"{hvac_mode} mode not supported for {self.name}")

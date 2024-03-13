@@ -1,4 +1,5 @@
 """Support for Big Ass Fans fan."""
+
 from __future__ import annotations
 
 import math
@@ -93,8 +94,6 @@ class BAFFan(BAFEntity, FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
-        if preset_mode != PRESET_MODE_AUTO:
-            raise ValueError(f"Invalid preset mode: {preset_mode}")
         self._device.fan_mode = OffOnAuto.AUTO
 
     async def async_set_direction(self, direction: str) -> None:

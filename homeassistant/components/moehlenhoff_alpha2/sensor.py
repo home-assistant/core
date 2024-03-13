@@ -25,7 +25,7 @@ async def async_setup_entry(
         Alpha2HeatControlValveOpeningSensor(coordinator, heat_control_id)
         for heat_control_id, heat_control in coordinator.data["heat_controls"].items()
         if heat_control["INUSE"]
-        and heat_control["_HEATAREA_ID"]
+        and heat_control["_HEATAREA_ID"] in coordinator.data["heat_areas"]
         and heat_control.get("ACTOR_PERCENT") is not None
     )
 
