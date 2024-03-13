@@ -650,12 +650,8 @@ class _ScriptRun:
         @callback
         def async_script_wait(entity_id, from_s, to_s):
             """Handle script after template condition is true."""
-            wait_var = self._variables["wait"]
-            if timeout_handle:
-                wait_var["remaining"] = timeout_handle.when() - self._hass.loop.time()
-            else:
-                wait_var["remaining"] = timeout
-            wait_var["completed"] = True
+            self._async_set_remaining_time(timeout_handle)
+            self._variables["wait"]["completed"] = True
             _set_result_unless_done(done)
 
         unsub = async_track_template(
@@ -665,6 +661,16 @@ class _ScriptRun:
         await self._async_wait_with_optional_timeout(
             futures, timeout_handle, timeout_future, unsub
         )
+
+    def _async_set_remaining_time(
+        self, timeout_handle: asyncio.TimerHandle | None
+    ) -> None:
+        """Set the remaining time for a wait step."""
+        wait_var = self._variables["wait"]
+        if timeout_handle:
+            wait_var["remaining"] = timeout_handle.when() - self._hass.loop.time()
+        else:
+            wait_var["remaining"] = None
 
     async def _async_run_long_action(self, long_task: asyncio.Task[_T]) -> _T | None:
         """Run a long task while monitoring for stop request."""
@@ -1003,12 +1009,8 @@ class _ScriptRun:
         )
 
         async def async_done(variables, context=None):
-            wait_var = self._variables["wait"]
-            if timeout_handle:
-                wait_var["remaining"] = timeout_handle.when() - self._hass.loop.time()
-            else:
-                wait_var["remaining"] = timeout
-            wait_var["trigger"] = variables["trigger"]
+            self._async_set_remaining_time(timeout_handle)
+            self._variables["wait"]["trigger"] = variables["trigger"]
             _set_result_unless_done(done)
 
         def log_cb(level, msg, **kwargs):
