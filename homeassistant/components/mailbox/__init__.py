@@ -233,12 +233,14 @@ class MailboxPlatformsView(MailboxView):
     async def get(self, request: web.Request) -> web.Response:
         """Retrieve list of platforms."""
         return self.json(
-            {
-                "name": mailbox.name,
-                "has_media": mailbox.has_media,
-                "can_delete": mailbox.can_delete,
-            }
-            for mailbox in self.mailboxes
+            [
+                {
+                    "name": mailbox.name,
+                    "has_media": mailbox.has_media,
+                    "can_delete": mailbox.can_delete,
+                }
+                for mailbox in self.mailboxes
+            ]
         )
 
 
