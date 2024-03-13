@@ -620,7 +620,7 @@ class _ScriptRun:
             else:
                 timeout_handle.cancel()
 
-    def _get_timeout_seconds_From_action(self) -> float | None:
+    def _get_timeout_seconds_from_action(self) -> float | None:
         """Get the timeout from the action."""
         if CONF_TIMEOUT in self._action:
             return self._get_pos_time_period_template(CONF_TIMEOUT).total_seconds()
@@ -628,7 +628,7 @@ class _ScriptRun:
 
     async def _async_wait_template_step(self):
         """Handle a wait template."""
-        timeout = self._get_timeout_seconds_From_action()
+        timeout = self._get_timeout_seconds_from_action()
         self._step_log("wait template", timeout)
 
         self._variables["wait"] = {"remaining": timeout, "completed": False}
@@ -991,7 +991,7 @@ class _ScriptRun:
 
     async def _async_wait_for_trigger_step(self):
         """Wait for a trigger event."""
-        timeout = self._get_timeout_seconds_From_action()
+        timeout = self._get_timeout_seconds_from_action()
 
         self._step_log("wait for trigger", timeout)
 
