@@ -192,7 +192,7 @@ async def async_check_ha_config_file(  # noqa: C901
             continue
 
         try:
-            component = integration.get_component()
+            component = await integration.async_get_component()
         except ImportError as ex:
             result.add_warning(f"Component error: {domain} - {ex}")
             continue

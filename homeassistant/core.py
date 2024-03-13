@@ -524,30 +524,43 @@ class HomeAssistant:
         if target is None:
             raise ValueError("Don't call add_job with None")
         if asyncio.iscoroutine(target):
-            self.loop.call_soon_threadsafe(self.async_add_job, target)
+            self.loop.call_soon_threadsafe(
+                functools.partial(self.async_add_job, target, eager_start=True)
+            )
             return
         if TYPE_CHECKING:
             target = cast(Callable[..., Any], target)
-        self.loop.call_soon_threadsafe(self.async_add_job, target, *args)
+        self.loop.call_soon_threadsafe(
+            functools.partial(self.async_add_job, target, *args, eager_start=True)
+        )
 
     @overload
     @callback
     def async_add_job(
-        self, target: Callable[..., Coroutine[Any, Any, _R]], *args: Any
+        self,
+        target: Callable[..., Coroutine[Any, Any, _R]],
+        *args: Any,
+        eager_start: bool = False,
     ) -> asyncio.Future[_R] | None:
         ...
 
     @overload
     @callback
     def async_add_job(
-        self, target: Callable[..., Coroutine[Any, Any, _R] | _R], *args: Any
+        self,
+        target: Callable[..., Coroutine[Any, Any, _R] | _R],
+        *args: Any,
+        eager_start: bool = False,
     ) -> asyncio.Future[_R] | None:
         ...
 
     @overload
     @callback
     def async_add_job(
-        self, target: Coroutine[Any, Any, _R], *args: Any
+        self,
+        target: Coroutine[Any, Any, _R],
+        *args: Any,
+        eager_start: bool = False,
     ) -> asyncio.Future[_R] | None:
         ...
 
@@ -556,6 +569,7 @@ class HomeAssistant:
         self,
         target: Callable[..., Coroutine[Any, Any, _R] | _R] | Coroutine[Any, Any, _R],
         *args: Any,
+        eager_start: bool = False,
     ) -> asyncio.Future[_R] | None:
         """Add a job to be executed by the event loop or by an executor.
 
@@ -571,7 +585,7 @@ class HomeAssistant:
             raise ValueError("Don't call async_add_job with None")
 
         if asyncio.iscoroutine(target):
-            return self.async_create_task(target)
+            return self.async_create_task(target, eager_start=eager_start)
 
         # This code path is performance sensitive and uses
         # if TYPE_CHECKING to avoid the overhead of constructing
@@ -579,7 +593,7 @@ class HomeAssistant:
         # https://github.com/home-assistant/core/pull/71960
         if TYPE_CHECKING:
             target = cast(Callable[..., Coroutine[Any, Any, _R] | _R], target)
-        return self.async_add_hass_job(HassJob(target), *args)
+        return self.async_add_hass_job(HassJob(target), *args, eager_start=eager_start)
 
     @overload
     @callback
@@ -750,7 +764,6 @@ class HomeAssistant:
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R]],
         *args: Any,
-        eager_start: bool = False,
         background: bool = False,
     ) -> asyncio.Future[_R] | None:
         ...
@@ -761,7 +774,6 @@ class HomeAssistant:
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
         *args: Any,
-        eager_start: bool = False,
         background: bool = False,
     ) -> asyncio.Future[_R] | None:
         ...
@@ -771,14 +783,12 @@ class HomeAssistant:
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
         *args: Any,
-        eager_start: bool = False,
         background: bool = False,
     ) -> asyncio.Future[_R] | None:
         """Run a HassJob from within the event loop.
 
         This method must be run in the event loop.
 
-        If eager_start is True, coroutine functions will be scheduled eagerly.
         If background is True, the task will created as a background task.
 
         hassjob: HassJob
@@ -795,7 +805,7 @@ class HomeAssistant:
             return None
 
         return self.async_add_hass_job(
-            hassjob, *args, eager_start=eager_start, background=background
+            hassjob, *args, eager_start=True, background=background
         )
 
     @overload
@@ -833,7 +843,7 @@ class HomeAssistant:
         args: parameters for method to call.
         """
         if asyncio.iscoroutine(target):
-            return self.async_create_task(target)
+            return self.async_create_task(target, eager_start=True)
 
         # This code path is performance sensitive and uses
         # if TYPE_CHECKING to avoid the overhead of constructing
@@ -1355,7 +1365,7 @@ class EventBus:
                     continue
             if run_immediately:
                 try:
-                    job.target(event)
+                    self._hass.async_run_hass_job(job, event)
                 except Exception:  # pylint: disable=broad-except
                     _LOGGER.exception("Error running job: %s", job)
             else:
@@ -1398,23 +1408,18 @@ class EventBus:
         @callback that returns a boolean value, determines if the
         listener callable should run.
 
-        If run_immediately is passed, the callback will be run
-        right away instead of using call_soon. Only use this if
-        the callback results in scheduling another task.
+        If run_immediately is passed:
+          - callbacks will be run right away instead of using call_soon.
+          - coroutine functions will be scheduled eagerly.
 
         This method must be run in the event loop.
         """
-        job_type: HassJobType | None = None
         if event_filter is not None and not is_callback_check_partial(event_filter):
             raise HomeAssistantError(f"Event filter {event_filter} is not a callback")
-        if run_immediately:
-            if not is_callback_check_partial(listener):
-                raise HomeAssistantError(f"Event listener {listener} is not a callback")
-            job_type = HassJobType.Callback
         return self._async_listen_filterable_job(
             event_type,
             (
-                HassJob(listener, f"listen {event_type}", job_type=job_type),
+                HassJob(listener, f"listen {event_type}"),
                 event_filter,
                 run_immediately,
             ),
@@ -1456,6 +1461,7 @@ class EventBus:
         self,
         event_type: str,
         listener: Callable[[Event[Any]], Coroutine[Any, Any, None] | None],
+        run_immediately: bool = False,
     ) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 
@@ -1476,7 +1482,7 @@ class EventBus:
                     job_type=HassJobType.Callback,
                 ),
                 None,
-                False,
+                run_immediately,
             ),
         )
         one_time_listener.remove = remove

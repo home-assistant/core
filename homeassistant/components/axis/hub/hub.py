@@ -16,7 +16,7 @@ from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_when_setup
 
@@ -38,6 +38,7 @@ class AxisHub:
         self.available = True
         self.fw_version = api.vapix.firmware_version
         self.product_type = api.vapix.product_type
+        self.unique_id = format_mac(api.vapix.serial_number)
 
         self.additional_diagnostics: dict[str, Any] = {}
 
@@ -48,22 +49,17 @@ class AxisHub:
         hub: AxisHub = hass.data[AXIS_DOMAIN][config_entry.entry_id]
         return hub
 
-    @property
-    def unique_id(self) -> str | None:
-        """Return the unique ID (serial number) of this device."""
-        return self.config.entry.unique_id
-
     # Signals
 
     @property
     def signal_reachable(self) -> str:
         """Device specific event to signal a change in connection status."""
-        return f"axis_reachable_{self.unique_id}"
+        return f"axis_reachable_{self.config.entry.entry_id}"
 
     @property
     def signal_new_address(self) -> str:
         """Device specific event to signal a change in device address."""
-        return f"axis_new_address_{self.unique_id}"
+        return f"axis_new_address_{self.config.entry.entry_id}"
 
     # Callbacks
 
@@ -100,8 +96,8 @@ class AxisHub:
         device_registry.async_get_or_create(
             config_entry_id=self.config.entry.entry_id,
             configuration_url=self.api.config.url,
-            connections={(CONNECTION_NETWORK_MAC, self.unique_id)},  # type: ignore[arg-type]
-            identifiers={(AXIS_DOMAIN, self.unique_id)},  # type: ignore[arg-type]
+            connections={(CONNECTION_NETWORK_MAC, self.unique_id)},
+            identifiers={(AXIS_DOMAIN, self.unique_id)},
             manufacturer=ATTR_MANUFACTURER,
             model=f"{self.config.model} {self.product_type}",
             name=self.config.name,
