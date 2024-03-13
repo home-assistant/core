@@ -217,7 +217,7 @@ async def async_setup_entry(
         ]
         processes: list[Process] = coordinator.data.processes
 
-        # Find process.id from list, raise HomeAssistantError if not found
+        # Find process.id from list, raise ServiceValidationError if not found
         try:
             return asdict(
                 next(
