@@ -1,4 +1,5 @@
 """Fixtures for the Coolmaster integration."""
+
 from __future__ import annotations
 
 import copy

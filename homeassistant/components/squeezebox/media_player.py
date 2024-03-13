@@ -1,4 +1,5 @@
 """Support for interfacing to the Logitech SqueezeBox API."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -394,11 +395,11 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         player_ids = {
             p.unique_id: p.entity_id for p in self.hass.data[DOMAIN][KNOWN_PLAYERS]
         }
-        sync_group = []
-        for player in self._player.sync_group:
-            if player in player_ids:
-                sync_group.append(player_ids[player])
-        return sync_group
+        return [
+            player_ids[player]
+            for player in self._player.sync_group
+            if player in player_ids
+        ]
 
     @property
     def sync_group(self):
@@ -549,8 +550,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         """
         all_params = [command]
         if parameters:
-            for parameter in parameters:
-                all_params.append(parameter)
+            all_params.extend(parameters)
         await self._player.async_query(*all_params)
 
     async def async_call_query(self, command, parameters=None):
@@ -561,8 +561,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         """
         all_params = [command]
         if parameters:
-            for parameter in parameters:
-                all_params.append(parameter)
+            all_params.extend(parameters)
         self._query_result = await self._player.async_query(*all_params)
         _LOGGER.debug("call_query got result %s", self._query_result)
 

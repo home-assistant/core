@@ -1,4 +1,5 @@
 """Define tests for the Sabnzbd config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from pysabnzbd import SabnzbdApiException

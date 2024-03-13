@@ -3,6 +3,7 @@
 Your beacons must be configured to transmit UID (for identification) and TLM
 (for temperature) frames.
 """
+
 from __future__ import annotations
 
 import logging

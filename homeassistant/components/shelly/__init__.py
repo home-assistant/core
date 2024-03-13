@@ -1,4 +1,5 @@
 """The Shelly integration."""
+
 from __future__ import annotations
 
 import contextlib
@@ -6,7 +7,7 @@ from typing import Any, Final
 
 from aioshelly.block_device import BlockDevice, BlockUpdateType
 from aioshelly.common import ConnectionOptions
-from aioshelly.const import RPC_GENERATIONS
+from aioshelly.const import DEFAULT_COAP_PORT, RPC_GENERATIONS
 from aioshelly.exceptions import (
     DeviceConnectionError,
     FirmwareUnsupported,
@@ -36,7 +37,6 @@ from .const import (
     CONF_COAP_PORT,
     CONF_SLEEP_PERIOD,
     DATA_CONFIG_ENTRY,
-    DEFAULT_COAP_PORT,
     DOMAIN,
     FIRMWARE_UNSUPPORTED_ISSUE_ID,
     LOGGER,
@@ -208,7 +208,7 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
             data["model"] = device.settings["device"]["type"]
             hass.config_entries.async_update_entry(entry, data=data)
 
-        hass.async_create_task(_async_block_device_setup())
+        hass.async_create_task(_async_block_device_setup(), eager_start=True)
 
     if sleep_period == 0:
         # Not a sleeping device, finish setup
@@ -298,7 +298,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
             data[CONF_SLEEP_PERIOD] = get_rpc_device_wakeup_period(device.status)
             hass.config_entries.async_update_entry(entry, data=data)
 
-        hass.async_create_task(_async_rpc_device_setup())
+        hass.async_create_task(_async_rpc_device_setup(), eager_start=True)
 
     if sleep_period == 0:
         # Not a sleeping device, finish setup

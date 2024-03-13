@@ -1,6 +1,5 @@
 """Describe group states."""
 
-
 from homeassistant.components.group import GroupIntegrationRegistry
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant, callback

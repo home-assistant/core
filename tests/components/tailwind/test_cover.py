@@ -1,4 +1,5 @@
 """Tests for cover entities provided by the Tailwind integration."""
+
 from unittest.mock import ANY, MagicMock
 
 from gotailwind import (

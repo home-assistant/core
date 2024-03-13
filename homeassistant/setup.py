@@ -1,4 +1,5 @@
 """All methods needed to bootstrap a Home Assistant instance."""
+
 from __future__ import annotations
 
 import asyncio
@@ -25,9 +26,11 @@ from .core import (
     callback,
 )
 from .exceptions import DependencyError, HomeAssistantError
+from .helpers import translation
 from .helpers.issue_registry import IssueSeverity, async_create_issue
-from .helpers.typing import ConfigType, EventType
+from .helpers.typing import ConfigType
 from .util import ensure_unique_string
+from .util.async_ import create_eager_task
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -158,7 +161,7 @@ async def async_setup_component(
         if setup_done_future := setup_done_futures.pop(domain, None):
             setup_done_future.set_result(result)
         return result
-    except BaseException as err:  # pylint: disable=broad-except
+    except BaseException as err:
         futures = [setup_future]
         if setup_done_future := setup_done_futures.pop(domain, None):
             futures.append(setup_done_future)
@@ -191,7 +194,7 @@ async def _async_process_dependencies(
 
     dependencies_tasks = {
         dep: setup_futures.get(dep)
-        or hass.loop.create_task(
+        or create_eager_task(
             async_setup_component(hass, dep, config),
             name=f"setup {dep} as dependency of {integration.domain}",
         )
@@ -244,7 +247,7 @@ async def _async_process_dependencies(
     return failed
 
 
-async def _async_setup_component(
+async def _async_setup_component(  # noqa: C901
     hass: core.HomeAssistant, domain: str, config: ConfigType
 ) -> bool:
     """Set up a component for Home Assistant.
@@ -291,13 +294,13 @@ async def _async_setup_component(
     # Some integrations fail on import because they call functions incorrectly.
     # So we do it before validating config to catch these errors.
     try:
-        component = integration.get_component()
+        component = await integration.async_get_component()
     except ImportError as err:
         log_error(f"Unable to import component: {err}", err)
         return False
 
     integration_config_info = await conf_util.async_process_component_config(
-        hass, config, integration
+        hass, config, integration, component
     )
     conf_util.async_handle_component_errors(hass, integration_config_info, integration)
     processed_config = conf_util.async_drop_config_annotations(
@@ -343,7 +346,19 @@ async def _async_setup_component(
 
     start = timer()
     _LOGGER.info("Setting up %s", domain)
-    with async_start_setup(hass, [domain]):
+    integration_set = {domain}
+
+    load_translations_task: asyncio.Task[None] | None = None
+    if not translation.async_translations_loaded(hass, integration_set):
+        # For most cases we expect the translations are already
+        # loaded since we try to load them in bootstrap ahead of time.
+        # If for some reason the background task in bootstrap was too slow
+        # or the integration was added after bootstrap, we will load them here.
+        load_translations_task = create_eager_task(
+            translation.async_load_integrations(hass, integration_set)
+        )
+
+    with async_start_setup(hass, integration_set):
         if hasattr(component, "PLATFORM_SCHEMA"):
             # Entity components have their own warning
             warn_task = None
@@ -409,6 +424,8 @@ async def _async_setup_component(
         await asyncio.sleep(0)
         await hass.config_entries.flow.async_wait_import_flow_initialized(domain)
 
+        if load_translations_task:
+            await load_translations_task
         # Add to components before the entry.async_setup
         # call to avoid a deadlock when forwarding platforms
         hass.config.components.add(domain)
@@ -418,7 +435,7 @@ async def _async_setup_component(
         ):
             await asyncio.gather(
                 *(
-                    asyncio.create_task(
+                    create_eager_task(
                         entry.async_setup(hass, integration=integration),
                         name=f"config entry setup {entry.title} {entry.domain} {entry.entry_id}",
                     )
@@ -466,8 +483,21 @@ async def async_prepare_setup_platform(
         log_error(str(err))
         return None
 
+    # Platforms cannot exist on their own, they are part of their integration.
+    # If the integration is not set up yet, and can be set up, set it up.
+    #
+    # We do this before we import the platform so the platform already knows
+    # where the top level component is.
+    #
+    if load_top_level_component := integration.domain not in hass.config.components:
+        try:
+            component = await integration.async_get_component()
+        except ImportError as exc:
+            log_error(f"Unable to import the component ({exc}).")
+            return None
+
     try:
-        platform = integration.get_platform(domain)
+        platform = await integration.async_get_platform(domain)
     except ImportError as exc:
         log_error(f"Platform not found ({exc}).")
         return None
@@ -478,13 +508,7 @@ async def async_prepare_setup_platform(
 
     # Platforms cannot exist on their own, they are part of their integration.
     # If the integration is not set up yet, and can be set up, set it up.
-    if integration.domain not in hass.config.components:
-        try:
-            component = integration.get_component()
-        except ImportError as exc:
-            log_error(f"Unable to import the component ({exc}).")
-            return None
-
+    if load_top_level_component:
         if (
             hasattr(component, "setup") or hasattr(component, "async_setup")
         ) and not await async_setup_component(hass, integration.domain, hass_config):
@@ -554,19 +578,21 @@ def _async_when_setup(
             _LOGGER.exception("Error handling when_setup callback for %s", component)
 
     if component in hass.config.components:
-        hass.async_create_task(when_setup(), f"when setup {component}")
+        hass.async_create_task(
+            when_setup(), f"when setup {component}", eager_start=True
+        )
         return
 
     listeners: list[CALLBACK_TYPE] = []
 
-    async def _matched_event(event: Event) -> None:
+    async def _matched_event(event: Event[Any]) -> None:
         """Call the callback when we matched an event."""
         for listener in listeners:
             listener()
         await when_setup()
 
     @callback
-    def _async_is_component_filter(event: EventType[EventComponentLoaded]) -> bool:
+    def _async_is_component_filter(event: Event[EventComponentLoaded]) -> bool:
         """Check if the event is for the component."""
         return event.data[ATTR_COMPONENT] == component
 
@@ -574,12 +600,15 @@ def _async_when_setup(
         hass.bus.async_listen(
             EVENT_COMPONENT_LOADED,
             _matched_event,
-            event_filter=_async_is_component_filter,  # type: ignore[arg-type]
+            event_filter=_async_is_component_filter,
+            run_immediately=True,
         )
     )
     if start_event:
         listeners.append(
-            hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _matched_event)
+            hass.bus.async_listen(
+                EVENT_HOMEASSISTANT_START, _matched_event, run_immediately=True
+            )
         )
 
 

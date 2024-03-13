@@ -1,4 +1,5 @@
 """Test the Tomorrow.io config flow."""
+
 from unittest.mock import patch
 
 from pytomorrowio.exceptions import (

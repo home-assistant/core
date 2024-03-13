@@ -1,8 +1,9 @@
 """Base class for protect data."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Generator, Iterable
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import Any, cast
 
@@ -283,13 +284,23 @@ class ProtectData:
             self._async_signal_device_update(device)
 
     @callback
+    def _async_poll(self, now: datetime) -> None:
+        """Poll the Protect API.
+
+        If the websocket is connected, most of the time
+        this will be a no-op. If the websocket is disconnected,
+        this will trigger a reconnect and refresh.
+        """
+        self._hass.async_create_task(self.async_refresh(), eager_start=True)
+
+    @callback
     def async_subscribe_device_id(
         self, mac: str, update_callback: Callable[[ProtectDeviceType], None]
     ) -> CALLBACK_TYPE:
         """Add an callback subscriber."""
         if not self._subscriptions:
             self._unsub_interval = async_track_time_interval(
-                self._hass, self.async_refresh, self._update_interval
+                self._hass, self._async_poll, self._update_interval
             )
         self._subscriptions.setdefault(mac, []).append(update_callback)
 

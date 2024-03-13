@@ -1,4 +1,5 @@
 """Test Modem Caller ID config flow."""
+
 from unittest.mock import MagicMock, patch
 
 import phone_modem

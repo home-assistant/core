@@ -1,4 +1,5 @@
 """The tests for the nx584 sensor platform."""
+
 from unittest import mock
 
 from nx584 import client as nx584_client

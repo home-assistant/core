@@ -1,4 +1,5 @@
 """Test the ibeacon init."""
+
 import pytest
 
 from homeassistant.components.ibeacon.const import DOMAIN

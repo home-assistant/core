@@ -1,4 +1,5 @@
 """Find translation keys that are in Lokalise but no longer defined in source."""
+
 import argparse
 
 from .const import CORE_PROJECT_ID, FRONTEND_DIR, FRONTEND_PROJECT_ID, INTEGRATIONS_DIR

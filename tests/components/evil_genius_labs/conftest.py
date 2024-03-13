@@ -1,4 +1,5 @@
 """Test helpers for Evil Genius Labs."""
+
 import json
 from unittest.mock import patch
 

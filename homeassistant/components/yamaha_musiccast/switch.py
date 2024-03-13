@@ -1,4 +1,5 @@
 """The switch entities for musiccast."""
+
 from typing import Any
 
 from aiomusiccast.capabilities import BinarySetter
@@ -19,16 +20,18 @@ async def async_setup_entry(
     """Set up MusicCast sensor based on a config entry."""
     coordinator: MusicCastDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    switch_entities = []
+    switch_entities = [
+        SwitchCapability(coordinator, capability)
+        for capability in coordinator.data.capabilities
+        if isinstance(capability, BinarySetter)
+    ]
 
-    for capability in coordinator.data.capabilities:
-        if isinstance(capability, BinarySetter):
-            switch_entities.append(SwitchCapability(coordinator, capability))
-
-    for zone, data in coordinator.data.zones.items():
-        for capability in data.capabilities:
-            if isinstance(capability, BinarySetter):
-                switch_entities.append(SwitchCapability(coordinator, capability, zone))
+    switch_entities.extend(
+        SwitchCapability(coordinator, capability, zone)
+        for zone, data in coordinator.data.zones.items()
+        for capability in data.capabilities
+        if isinstance(capability, BinarySetter)
+    )
 
     async_add_entities(switch_entities)
 

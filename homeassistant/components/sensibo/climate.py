@@ -1,4 +1,5 @@
 """Support for Sensibo wifi-enabled home thermostats."""
+
 from __future__ import annotations
 
 from bisect import bisect_left
@@ -229,11 +230,9 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     @property
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac operation modes."""
-        hvac_modes = []
         if TYPE_CHECKING:
             assert self.device_data.hvac_modes
-        for mode in self.device_data.hvac_modes:
-            hvac_modes.append(SENSIBO_TO_HA[mode])
+        hvac_modes = [SENSIBO_TO_HA[mode] for mode in self.device_data.hvac_modes]
         return hvac_modes if hvac_modes else [HVACMode.OFF]
 
     @property

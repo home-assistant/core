@@ -1,4 +1,5 @@
 """Flame height number sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -28,7 +29,6 @@ async def async_setup_entry(
     description = NumberEntityDescription(
         key="flame_control",
         translation_key="flame_control",
-        icon="mdi:arrow-expand-vertical",
     )
 
     async_add_entities(

@@ -7,11 +7,11 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 import voluptuous as vol
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries, loader, setup
 from homeassistant.const import EVENT_COMPONENT_LOADED, EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import discovery
+from homeassistant.helpers import discovery, translation
 from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -617,7 +617,7 @@ async def test_async_when_setup_or_start_already_loaded(hass: HomeAssistant) -> 
 async def test_setup_import_blows_up(hass: HomeAssistant) -> None:
     """Test that we handle it correctly when importing integration blows up."""
     with patch(
-        "homeassistant.loader.Integration.get_component", side_effect=ImportError
+        "homeassistant.loader.Integration.async_get_component", side_effect=ImportError
     ):
         assert not await setup.async_setup_component(hass, "sun", {})
 
@@ -801,3 +801,51 @@ async def test_setup_config_entry_from_yaml(
     caplog.clear()
     hass.data.pop(setup.DATA_SETUP)
     hass.config.components.remove("test_integration_only_entry")
+
+
+async def test_loading_component_loads_translations(hass: HomeAssistant) -> None:
+    """Test that loading a component loads translations."""
+    assert translation.async_translations_loaded(hass, {"comp"}) is False
+    mock_setup = Mock(return_value=True)
+
+    mock_integration(hass, MockModule("comp", setup=mock_setup))
+
+    assert await setup.async_setup_component(hass, "comp", {})
+    assert mock_setup.called
+    assert translation.async_translations_loaded(hass, {"comp"}) is True
+
+
+async def test_importing_integration_in_executor(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
+    """Test we can import an integration in an executor."""
+    assert await setup.async_setup_component(hass, "test_package_loaded_executor", {})
+    assert await setup.async_setup_component(hass, "test_package_loaded_executor", {})
+    await hass.async_block_till_done()
+
+
+async def test_async_prepare_setup_platform(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test we can prepare a platform setup."""
+    integration = await loader.async_get_integration(hass, "test")
+    with patch.object(
+        integration, "async_get_component", side_effect=ImportError("test is broken")
+    ):
+        assert (
+            await setup.async_prepare_setup_platform(hass, {}, "config", "test") is None
+        )
+
+    assert "test is broken" in caplog.text
+
+    caplog.clear()
+    # There is no actual config platform for this integration
+    assert await setup.async_prepare_setup_platform(hass, {}, "config", "test") is None
+    assert "No module named 'custom_components.test.config'" in caplog.text
+
+    button_platform = (
+        await setup.async_prepare_setup_platform(hass, {}, "button", "test") is None
+    )
+    assert button_platform is not None

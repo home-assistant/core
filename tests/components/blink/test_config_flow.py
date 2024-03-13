@@ -1,4 +1,5 @@
 """Test the Blink config flow."""
+
 from unittest.mock import patch
 
 from blinkpy.auth import LoginError

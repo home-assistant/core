@@ -1,11 +1,12 @@
 """Support for Ecovacs Ecovacs Vacuums."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
 from typing import Any
 
-from deebot_client.capabilities import Capabilities
+from deebot_client.capabilities import VacuumCapabilities
 from deebot_client.device import Device
 from deebot_client.events import BatteryEvent, FanSpeedEvent, RoomsEvent, StateEvent
 from deebot_client.models import CleanAction, CleanMode, Room, State
@@ -50,7 +51,7 @@ async def async_setup_entry(
     for device in controller.legacy_devices:
         await hass.async_add_executor_job(device.connect_and_wait_until_ready)
         vacuums.append(EcovacsLegacyVacuum(device))
-    for device in controller.devices:
+    for device in controller.devices(VacuumCapabilities):
         vacuums.append(EcovacsVacuum(device))
     _LOGGER.debug("Adding Ecovacs Vacuums to Home Assistant: %s", vacuums)
     async_add_entities(vacuums)
@@ -210,7 +211,7 @@ _ATTR_ROOMS = "rooms"
 
 
 class EcovacsVacuum(
-    EcovacsEntity[Capabilities],
+    EcovacsEntity[VacuumCapabilities, VacuumCapabilities],
     StateVacuumEntity,
 ):
     """Ecovacs vacuum."""
@@ -233,7 +234,7 @@ class EcovacsVacuum(
         key="vacuum", translation_key="vacuum", name=None
     )
 
-    def __init__(self, device: Device) -> None:
+    def __init__(self, device: Device[VacuumCapabilities]) -> None:
         """Initialize the vacuum."""
         capabilities = device.capabilities
         super().__init__(device, capabilities)
@@ -348,6 +349,15 @@ class EcovacsVacuum(
                     translation_domain=DOMAIN,
                     translation_key="vacuum_send_command_params_required",
                     translation_placeholders={"command": command},
+                )
+            if self._capability.clean.action.area is None:
+                info = self._device.device_info
+                name = info.get("nick", info["name"])
+                raise ServiceValidationError(
+                    f"Vacuum {name} does not support area capability!",
+                    translation_domain=DOMAIN,
+                    translation_key="vacuum_send_command_area_not_supported",
+                    translation_placeholders={"name": name},
                 )
 
             if command in "spot_area":

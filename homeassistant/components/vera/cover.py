@@ -1,4 +1,5 @@
 """Support for Vera cover - curtains, rollershutters etc."""
+
 from __future__ import annotations
 
 from typing import Any

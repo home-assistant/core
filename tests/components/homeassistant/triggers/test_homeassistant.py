@@ -1,4 +1,5 @@
 """The tests for the Event automation."""
+
 from unittest.mock import patch
 
 import pytest

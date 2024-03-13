@@ -1,4 +1,5 @@
 """Component providing Lights for UniFi Protect."""
+
 from __future__ import annotations
 
 import logging
@@ -44,12 +45,11 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
     )
 
-    entities = []
-    for device in data.get_by_types({ModelType.LIGHT}):
-        if device.can_write(data.api.bootstrap.auth_user):
-            entities.append(ProtectLight(data, device))
-
-    async_add_entities(entities)
+    async_add_entities(
+        ProtectLight(data, device)
+        for device in data.get_by_types({ModelType.LIGHT})
+        if device.can_write(data.api.bootstrap.auth_user)
+    )
 
 
 def unifi_brightness_to_hass(value: int) -> int:
