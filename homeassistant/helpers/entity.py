@@ -11,6 +11,7 @@ from enum import Enum, IntFlag, auto
 import functools as ft
 import logging
 import math
+from operator import attrgetter
 import sys
 from timeit import default_timer as timer
 from types import FunctionType
@@ -342,13 +343,7 @@ class CachedProperties(type):
 
         def getter(name: str) -> Callable[[Any], Any]:
             """Create a getter for an _attr_ property."""
-            private_attr_name = f"__attr_{name}"
-
-            def _getter(o: Any) -> Any:
-                """Get an _attr_ property from the backing __attr attribute."""
-                return getattr(o, private_attr_name)
-
-            return _getter
+            return attrgetter(f"__attr_{name}")
 
         def setter(name: str) -> Callable[[Any, Any], None]:
             """Create a setter for an _attr_ property."""
