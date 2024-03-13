@@ -33,14 +33,14 @@ from .util import cleanup_excluded_entity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class ScreenLogicBinarySensorDescription(
     BinarySensorEntityDescription, ScreenLogicEntityDescription
 ):
     """A class that describes ScreenLogic binary sensor eneites."""
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class ScreenLogicPushBinarySensorDescription(
     ScreenLogicBinarySensorDescription, ScreenLogicPushEntityDescription
 ):

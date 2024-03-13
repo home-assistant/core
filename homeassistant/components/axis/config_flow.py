@@ -267,12 +267,11 @@ class AxisOptionsFlowHandler(OptionsFlowWithConfigEntry):
             and profiles.max_groups > 0
         ):
             stream_profiles = [DEFAULT_STREAM_PROFILE]
-            for profile in vapix.streaming_profiles:
-                stream_profiles.append(profile.name)
+            stream_profiles.extend(profile.name for profile in vapix.streaming_profiles)
 
             schema[
                 vol.Optional(
-                    CONF_STREAM_PROFILE, default=self.hub.option_stream_profile
+                    CONF_STREAM_PROFILE, default=self.hub.config.stream_profile
                 )
             ] = vol.In(stream_profiles)
 
@@ -291,7 +290,7 @@ class AxisOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 video_sources[int(idx) + 1] = video_source.name
 
             schema[
-                vol.Optional(CONF_VIDEO_SOURCE, default=self.hub.option_video_source)
+                vol.Optional(CONF_VIDEO_SOURCE, default=self.hub.config.video_source)
             ] = vol.In(video_sources)
 
         return self.async_show_form(

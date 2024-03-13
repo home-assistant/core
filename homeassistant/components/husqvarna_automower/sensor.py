@@ -105,7 +105,6 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
     AutomowerSensorEntityDescription(
         key="number_of_charging_cycles",
         translation_key="number_of_charging_cycles",
-        icon="mdi:battery-sync-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda data: data.statistics.number_of_charging_cycles,
@@ -113,7 +112,6 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
     AutomowerSensorEntityDescription(
         key="number_of_collisions",
         translation_key="number_of_collisions",
-        icon="mdi:counter",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda data: data.statistics.number_of_collisions,
