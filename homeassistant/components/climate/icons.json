@@ -6,6 +6,7 @@
         "fan_mode": {
           "default": "mdi:circle-medium",
           "state": {
+            "auto": "mdi:fan-auto",
             "diffuse": "mdi:weather-windy",
             "focus": "mdi:target",
             "high": "mdi:speedometer",

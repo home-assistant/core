@@ -182,7 +182,7 @@ aioaseko==0.1.1
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2024.3.0
+aioautomower==2024.3.2
 
 # homeassistant.components.azure_devops
 aioazuredevops==1.3.5
@@ -389,7 +389,7 @@ aioymaps==1.2.2
 airly==1.1.0
 
 # homeassistant.components.airthings_ble
-airthings-ble==0.6.1
+airthings-ble==0.7.1
 
 # homeassistant.components.airthings
 airthings-cloud==0.2.0
@@ -876,7 +876,7 @@ holidays==0.44
 home-assistant-frontend==20240307.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.3.6
+home-assistant-intents==2024.3.12
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -2177,7 +2177,7 @@ wallbox==0.6.0
 watchdog==2.3.1
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==0.1.14
+weatherflow4py==0.1.17
 
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.2

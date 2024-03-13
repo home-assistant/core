@@ -295,7 +295,9 @@ async def async_test_home_assistant(
         },
     )
     hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, hass.config_entries._async_shutdown
+        EVENT_HOMEASSISTANT_STOP,
+        hass.config_entries._async_shutdown,
+        run_immediately=True,
     )
 
     # Load the registries
@@ -878,7 +880,9 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
         def _async_on_stop(_: Event) -> None:
             self.async_shutdown()
 
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_on_stop)
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, _async_on_stop, run_immediately=True
+        )
 
 
 class MockToggleEntity(entity.ToggleEntity):

@@ -36,21 +36,16 @@ from .util import cleanup_excluded_entity, get_ha_unit
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclasses.dataclass(frozen=True)
-class ScreenLogicSensorMixin:
-    """Mixin for SecreenLogic sensor entity."""
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class ScreenLogicSensorDescription(
+    SensorEntityDescription, ScreenLogicEntityDescription
+):
+    """Describes a ScreenLogic sensor."""
 
     value_mod: Callable[[int | str], int | str] | None = None
 
 
-@dataclasses.dataclass(frozen=True)
-class ScreenLogicSensorDescription(
-    ScreenLogicSensorMixin, SensorEntityDescription, ScreenLogicEntityDescription
-):
-    """Describes a ScreenLogic sensor."""
-
-
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class ScreenLogicPushSensorDescription(
     ScreenLogicSensorDescription, ScreenLogicPushEntityDescription
 ):
