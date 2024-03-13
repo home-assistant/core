@@ -111,13 +111,9 @@ async def async_list_contexts(
 
 def _get_debug_traces(hass: HomeAssistant, key: str) -> list[dict[str, Any]]:
     """Return a serializable list of debug traces for a script or automation."""
-    traces: list[dict[str, Any]] = []
-
     if traces_for_key := _get_data(hass).get(key):
-        for trace in traces_for_key.values():
-            traces.append(trace.as_short_dict())
-
-    return traces
+        return [trace.as_short_dict() for trace in traces_for_key.values()]
+    return []
 
 
 async def async_list_traces(
