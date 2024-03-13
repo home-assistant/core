@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Mapping, Sequence
-from contextlib import asynccontextmanager, suppress
+from contextlib import asynccontextmanager
 from contextvars import ContextVar
 from copy import copy
 from dataclasses import dataclass
@@ -15,6 +15,7 @@ import logging
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, TypedDict, TypeVar, cast
 
+import async_interrupt
 import voluptuous as vol
 
 from homeassistant import exceptions
@@ -155,6 +156,10 @@ SCRIPT_DEBUG_CONTINUE_STOP = "script_debug_continue_stop_{}_{}"
 SCRIPT_DEBUG_CONTINUE_ALL = "script_debug_continue_all"
 
 script_stack_cv: ContextVar[list[int] | None] = ContextVar("script_stack", default=None)
+
+
+class ScriptStoppedError(Exception):
+    """Error to indicate that the script has been stopped."""
 
 
 def _set_result_unless_done(future: asyncio.Future[None]) -> None:
@@ -682,34 +687,14 @@ class _ScriptRun:
 
     async def _async_run_long_action(self, long_task: asyncio.Task[_T]) -> _T | None:
         """Run a long task while monitoring for stop request."""
-
-        async def async_cancel_long_task() -> None:
-            # Stop long task and wait for it to finish.
-            long_task.cancel()
-            with suppress(Exception):
-                await long_task
-
-        # Wait for long task while monitoring for a stop request.
         try:
-            await asyncio.wait(
-                [self._stop, long_task], return_when=asyncio.FIRST_COMPLETED
-            )
-        finally:
-            # If our task is cancelled, then cancel long task, too. Note that if long task
-            # is cancelled otherwise the CancelledError exception will not be raised to
-            # here due to the call to asyncio.wait(). Rather we'll check for that below.
-            if self._stop.done():
-                # Stop requested, cancel long task and return None below
-                await async_cancel_long_task()
-
-        if self._stop.done():
-            return None
-        if long_task.done():
-            # Propagate any exceptions that occurred.
-            return long_task.result()
-        # Stopped before long task completed, so cancel it.
-        await async_cancel_long_task()
-        return None
+            async with async_interrupt.interrupt(self._stop, ScriptStoppedError, None):
+                # interrupt will raise ScriptStoppedError
+                # if stop is set it will also cancel the
+                # long_task
+                return await long_task
+        except ScriptStoppedError as ex:
+            raise asyncio.CancelledError from ex
 
     async def _async_call_service_step(self):
         """Call the service specified in the action."""
@@ -753,7 +738,7 @@ class _ScriptRun:
                     return_response=return_response,
                 ),
                 eager_start=True,
-            ),
+            )
         )
         if response_variable:
             self._variables[response_variable] = response_data
@@ -1130,8 +1115,7 @@ class _ScriptRun:
         """Execute a script."""
         result = await self._async_run_long_action(
             self._hass.async_create_task(
-                script.async_run(self._variables, self._context),
-                eager_start=True,
+                script.async_run(self._variables, self._context), eager_start=True
             )
         )
         if result and result.conversation_response is not UNDEFINED:
