@@ -1,4 +1,5 @@
 """Support for Lutron Caseta lights."""
+
 from datetime import timedelta
 from typing import Any
 

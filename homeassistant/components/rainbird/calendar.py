@@ -49,7 +49,7 @@ class RainBirdCalendarEntity(
 
     _attr_has_entity_name = True
     _attr_name: str | None = None
-    _attr_icon = "mdi:sprinkler"
+    _attr_translation_key = "calendar"
 
     def __init__(
         self,

@@ -1,4 +1,5 @@
 """Class to manage the entities for a single platform."""
+
 from __future__ import annotations
 
 import asyncio
@@ -129,10 +130,10 @@ class EntityPlatform:
         # Storage for entities for this specific platform only
         # which are indexed by entity_id
         self.entities: dict[str, Entity] = {}
-        self.component_translations: dict[str, Any] = {}
-        self.platform_translations: dict[str, Any] = {}
-        self.object_id_component_translations: dict[str, Any] = {}
-        self.object_id_platform_translations: dict[str, Any] = {}
+        self.component_translations: dict[str, str] = {}
+        self.platform_translations: dict[str, str] = {}
+        self.object_id_component_translations: dict[str, str] = {}
+        self.object_id_platform_translations: dict[str, str] = {}
         self._tasks: list[asyncio.Task[None]] = []
         # Stop tracking tasks after setup is completed
         self._setup_complete = False
@@ -418,7 +419,7 @@ class EntityPlatform:
 
     async def _async_get_translations(
         self, language: str, category: str, integration: str
-    ) -> dict[str, Any]:
+    ) -> dict[str, str]:
         """Get translations for a language, category, and integration."""
         try:
             return await translation.async_get_translations(
@@ -476,6 +477,7 @@ class EntityPlatform:
         task = self.hass.async_create_task(
             self.async_add_entities(new_entities, update_before_add=update_before_add),
             f"EntityPlatform async_add_entities {self.domain}.{self.platform_name}",
+            eager_start=True,
         )
 
         if not self._setup_complete:
@@ -491,6 +493,7 @@ class EntityPlatform:
             self.hass,
             self.async_add_entities(new_entities, update_before_add=update_before_add),
             f"EntityPlatform async_add_entities_for_entry {self.domain}.{self.platform_name}",
+            eager_start=True,
         )
 
         if not self._setup_complete:
@@ -526,9 +529,10 @@ class EntityPlatform:
         event loop and will finish faster if we run them concurrently.
         """
         results: list[BaseException | None] | None = None
+        tasks = [create_eager_task(coro) for coro in coros]
         try:
             async with self.hass.timeout.async_timeout(timeout, self.domain):
-                results = await asyncio.gather(*coros, return_exceptions=True)
+                results = await asyncio.gather(*tasks, return_exceptions=True)
         except TimeoutError:
             self.logger.warning(
                 "Timed out adding entities for domain %s with platform %s after %ds",
@@ -638,7 +642,19 @@ class EntityPlatform:
     @callback
     def _async_handle_interval_callback(self, now: datetime) -> None:
         """Update all the entity states in a single platform."""
-        self.hass.async_create_task(self._update_entity_states(now), eager_start=True)
+        if self.config_entry:
+            self.config_entry.async_create_background_task(
+                self.hass,
+                self._update_entity_states(now),
+                name=f"EntityPlatform poll {self.domain}.{self.platform_name}",
+                eager_start=True,
+            )
+        else:
+            self.hass.async_create_background_task(
+                self._update_entity_states(now),
+                name=f"EntityPlatform poll {self.domain}.{self.platform_name}",
+                eager_start=True,
+            )
 
     def _entity_id_already_exists(self, entity_id: str) -> tuple[bool, bool]:
         """Check if an entity_id already exists.

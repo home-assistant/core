@@ -1,4 +1,5 @@
 """Test entity discovery for device-specific schemas for the Z-Wave JS integration."""
+
 import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN

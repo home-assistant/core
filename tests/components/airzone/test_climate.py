@@ -1,4 +1,5 @@
 """The climate tests for the Airzone platform."""
+
 import copy
 from unittest.mock import patch
 

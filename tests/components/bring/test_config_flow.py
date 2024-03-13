@@ -1,4 +1,5 @@
 """Test the Bring! config flow."""
+
 from unittest.mock import AsyncMock
 
 from bring_api.exceptions import (

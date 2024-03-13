@@ -1,4 +1,5 @@
 """Support for the DirecTV receivers."""
+
 from __future__ import annotations
 
 import logging
@@ -59,18 +60,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up the DirecTV config entry."""
     dtv = hass.data[DOMAIN][entry.entry_id]
-    entities = []
 
-    for location in dtv.device.locations:
-        entities.append(
+    async_add_entities(
+        (
             DIRECTVMediaPlayer(
                 dtv=dtv,
                 name=str.title(location.name),
                 address=location.address,
             )
-        )
-
-    async_add_entities(entities, True)
+            for location in dtv.device.locations
+        ),
+        True,
+    )
 
 
 class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):

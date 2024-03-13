@@ -1,4 +1,5 @@
 """The tests for Netatmo camera."""
+
 from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, patch

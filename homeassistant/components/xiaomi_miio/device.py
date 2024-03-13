@@ -1,4 +1,5 @@
 """Code to handle a Xiaomi Device."""
+
 import datetime
 from enum import Enum
 from functools import partial

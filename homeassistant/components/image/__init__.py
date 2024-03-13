@@ -1,4 +1,5 @@
 """The image integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -13,7 +14,7 @@ from typing import TYPE_CHECKING, Final, final
 from aiohttp import hdrs, web
 import httpx
 
-from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
+from homeassistant.components.http import KEY_AUTHENTICATED, KEY_HASS, HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONTENT_TYPE_MULTIPART, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
@@ -30,7 +31,7 @@ from homeassistant.helpers.event import (
     async_track_time_interval,
 )
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.typing import UNDEFINED, ConfigType, EventType, UndefinedType
+from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
 from .const import DOMAIN, IMAGE_TIMEOUT  # noqa: F401
 
@@ -335,21 +336,20 @@ async def async_get_still_stream(
         # given the low frequency of image updates, it is acceptable.
         frame.extend(frame)
         await response.write(frame)
-        # Drain to ensure that the latest frame is available to the client
-        await response.drain()
         return True
 
     event = asyncio.Event()
 
-    async def image_state_update(_event: EventType[EventStateChangedData]) -> None:
+    @callback
+    def _async_image_state_update(_event: Event[EventStateChangedData]) -> None:
         """Write image to stream."""
         event.set()
 
-    hass: HomeAssistant = request.app["hass"]
+    hass = request.app[KEY_HASS]
     remove = async_track_state_change_event(
         hass,
         image_entity.entity_id,
-        image_state_update,
+        _async_image_state_update,
     )
     try:
         while True:

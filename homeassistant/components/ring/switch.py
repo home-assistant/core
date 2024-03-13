@@ -1,9 +1,9 @@
 """Component providing HA switch support for Ring Door Bell/Chimes."""
+
 from datetime import timedelta
 import logging
 from typing import Any
 
-import requests
 from ring_doorbell import RingStickUpCam
 from ring_doorbell.generic import RingGeneric
 
@@ -15,11 +15,9 @@ import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN, RING_DEVICES, RING_DEVICES_COORDINATOR
 from .coordinator import RingDataCoordinator
-from .entity import RingEntity
+from .entity import RingEntity, exception_wrap
 
 _LOGGER = logging.getLogger(__name__)
-
-SIREN_ICON = "mdi:alarm-bell"
 
 
 # It takes a few seconds for the API to correctly return an update indicating
@@ -65,7 +63,6 @@ class SirenSwitch(BaseRingSwitch):
     """Creates a switch to turn the ring cameras siren on and off."""
 
     _attr_translation_key = "siren"
-    _attr_icon = SIREN_ICON
 
     def __init__(self, device: RingGeneric, coordinator: RingDataCoordinator) -> None:
         """Initialize the switch for a device with a siren."""
@@ -85,13 +82,10 @@ class SirenSwitch(BaseRingSwitch):
             self._attr_is_on = device.siren > 0
         super()._handle_coordinator_update()
 
+    @exception_wrap
     def _set_switch(self, new_state):
         """Update switch state, and causes Home Assistant to correctly update."""
-        try:
-            self._device.siren = new_state
-        except requests.Timeout:
-            _LOGGER.error("Time out setting %s siren to %s", self.entity_id, new_state)
-            return
+        self._device.siren = new_state
 
         self._attr_is_on = new_state > 0
         self._no_updates_until = dt_util.utcnow() + SKIP_UPDATES_DELAY

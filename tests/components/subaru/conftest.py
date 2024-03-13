@@ -1,4 +1,5 @@
 """Common functions needed to setup tests for Subaru component."""
+
 from datetime import timedelta
 from unittest.mock import patch
 

@@ -1,4 +1,5 @@
 """Support for Hydrawise sprinkler binary sensors."""
+
 from __future__ import annotations
 
 from pydrawise.schema import Zone

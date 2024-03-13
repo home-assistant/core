@@ -1,4 +1,5 @@
 """Support for the Italian train system using ViaggiaTreno API."""
+
 from __future__ import annotations
 
 import asyncio

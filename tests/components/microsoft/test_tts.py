@@ -1,4 +1,5 @@
 """Tests for Microsoft text-to-speech."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 

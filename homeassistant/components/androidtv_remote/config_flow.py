@@ -1,4 +1,5 @@
 """Config flow for Android TV Remote integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -16,11 +17,11 @@ from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
+    ConfigFlowResult,
     OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import CONF_ENABLE_IME, DOMAIN
@@ -54,7 +55,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -78,7 +79,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _async_start_pair(self) -> FlowResult:
+    async def _async_start_pair(self) -> ConfigFlowResult:
         """Start pairing with the Android TV. Navigate to the pair flow to enter the PIN shown on screen."""
         assert self.host
         self.api = create_api(self.hass, self.host, enable_ime=False)
@@ -88,7 +89,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_pair(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the pair step."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -136,7 +137,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         self.host = discovery_info.host
         self.name = discovery_info.name.removesuffix("._androidtvremote2._tcp.local.")
@@ -152,7 +153,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by zeroconf."""
         if user_input is not None:
             try:
@@ -166,7 +167,9 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={CONF_NAME: self.name},
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         self.host = entry_data[CONF_HOST]
         self.name = entry_data[CONF_NAME]
@@ -178,7 +181,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -207,7 +210,7 @@ class AndroidTVRemoteOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

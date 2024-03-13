@@ -1,4 +1,5 @@
 """Support for IHC devices."""
+
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant

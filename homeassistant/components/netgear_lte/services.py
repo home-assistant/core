@@ -1,4 +1,5 @@
 """Services for the Netgear LTE integration."""
+
 from typing import TYPE_CHECKING
 
 import voluptuous as vol

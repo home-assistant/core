@@ -1,4 +1,5 @@
 """Support for tracking a Volvo."""
+
 from __future__ import annotations
 
 from volvooncall.dashboard import Instrument
