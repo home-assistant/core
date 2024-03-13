@@ -519,10 +519,12 @@ def _update_states_table_with_foreign_key_options(
         }
         for foreign_key in inspector.get_foreign_keys(TABLE_STATES)
         if foreign_key["name"]
-        # MySQL/MariaDB will have empty options
-        and not foreign_key.get("options")
-        # Postgres will have ondelete set to None
-        or foreign_key.get("options", {}).get("ondelete") is None
+        and (
+            # MySQL/MariaDB will have empty options
+            not foreign_key.get("options")
+            # Postgres will have ondelete set to None
+            or foreign_key.get("options", {}).get("ondelete") is None
+        )
     ]
 
     if not alters:
