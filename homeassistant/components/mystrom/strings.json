@@ -21,7 +21,7 @@
   "entity": {
     "sensor": {
       "avg_consumption": {
-        "name": "Average Consumption"
+        "name": "Average consumption"
       }
     }
   }
