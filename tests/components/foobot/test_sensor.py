@@ -1,4 +1,5 @@
 """The tests for the Foobot sensor platform."""
+
 from http import HTTPStatus
 import re
 from unittest.mock import MagicMock

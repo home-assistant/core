@@ -1,4 +1,5 @@
 """Configure tests for the YouTube integration."""
+
 from collections.abc import Awaitable, Callable, Coroutine
 import time
 from typing import Any

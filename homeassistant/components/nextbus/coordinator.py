@@ -1,4 +1,5 @@
 """NextBus data update coordinator."""
+
 from datetime import timedelta
 import logging
 from typing import Any, cast

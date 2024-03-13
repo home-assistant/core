@@ -1,4 +1,5 @@
 """Test the Panasonic Viera remote entity."""
+
 from unittest.mock import Mock, call
 
 from panasonic_viera import Keys, SOAPError

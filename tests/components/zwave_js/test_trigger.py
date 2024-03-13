@@ -1,4 +1,5 @@
 """The tests for Z-Wave JS automation triggers."""
+
 from unittest.mock import AsyncMock, patch
 
 import pytest

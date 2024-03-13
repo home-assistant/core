@@ -1,4 +1,5 @@
 """Test the August config flow."""
+
 from unittest.mock import patch
 
 from yalexs.authenticator import ValidationResult

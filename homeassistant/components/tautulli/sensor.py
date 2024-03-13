@@ -1,4 +1,5 @@
 """A platform which allows you to get information from Tautulli."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -43,18 +44,11 @@ def get_top_stats(
     return value
 
 
-@dataclass(frozen=True)
-class TautulliSensorEntityMixin:
-    """Mixin for Tautulli sensor."""
+@dataclass(frozen=True, kw_only=True)
+class TautulliSensorEntityDescription(SensorEntityDescription):
+    """Describes a Tautulli sensor."""
 
     value_fn: Callable[[PyTautulliApiHomeStats, PyTautulliApiActivity, str], StateType]
-
-
-@dataclass(frozen=True)
-class TautulliSensorEntityDescription(
-    SensorEntityDescription, TautulliSensorEntityMixin
-):
-    """Describes a Tautulli sensor."""
 
 
 SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
@@ -144,18 +138,11 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
 )
 
 
-@dataclass(frozen=True)
-class TautulliSessionSensorEntityMixin:
-    """Mixin for Tautulli session sensor."""
+@dataclass(frozen=True, kw_only=True)
+class TautulliSessionSensorEntityDescription(SensorEntityDescription):
+    """Describes a Tautulli session sensor."""
 
     value_fn: Callable[[PyTautulliApiSession], StateType]
-
-
-@dataclass(frozen=True)
-class TautulliSessionSensorEntityDescription(
-    SensorEntityDescription, TautulliSessionSensorEntityMixin
-):
-    """Describes a Tautulli session sensor."""
 
 
 SESSION_SENSOR_TYPES: tuple[TautulliSessionSensorEntityDescription, ...] = (

@@ -1,4 +1,5 @@
 """Test the National Weather Service (NWS) config flow."""
+
 import json
 from unittest.mock import patch
 
@@ -25,7 +26,7 @@ async def test_form(hass: HomeAssistant, requests_mock: requests_mock.Mocker) ->
     hass.config.longitude = TEST_LONGITUDE_WAVERTREE
 
     # all metoffice test data encapsulated in here
-    mock_json = json.loads(load_fixture("metoffice.json"))
+    mock_json = json.loads(load_fixture("metoffice.json", "metoffice"))
     all_sites = json.dumps(mock_json["all_sites"])
     requests_mock.get("/public/data/val/wxfcs/all/json/sitelist/", text=all_sites)
 
@@ -63,7 +64,7 @@ async def test_form_already_configured(
     hass.config.longitude = TEST_LONGITUDE_WAVERTREE
 
     # all metoffice test data encapsulated in here
-    mock_json = json.loads(load_fixture("metoffice.json"))
+    mock_json = json.loads(load_fixture("metoffice.json", "metoffice"))
 
     all_sites = json.dumps(mock_json["all_sites"])
 

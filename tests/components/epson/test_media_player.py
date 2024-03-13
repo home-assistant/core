@@ -1,4 +1,5 @@
 """Tests for the epson integration."""
+
 from datetime import timedelta
 from unittest.mock import patch
 

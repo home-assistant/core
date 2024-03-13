@@ -1,4 +1,5 @@
 """Define test fixtures for Ridwell."""
+
 from datetime import date
 from unittest.mock import AsyncMock, Mock, patch
 

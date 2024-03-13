@@ -1,4 +1,5 @@
 """The tests for numeric state automation."""
+
 from datetime import timedelta
 import logging
 from unittest.mock import patch

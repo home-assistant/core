@@ -1,4 +1,5 @@
 """HTTP views to interact with the device registry."""
+
 from __future__ import annotations
 
 from typing import Any, cast

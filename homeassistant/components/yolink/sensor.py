@@ -1,4 +1,5 @@
 """YoLink Sensor."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -118,7 +119,7 @@ def cvt_volume(val: int | None) -> str | None:
     if val is None:
         return None
     volume_level = {1: "low", 2: "medium", 3: "high"}
-    return volume_level.get(val, None)
+    return volume_level.get(val)
 
 
 SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (

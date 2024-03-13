@@ -82,6 +82,7 @@
             'highest',
           ]),
           'motion_announcement': False,
+          'motion_detection_enabled': True,
           'motion_snooze_preset_profile': 'low',
           'motion_snooze_presets': list([
             'null',
@@ -158,6 +159,7 @@
             'highest',
           ]),
           'motion_announcement': False,
+          'motion_detection_enabled': False,
           'motion_snooze_preset_profile': 'low',
           'motion_snooze_presets': list([
             'none',
@@ -398,6 +400,7 @@
             'highest',
           ]),
           'motion_announcement': False,
+          'motion_detection_enabled': True,
           'motion_snooze_preset_profile': 'low',
           'motion_snooze_presets': list([
             'none',

@@ -1,4 +1,5 @@
 """Auth models."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -11,6 +12,7 @@ from attr import Attribute
 from attr.setters import validate
 
 from homeassistant.const import __version__
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.util import dt as dt_util
 
 from . import permissions as perm_mdl
@@ -25,6 +27,8 @@ else:
 TOKEN_TYPE_NORMAL = "normal"
 TOKEN_TYPE_SYSTEM = "system"
 TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN = "long_lived_access_token"
+
+AuthFlowResult = FlowResult[tuple[str, str]]
 
 
 @attr.s(slots=True)

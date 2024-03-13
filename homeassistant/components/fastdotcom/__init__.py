@@ -1,4 +1,5 @@
 """Support for testing internet speed via Fast.com."""
+
 from __future__ import annotations
 
 import logging

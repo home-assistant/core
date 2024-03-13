@@ -4,6 +4,7 @@ Retrieves current events (typically incidents or alerts) in GeoRSS format, and
 shows information on events filtered by distance to the HA instance's location
 and grouped by category.
 """
+
 from __future__ import annotations
 
 from datetime import timedelta

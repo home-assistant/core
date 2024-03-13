@@ -1,4 +1,5 @@
 """Config flow to configure SmartThings."""
+
 from http import HTTPStatus
 import logging
 

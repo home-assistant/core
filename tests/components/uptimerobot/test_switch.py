@@ -1,4 +1,5 @@
 """Test UptimeRobot switch."""
+
 from unittest.mock import patch
 
 import pytest

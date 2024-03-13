@@ -1,4 +1,5 @@
 """Tests for the SleepIQ select platform."""
+
 from unittest.mock import MagicMock
 
 from asyncsleepiq import FootWarmingTemps

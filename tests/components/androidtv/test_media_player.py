@@ -1,4 +1,5 @@
 """The tests for the androidtv platform."""
+
 from datetime import timedelta
 import logging
 from typing import Any

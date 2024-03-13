@@ -1,9 +1,9 @@
 """DataUpdateCoordinator for System Bridge."""
+
 from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
 from typing import Any
@@ -18,19 +18,7 @@ from systembridgemodels.media_directories import MediaDirectory
 from systembridgemodels.media_files import MediaFile, MediaFiles
 from systembridgemodels.media_get_file import MediaGetFile
 from systembridgemodels.media_get_files import MediaGetFiles
-from systembridgemodels.modules import (
-    CPU,
-    GPU,
-    Battery,
-    Disks,
-    Display,
-    GetData,
-    Media,
-    Memory,
-    Process,
-    RegisterDataListener,
-    System,
-)
+from systembridgemodels.modules import GetData, RegisterDataListener
 from systembridgemodels.response import Response
 
 from homeassistant.config_entries import ConfigEntry
@@ -46,26 +34,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, MODULES
+from .data import SystemBridgeData
 
 
-@dataclass
-class SystemBridgeCoordinatorData:
-    """System Bridge Coordianator Data."""
-
-    battery: Battery = field(default_factory=Battery)
-    cpu: CPU = field(default_factory=CPU)
-    disks: Disks = None
-    displays: list[Display] = field(default_factory=list[Display])
-    gpus: list[GPU] = field(default_factory=list[GPU])
-    media: Media = field(default_factory=Media)
-    memory: Memory = None
-    processes: list[Process] = field(default_factory=list[Process])
-    system: System = None
-
-
-class SystemBridgeDataUpdateCoordinator(
-    DataUpdateCoordinator[SystemBridgeCoordinatorData]
-):
+class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData]):
     """Class to manage fetching System Bridge data from single endpoint."""
 
     def __init__(
@@ -79,11 +51,12 @@ class SystemBridgeDataUpdateCoordinator(
         self.title = entry.title
         self.unsub: Callable | None = None
 
-        self.systembridge_data = SystemBridgeCoordinatorData()
+        self.systembridge_data = SystemBridgeData()
         self.websocket_client = WebSocketClient(
             entry.data[CONF_HOST],
             entry.data[CONF_PORT],
             entry.data[CONF_TOKEN],
+            session=async_get_clientsession(hass),
         )
 
         super().__init__(
@@ -135,7 +108,7 @@ class SystemBridgeDataUpdateCoordinator(
         self,
         base: str,
         path: str,
-    ) -> MediaFile:
+    ) -> MediaFile | None:
         """Get media file."""
         return await self.websocket_client.get_file(
             MediaGetFile(
@@ -197,9 +170,7 @@ class SystemBridgeDataUpdateCoordinator(
         """Use WebSocket for updates."""
         try:
             async with asyncio.timeout(20):
-                await self.websocket_client.connect(
-                    session=async_get_clientsession(self.hass),
-                )
+                await self.websocket_client.connect()
 
             self.hass.async_create_background_task(
                 self._listen_for_data(),
@@ -247,7 +218,7 @@ class SystemBridgeDataUpdateCoordinator(
             EVENT_HOMEASSISTANT_STOP, close_websocket
         )
 
-    async def _async_update_data(self) -> SystemBridgeCoordinatorData:
+    async def _async_update_data(self) -> SystemBridgeData:
         """Update System Bridge data from WebSocket."""
         self.logger.debug(
             "_async_update_data - WebSocket Connected: %s",

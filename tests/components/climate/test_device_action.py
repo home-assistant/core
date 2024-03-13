@@ -1,4 +1,5 @@
 """The tests for Climate device actions."""
+
 import pytest
 from pytest_unordered import unordered
 import voluptuous_serialize
