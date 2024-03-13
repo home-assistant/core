@@ -54,16 +54,17 @@ async def async_setup_entry(
     """Set up Hive thermostat based on a config entry."""
     hive = hass.data[DOMAIN][entry.entry_id]
     devices = hive.session.deviceList.get("sensor")
-    if devices:
-        async_add_entities(
-            (
-                HiveSensorEntity(hive, dev, description)
-                for dev in devices
-                for description in SENSOR_TYPES
-                if dev["hiveType"] == description.key
-            ),
-            True,
-        )
+    if not devices:
+        return
+    async_add_entities(
+        (
+            HiveSensorEntity(hive, dev, description)
+            for dev in devices
+            for description in SENSOR_TYPES
+            if dev["hiveType"] == description.key
+        ),
+        True,
+    )
 
 
 class HiveSensorEntity(HiveEntity, SensorEntity):

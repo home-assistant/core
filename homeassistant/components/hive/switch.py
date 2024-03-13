@@ -36,16 +36,17 @@ async def async_setup_entry(
 
     hive = hass.data[DOMAIN][entry.entry_id]
     devices = hive.session.deviceList.get("switch")
-    if devices:
-        async_add_entities(
-            (
-                HiveSwitch(hive, dev, description)
-                for dev in devices
-                for description in SWITCH_TYPES
-                if dev["hiveType"] == description.key
-            ),
-            True,
-        )
+    if not devices:
+        return
+    async_add_entities(
+        (
+            HiveSwitch(hive, dev, description)
+            for dev in devices
+            for description in SWITCH_TYPES
+            if dev["hiveType"] == description.key
+        ),
+        True,
+    )
 
 
 class HiveSwitch(HiveEntity, SwitchEntity):
