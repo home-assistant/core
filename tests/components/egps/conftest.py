@@ -46,11 +46,12 @@ def patch_setup_entry() -> Generator[AsyncMock, None, None]:
 def patch_pyegps_get_device() -> MagicMock:
     """Fixture for a mocked FakePowerStrip."""
 
-    usb_device_mock = MagicMock(
-        wraps=FakePowerStrip(
-            devId=DEMO_CONFIG_ENTRY[CONF_DEVICE_API_ID], number_of_sockets=4
-        )
+    fkObj = FakePowerStrip(
+        devId=DEMO_CONFIG_ENTRY[CONF_DEVICE_API_ID], number_of_sockets=4
     )
+    fkObj.release = lambda: True
+
+    usb_device_mock = MagicMock(wraps=fkObj)
     usb_device_mock.get_device_type.return_value = "PowerStrip"
     usb_device_mock.numberOfSockets = 4
     usb_device_mock.device_id = DEMO_CONFIG_ENTRY[CONF_DEVICE_API_ID]

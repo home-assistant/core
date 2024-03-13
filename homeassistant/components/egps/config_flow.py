@@ -1,4 +1,5 @@
 """ConfigFlow for EGPS devices."""
+import asyncio
 from typing import Any
 
 from pyegps import get_device, search_for_devices
@@ -21,7 +22,7 @@ class ConfigFLow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if CONF_DEVICE_API_ID in user_input:
                 devId = user_input[CONF_DEVICE_API_ID]
-                dev = get_device(device_id=devId)
+                dev = await asyncio.to_thread(get_device, device_id=devId)
                 if dev is not None:
                     await self.async_set_unique_id(dev.device_id)
                     self._abort_if_unique_id_configured()
@@ -34,7 +35,7 @@ class ConfigFLow(config_entries.ConfigFlow, domain=DOMAIN):
 
         currently_configured = self._async_current_ids(include_ignore=True)
         try:
-            found_devices = search_for_devices()
+            found_devices = await asyncio.to_thread(search_for_devices)
         except (MissingLibrary, UsbError) as err:
             LOGGER.error("Unable to access USB devices: %s", err)
             return self.async_abort(reason="usb_error")
@@ -45,6 +46,7 @@ class ConfigFLow(config_entries.ConfigFlow, domain=DOMAIN):
             if d.get_device_type() == "PowerStrip"
             and d.device_id not in currently_configured
         ]
+        LOGGER.debug("Found %d devices", len(devices))
         if len(devices) > 0:
             options = {d.device_id: f"{d.name} ({d.device_id})" for d in devices}
             data_schema = {CONF_DEVICE_API_ID: vol.In(options)}
