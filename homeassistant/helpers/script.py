@@ -976,9 +976,8 @@ class _ScriptRun:
         timeout_handle: asyncio.TimerHandle | None = None
         timeout_future: asyncio.Future[None] | None = None
         if timeout:
-            loop = self._hass.loop
-            timeout_future = loop.create_future()
-            timeout_handle = loop.call_later(
+            timeout_future = self._hass.loop.create_future()
+            timeout_handle = self._hass.loop.call_later(
                 timeout, _set_result_unless_done, timeout_future
             )
             futures.append(timeout_future)
@@ -998,8 +997,7 @@ class _ScriptRun:
         self._variables["wait"] = {"remaining": timeout, "trigger": None}
         trace_set_result(wait=self._variables["wait"])
 
-        loop = self._hass.loop
-        done = loop.create_future()
+        done = self._hass.loop.create_future()
         futures: list[asyncio.Future[None]] = [self._stop, done]
         timeout_handle, timeout_future = self._async_add_future_timeout(
             futures, timeout
@@ -1009,7 +1007,7 @@ class _ScriptRun:
             # pylint: disable=protected-access
             wait_var = self._variables["wait"]
             if timeout_handle:
-                wait_var["remaining"] = timeout_handle._when - loop.time()
+                wait_var["remaining"] = timeout_handle._when - self._hass.loop.time()
             else:
                 wait_var["remaining"] = timeout
             wait_var["trigger"] = variables["trigger"]
