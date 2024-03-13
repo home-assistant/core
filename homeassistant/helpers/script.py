@@ -1004,8 +1004,8 @@ class _ScriptRun:
         timeout_handle: asyncio.TimerHandle | None = None
         futures: list[asyncio.Future[None]] = [self._stop, done]
         if timeout:
-            timeout_future = self._hass.loop.create_future()
-            timeout_handle = self._hass.loop.call_later(
+            timeout_future = loop.create_future()
+            timeout_handle = loop.call_later(
                 timeout, _set_result_unless_done, timeout_future
             )
             futures.append(timeout_future)
