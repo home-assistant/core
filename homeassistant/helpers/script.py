@@ -1146,12 +1146,12 @@ class _QueuedScriptRun(_ScriptRun):
             async with async_interrupt.interrupt(self._stop, ScriptStoppedError, None):
                 await lock.acquire()
         except ScriptStoppedError as ex:
+            # If we've been told to stop, then just finish up.
             self._finish()
             raise asyncio.CancelledError from ex
 
         self.lock_acquired = True
-        # If we've been told to stop, then just finish up. Otherwise, we've acquired the
-        # lock so we can go ahead and start the run.
+        # We've acquired the lock so we can go ahead and start the run.
         await super().async_run()
 
     def _finish(self) -> None:
