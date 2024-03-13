@@ -1,4 +1,5 @@
 """Constants for the SRP Energy integration."""
+
 from datetime import timedelta
 import logging
 

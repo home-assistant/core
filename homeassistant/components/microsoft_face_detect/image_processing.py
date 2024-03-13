@@ -1,4 +1,5 @@
 """Component that will help set the Microsoft face detect processing."""
+
 from __future__ import annotations
 
 import logging

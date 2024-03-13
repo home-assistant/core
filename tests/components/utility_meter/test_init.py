@@ -1,4 +1,5 @@
 """The tests for the utility_meter component."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -347,6 +348,7 @@ async def test_both_cron_and_meter(hass: HomeAssistant) -> None:
     }
 
     assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
 
 
 async def test_cron_and_offset(hass: HomeAssistant) -> None:

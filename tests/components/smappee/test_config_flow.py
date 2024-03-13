@@ -1,4 +1,5 @@
 """Test the Smappee component config flow module."""
+
 from http import HTTPStatus
 from ipaddress import ip_address
 from unittest.mock import patch

@@ -1,7 +1,7 @@
 """Support for Renault binary sensors."""
+
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 
 from renault_api.kamereon.enums import ChargeState, PlugState
@@ -22,23 +22,15 @@ from .entity import RenaultDataEntity, RenaultDataEntityDescription
 from .renault_hub import RenaultHub
 
 
-@dataclass(frozen=True)
-class RenaultBinarySensorRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    on_key: str
-    on_value: StateType
-
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class RenaultBinarySensorEntityDescription(
     BinarySensorEntityDescription,
     RenaultDataEntityDescription,
-    RenaultBinarySensorRequiredKeysMixin,
 ):
     """Class describing Renault binary sensor entities."""
 
-    icon_fn: Callable[[RenaultBinarySensor], str] | None = None
+    on_key: str
+    on_value: StateType
 
 
 async def async_setup_entry(
@@ -71,13 +63,6 @@ class RenaultBinarySensor(
             return None
         return data == self.entity_description.on_value
 
-    @property
-    def icon(self) -> str | None:
-        """Icon handling."""
-        if self.entity_description.icon_fn:
-            return self.entity_description.icon_fn(self)
-        return None
-
 
 BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = tuple(
     [
@@ -98,7 +83,6 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = tuple(
         RenaultBinarySensorEntityDescription(
             key="hvac_status",
             coordinator="hvac_status",
-            icon_fn=lambda e: "mdi:fan" if e.is_on else "mdi:fan-off",
             on_key="hvacStatus",
             on_value="on",
             translation_key="hvac_status",

@@ -1,4 +1,5 @@
 """Tests for the intent helpers."""
+
 import asyncio
 from unittest.mock import MagicMock, patch
 
@@ -174,6 +175,14 @@ def test_async_validate_slots() -> None:
     handler1.async_validate_slots(
         {"name": {"value": "kitchen"}, "probability": {"value": "0.5"}}
     )
+
+
+def test_async_validate_slots_no_schema() -> None:
+    """Test async_validate_slots of IntentHandler with no schema."""
+    handler1 = MockIntentHandler(None)
+    assert handler1.async_validate_slots({"name": {"value": "kitchen"}}) == {
+        "name": {"value": "kitchen"}
+    }
 
 
 async def test_cant_turn_on_lock(hass: HomeAssistant) -> None:

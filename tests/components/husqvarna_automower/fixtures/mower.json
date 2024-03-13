@@ -62,6 +62,18 @@
           "connected": true,
           "statusTimestamp": 1697669932683
         },
+        "workAreas": [
+          {
+            "workAreaId": 123456,
+            "name": "Front lawn",
+            "cuttingHeight": 50
+          },
+          {
+            "workAreaId": 0,
+            "name": "",
+            "cuttingHeight": 50
+          }
+        ],
         "positions": [
           {
             "latitude": 35.5402913,
@@ -120,11 +132,8 @@
             "longitude": -82.5520054
           }
         ],
-        "cuttingHeight": 4,
-        "headlight": {
-          "mode": "EVENING_ONLY"
-        },
         "statistics": {
+          "cuttingBladeUsageTime": 123,
           "numberOfChargingCycles": 1380,
           "numberOfCollisions": 11396,
           "totalChargingTime": 4334400,
@@ -132,6 +141,20 @@
           "totalDriveDistance": 1780272,
           "totalRunningTime": 4564800,
           "totalSearchingTime": 370800
+        },
+        "stayOutZones": {
+          "dirty": false,
+          "zones": [
+            {
+              "id": "81C6EEA2-D139-4FEA-B134-F22A6B3EA403",
+              "name": "Springflowers",
+              "enabled": true
+            }
+          ]
+        },
+        "cuttingHeight": 4,
+        "headlight": {
+          "mode": "EVENING_ONLY"
         }
       }
     }

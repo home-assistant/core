@@ -1,4 +1,5 @@
 """Test the habitica module."""
+
 from http import HTTPStatus
 
 import pytest

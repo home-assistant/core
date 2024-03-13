@@ -1,4 +1,5 @@
 """Support for Xiaomi Mi WiFi Repeater 2."""
+
 from __future__ import annotations
 
 import logging

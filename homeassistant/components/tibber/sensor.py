@@ -1,4 +1,5 @@
 """Support for Tibber sensors."""
+
 from __future__ import annotations
 
 import datetime
@@ -58,6 +59,35 @@ ICON = "mdi:currency-usd"
 SCAN_INTERVAL = timedelta(minutes=1)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 PARALLEL_UPDATES = 0
+
+
+RT_SENSORS_UNIQUE_ID_MIGRATION = {
+    "accumulated_consumption_last_hour": "accumulated consumption current hour",
+    "accumulated_production_last_hour": "accumulated production current hour",
+    "current_l1": "current L1",
+    "current_l2": "current L2",
+    "current_l3": "current L3",
+    "estimated_hour_consumption": "Estimated consumption current hour",
+}
+
+RT_SENSORS_UNIQUE_ID_MIGRATION_SIMPLE = {
+    # simple migration can be done by replacing " " with "_"
+    "accumulated_consumption",
+    "accumulated_cost",
+    "accumulated_production",
+    "accumulated_reward",
+    "average_power",
+    "last_meter_consumption",
+    "last_meter_production",
+    "max_power",
+    "min_power",
+    "power_factor",
+    "power_production",
+    "signal_strength",
+    "voltage_phase1",
+    "voltage_phase2",
+    "voltage_phase3",
+}
 
 
 RT_SENSORS: tuple[SensorEntityDescription, ...] = (
@@ -454,7 +484,7 @@ class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"])
         self._device_name = f"{self._model} {self._home_name}"
 
         self._attr_native_value = initial_state
-        self._attr_unique_id = f"{self._tibber_home.home_id}_rt_{description.name}"
+        self._attr_unique_id = f"{self._tibber_home.home_id}_rt_{description.key}"
 
         if description.key in ("accumulatedCost", "accumulatedReward"):
             self._attr_native_unit_of_measurement = tibber_home.currency
@@ -523,12 +553,56 @@ class TibberRtDataCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-en
         self._async_remove_device_updates_handler = self.async_add_listener(
             self._add_sensors
         )
+        self.entity_registry = async_get_entity_reg(hass)
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
 
     @callback
     def _handle_ha_stop(self, _event: Event) -> None:
         """Handle Home Assistant stopping."""
         self._async_remove_device_updates_handler()
+
+    @callback
+    def _migrate_unique_id(self, sensor_description: SensorEntityDescription) -> None:
+        """Migrate unique id if needed."""
+        home_id = self._tibber_home.home_id
+        translation_key = sensor_description.translation_key
+        description_key = sensor_description.key
+        entity_id: str | None = None
+        if translation_key in RT_SENSORS_UNIQUE_ID_MIGRATION_SIMPLE:
+            entity_id = self.entity_registry.async_get_entity_id(
+                "sensor",
+                TIBBER_DOMAIN,
+                f"{home_id}_rt_{translation_key.replace('_', ' ')}",
+            )
+        elif translation_key in RT_SENSORS_UNIQUE_ID_MIGRATION:
+            entity_id = self.entity_registry.async_get_entity_id(
+                "sensor",
+                TIBBER_DOMAIN,
+                f"{home_id}_rt_{RT_SENSORS_UNIQUE_ID_MIGRATION[translation_key]}",
+            )
+        elif translation_key != description_key:
+            entity_id = self.entity_registry.async_get_entity_id(
+                "sensor",
+                TIBBER_DOMAIN,
+                f"{home_id}_rt_{translation_key}",
+            )
+
+        if entity_id is None:
+            return
+
+        new_unique_id = f"{home_id}_rt_{description_key}"
+
+        _LOGGER.debug(
+            "Migrating unique id for %s to %s",
+            entity_id,
+            new_unique_id,
+        )
+        try:
+            self.entity_registry.async_update_entity(
+                entity_id, new_unique_id=new_unique_id
+            )
+        except ValueError as err:
+            _LOGGER.error(err)
 
     @callback
     def _add_sensors(self) -> None:
@@ -543,6 +617,8 @@ class TibberRtDataCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-en
             state = live_measurement.get(sensor_description.key)
             if state is None:
                 continue
+
+            self._migrate_unique_id(sensor_description)
             entity = TibberSensorRT(
                 self._tibber_home,
                 sensor_description,

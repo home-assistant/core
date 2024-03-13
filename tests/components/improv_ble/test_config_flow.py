@@ -1,4 +1,5 @@
 """Test the Improv via BLE config flow."""
+
 from collections.abc import Callable
 from unittest.mock import patch
 

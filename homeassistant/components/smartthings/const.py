@@ -1,4 +1,5 @@
 """Constants used by the SmartThings component and platforms."""
+
 from datetime import timedelta
 import re
 

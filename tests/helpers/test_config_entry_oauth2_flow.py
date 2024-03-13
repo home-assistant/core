@@ -1,4 +1,5 @@
 """Tests for the Somfy config flow."""
+
 from http import HTTPStatus
 import logging
 import time
@@ -709,6 +710,7 @@ async def test_oauth_session(
             },
         },
     )
+    config_entry.add_to_hass(hass)
 
     now = time.time()
     session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)
@@ -755,6 +757,7 @@ async def test_oauth_session_with_clock_slightly_out_of_sync(
             },
         },
     )
+    config_entry.add_to_hass(hass)
 
     now = time.time()
     session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)

@@ -1,4 +1,4 @@
-"""Setting up config entry from deprecated Air Quality platform."""
+"""Support for openSenseMap Air Quality data."""
 
 from __future__ import annotations
 

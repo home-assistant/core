@@ -1,4 +1,5 @@
 """Tests for the HDMI-CEC component."""
+
 from unittest.mock import patch
 
 import pytest

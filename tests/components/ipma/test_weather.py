@@ -1,4 +1,5 @@
 """The tests for the IPMA weather component."""
+
 import datetime
 from unittest.mock import patch
 

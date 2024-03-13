@@ -1,4 +1,5 @@
 """Config flow for Rabbit Air integration."""
+
 from __future__ import annotations
 
 import logging
@@ -11,7 +12,6 @@ from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
@@ -58,7 +58,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
 
@@ -100,7 +100,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Handle zeroconf discovery."""
         mac = dr.format_mac(discovery_info.properties["id"])
         await self.async_set_unique_id(mac)

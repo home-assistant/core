@@ -37,7 +37,8 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "protect_version": "Minimum required version is v1.20.0. Please upgrade UniFi Protect and then retry."
+      "protect_version": "Minimum required version is v1.20.0. Please upgrade UniFi Protect and then retry.",
+      "cloud_user": "Ubiquiti Cloud users are not Supported. Please use a Local only user."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -78,6 +79,17 @@
     "ea_setup_failed": {
       "title": "Setup error using Early Access version",
       "description": "You are using v{version} of UniFi Protect which is an Early Access version. An unrecoverable error occurred while trying to load the integration. Please [downgrade to a stable version](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) of UniFi Protect to continue using the integration.\n\nError: {error}"
+    },
+    "cloud_user": {
+      "title": "Ubiquiti Cloud Users are not Supported",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Ubiquiti Cloud Users are not Supported",
+            "description": "Starting on July 22nd, 2024, Ubiquiti will require all cloud users to enroll in multi-factor authentication (MFA), which is incompatible with Home Assistant.\n\nIt would be best to migrate to using a [local user]({learn_more}) as soon as possible to keep the integration working.\n\nConfirming this repair will trigger a re-authentication flow to enter the needed authentication credentials."
+          }
+        }
+      }
     }
   },
   "entity": {

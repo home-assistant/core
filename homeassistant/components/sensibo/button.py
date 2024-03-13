@@ -1,4 +1,5 @@
 """Button platform for Sensibo integration."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -17,24 +18,16 @@ from .entity import SensiboDeviceBaseEntity, async_handle_api_call
 PARALLEL_UPDATES = 0
 
 
-@dataclass(frozen=True)
-class SensiboEntityDescriptionMixin:
-    """Mixin values for Sensibo entities."""
+@dataclass(frozen=True, kw_only=True)
+class SensiboButtonEntityDescription(ButtonEntityDescription):
+    """Class describing Sensibo Button entities."""
 
     data_key: str
-
-
-@dataclass(frozen=True)
-class SensiboButtonEntityDescription(
-    ButtonEntityDescription, SensiboEntityDescriptionMixin
-):
-    """Class describing Sensibo Button entities."""
 
 
 DEVICE_BUTTON_TYPES = SensiboButtonEntityDescription(
     key="reset_filter",
     translation_key="reset_filter",
-    icon="mdi:air-filter",
     entity_category=EntityCategory.CONFIG,
     data_key="filter_clean",
 )

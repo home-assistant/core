@@ -1,4 +1,5 @@
 """Component to interface with cameras."""
+
 from __future__ import annotations
 
 import asyncio
@@ -300,8 +301,12 @@ async def async_get_still_stream(
         if img_bytes != last_image:
             await write_to_mjpeg_stream(img_bytes)
 
-            # Chrome seems to always ignore first picture,
-            # print it twice.
+            # Chrome always shows the n-1 frame:
+            # https://issues.chromium.org/issues/41199053
+            # https://issues.chromium.org/issues/40791855
+            # We send the first frame twice to ensure it shows
+            # Subsequent frames are not a concern at reasonable frame rates
+            # (even 1/10 FPS is about the latency of HLS)
             if last_image is None:
                 await write_to_mjpeg_stream(img_bytes)
             last_image = img_bytes
@@ -387,6 +392,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     prefs = CameraPreferences(hass)
+    await prefs.async_load()
     hass.data[DATA_CAMERA_PREFS] = prefs
 
     hass.http.register_view(CameraImageView(component))

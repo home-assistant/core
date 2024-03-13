@@ -1,4 +1,5 @@
 """The tests for the camera component."""
+
 from http import HTTPStatus
 import io
 from types import ModuleType

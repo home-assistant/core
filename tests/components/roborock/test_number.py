@@ -1,4 +1,5 @@
 """Test Roborock Number platform."""
+
 from unittest.mock import patch
 
 import pytest

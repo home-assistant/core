@@ -1,4 +1,5 @@
 """The tests for the Script component."""
+
 import asyncio
 from datetime import timedelta
 from typing import Any
@@ -718,7 +719,7 @@ async def test_extraction_functions(
 ) -> None:
     """Test extraction functions."""
     config_entry = MockConfigEntry(domain="fake_integration", data={})
-    config_entry.state = config_entries.ConfigEntryState.LOADED
+    config_entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
     config_entry.add_to_hass(hass)
 
     device_in_both = device_registry.async_get_or_create(
@@ -898,6 +899,7 @@ async def test_logbook_humanify_script_started_event(hass: HomeAssistant) -> Non
     hass.config.components.add("recorder")
     await async_setup_component(hass, DOMAIN, {})
     await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
 
     event1, event2 = mock_humanify(
         hass,

@@ -1,4 +1,5 @@
 """The tests for Alarm control panel device conditions."""
+
 import pytest
 from pytest_unordered import unordered
 

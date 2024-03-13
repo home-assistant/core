@@ -1,4 +1,5 @@
 """Base class for common speaker tasks."""
+
 from __future__ import annotations
 
 import asyncio
@@ -8,7 +9,7 @@ import datetime
 from functools import partial
 import logging
 import time
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import defusedxml.ElementTree as ET
 from soco.core import SoCo
@@ -64,6 +65,9 @@ from .helpers import soco_error
 from .media import SonosMedia
 from .statistics import ActivityStatistics, EventStatistics
 
+if TYPE_CHECKING:
+    from . import SonosData
+
 NEVER_TIME = -1200.0
 RESUB_COOLDOWN_SECONDS = 10.0
 EVENT_CHARGING = {
@@ -97,6 +101,7 @@ class SonosSpeaker:
     ) -> None:
         """Initialize a SonosSpeaker."""
         self.hass = hass
+        self.data: SonosData = hass.data[DATA_SONOS]
         self.soco = soco
         self.websocket: SonosWebsocket | None = None
         self.household_id: str = soco.household_id
@@ -183,7 +188,7 @@ class SonosSpeaker:
         )
         dispatch_pairs: tuple[tuple[str, Callable[..., Any]], ...] = (
             (SONOS_CHECK_ACTIVITY, self.async_check_activity),
-            (SONOS_SPEAKER_ADDED, self.update_group_for_uid),
+            (SONOS_SPEAKER_ADDED, self.async_update_group_for_uid),
             (f"{SONOS_REBOOTED}-{self.soco.uid}", self.async_rebooted),
             (f"{SONOS_SPEAKER_ACTIVITY}-{self.soco.uid}", self.speaker_activity),
             (f"{SONOS_VANISHED}-{self.soco.uid}", self.async_vanished),
@@ -272,12 +277,12 @@ class SonosSpeaker:
     @property
     def alarms(self) -> SonosAlarms:
         """Return the SonosAlarms instance for this household."""
-        return self.hass.data[DATA_SONOS].alarms[self.household_id]
+        return self.data.alarms[self.household_id]
 
     @property
     def favorites(self) -> SonosFavorites:
         """Return the SonosFavorites instance for this household."""
-        return self.hass.data[DATA_SONOS].favorites[self.household_id]
+        return self.data.favorites[self.household_id]
 
     @property
     def is_coordinator(self) -> bool:
@@ -456,7 +461,9 @@ class SonosSpeaker:
     def async_dispatch_device_properties(self, event: SonosEvent) -> None:
         """Update device properties from an event."""
         self.event_stats.process(event)
-        self.hass.async_create_task(self.async_update_device_properties(event))
+        self.hass.async_create_task(
+            self.async_update_device_properties(event), eager_start=True
+        )
 
     async def async_update_device_properties(self, event: SonosEvent) -> None:
         """Update device properties from an event."""
@@ -494,9 +501,7 @@ class SonosSpeaker:
             "x-rincon:"
         ):
             new_coordinator_uid = av_transport_uri.split(":")[-1]
-            if new_coordinator_speaker := self.hass.data[DATA_SONOS].discovered.get(
-                new_coordinator_uid
-            ):
+            if new_coordinator_speaker := self.data.discovered.get(new_coordinator_uid):
                 _LOGGER.debug(
                     "Media update coordinator (%s) received for %s",
                     new_coordinator_speaker.zone_name,
@@ -613,7 +618,9 @@ class SonosSpeaker:
             return
         # Ensure the ping is canceled at shutdown
         self.hass.async_create_background_task(
-            self._async_check_activity(), f"sonos {self.uid} {self.zone_name} ping"
+            self._async_check_activity(),
+            f"sonos {self.uid} {self.zone_name} ping",
+            eager_start=True,
         )
 
     async def _async_check_activity(self) -> None:
@@ -653,7 +660,7 @@ class SonosSpeaker:
 
         await self.async_unsubscribe()
 
-        self.hass.data[DATA_SONOS].discovery_known.discard(self.soco.uid)
+        self.data.discovery_known.discard(self.soco.uid)
 
     async def async_vanished(self, reason: str) -> None:
         """Handle removal of speaker when marked as vanished."""
@@ -780,15 +787,16 @@ class SonosSpeaker:
         """Update group topology when polling."""
         self.hass.add_job(self.create_update_groups_coro())
 
-    def update_group_for_uid(self, uid: str) -> None:
+    @callback
+    def async_update_group_for_uid(self, uid: str) -> None:
         """Update group topology if uid is missing."""
         if uid not in self._group_members_missing:
             return
-        missing_zone = self.hass.data[DATA_SONOS].discovered[uid].zone_name
+        missing_zone = self.data.discovered[uid].zone_name
         _LOGGER.debug(
             "%s was missing, adding to %s group", missing_zone, self.zone_name
         )
-        self.update_groups()
+        self.hass.async_create_task(self.create_update_groups_coro(), eager_start=True)
 
     @callback
     def async_update_groups(self, event: SonosEvent) -> None:
@@ -862,7 +870,7 @@ class SonosSpeaker:
             sonos_group_entities = []
 
             for uid in group:
-                speaker = self.hass.data[DATA_SONOS].discovered.get(uid)
+                speaker = self.data.discovered.get(uid)
                 if speaker:
                     self._group_members_missing.discard(uid)
                     sonos_group.append(speaker)
@@ -890,10 +898,7 @@ class SonosSpeaker:
             self.async_write_entity_states()
 
             for joined_uid in group[1:]:
-                joined_speaker: SonosSpeaker = self.hass.data[
-                    DATA_SONOS
-                ].discovered.get(joined_uid)
-                if joined_speaker:
+                if joined_speaker := self.data.discovered.get(joined_uid):
                     joined_speaker.coordinator = self
                     joined_speaker.sonos_group = sonos_group
                     joined_speaker.sonos_group_entities = sonos_group_entities
@@ -904,13 +909,13 @@ class SonosSpeaker:
         async def _async_handle_group_event(event: SonosEvent | None) -> None:
             """Get async lock and handle event."""
 
-            async with self.hass.data[DATA_SONOS].topology_condition:
+            async with self.data.topology_condition:
                 group = await _async_extract_group(event)
 
                 if self.soco.uid == group[0]:
                     _async_regroup(group)
 
-                    self.hass.data[DATA_SONOS].topology_condition.notify_all()
+                    self.data.topology_condition.notify_all()
 
         return _async_handle_group_event(event)
 

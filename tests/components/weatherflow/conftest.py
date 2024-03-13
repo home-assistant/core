@@ -1,4 +1,5 @@
 """Fixtures for Weatherflow integration tests."""
+
 import asyncio
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch

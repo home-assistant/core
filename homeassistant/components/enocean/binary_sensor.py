@@ -1,4 +1,5 @@
 """Support for EnOcean binary sensors."""
+
 from __future__ import annotations
 
 from enocean.utils import combine_hex

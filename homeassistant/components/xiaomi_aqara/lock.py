@@ -1,4 +1,5 @@
 """Support for Xiaomi Aqara locks."""
+
 from __future__ import annotations
 
 from homeassistant.components.lock import LockEntity

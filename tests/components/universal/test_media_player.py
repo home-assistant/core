@@ -1,4 +1,5 @@
 """The tests for the Universal Media player platform."""
+
 from copy import copy
 from unittest.mock import Mock, patch
 
