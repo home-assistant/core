@@ -56,12 +56,15 @@ class SessionManager:
         self._store = Store[StoreData](
             hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
-        self._key: str = None  # type: ignore[assignment]
+        self._key: str | None = None
         self._refresh_token_revoce_callbacks: dict[str, CALLBACK_TYPE] = {}
 
     @property
     def key(self) -> str:
         """Return the encryption key."""
+        if self._key is None:
+            self._key = Fernet.generate_key().decode()
+            self._async_schedule_save()
         return self._key
 
     async def async_validate_strict_connection_session(
@@ -179,29 +182,16 @@ class SessionManager:
         """Return the data to store."""
         return StoreData(
             unauthorized_sessions=self._unauthorized_sessions,
-            key=self._key,
+            key=self.key,
         )
 
     async def async_setup(self) -> None:
         """Set up session manager."""
         data = await self._store.async_load()
         if data is None or not isinstance(data, dict):
-            self._set_defaults()
             return
 
         self._key = data["key"]
         self._unauthorized_sessions = data["unauthorized_sessions"]
         for token_id in self._unauthorized_sessions.values():
             self._async_register_revoke_token_callback(token_id)
-
-    @callback
-    def _set_defaults(self) -> None:
-        """Set default values."""
-        self._unauthorized_sessions = {}
-        self._key = _generate_key()
-        self._async_schedule_save(0)
-
-
-def _generate_key() -> str:
-    """Generate a random key."""
-    return Fernet.generate_key().decode()
