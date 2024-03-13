@@ -127,9 +127,23 @@ async def test_get_next_holiday(
         # Defaults to current year (mocked above)
         ({"holidays": "פסח"}, ["15 Nisan 5780"]),
         ({"year": 5784, "holidays": "שמחת תורה"}, ["23 Tishrei 5784"]),
+        # Leap Year
+        ({"year": 5784, "holidays": "Purim"}, ["14 Adar II 5784"]),
+        # Regular Year
+        ({"year": 5783, "holidays": "Purim"}, ["14 Adar 5783"]),
         (
             {"year": 5784, "types": "MINOR_HOLIDAY"},
             ["15 Sh'vat 5784", "18 Iyyar 5784", "15 Av 5784"],
+        ),
+        (
+            {"year": 5784, "types": "FAST_DAY"},
+            [
+                "3 Tishrei 5784",
+                "10 Tevet 5784",
+                "11 Adar II 5784",
+                "17 Tammuz 5784",
+                "9 Av 5784",
+            ],
         ),
         ({"year": 5784, "holidays": 'יוה"כ'}, ["10 Tishrei 5784"]),
         ({"year": 5784, "holidays": "יום הכפורים"}, ["10 Tishrei 5784"]),
@@ -247,24 +261,24 @@ async def test_include_hebrew_date_info(hass: HomeAssistant) -> None:
     assert result == {
         "date": "2023-01-01",
         "hebrew_date": {
-            "str": """ח' טבת ה' תשפ"ג""",
+            "str": "ח' טבת ה' תשפ\"ג",
             "year": 5783,
-            "month_name": {"english": "Tevet", "hebrew": "טבת"},
+            "month_name": {"french": "Tevet", "english": "Tevet", "hebrew": "טבת"},
             "day": 8,
         },
         "day_of_week": 1,
         "daf_yomi": {
             "label": "נדרים סח",
-            "mesechta": {"english": "Nedarim", "hebrew": "נדרים"},
+            "mesechta": {"french": "Nedarim", "english": "Nedarim", "hebrew": "נדרים"},
             "daf": 68,
         },
-        "parasha": {"english": "Vayechi", "hebrew": "ויחי"},
+        "parasha": {"french": "Vaye'hi", "english": "Vayechi", "hebrew": "ויחי"},
         "omer_day": 0,
         "is_yom_tov": False,
         "is_shabbat": False,
         "upcoming_shabbat": "2023-01-07",
-        "upcoming_shabbat_or_yom_tov": "2023-01-07",
         "upcoming_yom_tov": "2023-04-06",
+        "upcoming_shabbat_or_yom_tov": "2023-01-07",
     }
 
 
@@ -332,18 +346,18 @@ async def test_include_all_fields(hass: HomeAssistant) -> None:
     assert result == {
         "date": "2023-04-07",
         "hebrew_date": {
-            "str": """ט"ז ניסן ה' תשפ"ג""",
+            "str": 'ט"ז ניסן ה\' תשפ"ג',
             "year": 5783,
-            "month_name": {"english": "Nisan", "hebrew": "ניסן"},
+            "month_name": {"french": "Nissan", "english": "Nisan", "hebrew": "ניסן"},
             "day": 16,
         },
         "day_of_week": 6,
         "daf_yomi": {
             "label": "סוטה ט",
-            "mesechta": {"english": "Sotah", "hebrew": "סוטה"},
+            "mesechta": {"french": "Sotah", "english": "Sotah", "hebrew": "סוטה"},
             "daf": 9,
         },
-        "parasha": {"english": "none", "hebrew": "none"},
+        "parasha": {"french": "none", "english": "none", "hebrew": "none"},
         "omer_day": 1,
         "is_yom_tov": True,
         "is_shabbat": False,

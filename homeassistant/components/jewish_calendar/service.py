@@ -164,12 +164,12 @@ class JewishCalendarServices:
         # The HDate implementation treats ADAR_I as ADAR and ADAR_II as
         # 30 days later.  This breaks ADAR_II in non-leap years.
         if date.year_size() < 380 and call.data["month"] in [
-            htables.Months.Adar_I,
-            htables.Months.Adar_II,
+            htables.Months.ADAR_I,
+            htables.Months.ADAR_II,
         ]:
             date.hdate = HebrewDate(
                 call.data.get("year", today.year),
-                htables.Months.Adar,
+                htables.Months.ADAR,
                 call.data["day"],
             )
         return self._build_response(date, call)
