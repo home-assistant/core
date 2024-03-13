@@ -52,10 +52,7 @@ def setup_platform(
     auth = sigfox.auth
     devices = sigfox.devices
 
-    sensors = []
-    for device in devices:
-        sensors.append(SigfoxDevice(device, auth, name))
-    add_entities(sensors, True)
+    add_entities((SigfoxDevice(device, auth, name) for device in devices), True)
 
 
 def epoch_to_datetime(epoch_time):
@@ -105,8 +102,7 @@ class SigfoxAPI:
             url = urljoin(API_URL, location_url)
             response = requests.get(url, auth=self._auth, timeout=10)
             devices_data = json.loads(response.text)["data"]
-            for device in devices_data:
-                devices.append(device["id"])
+            devices.extend(device["id"] for device in devices_data)
         return devices
 
     @property

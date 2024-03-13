@@ -914,18 +914,17 @@ async def test_stats_timestamp_conversion_is_reentrant(
 
     def _get_all_short_term_stats() -> list[dict[str, Any]]:
         with session_scope(hass=hass) as session:
-            results = []
-            for result in (
-                session.query(old_db_schema.StatisticsShortTerm)
-                .where(old_db_schema.StatisticsShortTerm.metadata_id == 1000)
-                .all()
-            ):
-                results.append(
-                    {
-                        field.name: getattr(result, field.name)
-                        for field in old_db_schema.StatisticsShortTerm.__table__.c
-                    }
+            results = [
+                {
+                    field.name: getattr(result, field.name)
+                    for field in old_db_schema.StatisticsShortTerm.__table__.c
+                }
+                for result in (
+                    session.query(old_db_schema.StatisticsShortTerm)
+                    .where(old_db_schema.StatisticsShortTerm.metadata_id == 1000)
+                    .all()
                 )
+            ]
             return sorted(results, key=lambda row: row["start_ts"])
 
     # Do not optimize this block, its intentionally written to interleave
@@ -1099,14 +1098,12 @@ async def test_stats_timestamp_with_one_by_one(
     def _get_all_stats(table: old_db_schema.StatisticsBase) -> list[dict[str, Any]]:
         """Get all stats from a table."""
         with session_scope(hass=hass) as session:
-            results = []
-            for result in session.query(table).where(table.metadata_id == 1000).all():
-                results.append(
-                    {
-                        field.name: getattr(result, field.name)
-                        for field in table.__table__.c
-                    }
-                )
+            results = [
+                {field.name: getattr(result, field.name) for field in table.__table__.c}
+                for result in session.query(table)
+                .where(table.metadata_id == 1000)
+                .all()
+            ]
             return sorted(results, key=lambda row: row["start_ts"])
 
     def _insert_and_do_migration():
@@ -1326,14 +1323,12 @@ async def test_stats_timestamp_with_one_by_one_removes_duplicates(
     def _get_all_stats(table: old_db_schema.StatisticsBase) -> list[dict[str, Any]]:
         """Get all stats from a table."""
         with session_scope(hass=hass) as session:
-            results = []
-            for result in session.query(table).where(table.metadata_id == 1000).all():
-                results.append(
-                    {
-                        field.name: getattr(result, field.name)
-                        for field in table.__table__.c
-                    }
-                )
+            results = [
+                {field.name: getattr(result, field.name) for field in table.__table__.c}
+                for result in session.query(table)
+                .where(table.metadata_id == 1000)
+                .all()
+            ]
             return sorted(results, key=lambda row: row["start_ts"])
 
     def _insert_and_do_migration():
