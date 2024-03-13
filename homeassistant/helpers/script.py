@@ -1141,28 +1141,18 @@ class _QueuedScriptRun(_ScriptRun):
         """Run script."""
         # Wait for previous run, if any, to finish by attempting to acquire the script's
         # shared lock. At the same time monitor if we've been told to stop.
-        lock_task = self._hass.async_create_task(
-            self._script._queue_lck.acquire(),  # pylint: disable=protected-access
-            eager_start=True,
-        )
+        lock = self._script._queue_lck  # pylint: disable=protected-access
         try:
-            await asyncio.wait(
-                [lock_task, self._stop], return_when=asyncio.FIRST_COMPLETED
-            )
-        except asyncio.CancelledError:
+            async with async_interrupt.interrupt(self._stop, ScriptStoppedError, None):
+                await lock.acquire()
+        except ScriptStoppedError as ex:
             self._finish()
-            raise
-        else:
-            self.lock_acquired = lock_task.done() and not lock_task.cancelled()
-        finally:
-            lock_task.cancel()
+            raise asyncio.CancelledError from ex
 
+        self.lock_acquired = True
         # If we've been told to stop, then just finish up. Otherwise, we've acquired the
         # lock so we can go ahead and start the run.
-        if self._stop.done():
-            self._finish()
-        else:
-            await super().async_run()
+        await super().async_run()
 
     def _finish(self) -> None:
         if self.lock_acquired:
