@@ -1,4 +1,5 @@
 """The tests for the Group Light platform."""
+
 import asyncio
 from unittest.mock import MagicMock, patch
 

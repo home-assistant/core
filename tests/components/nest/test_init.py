@@ -7,6 +7,7 @@ By default all tests use test fixtures that run in each possible configuration
 mode (e.g. yaml, ConfigEntry, etc) however some tests override and just run in
 relevant modes.
 """
+
 import logging
 from typing import Any
 from unittest.mock import patch

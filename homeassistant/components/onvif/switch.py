@@ -1,4 +1,5 @@
 """ONVIF switches for controlling cameras."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -16,9 +17,9 @@ from .device import ONVIFDevice
 from .models import Profile
 
 
-@dataclass(frozen=True)
-class ONVIFSwitchEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class ONVIFSwitchEntityDescription(SwitchEntityDescription):
+    """Describes ONVIF switch entity."""
 
     turn_on_fn: Callable[
         [ONVIFDevice], Callable[[Profile, Any], Coroutine[Any, Any, None]]
@@ -29,13 +30,6 @@ class ONVIFSwitchEntityDescriptionMixin:
     turn_on_data: Any
     turn_off_data: Any
     supported_fn: Callable[[ONVIFDevice], bool]
-
-
-@dataclass(frozen=True)
-class ONVIFSwitchEntityDescription(
-    SwitchEntityDescription, ONVIFSwitchEntityDescriptionMixin
-):
-    """Describes ONVIF switch entity."""
 
 
 SWITCHES: tuple[ONVIFSwitchEntityDescription, ...] = (

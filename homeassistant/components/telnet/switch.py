@@ -1,4 +1,5 @@
 """Support for switch controlled using a telnet connection."""
+
 from __future__ import annotations
 
 from datetime import timedelta

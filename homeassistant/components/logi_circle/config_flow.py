@@ -1,4 +1,5 @@
 """Config flow to configure Logi Circle component."""
+
 import asyncio
 from collections import OrderedDict
 from http import HTTPStatus
@@ -7,7 +8,7 @@ from logi_circle import LogiCircle
 from logi_circle.exception import AuthorizationFailed
 import voluptuous as vol
 
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import (
     CONF_API_KEY,
@@ -191,7 +192,7 @@ class LogiCircleAuthCallbackView(HomeAssistantView):
 
     async def get(self, request):
         """Receive authorization code."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
         if "code" in request.query:
             hass.async_create_task(
                 hass.config_entries.flow.async_init(

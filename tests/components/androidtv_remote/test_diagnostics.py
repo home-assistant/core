@@ -1,4 +1,5 @@
 """Tests for the diagnostics data provided by the Android TV Remote integration."""
+
 from unittest.mock import MagicMock
 
 from syrupy.assertion import SnapshotAssertion

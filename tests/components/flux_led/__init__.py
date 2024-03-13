@@ -1,4 +1,5 @@
 """Tests for the flux_led integration."""
+
 from __future__ import annotations
 
 import asyncio

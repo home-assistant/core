@@ -1,4 +1,5 @@
 """Test the Z-Wave JS number platform."""
+
 from unittest.mock import MagicMock
 
 from zwave_js_server.const import CURRENT_VALUE_PROPERTY, CommandClass

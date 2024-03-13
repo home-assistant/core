@@ -23,7 +23,7 @@ from .const import DOMAIN
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
-OPTIONS_VALUME = "options_volume"
+OPTIONS_VOLUME = "options_volume"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -49,14 +49,13 @@ def get_volume_value(state: dict[str, Any]) -> int | None:
 
 DEVICE_CONFIG_DESCRIPTIONS: tuple[YoLinkNumberTypeConfigEntityDescription, ...] = (
     YoLinkNumberTypeConfigEntityDescription(
-        key=OPTIONS_VALUME,
+        key=OPTIONS_VOLUME,
         translation_key="config_volume",
         native_min_value=1,
         native_max_value=16,
         mode=NumberMode.SLIDER,
         native_step=1.0,
         native_unit_of_measurement=None,
-        icon="mdi:volume-high",
         exists_fn=lambda device: device.device_type in SUPPORT_SET_VOLUME_DEVICES,
         should_update_entity=lambda value: value is not None,
         value=get_volume_value,
@@ -124,7 +123,7 @@ class YoLinkNumberTypeConfigEntity(YoLinkEntity, NumberEntity):
         """Update the current value."""
         if (
             self.coordinator.device.device_type == ATTR_DEVICE_SPEAKER_HUB
-            and self.entity_description.key == OPTIONS_VALUME
+            and self.entity_description.key == OPTIONS_VOLUME
         ):
             await self.update_speaker_hub_volume(value)
             self._attr_native_value = value

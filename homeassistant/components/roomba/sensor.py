@@ -1,4 +1,5 @@
 """Sensor platform for Roomba."""
+
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -26,18 +27,11 @@ from .irobot_base import IRobotEntity
 from .models import RoombaData
 
 
-@dataclass(frozen=True)
-class RoombaSensorEntityDescriptionMixin:
-    """Mixin for describing Roomba data."""
+@dataclass(frozen=True, kw_only=True)
+class RoombaSensorEntityDescription(SensorEntityDescription):
+    """Immutable class for describing Roomba data."""
 
     value_fn: Callable[[IRobotEntity], StateType]
-
-
-@dataclass(frozen=True)
-class RoombaSensorEntityDescription(
-    SensorEntityDescription, RoombaSensorEntityDescriptionMixin
-):
-    """Immutable class for describing Roomba data."""
 
 
 SENSORS: list[RoombaSensorEntityDescription] = [

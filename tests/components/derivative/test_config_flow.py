@@ -1,4 +1,5 @@
 """Test the Derivative config flow."""
+
 from unittest.mock import patch
 
 import pytest

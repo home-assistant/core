@@ -1,4 +1,5 @@
 """Light integration microBees."""
+
 from typing import Any
 
 from homeassistant.components.light import ATTR_RGBW_COLOR, ColorMode, LightEntity

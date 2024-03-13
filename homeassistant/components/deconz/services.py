@@ -18,7 +18,7 @@ from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from .config_flow import get_master_gateway
 from .const import CONF_BRIDGE_ID, DOMAIN, LOGGER
-from .gateway import DeconzGateway
+from .hub import DeconzHub
 
 DECONZ_SERVICES = "deconz_services"
 
@@ -110,7 +110,7 @@ def async_unload_services(hass: HomeAssistant) -> None:
         hass.services.async_remove(DOMAIN, service)
 
 
-async def async_configure_service(gateway: DeconzGateway, data: ReadOnlyDict) -> None:
+async def async_configure_service(gateway: DeconzHub, data: ReadOnlyDict) -> None:
     """Set attribute of device in deCONZ.
 
     Entity is used to resolve to a device path (e.g. '/lights/1').
@@ -140,7 +140,7 @@ async def async_configure_service(gateway: DeconzGateway, data: ReadOnlyDict) ->
     await gateway.api.request("put", field, json=data)
 
 
-async def async_refresh_devices_service(gateway: DeconzGateway) -> None:
+async def async_refresh_devices_service(gateway: DeconzHub) -> None:
     """Refresh available devices from deCONZ."""
     gateway.ignore_state_updates = True
     await gateway.api.refresh_state()
@@ -148,7 +148,7 @@ async def async_refresh_devices_service(gateway: DeconzGateway) -> None:
     gateway.ignore_state_updates = False
 
 
-async def async_remove_orphaned_entries_service(gateway: DeconzGateway) -> None:
+async def async_remove_orphaned_entries_service(gateway: DeconzHub) -> None:
     """Remove orphaned deCONZ entries from device and entity registries."""
     device_registry = dr.async_get(gateway.hass)
     entity_registry = er.async_get(gateway.hass)

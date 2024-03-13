@@ -1,4 +1,5 @@
 """Tests for the Atag climate platform."""
+
 from unittest.mock import PropertyMock, patch
 
 from homeassistant.components.atag.climate import DOMAIN, PRESET_MAP

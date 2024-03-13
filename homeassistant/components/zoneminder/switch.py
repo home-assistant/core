@@ -1,4 +1,5 @@
 """Support for ZoneMinder switches."""
+
 from __future__ import annotations
 
 import logging

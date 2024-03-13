@@ -1,4 +1,5 @@
 """Tests for Broadlink devices."""
+
 from unittest.mock import patch
 
 import broadlink.exceptions as blke

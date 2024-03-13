@@ -1,4 +1,5 @@
 """Test the Z-Wave JS sensor platform."""
+
 import copy
 
 import pytest

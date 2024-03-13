@@ -1,10 +1,11 @@
 """Support for Abode Security System switches."""
+
 from __future__ import annotations
 
 from typing import Any, cast
 
-from jaraco.abode.devices.switch import Switch as AbodeSW
-from jaraco.abode.helpers import constants as CONST
+from jaraco.abode.devices.switch import Switch
+from jaraco.abode.helpers.constants import TYPE_SWITCH, TYPE_VALVE
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -15,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import AbodeAutomation, AbodeDevice, AbodeSystem
 from .const import DOMAIN
 
-DEVICE_TYPES = [CONST.TYPE_SWITCH, CONST.TYPE_VALVE]
+DEVICE_TYPES = [TYPE_SWITCH, TYPE_VALVE]
 
 
 async def async_setup_entry(
@@ -41,7 +42,7 @@ async def async_setup_entry(
 class AbodeSwitch(AbodeDevice, SwitchEntity):
     """Representation of an Abode switch."""
 
-    _device: AbodeSW
+    _device: Switch
     _attr_name = None
 
     def turn_on(self, **kwargs: Any) -> None:

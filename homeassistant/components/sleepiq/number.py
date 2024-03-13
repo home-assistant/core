@@ -1,4 +1,5 @@
 """Support for SleepIQ SleepNumber firmness number entities."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -30,21 +31,14 @@ from .coordinator import SleepIQData, SleepIQDataUpdateCoordinator
 from .entity import SleepIQBedEntity, sleeper_for_side
 
 
-@dataclass(frozen=True)
-class SleepIQNumberEntityDescriptionMixin:
-    """Mixin to describe a SleepIQ number entity."""
+@dataclass(frozen=True, kw_only=True)
+class SleepIQNumberEntityDescription(NumberEntityDescription):
+    """Class to describe a SleepIQ number entity."""
 
     value_fn: Callable[[Any], float]
     set_value_fn: Callable[[Any, int], Coroutine[None, None, None]]
     get_name_fn: Callable[[SleepIQBed, Any], str]
     get_unique_id_fn: Callable[[SleepIQBed, Any], str]
-
-
-@dataclass(frozen=True)
-class SleepIQNumberEntityDescription(
-    NumberEntityDescription, SleepIQNumberEntityDescriptionMixin
-):
-    """Class to describe a SleepIQ number entity."""
 
 
 async def _async_set_firmness(sleeper: SleepIQSleeper, firmness: int) -> None:

@@ -1,4 +1,5 @@
 """Tests for samsungtv component."""
+
 from copy import deepcopy
 from datetime import datetime, timedelta
 import logging
@@ -325,7 +326,7 @@ async def test_update_off_ws_with_power_state(
     next_update = mock_now + timedelta(minutes=1)
     freezer.move_to(next_update)
     async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     remotews.start_listening.assert_called_once()
     rest_api.rest_device_info.assert_called_once()
@@ -341,7 +342,7 @@ async def test_update_off_ws_with_power_state(
     next_update = mock_now + timedelta(minutes=2)
     freezer.move_to(next_update)
     async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     rest_api.rest_device_info.assert_called_once()
 
@@ -354,7 +355,7 @@ async def test_update_off_ws_with_power_state(
     next_update = mock_now + timedelta(minutes=3)
     freezer.move_to(next_update)
     async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     rest_api.rest_device_info.assert_called_once()
 
@@ -385,7 +386,7 @@ async def test_update_off_encryptedws(
     next_update = mock_now + timedelta(minutes=5)
     freezer.move_to(next_update)
     async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
@@ -406,12 +407,12 @@ async def test_update_access_denied(
         next_update = mock_now + timedelta(minutes=5)
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         next_update = mock_now + timedelta(minutes=10)
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert [
         flow
@@ -441,7 +442,7 @@ async def test_update_ws_connection_failure(
         next_update = mock_now + timedelta(minutes=5)
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
         "Unexpected ConnectionFailure trying to get remote for fake_host, please "
@@ -469,7 +470,7 @@ async def test_update_ws_connection_closed(
         next_update = mock_now + timedelta(minutes=5)
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
@@ -491,7 +492,7 @@ async def test_update_ws_unauthorized_error(
         next_update = mock_now + timedelta(minutes=5)
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert [
         flow
@@ -516,7 +517,7 @@ async def test_update_unhandled_response(
         next_update = mock_now + timedelta(minutes=5)
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         state = hass.states.get(ENTITY_ID)
         assert state.state == STATE_ON
@@ -536,7 +537,7 @@ async def test_connection_closed_during_update_can_recover(
         next_update = mock_now + timedelta(minutes=5)
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         state = hass.states.get(ENTITY_ID)
         assert state.state == STATE_UNAVAILABLE
@@ -544,7 +545,7 @@ async def test_connection_closed_during_update_can_recover(
         next_update = mock_now + timedelta(minutes=10)
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         state = hass.states.get(ENTITY_ID)
         assert state.state == STATE_ON
@@ -704,7 +705,7 @@ async def test_state(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
     ):
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     # Should be STATE_UNAVAILABLE since there is no way to turn it back on
@@ -1443,7 +1444,7 @@ async def test_upnp_re_subscribe_events(
         next_update = mock_now + timedelta(minutes=5)
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
@@ -1453,7 +1454,7 @@ async def test_upnp_re_subscribe_events(
     next_update = mock_now + timedelta(minutes=10)
     freezer.move_to(next_update)
     async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
@@ -1489,7 +1490,7 @@ async def test_upnp_failed_re_subscribe_events(
         next_update = mock_now + timedelta(minutes=5)
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
@@ -1500,7 +1501,7 @@ async def test_upnp_failed_re_subscribe_events(
     with patch.object(dmr_device, "async_subscribe_services", side_effect=error):
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON

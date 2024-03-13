@@ -1,4 +1,5 @@
 """Config flow for UPB PIM integration."""
+
 import asyncio
 from contextlib import suppress
 import logging

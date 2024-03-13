@@ -1,4 +1,5 @@
 """The tests for the nexbus sensor component."""
+
 from collections.abc import Generator
 from copy import deepcopy
 from unittest.mock import MagicMock, patch

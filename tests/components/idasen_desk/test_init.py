@@ -1,4 +1,5 @@
 """Test the IKEA Idasen Desk init."""
+
 from unittest import mock
 from unittest.mock import AsyncMock, MagicMock
 

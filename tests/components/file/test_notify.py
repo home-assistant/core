@@ -1,4 +1,5 @@
 """The tests for the notify file platform."""
+
 import os
 from unittest.mock import call, mock_open, patch
 

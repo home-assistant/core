@@ -1,4 +1,5 @@
 """The exceptions used by Home Assistant."""
+
 from __future__ import annotations
 
 from collections.abc import Generator, Sequence

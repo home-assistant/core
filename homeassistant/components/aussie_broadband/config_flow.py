@@ -1,4 +1,5 @@
 """Config flow for Aussie Broadband integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
