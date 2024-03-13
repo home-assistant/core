@@ -597,17 +597,17 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
                 value=CONF_KNX_AUTOMATIC, label=CONF_KNX_AUTOMATIC.capitalize()
             )
         ]
-        for endpoint in self._tunnel_endpoints:
-            tunnel_endpoint_options.append(
-                selector.SelectOptionDict(
-                    value=str(endpoint.individual_address),
-                    label=(
-                        f"{endpoint.individual_address} "
-                        f"{'🔐 ' if endpoint.user_id else ''}"
-                        f"(Data Secure GAs: {len(endpoint.group_addresses)})"
-                    ),
-                )
+        tunnel_endpoint_options.extend(
+            selector.SelectOptionDict(
+                value=str(endpoint.individual_address),
+                label=(
+                    f"{endpoint.individual_address} "
+                    f"{'🔐 ' if endpoint.user_id else ''}"
+                    f"(Data Secure GAs: {len(endpoint.group_addresses)})"
+                ),
             )
+            for endpoint in self._tunnel_endpoints
+        )
         return self.async_show_form(
             step_id="knxkeys_tunnel_select",
             data_schema=vol.Schema(

@@ -45,9 +45,11 @@ async def async_setup_platform(
     devices = (await api.async_fetch_devices()).values()
 
     async_add_entities(
-        MelissaClimate(api, device["serial_number"], device)
-        for device in devices
-        if device["type"] == "melissa"
+        (
+            MelissaClimate(api, device["serial_number"], device)
+            for device in devices
+            if device["type"] == "melissa"
+        ), True
     )
 
 

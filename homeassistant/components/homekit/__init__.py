@@ -928,13 +928,15 @@ class HomeKit:
         connection: tuple[str, str],
     ) -> None:
         """Purge bridges that exist from failed pairing or manual resets."""
-        devices_to_purge = []
-        for entry in dev_reg.devices.values():
-            if self._entry_id in entry.config_entries and (
+        devices_to_purge = [
+            entry.id
+            for entry in dev_reg.devices.values()
+            if self._entry_id in entry.config_entries
+            and (
                 identifier not in entry.identifiers  # type: ignore[comparison-overlap]
                 or connection not in entry.connections
-            ):
-                devices_to_purge.append(entry.id)
+            )
+        ]
 
         for device_id in devices_to_purge:
             dev_reg.async_remove_device(device_id)
