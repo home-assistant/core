@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from airthings_ble import AirthingsDevice
+from airthings_ble import AirthingsDevice, AirthingsDeviceType
 from bleak import BleakError
 
 from homeassistant.components.airthings_ble.const import DOMAIN
@@ -29,8 +29,7 @@ async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
     with patch_async_ble_device_from_address(WAVE_SERVICE_INFO), patch_airthings_ble(
         AirthingsDevice(
             manufacturer="Airthings AS",
-            model="Wave Plus",
-            model_raw="2930",
+            model=AirthingsDeviceType.WAVE_PLUS,
             name="Airthings Wave Plus",
             identifier="123456",
         )
@@ -112,8 +111,7 @@ async def test_user_setup(hass: HomeAssistant) -> None:
     ), patch_async_ble_device_from_address(WAVE_SERVICE_INFO), patch_airthings_ble(
         AirthingsDevice(
             manufacturer="Airthings AS",
-            model="Wave Plus",
-            model_raw="2930",
+            model=AirthingsDeviceType.WAVE_PLUS,
             name="Airthings Wave Plus",
             identifier="123456",
         )
