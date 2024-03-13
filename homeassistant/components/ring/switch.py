@@ -38,13 +38,12 @@ async def async_setup_entry(
     coordinator: RingDataCoordinator = hass.data[DOMAIN][config_entry.entry_id][
         RING_DEVICES_COORDINATOR
     ]
-    switches = []
 
-    for device in devices["stickup_cams"]:
-        if device.has_capability("siren"):
-            switches.append(SirenSwitch(device, coordinator))
-
-    async_add_entities(switches)
+    async_add_entities(
+        SirenSwitch(device, coordinator)
+        for device in devices["stickup_cams"]
+        if device.has_capability("siren")
+    )
 
 
 class BaseRingSwitch(RingEntity, SwitchEntity):

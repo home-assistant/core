@@ -640,7 +640,11 @@ class ConfigEntry:
         # Check again when we fire in case shutdown
         # has started so we do not block shutdown
         if not hass.is_stopping:
-            hass.async_create_task(self.async_setup(hass), eager_start=True)
+            hass.async_create_task(
+                self.async_setup(hass),
+                f"config entry retry {self.domain} {self.title}",
+                eager_start=True,
+            )
 
     @callback
     def async_shutdown(self) -> None:

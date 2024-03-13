@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from airthings_ble import AirthingsBluetoothDeviceData, AirthingsDevice
+from airthings_ble import (
+    AirthingsBluetoothDeviceData,
+    AirthingsDevice,
+    AirthingsDeviceType,
+)
 
 from homeassistant.components.airthings_ble.const import DOMAIN
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
@@ -162,8 +166,7 @@ WAVE_DEVICE_INFO = AirthingsDevice(
     manufacturer="Airthings AS",
     hw_version="REV A",
     sw_version="G-BLE-1.5.3-master+0",
-    model="Wave Plus",
-    model_raw="2930",
+    model=AirthingsDeviceType.WAVE_PLUS,
     name="Airthings Wave+",
     identifier="123456",
     sensors={
