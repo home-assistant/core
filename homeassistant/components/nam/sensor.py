@@ -75,16 +75,11 @@ PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class NAMSensorRequiredKeysMixin:
-    """Class for NAM entity required keys."""
+@dataclass(frozen=True, kw_only=True)
+class NAMSensorEntityDescription(SensorEntityDescription):
+    """NAM sensor entity description."""
 
     value: Callable[[NAMSensors], StateType | datetime]
-
-
-@dataclass(frozen=True)
-class NAMSensorEntityDescription(SensorEntityDescription, NAMSensorRequiredKeysMixin):
-    """NAM sensor entity description."""
 
 
 SENSORS: tuple[NAMSensorEntityDescription, ...] = (

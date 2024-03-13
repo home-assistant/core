@@ -14,7 +14,7 @@ from homeassistant.components.media_source.models import (
     PlayMedia,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
@@ -124,7 +124,7 @@ def _build_base_url(
     """Build base url for System Bridge media."""
     return (
         f"http://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
-        f"/api/media/file/data?apiKey={entry.data[CONF_API_KEY]}"
+        f"/api/media/file/data?token={entry.data[CONF_TOKEN]}"
     )
 
 

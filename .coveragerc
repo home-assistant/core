@@ -546,6 +546,7 @@ omit =
     homeassistant/components/homematic/sensor.py
     homeassistant/components/homematic/switch.py
     homeassistant/components/homeworks/__init__.py
+    homeassistant/components/homeworks/binary_sensor.py
     homeassistant/components/homeworks/button.py
     homeassistant/components/homeworks/light.py
     homeassistant/components/horizon/media_player.py
@@ -890,6 +891,7 @@ omit =
     homeassistant/components/notify_events/notify.py
     homeassistant/components/notion/__init__.py
     homeassistant/components/notion/binary_sensor.py
+    homeassistant/components/notion/coordinator.py
     homeassistant/components/notion/sensor.py
     homeassistant/components/notion/util.py
     homeassistant/components/nsw_fuel_station/sensor.py
@@ -1183,7 +1185,6 @@ omit =
     homeassistant/components/serial_pm/sensor.py
     homeassistant/components/sesame/lock.py
     homeassistant/components/seven_segments/image_processing.py
-    homeassistant/components/seventeentrack/sensor.py
     homeassistant/components/shodan/sensor.py
     homeassistant/components/sia/__init__.py
     homeassistant/components/sia/alarm_control_panel.py

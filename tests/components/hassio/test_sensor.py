@@ -298,7 +298,7 @@ async def test_stats_addon_sensor(
 
     freezer.tick(HASSIO_UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "Could not fetch stats" not in caplog.text
 
@@ -308,7 +308,7 @@ async def test_stats_addon_sensor(
 
     freezer.tick(HASSIO_UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "Could not fetch stats" not in caplog.text
 
@@ -316,7 +316,7 @@ async def test_stats_addon_sensor(
     entity_registry.async_update_entity(entity_id, disabled_by=None)
     freezer.tick(config_entries.RELOAD_AFTER_UPDATE_DELAY)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert config_entry.state is config_entries.ConfigEntryState.LOADED
     # Verify the entity is still enabled
     assert entity_registry.async_get(entity_id).disabled_by is None
@@ -324,13 +324,13 @@ async def test_stats_addon_sensor(
     # The config entry just reloaded, so we need to wait for the next update
     freezer.tick(HASSIO_UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id) is not None
 
     freezer.tick(HASSIO_UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     # Verify that the entity have the expected state.
     state = hass.states.get(entity_id)
     assert state.state == expected
@@ -341,7 +341,7 @@ async def test_stats_addon_sensor(
 
     freezer.tick(HASSIO_UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_UNAVAILABLE

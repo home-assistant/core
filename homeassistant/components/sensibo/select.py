@@ -21,21 +21,14 @@ from .entity import SensiboDeviceBaseEntity, async_handle_api_call
 PARALLEL_UPDATES = 0
 
 
-@dataclass(frozen=True)
-class SensiboSelectDescriptionMixin:
-    """Mixin values for Sensibo entities."""
+@dataclass(frozen=True, kw_only=True)
+class SensiboSelectEntityDescription(SelectEntityDescription):
+    """Class describing Sensibo Select entities."""
 
     data_key: str
     value_fn: Callable[[SensiboDevice], str | None]
     options_fn: Callable[[SensiboDevice], list[str] | None]
     transformation: Callable[[SensiboDevice], dict | None]
-
-
-@dataclass(frozen=True)
-class SensiboSelectEntityDescription(
-    SelectEntityDescription, SensiboSelectDescriptionMixin
-):
-    """Class describing Sensibo Select entities."""
 
 
 DEVICE_SELECT_TYPES = (
