@@ -29,7 +29,6 @@ COMMENT_REQUIREMENTS = (
     "decora-wifi",
     "evdev",
     "face-recognition",
-    "opencv-python-headless",
     "pybluez",
     "pycocotools",
     "pycups",
