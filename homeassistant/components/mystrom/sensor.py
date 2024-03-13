@@ -31,6 +31,14 @@ class MyStromSwitchSensorEntityDescription(SensorEntityDescription):
 
 SENSOR_TYPES: tuple[MyStromSwitchSensorEntityDescription, ...] = (
     MyStromSwitchSensorEntityDescription(
+        key="avg_consumption",
+        name="Average Consumption",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        value_fn=lambda device: device.consumedWs,
+    ),
+    MyStromSwitchSensorEntityDescription(
         key="consumption",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
