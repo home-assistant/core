@@ -601,22 +601,22 @@ class _ScriptRun:
 
     async def _async_delay_step(self):
         """Handle delay."""
-        delay = self._get_pos_time_period_template(CONF_DELAY)
+        delay_delta = self._get_pos_time_period_template(CONF_DELAY)
 
-        self._step_log(f"delay {delay}")
+        self._step_log(f"delay {delay_delta}")
 
-        delay_seconds = delay.total_seconds()
+        delay = delay_delta.total_seconds()
         self._changed()
-        trace_set_result(delay=delay_seconds, done=False)
+        trace_set_result(delay=delay, done=False)
         futures, timeout_handle, timeout_future = self._async_futures_with_timeout(
-            delay_seconds
+            delay
         )
 
         try:
             await asyncio.wait(futures, return_when=asyncio.FIRST_COMPLETED)
         finally:
             if timeout_future.done():
-                trace_set_result(delay=delay_seconds, done=True)
+                trace_set_result(delay=delay, done=True)
             else:
                 timeout_handle.cancel()
 
