@@ -83,14 +83,14 @@ class UnifiEntityLoader:
         Provide inactive clients to device tracker and switch platform.
         """
         config = self.hub.config
-        macs: list[str] = []
         entity_registry = er.async_get(self.hub.hass)
-        for entry in async_entries_for_config_entry(
-            entity_registry, config.entry.entry_id
-        ):
-            if entry.domain == Platform.DEVICE_TRACKER and "-" in entry.unique_id:
-                macs.append(entry.unique_id.split("-", 1)[1])
-
+        macs: list[str] = [
+            entry.unique_id.split("-", 1)[1]
+            for entry in async_entries_for_config_entry(
+                entity_registry, config.entry.entry_id
+            )
+            if entry.domain == Platform.DEVICE_TRACKER and "-" in entry.unique_id
+        ]
         api = self.hub.api
         for mac in config.option_supported_clients + config.option_block_clients + macs:
             if mac not in api.clients and mac in api.clients_all:
