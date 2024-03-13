@@ -30,7 +30,7 @@ from zigpy.state import State
 from zigpy.types.named import EUI64
 
 from homeassistant import __path__ as HOMEASSISTANT_PATH
-from homeassistant.components.system_log import LogEntry, _figure_out_source
+from homeassistant.components.system_log import LogEntry
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -871,10 +871,9 @@ class LogRelayHandler(logging.Handler):
 
     def emit(self, record: LogRecord) -> None:
         """Relay log message via dispatcher."""
-        if record.levelno >= logging.WARN:
-            entry = LogEntry(record, _figure_out_source(record, self.paths_re))
-        else:
-            entry = LogEntry(record, (record.pathname, record.lineno))
+        entry = LogEntry(
+            record, self.paths_re, figure_out_source=record.levelno >= logging.WARN
+        )
         async_dispatcher_send(
             self.hass,
             ZHA_GW_MSG,
