@@ -13,7 +13,14 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY, DPCode, DPType
+from .const import (
+    DOMAIN,
+    LOGGER,
+    TUYA_HA_SIGNAL_UPDATE_ENTITY,
+    DPCode,
+    DPType,
+    UnitOfTemperature,
+)
 from .util import remap_value
 
 
@@ -126,6 +133,56 @@ class ElectricityTypeData:
         power = struct.unpack(">L", b"\x00" + raw[5:8])[0] / 1000.0
         return cls(
             electriccurrent=str(electriccurrent), power=str(power), voltage=str(voltage)
+        )
+
+
+@dataclass
+class InkbirdB64TypeData:
+    """B64Temperature Type Data."""
+
+    temperature_unit: UnitOfTemperature | None = None
+    temperature: float | None = None
+    humidity: float | None = None
+    battery: int | None = None
+
+    def __post_init__(self) -> None:
+        """Convert temperature to target unit."""
+
+        # pool sensors register humidity as ~6k, replace with None
+        if self.humidity and (self.humidity > 100 or self.humidity < 0):
+            self.humidity = None
+
+        # proactively guard against invalid battery values
+        if self.battery and (self.battery > 100 or self.battery < 0):
+            self.battery = None
+
+    @classmethod
+    def from_raw(cls, data: str) -> Self:
+        """Parse the raw, base64 encoded data and return a InkbirdB64TypeData object."""
+        temperature_unit: UnitOfTemperature | None = None
+        battery: int | None = None
+        temperature: float | None = None
+        humidity: float | None = None
+
+        if len(data) > 0:
+            try:
+                if data[0] == "C":
+                    temperature_unit = UnitOfTemperature.CELSIUS
+                decoded_bytes = base64.b64decode(data)
+                _temperature, _humidity = struct.Struct("<hH").unpack(
+                    decoded_bytes[1:5]
+                )
+                (temperature, humidity) = _temperature / 10.0, _humidity / 10.0
+                battery = int.from_bytes(decoded_bytes[9:10], "little")
+            except Exception as e:
+                LOGGER.error("InkbirdB64TypeData.from_raw: %s", e)
+                raise ValueError(f"Invalid data: {data}") from e
+
+        return cls(
+            temperature=temperature,
+            humidity=humidity,
+            temperature_unit=temperature_unit,
+            battery=battery,
         )
 
 

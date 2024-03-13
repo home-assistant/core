@@ -27,7 +27,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import HomeAssistantTuyaData
-from .base import ElectricityTypeData, EnumTypeData, IntegerTypeData, TuyaEntity
+from .base import (
+    ElectricityTypeData,
+    EnumTypeData,
+    InkbirdB64TypeData,
+    IntegerTypeData,
+    TuyaEntity,
+)
 from .const import (
     DEVICE_CLASS_UNITS,
     DOMAIN,
@@ -35,6 +41,7 @@ from .const import (
     DPCode,
     DPType,
     UnitOfMeasurement,
+    UnitOfTemperature,
 )
 
 
@@ -598,65 +605,59 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     # https://developer.tuya.com/en/docs/iot/categorywsdcg?id=Kaiuz3hinij34
     "wsdcg": (
         TuyaSensorEntityDescription(
+            key=DPCode.TEMP_UNIT_CONVERT,
+            translation_key="temp_unit_convert",
+            name="temp_unit_convert",
+        ),
+        TuyaSensorEntityDescription(
             key=DPCode.CHANNEL_0,
-            translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
+            name="base_station_temperature",
+            subkey="temperature",
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.CHANNEL_1,
-            translation_key="temperature",
-            device_class=SensorDeviceClass.TEMPERATURE,
+            key=DPCode.CHANNEL_0,
+            device_class=SensorDeviceClass.HUMIDITY,
             state_class=SensorStateClass.MEASUREMENT,
+            name="base_station_humidity",
+            subkey="humidity",
         ),
-        TuyaSensorEntityDescription(
-            key=DPCode.CHANNEL_2,
-            translation_key="temperature",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        TuyaSensorEntityDescription(
-            key=DPCode.CHANNEL_3,
-            translation_key="temperature",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        TuyaSensorEntityDescription(
-            key=DPCode.CHANNEL_4,
-            translation_key="temperature",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        TuyaSensorEntityDescription(
-            key=DPCode.CHANNEL_5,
-            translation_key="temperature",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        TuyaSensorEntityDescription(
-            key=DPCode.CHANNEL_6,
-            translation_key="temperature",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        TuyaSensorEntityDescription(
-            key=DPCode.CHANNEL_7,
-            translation_key="temperature",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        TuyaSensorEntityDescription(
-            key=DPCode.CHANNEL_8,
-            translation_key="temperature",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        TuyaSensorEntityDescription(
-            key=DPCode.CHANNEL_9,
-            translation_key="temperature",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+        *[
+            i
+            for dp_code in (
+                DPCode.CHANNEL_1,
+                DPCode.CHANNEL_2,
+                DPCode.CHANNEL_3,
+                DPCode.CHANNEL_4,
+                DPCode.CHANNEL_5,
+                DPCode.CHANNEL_6,
+                DPCode.CHANNEL_7,
+                DPCode.CHANNEL_8,
+                DPCode.CHANNEL_9,
+            )
+            for i in (
+                TuyaSensorEntityDescription(
+                    key=dp_code,
+                    translation_key="temperature",
+                    device_class=SensorDeviceClass.TEMPERATURE,
+                    state_class=SensorStateClass.MEASUREMENT,
+                    name=f"{dp_code.value}_temperature",
+                    subkey="temperature",
+                    native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+                ),
+                TuyaSensorEntityDescription(
+                    key=dp_code,
+                    native_unit_of_measurement=PERCENTAGE,
+                    device_class=SensorDeviceClass.BATTERY,
+                    state_class=SensorStateClass.MEASUREMENT,
+                    entity_category=EntityCategory.DIAGNOSTIC,
+                    name=f"{dp_code.value}_battery",
+                    subkey="battery",
+                ),
+            )
+        ],
         TuyaSensorEntityDescription(
             key=DPCode.VA_TEMPERATURE,
             translation_key="temperature",
@@ -1262,6 +1263,8 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         ):
             return None
 
+        values: None | ElectricityTypeData | InkbirdB64TypeData = None
+
         # Get subkey value from Json string.
         if self._type is DPType.JSON:
             if self.entity_description.subkey is None:
@@ -1272,7 +1275,19 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         if self._type is DPType.RAW:
             if self.entity_description.subkey is None:
                 return None
-            values = ElectricityTypeData.from_raw(value)
+
+            if self.entity_description.subkey in [
+                "temperature",
+                "humidity",
+                "battery",
+            ]:
+                try:
+                    values = InkbirdB64TypeData.from_raw(value)
+                except ValueError:
+                    return None
+            else:
+                values = ElectricityTypeData.from_raw(value)
+
             return getattr(values, self.entity_description.subkey)
 
         # Valid string or enum value
