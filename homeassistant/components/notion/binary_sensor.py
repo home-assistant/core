@@ -32,79 +32,67 @@ from .const import (
     SENSOR_WINDOW_HINGED,
 )
 from .coordinator import NotionDataUpdateCoordinator
-from .model import NotionEntityDescription
 
 
 @dataclass(frozen=True, kw_only=True)
-class NotionBinarySensorDescription(
-    BinarySensorEntityDescription, NotionEntityDescription
-):
+class NotionBinarySensorDescription(BinarySensorEntityDescription):
     """Describe a Notion binary sensor."""
 
     on_state: Literal["alarm", "leak", "low", "not_missing", "open"]
 
 
-BINARY_SENSOR_DESCRIPTIONS = (
-    NotionBinarySensorDescription(
+BINARY_SENSOR_DESCRIPTIONS: dict[ListenerKind, NotionBinarySensorDescription] = {
+    ListenerKind.BATTERY: NotionBinarySensorDescription(
         key=SENSOR_BATTERY,
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        listener_kind=ListenerKind.BATTERY,
         on_state="low",
     ),
-    NotionBinarySensorDescription(
+    ListenerKind.DOOR: NotionBinarySensorDescription(
         key=SENSOR_DOOR,
         device_class=BinarySensorDeviceClass.DOOR,
-        listener_kind=ListenerKind.DOOR,
         on_state="open",
     ),
-    NotionBinarySensorDescription(
+    ListenerKind.GARAGE_DOOR: NotionBinarySensorDescription(
         key=SENSOR_GARAGE_DOOR,
         device_class=BinarySensorDeviceClass.GARAGE_DOOR,
-        listener_kind=ListenerKind.GARAGE_DOOR,
         on_state="open",
     ),
-    NotionBinarySensorDescription(
+    ListenerKind.LEAK: NotionBinarySensorDescription(
         key=SENSOR_LEAK,
         device_class=BinarySensorDeviceClass.MOISTURE,
-        listener_kind=ListenerKind.LEAK_STATUS,
         on_state="leak",
     ),
-    NotionBinarySensorDescription(
+    ListenerKind.SENSOR_CONNECTION: NotionBinarySensorDescription(
         key=SENSOR_MISSING,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        listener_kind=ListenerKind.CONNECTED,
         on_state="not_missing",
     ),
-    NotionBinarySensorDescription(
+    ListenerKind.SAFE: NotionBinarySensorDescription(
         key=SENSOR_SAFE,
         translation_key="safe",
         device_class=BinarySensorDeviceClass.DOOR,
-        listener_kind=ListenerKind.SAFE,
         on_state="open",
     ),
-    NotionBinarySensorDescription(
+    ListenerKind.SLIDING_DOOR_OR_WINDOW: NotionBinarySensorDescription(
         key=SENSOR_SLIDING,
         translation_key="sliding_door_window",
         device_class=BinarySensorDeviceClass.DOOR,
-        listener_kind=ListenerKind.SLIDING_DOOR_OR_WINDOW,
         on_state="open",
     ),
-    NotionBinarySensorDescription(
+    ListenerKind.ALARM: NotionBinarySensorDescription(
         key=SENSOR_SMOKE_CO,
         translation_key="smoke_carbon_monoxide_detector",
         device_class=BinarySensorDeviceClass.SMOKE,
-        listener_kind=ListenerKind.SMOKE,
         on_state="alarm",
     ),
-    NotionBinarySensorDescription(
+    ListenerKind.WINDOW_HINGED_VERTICAL: NotionBinarySensorDescription(
         key=SENSOR_WINDOW_HINGED,
         translation_key="hinged_window",
-        listener_kind=ListenerKind.HINGED_WINDOW,
         on_state="open",
     ),
-)
+}
 
 
 async def async_setup_entry(
@@ -116,16 +104,11 @@ async def async_setup_entry(
     async_add_entities(
         [
             NotionBinarySensor(
-                coordinator,
-                listener_id,
-                sensor.uuid,
-                sensor.bridge.id,
-                description,
+                coordinator, listener.id, sensor.uuid, sensor.bridge.id, description
             )
-            for listener_id, listener in coordinator.data.listeners.items()
-            for description in BINARY_SENSOR_DESCRIPTIONS
-            if description.listener_kind.value == listener.definition_id
-            and (sensor := coordinator.data.sensors[listener.sensor_id])
+            for listener in coordinator.data.listeners.values()
+            if (description := BINARY_SENSOR_DESCRIPTIONS.get(listener.kind))
+            and (sensor := coordinator.data.sensors.get(listener.sensor_id))
         ]
     )
 
