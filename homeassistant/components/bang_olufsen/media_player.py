@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import json
 import logging
 from typing import Any, cast
@@ -50,7 +49,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -118,6 +117,7 @@ async def async_setup_entry(
             ),
         },
         func="async_beolink_join",
+        supports_response=SupportsResponse.OPTIONAL,
     )
 
     platform.async_register_entity_service(
@@ -134,6 +134,7 @@ async def async_setup_entry(
             )
         },
         func="async_beolink_expand",
+        supports_response=SupportsResponse.OPTIONAL,
     )
 
     platform.async_register_entity_service(
@@ -901,49 +902,48 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
     async def async_unjoin_player(self) -> None:
         """Unjoin Beolink session. End session if leader."""
-        await self._client.post_beolink_leave()
+        await self.async_beolink_leave()
 
     # Custom services:
-    async def async_beolink_join(self, beolink_jid: str | None = None) -> None:
+    async def async_beolink_join(
+        self, beolink_jid: str | None = None
+    ) -> None | ServiceResponse:
         """Join a Beolink multi-room experience."""
         if beolink_jid is None:
-            await self._client.join_latest_beolink_experience()
+            response = await self._client.join_latest_beolink_experience()
         else:
             if not check_valid_jid(beolink_jid):
-                return
+                return {"invalid_jid": beolink_jid}
+            response = await self._client.join_beolink_peer(jid=beolink_jid)
 
-            await self._client.join_beolink_peer(jid=beolink_jid)
+        return response.dict()
 
-    async def async_beolink_expand(self, beolink_jids: list[str]) -> None:
+    async def async_beolink_expand(self, beolink_jids: list[str]) -> ServiceResponse:
         """Expand a Beolink multi-room experience with a device or devices."""
-        # Check if the Beolink JIDs are valid.
+        response: dict[str, Any] = {"invalid_jid": []}
+
+        # Ensure that the current source is expandable
+        if not self._source_change.is_multiroom_available:
+            return {"invalid_source": self.source}
+
         for beolink_jid in beolink_jids:
             if not check_valid_jid(beolink_jid):
-                _LOGGER.error("Invalid Beolink JID: %s", beolink_jid)
-                return
-
-        self.hass.async_create_task(self._beolink_expand(beolink_jids))
-
-    async def _beolink_expand(self, beolink_jids: list[str]) -> None:
-        """Expand the Beolink experience with a non blocking delay."""
-        for beolink_jid in beolink_jids:
+                response["invalid_jid"].append(beolink_jid)
+                continue
             await self._client.post_beolink_expand(jid=beolink_jid)
-            # await asyncio.sleep(1)
+
+        if len(response["invalid_jid"]) > 0:
+            return response
+
+        return None
 
     async def async_beolink_unexpand(self, beolink_jids: list[str]) -> None:
         """Unexpand a Beolink multi-room experience with a device or devices."""
-        # Check if the Beolink JIDs are valid.
         for beolink_jid in beolink_jids:
             if not check_valid_jid(beolink_jid):
-                return
-
-        self.hass.async_create_task(self._beolink_unexpand(beolink_jids))
-
-    async def _beolink_unexpand(self, beolink_jids: list[str]) -> None:
-        """Unexpand the Beolink experience with a non blocking delay."""
-        for beolink_jid in beolink_jids:
+                _LOGGER.error("Invalid Beolink JID: %s", beolink_jid)
+                continue
             await self._client.post_beolink_unexpand(jid=beolink_jid)
-            await asyncio.sleep(1)
 
     async def async_beolink_leave(self) -> None:
         """Leave the current Beolink experience."""
