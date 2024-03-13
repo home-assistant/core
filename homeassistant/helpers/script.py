@@ -648,6 +648,7 @@ class _ScriptRun:
         done = loop.create_future()
         futures: list[asyncio.Future[None]] = [self._stop, done]
         timeout_handle: asyncio.TimerHandle | None = None
+        timeout_future: asyncio.Future[None] | None = None
         if timeout:
             timeout_future = loop.create_future()
             timeout_handle = loop.call_later(
@@ -671,15 +672,9 @@ class _ScriptRun:
             self._hass, wait_template, async_script_wait, self._variables
         )
         self._changed()
-        try:
-            await asyncio.wait(futures, return_when=asyncio.FIRST_COMPLETED)
-            if timeout_handle and timeout_future.done():
-                self._handle_timeout()
-        finally:
-            if timeout_handle and not timeout_future.done():
-                timeout_handle.cancel()
-
-            unsub()
+        await self._async_wait_with_optional_timeout(
+            futures, timeout_handle, timeout_future, unsub
+        )
 
     async def _async_run_long_action(self, long_task: asyncio.Task[_T]) -> _T | None:
         """Run a long task while monitoring for stop request."""
@@ -998,6 +993,7 @@ class _ScriptRun:
         loop = self._hass.loop
         done = loop.create_future()
         timeout_handle: asyncio.TimerHandle | None = None
+        timeout_future: asyncio.Future[None] | None = None
         futures: list[asyncio.Future[None]] = [self._stop, done]
         if timeout:
             timeout_future = loop.create_future()
@@ -1030,17 +1026,27 @@ class _ScriptRun:
         )
         if not remove_triggers:
             return
-
         self._changed()
+        await self._async_wait_with_optional_timeout(
+            futures, timeout_handle, timeout_future, remove_triggers
+        )
+
+    async def _async_wait_with_optional_timeout(
+        self,
+        futures: list[asyncio.Future[None]],
+        timeout_handle: asyncio.TimerHandle | None,
+        timeout_future: asyncio.Future[None] | None,
+        unsub: Callable[[], None],
+    ) -> None:
         try:
             await asyncio.wait(futures, return_when=asyncio.FIRST_COMPLETED)
-            if timeout_handle and timeout_future.done():
+            if timeout_future and timeout_future.done():
                 self._handle_timeout()
         finally:
-            if timeout_handle and not timeout_future.done():
+            if timeout_future and not timeout_future.done() and timeout_handle:
                 timeout_handle.cancel()
 
-            remove_triggers()
+            unsub()
 
     def _handle_timeout(self) -> None:
         """Handle timeout."""
