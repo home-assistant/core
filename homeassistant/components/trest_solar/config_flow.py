@@ -30,7 +30,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     identity = TrestIdentityService(hass, data[CONF_USERNAME], data[CONF_PASSWORD])
     await identity.authenticate_async()
 
-    if not identity.check_token_is_expired():
+    if identity.check_token_is_expired():
         raise InvalidAuth
 
     return {"title": "Trest Solar Controller"}
