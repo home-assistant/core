@@ -689,9 +689,9 @@ class _ScriptRun:
         """Run a long task while monitoring for stop request."""
         try:
             async with async_interrupt.interrupt(self._stop, ScriptStoppedError, None):
-                # interrupt will raise ScriptStoppedError
-                # if stop is set it will also cancel the
-                # long_task
+                # if stop is set, interrupt will cancel inside the context
+                # manager which will cancel long_task, and raise
+                # ScriptStoppedError outside the context manager
                 return await long_task
         except ScriptStoppedError as ex:
             raise asyncio.CancelledError from ex
