@@ -78,7 +78,6 @@ class SessionManager:
         result = await self._async_validate_strict_connection_session(session)
         if result is False:
             session.invalidate()
-            # todo raise for None to notify ban?
         return result
 
     async def _async_validate_strict_connection_session(
