@@ -331,10 +331,7 @@ class CachedProperties(type):
                 Raises AttributeError if the __attr_ attribute does not exist
                 """
                 # Invalidate the cache of the cached property
-                try:  # noqa: SIM105  suppress is much slower
-                    delattr(o, name)
-                except AttributeError:
-                    pass
+                o.__dict__.pop(name, None)
                 # Delete the __attr_ attribute
                 delattr(o, private_attr_name)
 
@@ -363,11 +360,8 @@ class CachedProperties(type):
                 if getattr(o, private_attr_name, _SENTINEL) == val:
                     return
                 setattr(o, private_attr_name, val)
-                if name in o.__dict__:
-                    try:  # noqa: SIM105  suppress is much slower
-                        delattr(o, name)
-                    except AttributeError:
-                        pass
+                # Invalidate the cache of the cached property
+                o.__dict__.pop(name, None)
 
             return _setter
 
