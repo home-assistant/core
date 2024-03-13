@@ -38,19 +38,43 @@
         "name": "Outdoor temperature controlling sensor"
       },
       "dehumidification_status": {
-        "name": "Dehumidification status"
+        "name": "Dehumidification status",
+        "state": {
+          "idle": "Idle",
+          "on": "On",
+          "off": "Off"
+        }
       },
       "humidification_status": {
-        "name": "Humidification status"
+        "name": "Humidification status",
+        "state": {
+          "idle": "Idle",
+          "on": "On",
+          "off": "Off"
+        }
       },
       "ventilation_status": {
-        "name": "Ventilation status"
+        "name": "Ventilation status",
+        "state": {
+          "idle": "Idle",
+          "on": "On",
+          "off": "Off"
+        }
       },
       "air_cleaning_status": {
-        "name": "Air cleaning status"
+        "name": "Air cleaning status",
+        "state": {
+          "idle": "Idle",
+          "on": "On",
+          "off": "Off"
+        }
       },
       "fan_status": {
-        "name": "Fan status"
+        "name": "Fan status",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
       }
     }
   }
