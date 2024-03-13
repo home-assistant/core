@@ -608,10 +608,10 @@ class _ScriptRun:
         delay_seconds = delay.total_seconds()
         self._changed()
         trace_set_result(delay=delay_seconds, done=False)
-        futures: list[asyncio.Future[None]] = [self._stop]
-        timeout_handle, timeout_future = self._async_add_future_timeout(
-            futures, delay_seconds
+        futures, timeout_handle, timeout_future = self._async_futures_with_timeout(
+            delay_seconds
         )
+
         try:
             await asyncio.wait(futures, return_when=asyncio.FIRST_COMPLETED)
         finally:
@@ -643,10 +643,10 @@ class _ScriptRun:
             return
 
         done = self._hass.loop.create_future()
-        futures: list[asyncio.Future[None]] = [self._stop, done]
-        timeout_handle, timeout_future = self._async_add_future_timeout(
-            futures, timeout
+        futures, timeout_handle, timeout_future = self._async_futures_with_timeout(
+            timeout
         )
+        futures.append(done)
 
         @callback
         def async_script_wait(entity_id, from_s, to_s):
@@ -973,21 +973,31 @@ class _ScriptRun:
             with trace_path("else"):
                 await self._async_run_script(if_data["if_else"])
 
-    def _async_add_future_timeout(
+    def _async_futures_with_timeout(
         self,
-        futures: list[asyncio.Future[None]],
         timeout: float | None,
-    ) -> tuple[asyncio.TimerHandle | None, asyncio.Future[None] | None]:
-        """If timeout is set, add a future to the list and schedule the timeout."""
+    ) -> tuple[
+        list[asyncio.Future[None]],
+        asyncio.TimerHandle | None,
+        asyncio.Future[None] | None,
+    ]:
+        """Return a list of futures to wait for.
+
+        The list will contain the stop future.
+
+        If timeout is set, a timeout future and handle will be created
+        and will be added to the list of futures.
+        """
         timeout_handle: asyncio.TimerHandle | None = None
         timeout_future: asyncio.Future[None] | None = None
+        futures: list[asyncio.Future[None]] = [self._stop]
         if timeout:
             timeout_future = self._hass.loop.create_future()
             timeout_handle = self._hass.loop.call_later(
                 timeout, _set_result_unless_done, timeout_future
             )
             futures.append(timeout_future)
-        return timeout_handle, timeout_future
+        return futures, timeout_handle, timeout_future
 
     async def _async_wait_for_trigger_step(self):
         """Wait for a trigger event."""
@@ -999,11 +1009,11 @@ class _ScriptRun:
         self._variables["wait"] = {"remaining": timeout, "trigger": None}
         trace_set_result(wait=self._variables["wait"])
 
-        done = self._hass.loop.create_future()
-        futures: list[asyncio.Future[None]] = [self._stop, done]
-        timeout_handle, timeout_future = self._async_add_future_timeout(
-            futures, timeout
+        futures, timeout_handle, timeout_future = self._async_futures_with_timeout(
+            timeout
         )
+        done = self._hass.loop.create_future()
+        futures.append(done)
 
         async def async_done(variables, context=None):
             self._async_set_remaining_time_var(timeout_handle)
