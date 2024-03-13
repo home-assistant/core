@@ -18,7 +18,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HassJob, HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
@@ -212,6 +212,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if comp_conf:
             load_platform(hass, comp_name, DOMAIN, {DOMAIN: comp_conf}, config)
 
+    update_job = HassJob(qsusb.update_from_devices)
+
     def callback_qs_listen(qspacket):
         """Typically a button press or update signal."""
         # If button pressed, fire a hass event
@@ -225,7 +227,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 async_dispatcher_send(hass, qspacket[QS_ID], qspacket)
 
         # Update all ha_objects
-        hass.async_add_job(qsusb.update_from_devices)
+        hass.async_add_hass_job(update_job)
 
     @callback
     def async_start(_):
