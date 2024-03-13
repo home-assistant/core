@@ -241,7 +241,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[REG_KEY] = GroupIntegrationRegistry()
 
-    await async_process_integration_platforms(hass, DOMAIN, _process_group_platform)
+    await async_process_integration_platforms(
+        hass, DOMAIN, _process_group_platform, wait_for_platforms=True
+    )
 
     await _async_process_config(hass, config)
 
