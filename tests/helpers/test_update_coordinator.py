@@ -90,6 +90,32 @@ def crd_without_update_interval(
     return get_crd(hass, None)
 
 
+@pytest.fixture
+def crd_subclass(
+    hass: HomeAssistant,
+) -> update_coordinator.DataUpdateCoordinator[str]:
+    """Coordinator mock with overridden _schedule_."""
+
+    class CoordinatorSubclass(update_coordinator.DataUpdateCoordinator[str]):
+        def _schedule_refresh(self) -> None:
+            self._async_unsub_refresh()
+            self._unsub_refresh = event.async_track_point_in_utc_time(
+                self.hass,
+                self._job,
+                utcnow(),
+            )
+
+    refresh = AsyncMock(return_value="refreshed_data")
+
+    return CoordinatorSubclass(
+        hass,
+        _LOGGER,
+        name="test_subclass",
+        update_method=refresh,
+        update_interval=timedelta(seconds=0),
+    )
+
+
 async def test_async_refresh(
     crd: update_coordinator.DataUpdateCoordinator[int],
 ) -> None:
@@ -452,16 +478,26 @@ async def test_coordinator_entity(
 
 async def test_schedule_refresh_point_in_utc_time(
     hass: HomeAssistant,
-    crd: update_coordinator.DataUpdateCoordinator[int],
+    crd_subclass: update_coordinator.DataUpdateCoordinator[int],
 ) -> None:
-    """Test that subclasses overriding _schedule_refresh with async_track_point_in_utc_time continue to work."""
-    crd._handle_refresh_interval = AsyncMock()
-    event.async_track_point_in_utc_time(crd.hass, crd._job, utcnow())
+    """Test that subclasses relying on self._job continue to work.
+
+    It is relatively common to override _schedule_refresh and then call
+    async_track_point_in_utc_time to schedule updates. Ensure this continues
+    to work for custom integrations.
+    """
+    called_back_data = None
+
+    def update_callback():
+        nonlocal called_back_data
+        called_back_data = crd_subclass.data
+
+    crd_subclass.async_add_listener(update_callback)
 
     # wait until the handler is called
     await asyncio.sleep(0)
     await hass.async_block_till_done()
-    crd._handle_refresh_interval.assert_called_once()
+    assert called_back_data == "refreshed_data"
 
 
 async def test_async_set_updated_data(
