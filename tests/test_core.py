@@ -3119,3 +3119,27 @@ async def test_async_add_import_executor_job(hass: HomeAssistant) -> None:
     assert await future is evt
 
     assert hass.import_executor._max_workers == 1
+
+
+async def test_async_run_job_deprecated(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test async_run_job warns about its deprecation."""
+
+    async def _test():
+        pass
+
+    hass.async_run_job(_test)
+    assert "async_run_job is deprecated" in caplog.text
+
+
+async def test_async_add_job_deprecated(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test async_add_job warns about its deprecation."""
+
+    async def _test():
+        pass
+
+    hass.async_add_job(_test)
+    assert "async_add_job is deprecated" in caplog.text

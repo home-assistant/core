@@ -583,6 +583,15 @@ class HomeAssistant:
         target: target to call.
         args: parameters for method to call.
         """
+        # late import to avoid circular imports
+        from .helpers import frame  # pylint: disable=import-outside-toplevel
+
+        frame.report(
+            "async_add_job is deprecated and will be removed in Home Assistant 2025.4; "
+            "Wrap the callable in HassJob and use async_add_hass_job instead",
+            error_if_core=False,
+        )
+
         if target is None:
             raise ValueError("Don't call async_add_job with None")
 
@@ -844,6 +853,15 @@ class HomeAssistant:
         target: target to call.
         args: parameters for method to call.
         """
+        # late import to avoid circular imports
+        from .helpers import frame  # pylint: disable=import-outside-toplevel
+
+        frame.report(
+            "async_run_job is deprecated and will be removed in Home Assistant 2025.4; "
+            "Wrap the callable in HassJob and use async_run_hass_job instead",
+            error_if_core=False,
+        )
+
         if asyncio.iscoroutine(target):
             return self.async_create_task(target, eager_start=True)
 
