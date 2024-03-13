@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any, Protocol
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 from tuya_iot.device import TuyaDeviceStatusRange
@@ -45,11 +46,19 @@ from .const import (
 )
 
 
+class ValueFunction(Protocol):
+    """Value Parsing Function Definition."""
+
+    def __call__(self, sensor: TuyaSensorEntity, value: Any) -> StateType:
+        """Given a sensor and it's incoming value, return the appropriate state."""
+
+
 @dataclass
 class TuyaSensorEntityDescription(SensorEntityDescription):
     """Describes Tuya sensor entity."""
 
     subkey: str | None = None
+    value_fn: ValueFunction | None = None
 
 
 # Commonly used battery sensors, that are re-used in the sensors down below.
@@ -616,6 +625,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             name="base_station_temperature",
             subkey="temperature",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            value_fn=lambda _, value: InkbirdB64TypeData.from_raw(value).temperature,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CHANNEL_0,
@@ -623,6 +633,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
             name="base_station_humidity",
             subkey="humidity",
+            value_fn=lambda _, value: InkbirdB64TypeData.from_raw(value).humidity,
         ),
         *[
             i
@@ -640,12 +651,14 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             for i in (
                 TuyaSensorEntityDescription(
                     key=dp_code,
-                    translation_key="temperature",
                     device_class=SensorDeviceClass.TEMPERATURE,
                     state_class=SensorStateClass.MEASUREMENT,
                     name=f"{dp_code.value}_temperature",
                     subkey="temperature",
                     native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+                    value_fn=lambda _, value: InkbirdB64TypeData.from_raw(
+                        value
+                    ).temperature,
                 ),
                 TuyaSensorEntityDescription(
                     key=dp_code,
@@ -655,6 +668,9 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
                     entity_category=EntityCategory.DIAGNOSTIC,
                     name=f"{dp_code.value}_battery",
                     subkey="battery",
+                    value_fn=lambda _, value: InkbirdB64TypeData.from_raw(
+                        value
+                    ).battery,
                 ),
             )
         ],
@@ -1244,6 +1260,11 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         ):
             return None
 
+        if self.entity_description.value_fn is not None:
+            return self.entity_description.value_fn(
+                self.device, self.device.status.get(self.entity_description.key)
+            )
+
         # Raw value
         value = self.device.status.get(self.entity_description.key)
         if value is None:
@@ -1276,18 +1297,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             if self.entity_description.subkey is None:
                 return None
 
-            if self.entity_description.subkey in [
-                "temperature",
-                "humidity",
-                "battery",
-            ]:
-                try:
-                    values = InkbirdB64TypeData.from_raw(value)
-                except ValueError:
-                    return None
-            else:
-                values = ElectricityTypeData.from_raw(value)
-
+            values = ElectricityTypeData.from_raw(value)
             return getattr(values, self.entity_description.subkey)
 
         # Valid string or enum value
