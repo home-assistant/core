@@ -23,7 +23,7 @@ class SunWEGConfigFlow(ConfigFlow, domain=DOMAIN):
         self.data: dict[str, Any] = {}
 
     @callback
-    def _async_show_user_form(self, step_id: str, errors=None) -> FlowResult:
+    def _async_show_user_form(self, step_id: str, errors=None) -> ConfigFlowResult:
         """Show the form to the user."""
         default_username = ""
         if CONF_USERNAME in self.data:
@@ -49,7 +49,7 @@ class SunWEGConfigFlow(ConfigFlow, domain=DOMAIN):
             # Initialise the library with the username & password
             self.api = APIHelper(username, password)
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle the start of the config flow."""
         if not user_input:
             return self._async_show_user_form("user")
@@ -88,14 +88,16 @@ class SunWEGConfigFlow(ConfigFlow, domain=DOMAIN):
         self.data.update(user_input)
         return self.async_create_entry(title=self.data[CONF_NAME], data=self.data)
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle reauthorization request from SunWEG."""
         self.data.update(entry_data)
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle reauthorization flow."""
         if user_input is None:
             return self._async_show_user_form("reauth_confirm")
