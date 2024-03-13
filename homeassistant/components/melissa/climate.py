@@ -49,7 +49,8 @@ async def async_setup_platform(
             MelissaClimate(api, device["serial_number"], device)
             for device in devices
             if device["type"] == "melissa"
-        ), True
+        ),
+        True,
     )
 
 
