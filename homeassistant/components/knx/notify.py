@@ -37,11 +37,7 @@ async def async_get_service(
             )
             for device_config in platform_config
         ]
-        return (
-            KNXNotificationService(notification_devices)
-            if notification_devices
-            else None
-        )
+        return KNXNotificationService(notification_devices)
 
     return None
 
