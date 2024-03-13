@@ -1,4 +1,5 @@
 """Tests for gree component."""
+
 from datetime import timedelta
 from unittest.mock import DEFAULT as DEFAULT_MOCK, AsyncMock, patch
 

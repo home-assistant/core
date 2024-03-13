@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-ENTITY_RESTART = "button.2ch_power_strip_restart"
+ENTITY_RESTART = "button.power_strip_with_2_sockets_restart"
 
 
 @pytest.fixture

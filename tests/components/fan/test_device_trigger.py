@@ -1,4 +1,5 @@
 """The tests for Fan device triggers."""
+
 from datetime import timedelta
 
 import pytest

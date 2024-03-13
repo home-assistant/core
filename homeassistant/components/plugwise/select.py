@@ -1,4 +1,5 @@
 """Plugwise Select component for Home Assistant."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -67,15 +68,12 @@ async def async_setup_entry(
         config_entry.entry_id
     ]
 
-    entities: list[PlugwiseSelectEntity] = []
-    for device_id, device in coordinator.data.devices.items():
-        for description in SELECT_TYPES:
-            if description.options_key in device:
-                entities.append(
-                    PlugwiseSelectEntity(coordinator, device_id, description)
-                )
-
-    async_add_entities(entities)
+    async_add_entities(
+        PlugwiseSelectEntity(coordinator, device_id, description)
+        for device_id, device in coordinator.data.devices.items()
+        for description in SELECT_TYPES
+        if description.options_key in device
+    )
 
 
 class PlugwiseSelectEntity(PlugwiseEntity, SelectEntity):

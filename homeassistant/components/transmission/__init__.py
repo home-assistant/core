@@ -1,4 +1,5 @@
 """Support for the Transmission BitTorrent client API."""
+
 from __future__ import annotations
 
 from functools import partial

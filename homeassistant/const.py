@@ -1,4 +1,5 @@
 """Constants used by Home Assistant components."""
+
 from __future__ import annotations
 
 from enum import StrEnum
@@ -15,7 +16,7 @@ from .helpers.deprecation import (
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2024
-MINOR_VERSION: Final = 3
+MINOR_VERSION: Final = 4
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -1214,6 +1215,7 @@ CONCENTRATION_PARTS_PER_BILLION: Final = "ppb"
 class UnitOfSpeed(StrEnum):
     """Speed units."""
 
+    BEAUFORT = "Beaufort"
     FEET_PER_SECOND = "ft/s"
     METERS_PER_SECOND = "m/s"
     KILOMETERS_PER_HOUR = "km/h"
@@ -1601,6 +1603,11 @@ CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "A078F6B0"
 HASSIO_USER_NAME = "Supervisor"
 
 SIGNAL_BOOTSTRAP_INTEGRATIONS = "bootstrap_integrations"
+
+
+# hass.data key for logging information.
+KEY_DATA_LOGGING = "logging"
+
 
 # Date/Time formats
 FORMAT_DATE: Final = "%Y-%m-%d"

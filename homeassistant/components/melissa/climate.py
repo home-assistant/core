@@ -1,4 +1,5 @@
 """Support for Melissa Climate A/C."""
+
 from __future__ import annotations
 
 import logging
@@ -49,7 +50,7 @@ async def async_setup_platform(
         if device["type"] == "melissa":
             all_devices.append(MelissaClimate(api, device["serial_number"], device))
 
-    async_add_entities(all_devices)
+    async_add_entities(all_devices, True)
 
 
 class MelissaClimate(ClimateEntity):

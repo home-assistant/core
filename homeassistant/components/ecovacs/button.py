@@ -1,4 +1,5 @@
 """Ecovacs button module."""
+
 from dataclasses import dataclass
 
 from deebot_client.capabilities import (
@@ -73,18 +74,15 @@ async def async_setup_entry(
     entities: list[EcovacsEntity] = get_supported_entitites(
         controller, EcovacsButtonEntity, ENTITY_DESCRIPTIONS
     )
-    for device in controller.devices(Capabilities):
-        lifespan_capability = device.capabilities.life_span
-        for description in LIFESPAN_ENTITY_DESCRIPTIONS:
-            if description.component in lifespan_capability.types:
-                entities.append(
-                    EcovacsResetLifespanButtonEntity(
-                        device, lifespan_capability, description
-                    )
-                )
-
-    if entities:
-        async_add_entities(entities)
+    entities.extend(
+        EcovacsResetLifespanButtonEntity(
+            device, device.capabilities.life_span, description
+        )
+        for device in controller.devices(Capabilities)
+        for description in LIFESPAN_ENTITY_DESCRIPTIONS
+        if description.component in device.capabilities.life_span.types
+    )
+    async_add_entities(entities)
 
 
 class EcovacsButtonEntity(

@@ -1,4 +1,5 @@
 """Tests for the Reolink media_source platform."""
+
 from datetime import datetime, timedelta
 import logging
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -81,7 +82,9 @@ async def test_resolve(
         f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}"
     )
 
-    play_media = await async_resolve_media(hass, f"{URI_SCHEME}{DOMAIN}/{file_id}")
+    play_media = await async_resolve_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/{file_id}", None
+    )
 
     assert play_media.mime_type == TEST_MIME_TYPE
 
@@ -245,7 +248,7 @@ async def test_browsing_errors(
     with pytest.raises(Unresolvable):
         await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/UNKNOWN")
     with pytest.raises(Unresolvable):
-        await async_resolve_media(hass, f"{URI_SCHEME}{DOMAIN}/UNKNOWN")
+        await async_resolve_media(hass, f"{URI_SCHEME}{DOMAIN}/UNKNOWN", None)
 
 
 async def test_browsing_not_loaded(

@@ -1,4 +1,5 @@
 """Provide the functionality to group entities."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -26,6 +27,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
+    Event,
     HomeAssistant,
     ServiceCall,
     State,
@@ -47,7 +49,7 @@ from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
 from homeassistant.helpers.reload import async_reload_integration_platforms
-from homeassistant.helpers.typing import ConfigType, EventType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from .const import CONF_HIDE_MEMBERS
@@ -183,13 +185,11 @@ def groups_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
     if DOMAIN not in hass.data:
         return []
 
-    groups = []
-
-    for group in hass.data[DOMAIN].entities:
-        if entity_id in group.tracking:
-            groups.append(group.entity_id)
-
-    return groups
+    return [
+        group.entity_id
+        for group in hass.data[DOMAIN].entities
+        if entity_id in group.tracking
+    ]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -455,7 +455,7 @@ class GroupEntity(Entity):
 
         @callback
         def async_state_changed_listener(
-            event: EventType[EventStateChangedData] | None,
+            event: Event[EventStateChangedData] | None,
         ) -> None:
             """Handle child updates."""
             self.async_update_group_state()
@@ -480,7 +480,7 @@ class GroupEntity(Entity):
 
         @callback
         def async_state_changed_listener(
-            event: EventType[EventStateChangedData],
+            event: Event[EventStateChangedData],
         ) -> None:
             """Handle child updates."""
             self.async_set_context(event.context)
@@ -761,7 +761,7 @@ class Group(Entity):
         self._async_stop()
 
     async def _async_state_changed_listener(
-        self, event: EventType[EventStateChangedData]
+        self, event: Event[EventStateChangedData]
     ) -> None:
         """Respond to a member state changing.
 

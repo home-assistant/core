@@ -1,4 +1,5 @@
 """The test for the Template sensor platform."""
+
 from datetime import timedelta
 from unittest.mock import patch
 

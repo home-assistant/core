@@ -1,4 +1,5 @@
 """Code to handle the Plenticore API."""
+
 from __future__ import annotations
 
 from collections import defaultdict

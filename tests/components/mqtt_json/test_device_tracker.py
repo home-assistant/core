@@ -1,4 +1,5 @@
 """The tests for the JSON MQTT device tracker platform."""
+
 from collections.abc import Generator
 import json
 import logging

@@ -1,4 +1,5 @@
 """Test config flow."""
+
 from unittest.mock import patch
 
 from aiomusiccast import MusicCastConnectionException

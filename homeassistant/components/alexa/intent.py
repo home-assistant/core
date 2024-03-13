@@ -1,4 +1,5 @@
 """Support for Alexa skill service end point."""
+
 import enum
 import logging
 from typing import Any
@@ -64,7 +65,7 @@ class AlexaIntentsView(http.HomeAssistantView):
 
     async def post(self, request: http.HomeAssistantRequest) -> Response | bytes:
         """Handle Alexa."""
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[http.KEY_HASS]
         message: dict[str, Any] = await request.json()
 
         _LOGGER.debug("Received Alexa request: %s", message)

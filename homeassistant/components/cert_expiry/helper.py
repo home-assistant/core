@@ -1,4 +1,5 @@
 """Helper functions for the Cert Expiry platform."""
+
 import asyncio
 import datetime
 from functools import cache

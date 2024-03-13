@@ -2,6 +2,7 @@
 
 Collects data from advertisements but can also poll.
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -91,6 +92,7 @@ class ActiveBluetoothProcessorCoordinator(
                 cooldown=POLL_DEFAULT_COOLDOWN,
                 immediate=POLL_DEFAULT_IMMEDIATE,
                 function=self._async_poll,
+                background=True,
             )
         else:
             poll_debouncer.function = self._async_poll

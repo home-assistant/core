@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "watering_time": {
+        "default": "mdi:water-pump"
+      }
+    }
+  }
+}

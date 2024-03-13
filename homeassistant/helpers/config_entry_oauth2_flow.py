@@ -5,6 +5,7 @@ This module exists of the following parts:
  - OAuth2 implementation that works with local provided client ID/secret
 
 """
+
 from __future__ import annotations
 
 from abc import ABC, ABCMeta, abstractmethod
@@ -25,7 +26,6 @@ from yarl import URL
 from homeassistant import config_entries
 from homeassistant.components import http
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.loader import async_get_application_credentials
 
 from .aiohttp_client import async_get_clientsession
@@ -253,7 +253,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
 
     async def async_step_pick_implementation(
         self, user_input: dict | None = None
-    ) -> FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Handle a flow start."""
         implementations = await async_get_implementations(self.hass, self.DOMAIN)
 
@@ -286,7 +286,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
 
     async def async_step_auth(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Create an entry for auth."""
         # Flow has been triggered by external data
         if user_input is not None:
@@ -314,7 +314,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
 
     async def async_step_creation(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Create config entry from external data."""
         _LOGGER.debug("Creating config entry from external data")
 
@@ -353,14 +353,18 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             {"auth_implementation": self.flow_impl.domain, "token": token}
         )
 
-    async def async_step_authorize_rejected(self, data: None = None) -> FlowResult:
+    async def async_step_authorize_rejected(
+        self, data: None = None
+    ) -> config_entries.ConfigFlowResult:
         """Step to handle flow rejection."""
         return self.async_abort(
             reason="user_rejected_authorize",
             description_placeholders={"error": self.external_data["error"]},
         )
 
-    async def async_oauth_create_entry(self, data: dict) -> FlowResult:
+    async def async_oauth_create_entry(
+        self, data: dict
+    ) -> config_entries.ConfigFlowResult:
         """Create an entry for the flow.
 
         Ok to override if you want to fetch extra info or even add another step.
@@ -369,7 +373,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Handle a flow start."""
         return await self.async_step_pick_implementation(user_input)
 
@@ -452,7 +456,7 @@ class OAuth2AuthorizeCallbackView(http.HomeAssistantView):
         if "state" not in request.query:
             return web.Response(text="Missing state parameter")
 
-        hass = request.app["hass"]
+        hass = request.app[http.KEY_HASS]
 
         state = _decode_jwt(hass, request.query["state"])
 
