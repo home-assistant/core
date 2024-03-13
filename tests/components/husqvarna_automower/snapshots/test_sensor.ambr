@@ -109,6 +109,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'no_error',
         'alarm_mower_in_motion',
         'alarm_mower_lifted',
         'alarm_mower_stopped',
@@ -286,6 +287,7 @@
       'device_class': 'enum',
       'friendly_name': 'Test Mower 1 Error',
       'options': list([
+        'no_error',
         'alarm_mower_in_motion',
         'alarm_mower_lifted',
         'alarm_mower_stopped',
@@ -434,7 +436,7 @@
     'entity_id': 'sensor.test_mower_1_error',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'no_error',
   })
 # ---
 # name: test_sensor[sensor.test_mower_1_mode-entry]

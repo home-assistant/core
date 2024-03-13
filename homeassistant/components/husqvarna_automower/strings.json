@@ -112,6 +112,7 @@
           "no_accurate_position_from_satellites": "No accurate position from satellites",
           "no_confirmed_position": "No confirmed position",
           "no_drive": "No drive",
+          "no_error": "No error",
           "no_loop_signal": "No loop signal",
           "no_power_in_charging_station": "No power in charging station",
           "no_response_from_charger": "No response from charger",
