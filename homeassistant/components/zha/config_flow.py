@@ -500,7 +500,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
         if not current_entry:
             return
 
-        if current_entry.source != SOURCE_IGNORE:
+        if current_entry.source != config_entries.SOURCE_IGNORE:
             self._abort_if_unique_id_configured()
         else:
             # Only update the current entry if it is an ignored discovery
