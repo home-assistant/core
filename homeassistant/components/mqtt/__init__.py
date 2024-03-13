@@ -239,31 +239,27 @@ async def async_check_config_schema(
     hass: HomeAssistant, config_yaml: ConfigType
 ) -> None:
     """Validate manually configured MQTT items."""
-
     mqtt_data = get_mqtt_data(hass)
     mqtt_config: list[dict[str, list[ConfigType]]] = config_yaml.get(DOMAIN, {})
-    domain_schema_config: list[tuple[str, vol.Schema, ConfigType]] = [
-        (domain, mqtt_data.reload_schema[domain], config)
-        for mqtt_config_item in mqtt_config
-        for domain, config_items in mqtt_config_item.items()
-        for config in config_items
-    ]
-    for domain, schema, config in domain_schema_config:
-        try:
-            schema(config)
-        except vol.Invalid as exc:
-            integration = await async_get_integration(hass, DOMAIN)
-            message = conf_util.format_schema_error(
-                hass, exc, domain, config, integration.documentation
-            )
-            raise ServiceValidationError(
-                message,
-                translation_domain=DOMAIN,
-                translation_key="invalid_platform_config",
-                translation_placeholders={
-                    "domain": domain,
-                },
-            ) from exc
+    for mqtt_config_item in mqtt_config:
+        for domain, config_items in mqtt_config_item.items():
+            schema = mqtt_data.reload_schema[domain]
+            for config in config_items:
+                try:
+                    schema(config)
+                except vol.Invalid as exc:
+                    integration = await async_get_integration(hass, DOMAIN)
+                    message = conf_util.format_schema_error(
+                        hass, exc, domain, config, integration.documentation
+                    )
+                    raise ServiceValidationError(
+                        message,
+                        translation_domain=DOMAIN,
+                        translation_key="invalid_platform_config",
+                        translation_placeholders={
+                            "domain": domain,
+                        },
+                    ) from exc
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

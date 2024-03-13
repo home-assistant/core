@@ -25,7 +25,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util.async_ import create_eager_task
 
 from . import debug_info, trigger as mqtt_trigger
 from .config import MQTT_BASE_SCHEMA
@@ -179,7 +178,7 @@ class Trigger:
             return
         await asyncio.gather(
             *[
-                create_eager_task(trig.async_attach_trigger())
+                trig.async_attach_trigger()
                 for trig in self.trigger_instances
                 if topic_changed
             ]
@@ -344,19 +343,16 @@ async def async_removed_from_device(hass: HomeAssistant, device_id: str) -> None
     """Handle Mqtt removed from a device."""
     mqtt_data = get_mqtt_data(hass)
     triggers = await async_get_triggers(hass, device_id)
-    device_triggers = [
-        mqtt_data.device_triggers.pop(trigger_id)
-        for trig in triggers
-        if (trigger_id := f"{device_id}_{trig[CONF_TYPE]}_{trig[CONF_SUBTYPE]}")
-        in mqtt_data.device_triggers
-    ]
-    for device_trigger in device_triggers:
-        device_trigger.detach_trigger()
-        discovery_data = device_trigger.discovery_data
-        if TYPE_CHECKING:
-            assert discovery_data is not None
-        discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
-        debug_info.remove_trigger_discovery_data(hass, discovery_hash)
+    for trig in triggers:
+        trigger_id = f"{device_id}_{trig[CONF_TYPE]}_{trig[CONF_SUBTYPE]}"
+        if trigger_id in mqtt_data.device_triggers:
+            device_trigger = mqtt_data.device_triggers.pop(trigger_id)
+            device_trigger.detach_trigger()
+            discovery_data = device_trigger.discovery_data
+            if TYPE_CHECKING:
+                assert discovery_data is not None
+            discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
+            debug_info.remove_trigger_discovery_data(hass, discovery_hash)
 
 
 async def async_get_triggers(
