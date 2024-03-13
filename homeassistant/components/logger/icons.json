@@ -1,0 +1,6 @@
+{
+  "services": {
+    "set_default_level": "mdi:cog",
+    "set_level": "mdi:cog"
+  }
+}
