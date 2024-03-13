@@ -17,7 +17,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
-    LIGHT_LUX,
     PERCENTAGE,
     EntityCategory,
     Platform,
@@ -109,8 +108,7 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
     ),
     "illuminance": SensorEntityDescription(
         key="illuminance",
-        device_class=SensorDeviceClass.ILLUMINANCE,
-        native_unit_of_measurement=LIGHT_LUX,
+        native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }
@@ -226,7 +224,7 @@ class AirthingsSensor(
             manufacturer=airthings_device.manufacturer,
             hw_version=airthings_device.hw_version,
             sw_version=airthings_device.sw_version,
-            model=airthings_device.model,
+            model=airthings_device.model.name,
         )
 
     @property
