@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-import logging
 import secrets
 from typing import TYPE_CHECKING, TypedDict
 
@@ -110,9 +109,11 @@ class SessionManager:
         @callback
         def async_invalidate_auth_sessions() -> None:
             """Invalidate all sessions for a refresh token."""
-            for session_id, token_id in self._unauthorized_sessions.items():
-                if token_id == refresh_token_id:
-                    self._unauthorized_sessions.pop(session_id)
+            self._unauthorized_sessions = {
+                session_id: token_id
+                for session_id, token_id in self._unauthorized_sessions.items()
+                if token_id != refresh_token_id
+            }
             self._async_schedule_save()
 
         self._refresh_token_revoce_callbacks[
@@ -130,9 +131,11 @@ class SessionManager:
         if not self._auth.async_get_refresh_token(refresh_token.id):
             return
 
-        for session_id, token_id in self._unauthorized_sessions.items():
-            if token_id == refresh_token.id:
-                self._unauthorized_sessions.pop(session_id)
+        self._unauthorized_sessions = {
+            session_id: token_id
+            for session_id, token_id in self._unauthorized_sessions.items()
+            if token_id != refresh_token.id
+        }
 
         self._async_register_revoke_token_callback(refresh_token.id)
         session_id = await self._async_create_new_session(request)

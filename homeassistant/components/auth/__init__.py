@@ -208,7 +208,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _: ServiceCall,
     ) -> ServiceResponse:
         """Create a strict connection url and return it."""
-        # todo check if enabled
         url = async_sign_path(
             hass, STRICT_CONNECTION_URL, timedelta(hours=1), use_content_user=True
         )
@@ -470,7 +469,7 @@ class StrictConnectionTempTokenView(HomeAssistantView):
     requires_auth = False
     cors_allowed = True
 
-    async def post(self, request: web.Request) -> web.Response:
+    async def get(self, request: web.Request) -> web.Response:
         """Get a temporary token and redirect to main page."""
         hass: HomeAssistant = request.app["hass"]
         await hass.auth.session.async_create_temp_unauthorized_session(request)

@@ -121,7 +121,7 @@ def async_user_not_allowed_do_auth(
 
 
 async def async_setup_auth(
-    hass: HomeAssistant, app: Application, strict_connection_enabled: bool | None = None
+    hass: HomeAssistant, app: Application, strict_connection_enabled_non_cloud: bool
 ) -> None:
     """Create auth middleware for the app."""
     store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
@@ -235,7 +235,7 @@ async def async_setup_auth(
 
         if (
             not authenticated
-            and strict_connection_enabled
+            and strict_connection_enabled_non_cloud
             and not request.path.startswith(STRICT_CONNECTION_EXCLUDED_PATH)
             and not await hass.auth.session.async_validate_strict_connection_session(
                 request
