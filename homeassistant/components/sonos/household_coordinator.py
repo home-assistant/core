@@ -9,7 +9,7 @@ from typing import Any
 
 from soco import SoCo
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 
 from .const import DATA_SONOS
@@ -35,7 +35,8 @@ class SonosHouseholdCoordinator:
         self.update_cache(soco)
         self.hass.add_job(self._async_setup)
 
-    async def _async_setup(self) -> None:
+    @callback
+    def _async_setup(self) -> None:
         """Finish setup in async context."""
         self.cache_update_lock = asyncio.Lock()
         self.async_poll = Debouncer[Coroutine[Any, Any, None]](

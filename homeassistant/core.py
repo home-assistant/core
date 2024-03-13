@@ -764,7 +764,6 @@ class HomeAssistant:
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R]],
         *args: Any,
-        eager_start: bool = False,
         background: bool = False,
     ) -> asyncio.Future[_R] | None:
         ...
@@ -775,7 +774,6 @@ class HomeAssistant:
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
         *args: Any,
-        eager_start: bool = False,
         background: bool = False,
     ) -> asyncio.Future[_R] | None:
         ...
@@ -785,14 +783,12 @@ class HomeAssistant:
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
         *args: Any,
-        eager_start: bool = False,
         background: bool = False,
     ) -> asyncio.Future[_R] | None:
         """Run a HassJob from within the event loop.
 
         This method must be run in the event loop.
 
-        If eager_start is True, coroutine functions will be scheduled eagerly.
         If background is True, the task will created as a background task.
 
         hassjob: HassJob
@@ -809,7 +805,7 @@ class HomeAssistant:
             return None
 
         return self.async_add_hass_job(
-            hassjob, *args, eager_start=eager_start, background=background
+            hassjob, *args, eager_start=True, background=background
         )
 
     @overload
@@ -847,7 +843,7 @@ class HomeAssistant:
         args: parameters for method to call.
         """
         if asyncio.iscoroutine(target):
-            return self.async_create_task(target)
+            return self.async_create_task(target, eager_start=True)
 
         # This code path is performance sensitive and uses
         # if TYPE_CHECKING to avoid the overhead of constructing
@@ -1268,7 +1264,7 @@ _FilterableJobType = tuple[
 @dataclass(slots=True)
 class _OneTimeListener:
     hass: HomeAssistant
-    listener: Callable[[Event], Coroutine[Any, Any, None] | None]
+    listener_job: HassJob[[Event], Coroutine[Any, Any, None] | None]
     remove: CALLBACK_TYPE | None = None
 
     @callback
@@ -1279,14 +1275,14 @@ class _OneTimeListener:
             return
         self.remove()
         self.remove = None
-        self.hass.async_run_job(self.listener, event)
+        self.hass.async_run_hass_job(self.listener_job, event)
 
     def __repr__(self) -> str:
         """Return the representation of the listener and source module."""
-        module = inspect.getmodule(self.listener)
+        module = inspect.getmodule(self.listener_job.target)
         if module:
-            return f"<_OneTimeListener {module.__name__}:{self.listener}>"
-        return f"<_OneTimeListener {self.listener}>"
+            return f"<_OneTimeListener {module.__name__}:{self.listener_job.target}>"
+        return f"<_OneTimeListener {self.listener_job.target}>"
 
 
 class EventBus:
@@ -1369,7 +1365,7 @@ class EventBus:
                     continue
             if run_immediately:
                 try:
-                    self._hass.async_run_hass_job(job, event, eager_start=True)
+                    self._hass.async_run_hass_job(job, event)
                 except Exception:  # pylint: disable=broad-except
                     _LOGGER.exception("Error running job: %s", job)
             else:
@@ -1465,6 +1461,7 @@ class EventBus:
         self,
         event_type: str,
         listener: Callable[[Event[Any]], Coroutine[Any, Any, None] | None],
+        run_immediately: bool = False,
     ) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 
@@ -1475,7 +1472,7 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        one_time_listener = _OneTimeListener(self._hass, listener)
+        one_time_listener = _OneTimeListener(self._hass, HassJob(listener))
         remove = self._async_listen_filterable_job(
             event_type,
             (
@@ -1485,7 +1482,7 @@ class EventBus:
                     job_type=HassJobType.Callback,
                 ),
                 None,
-                False,
+                run_immediately,
             ),
         )
         one_time_listener.remove = remove

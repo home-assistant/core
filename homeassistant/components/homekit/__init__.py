@@ -45,13 +45,11 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_NAME,
     CONF_PORT,
-    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_RELOAD,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
-    CoreState,
     HomeAssistant,
     ServiceCall,
     State,
@@ -75,6 +73,7 @@ from homeassistant.helpers.service import (
     async_extract_referenced_entity_ids,
     async_register_admin_service,
 )
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 
@@ -358,10 +357,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     hass.data[DOMAIN][entry.entry_id] = entry_data
 
-    if hass.state is CoreState.running:
+    async def _async_start_homekit(hass: HomeAssistant) -> None:
         await homekit.async_start()
-    else:
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, homekit.async_start)
+
+    entry.async_on_unload(async_at_started(hass, _async_start_homekit))
 
     return True
 
@@ -553,7 +552,6 @@ class HomeKit:
         """Set up bridge and accessory driver."""
         assert self.iid_storage is not None
         persist_file = get_persist_fullpath_for_entry_id(self.hass, self._entry_id)
-
         self.driver = HomeDriver(
             self.hass,
             self._entry_id,
@@ -569,7 +567,6 @@ class HomeKit:
             loader=get_loader(),
             iid_storage=self.iid_storage,
         )
-
         # If we do not load the mac address will be wrong
         # as pyhap uses a random one until state is restored
         if os.path.exists(persist_file):
@@ -931,13 +928,15 @@ class HomeKit:
         connection: tuple[str, str],
     ) -> None:
         """Purge bridges that exist from failed pairing or manual resets."""
-        devices_to_purge = []
-        for entry in dev_reg.devices.values():
-            if self._entry_id in entry.config_entries and (
+        devices_to_purge = [
+            entry.id
+            for entry in dev_reg.devices.values()
+            if self._entry_id in entry.config_entries
+            and (
                 identifier not in entry.identifiers  # type: ignore[comparison-overlap]
                 or connection not in entry.connections
-            ):
-                devices_to_purge.append(entry.id)
+            )
+        ]
 
         for device_id in devices_to_purge:
             dev_reg.async_remove_device(device_id)

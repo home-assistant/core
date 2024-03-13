@@ -24,10 +24,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up discovered switches."""
-    devs = []
-    for dev in hass.data[AQUALINK_DOMAIN][DOMAIN]:
-        devs.append(HassAqualinkSwitch(dev))
-    async_add_entities(devs, True)
+    async_add_entities(
+        (HassAqualinkSwitch(dev) for dev in hass.data[AQUALINK_DOMAIN][DOMAIN]), True
+    )
 
 
 class HassAqualinkSwitch(AqualinkEntity, SwitchEntity):

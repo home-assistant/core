@@ -86,16 +86,15 @@ async def async_setup_entry(
     name = config_entry.data[CONF_NAME]
     coordinator = hass.data[DOMAIN][entry_id]
 
-    sensors: list[HERETravelTimeSensor] = []
-    for sensor_description in sensor_descriptions(config_entry.data[CONF_MODE]):
-        sensors.append(
-            HERETravelTimeSensor(
-                entry_id,
-                name,
-                sensor_description,
-                coordinator,
-            )
+    sensors: list[HERETravelTimeSensor] = [
+        HERETravelTimeSensor(
+            entry_id,
+            name,
+            sensor_description,
+            coordinator,
         )
+        for sensor_description in sensor_descriptions(config_entry.data[CONF_MODE])
+    ]
     sensors.append(OriginSensor(entry_id, name, coordinator))
     sensors.append(DestinationSensor(entry_id, name, coordinator))
     async_add_entities(sensors)
