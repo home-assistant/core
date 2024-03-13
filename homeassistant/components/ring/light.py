@@ -41,13 +41,12 @@ async def async_setup_entry(
     devices_coordinator: RingDataCoordinator = hass.data[DOMAIN][config_entry.entry_id][
         RING_DEVICES_COORDINATOR
     ]
-    lights = []
 
-    for device in devices["stickup_cams"]:
-        if device.has_capability("light"):
-            lights.append(RingLight(device, devices_coordinator))
-
-    async_add_entities(lights)
+    async_add_entities(
+        RingLight(device, devices_coordinator)
+        for device in devices["stickup_cams"]
+        if device.has_capability("light")
+    )
 
 
 class RingLight(RingEntity, LightEntity):

@@ -37,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         await async_update_master_gateway(hass, config_entry)
 
     try:
-        api = await get_deconz_api(hass, config_entry.data)
+        api = await get_deconz_api(hass, config_entry)
     except CannotConnect as err:
         raise ConfigEntryNotReady from err
     except AuthenticationRequired as err:
