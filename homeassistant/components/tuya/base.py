@@ -168,6 +168,8 @@ class InkbirdB64TypeData:
             try:
                 if data[0] == "C":
                     temperature_unit = UnitOfTemperature.CELSIUS
+                elif data[0] == "F":
+                    temperature_unit = UnitOfTemperature.FAHRENHEIT
                 decoded_bytes = base64.b64decode(data)
                 _temperature, _humidity = struct.Struct("<hH").unpack(
                     decoded_bytes[1:5]
@@ -176,7 +178,7 @@ class InkbirdB64TypeData:
                 battery = int.from_bytes(decoded_bytes[9:10], "little")
             except Exception as e:
                 LOGGER.error("InkbirdB64TypeData.from_raw: %s", e)
-                raise ValueError(f"Invalid data: {data}") from e
+                raise ValueError(f"Invalid data: '{data}'") from e
 
         return cls(
             temperature=temperature,
