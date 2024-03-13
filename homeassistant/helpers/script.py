@@ -650,7 +650,7 @@ class _ScriptRun:
         @callback
         def async_script_wait(entity_id, from_s, to_s):
             """Handle script after template condition is true."""
-            self._async_set_remaining_time(timeout_handle)
+            self._async_set_remaining_time_var(timeout_handle)
             self._variables["wait"]["completed"] = True
             _set_result_unless_done(done)
 
@@ -662,10 +662,10 @@ class _ScriptRun:
             futures, timeout_handle, timeout_future, unsub
         )
 
-    def _async_set_remaining_time(
+    def _async_set_remaining_time_var(
         self, timeout_handle: asyncio.TimerHandle | None
     ) -> None:
-        """Set the remaining time for a wait step."""
+        """Set the remaining time variable for a wait step."""
         wait_var = self._variables["wait"]
         if timeout_handle:
             wait_var["remaining"] = timeout_handle.when() - self._hass.loop.time()
@@ -1009,7 +1009,7 @@ class _ScriptRun:
         )
 
         async def async_done(variables, context=None):
-            self._async_set_remaining_time(timeout_handle)
+            self._async_set_remaining_time_var(timeout_handle)
             self._variables["wait"]["trigger"] = variables["trigger"]
             _set_result_unless_done(done)
 
