@@ -24,11 +24,11 @@ from .entity import SystemBridgeEntity
 class SystemBridgeBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Class describing System Bridge binary sensor entities."""
 
-    value: Callable = round
+    value_fn: Callable = round
 
 
 def camera_in_use(data: SystemBridgeCoordinatorData) -> bool | None:
-    """Return if the camera is in use."""
+    """Return if any camera is in use."""
     if data.system.camera_usage is not None:
         return len(data.system.camera_usage) > 0
     return None
