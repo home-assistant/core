@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING, Any
@@ -174,15 +173,9 @@ class Trigger:
         # Unsubscribe+subscribe if this trigger is in use and topic has changed
         # If topic is same unsubscribe+subscribe will execute in the wrong order
         # because unsubscribe is done with help of async_create_task
-        if not topic_changed:
-            return
-        await asyncio.gather(
-            *[
-                trig.async_attach_trigger()
-                for trig in self.trigger_instances
-                if topic_changed
-            ]
-        )
+        if topic_changed:
+            for trig in self.trigger_instances:
+                await trig.async_attach_trigger()
 
     def detach_trigger(self) -> None:
         """Remove MQTT device trigger."""
