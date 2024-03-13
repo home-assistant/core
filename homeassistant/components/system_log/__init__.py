@@ -65,14 +65,17 @@ SERVICE_WRITE_SCHEMA = vol.Schema(
 def _figure_out_source(
     record: logging.LogRecord,
     paths_re: re.Pattern[str],
-    extracted_tb: traceback.StackSummary | None,
+    extracted_tb: traceback.StackSummary | None = None,
 ) -> tuple[str, int]:
     """Figure out where a log message came from."""
     # If a stack trace exists, extract file names from the entire call stack.
     # The other case is when a regular "log" is made (without an attached
     # exception). In that case, just use the file where the log was made from.
-    if extracted_tb:
-        stack = [(x[0], x[1]) for x in extracted_tb]
+    if record.exc_info:
+        stack = [
+            (x[0], x[1])
+            for x in (extracted_tb or traceback.extract_tb(record.exc_info[2]))
+        ]
         for i, (filename, _) in enumerate(stack):
             # Slice the stack to the first frame that matches
             # the record pathname.
