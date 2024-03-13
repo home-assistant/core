@@ -642,10 +642,10 @@ class _ScriptRun:
             self._variables["wait"]["completed"] = True
             return
 
-        done = self._hass.loop.create_future()
         futures, timeout_handle, timeout_future = self._async_futures_with_timeout(
             timeout
         )
+        done = self._hass.loop.create_future()
         futures.append(done)
 
         @callback
