@@ -24,38 +24,38 @@ from .entity import BaseAprilaireEntity
 from .util import convert_temperature_if_needed
 
 DEHUMIDIFICATION_STATUS_MAP = {
-    0: "Idle",
-    1: "Idle",
-    2: "On",
-    3: "On",
-    4: "Off",
+    0: "idle",
+    1: "idle",
+    2: "on",
+    3: "on",
+    4: "off",
 }
 
 HUMIDIFICATION_STATUS_MAP = {
-    0: "Idle",
-    1: "Idle",
-    2: "On",
-    3: "Off",
+    0: "idle",
+    1: "idle",
+    2: "on",
+    3: "off",
 }
 
 VENTILATION_STATUS_MAP = {
-    0: "Idle",
-    1: "Idle",
-    2: "On",
-    3: "Idle",
-    4: "Idle",
-    5: "Idle",
-    6: "Off",
+    0: "idle",
+    1: "idle",
+    2: "on",
+    3: "idle",
+    4: "idle",
+    5: "idle",
+    6: "off",
 }
 
 AIR_CLEANING_STATUS_MAP = {
-    0: "Idle",
-    1: "Idle",
-    2: "On",
-    3: "Off",
+    0: "idle",
+    1: "idle",
+    2: "on",
+    3: "off",
 }
 
-FAN_STATUS_MAP = {0: "Off", 1: "On"}
+FAN_STATUS_MAP = {0: "off", 1: "on"}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -124,8 +124,8 @@ SENSOR_TYPES: tuple[AprilaireSensorDescription, ...] = (
     AprilaireSensorDescription(
         key="dehumidification_status",
         translation_key="dehumidification_status",
-        device_class=None,
-        state_class=None,
+        device_class=SensorDeviceClass.ENUM,
+        options=list(set(DEHUMIDIFICATION_STATUS_MAP.values())),
         status_key=Attribute.DEHUMIDIFICATION_AVAILABLE,
         status_sensor_available_value=None,
         status_sensor_exists_values=[1],
@@ -135,8 +135,8 @@ SENSOR_TYPES: tuple[AprilaireSensorDescription, ...] = (
     AprilaireSensorDescription(
         key="humidification_status",
         translation_key="humidification_status",
-        device_class=None,
-        state_class=None,
+        device_class=SensorDeviceClass.ENUM,
+        options=list(set(HUMIDIFICATION_STATUS_MAP.values())),
         status_key=Attribute.HUMIDIFICATION_AVAILABLE,
         status_sensor_available_value=None,
         status_sensor_exists_values=[1, 2],
@@ -146,6 +146,8 @@ SENSOR_TYPES: tuple[AprilaireSensorDescription, ...] = (
     AprilaireSensorDescription(
         key="ventilation_status",
         translation_key="ventilation_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(set(VENTILATION_STATUS_MAP.values())),
         status_key=Attribute.VENTILATION_AVAILABLE,
         status_sensor_available_value=None,
         status_sensor_exists_values=[1],
@@ -155,6 +157,8 @@ SENSOR_TYPES: tuple[AprilaireSensorDescription, ...] = (
     AprilaireSensorDescription(
         key="air_cleaning_status",
         translation_key="air_cleaning_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(set(AIR_CLEANING_STATUS_MAP.values())),
         status_key=Attribute.AIR_CLEANING_AVAILABLE,
         status_sensor_available_value=None,
         status_sensor_exists_values=[1],
@@ -164,6 +168,8 @@ SENSOR_TYPES: tuple[AprilaireSensorDescription, ...] = (
     AprilaireSensorDescription(
         key="fan_status",
         translation_key="fan_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(set(FAN_STATUS_MAP.values())),
         status_key=None,
         status_sensor_available_value=None,
         status_sensor_exists_values=[],
