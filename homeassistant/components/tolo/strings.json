@@ -79,6 +79,11 @@
       "fan_timer_remaining": {
         "name": "Fan timer"
       }
+    },
+    "switch": {
+      "aroma_therapy_on": {
+        "name": "Aroma Therapy"
+      }
     }
   }
 }
