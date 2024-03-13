@@ -1,4 +1,5 @@
 """Config flow for Risco integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -8,7 +9,12 @@ from typing import Any
 from pyrisco import CannotConnectError, RiscoCloud, RiscoLocal, UnauthorizedError
 import voluptuous as vol
 
-from homeassistant import config_entries, core
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -22,7 +28,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
 )
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -64,7 +70,7 @@ HA_STATES = [
 
 
 async def validate_cloud_input(
-    hass: core.HomeAssistant, data: dict[str, Any]
+    hass: HomeAssistant, data: dict[str, Any]
 ) -> dict[str, str]:
     """Validate the user input allows us to connect to Risco Cloud.
 
@@ -81,7 +87,7 @@ async def validate_cloud_input(
 
 
 async def validate_local_input(
-    hass: core.HomeAssistant, data: Mapping[str, str]
+    hass: HomeAssistant, data: Mapping[str, str]
 ) -> dict[str, Any]:
     """Validate the user input allows us to connect to a local panel.
 
@@ -109,26 +115,26 @@ async def validate_local_input(
     return {"title": site_id, "comm_delay": comm_delay}
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class RiscoConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Risco."""
 
     VERSION = 1
 
     def __init__(self) -> None:
         """Init the config flow."""
-        self._reauth_entry: config_entries.ConfigEntry | None = None
+        self._reauth_entry: ConfigEntry | None = None
 
     @staticmethod
-    @core.callback
+    @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> RiscoOptionsFlowHandler:
         """Define the config flow to handle options."""
         return RiscoOptionsFlowHandler(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         return self.async_show_menu(
             step_id="user",
@@ -137,7 +143,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_cloud(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Configure a cloud based alarm."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -169,14 +175,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="cloud", data_schema=CLOUD_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         self._reauth_entry = await self.async_set_unique_id(entry_data[CONF_USERNAME])
         return await self.async_step_cloud()
 
     async def async_step_local(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Configure a local based alarm."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -208,10 +216,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class RiscoOptionsFlowHandler(config_entries.OptionsFlow):
+class RiscoOptionsFlowHandler(OptionsFlow):
     """Handle a Risco options flow."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize."""
         self.config_entry = config_entry
         self._data = {**DEFAULT_OPTIONS, **config_entry.options}
@@ -234,7 +242,7 @@ class RiscoOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             self._data = {**self._data, **user_input}
@@ -244,7 +252,7 @@ class RiscoOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_risco_to_ha(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Map Risco states to HA states."""
         if user_input is not None:
             self._data[CONF_RISCO_STATES_TO_HA] = user_input
@@ -264,7 +272,7 @@ class RiscoOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_ha_to_risco(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Map HA states to Risco states."""
         if user_input is not None:
             self._data[CONF_HA_STATES_TO_RISCO] = user_input

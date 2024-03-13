@@ -1,4 +1,5 @@
 """Support for sensorpush ble sensors."""
+
 from __future__ import annotations
 
 from sensorpush_ble import DeviceClass, DeviceKey, SensorUpdate, Units

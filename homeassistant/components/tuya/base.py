@@ -1,4 +1,5 @@
 """Tuya Home Assistant Base Device Model."""
+
 from __future__ import annotations
 
 import base64

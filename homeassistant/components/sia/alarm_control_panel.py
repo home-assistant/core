@@ -1,4 +1,5 @@
 """Module for SIA Alarm Control Panels."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

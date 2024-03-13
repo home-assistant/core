@@ -1,4 +1,5 @@
 """The tests for the demo sensor component."""
+
 from datetime import timedelta
 from unittest.mock import patch
 

@@ -1,4 +1,5 @@
 """Representation of ZHA updates."""
+
 from __future__ import annotations
 
 import functools
@@ -71,7 +72,7 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-class ZHAFirmwareUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-enforce-coordinator-module
+class ZHAFirmwareUpdateCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module
     """Firmware update coordinator that broadcasts updates network-wide."""
 
     def __init__(
@@ -93,7 +94,9 @@ class ZHAFirmwareUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=ha
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_OTA)
-class ZHAFirmwareUpdateEntity(ZhaEntity, CoordinatorEntity, UpdateEntity):
+class ZHAFirmwareUpdateEntity(
+    ZhaEntity, CoordinatorEntity[ZHAFirmwareUpdateCoordinator], UpdateEntity
+):
     """Representation of a ZHA firmware update entity."""
 
     _unique_id_suffix = "firmware_update"

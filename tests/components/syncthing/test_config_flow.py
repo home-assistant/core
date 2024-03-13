@@ -1,4 +1,5 @@
 """Tests for syncthing config flow."""
+
 from unittest.mock import patch
 
 from aiosyncthing.exceptions import UnauthorizedError

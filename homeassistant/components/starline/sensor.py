@@ -1,4 +1,5 @@
 """Reads vehicle status from StarLine API."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
@@ -33,7 +34,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="balance",
         translation_key="balance",
-        icon="mdi:cash-multiple",
     ),
     SensorEntityDescription(
         key="ctemp",
@@ -55,12 +55,10 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="fuel",
         translation_key="fuel",
-        icon="mdi:fuel",
     ),
     SensorEntityDescription(
         key="errors",
         translation_key="errors",
-        icon="mdi:alert-octagon",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
@@ -68,12 +66,10 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         translation_key="mileage",
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
-        icon="mdi:counter",
     ),
     SensorEntityDescription(
         key="gps_count",
         translation_key="gps_count",
-        icon="mdi:satellite-variant",
         native_unit_of_measurement="satellites",
     ),
 )

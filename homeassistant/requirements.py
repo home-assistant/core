@@ -1,4 +1,5 @@
 """Module to handle installing requirements."""
+
 from __future__ import annotations
 
 import asyncio

@@ -42,10 +42,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Ecovacs mowers."""
-    mowers: list[EcovacsMower] = []
     controller: EcovacsController = hass.data[DOMAIN][config_entry.entry_id]
-    for device in controller.devices(MowerCapabilities):
-        mowers.append(EcovacsMower(device))
+    mowers: list[EcovacsMower] = [
+        EcovacsMower(device) for device in controller.devices(MowerCapabilities)
+    ]
     _LOGGER.debug("Adding Ecovacs Mowers to Home Assistant: %s", mowers)
     async_add_entities(mowers)
 
@@ -62,9 +62,7 @@ class EcovacsMower(
         | LawnMowerEntityFeature.START_MOWING
     )
 
-    entity_description = LawnMowerEntityEntityDescription(
-        key="mower", translation_key="mower", name=None
-    )
+    entity_description = LawnMowerEntityEntityDescription(key="mower", name=None)
 
     def __init__(self, device: Device[MowerCapabilities]) -> None:
         """Initialize the mower."""

@@ -1,4 +1,5 @@
 """Configure tests for the Twinkly integration."""
+
 from collections.abc import Awaitable, Callable, Coroutine
 from typing import Any
 from unittest.mock import patch

@@ -1,4 +1,5 @@
 """Support for LiteJet switch."""
+
 from typing import Any
 
 from pylitejet import LiteJet, LiteJetError

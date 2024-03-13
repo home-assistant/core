@@ -1,4 +1,5 @@
 """Support for Octoprint buttons."""
+
 from pyoctoprintapi import OctoprintClient, OctoprintPrinterInfo
 
 from homeassistant.components.button import ButtonEntity

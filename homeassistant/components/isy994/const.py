@@ -1,4 +1,5 @@
 """Constants for the ISY Platform."""
+
 import logging
 
 from pyisy.constants import PROP_ON_LEVEL, PROP_RAMP_RATE

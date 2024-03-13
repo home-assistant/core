@@ -1,4 +1,5 @@
 """Component to interface with various sensors that can be monitored."""
+
 from __future__ import annotations
 
 import asyncio

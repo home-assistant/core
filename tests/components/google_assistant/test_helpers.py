@@ -1,4 +1,5 @@
 """Test Google Assistant helpers."""
+
 from datetime import timedelta
 from http import HTTPStatus
 from unittest.mock import Mock, call, patch

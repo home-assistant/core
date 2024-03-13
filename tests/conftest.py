@@ -1,4 +1,5 @@
 """Set up some common test helper things."""
+
 from __future__ import annotations
 
 import asyncio
@@ -96,6 +97,7 @@ from .common import (  # noqa: E402, isort:skip
     init_recorder_component,
     mock_storage,
     patch_yaml_files,
+    extract_stack_to_frame,
 )
 from .test_util.aiohttp import (  # noqa: E402, isort:skip
     AiohttpClientMocker,
@@ -933,8 +935,7 @@ async def mqtt_mock(
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> AsyncGenerator[MqttMockHAClient, None]:
     """Fixture to mock MQTT component."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", []):
-        return await mqtt_mock_entry()
+    return await mqtt_mock_entry()
 
 
 @asynccontextmanager
@@ -1588,20 +1589,24 @@ def mock_integration_frame() -> Generator[Mock, None, None]:
         line="self.light.is_on",
     )
     with patch(
-        "homeassistant.helpers.frame.extract_stack",
-        return_value=[
-            Mock(
-                filename="/home/paulus/homeassistant/core.py",
-                lineno="23",
-                line="do_something()",
-            ),
-            correct_frame,
-            Mock(
-                filename="/home/paulus/aiohue/lights.py",
-                lineno="2",
-                line="something()",
-            ),
-        ],
+        "homeassistant.helpers.frame.linecache.getline", return_value=correct_frame.line
+    ), patch(
+        "homeassistant.helpers.frame.get_current_frame",
+        return_value=extract_stack_to_frame(
+            [
+                Mock(
+                    filename="/home/paulus/homeassistant/core.py",
+                    lineno="23",
+                    line="do_something()",
+                ),
+                correct_frame,
+                Mock(
+                    filename="/home/paulus/aiohue/lights.py",
+                    lineno="2",
+                    line="something()",
+                ),
+            ]
+        ),
     ):
         yield correct_frame
 

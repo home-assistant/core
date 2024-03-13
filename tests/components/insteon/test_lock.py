@@ -1,4 +1,5 @@
 """Tests for the Insteon lock."""
+
 from unittest.mock import patch
 
 import pytest

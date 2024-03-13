@@ -1,4 +1,5 @@
 """Template helper methods for rendering strings with Home Assistant data."""
+
 from __future__ import annotations
 
 from ast import literal_eval
@@ -78,7 +79,13 @@ from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.thread import ThreadWithException
 
-from . import area_registry, device_registry, entity_registry, location as loc_helper
+from . import (
+    area_registry,
+    device_registry,
+    entity_registry,
+    issue_registry,
+    location as loc_helper,
+)
 from .singleton import singleton
 from .translation import async_translate_state
 from .typing import TemplateVarsType
@@ -1280,19 +1287,23 @@ def integration_entities(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
     or provide a config entry title for filtering between instances of the same
     integration.
     """
-    # first try if this is a config entry match
-    conf_entry = next(
-        (
-            entry.entry_id
-            for entry in hass.config_entries.async_entries()
-            if entry.title == entry_name
-        ),
-        None,
-    )
-    if conf_entry is not None:
-        ent_reg = entity_registry.async_get(hass)
-        entries = entity_registry.async_entries_for_config_entry(ent_reg, conf_entry)
-        return [entry.entity_id for entry in entries]
+
+    # Don't allow searching for config entries without title
+    if not entry_name:
+        return []
+
+    # first try if there are any config entries with a matching title
+    entities: list[str] = []
+    ent_reg = entity_registry.async_get(hass)
+    for entry in hass.config_entries.async_entries():
+        if entry.title != entry_name:
+            continue
+        entries = entity_registry.async_entries_for_config_entry(
+            ent_reg, entry.entry_id
+        )
+        entities.extend(entry.entity_id for entry in entries)
+    if entities:
+        return entities
 
     # fallback to just returning all entities for a domain
     # pylint: disable-next=import-outside-toplevel
@@ -1355,6 +1366,21 @@ def is_device_attr(
 ) -> bool:
     """Test if a device's attribute is a specific value."""
     return bool(device_attr(hass, device_or_entity_id, attr_name) == attr_value)
+
+
+def issues(hass: HomeAssistant) -> dict[tuple[str, str], dict[str, Any]]:
+    """Return all open issues."""
+    current_issues = issue_registry.async_get(hass).issues
+    # Use JSON for safe representation
+    return {k: v.to_json() for (k, v) in current_issues.items()}
+
+
+def issue(hass: HomeAssistant, domain: str, issue_id: str) -> dict[str, Any] | None:
+    """Get issue by domain and issue_id."""
+    result = issue_registry.async_get(hass).async_get_issue(domain, issue_id)
+    if result:
+        return result.to_json()
+    return None
 
 
 def areas(hass: HomeAssistant) -> Iterable[str | None]:
@@ -2619,8 +2645,12 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["device_id"] = hassfunction(device_id)
         self.filters["device_id"] = self.globals["device_id"]
 
+        self.globals["issues"] = hassfunction(issues)
+
+        self.globals["issue"] = hassfunction(issue)
+        self.filters["issue"] = self.globals["issue"]
+
         self.globals["areas"] = hassfunction(areas)
-        self.filters["areas"] = self.globals["areas"]
 
         self.globals["area_id"] = hassfunction(area_id)
         self.filters["area_id"] = self.globals["area_id"]

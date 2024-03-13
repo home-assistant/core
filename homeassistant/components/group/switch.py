@@ -1,4 +1,5 @@
 """Platform allowing several switches to be grouped into one switch."""
+
 from __future__ import annotations
 
 import logging

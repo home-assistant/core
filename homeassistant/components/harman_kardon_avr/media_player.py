@@ -1,4 +1,5 @@
 """Support for interface with an Harman/Kardon or JBL AVR."""
+
 from __future__ import annotations
 
 import hkavr
