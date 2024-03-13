@@ -186,7 +186,9 @@ def groups_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
         return []
 
     return [
-        group for group in hass.data[DOMAIN].entities if entity_id in group.tracking
+        group.entity_id
+        for group in hass.data[DOMAIN].entities
+        if entity_id in group.tracking
     ]
 
 
