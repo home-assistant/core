@@ -243,7 +243,6 @@ class ReolinkVODMediaSource(MediaSource):
         start = now - dt.timedelta(days=31)
         end = now
 
-        children: list[BrowseMediaSource] = []
         if _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug(
                 "Requesting recording days of %s from %s to %s",
@@ -254,19 +253,19 @@ class ReolinkVODMediaSource(MediaSource):
         statuses, _ = await host.api.request_vod_files(
             channel, start, end, status_only=True, stream=stream
         )
-        for status in statuses:
-            for day in status.days:
-                children.append(
-                    BrowseMediaSource(
-                        domain=DOMAIN,
-                        identifier=f"DAY|{config_entry_id}|{channel}|{stream}|{status.year}|{status.month}|{day}",
-                        media_class=MediaClass.DIRECTORY,
-                        media_content_type=MediaType.PLAYLIST,
-                        title=f"{status.year}/{status.month}/{day}",
-                        can_play=False,
-                        can_expand=True,
-                    )
-                )
+        children: list[BrowseMediaSource] = [
+            BrowseMediaSource(
+                domain=DOMAIN,
+                identifier=f"DAY|{config_entry_id}|{channel}|{stream}|{status.year}|{status.month}|{day}",
+                media_class=MediaClass.DIRECTORY,
+                media_content_type=MediaType.PLAYLIST,
+                title=f"{status.year}/{status.month}/{day}",
+                can_play=False,
+                can_expand=True,
+            )
+            for status in statuses
+            for day in status.days
+        ]
 
         return BrowseMediaSource(
             domain=DOMAIN,
