@@ -1,0 +1,7 @@
+{
+  "services": {
+    "seek_forward": "mdi:fast-forward",
+    "seek_backward": "mdi:skip-backward",
+    "seek_by": "mdi:timer-check-outline"
+  }
+}
