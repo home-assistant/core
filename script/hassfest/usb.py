@@ -17,12 +17,12 @@ def generate_and_validate(integrations: dict[str, Integration]) -> str:
             continue
 
         match_list.extend(
-                {
-                    "domain": domain,
-                    **{k: v for k, v in entry.items() if k != "known_devices"},
-                }
-                for entry in match_types
-            )
+            {
+                "domain": domain,
+                **{k: v for k, v in entry.items() if k != "known_devices"},
+            }
+            for entry in match_types
+        )
 
     return format_python_namespace({"USB": match_list})
 

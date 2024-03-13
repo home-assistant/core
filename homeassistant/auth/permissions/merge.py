@@ -58,11 +58,7 @@ def _merge_policies(sources: list[CategoryType]) -> CategoryType:
                 continue
             seen.add(key)
 
-            key_sources = [
-                src.get(key)
-                for src in sources
-                if isinstance(src, dict)
-            ]
+            key_sources = [src.get(key) for src in sources if isinstance(src, dict)]
 
             policy[key] = _merge_policies(key_sources)
 

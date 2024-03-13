@@ -3913,8 +3913,7 @@ async def test_entry_reload_concurrency(
     )
     mock_platform(hass, "comp.config_flow", None)
     tasks = [
-        asyncio.create_task(manager.async_reload(entry.entry_id))
-        for _ in range(15)
+        asyncio.create_task(manager.async_reload(entry.entry_id)) for _ in range(15)
     ]
     await asyncio.gather(*tasks)
     assert entry.state is config_entries.ConfigEntryState.LOADED

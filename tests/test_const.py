@@ -17,10 +17,7 @@ from tests.common import (
 def _create_tuples(
     value: Enum | list[Enum], constant_prefix: str
 ) -> list[tuple[Enum, str]]:
-    return [
-        (enum, constant_prefix)
-        for enum in value
-    ]
+    return [(enum, constant_prefix) for enum in value]
 
 
 def test_all() -> None:
