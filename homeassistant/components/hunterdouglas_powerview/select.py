@@ -63,20 +63,23 @@ async def async_setup_entry(
 
     pv_entry: PowerviewEntryData = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities(
-        PowerViewSelect(
-            pv_entry.coordinator,
-            pv_entry.device_info,
-            getattr(pv_entry.room_data.get(shade.room_id), ATTR_NAME, ""),
-            shade,
-            shade.name,
-            description,
-        )
-        for shade in pv_entry.shade_data.values()
-        if shade.has_battery_info()
-        for description in DROPDOWNS
-        if description.create_entity_fn(shade)
-    )
+    entities: list[PowerViewSelect] = []
+    for shade in pv_entry.shade_data.values():
+        if shade.has_battery_info():
+            room_name = getattr(pv_entry.room_data.get(shade.room_id), ATTR_NAME, "")
+            entities.extend(
+                PowerViewSelect(
+                    pv_entry.coordinator,
+                    pv_entry.device_info,
+                    room_name,
+                    shade,
+                    shade.name,
+                    description,
+                )
+                for description in DROPDOWNS
+                if description.create_entity_fn(shade)
+            )
+    async_add_entities(entities)
 
 
 class PowerViewSelect(ShadeEntity, SelectEntity):

@@ -63,19 +63,22 @@ async def async_setup_entry(
 
     pv_entry: PowerviewEntryData = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities(
-        PowerViewNumber(
-            pv_entry.coordinator,
-            pv_entry.device_info,
-            getattr(pv_entry.room_data.get(shade.room_id), ATTR_NAME, ""),
-            shade,
-            shade.name,
-            description,
+    entities: list[PowerViewNumber] = []
+    for shade in pv_entry.shade_data.values():
+        room_name = getattr(pv_entry.room_data.get(shade.room_id), ATTR_NAME, "")
+        entities.extend(
+            PowerViewNumber(
+                pv_entry.coordinator,
+                pv_entry.device_info,
+                room_name,
+                shade,
+                shade.name,
+                description,
+            )
+            for description in NUMBERS
+            if description.create_entity_fn(shade)
         )
-        for shade in pv_entry.shade_data.values()
-        for description in NUMBERS
-        if description.create_entity_fn(shade)
-    )
+    async_add_entities(entities)
 
 
 class PowerViewNumber(ShadeEntity, RestoreNumber):
