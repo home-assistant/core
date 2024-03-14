@@ -125,12 +125,6 @@ def requests_mock_fixture():
             "https://api.ring.com/groups/v1/locations/mock-location-id/groups",
             text=load_fixture("groups.json", "ring"),
         )
-        # Mocks the open door command for intercom devices
-        mock.put(
-            "https://api.ring.com/commands/v1/devices/185036587/device_rpc",
-            status_code=200,
-            text="{}",
-        )
         # Mocks the response for getting the history of the intercom
         mock.get(
             "https://api.ring.com/clients_api/doorbots/185036587/history",

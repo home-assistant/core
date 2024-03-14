@@ -208,21 +208,18 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
         key="doorbell_volume",
         translation_key="doorbell_volume",
         category=["other"],
-        icon="mdi:bell-ring",
         cls=RingSensor,
     ),
     RingSensorEntityDescription(
         key="mic_volume",
         translation_key="mic_volume",
         category=["other"],
-        icon="mdi:microphone",
         cls=RingSensor,
     ),
     RingSensorEntityDescription(
         key="voice_volume",
         translation_key="voice_volume",
         category=["other"],
-        icon="mdi:account-voice",
         cls=RingSensor,
     ),
     RingSensorEntityDescription(
