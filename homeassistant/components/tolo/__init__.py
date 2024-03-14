@@ -67,7 +67,7 @@ class ToloSaunaUpdateCoordinator(DataUpdateCoordinator[ToloSaunaData]):  # pylin
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize ToloSaunaUpdateCoordinator."""
         self.client = ToloClient(
-            entry.data[CONF_HOST],
+            address=entry.data[CONF_HOST],
             retry_timeout=DEFAULT_RETRY_TIMEOUT,
             retry_count=DEFAULT_RETRY_COUNT,
         )
