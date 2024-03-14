@@ -17,7 +17,7 @@ DEFAULT_API_REFRESH_PERIOD_S = 5 * 60
 DEFAULT_API_REFRESH_PERIOD_S = 30
 DEFAULT_FIRST_FETCH_LAST_H = 48
 
-PLATFORMS = ["binary_sensor", "device_tracker", "sensor"]
+PLATFORMS = ["sensor"]
 
 # Init menu
 OPTIONS_SELECTED_MENU = "selected_menu"
