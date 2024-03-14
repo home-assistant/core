@@ -82,10 +82,10 @@
     },
     "switch": {
       "aroma_therapy_on": {
-        "name": "Aroma Therapy"
+        "name": "Aroma therapy"
       },
       "salt_bath_on": {
-        "name": "Salt Bath"
+        "name": "Salt bath"
       }
     }
   }
