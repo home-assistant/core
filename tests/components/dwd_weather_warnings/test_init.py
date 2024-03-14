@@ -61,7 +61,7 @@ async def test_load_invalid_registry_entry(hass: HomeAssistant) -> None:
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert entry.state == ConfigEntryState.SETUP_RETRY
 
 
 async def test_load_missing_device_tracker(hass: HomeAssistant) -> None:
@@ -71,7 +71,7 @@ async def test_load_missing_device_tracker(hass: HomeAssistant) -> None:
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert entry.state == ConfigEntryState.SETUP_RETRY
 
 
 async def test_load_missing_required_attribute(hass: HomeAssistant) -> None:
@@ -87,7 +87,7 @@ async def test_load_missing_required_attribute(hass: HomeAssistant) -> None:
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert entry.state == ConfigEntryState.SETUP_RETRY
 
 
 async def test_load_valid_device_tracker(
