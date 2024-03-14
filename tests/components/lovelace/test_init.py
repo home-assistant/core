@@ -81,12 +81,13 @@ async def test_create_dashboards_when_not_onboarded(
     assert response["success"]
     assert response["result"] == [
         {
+            "icon": "mdi:map",
             "id": "map",
-            "title": "Map",
-            "url_path": "map",
             "mode": "storage",
             "require_admin": False,
             "show_in_sidebar": True,
+            "title": "Map",
+            "url_path": "map",
         }
     ]
 

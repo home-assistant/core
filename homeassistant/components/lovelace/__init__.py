@@ -272,7 +272,12 @@ async def _create_map_dashboard(hass: HomeAssistant):
         "dashboards_collection"
     ]
     await dashboards_collection.async_create_item(
-        {CONF_ALLOW_SINGLE_WORD: True, CONF_TITLE: title, CONF_URL_PATH: "map"}
+        {
+            CONF_ALLOW_SINGLE_WORD: True,
+            CONF_ICON: "mdi:map",
+            CONF_TITLE: title,
+            CONF_URL_PATH: "map",
+        }
     )
 
     map_store: dashboard.LovelaceStorage = hass.data[DOMAIN]["dashboards"]["map"]
