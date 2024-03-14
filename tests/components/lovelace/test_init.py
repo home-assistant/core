@@ -32,6 +32,15 @@ def mock_onboarding_done() -> Generator[MagicMock, None, None]:
         yield mock_onboarding
 
 
+@pytest.fixture
+def mock_add_onboarding_listener() -> Generator[MagicMock, None, None]:
+    """Mock that Home Assistant is currently onboarding."""
+    with patch(
+        "homeassistant.components.onboarding.async_add_listener",
+    ) as mock_add_onboarding_listener:
+        yield mock_add_onboarding_listener
+
+
 async def test_create_dashboards_when_onboarded(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -54,12 +63,17 @@ async def test_create_dashboards_when_not_onboarded(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     hass_storage: dict[str, Any],
+    mock_add_onboarding_listener,
     mock_onboarding_not_done,
 ) -> None:
     """Test we automatically create dashboards when not onboarded."""
     client = await hass_ws_client(hass)
 
     assert await async_setup_component(hass, "lovelace", {})
+
+    # Call onboarding listener
+    mock_add_onboarding_listener.mock_calls[0][1][1]()
+    await hass.async_block_till_done()
 
     # List dashboards
     await client.send_json_auto_id({"type": "lovelace/dashboards/list"})

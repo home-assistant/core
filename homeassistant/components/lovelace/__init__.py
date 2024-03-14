@@ -14,6 +14,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
 
@@ -216,8 +217,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         STORAGE_DASHBOARD_UPDATE_FIELDS,
     ).async_setup(hass, create_list=False)
 
+    def create_map_dashboard():
+        hass.async_create_task(_create_map_dashboard(hass))
+
     if not onboarding.async_is_onboarded(hass):
-        await _create_map_dashboard(hass)
+        onboarding.async_add_listener(hass, create_map_dashboard)
 
     return True
 
@@ -259,11 +263,16 @@ def _register_panel(hass, url_path, mode, config, update):
 
 
 async def _create_map_dashboard(hass: HomeAssistant):
+    translations = await async_get_translations(
+        hass, hass.config.language, "dashboard", {onboarding.DOMAIN}
+    )
+    title = translations["component.onboarding.dashboard.map.title"]
+
     dashboards_collection: dashboard.DashboardsCollection = hass.data[DOMAIN][
         "dashboards_collection"
     ]
     await dashboards_collection.async_create_item(
-        {CONF_ALLOW_SINGLE_WORD: True, CONF_TITLE: "Map", CONF_URL_PATH: "map"}
+        {CONF_ALLOW_SINGLE_WORD: True, CONF_TITLE: title, CONF_URL_PATH: "map"}
     )
 
     map_store: dashboard.LovelaceStorage = hass.data[DOMAIN]["dashboards"]["map"]
