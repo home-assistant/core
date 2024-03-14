@@ -5738,7 +5738,8 @@
     "sun": {
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "calculated"
+      "iot_class": "calculated",
+      "single_config_entry": true
     },
     "sunweg": {
       "name": "Sun WEG",
