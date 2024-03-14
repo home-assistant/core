@@ -4,8 +4,7 @@
       "elect_add": {
         "default": "mdi:electric-switch",
         "state": {
-          "on": "mdi:electric-switch-closed",
-          "off": "mdi:electric-switch"
+          "on": "mdi:electric-switch-closed"
         }
       }
     },
@@ -38,7 +37,6 @@
       "temporary_lux": {
         "default": "mdi:water-alert-outline",
         "state": {
-          "off": "mdi:water-alert-outline",
           "on": "mdi:water-alert"
         }
       }
