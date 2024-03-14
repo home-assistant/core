@@ -7,7 +7,7 @@ from functools import partial
 import logging
 from typing import Any
 
-from soco import alarms
+from soco import SoCo, alarms
 from soco.core import (
     MUSIC_SRC_LINE_IN,
     MUSIC_SRC_RADIO,
@@ -15,6 +15,7 @@ from soco.core import (
     PLAY_MODES,
 )
 from soco.data_structures import DidlFavorite
+from soco.ms_data_structures import MusicServiceItem
 from sonos_websocket.exception import SonosWebsocketError
 import voluptuous as vol
 
@@ -548,6 +549,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     def _play_media(
         self, media_type: MediaType | str, media_id: str, is_radio: bool, **kwargs: Any
     ) -> None:
+        _LOGGER.debug("_play_media media_type %s media_id %s", media_type, media_id)
         """Wrap sync calls to async_play_media."""
         enqueue = kwargs.get(ATTR_MEDIA_ENQUEUE, MediaPlayerEnqueue.REPLACE)
 
@@ -645,9 +647,32 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 _LOGGER.error('Could not find "%s" in the library', media_id)
                 return
 
-            soco.play_uri(item.get_uri())
+            self._play_media_queue(soco, item, enqueue)
         else:
             _LOGGER.error('Sonos does not support a media type of "%s"', media_type)
+
+    def _play_media_queue(self, soco: SoCo, item: MusicServiceItem, enqueue: str):
+        """Manage adding, replacing, playing items onto the sonos queue."""
+        _LOGGER.debug(
+            "_play_media_queue item_id [%s] title [%s] enqueue [%s]",
+            item.item_id,
+            item.title,
+            enqueue,
+        )
+        if enqueue == MediaPlayerEnqueue.REPLACE:
+            soco.clear_queue()
+
+        if enqueue in (MediaPlayerEnqueue.ADD, MediaPlayerEnqueue.REPLACE):
+            new_pos = soco.add_to_queue(item, timeout=LONG_SERVICE_TIMEOUT)
+            if enqueue == MediaPlayerEnqueue.REPLACE:
+                soco.play_from_queue(0)
+        else:
+            pos = (self.media.queue_position or 0) + 1
+            new_pos = soco.add_to_queue(
+                item, position=pos, timeout=LONG_SERVICE_TIMEOUT
+            )
+            if enqueue == MediaPlayerEnqueue.PLAY:
+                soco.play_from_queue(new_pos - 1)
 
     @soco_error()
     def set_sleep_timer(self, sleep_time: int) -> None:
