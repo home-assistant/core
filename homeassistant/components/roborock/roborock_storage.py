@@ -7,7 +7,7 @@ import time
 from homeassistant.core import DOMAIN, HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
-MAP_PATHS = f"{DOMAIN}/roborock/maps"
+MAP_PATH = f"{DOMAIN}/roborock/maps"
 STORAGE_KEY = "roborock.storage"
 STORAGE_VERSION = 1
 MAP_UPDATE_FREQUENCY = 3600  # Only save the map once every hour.
@@ -15,7 +15,7 @@ MAP_UPDATE_FREQUENCY = 3600  # Only save the map once every hour.
 
 async def get_roborock_storage(hass: HomeAssistant, entry_id: str):
     """Get a roborock storage object for a given config entry."""
-    map_path = hass.config.path(MAP_PATHS)
+    map_path = hass.config.path(MAP_PATH)
 
     def mkdir() -> None:
         os.makedirs(map_path, exist_ok=True)
@@ -56,7 +56,7 @@ class RoborockStorage:
         )
 
     def _get_map_filename(self, map_name: str):
-        return self._hass.config.path(f"{MAP_PATHS}/{self._entry_id}/{map_name}")
+        return self._hass.config.path(f"{MAP_PATH}/{self._entry_id}/{map_name}")
 
     async def async_load_map(self, map_name: str) -> bytes | None:
         """Load map content."""

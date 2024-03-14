@@ -1,6 +1,8 @@
 """Global fixtures for Roborock integration."""
 
+import shutil
 from unittest.mock import patch
+import uuid
 
 import pytest
 
@@ -95,3 +97,14 @@ async def setup_entry(
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
     return mock_roborock_entry
+
+
+@pytest.fixture(autouse=True)
+def cleanup_map_storage(hass: HomeAssistant):
+    """Test cleanup, remove any map storage persisted during the test."""
+    tmp_path = str(uuid.uuid4())
+    with patch(
+        "homeassistant.components.roborock.roborock_storage.MAP_PATH", new=tmp_path
+    ):
+        yield
+        shutil.rmtree(hass.config.path(tmp_path), ignore_errors=True)
