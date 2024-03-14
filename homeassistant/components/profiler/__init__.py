@@ -263,8 +263,11 @@ async def async_setup_entry(  # noqa: C901
         # Always log this at critical level so we know when
         # it's been changed when reviewing logs
         _LOGGER.critical("Setting asyncio debug to %s", enabled)
-        if _LOGGER.getEffectiveLevel() <= logging.INFO:
-            _LOGGER.setLevel(logging.INFO)
+        # Make sure the logger is set to at least INFO or
+        # we won't see the messages
+        base_logger = logging.getLogger()
+        if base_logger.getEffectiveLevel() <= logging.INFO:
+            base_logger.setLevel(logging.INFO)
         hass.loop.set_debug(enabled)
 
     async_register_admin_service(
