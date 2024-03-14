@@ -6,7 +6,8 @@
           "region": "Region",
           "key_id": "Key ID",
           "key_secret": "Key Secret",
-          "model_id": "Model ID"
+          "model_id": "Model ID",
+          "prompt_context": "Prompt Context"
         }
       },
       "init": {
@@ -14,7 +15,8 @@
           "region": "Region",
           "key_id": "Key ID",
           "key_secret": "Key Secret",
-          "model_id": "Model ID"
+          "model_id": "Model ID",
+          "prompt_context": "Prompt Context"
         }
       }
     },

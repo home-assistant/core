@@ -15,7 +15,14 @@ from homeassistant.const import MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 
-from .const import CONST_KEY_ID, CONST_KEY_SECRET, CONST_MODEL_ID, CONST_REGION, DOMAIN
+from .const import (
+    CONST_KEY_ID,
+    CONST_KEY_SECRET,
+    CONST_MODEL_ID,
+    CONST_PROMPT_CONTEXT,
+    CONST_REGION,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 __all__ = [
@@ -74,7 +81,7 @@ class BedrockAgent(conversation.AbstractConversationAgent):
     async def async_call_bedrock(self, question) -> str:
         """Return result from Amazon Bedrock."""
 
-        question = "Provide me a short answer to the following question: " + question
+        question = self.entry.data[CONST_PROMPT_CONTEXT] + question
 
         modelId = self.entry.data[CONST_MODEL_ID]
         body = json.dumps({"prompt": question})

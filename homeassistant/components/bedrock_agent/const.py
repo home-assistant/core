@@ -8,6 +8,7 @@ CONST_KEY_SECRET: Final = "key_secret"
 CONST_REGION: Final = "region"
 CONST_MODEL_ID: Final = "model_id"
 
+CONST_PROMPT_CONTEXT: Final = "prompt_context"
 CONST_MODEL_LIST: Final = [
     "amazon.titan-text-express-v1",
     "amazon.titan-text-lite-v1",

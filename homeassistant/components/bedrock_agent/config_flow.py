@@ -23,6 +23,7 @@ from .const import (
     CONST_KEY_SECRET,
     CONST_MODEL_ID,
     CONST_MODEL_LIST,
+    CONST_PROMPT_CONTEXT,
     CONST_REGION,
     DOMAIN,
 )
@@ -34,6 +35,10 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONST_REGION): str,
         vol.Required(CONST_KEY_ID): str,
         vol.Required(CONST_KEY_SECRET): str,
+        vol.Required(
+            CONST_PROMPT_CONTEXT,
+            default="Provide me a short answer to the following question: ",
+        ): str,
         vol.Required(CONST_MODEL_ID): selector.SelectSelector(
             selector.SelectSelectorConfig(options=CONST_MODEL_LIST),
         ),
