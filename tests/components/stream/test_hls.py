@@ -399,9 +399,7 @@ async def test_hls_max_segments(
 
     # Only NUM_PLAYLIST_SEGMENTS are returned in the playlist.
     start = MAX_SEGMENTS + 1 - NUM_PLAYLIST_SEGMENTS
-    segments = []
-    for sequence in range(start, MAX_SEGMENTS + 1):
-        segments.append(make_segment(sequence))
+    segments = [make_segment(sequence) for sequence in range(start, MAX_SEGMENTS + 1)]
     assert await resp.text() == make_playlist(sequence=start, segments=segments)
 
     # Fetch the actual segments with a fake byte payload
@@ -497,9 +495,7 @@ async def test_hls_max_segments_discontinuity(
     # EXT-X-DISCONTINUITY tag to be omitted and EXT-X-DISCONTINUITY-SEQUENCE
     # returned instead.
     start = MAX_SEGMENTS + 1 - NUM_PLAYLIST_SEGMENTS
-    segments = []
-    for sequence in range(start, MAX_SEGMENTS + 1):
-        segments.append(make_segment(sequence))
+    segments = [make_segment(sequence) for sequence in range(start, MAX_SEGMENTS + 1)]
     assert await resp.text() == make_playlist(
         sequence=start,
         discontinuity_sequence=1,

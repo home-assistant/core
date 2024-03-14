@@ -57,6 +57,8 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
+from . import group as group_pre_import  # noqa: F401
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_SOURCE = "source"

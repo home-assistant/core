@@ -64,7 +64,12 @@ async def async_setup_entry(
                         config_entry, siren_device_coordinator, description
                     )
                 )
-    async_add_entities(entities)
+    async_add_entities(
+        YoLinkSirenEntity(config_entry, siren_device_coordinator, description)
+        for siren_device_coordinator in siren_device_coordinators
+        for description in DEVICE_TYPES
+        if description.exists_fn(siren_device_coordinator.device)
+    )
 
 
 class YoLinkSirenEntity(YoLinkEntity, SirenEntity):
