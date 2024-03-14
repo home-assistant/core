@@ -5486,6 +5486,11 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "smud": {
+      "name": "Sacramento Municipal Utility District (SMUD)",
+      "integration_type": "virtual",
+      "supported_by": "opower"
+    },
     "snapcast": {
       "name": "Snapcast",
       "integration_type": "hub",
