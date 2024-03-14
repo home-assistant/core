@@ -289,6 +289,7 @@ async def test_call_async_migrate_entry_failure_not_supported(
     )
     entry.add_to_hass(hass)
     assert not entry.supports_unload
+    entry.supports_migrate = True
 
     mock_setup_entry = AsyncMock(return_value=True)
 

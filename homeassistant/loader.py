@@ -961,10 +961,7 @@ class Integration:
 
         # Some integrations fail on import because they call functions incorrectly.
         # So we do it before validating config to catch these errors.
-        load_executor = self.import_executor and (
-            self.pkg_path not in sys.modules
-            or (self.config_flow and f"{self.pkg_path}.config_flow" not in sys.modules)
-        )
+        load_executor = self.import_executor and self.pkg_path not in sys.modules
         if not load_executor:
             comp = self._get_component()
             if debug:
@@ -1051,6 +1048,12 @@ class Integration:
 
         if preload_platforms:
             for platform_name in self.platforms_exists(self._platforms_to_preload):
+                if (
+                    platform_name == "config_flow"
+                    and not async_config_flow_needs_preload(cache[domain])
+                ):
+                    continue
+
                 with suppress(ImportError):
                     self.get_platform(platform_name)
 
@@ -1684,3 +1687,15 @@ def async_suggest_report_issue(
         )
 
     return f"create a bug report at {issue_tracker}"
+
+
+@callback
+def async_config_flow_needs_preload(component: ComponentProtocol) -> bool:
+    """Test if a component needs to be preloaded.
+
+    Currently we need to preload a the config flow if the integration
+    has a config flow and the component has an async_migrate_entry method
+    because it means that config_entries will always have to load
+    it to check if it needs to be migrated.
+    """
+    return hasattr(component, "async_migrate_entry")
