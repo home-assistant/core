@@ -119,7 +119,6 @@ async def validate_input(
         CONF_SLEEP_PERIOD: get_block_device_sleep_period(block_device.settings),
         "model": block_device.model,
         CONF_GEN: gen,
-        CONF_PORT: port,
     }
 
 
