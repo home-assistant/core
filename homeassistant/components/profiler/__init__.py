@@ -259,7 +259,11 @@ async def async_setup_entry(  # noqa: C901
 
     async def _async_asyncio_debug(call: ServiceCall) -> None:
         """Enable or disable asyncio debug."""
-        hass.loop.set_debug(call.data.get("enabled", False))
+        enabled = call.data[CONF_ENABLED]
+        # Always log this at critical level so we know when
+        # it's been changed when reviewing logs
+        _LOGGER.critical("Setting asyncio debug to %s", enabled)
+        hass.loop.set_debug(enabled)
 
     async_register_admin_service(
         hass,
