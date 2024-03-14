@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import datetime
 import logging
 
-from aioautomower.model import MowerAttributes, MowerModes
+from aioautomower.model import MowerAttributes, MowerModes, RestrictedReasons
 from aioautomower.utils import error_key_list
 
 from homeassistant.components.sensor import (
@@ -141,6 +141,13 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
             "no_error" if data.mower.error_key is None else data.mower.error_key
         ),
         options=["no_error"] + error_key_list(),
+    ),
+    AutomowerSensorEntityDescription(
+        key="restricted_reason",
+        translation_key="restricted_reason",
+        device_class=SensorDeviceClass.ENUM,
+        options=[option.lower() for option in list(RestrictedReasons)],
+        value_fn=lambda data: data.planner.restricted_reason.lower(),
     ),
 )
 

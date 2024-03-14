@@ -172,6 +172,21 @@
       "cutting_blade_usage_time": {
         "name": "Cutting blade usage time"
       },
+      "restricted_reason": {
+        "name": "Restricted reason",
+        "state": {
+          "none": "No restrictions",
+          "week_schedule": "Week schedule",
+          "park_override": "Park override",
+          "sensor": "Weather timer",
+          "daily_limit": "Daily limit",
+          "fota": "Firmware Over-the-Air update running",
+          "frost": "Frost",
+          "all_work_areas_completed": "All work areas completed",
+          "external": "External",
+          "not_applicable": "Not applicable"
+        }
+      },
       "total_charging_time": {
         "name": "Total charging time"
       },

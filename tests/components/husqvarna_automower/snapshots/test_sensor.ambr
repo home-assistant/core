@@ -642,6 +642,77 @@
     'state': '11396',
   })
 # ---
+# name: test_sensor[sensor.test_mower_1_restricted_reason-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'none',
+        'week_schedule',
+        'park_override',
+        'sensor',
+        'daily_limit',
+        'fota',
+        'frost',
+        'all_work_areas_completed',
+        'external',
+        'not_applicable',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_mower_1_restricted_reason',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Restricted reason',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'restricted_reason',
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_restricted_reason',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.test_mower_1_restricted_reason-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Test Mower 1 Restricted reason',
+      'options': list([
+        'none',
+        'week_schedule',
+        'park_override',
+        'sensor',
+        'daily_limit',
+        'fota',
+        'frost',
+        'all_work_areas_completed',
+        'external',
+        'not_applicable',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_mower_1_restricted_reason',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'week_schedule',
+  })
+# ---
 # name: test_sensor[sensor.test_mower_1_total_charging_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
