@@ -1,7 +1,5 @@
 """Tests for the Sonos Media Player platform."""
 
-import logging
-
 import pytest
 
 from homeassistant.components.media_player import (
