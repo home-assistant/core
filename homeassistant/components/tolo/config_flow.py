@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from tololib import ToloClient
+from tololib import ToloClient, ToloCommunicationError
 import voluptuous as vol
 
 from homeassistant.components import dhcp
@@ -30,7 +30,7 @@ class ToloSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
         client = ToloClient(host)
         try:
             result = client.get_status()
-        except TimeoutError:
+        except ToloCommunicationError:
             return False
         return result is not None
 

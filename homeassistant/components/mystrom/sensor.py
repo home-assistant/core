@@ -52,13 +52,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the myStrom entities."""
     device: MyStromSwitch = hass.data[DOMAIN][entry.entry_id].device
-    sensors = []
 
-    for description in SENSOR_TYPES:
-        if description.value_fn(device) is not None:
-            sensors.append(MyStromSwitchSensor(device, entry.title, description))
-
-    async_add_entities(sensors)
+    async_add_entities(
+        MyStromSwitchSensor(device, entry.title, description)
+        for description in SENSOR_TYPES
+        if description.value_fn(device) is not None
+    )
 
 
 class MyStromSwitchSensor(SensorEntity):

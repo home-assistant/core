@@ -177,6 +177,10 @@ pandas==2.1.4
 
 # chacha20poly1305-reuseable==0.12.0 is incompatible with cryptography==42.0.x
 chacha20poly1305-reuseable>=0.12.1
+
+# pycountry<23.12.11 imports setuptools at run time
+# https://github.com/pycountry/pycountry/blob/ea69bab36f00df58624a0e490fdad4ccdc14268b/HISTORY.txt#L39
+pycountry>=23.12.11
 """
 
 GENERATED_MESSAGE = (
@@ -343,8 +347,7 @@ def generate_requirements_list(reqs: dict[str, list[str]]) -> str:
     """Generate a pip file based on requirements."""
     output = []
     for pkg, requirements in sorted(reqs.items(), key=itemgetter(0)):
-        for req in sorted(requirements):
-            output.append(f"\n# {req}")
+        output.extend(f"\n# {req}" for req in sorted(requirements))
 
         if comment_requirement(pkg):
             output.append(f"\n# {pkg}\n")
