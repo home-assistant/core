@@ -57,6 +57,8 @@ async def test_sensor_reading(hass: HomeAssistant, fake_dice) -> None:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
+    fake_dice.pulse_led.assert_called_once()
+
     color_sensor = hass.states.get(f"sensor.{GODICE_DEVICE_SERVICE_INFO.name}_color")
     assert color_sensor is not None
     assert color_sensor.state == color.name
@@ -180,3 +182,37 @@ async def test_connection_proxy(hass: HomeAssistant, fake_dice) -> None:
         assert (await proxy.get_color()) is None
         assert (await proxy.get_battery_level()) is None
         disconnect_cb.assert_called_once_with(None, False)
+
+
+async def test_reloading_on_connection_lost(hass: HomeAssistant, fake_dice) -> None:
+    """Verify integration gets reloaded when connection to GoDice is lost."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=GODICE_DEVICE_SERVICE_INFO.address,
+        data={
+            "name": GODICE_DEVICE_SERVICE_INFO.name,
+            "address": GODICE_DEVICE_SERVICE_INFO.address,
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.godice.create_dice",
+        return_value=fake_dice,
+    ), patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload",
+        return_value=None,
+    ) as mock_reload:
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # no reloading when disconnected by request
+        disconnect_cb, *_others = fake_dice.connect.call_args.args
+        await disconnect_cb(None, is_disconnected_by_request=True)
+        await hass.async_block_till_done()
+        mock_reload.assert_not_called()
+
+        # reloading when connection is lost
+        await disconnect_cb(None, is_disconnected_by_request=False)
+        await hass.async_block_till_done()
+        mock_reload.assert_called()
