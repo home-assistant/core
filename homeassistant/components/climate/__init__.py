@@ -42,6 +42,7 @@ from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.unit_conversion import TemperatureConverter
 
+from . import group as group_pre_import  # noqa: F401
 from .const import (  # noqa: F401
     _DEPRECATED_HVAC_MODE_AUTO,
     _DEPRECATED_HVAC_MODE_COOL,

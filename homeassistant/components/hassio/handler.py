@@ -263,10 +263,7 @@ async def async_update_core(
 @bind_hass
 @_api_bool
 async def async_apply_suggestion(hass: HomeAssistant, suggestion_uuid: str) -> dict:
-    """Apply a suggestion from supervisor's resolution center.
-
-    The caller of the function should handle HassioAPIError.
-    """
+    """Apply a suggestion from supervisor's resolution center."""
     hassio: HassIO = hass.data[DOMAIN]
     command = f"/resolution/suggestion/{suggestion_uuid}"
     return await hassio.send_command(command, timeout=None)

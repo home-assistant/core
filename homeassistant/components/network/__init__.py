@@ -131,10 +131,8 @@ async def async_get_announce_addresses(hass: HomeAssistant) -> list[str]:
     for adapter in adapters:
         if not adapter["enabled"]:
             continue
-        for ips in adapter["ipv4"]:
-            addresses.append(str(IPv4Address(ips["address"])))
-        for ips in adapter["ipv6"]:
-            addresses.append(str(IPv6Address(ips["address"])))
+        addresses.extend(str(IPv4Address(ips["address"])) for ips in adapter["ipv4"])
+        addresses.extend(str(IPv6Address(ips["address"])) for ips in adapter["ipv6"])
 
     # Puts the default IPv4 address first in the list to preserve compatibility,
     # because some mDNS implementations ignores anything but the first announced

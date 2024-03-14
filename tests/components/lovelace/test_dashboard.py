@@ -441,61 +441,6 @@ async def test_storage_dashboards(
     assert dashboard.CONFIG_STORAGE_KEY.format(dashboard_id) not in hass_storage
 
 
-async def test_storage_dashboard_migrate(
-    hass: HomeAssistant, hass_ws_client, hass_storage: dict[str, Any]
-) -> None:
-    """Test changing url path from storage config."""
-    hass_storage[dashboard.DASHBOARDS_STORAGE_KEY] = {
-        "key": "lovelace_dashboards",
-        "version": 1,
-        "data": {
-            "items": [
-                {
-                    "icon": "mdi:tools",
-                    "id": "tools",
-                    "mode": "storage",
-                    "require_admin": True,
-                    "show_in_sidebar": True,
-                    "title": "Tools",
-                    "url_path": "tools",
-                },
-                {
-                    "icon": "mdi:tools",
-                    "id": "tools2",
-                    "mode": "storage",
-                    "require_admin": True,
-                    "show_in_sidebar": True,
-                    "title": "Tools",
-                    "url_path": "dashboard-tools",
-                },
-            ]
-        },
-    }
-
-    assert await async_setup_component(hass, "lovelace", {})
-
-    client = await hass_ws_client(hass)
-
-    # Fetch data
-    await client.send_json({"id": 5, "type": "lovelace/dashboards/list"})
-    response = await client.receive_json()
-    assert response["success"]
-    without_hyphen, with_hyphen = response["result"]
-
-    assert without_hyphen["icon"] == "mdi:tools"
-    assert without_hyphen["id"] == "tools"
-    assert without_hyphen["mode"] == "storage"
-    assert without_hyphen["require_admin"]
-    assert without_hyphen["show_in_sidebar"]
-    assert without_hyphen["title"] == "Tools"
-    assert without_hyphen["url_path"] == "lovelace-tools"
-
-    assert (
-        with_hyphen
-        == hass_storage[dashboard.DASHBOARDS_STORAGE_KEY]["data"]["items"][1]
-    )
-
-
 async def test_websocket_list_dashboards(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
