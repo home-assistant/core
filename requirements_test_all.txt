@@ -734,7 +734,7 @@ gTTS==2.2.4
 gardena-bluetooth==1.4.1
 
 # homeassistant.components.google_assistant_sdk
-gassist-text==0.0.10
+gassist-text==0.0.11
 
 # homeassistant.components.google
 gcal-sync==6.0.3
@@ -1165,7 +1165,7 @@ openerz-api==0.3.0
 openhomedevice==2.2.0
 
 # homeassistant.components.opower
-opower==0.3.1
+opower==0.4.0
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
