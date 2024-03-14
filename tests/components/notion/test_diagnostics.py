@@ -23,9 +23,9 @@ async def test_entry_diagnostics(
             "domain": DOMAIN,
             "title": REDACTED,
             "data": {
-                "refresh_token": REDACTED,
-                "user_uuid": REDACTED,
                 "username": REDACTED,
+                "user_uuid": REDACTED,
+                "refresh_token": REDACTED,
             },
             "options": {},
             "pref_disable_new_entities": False,
@@ -85,6 +85,7 @@ async def test_entry_diagnostics(
                     "configuration": {},
                     "pro_monitoring_status": "ineligible",
                     "device_type": "sensor",
+                    "kind": 24,
                 }
             ],
             "sensors": [
