@@ -51,7 +51,6 @@ from .components import (
     webhook as webhook_pre_import,  # noqa: F401
     websocket_api as websocket_api_pre_import,  # noqa: F401
 )
-
 from .components.sensor import recorder as sensor_recorder  # noqa: F401
 from .const import (
     FORMAT_DATETIME,
