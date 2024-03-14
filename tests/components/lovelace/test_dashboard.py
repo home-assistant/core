@@ -1,7 +1,8 @@
 """Test the Lovelace initialization."""
 
+from collections.abc import Generator
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -12,6 +13,19 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, async_capture_events
 from tests.typing import WebSocketGenerator
+
+
+@pytest.fixture(autouse=True)
+def mock_onboarding_done() -> Generator[MagicMock, None, None]:
+    """Mock that Home Assistant is currently onboarding.
+
+    Enabled to prevent creating default dashboards during test execution.
+    """
+    with patch(
+        "homeassistant.components.onboarding.async_is_onboarded",
+        return_value=True,
+    ) as mock_onboarding:
+        yield mock_onboarding
 
 
 async def test_lovelace_from_storage(
@@ -277,7 +291,7 @@ async def test_dashboard_from_yaml(
 
 async def test_wrong_key_dashboard_from_yaml(hass: HomeAssistant) -> None:
     """Test we don't load lovelace dashboard without hyphen config from yaml."""
-    with assert_setup_component(0):
+    with assert_setup_component(0, "lovelace"):
         assert not await async_setup_component(
             hass,
             "lovelace",
