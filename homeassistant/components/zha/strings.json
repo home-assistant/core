@@ -823,17 +823,6 @@
       },
       "keypad_lockout": {
         "name": "Keypad lockout"
-      },
-      "heat_mode": {
-        "name": "Heat mode",
-        "state": {
-          "comfort": "Comfort",
-          "comfort_minus_1": "Comfort -1 °C",
-          "comfort_minus_2": "Comfort -2 °C",
-          "eco": "Eco",
-          "frost_protection": "Frost protection",
-          "off": "Off"
-        }
       }
     },
     "sensor": {
@@ -1010,14 +999,11 @@
       "linkage_alarm": {
         "name": "Linkage alarm"
       },
-      "led_dark": {
-        "name": "Led dark"
+      "buzzer_manual_mute": {
+        "name": "Buzzer manual mute"
       },
-      "led_on": {
-        "name": "Led on"
-      },
-      "wire_pilot_enabled": {
-        "name": "Wire pilot mode"
+      "buzzer_manual_alarm": {
+        "name": "Buzzer manual alarm"
       }
     }
   }
