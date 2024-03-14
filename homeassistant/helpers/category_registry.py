@@ -9,13 +9,13 @@ from typing import Literal, TypedDict, cast
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.ulid import ulid_now
 
+from .registry import BaseRegistry
 from .typing import UNDEFINED, EventType, UndefinedType
 
 DATA_REGISTRY = "category_registry"
 EVENT_CATEGORY_REGISTRY_UPDATED = "category_registry_updated"
 STORAGE_KEY = "core.category_registry"
 STORAGE_VERSION_MAJOR = 1
-SAVE_DELAY = 10
 
 
 class EventCategoryRegistryUpdatedData(TypedDict):
@@ -38,7 +38,7 @@ class CategoryEntry:
     name: str
 
 
-class CategoryRegistry:
+class CategoryRegistry(BaseRegistry):
     """Class to hold a registry of categories by scope."""
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -162,11 +162,6 @@ class CategoryRegistry:
                 }
 
         self.categories = category_entries
-
-    @callback
-    def async_schedule_save(self) -> None:
-        """Schedule saving the category registry."""
-        self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
     @callback
     def _data_to_save(self) -> dict[str, dict[str, list[dict[str, str | None]]]]:
