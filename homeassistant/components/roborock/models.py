@@ -28,28 +28,3 @@ class RoborockHassDeviceInfo:
             "product": self.product.as_dict(),
             "props": self.props.as_dict(),
         }
-
-
-@dataclass
-class RoborockImageExtraStoredData(ExtraStoredData):
-    """A model to describe the maps for restore."""
-
-    map_flag: int
-    cached_image: bytes
-
-    def as_dict(self) -> dict:
-        """Return the image data as a dictionary."""
-        return {
-            "map_flag": self.map_flag,
-            "cached_image": base64.b64encode(self.cached_image).decode("utf-8"),
-        }
-
-    @staticmethod
-    def from_dict(
-        serialized_dict: dict,
-    ) -> RoborockImageExtraStoredData:
-        """Take the serialized dict and convert to object."""
-        return RoborockImageExtraStoredData(
-            map_flag=serialized_dict["map_flag"],
-            cached_image=base64.b64decode(serialized_dict["cached_image"]),
-        )
