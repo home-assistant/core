@@ -10,5 +10,9 @@
         "default": "mdi:clock-outline"
       }
     }
+  },
+  "services": {
+    "reset": "mdi:reset",
+    "calibrate": "mdi:scale-balance"
   }
 }
