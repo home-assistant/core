@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass, field
+from datetime import datetime
 import logging
 from typing import Any, NotRequired, TypedDict
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HassJob, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
@@ -36,6 +38,7 @@ from .const import (
     EVENT_SUPPORTED_CHANGED,
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
     PLACEHOLDER_KEY_REFERENCE,
+    REQUEST_REFRESH_DELAY,
     UPDATE_KEY_SUPERVISOR,
     SupervisorIssueContext,
 )
@@ -303,12 +306,17 @@ class SupervisorIssues:
             self._hass, EVENT_SUPERVISOR_EVENT, self._supervisor_events_to_issues
         )
 
-    async def update(self) -> None:
+    async def update(self, _: datetime | None = None) -> None:
         """Update issues from Supervisor resolution center."""
         try:
             data = await self._client.get_resolution_info()
         except HassioAPIError as err:
             _LOGGER.error("Failed to update supervisor issues: %r", err)
+            async_call_later(
+                self._hass,
+                REQUEST_REFRESH_DELAY,
+                HassJob(self.update, cancel_on_shutdown=True),
+            )
             return
         self.unhealthy_reasons = set(data[ATTR_UNHEALTHY])
         self.unsupported_reasons = set(data[ATTR_UNSUPPORTED])
