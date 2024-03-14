@@ -112,7 +112,7 @@ pytestmark = [
             ],
         ),
         (
-            "HWE-SKT",
+            "HWE-SKT-11",
             [
                 "sensor.device_energy_export",
                 "sensor.device_energy_import",
@@ -276,7 +276,7 @@ async def test_sensors(
             ],
         ),
         (
-            "HWE-SKT",
+            "HWE-SKT-11",
             [
                 "sensor.device_wi_fi_strength",
             ],
@@ -413,7 +413,7 @@ async def test_external_sensors_unreachable(
     ("device_fixture", "entity_ids"),
     [
         (
-            "HWE-SKT",
+            "HWE-SKT-11",
             [
                 "sensor.device_apparent_power_phase_1",
                 "sensor.device_apparent_power_phase_2",
