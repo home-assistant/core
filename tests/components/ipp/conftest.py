@@ -74,6 +74,16 @@ def mock_ipp_config_flow(
 
 
 @pytest.fixture
+def mock_ipp_services() -> Generator[None, MagicMock, None]:
+    """Return a mocked IPP client."""
+
+    with patch("homeassistant.components.ipp.services.IPP", autospec=True) as ipp_mock:
+        client = ipp_mock.return_value
+        client.raw.return_value = b""
+        yield client
+
+
+@pytest.fixture
 def mock_ipp(
     request: pytest.FixtureRequest, mock_printer: Printer
 ) -> Generator[None, MagicMock, None]:
