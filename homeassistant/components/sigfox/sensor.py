@@ -89,10 +89,7 @@ class SigfoxAPI:
         """Get a list of device types."""
         url = urljoin(API_URL, "devicetypes")
         response = requests.get(url, auth=self._auth, timeout=10)
-        device_types = []
-        for device in json.loads(response.text)["data"]:
-            device_types.append(device["id"])
-        return device_types
+        return [device["id"] for device in json.loads(response.text)["data"]]
 
     def get_devices(self, device_types):
         """Get the device_id of each device registered."""

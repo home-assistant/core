@@ -24,6 +24,7 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     CONF_TYPE,
 )
+from homeassistant.core import HomeAssistant
 
 from .const import (
     CONF_DATA_TYPE,
@@ -270,7 +271,99 @@ def register_int_list_validator(value: Any) -> Any:
     )
 
 
-def check_config(config: dict) -> dict:
+def validate_modbus(
+    hass: HomeAssistant,
+    hosts: set[str],
+    hub_names: set[str],
+    hub: dict,
+    hub_name_inx: int,
+) -> bool:
+    """Validate modbus entries."""
+    host: str = (
+        hub[CONF_PORT]
+        if hub[CONF_TYPE] == SERIAL
+        else f"{hub[CONF_HOST]}_{hub[CONF_PORT]}"
+    )
+    if CONF_NAME not in hub:
+        hub[CONF_NAME] = (
+            DEFAULT_HUB if not hub_name_inx else f"{DEFAULT_HUB}_{hub_name_inx}"
+        )
+        hub_name_inx += 1
+        err = f"Modbus host/port {host} is missing name, added {hub[CONF_NAME]}!"
+        _LOGGER.warning(err)
+    name = hub[CONF_NAME]
+    if host in hosts or name in hub_names:
+        err = f"Modbus {name} host/port {host} is duplicate, not loaded!"
+        _LOGGER.warning(err)
+        return False
+    hosts.add(host)
+    hub_names.add(name)
+    return True
+
+
+def validate_entity(
+    hass: HomeAssistant,
+    hub_name: str,
+    component: str,
+    entity: dict,
+    minimum_scan_interval: int,
+    ent_names: set[str],
+    ent_addr: set[str],
+) -> bool:
+    """Validate entity."""
+    name = f"{component}.{entity[CONF_NAME]}"
+    addr = f"{hub_name}{entity[CONF_ADDRESS]}"
+    scan_interval = entity.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    if 0 < scan_interval < 5:
+        _LOGGER.warning(
+            (
+                "%s %s scan_interval(%d) is lower than 5 seconds, "
+                "which may cause Home Assistant stability issues"
+            ),
+            hub_name,
+            name,
+            scan_interval,
+        )
+    entity[CONF_SCAN_INTERVAL] = scan_interval
+    minimum_scan_interval = min(scan_interval, minimum_scan_interval)
+    for conf_type in (
+        CONF_INPUT_TYPE,
+        CONF_WRITE_TYPE,
+        CONF_COMMAND_ON,
+        CONF_COMMAND_OFF,
+    ):
+        if conf_type in entity:
+            addr += f"_{entity[conf_type]}"
+    inx = entity.get(CONF_SLAVE) or entity.get(CONF_DEVICE_ADDRESS, 0)
+    addr += f"_{inx}"
+    loc_addr: set[str] = {addr}
+
+    if CONF_TARGET_TEMP in entity:
+        loc_addr.add(f"{hub_name}{entity[CONF_TARGET_TEMP]}_{inx}")
+    if CONF_HVAC_MODE_REGISTER in entity:
+        loc_addr.add(f"{hub_name}{entity[CONF_HVAC_MODE_REGISTER][CONF_ADDRESS]}_{inx}")
+    if CONF_FAN_MODE_REGISTER in entity:
+        loc_addr.add(f"{hub_name}{entity[CONF_FAN_MODE_REGISTER][CONF_ADDRESS]}_{inx}")
+
+    dup_addrs = ent_addr.intersection(loc_addr)
+    if len(dup_addrs) > 0:
+        for addr in dup_addrs:
+            err = (
+                f"Modbus {hub_name}/{name} address {addr} is duplicate, second"
+                " entry not loaded!"
+            )
+            _LOGGER.warning(err)
+        return False
+    if name in ent_names:
+        err = f"Modbus {hub_name}/{name} is duplicate, second entry not loaded!"
+        _LOGGER.warning(err)
+        return False
+    ent_names.add(name)
+    ent_addr.update(loc_addr)
+    return True
+
+
+def check_config(hass: HomeAssistant, config: dict) -> dict:
     """Do final config check."""
     hosts: set[str] = set()
     hub_names: set[str] = set()
@@ -279,97 +372,10 @@ def check_config(config: dict) -> dict:
     ent_names: set[str] = set()
     ent_addr: set[str] = set()
 
-    def validate_modbus(hub: dict, hub_name_inx: int) -> bool:
-        """Validate modbus entries."""
-        host: str = (
-            hub[CONF_PORT]
-            if hub[CONF_TYPE] == SERIAL
-            else f"{hub[CONF_HOST]}_{hub[CONF_PORT]}"
-        )
-        if CONF_NAME not in hub:
-            hub[CONF_NAME] = (
-                DEFAULT_HUB if not hub_name_inx else f"{DEFAULT_HUB}_{hub_name_inx}"
-            )
-            hub_name_inx += 1
-            err = f"Modbus host/port {host} is missing name, added {hub[CONF_NAME]}!"
-            _LOGGER.warning(err)
-        name = hub[CONF_NAME]
-        if host in hosts or name in hub_names:
-            err = f"Modbus {name} host/port {host} is duplicate, not loaded!"
-            _LOGGER.warning(err)
-            return False
-        hosts.add(host)
-        hub_names.add(name)
-        return True
-
-    def validate_entity(
-        hub_name: str,
-        component: str,
-        entity: dict,
-        minimum_scan_interval: int,
-        ent_names: set,
-        ent_addr: set,
-    ) -> bool:
-        """Validate entity."""
-        name = f"{component}.{entity[CONF_NAME]}"
-        addr = f"{hub_name}{entity[CONF_ADDRESS]}"
-        scan_interval = entity.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        if 0 < scan_interval < 5:
-            _LOGGER.warning(
-                (
-                    "%s %s scan_interval(%d) is lower than 5 seconds, "
-                    "which may cause Home Assistant stability issues"
-                ),
-                hub_name,
-                name,
-                scan_interval,
-            )
-        entity[CONF_SCAN_INTERVAL] = scan_interval
-        minimum_scan_interval = min(scan_interval, minimum_scan_interval)
-        for conf_type in (
-            CONF_INPUT_TYPE,
-            CONF_WRITE_TYPE,
-            CONF_COMMAND_ON,
-            CONF_COMMAND_OFF,
-        ):
-            if conf_type in entity:
-                addr += f"_{entity[conf_type]}"
-        inx = entity.get(CONF_SLAVE) or entity.get(CONF_DEVICE_ADDRESS, 0)
-        addr += f"_{inx}"
-        loc_addr: set[str] = {addr}
-
-        if CONF_TARGET_TEMP in entity:
-            loc_addr.add(f"{hub_name}{entity[CONF_TARGET_TEMP]}_{inx}")
-        if CONF_HVAC_MODE_REGISTER in entity:
-            loc_addr.add(
-                f"{hub_name}{entity[CONF_HVAC_MODE_REGISTER][CONF_ADDRESS]}_{inx}"
-            )
-        if CONF_FAN_MODE_REGISTER in entity:
-            loc_addr.add(
-                f"{hub_name}{entity[CONF_FAN_MODE_REGISTER][CONF_ADDRESS]}_{inx}"
-            )
-
-        dup_addrs = ent_addr.intersection(loc_addr)
-        if len(dup_addrs) > 0:
-            for addr in dup_addrs:
-                err = (
-                    f"Modbus {hub_name}/{name} address {addr} is duplicate, second"
-                    " entry not loaded!"
-                )
-                _LOGGER.warning(err)
-            return False
-        if name in ent_names:
-            err = f"Modbus {hub_name}/{name} is duplicate, second entry not loaded!"
-            _LOGGER.warning(err)
-            return False
-        ent_names.add(name)
-        ent_addr.update(loc_addr)
-        return True
-
     hub_inx = 0
     while hub_inx < len(config):
         hub = config[hub_inx]
-        if not validate_modbus(hub, hub_name_inx):
+        if not validate_modbus(hass, hosts, hub_names, hub, hub_name_inx):
             del config[hub_inx]
             continue
         minimum_scan_interval = 9999
@@ -382,6 +388,7 @@ def check_config(config: dict) -> dict:
             entities = hub[conf_key]
             while entity_inx < len(entities):
                 if not validate_entity(
+                    hass,
                     hub[CONF_NAME],
                     component,
                     entities[entity_inx],
