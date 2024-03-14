@@ -7,8 +7,8 @@ from homeassistant.util.unit_conversion import TemperatureConverter
 
 
 def convert_temperature_if_needed(
-    temperature_unit: UnitOfTemperature, temperature: float
-) -> float:
+    temperature_unit: UnitOfTemperature, temperature: float | None
+) -> float | None:
     """Convert a temperature manually to correct rounding errors.
 
     This is due to the fact that the rounding in Home Assistant does not match the rounding
