@@ -41,6 +41,7 @@ def mock_resolution_info(
     unsupported: list[str] | None = None,
     unhealthy: list[str] | None = None,
     issues: list[dict[str, str]] | None = None,
+    suggestion_result: str = "ok",
 ):
     """Mock resolution/info endpoint with unsupported/unhealthy reasons and/or issues."""
     aioclient_mock.get(
@@ -77,7 +78,7 @@ def mock_resolution_info(
             for suggestion in suggestions:
                 aioclient_mock.post(
                     f"http://127.0.0.1/resolution/suggestion/{suggestion['uuid']}",
-                    json={"result": "ok"},
+                    json={"result": suggestion_result},
                 )
 
 
