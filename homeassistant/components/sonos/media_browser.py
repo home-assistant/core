@@ -497,7 +497,7 @@ def get_content_id(item: DidlObject) -> str:
 
 
 def get_media(
-    media_library: MusicLibrary, item_id: str, search_type: str, special: bool = False
+    media_library: MusicLibrary, item_id: str, search_type: str
 ) -> MusicServiceItem:
     """Fetch a single media/album."""
     _LOGGER.debug("get_media item_id [%s], search_type [%s]", item_id, search_type)
