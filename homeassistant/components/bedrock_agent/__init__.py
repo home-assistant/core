@@ -18,6 +18,13 @@ from homeassistant.helpers import intent
 from .const import CONST_KEY_ID, CONST_KEY_SECRET, CONST_MODEL_ID, CONST_REGION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+__all__ = [
+    "async_setup_entry",
+    "async_unload_entry",
+    "options_update_listener",
+    "async_process",
+    "BedrockAgent",
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
