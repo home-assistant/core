@@ -1356,6 +1356,10 @@ def mock_storage(
         # To ensure that the data can be serialized
         _LOGGER.debug("Writing data to %s: %s", store.key, data_to_write)
         raise_contains_mocks(data_to_write)
+
+        if "data_func" in data_to_write:
+            data_to_write["data"] = data_to_write.pop("data_func")()
+
         encoder = store._encoder
         if encoder and encoder is not JSONEncoder:
             # If they pass a custom encoder that is not the
@@ -1363,7 +1367,7 @@ def mock_storage(
             dump = ft.partial(json.dumps, cls=store._encoder)
         else:
             dump = _orjson_default_encoder
-        data[store.key] = json.loads(dump(data_to_write))
+        data[store.key] = json_loads(dump(data_to_write))
 
     async def mock_remove(store: storage.Store) -> None:
         """Remove data."""
