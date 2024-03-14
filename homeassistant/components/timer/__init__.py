@@ -1,10 +1,11 @@
 """Support for Timers."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
-from typing import Self
+from typing import Any, Self, TypeVar
 
 import voluptuous as vol
 
@@ -28,6 +29,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
+_T = TypeVar("_T")
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "timer"
@@ -73,14 +75,14 @@ STORAGE_FIELDS = {
 }
 
 
-def _format_timedelta(delta: timedelta):
+def _format_timedelta(delta: timedelta) -> str:
     total_seconds = delta.total_seconds()
     hours, remainder = divmod(total_seconds, 3600)
     minutes, seconds = divmod(remainder, 60)
     return f"{int(hours)}:{int(minutes):02}:{int(seconds):02}"
 
 
-def _none_to_empty_dict(value):
+def _none_to_empty_dict(value: _T | None) -> _T | dict[Any, Any]:
     if value is None:
         return {}
     return value
@@ -185,7 +187,7 @@ class TimerStorageCollection(collection.DictStorageCollection):
     @callback
     def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
-        return info[CONF_NAME]
+        return info[CONF_NAME]  # type: ignore[no-any-return]
 
     async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
@@ -193,7 +195,7 @@ class TimerStorageCollection(collection.DictStorageCollection):
         # make duration JSON serializeable
         if CONF_DURATION in update_data:
             data[CONF_DURATION] = _format_timedelta(data[CONF_DURATION])
-        return data
+        return data  # type: ignore[no-any-return]
 
 
 class Timer(collection.CollectionEntity, RestoreEntity):
@@ -231,24 +233,24 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         return timer
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         """Return name of the timer."""
         return self._config.get(CONF_NAME)
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Return the icon to be used for this entity."""
         return self._config.get(CONF_ICON)
 
     @property
-    def state(self):
+    def state(self) -> str:
         """Return the current value of the timer."""
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        attrs = {
+        attrs: dict[str, Any] = {
             ATTR_DURATION: _format_timedelta(self._running_duration),
             ATTR_EDITABLE: self.editable,
         }
@@ -264,9 +266,9 @@ class Timer(collection.CollectionEntity, RestoreEntity):
     @property
     def unique_id(self) -> str | None:
         """Return unique id for the entity."""
-        return self._config[CONF_ID]
+        return self._config[CONF_ID]  # type: ignore[no-any-return]
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity is about to be added to Home Assistant."""
         # If we don't need to restore a previous state or no previous state exists,
         # start at idle
@@ -302,7 +304,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
             self.async_finish()
 
     @callback
-    def async_start(self, duration: timedelta | None = None):
+    def async_start(self, duration: timedelta | None = None) -> None:
         """Start a timer."""
         if self._listener:
             self._listener()
@@ -356,9 +358,9 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self.async_write_ha_state()
 
     @callback
-    def async_pause(self):
+    def async_pause(self) -> None:
         """Pause a timer."""
-        if self._listener is None:
+        if self._listener is None or self._end is None:
             return
 
         self._listener()
@@ -370,7 +372,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self.async_write_ha_state()
 
     @callback
-    def async_cancel(self):
+    def async_cancel(self) -> None:
         """Cancel a timer."""
         if self._listener:
             self._listener()
@@ -385,9 +387,9 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self.async_write_ha_state()
 
     @callback
-    def async_finish(self):
+    def async_finish(self) -> None:
         """Reset and updates the states, fire finished event."""
-        if self._state != STATUS_ACTIVE:
+        if self._state != STATUS_ACTIVE or self._end is None:
             return
 
         if self._listener:
@@ -405,9 +407,9 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self.async_write_ha_state()
 
     @callback
-    def _async_finished(self, time):
+    def _async_finished(self, time: datetime) -> None:
         """Reset and updates the states, fire finished event."""
-        if self._state != STATUS_ACTIVE:
+        if self._state != STATUS_ACTIVE or self._end is None:
             return
 
         self._listener = None

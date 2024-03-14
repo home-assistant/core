@@ -1,4 +1,5 @@
 """Module to handle installing requirements."""
+
 from __future__ import annotations
 
 import asyncio
@@ -63,6 +64,13 @@ async def async_process_requirements(
     await _async_get_manager(hass).async_process_requirements(name, requirements)
 
 
+async def async_load_installed_versions(
+    hass: HomeAssistant, requirements: set[str]
+) -> None:
+    """Load the installed version of requirements."""
+    await _async_get_manager(hass).async_load_installed_versions(requirements)
+
+
 @callback
 def _async_get_manager(hass: HomeAssistant) -> RequirementsManager:
     """Get the requirements manager."""
@@ -122,7 +130,7 @@ class RequirementsManager:
         self.hass = hass
         self.pip_lock = asyncio.Lock()
         self.integrations_with_reqs: dict[
-            str, Integration | asyncio.Event | None | UndefinedType
+            str, Integration | asyncio.Future[None] | None | UndefinedType
         ] = {}
         self.install_failure_history: set[str] = set()
         self.is_installed_cache: set[str] = set()
@@ -148,31 +156,33 @@ class RequirementsManager:
             return integration
 
         cache = self.integrations_with_reqs
-        int_or_evt = cache.get(domain, UNDEFINED)
+        int_or_fut = cache.get(domain, UNDEFINED)
 
-        if isinstance(int_or_evt, asyncio.Event):
-            await int_or_evt.wait()
+        if isinstance(int_or_fut, asyncio.Future):
+            await int_or_fut
 
             # When we have waited and it's UNDEFINED, it doesn't exist
             # We don't cache that it doesn't exist, or else people can't fix it
             # and then restart, because their config will never be valid.
-            if (int_or_evt := cache.get(domain, UNDEFINED)) is UNDEFINED:
+            if (int_or_fut := cache.get(domain, UNDEFINED)) is UNDEFINED:
                 raise IntegrationNotFound(domain)
 
-        if int_or_evt is not UNDEFINED:
-            return cast(Integration, int_or_evt)
+        if int_or_fut is not UNDEFINED:
+            return cast(Integration, int_or_fut)
 
-        event = cache[domain] = asyncio.Event()
+        event = cache[domain] = self.hass.loop.create_future()
 
         try:
             await self._async_process_integration(integration, done)
         except Exception:
             del cache[domain]
-            event.set()
+            if not event.done():
+                event.set_result(None)
             raise
 
         cache[domain] = integration
-        event.set()
+        if not event.done():
+            event.set_result(None)
         return integration
 
     async def _async_process_integration(
@@ -184,38 +194,61 @@ class RequirementsManager:
                 integration.domain, integration.requirements
             )
 
-        deps_to_check = [
+        cache = self.integrations_with_reqs
+
+        deps_to_check = {
             dep
             for dep in integration.dependencies + integration.after_dependencies
             if dep not in done
-        ]
+            # If the dep is in the cache and it's an Integration
+            # it's already been checked for the requirements and we should
+            # not check it again.
+            and (
+                not (cached_integration := cache.get(dep))
+                or type(cached_integration) is not Integration
+            )
+        }
 
         for check_domain, to_check in DISCOVERY_INTEGRATIONS.items():
             if (
                 check_domain not in done
                 and check_domain not in deps_to_check
+                # If the integration is in the cache and it's an Integration
+                # it's already been checked for the requirements and we should
+                # not check it again.
+                and (
+                    not (cached_integration := cache.get(check_domain))
+                    or type(cached_integration) is not Integration
+                )
                 and any(check in integration.manifest for check in to_check)
             ):
-                deps_to_check.append(check_domain)
+                deps_to_check.add(check_domain)
 
         if not deps_to_check:
             return
 
-        results = await asyncio.gather(
-            *(
-                self.async_get_integration_with_requirements(dep, done)
-                for dep in deps_to_check
-            ),
-            return_exceptions=True,
-        )
-        for result in results:
-            if not isinstance(result, BaseException):
-                continue
-            if not isinstance(result, IntegrationNotFound) or not (
-                not integration.is_built_in
-                and result.domain in integration.after_dependencies
-            ):
-                raise result
+        exceptions: list[Exception] = []
+        # We don't create tasks here since everything waits for the pip lock
+        # anyways and we want to make sure we don't start a bunch of tasks
+        # that will just wait for the lock.
+        for dep in deps_to_check:
+            # We want all the async_get_integration_with_requirements calls to
+            # happen even if one fails. So we catch the exception and store it
+            # to raise the first one after all are done to behave like asyncio
+            # gather.
+            try:
+                await self.async_get_integration_with_requirements(dep, done)
+            except IntegrationNotFound as ex:
+                if (
+                    integration.is_built_in
+                    or ex.domain not in integration.after_dependencies
+                ):
+                    exceptions.append(ex)
+            except Exception as ex:  # pylint: disable=broad-except
+                exceptions.insert(0, ex)
+
+        if exceptions:
+            raise exceptions[0]
 
     async def async_process_requirements(
         self, name: str, requirements: list[str]
@@ -226,11 +259,11 @@ class RequirementsManager:
         if an requirement can't be satisfied.
         """
         if self.hass.config.skip_pip_packages:
-            skipped_requirements = [
+            skipped_requirements = {
                 req
                 for req in requirements
                 if Requirement(req).name in self.hass.config.skip_pip_packages
-            ]
+            }
 
             for req in skipped_requirements:
                 _LOGGER.warning("Skipping requirement %s. This may cause issues", req)
@@ -242,9 +275,8 @@ class RequirementsManager:
         self._raise_for_failed_requirements(name, missing)
 
         async with self.pip_lock:
-            # Recaculate missing again now that we have the lock
-            missing = self._find_missing_requirements(requirements)
-            if missing:
+            # Recalculate missing again now that we have the lock
+            if missing := self._find_missing_requirements(requirements):
                 await self._async_process_requirements(name, missing)
 
     def _find_missing_requirements(self, requirements: list[str]) -> list[str]:
@@ -284,3 +316,15 @@ class RequirementsManager:
         self.install_failure_history |= failures
         if failures:
             raise RequirementsNotFound(name, list(failures))
+
+    async def async_load_installed_versions(
+        self,
+        requirements: set[str],
+    ) -> None:
+        """Load the installed version of requirements."""
+        if not (requirements_to_check := requirements - self.is_installed_cache):
+            return
+
+        self.is_installed_cache |= await self.hass.async_add_executor_job(
+            pkg_util.get_installed_versions, requirements_to_check
+        )

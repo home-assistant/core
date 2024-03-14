@@ -1,4 +1,5 @@
 """Test the Google Mail config flow."""
+
 from unittest.mock import patch
 
 from httplib2 import Response

@@ -1,4 +1,5 @@
 """Constants for the Logger integration."""
+
 import logging
 
 DOMAIN = "logger"

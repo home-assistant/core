@@ -1,4 +1,5 @@
 """Test HTML5 notify platform."""
+
 from http import HTTPStatus
 import json
 from unittest.mock import MagicMock, mock_open, patch

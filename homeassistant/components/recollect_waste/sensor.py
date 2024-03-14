@@ -1,4 +1,5 @@
 """Support for ReCollect Waste sensors."""
+
 from __future__ import annotations
 
 from datetime import date
@@ -92,3 +93,5 @@ class ReCollectWasteSensor(ReCollectWasteEntity, SensorEntity):
                 ATTR_PICKUP_TYPES
             ] = async_get_pickup_type_names(self._entry, event.pickup_types)
             self._attr_native_value = event.date
+
+        super()._handle_coordinator_update()

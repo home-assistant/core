@@ -1,14 +1,22 @@
 """Support to turn on lights based on the states."""
+
 from datetime import timedelta
 import logging
 
 import voluptuous as vol
 
+from homeassistant.components.device_tracker import (
+    DOMAIN as DOMAIN_DEVICE_TRACKER,
+    is_on as device_tracker_is_on,
+)
+from homeassistant.components.group import get_entity_ids as group_get_entity_ids
 from homeassistant.components.light import (
     ATTR_PROFILE,
     ATTR_TRANSITION,
     DOMAIN as DOMAIN_LIGHT,
+    is_on as light_is_on,
 )
+from homeassistant.components.person import DOMAIN as DOMAIN_PERSON
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     EVENT_HOMEASSISTANT_START,
@@ -86,16 +94,16 @@ async def activate_automation(  # noqa: C901
 ):
     """Activate the automation."""
     logger = logging.getLogger(__name__)
-    device_tracker = hass.components.device_tracker
-    group = hass.components.group
-    light = hass.components.light
-    person = hass.components.person
 
     if device_group is None:
-        device_entity_ids = hass.states.async_entity_ids(device_tracker.DOMAIN)
+        device_entity_ids = hass.states.async_entity_ids(DOMAIN_DEVICE_TRACKER)
     else:
-        device_entity_ids = group.get_entity_ids(device_group, device_tracker.DOMAIN)
-        device_entity_ids.extend(group.get_entity_ids(device_group, person.DOMAIN))
+        device_entity_ids = group_get_entity_ids(
+            hass, device_group, DOMAIN_DEVICE_TRACKER
+        )
+        device_entity_ids.extend(
+            group_get_entity_ids(hass, device_group, DOMAIN_PERSON)
+        )
 
     if not device_entity_ids:
         logger.error("No devices found to track")
@@ -103,9 +111,9 @@ async def activate_automation(  # noqa: C901
 
     # Get the light IDs from the specified group
     if light_group is None:
-        light_ids = hass.states.async_entity_ids(light.DOMAIN)
+        light_ids = hass.states.async_entity_ids(DOMAIN_LIGHT)
     else:
-        light_ids = group.get_entity_ids(light_group, light.DOMAIN)
+        light_ids = group_get_entity_ids(hass, light_group, DOMAIN_LIGHT)
 
     if not light_ids:
         logger.error("No lights found to turn on")
@@ -114,12 +122,12 @@ async def activate_automation(  # noqa: C901
     @callback
     def anyone_home():
         """Test if anyone is home."""
-        return any(device_tracker.is_on(dt_id) for dt_id in device_entity_ids)
+        return any(device_tracker_is_on(hass, dt_id) for dt_id in device_entity_ids)
 
     @callback
     def any_light_on():
         """Test if any light on."""
-        return any(light.is_on(light_id) for light_id in light_ids)
+        return any(light_is_on(hass, light_id) for light_id in light_ids)
 
     def calc_time_for_light_when_sunset():
         """Calculate the time when to start fading lights in when sun sets.
@@ -135,7 +143,7 @@ async def activate_automation(  # noqa: C901
 
     async def async_turn_on_before_sunset(light_id):
         """Turn on lights."""
-        if not anyone_home() or light.is_on(light_id):
+        if not anyone_home() or light_is_on(hass, light_id):
             return
         await hass.services.async_call(
             DOMAIN_LIGHT,

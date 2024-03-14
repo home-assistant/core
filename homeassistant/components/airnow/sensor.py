@@ -1,4 +1,5 @@
 """Support for the AirNow sensor service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -51,17 +52,12 @@ ATTR_LEVEL = "level"
 ATTR_STATION = "reporting_station"
 
 
-@dataclass(frozen=True)
-class AirNowEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class AirNowEntityDescription(SensorEntityDescription):
+    """Describes Airnow sensor entity."""
 
     value_fn: Callable[[Any], StateType]
     extra_state_attributes_fn: Callable[[Any], dict[str, str]] | None
-
-
-@dataclass(frozen=True)
-class AirNowEntityDescription(SensorEntityDescription, AirNowEntityDescriptionMixin):
-    """Describes Airnow sensor entity."""
 
 
 def station_extra_attrs(data: dict[str, Any]) -> dict[str, Any]:
@@ -77,7 +73,7 @@ def station_extra_attrs(data: dict[str, Any]) -> dict[str, Any]:
 SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
     AirNowEntityDescription(
         key=ATTR_API_AQI,
-        icon="mdi:blur",
+        translation_key="aqi",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.AQI,
         value_fn=lambda data: data.get(ATTR_API_AQI),
@@ -94,7 +90,7 @@ SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
     ),
     AirNowEntityDescription(
         key=ATTR_API_PM25,
-        icon="mdi:blur",
+        translation_key="pm25",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PM25,
@@ -104,7 +100,6 @@ SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
     AirNowEntityDescription(
         key=ATTR_API_O3,
         translation_key="o3",
-        icon="mdi:blur",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.get(ATTR_API_O3),
@@ -113,7 +108,6 @@ SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
     AirNowEntityDescription(
         key=ATTR_API_STATION,
         translation_key="station",
-        icon="mdi:blur",
         value_fn=lambda data: data.get(ATTR_API_STATION),
         extra_state_attributes_fn=station_extra_attrs,
     ),

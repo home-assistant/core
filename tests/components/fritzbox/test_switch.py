@@ -1,4 +1,5 @@
 """Tests for AVM Fritz!Box switch component."""
+
 from datetime import timedelta
 from unittest.mock import Mock
 

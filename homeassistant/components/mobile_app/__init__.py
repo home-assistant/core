@@ -1,4 +1,5 @@
 """Integrates Native Apps to Home Assistant."""
+
 from contextlib import suppress
 from typing import Any
 
@@ -39,7 +40,7 @@ from .http_api import RegistrationsView
 from .util import async_create_cloud_hook
 from .webhook import handle_webhook
 
-PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER, Platform.SENSOR]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -150,5 +151,5 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await store.async_save(savable_state(hass))
 
     if CONF_CLOUDHOOK_URL in entry.data:
-        with suppress(cloud.CloudNotAvailable):
+        with suppress(cloud.CloudNotAvailable, ValueError):
             await cloud.async_delete_cloudhook(hass, entry.data[CONF_WEBHOOK_ID])

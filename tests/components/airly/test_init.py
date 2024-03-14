@@ -1,4 +1,5 @@
 """Test init of Airly integration."""
+
 from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory

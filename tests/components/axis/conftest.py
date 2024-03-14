@@ -1,4 +1,5 @@
 """Axis conftest."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -9,7 +10,7 @@ from axis.rtsp import Signal, State
 import pytest
 import respx
 
-from homeassistant.components.axis.const import CONF_EVENTS, DOMAIN as AXIS_DOMAIN
+from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODEL,
@@ -21,6 +22,8 @@ from homeassistant.const import (
 
 from .const import (
     API_DISCOVERY_RESPONSE,
+    APP_AOA_RESPONSE,
+    APP_VMD4_RESPONSE,
     APPLICATIONS_LIST_RESPONSE,
     BASIC_DEVICE_INFO_RESPONSE,
     BRAND_RESPONSE,
@@ -36,7 +39,6 @@ from .const import (
     PTZ_RESPONSE,
     STREAM_PROFILES_RESPONSE,
     VIEW_AREAS_RESPONSE,
-    VMD4_RESPONSE,
 )
 
 from tests.common import MockConfigEntry
@@ -92,79 +94,103 @@ def config_fixture():
 @pytest.fixture(name="options")
 def options_fixture(request):
     """Define a config entry options fixture."""
-    return {CONF_EVENTS: True}
+    return {}
 
 
 # Axis API fixtures
 
 
 @pytest.fixture(name="mock_vapix_requests")
-def default_request_fixture(respx_mock):
+def default_request_fixture(
+    respx_mock, port_management_payload, param_properties_payload, param_ports_payload
+):
     """Mock default Vapix requests responses."""
 
     def __mock_default_requests(host):
-        path = f"http://{host}:80"
+        respx_mock(base_url=f"http://{host}:80")
 
         if host != DEFAULT_HOST:
-            respx.post(f"{path}/axis-cgi/apidiscovery.cgi").respond(
+            respx.post("/axis-cgi/apidiscovery.cgi").respond(
                 json=API_DISCOVERY_RESPONSE,
             )
-        respx.post(f"{path}/axis-cgi/basicdeviceinfo.cgi").respond(
+        respx.post("/axis-cgi/basicdeviceinfo.cgi").respond(
             json=BASIC_DEVICE_INFO_RESPONSE,
         )
-        respx.post(f"{path}/axis-cgi/io/portmanagement.cgi").respond(
-            json=PORT_MANAGEMENT_RESPONSE,
+        respx.post("/axis-cgi/io/portmanagement.cgi").respond(
+            json=port_management_payload,
         )
-        respx.post(f"{path}/axis-cgi/mqtt/client.cgi").respond(
+        respx.post("/axis-cgi/mqtt/client.cgi").respond(
             json=MQTT_CLIENT_RESPONSE,
         )
-        respx.post(f"{path}/axis-cgi/streamprofile.cgi").respond(
+        respx.post("/axis-cgi/streamprofile.cgi").respond(
             json=STREAM_PROFILES_RESPONSE,
         )
-        respx.post(f"{path}/axis-cgi/viewarea/info.cgi").respond(
-            json=VIEW_AREAS_RESPONSE
-        )
-        respx.get(f"{path}/axis-cgi/param.cgi?action=list&group=root.Brand").respond(
+        respx.post("/axis-cgi/viewarea/info.cgi").respond(json=VIEW_AREAS_RESPONSE)
+        respx.post(
+            "/axis-cgi/param.cgi",
+            data={"action": "list", "group": "root.Brand"},
+        ).respond(
             text=BRAND_RESPONSE,
             headers={"Content-Type": "text/plain"},
         )
-        respx.get(f"{path}/axis-cgi/param.cgi?action=list&group=root.Image").respond(
+        respx.post(
+            "/axis-cgi/param.cgi",
+            data={"action": "list", "group": "root.Image"},
+        ).respond(
             text=IMAGE_RESPONSE,
             headers={"Content-Type": "text/plain"},
         )
-        respx.get(f"{path}/axis-cgi/param.cgi?action=list&group=root.Input").respond(
-            text=PORTS_RESPONSE,
-            headers={"Content-Type": "text/plain"},
-        )
-        respx.get(f"{path}/axis-cgi/param.cgi?action=list&group=root.IOPort").respond(
-            text=PORTS_RESPONSE,
-            headers={"Content-Type": "text/plain"},
-        )
-        respx.get(f"{path}/axis-cgi/param.cgi?action=list&group=root.Output").respond(
-            text=PORTS_RESPONSE,
-            headers={"Content-Type": "text/plain"},
-        )
-        respx.get(
-            f"{path}/axis-cgi/param.cgi?action=list&group=root.Properties"
+        respx.post(
+            "/axis-cgi/param.cgi",
+            data={"action": "list", "group": "root.Input"},
         ).respond(
-            text=PROPERTIES_RESPONSE,
+            text=PORTS_RESPONSE,
             headers={"Content-Type": "text/plain"},
         )
-        respx.get(f"{path}/axis-cgi/param.cgi?action=list&group=root.PTZ").respond(
+        respx.post(
+            "/axis-cgi/param.cgi",
+            data={"action": "list", "group": "root.IOPort"},
+        ).respond(
+            text=param_ports_payload,
+            headers={"Content-Type": "text/plain"},
+        )
+        respx.post(
+            "/axis-cgi/param.cgi",
+            data={"action": "list", "group": "root.Output"},
+        ).respond(
+            text=PORTS_RESPONSE,
+            headers={"Content-Type": "text/plain"},
+        )
+        respx.post(
+            "/axis-cgi/param.cgi",
+            data={"action": "list", "group": "root.Properties"},
+        ).respond(
+            text=param_properties_payload,
+            headers={"Content-Type": "text/plain"},
+        )
+        respx.post(
+            "/axis-cgi/param.cgi",
+            data={"action": "list", "group": "root.PTZ"},
+        ).respond(
             text=PTZ_RESPONSE,
             headers={"Content-Type": "text/plain"},
         )
-        respx.get(
-            f"{path}/axis-cgi/param.cgi?action=list&group=root.StreamProfile"
+        respx.post(
+            "/axis-cgi/param.cgi",
+            data={"action": "list", "group": "root.StreamProfile"},
         ).respond(
             text=STREAM_PROFILES_RESPONSE,
             headers={"Content-Type": "text/plain"},
         )
-        respx.post(f"{path}/axis-cgi/applications/list.cgi").respond(
+        respx.post("/axis-cgi/applications/list.cgi").respond(
             text=APPLICATIONS_LIST_RESPONSE,
             headers={"Content-Type": "text/xml"},
         )
-        respx.post(f"{path}/local/vmd/control.cgi").respond(json=VMD4_RESPONSE)
+        respx.post("/local/fenceguard/control.cgi").respond(json=APP_VMD4_RESPONSE)
+        respx.post("/local/loiteringguard/control.cgi").respond(json=APP_VMD4_RESPONSE)
+        respx.post("/local/motionguard/control.cgi").respond(json=APP_VMD4_RESPONSE)
+        respx.post("/local/vmd/control.cgi").respond(json=APP_VMD4_RESPONSE)
+        respx.post("/local/objectanalytics/control.cgi").respond(json=APP_AOA_RESPONSE)
 
     return __mock_default_requests
 
@@ -182,6 +208,24 @@ def api_discovery_fixture(api_discovery_items):
     if api_discovery_items:
         data["data"]["apiList"].append(api_discovery_items)
     respx.post(f"http://{DEFAULT_HOST}:80/axis-cgi/apidiscovery.cgi").respond(json=data)
+
+
+@pytest.fixture(name="port_management_payload")
+def io_port_management_data_fixture():
+    """Property parameter data."""
+    return PORT_MANAGEMENT_RESPONSE
+
+
+@pytest.fixture(name="param_properties_payload")
+def param_properties_data_fixture():
+    """Property parameter data."""
+    return PROPERTIES_RESPONSE
+
+
+@pytest.fixture(name="param_ports_payload")
+def param_ports_data_fixture():
+    """Property parameter data."""
+    return PORTS_RESPONSE
 
 
 @pytest.fixture(name="setup_default_vapix_requests")

@@ -1,4 +1,5 @@
 """Allow users to set and activate scenes."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping, ValuesView
@@ -135,7 +136,7 @@ class SceneConfig(NamedTuple):
     id: str | None
     name: str
     icon: str | None
-    states: dict
+    states: dict[str, State]
 
 
 @callback

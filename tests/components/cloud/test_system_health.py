@@ -1,4 +1,5 @@
 """Test cloud system health."""
+
 import asyncio
 from collections.abc import Callable, Coroutine
 from typing import Any
@@ -42,6 +43,7 @@ async def test_cloud_system_health(
         },
     )
     await hass.async_block_till_done()
+    await cloud.login("test-user", "test-pass")
 
     cloud.remote.snitun_server = "us-west-1"
     cloud.remote.certificate_status = CertificateStatus.READY

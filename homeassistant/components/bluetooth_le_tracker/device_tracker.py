@@ -1,7 +1,7 @@
 """Tracking for bluetooth low energy devices."""
+
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime, timedelta
 import logging
 from uuid import UUID
@@ -155,7 +155,7 @@ async def async_setup_scanner(  # noqa: C901
             async with BleakClient(device) as client:
                 bat_char = await client.read_gatt_char(BATTERY_CHARACTERISTIC_UUID)
                 battery = ord(bat_char)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.debug(
                 "Timeout when trying to get battery status for %s", service_info.name
             )

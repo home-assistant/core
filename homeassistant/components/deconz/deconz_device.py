@@ -16,7 +16,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN as DECONZ_DOMAIN
-from .gateway import DeconzGateway
+from .hub import DeconzHub
 from .util import serial_from_unique_id
 
 _DeviceT = TypeVar(
@@ -33,7 +33,7 @@ class DeconzBase(Generic[_DeviceT]):
     def __init__(
         self,
         device: _DeviceT,
-        gateway: DeconzGateway,
+        gateway: DeconzHub,
     ) -> None:
         """Set up device and add update callback to get data from websocket."""
         self._device: _DeviceT = device
@@ -85,7 +85,7 @@ class DeconzDevice(DeconzBase[_DeviceT], Entity):
     def __init__(
         self,
         device: _DeviceT,
-        gateway: DeconzGateway,
+        gateway: DeconzHub,
     ) -> None:
         """Set up device and add update callback to get data from websocket."""
         super().__init__(device, gateway)
@@ -152,7 +152,7 @@ class DeconzSceneMixin(DeconzDevice[PydeconzScene]):
     def __init__(
         self,
         device: PydeconzScene,
-        gateway: DeconzGateway,
+        gateway: DeconzHub,
     ) -> None:
         """Set up a scene."""
         super().__init__(device, gateway)

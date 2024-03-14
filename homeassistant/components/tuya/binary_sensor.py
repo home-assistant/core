@@ -1,9 +1,10 @@
 """Support for Tuya binary sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 
-from tuya_iot import TuyaDevice, TuyaDeviceManager
+from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -51,7 +52,6 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
     "dgnbj": (
         TuyaBinarySensorEntityDescription(
             key=DPCode.GAS_SENSOR_STATE,
-            icon="mdi:gas-cylinder",
             device_class=BinarySensorDeviceClass.GAS,
             on_value="alarm",
         ),
@@ -76,14 +76,12 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         TuyaBinarySensorEntityDescription(
             key=DPCode.CO_STATE,
             translation_key="carbon_monoxide",
-            icon="mdi:molecule-co",
             device_class=BinarySensorDeviceClass.SAFETY,
             on_value="alarm",
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.CO2_STATE,
             translation_key="carbon_dioxide",
-            icon="mdi:molecule-co2",
             device_class=BinarySensorDeviceClass.SAFETY,
             on_value="alarm",
         ),
@@ -109,7 +107,6 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.SMOKE_SENSOR_STATE,
-            icon="mdi:smoke-detector",
             device_class=BinarySensorDeviceClass.SMOKE,
             on_value="alarm",
         ),
@@ -146,7 +143,6 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         TuyaBinarySensorEntityDescription(
             key=DPCode.FEED_STATE,
             translation_key="feeding",
-            icon="mdi:information",
             on_value="feeding",
         ),
     ),
@@ -329,14 +325,12 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             key=f"{DPCode.SHOCK_STATE}_drop",
             dpcode=DPCode.SHOCK_STATE,
             translation_key="drop",
-            icon="mdi:icon=package-down",
             on_value="drop",
         ),
         TuyaBinarySensorEntityDescription(
             key=f"{DPCode.SHOCK_STATE}_tilt",
             dpcode=DPCode.SHOCK_STATE,
             translation_key="tilt",
-            icon="mdi:spirit-level",
             on_value="tilt",
         ),
     ),
@@ -354,20 +348,20 @@ async def async_setup_entry(
         """Discover and add a discovered Tuya binary sensor."""
         entities: list[TuyaBinarySensorEntity] = []
         for device_id in device_ids:
-            device = hass_data.device_manager.device_map[device_id]
+            device = hass_data.manager.device_map[device_id]
             if descriptions := BINARY_SENSORS.get(device.category):
                 for description in descriptions:
                     dpcode = description.dpcode or description.key
                     if dpcode in device.status:
                         entities.append(
                             TuyaBinarySensorEntity(
-                                device, hass_data.device_manager, description
+                                device, hass_data.manager, description
                             )
                         )
 
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.device_manager.device_map])
+    async_discover_device([*hass_data.manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
@@ -381,8 +375,8 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        device: TuyaDevice,
-        device_manager: TuyaDeviceManager,
+        device: CustomerDevice,
+        device_manager: Manager,
         description: TuyaBinarySensorEntityDescription,
     ) -> None:
         """Init Tuya binary sensor."""

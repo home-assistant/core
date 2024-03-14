@@ -1,4 +1,5 @@
 """Support for OpenWRT (luci) routers."""
+
 from __future__ import annotations
 
 import logging
@@ -95,14 +96,11 @@ class LuciDeviceScanner(DeviceScanner):
 
         _LOGGER.debug("Luci get_all_connected_devices returned: %s", result)
 
-        last_results = []
-        for device in result:
-            if (
-                not hasattr(self.router.router.owrt_version, "release")
-                or not self.router.router.owrt_version.release
-                or self.router.router.owrt_version.release[0] < 19
-                or device.reachable
-            ):
-                last_results.append(device)
-
-        self.last_results = last_results
+        self.last_results = [
+            device
+            for device in result
+            if not hasattr(self.router.router.owrt_version, "release")
+            or not self.router.router.owrt_version.release
+            or self.router.router.owrt_version.release[0] < 19
+            or device.reachable
+        ]

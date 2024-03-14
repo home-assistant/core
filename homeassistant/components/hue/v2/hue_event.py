@@ -1,4 +1,5 @@
 """Handle forward of events transmitted by Hue devices to HASS."""
+
 import logging
 from typing import TYPE_CHECKING
 

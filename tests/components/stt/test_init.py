@@ -1,4 +1,5 @@
 """Test STT component setup."""
+
 from collections.abc import AsyncIterable, Generator
 from http import HTTPStatus
 from pathlib import Path

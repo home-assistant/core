@@ -1,4 +1,5 @@
 """Test the BTHome config flow."""
+
 from unittest.mock import patch
 
 from bthome_ble import BTHomeBluetoothDeviceData as DeviceData

@@ -1,4 +1,5 @@
 """Test APCUPSd config flow setup process."""
+
 from copy import copy
 from unittest.mock import patch
 
@@ -34,17 +35,6 @@ async def test_config_flow_cannot_connect(hass: HomeAssistant) -> None:
         )
         assert result["type"] == FlowResultType.FORM
         assert result["errors"]["base"] == "cannot_connect"
-
-
-async def test_config_flow_no_status(hass: HomeAssistant) -> None:
-    """Test config flow setup with successful connection but no status is reported."""
-    with patch("aioapcaccess.request_status", return_value={}):  # Returns no status.
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == "no_status"
 
 
 async def test_config_flow_duplicate(hass: HomeAssistant) -> None:

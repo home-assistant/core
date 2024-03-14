@@ -1,4 +1,5 @@
 """Platform allowing several switches to be grouped into one switch."""
+
 from __future__ import annotations
 
 import logging
@@ -87,7 +88,7 @@ async def async_setup_entry(
 
 @callback
 def async_create_preview_switch(
-    name: str, validated_config: dict[str, Any]
+    hass: HomeAssistant, name: str, validated_config: dict[str, Any]
 ) -> SwitchGroup:
     """Create a preview sensor."""
     return SwitchGroup(

@@ -3,6 +3,7 @@
 All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
+
 from homeassistant.components.alarm_control_panel import DOMAIN
 from homeassistant.const import (
     ATTR_CODE,
