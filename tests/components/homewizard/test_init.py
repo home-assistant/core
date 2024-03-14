@@ -135,6 +135,16 @@ async def test_load_handles_homewizardenergy_exception(
             "aabbccddeeff_total_power_export_t1_kwh",
             "aabbccddeeff_total_power_export_kwh",
         ),
+        (
+            "HWE-SKT-21",
+            "aabbccddeeff_total_power_import_t1_kwh",
+            "aabbccddeeff_total_power_import_kwh",
+        ),
+        (
+            "HWE-SKT-21",
+            "aabbccddeeff_total_power_export_t1_kwh",
+            "aabbccddeeff_total_power_export_kwh",
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_homewizardenergy")
@@ -176,6 +186,16 @@ async def test_sensor_migration(
         ),
         (
             "HWE-SKT-11",
+            "aabbccddeeff_total_power_export_t1_kwh",
+            "aabbccddeeff_total_power_export_kwh",
+        ),
+        (
+            "HWE-SKT-21",
+            "aabbccddeeff_total_power_import_t1_kwh",
+            "aabbccddeeff_total_power_import_kwh",
+        ),
+        (
+            "HWE-SKT-21",
             "aabbccddeeff_total_power_export_t1_kwh",
             "aabbccddeeff_total_power_export_kwh",
         ),
