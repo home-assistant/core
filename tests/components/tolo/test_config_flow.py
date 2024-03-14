@@ -3,7 +3,6 @@
 from unittest.mock import Mock, patch
 
 import pytest
-from tololib.errors import ResponseTimedOutError
 
 from homeassistant.components import dhcp
 from homeassistant.components.tolo.const import DOMAIN
@@ -38,7 +37,7 @@ def coordinator_toloclient() -> Mock:
 
 async def test_user_with_timed_out_host(hass: HomeAssistant, toloclient: Mock) -> None:
     """Test a user initiated config flow with provided host which times out."""
-    toloclient().get_status_info.side_effect = ResponseTimedOutError()
+    toloclient().get_status_info.side_effect = TimeoutError()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
