@@ -219,25 +219,31 @@ async def test_form_reauth_auth(
     )
     mock_config.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_config.entry_id,
-        },
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert not result["errors"]
-    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-    assert flows[0]["context"]["title_placeholders"] == {
-        "ip_address": "1.1.1.1",
-        "name": "Mock Title",
-    }
-
     with patch(
         "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_bootstrap",
         side_effect=NotAuthorized,
+    ), patch(
+        "homeassistant.components.unifiprotect.async_setup",
+        return_value=True,
+    ) as mock_setup, patch(
+        "homeassistant.components.unifiprotect.async_setup_entry",
+        return_value=True,
     ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": mock_config.entry_id,
+            },
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert not result["errors"]
+        flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+        assert flows[0]["context"]["title_placeholders"] == {
+            "ip_address": "1.1.1.1",
+            "name": "Mock Title",
+        }
+
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -257,7 +263,10 @@ async def test_form_reauth_auth(
     ), patch(
         "homeassistant.components.unifiprotect.async_setup",
         return_value=True,
-    ) as mock_setup:
+    ) as mock_setup, patch(
+        "homeassistant.components.unifiprotect.async_setup_entry",
+        return_value=True,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
@@ -768,6 +777,20 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
     )
     mock_config.add_to_hass(hass)
 
+    with patch(
+        "homeassistant.components.unifiprotect.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.unifiprotect.async_setup",
+        return_value=True,
+    ) as mock_setup:
+        await hass.config_entries.async_setup(mock_config.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config.state == config_entries.ConfigEntryState.LOADED
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_setup.mock_calls) == 1
+
     other_ip_dict = UNIFI_DISCOVERY_DICT.copy()
     other_ip_dict["source_ip"] = "127.0.0.2"
     other_ip_dict["direct_connect_domain"] = "nomatchsameip.ui.direct"
@@ -823,7 +846,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
         "verify_ssl": True,
     }
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup.mock_calls) == 0
 
 
 async def test_discovered_by_unifi_discovery_direct_connect_on_different_interface_resolver_no_result(
