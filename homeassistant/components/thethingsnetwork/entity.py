@@ -7,6 +7,7 @@ from typing import Any, Optional
 from ttn_client import TTN_SensorValue
 
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -61,7 +62,7 @@ class TTN_Entity(CoordinatorEntity, Entity):
     # -----------------------------------------------------------#
 
     async def async_added_to_hass(self):
-        """Rembember added entity - see exits method bellow."""
+        """Remember added entity - see exits method below."""
 
         await super().async_added_to_hass()
         TTN_EntrySettings(self.__entry).get_entities()[self.unique_id] = self
@@ -128,7 +129,7 @@ class TTN_Entity(CoordinatorEntity, Entity):
         """Return the state attributes of the sensor."""
         # if self._ttn_data_storage.data is not None:
 
-        # TBD - add more info in the TTN upstream message such as signal strenght, transmition time, etc
+        # TBD - add more info in the TTN upstream message such as signal strength, transmission time, etc
         return {}
 
     @property
@@ -161,20 +162,22 @@ class TTN_Entity(CoordinatorEntity, Entity):
         return {}
 
     @property
-    def device_info(self) -> Optional[dict[str, Any]]:
+    def device_info(self) -> DeviceInfo:
         """Return device specific attributes.
 
         Implemented by platform classes.
         """
 
-        return {
-            "identifiers": {
-                # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self.device_id)
-            },
-            "name": self.device_name,
-            # TBD - add more info in the TTN upstream message such as signal strenght, transmition time, etc
-        }
+        return DeviceInfo(
+            {
+                "identifiers": {
+                    # Serial numbers are unique identifiers within a specific domain
+                    (DOMAIN, self.device_id)
+                },
+                "name": self.device_name,
+                # TBD - add more info in the TTN upstream message such as signal strength, transmission time, etc
+            }
+        )
 
     @property
     def device_class(self) -> Optional[str]:

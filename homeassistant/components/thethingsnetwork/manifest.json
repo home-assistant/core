@@ -1,12 +1,11 @@
 {
   "domain": "thethingsnetwork",
   "name": "The Things Network",
-  "version": "1.0.0",
-  "documentation": "https://github.com/angelnu/home_assistant_thethingsnetwork",
-  "issue_tracker": "https://github.com/angelnu/home_assistant_thethingsnetwork/issues",
-  "config_flow": true,
   "codeowners": ["@angelnu"],
+  "config_flow": true,
+  "documentation": "https://github.com/angelnu/home_assistant_thethingsnetwork",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/angelnu/home_assistant_thethingsnetwork/issues",
   "requirements": ["ttn_client==0.0.2"]
 }

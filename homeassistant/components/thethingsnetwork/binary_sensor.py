@@ -14,7 +14,9 @@ from .entry_settings import TTN_EntrySettings
 async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities):
     """Add entities for TTN."""
 
-    entry.coordinator.register_platform_entity_class(TtnBinarySensor, async_add_entities)
+    entry.coordinator.register_platform_entity_class(
+        TtnBinarySensor, async_add_entities
+    )
     entry.coordinator.async_add_entities()
 
 
