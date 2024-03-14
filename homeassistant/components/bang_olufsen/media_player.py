@@ -151,6 +151,7 @@ async def async_setup_entry(
             )
         },
         func="async_beolink_unexpand",
+        supports_response=SupportsResponse.OPTIONAL,
     )
 
     platform.async_register_entity_service(
@@ -202,6 +203,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         self._video_sources: dict[str, str] = {}
 
         # Beolink
+        self._beolink_sources: dict[str, bool] = {}
         self._remote_leader: BeolinkLeader | None = None
         self._beolink_attribute: dict[str, dict] = {}
 
@@ -299,6 +301,10 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         # Get overall device state once. This is handled by WebSocket events the rest of the time.
         product_state = await self._client.get_product_state()
 
+        # Set the entity name to the device's friendly name
+        beolink_self = await self._client.get_beolink_self()
+        self._attr_name = beolink_self.friendly_name
+
         # Get volume information.
         if product_state.volume:
             self._volume = product_state.volume
@@ -363,6 +369,18 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             and source.id
             and source.name
             and source.id not in HIDDEN_SOURCE_IDS
+        }
+
+        # Some sources are not Beolink expandable. _source_change, which is used throughout the entity does not have this information.
+        # Save expandable sources for Beolink services
+        self._beolink_sources = {
+            source.id: (
+                source.is_multiroom_available
+                if source.is_multiroom_available is not None
+                else False
+            )
+            for source in cast(list[Source], sources.items)
+            if source.id
         }
 
         # Video sources from remote menu
@@ -908,7 +926,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
     # Custom services:
     async def async_beolink_join(
         self, beolink_jid: str | None = None
-    ) -> None | ServiceResponse:
+    ) -> ServiceResponse:
         """Join a Beolink multi-room experience."""
         if beolink_jid is None:
             response = await self._client.join_latest_beolink_experience()
@@ -924,7 +942,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         response: dict[str, Any] = {"invalid_jid": []}
 
         # Ensure that the current source is expandable
-        if not self._source_change.is_multiroom_available:
+        if not self._beolink_sources[cast(str, self._source_change.id)]:
             return {"invalid_source": self.source}
 
         for beolink_jid in beolink_jids:
@@ -938,13 +956,20 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
         return None
 
-    async def async_beolink_unexpand(self, beolink_jids: list[str]) -> None:
+    async def async_beolink_unexpand(self, beolink_jids: list[str]) -> ServiceResponse:
         """Unexpand a Beolink multi-room experience with a device or devices."""
+        response: dict[str, Any] = {"invalid_jid": []}
+
         for beolink_jid in beolink_jids:
             if not check_valid_jid(beolink_jid):
-                _LOGGER.error("Invalid Beolink JID: %s", beolink_jid)
+                response["invalid_jid"].append(beolink_jid)
                 continue
             await self._client.post_beolink_unexpand(jid=beolink_jid)
+
+        if len(response["invalid_jid"]) > 0:
+            return response
+
+        return None
 
     async def async_beolink_leave(self) -> None:
         """Leave the current Beolink experience."""
