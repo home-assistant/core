@@ -152,9 +152,9 @@ async def test_gateway_setup(
         gateway = get_gateway_from_config_entry(hass, config_entry)
         assert gateway.bridgeid == BRIDGEID
         assert gateway.master is True
-        assert gateway.option_allow_clip_sensor is False
-        assert gateway.option_allow_deconz_groups is True
-        assert gateway.option_allow_new_devices is True
+        assert gateway.config.allow_clip_sensor is False
+        assert gateway.config.allow_deconz_groups is True
+        assert gateway.config.allow_new_devices is True
 
         assert len(gateway.deconz_ids) == 0
         assert len(hass.states.async_all()) == 0
@@ -290,8 +290,9 @@ async def test_reset_after_successful_setup(
 
 async def test_get_deconz_api(hass: HomeAssistant) -> None:
     """Successful call."""
+    config_entry = MockConfigEntry(domain=DECONZ_DOMAIN, data=ENTRY_CONFIG)
     with patch("pydeconz.DeconzSession.refresh_state", return_value=True):
-        assert await get_deconz_api(hass, ENTRY_CONFIG)
+        assert await get_deconz_api(hass, config_entry)
 
 
 @pytest.mark.parametrize(
@@ -307,8 +308,9 @@ async def test_get_deconz_api_fails(
     hass: HomeAssistant, side_effect, raised_exception
 ) -> None:
     """Failed call."""
+    config_entry = MockConfigEntry(domain=DECONZ_DOMAIN, data=ENTRY_CONFIG)
     with patch(
         "pydeconz.DeconzSession.refresh_state",
         side_effect=side_effect,
     ), pytest.raises(raised_exception):
-        assert await get_deconz_api(hass, ENTRY_CONFIG)
+        assert await get_deconz_api(hass, config_entry)

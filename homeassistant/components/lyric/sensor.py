@@ -149,7 +149,18 @@ async def async_setup_entry(
                         )
                     )
 
-    async_add_entities(entities)
+    async_add_entities(
+        LyricSensor(
+            coordinator,
+            device_sensor,
+            location,
+            device,
+        )
+        for location in coordinator.data.locations
+        for device in location.devices
+        for device_sensor in DEVICE_SENSORS
+        if device_sensor.suitable_fn(device)
+    )
 
 
 class LyricSensor(LyricDeviceEntity, SensorEntity):
