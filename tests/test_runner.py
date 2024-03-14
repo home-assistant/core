@@ -1,4 +1,5 @@
 """Test the runner."""
+
 import asyncio
 from collections.abc import Iterator
 import threading

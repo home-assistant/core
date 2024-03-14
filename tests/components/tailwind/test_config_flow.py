@@ -1,4 +1,5 @@
 """Configuration flow tests for the Tailwind integration."""
+
 from ipaddress import ip_address
 from unittest.mock import MagicMock
 
@@ -400,7 +401,7 @@ async def test_dhcp_discovery_updates_entry(
         data=DhcpServiceInfo(
             hostname="tailwind-3ce90e6d2184.local.",
             ip="127.0.0.1",
-            macaddress="3c:e9:0e:6d:21:84",
+            macaddress="3ce90e6d2184",
         ),
     )
 
@@ -420,7 +421,7 @@ async def test_dhcp_discovery_ignores_unknown(hass: HomeAssistant) -> None:
         data=DhcpServiceInfo(
             hostname="tailwind-3ce90e6d2184.local.",
             ip="127.0.0.1",
-            macaddress="3c:e9:0e:6d:21:84",
+            macaddress="3ce90e6d2184",
         ),
     )
 

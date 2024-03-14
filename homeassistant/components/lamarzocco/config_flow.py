@@ -1,4 +1,5 @@
 """Config flow for La Marzocco integration."""
+
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -11,6 +12,7 @@ from homeassistant.components.bluetooth import BluetoothServiceInfo
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
+    ConfigFlowResult
     OptionsFlow,
     OptionsFlowWithConfigEntry,
 )
@@ -22,7 +24,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -49,7 +50,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
 
         errors = {}
@@ -116,7 +117,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_machine_selection(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Let user select machine to connect to."""
         errors: dict[str, str] = {}
         if user_input:
@@ -173,7 +174,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery over Bluetooth."""
         address = discovery_info.address
         name = discovery_info.name
@@ -195,7 +196,9 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -204,7 +207,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         if not user_input:
             return self.async_show_form(

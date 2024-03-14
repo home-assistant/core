@@ -4,7 +4,6 @@
 # Current and forecast will create general, controlled load and feed in as required
 # At the moment renewables in the only grid sensor.
 
-
 from __future__ import annotations
 
 from typing import Any
@@ -26,12 +25,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION, DOMAIN
 from .coordinator import AmberUpdateCoordinator, normalize_descriptor
-
-ICONS = {
-    "general": "mdi:transmission-tower",
-    "controlled_load": "mdi:clock-outline",
-    "feed_in": "mdi:solar-power",
-}
 
 UNIT = f"{CURRENCY_DOLLAR}/{UnitOfEnergy.KILO_WATT_HOUR}"
 
@@ -219,7 +212,7 @@ async def async_setup_entry(
             name=f"{entry.title} - {friendly_channel_type(channel_type)} Price",
             native_unit_of_measurement=UNIT,
             state_class=SensorStateClass.MEASUREMENT,
-            icon=ICONS[channel_type],
+            translation_key=channel_type,
         )
         entities.append(AmberPriceSensor(coordinator, description, channel_type))
 
@@ -230,7 +223,7 @@ async def async_setup_entry(
                 f"{entry.title} - {friendly_channel_type(channel_type)} Price"
                 " Descriptor"
             ),
-            icon=ICONS[channel_type],
+            translation_key=channel_type,
         )
         entities.append(
             AmberPriceDescriptorSensor(coordinator, description, channel_type)
@@ -242,7 +235,7 @@ async def async_setup_entry(
             name=f"{entry.title} - {friendly_channel_type(channel_type)} Forecast",
             native_unit_of_measurement=UNIT,
             state_class=SensorStateClass.MEASUREMENT,
-            icon=ICONS[channel_type],
+            translation_key=channel_type,
         )
         entities.append(AmberForecastSensor(coordinator, description, channel_type))
 
@@ -251,7 +244,7 @@ async def async_setup_entry(
         name=f"{entry.title} - Renewables",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:solar-power",
+        translation_key="renewables",
     )
     entities.append(AmberGridSensor(coordinator, renewables_description))
 

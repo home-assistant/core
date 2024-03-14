@@ -1,4 +1,5 @@
 """Philips Hue sensor platform tests for V2 bridge/api."""
+
 from homeassistant.components import hue
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er

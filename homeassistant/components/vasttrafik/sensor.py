@@ -1,4 +1,5 @@
 """Support for Västtrafik public transport."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -64,10 +65,8 @@ def setup_platform(
 ) -> None:
     """Set up the departure sensor."""
     planner = vasttrafik.JournyPlanner(config.get(CONF_KEY), config.get(CONF_SECRET))
-    sensors = []
-
-    for departure in config[CONF_DEPARTURES]:
-        sensors.append(
+    add_entities(
+        (
             VasttrafikDepartureSensor(
                 planner,
                 departure.get(CONF_NAME),
@@ -76,8 +75,10 @@ def setup_platform(
                 departure.get(CONF_LINES),
                 departure.get(CONF_DELAY),
             )
-        )
-    add_entities(sensors, True)
+            for departure in config[CONF_DEPARTURES]
+        ),
+        True,
+    )
 
 
 class VasttrafikDepartureSensor(SensorEntity):

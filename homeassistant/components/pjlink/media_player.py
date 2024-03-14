@@ -1,7 +1,6 @@
 """Support for controlling projector via the PJLink protocol."""
-from __future__ import annotations
 
-import socket
+from __future__ import annotations
 
 from pypjlink import MUTE_AUDIO, Projector
 from pypjlink.projector import ProjectorError
@@ -116,7 +115,7 @@ class PjLinkDevice(MediaPlayerEntity):
         try:
             projector = Projector.from_address(self._host, self._port)
             projector.authenticate(self._password)
-        except (socket.timeout, OSError) as err:
+        except (TimeoutError, OSError) as err:
             self._attr_available = False
             raise ProjectorError(ERR_PROJECTOR_UNAVAILABLE) from err
 

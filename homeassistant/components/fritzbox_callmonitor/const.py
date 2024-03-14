@@ -1,4 +1,5 @@
 """Constants for the AVM Fritz!Box call monitor integration."""
+
 from enum import StrEnum
 from typing import Final
 
@@ -13,8 +14,6 @@ class FritzState(StrEnum):
     CONNECT = "CONNECT"
     DISCONNECT = "DISCONNECT"
 
-
-ICON_PHONE: Final = "mdi:phone"
 
 ATTR_PREFIXES = "prefixes"
 

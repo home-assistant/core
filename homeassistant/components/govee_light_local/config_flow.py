@@ -44,7 +44,7 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
         async with asyncio.timeout(delay=5):
             while not controller.devices:
                 await asyncio.sleep(delay=1)
-    except asyncio.TimeoutError:
+    except TimeoutError:
         _LOGGER.debug("No devices found")
 
     devices_count = len(controller.devices)

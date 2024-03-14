@@ -1,4 +1,5 @@
 """Test emulated_roku component setup process."""
+
 from unittest.mock import AsyncMock, Mock, patch
 
 from homeassistant.components import emulated_roku

@@ -1,4 +1,5 @@
 """Initializer helpers for HomematicIP fake server."""
+
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from homematicip.aio.auth import AsyncAuth

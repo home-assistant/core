@@ -10,6 +10,10 @@
         "data_description": {
           "host": "Hostname or IP address of your TechnoVE station."
         }
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to add the TechnoVE Station named `{name}` to Home Assistant?",
+        "title": "Discovered TechnoVE station"
       }
     },
     "error": {
@@ -21,15 +25,26 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "conflict_in_sharing_config": {
+        "name": "Conflict with power sharing mode"
+      },
+      "in_sharing_mode": {
+        "name": "Power sharing mode"
+      },
+      "is_battery_protected": {
+        "name": "Battery protected"
+      },
+      "is_static_ip": {
+        "name": "Static IP"
+      }
+    },
     "sensor": {
       "voltage_in": {
         "name": "Input voltage"
       },
       "voltage_out": {
         "name": "Output voltage"
-      },
-      "max_current": {
-        "name": "Max current"
       },
       "max_station_current": {
         "name": "Max station current"
@@ -48,8 +63,15 @@
         "state": {
           "unplugged": "Unplugged",
           "plugged_waiting": "Plugged, waiting",
-          "plugged_charging": "Plugged, charging"
+          "plugged_charging": "Plugged, charging",
+          "out_of_activation_period": "Out of activation period",
+          "high_charge_period": "High charge period"
         }
+      }
+    },
+    "switch": {
+      "auto_charge": {
+        "name": "Auto charge"
       }
     }
   }

@@ -1,4 +1,5 @@
 """Support for System Bridge binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -22,10 +23,6 @@ from .entity import SystemBridgeEntity
 @dataclass(frozen=True)
 class SystemBridgeBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Class describing System Bridge binary sensor entities."""
-
-    # SystemBridgeBinarySensor does not support UNDEFINED or None,
-    # restrict the type to str.
-    name: str = ""
 
     value: Callable = round
 
@@ -53,23 +50,20 @@ async def async_setup_entry(
     """Set up System Bridge binary sensor based on a config entry."""
     coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities = []
-    for description in BASE_BINARY_SENSOR_TYPES:
-        entities.append(
-            SystemBridgeBinarySensor(coordinator, description, entry.data[CONF_PORT])
-        )
+    entities = [
+        SystemBridgeBinarySensor(coordinator, description, entry.data[CONF_PORT])
+        for description in BASE_BINARY_SENSOR_TYPES
+    ]
 
     if (
         coordinator.data.battery
         and coordinator.data.battery.percentage
         and coordinator.data.battery.percentage > -1
     ):
-        for description in BATTERY_BINARY_SENSOR_TYPES:
-            entities.append(
-                SystemBridgeBinarySensor(
-                    coordinator, description, entry.data[CONF_PORT]
-                )
-            )
+        entities.extend(
+            SystemBridgeBinarySensor(coordinator, description, entry.data[CONF_PORT])
+            for description in BATTERY_BINARY_SENSOR_TYPES
+        )
 
     async_add_entities(entities)
 

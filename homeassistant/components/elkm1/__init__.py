@@ -1,4 +1,5 @@
 """Support the ElkM1 Gold and ElkM1 EZ8 alarm/integration panels."""
+
 from __future__ import annotations
 
 import asyncio
@@ -10,7 +11,7 @@ from types import MappingProxyType
 from typing import Any
 
 from elkm1_lib.elements import Element
-from elkm1_lib.elk import Elk
+from elkm1_lib.elk import Elk, Panel
 from elkm1_lib.util import parse_url
 import voluptuous as vol
 
@@ -296,7 +297,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         if not await async_wait_for_elk_to_sync(elk, LOGIN_TIMEOUT, SYNC_TIMEOUT):
             return False
-    except asyncio.TimeoutError as exc:
+    except TimeoutError as exc:
         raise ConfigEntryNotReady(f"Timed out connecting to {conf[CONF_HOST]}") from exc
 
     elk_temp_unit = elk.panel.temperature_units
@@ -389,7 +390,7 @@ async def async_wait_for_elk_to_sync(
         try:
             async with asyncio.timeout(timeout):
                 await event.wait()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.debug("Timed out waiting for %s event", name)
             elk.disconnect()
             raise
@@ -398,22 +399,30 @@ async def async_wait_for_elk_to_sync(
     return success
 
 
+@callback
+def _async_get_elk_panel(hass: HomeAssistant, service: ServiceCall) -> Panel:
+    """Get the ElkM1 panel from a service call."""
+    prefix = service.data["prefix"]
+    elk = _find_elk_by_prefix(hass, prefix)
+    if elk is None:
+        raise HomeAssistantError(f"No ElkM1 with prefix '{prefix}' found")
+    return elk.panel
+
+
 def _create_elk_services(hass: HomeAssistant) -> None:
-    def _getelk(service: ServiceCall) -> Elk:
-        prefix = service.data["prefix"]
-        elk = _find_elk_by_prefix(hass, prefix)
-        if elk is None:
-            raise HomeAssistantError(f"No ElkM1 with prefix '{prefix}' found")
-        return elk
+    """Create ElkM1 services."""
 
+    @callback
     def _speak_word_service(service: ServiceCall) -> None:
-        _getelk(service).panel.speak_word(service.data["number"])
+        _async_get_elk_panel(hass, service).speak_word(service.data["number"])
 
+    @callback
     def _speak_phrase_service(service: ServiceCall) -> None:
-        _getelk(service).panel.speak_phrase(service.data["number"])
+        _async_get_elk_panel(hass, service).speak_phrase(service.data["number"])
 
+    @callback
     def _set_time_service(service: ServiceCall) -> None:
-        _getelk(service).panel.set_time(dt_util.now())
+        _async_get_elk_panel(hass, service).set_time(dt_util.now())
 
     hass.services.async_register(
         DOMAIN, "speak_word", _speak_word_service, SPEAK_SERVICE_SCHEMA

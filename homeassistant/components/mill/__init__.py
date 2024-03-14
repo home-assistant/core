@@ -1,4 +1,5 @@
 """The mill component."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -21,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
 
 
-class MillDataUpdateCoordinator(DataUpdateCoordinator):
+class MillDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching Mill data."""
 
     def __init__(

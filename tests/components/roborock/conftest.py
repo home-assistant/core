@@ -1,4 +1,5 @@
 """Global fixtures for Roborock integration."""
+
 from unittest.mock import patch
 
 import pytest
@@ -44,6 +45,9 @@ def bypass_api_fixture() -> None:
         return_value=PROP,
     ), patch(
         "homeassistant.components.roborock.coordinator.RoborockMqttClient.get_multi_maps_list",
+        return_value=MULTI_MAP_LIST,
+    ), patch(
+        "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_multi_maps_list",
         return_value=MULTI_MAP_LIST,
     ), patch(
         "homeassistant.components.roborock.image.RoborockMapDataParser.parse",

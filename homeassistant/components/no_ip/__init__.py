@@ -1,4 +1,5 @@
 """Integrate with NO-IP Dynamic DNS service."""
+
 import asyncio
 import base64
 from datetime import datetime, timedelta
@@ -114,7 +115,7 @@ async def _update_no_ip(
     except aiohttp.ClientError:
         _LOGGER.warning("Can't connect to NO-IP API")
 
-    except asyncio.TimeoutError:
+    except TimeoutError:
         _LOGGER.warning("Timeout from NO-IP API for domain: %s", domain)
 
     return False

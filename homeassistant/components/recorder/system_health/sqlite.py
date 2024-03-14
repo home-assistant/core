@@ -1,4 +1,5 @@
 """Provide info to system health for sqlite."""
+
 from __future__ import annotations
 
 from sqlalchemy import text
