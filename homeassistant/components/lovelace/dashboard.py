@@ -18,6 +18,7 @@ from homeassistant.helpers import collection, storage
 from homeassistant.util.yaml import Secrets, load_yaml_dict
 
 from .const import (
+    CONF_ALLOW_SINGLE_WORD,
     CONF_ICON,
     CONF_URL_PATH,
     DOMAIN,
@@ -234,10 +235,14 @@ class DashboardsCollection(collection.DictStorageCollection):
 
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
-        if "-" not in data[CONF_URL_PATH]:
+        url_path = data[CONF_URL_PATH]
+
+        allow_single_word = data.pop(CONF_ALLOW_SINGLE_WORD, False)
+
+        if not allow_single_word and "-" not in url_path:
             raise vol.Invalid("Url path needs to contain a hyphen (-)")
 
-        if data[CONF_URL_PATH] in self.hass.data[DATA_PANELS]:
+        if url_path in self.hass.data[DATA_PANELS]:
             raise vol.Invalid("Panel url path needs to be unique")
 
         return self.CREATE_SCHEMA(data)

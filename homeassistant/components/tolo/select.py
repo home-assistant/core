@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from tololib.const import LampMode
+from tololib import LampMode
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry

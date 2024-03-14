@@ -747,7 +747,6 @@ omit =
     homeassistant/components/lyric/climate.py
     homeassistant/components/lyric/sensor.py
     homeassistant/components/mailgun/notify.py
-    homeassistant/components/map/*
     homeassistant/components/mastodon/notify.py
     homeassistant/components/matrix/__init__.py
     homeassistant/components/matrix/notify.py

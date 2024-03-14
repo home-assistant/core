@@ -1,7 +1,8 @@
 """Test the Lovelace Cast platform."""
 
+from collections.abc import Generator
 from time import time
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -13,6 +14,19 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
+
+
+@pytest.fixture(autouse=True)
+def mock_onboarding_done() -> Generator[MagicMock, None, None]:
+    """Mock that Home Assistant is currently onboarding.
+
+    Enabled to prevent creating default dashboards during test execution.
+    """
+    with patch(
+        "homeassistant.components.onboarding.async_is_onboarded",
+        return_value=True,
+    ) as mock_onboarding:
+        yield mock_onboarding
 
 
 @pytest.fixture
