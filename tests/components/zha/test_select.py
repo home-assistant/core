@@ -19,13 +19,23 @@ import zigpy.zcl.clusters.general as general
 from zigpy.zcl.clusters.manufacturer_specific import ManufacturerSpecificCluster
 import zigpy.zcl.clusters.security as security
 
-from homeassistant.components.zha.select import AqaraMotionSensitivities
+from homeassistant.components.zha.select import (
+    AqaraMotionSensitivities,
+    MultitermElectricValveStates,
+    MultitermHeatingCoolingStates,
+    MultitermSleepModeStates,
+)
 from homeassistant.const import STATE_UNKNOWN, EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, restore_state
 from homeassistant.util import dt as dt_util
 
-from .common import async_enable_traffic, find_entity_id, send_attributes_report
+from .common import (
+    async_enable_traffic,
+    find_entity_id,
+    send_attributes_report,
+    update_attribute_cache,
+)
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 
 from tests.common import async_mock_load_restore_state_from_storage
@@ -48,6 +58,53 @@ def select_select_only():
         ),
     ):
         yield
+
+
+@pytest.fixture
+async def multiterm_zc0101_binary_output(hass, zigpy_device_mock):
+    """Binary Output fixture."""
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [
+                    # general.Basic.cluster_id,
+                    general.BinaryOutput.cluster_id,
+                ],
+                SIG_EP_OUTPUT: [
+                    # general.Basic.cluster_id
+                ],
+                SIG_EP_TYPE: zha.DeviceType.HEATING_COOLING_UNIT,
+                SIG_EP_PROFILE: zha.PROFILE_ID,
+            },
+            2: {
+                SIG_EP_INPUT: [
+                    # general.Basic.cluster_id,
+                    general.BinaryOutput.cluster_id,
+                ],
+                SIG_EP_OUTPUT: [
+                    # general.Basic.cluster_id
+                ],
+                SIG_EP_TYPE: zha.DeviceType.HEATING_COOLING_UNIT,
+                SIG_EP_PROFILE: zha.PROFILE_ID,
+            },
+            3: {
+                SIG_EP_INPUT: [
+                    # general.Basic.cluster_id,
+                    general.BinaryOutput.cluster_id,
+                ],
+                SIG_EP_OUTPUT: [
+                    # general.Basic.cluster_id
+                ],
+                SIG_EP_TYPE: zha.DeviceType.HEATING_COOLING_UNIT,
+                SIG_EP_PROFILE: zha.PROFILE_ID,
+            },
+        },
+        manufacturer="MultiTerm",
+        model="ZC0101",
+    )
+
+    return zigpy_device
 
 
 @pytest.fixture
@@ -120,6 +177,72 @@ def core_rs(hass_storage):
         }
 
     return _storage
+
+
+async def test_select_multiterm_zc0101_binary_output(
+    hass: HomeAssistant, zha_device_joined_restored, multiterm_zc0101_binary_output
+) -> None:
+    """Test ZHA binary output device."""
+
+    enums = {
+        1: {"description": "Electric Valve", "enum": MultitermElectricValveStates},
+        2: {"description": "Heating/Cooling", "enum": MultitermHeatingCoolingStates},
+        3: {"description": "Sleep Mode", "enum": MultitermSleepModeStates},
+    }
+
+    # Load mandatory attributes
+    for ep_index, attrs in enums.items():
+        cluster = multiterm_zc0101_binary_output.endpoints[ep_index].binary_output
+        cluster.PLUGGED_ATTR_READS = {
+            general.BinaryOutput.AttributeDefs.description.name: attrs["description"],
+            general.BinaryOutput.AttributeDefs.inactive_text.name: attrs["enum"](
+                0
+            ).name,
+            general.BinaryOutput.AttributeDefs.active_text.name: attrs["enum"](1).name,
+            general.BinaryOutput.AttributeDefs.present_value.name: False,
+        }
+        update_attribute_cache(cluster)
+
+    zha_device = await zha_device_joined_restored(multiterm_zc0101_binary_output)
+
+    # Check if entities are created and update their state
+    for attrs in enums.values():
+        entity_id = find_entity_id(
+            Platform.SELECT,
+            zha_device,
+            hass,
+            qualifier=attrs["description"].replace("/", "_").replace(" ", "_").lower(),
+        )
+        assert entity_id is not None
+
+        # Test that entity is created properly
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == attrs["enum"](0).name
+        assert state.attributes["options"] == [
+            attrs["enum"](0).name,
+            attrs["enum"](1).name,
+        ]
+
+        entity_registry = er.async_get(hass)
+        entity_entry = entity_registry.async_get(entity_id)
+        assert entity_entry
+        assert entity_entry.entity_category == EntityCategory.CONFIG
+
+        # Test select option and update state
+        await hass.services.async_call(
+            "select",
+            "select_option",
+            {
+                "entity_id": entity_id,
+                "option": attrs["enum"](1).name,
+            },
+            blocking=True,
+        )
+
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == attrs["enum"](1).name
 
 
 async def test_select(hass: HomeAssistant, siren) -> None:
