@@ -62,12 +62,12 @@
   },
   "issues": {
     "ea_warning": {
-      "title": "UniFi Protect v{version} is an Early Access version",
+      "title": "UniFi Protect Early Access enabled",
       "fix_flow": {
         "step": {
           "start": {
-            "title": "v{version} is an Early Access version",
-            "description": "You are using v{version} of UniFi Protect which is an Early Access version. [Early Access versions are not supported by Home Assistant](https://www.home-assistant.io/integrations/unifiprotect#about-unifi-early-access) and it is recommended to go back to a stable release as soon as possible.\n\nBy submitting this form you have either [downgraded UniFi Protect](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) or you agree to run an unsupported version of UniFi Protect."
+            "title": "UniFi Protect Early Access enabled",
+            "description": "You are either running an Early Access version of UniFi Protect (v{version}) or you have opt-ed into a release channel that is not the Official stable release channel. [Early Access versions are not supported by Home Assistant](https://www.home-assistant.io/integrations/unifiprotect#about-unifi-early-access) and you should switch back to the Official stable release channel as soon as possible. Accidently upgrading to an Early Access version can break your UniFi Protect integration.\n\nBy submitting this form you have either restored a backup back to a stable release of UniFi Protect and have switched back to the offical release channel or you agree to run an unsupported version of UniFi Protect and your Home Assistant integration may break at anytime."
           },
           "confirm": {
             "title": "[%key:component::unifiprotect::issues::ea_warning::fix_flow::step::start::title%]",
@@ -78,7 +78,7 @@
     },
     "ea_setup_failed": {
       "title": "Setup error using Early Access version",
-      "description": "You are using v{version} of UniFi Protect which is an Early Access version. An unrecoverable error occurred while trying to load the integration. Please [downgrade to a stable version](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) of UniFi Protect to continue using the integration.\n\nError: {error}"
+      "description": "You are using v{version} of UniFi Protect which is an Early Access version. An unrecoverable error occurred while trying to load the integration. Please restore a backup of a stable release of UniFi Protect to continue using the integration.\n\nError: {error}"
     },
     "cloud_user": {
       "title": "Ubiquiti Cloud Users are not Supported",

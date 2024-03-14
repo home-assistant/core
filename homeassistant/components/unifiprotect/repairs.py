@@ -6,6 +6,7 @@ import logging
 from typing import cast
 
 from pyunifiprotect import ProtectApiClient
+from pyunifiprotect.data import FirmwareReleaseChannel
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
@@ -68,7 +69,10 @@ class EAConfirm(ProtectRepair):
             )
 
         nvr = await self._api.get_nvr()
-        if await nvr.get_is_prerelease():
+        if (
+            await nvr.get_is_prerelease()
+            or nvr.release_channel != FirmwareReleaseChannel.RELEASE
+        ):
             return await self.async_step_confirm()
         await self.hass.config_entries.async_reload(self._entry.entry_id)
         return self.async_create_entry(data={})
