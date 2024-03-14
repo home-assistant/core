@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 
-from homeassistant.core import HomeAssistant, async_get_hass
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConditionErrorContainer,
     ConditionErrorIndex,
@@ -14,8 +15,6 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     TemplateError,
 )
-
-from .common import async_mock_service
 
 
 def test_conditionerror_format() -> None:
@@ -79,8 +78,22 @@ def test_template_message(arg: str | Exception, expected: str) -> None:
         ((TypeError("bla"),), {}, "bla"),
         (
             (),
+            {"translation_domain": "test", "translation_key": "test"},
+            "component.test.exceptions.test.message",
+        ),
+        (
+            (),
             {"translation_domain": "test", "translation_key": "bla"},
-            "component.test.exceptions.bla.message",
+            "{bla} from cache",
+        ),
+        (
+            (),
+            {
+                "translation_domain": "test",
+                "translation_key": "bla",
+                "translation_placeholders": {"bla": "Bla"},
+            },
+            "Bla from cache",
         ),
     ],
 )
@@ -92,18 +105,9 @@ async def test_home_assistant_error(
 ) -> None:
     """Test edge cases with HomeAssistantError."""
 
-    assert async_get_hass() is hass
-    async_mock_service(
-        hass,
-        "test_domain",
-        "test_service",
-        raise_exception=HomeAssistantError(*exception_args, **exception_kwargs),
-    )
-    with pytest.raises(HomeAssistantError, match=message) as exc:
-        await hass.services.async_call(
-            "test_domain",
-            "test_service",
-            service_data={},
-            blocking=True,
-        )
+    with pytest.raises(HomeAssistantError, match=message) as exc, patch(
+        "homeassistant.helpers.translation.async_get_cached_translations",
+        return_value={"component.test.exceptions.bla.message": "{bla} from cache"},
+    ):
+        raise HomeAssistantError(*exception_args, **exception_kwargs)
     assert str(exc.value) == message
