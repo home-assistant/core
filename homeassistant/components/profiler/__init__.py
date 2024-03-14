@@ -266,7 +266,7 @@ async def async_setup_entry(  # noqa: C901
         # Make sure the logger is set to at least INFO or
         # we won't see the messages
         base_logger = logging.getLogger()
-        if base_logger.getEffectiveLevel() <= logging.INFO:
+        if base_logger.getEffectiveLevel() > logging.INFO:
             base_logger.setLevel(logging.INFO)
         hass.loop.set_debug(enabled)
 
