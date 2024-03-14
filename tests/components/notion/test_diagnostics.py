@@ -23,9 +23,9 @@ async def test_entry_diagnostics(
             "domain": DOMAIN,
             "title": REDACTED,
             "data": {
-                "username": REDACTED,
-                "user_uuid": REDACTED,
                 "refresh_token": REDACTED,
+                "user_uuid": REDACTED,
+                "username": REDACTED,
             },
             "options": {},
             "pref_disable_new_entities": False,
