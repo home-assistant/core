@@ -2,7 +2,7 @@
   "title": "Notifications",
   "entity_component": {
     "_": {
-      "name": "[%key:component::button::title%]"
+      "name": "[%key:component::notify::title%]"
     },
     "direct_message": {
       "name": "Direct message notifier"
