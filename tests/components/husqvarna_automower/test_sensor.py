@@ -65,9 +65,9 @@ async def test_cutting_blade_usage_time_sensor(
 @pytest.mark.parametrize(
     ("sensor_to_test"),
     [
+        ("cutting_blade_usage_time"),
         ("number_of_charging_cycles"),
         ("number_of_collisions"),
-        ("cutting_blade_usage_time"),
         ("total_charging_time"),
         ("total_cutting_time"),
         ("total_running_time"),
