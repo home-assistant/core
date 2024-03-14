@@ -583,6 +583,17 @@ class HomeAssistant:
         target: target to call.
         args: parameters for method to call.
         """
+        # late import to avoid circular imports
+        from .helpers import frame  # pylint: disable=import-outside-toplevel
+
+        frame.report(
+            "calls `async_add_job`, which is deprecated and will be removed in Home "
+            "Assistant 2025.4; Please review "
+            "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
+            " for replacement options",
+            error_if_core=False,
+        )
+
         if target is None:
             raise ValueError("Don't call async_add_job with None")
 
@@ -844,6 +855,17 @@ class HomeAssistant:
         target: target to call.
         args: parameters for method to call.
         """
+        # late import to avoid circular imports
+        from .helpers import frame  # pylint: disable=import-outside-toplevel
+
+        frame.report(
+            "calls `async_run_job`, which is deprecated and will be removed in Home "
+            "Assistant 2025.4; Please review "
+            "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
+            " for replacement options",
+            error_if_core=False,
+        )
+
         if asyncio.iscoroutine(target):
             return self.async_create_task(target, eager_start=True)
 
