@@ -15,7 +15,8 @@
       "name": "AccuWeather",
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "acer_projector": {
       "name": "Acer Projector",
@@ -5491,6 +5492,11 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "smud": {
+      "name": "Sacramento Municipal Utility District (SMUD)",
+      "integration_type": "virtual",
+      "supported_by": "opower"
+    },
     "snapcast": {
       "name": "Snapcast",
       "integration_type": "hub",
@@ -5743,7 +5749,8 @@
     "sun": {
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "calculated"
+      "iot_class": "calculated",
+      "single_config_entry": true
     },
     "sunweg": {
       "name": "Sun WEG",
