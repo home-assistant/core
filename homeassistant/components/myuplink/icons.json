@@ -14,11 +14,11 @@
       }
     },
     "sensor": {
-      "air_flow": {
+      "airflow": {
         "default": "mdi:weather-windy"
       },
       "elect_add": {
-        "default": "mdi:heat_wave"
+        "default": "mdi:heat-wave"
       },
       "fan_mode": {
         "default": "mdi:fan"
