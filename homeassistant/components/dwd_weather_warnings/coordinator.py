@@ -30,7 +30,7 @@ class DwdWeatherWarningsCoordinator(DataUpdateCoordinator[None]):
             hass, LOGGER, name=DOMAIN, update_interval=DEFAULT_SCAN_INTERVAL
         )
 
-        self._api = None
+        self._api = DwdWeatherWarningsAPI(None)
         self._device_tracker = None
 
         # Do necessary setup of API when using a region identifier.

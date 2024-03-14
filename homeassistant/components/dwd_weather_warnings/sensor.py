@@ -95,7 +95,7 @@ class DwdWeatherWarningsSensor(
             entry_type=DeviceEntryType.SERVICE,
         )
 
-        self.api = coordinator.api
+        self.api = coordinator._api
 
     @property
     def native_value(self) -> int | None:
