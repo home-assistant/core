@@ -1,4 +1,5 @@
 """Helper for aiohttp webclient stuff."""
+
 from __future__ import annotations
 
 import asyncio
@@ -31,8 +32,9 @@ if TYPE_CHECKING:
 DATA_CONNECTOR = "aiohttp_connector"
 DATA_CLIENTSESSION = "aiohttp_clientsession"
 
-SERVER_SOFTWARE = "{0}/{1} aiohttp/{2} Python/{3[0]}.{3[1]}".format(
-    APPLICATION_NAME, __version__, aiohttp.__version__, sys.version_info
+SERVER_SOFTWARE = (
+    f"{APPLICATION_NAME}/{__version__} "
+    f"aiohttp/{aiohttp.__version__} Python/{sys.version_info[0]}.{sys.version_info[1]}"
 )
 
 ENABLE_CLEANUP_CLOSED = not (3, 11, 1) <= sys.version_info < (3, 11, 4)

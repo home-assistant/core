@@ -1,5 +1,7 @@
 """Tests for the Device Registry."""
-from contextlib import nullcontext
+
+from collections.abc import Iterable
+from contextlib import AbstractContextManager, nullcontext
 import time
 from typing import Any
 from unittest.mock import patch
@@ -2293,3 +2295,177 @@ async def test_entries_for_label(
 
     assert not dr.async_entries_for_label(device_registry, "unknown")
     assert not dr.async_entries_for_label(device_registry, "")
+
+
+@pytest.mark.parametrize(
+    (
+        "translation_key",
+        "translations",
+        "placeholders",
+        "expected_device_name",
+    ),
+    (
+        (None, None, None, "Device Bla"),
+        (
+            "test_device",
+            {
+                "en": {"component.test.device.test_device.name": "English device"},
+            },
+            None,
+            "English device",
+        ),
+        (
+            "test_device",
+            {
+                "en": {
+                    "component.test.device.test_device.name": "{placeholder} English dev"
+                },
+            },
+            {"placeholder": "special"},
+            "special English dev",
+        ),
+        (
+            "test_device",
+            {
+                "en": {
+                    "component.test.device.test_device.name": "English dev {placeholder}"
+                },
+            },
+            {"placeholder": "special"},
+            "English dev special",
+        ),
+    ),
+)
+async def test_device_name_translation_placeholders(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    translation_key: str | None,
+    translations: dict[str, str] | None,
+    placeholders: dict[str, str] | None,
+    expected_device_name: str | None,
+) -> None:
+    """Test device name when the device name translation has placeholders."""
+
+    def async_get_cached_translations(
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Iterable[str] | None = None,
+        config_flow: bool | None = None,
+    ) -> dict[str, Any]:
+        """Return all backend translations."""
+        return translations[language]
+
+    config_entry_1 = MockConfigEntry()
+    config_entry_1.add_to_hass(hass)
+    with patch(
+        "homeassistant.helpers.device_registry.translation.async_get_cached_translations",
+        side_effect=async_get_cached_translations,
+    ):
+        entry1 = device_registry.async_get_or_create(
+            config_entry_id=config_entry_1.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+            name="Device Bla",
+            translation_key=translation_key,
+            translation_placeholders=placeholders,
+        )
+        assert entry1.name == expected_device_name
+
+
+@pytest.mark.parametrize(
+    (
+        "translation_key",
+        "translations",
+        "placeholders",
+        "release_channel",
+        "expectation",
+        "expected_error",
+    ),
+    (
+        (
+            "test_device",
+            {
+                "en": {
+                    "component.test.device.test_device.name": "{placeholder} English dev {2ndplaceholder}"
+                },
+            },
+            {"placeholder": "special"},
+            "stable",
+            nullcontext(),
+            (
+                "has translation placeholders '{'placeholder': 'special'}' which do "
+                "not match the name '{placeholder} English dev {2ndplaceholder}'"
+            ),
+        ),
+        (
+            "test_device",
+            {
+                "en": {
+                    "component.test.device.test_device.name": "{placeholder} English ent {2ndplaceholder}"
+                },
+            },
+            {"placeholder": "special"},
+            "beta",
+            pytest.raises(
+                HomeAssistantError, match="Missing placeholder '2ndplaceholder'"
+            ),
+            "",
+        ),
+        (
+            "test_device",
+            {
+                "en": {
+                    "component.test.device.test_device.name": "{placeholder} English dev"
+                },
+            },
+            None,
+            "stable",
+            nullcontext(),
+            (
+                "has translation placeholders '{}' which do "
+                "not match the name '{placeholder} English dev'"
+            ),
+        ),
+    ),
+)
+async def test_device_name_translation_placeholders_errors(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    translation_key: str | None,
+    translations: dict[str, str] | None,
+    placeholders: dict[str, str] | None,
+    release_channel: str,
+    expectation: AbstractContextManager,
+    expected_error: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test device name has placeholder issuess."""
+
+    def async_get_cached_translations(
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Iterable[str] | None = None,
+        config_flow: bool | None = None,
+    ) -> dict[str, Any]:
+        """Return all backend translations."""
+        return translations[language]
+
+    config_entry_1 = MockConfigEntry()
+    config_entry_1.add_to_hass(hass)
+    with patch(
+        "homeassistant.helpers.device_registry.translation.async_get_cached_translations",
+        side_effect=async_get_cached_translations,
+    ), patch(
+        "homeassistant.helpers.device_registry.get_release_channel",
+        return_value=release_channel,
+    ), expectation:
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry_1.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+            name="Device Bla",
+            translation_key=translation_key,
+            translation_placeholders=placeholders,
+        )
+
+    assert expected_error in caplog.text

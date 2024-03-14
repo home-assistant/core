@@ -1,4 +1,5 @@
 """Service calling related helpers."""
+
 from __future__ import annotations
 
 import asyncio
@@ -43,6 +44,7 @@ from homeassistant.exceptions import (
     UnknownUser,
 )
 from homeassistant.loader import Integration, async_get_integrations, bind_hass
+from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.yaml import load_yaml_dict
 from homeassistant.util.yaml.loader import JSON_TYPE
 
@@ -631,16 +633,18 @@ async def async_get_all_descriptions(
         ints_or_excs = await async_get_integrations(hass, domains_with_missing_services)
         integrations: list[Integration] = []
         for domain, int_or_exc in ints_or_excs.items():
-            if type(int_or_exc) is Integration:  # noqa: E721
+            if type(int_or_exc) is Integration and int_or_exc.has_services:  # noqa: E721
                 integrations.append(int_or_exc)
                 continue
             if TYPE_CHECKING:
                 assert isinstance(int_or_exc, Exception)
             _LOGGER.error("Failed to load integration: %s", domain, exc_info=int_or_exc)
-        contents = await hass.async_add_executor_job(
-            _load_services_files, hass, integrations
-        )
-        loaded = dict(zip(domains_with_missing_services, contents))
+
+        if integrations:
+            contents = await hass.async_add_executor_job(
+                _load_services_files, hass, integrations
+            )
+            loaded = dict(zip(domains_with_missing_services, contents))
 
     # Load translations for all service domains
     translations = await translation.async_get_translations(
@@ -938,7 +942,7 @@ async def entity_service_call(
         # Context expires if the turn on commands took a long time.
         # Set context again so it's there when we update
         entity.async_set_context(call.context)
-        tasks.append(asyncio.create_task(entity.async_update_ha_state(True)))
+        tasks.append(create_eager_task(entity.async_update_ha_state(True)))
 
     if tasks:
         done, pending = await asyncio.wait(tasks)
@@ -961,9 +965,11 @@ async def _handle_entity_call(
 
     task: asyncio.Future[ServiceResponse] | None
     if isinstance(func, str):
-        task = hass.async_run_hass_job(
-            HassJob(partial(getattr(entity, func), **data))  # type: ignore[arg-type]
+        job = HassJob(
+            partial(getattr(entity, func), **data),  # type: ignore[arg-type]
+            job_type=entity.get_hassjob_type(func),
         )
+        task = hass.async_run_hass_job(job)
     else:
         task = hass.async_run_hass_job(func, entity, data)
 
@@ -989,7 +995,7 @@ async def _handle_entity_call(
 
 async def _async_admin_handler(
     hass: HomeAssistant,
-    service_job: HassJob[[None], Callable[[ServiceCall], Awaitable[None] | None]],
+    service_job: HassJob[[ServiceCall], Awaitable[None] | None],
     call: ServiceCall,
 ) -> None:
     """Run an admin service."""

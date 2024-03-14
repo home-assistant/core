@@ -1,11 +1,13 @@
 """Fixtures for Tessie."""
+
 from __future__ import annotations
 
+from copy import deepcopy
 from unittest.mock import patch
 
 import pytest
 
-from .const import PRODUCTS, RESPONSE_OK, VEHICLE_DATA, WAKE_UP_ONLINE
+from .const import LIVE_STATUS, PRODUCTS, RESPONSE_OK, VEHICLE_DATA, WAKE_UP_ONLINE
 
 
 @pytest.fixture(autouse=True)
@@ -55,3 +57,13 @@ def mock_request():
         return_value=RESPONSE_OK,
     ) as mock_request:
         yield mock_request
+
+
+@pytest.fixture(autouse=True)
+def mock_live_status():
+    """Mock Teslemetry Energy Specific live_status method."""
+    with patch(
+        "homeassistant.components.teslemetry.EnergySpecific.live_status",
+        side_effect=lambda: deepcopy(LIVE_STATUS),
+    ) as mock_live_status:
+        yield mock_live_status

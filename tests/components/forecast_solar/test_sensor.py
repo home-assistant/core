@@ -1,4 +1,5 @@
 """Tests for the sensors provided by the Forecast.Solar integration."""
+
 from unittest.mock import MagicMock
 
 import pytest

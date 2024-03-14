@@ -1,4 +1,5 @@
 """Climate device for CCM15 coordinator."""
+
 import logging
 from typing import Any
 

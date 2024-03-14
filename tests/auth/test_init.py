@@ -1,4 +1,5 @@
 """Tests for the Home Assistant auth module."""
+
 from datetime import timedelta
 import time
 from typing import Any

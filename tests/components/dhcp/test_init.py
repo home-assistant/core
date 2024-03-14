@@ -1,4 +1,5 @@
 """Test the DHCP discovery integration."""
+
 from collections.abc import Awaitable, Callable
 import datetime
 import threading

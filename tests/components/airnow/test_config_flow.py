@@ -1,4 +1,5 @@
 """Test the AirNow config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from pyairnow.errors import AirNowError, EmptyResponseError, InvalidKeyError

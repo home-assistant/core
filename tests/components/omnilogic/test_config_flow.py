@@ -1,4 +1,5 @@
 """Test the Omnilogic config flow."""
+
 from unittest.mock import patch
 
 from omnilogic import LoginException, OmniLogicException

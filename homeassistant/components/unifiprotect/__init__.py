@@ -1,11 +1,18 @@
 """UniFi Protect Platform."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 import logging
 
 from aiohttp.client_exceptions import ServerDisconnectedError
+from pyunifiprotect.data import Bootstrap
 from pyunifiprotect.exceptions import ClientError, NotAuthorized
+
+# Import the test_util.anonymize module from the pyunifiprotect package
+# in __init__ to ensure it gets imported in the executor since the
+# diagnostics module will not be imported in the executor.
+from pyunifiprotect.test_util.anonymize import anonymize_data  # noqa: F401
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -123,7 +130,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     try:
-        await _async_setup_entry(hass, entry, data_service)
+        await _async_setup_entry(hass, entry, data_service, bootstrap)
     except Exception as err:
         if await nvr_info.get_is_prerelease():
             # If they are running a pre-release, its quite common for setup
@@ -151,9 +158,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def _async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, data_service: ProtectData
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    data_service: ProtectData,
+    bootstrap: Bootstrap,
 ) -> None:
-    await async_migrate_data(hass, entry, data_service.api)
+    await async_migrate_data(hass, entry, data_service.api, bootstrap)
 
     await data_service.async_setup()
     if not data_service.last_update_success:

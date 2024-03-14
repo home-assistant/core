@@ -1,4 +1,5 @@
 """Support for vacuum cleaner robots (botvacs)."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping

@@ -1,4 +1,5 @@
 """The sensor tests for the nut platform."""
+
 from unittest.mock import patch
 
 import pytest

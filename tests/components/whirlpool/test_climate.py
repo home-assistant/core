@@ -1,4 +1,5 @@
 """Test the Whirlpool Sixth Sense climate domain."""
+
 from unittest.mock import MagicMock
 
 from attr import dataclass

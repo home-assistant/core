@@ -1,4 +1,5 @@
 """The tests the History component websocket_api."""
+
 import asyncio
 from datetime import timedelta
 from unittest.mock import patch

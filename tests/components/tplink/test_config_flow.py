@@ -1,4 +1,5 @@
 """Test the tplink config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from kasa import TimeoutException
@@ -740,8 +741,10 @@ async def test_integration_discovery_with_ip_change(
     """Test reauth flow."""
     mock_connect["connect"].side_effect = SmartDeviceException()
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.tplink.Discover.discover", return_value={}):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
     assert mock_config_entry.state == config_entries.ConfigEntryState.SETUP_RETRY
 
     flows = hass.config_entries.flow.async_progress()
@@ -791,8 +794,9 @@ async def test_dhcp_discovery_with_ip_change(
     """Test dhcp discovery with an IP change."""
     mock_connect["connect"].side_effect = SmartDeviceException()
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.tplink.Discover.discover", return_value={}):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
     assert mock_config_entry.state == config_entries.ConfigEntryState.SETUP_RETRY
 
     flows = hass.config_entries.flow.async_progress()
@@ -855,8 +859,9 @@ async def test_reauth_update_from_discovery(
     """Test reauth flow."""
     mock_connect["connect"].side_effect = AuthenticationException
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.tplink.Discover.discover", return_value={}):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     assert mock_config_entry.state == config_entries.ConfigEntryState.SETUP_ERROR
 
@@ -891,8 +896,9 @@ async def test_reauth_update_from_discovery_with_ip_change(
     """Test reauth flow."""
     mock_connect["connect"].side_effect = AuthenticationException()
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.tplink.Discover.discover", return_value={}):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
     assert mock_config_entry.state == config_entries.ConfigEntryState.SETUP_ERROR
 
     flows = hass.config_entries.flow.async_progress()
@@ -1108,7 +1114,6 @@ async def test_reauth_update_other_flows(
     mock_config_entry: MockConfigEntry,
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
-    # mock_init,
 ) -> None:
     """Test reauth updates other reauth flows."""
     mock_config_entry2 = MockConfigEntry(
@@ -1121,8 +1126,9 @@ async def test_reauth_update_other_flows(
     mock_connect["connect"].side_effect = AuthenticationException()
     mock_config_entry.add_to_hass(hass)
     mock_config_entry2.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.tplink.Discover.discover", return_value={}):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     assert mock_config_entry2.state == config_entries.ConfigEntryState.SETUP_ERROR
     assert mock_config_entry.state == config_entries.ConfigEntryState.SETUP_ERROR
@@ -1132,10 +1138,10 @@ async def test_reauth_update_other_flows(
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 2
-    result = flows[0]
+    flows_by_entry_id = {flow["context"]["entry_id"]: flow for flow in flows}
+    result = flows_by_entry_id[mock_config_entry.entry_id]
     assert result["step_id"] == "reauth_confirm"
     assert mock_config_entry.data[CONF_DEVICE_CONFIG] == DEVICE_CONFIG_DICT_LEGACY
-
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={

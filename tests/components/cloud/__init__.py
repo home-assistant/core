@@ -1,4 +1,5 @@
 """Tests for the cloud component."""
+
 from unittest.mock import AsyncMock, patch
 
 from hass_nabucasa import Cloud

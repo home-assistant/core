@@ -1,4 +1,5 @@
 """Test the Wallbox config flow."""
+
 from http import HTTPStatus
 import json
 
@@ -42,7 +43,7 @@ test_response = json.loads(
 
 async def test_show_set_form(hass: HomeAssistant) -> None:
     """Test that the setup form is served."""
-    flow = config_flow.ConfigFlow()
+    flow = config_flow.WallboxConfigFlow()
     flow.hass = hass
     result = await flow.async_step_user(user_input=None)
 

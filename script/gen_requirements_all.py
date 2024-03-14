@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Generate updated constraint and requirements files."""
+
 from __future__ import annotations
 
 import difflib
@@ -100,7 +101,7 @@ regex==2021.8.28
 # requirements so we can directly link HA versions to these library versions.
 anyio==4.1.0
 h11==0.14.0
-httpcore==1.0.2
+httpcore==1.0.4
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
@@ -176,6 +177,10 @@ pandas==2.1.4
 
 # chacha20poly1305-reuseable==0.12.0 is incompatible with cryptography==42.0.x
 chacha20poly1305-reuseable>=0.12.1
+
+# pycountry<23.12.11 imports setuptools at run time
+# https://github.com/pycountry/pycountry/blob/ea69bab36f00df58624a0e490fdad4ccdc14268b/HISTORY.txt#L39
+pycountry>=23.12.11
 """
 
 GENERATED_MESSAGE = (

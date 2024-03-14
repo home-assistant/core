@@ -1,4 +1,5 @@
 """Decorators for the Websocket API."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -45,6 +46,7 @@ def async_response(
         hass.async_create_background_task(
             _handle_async_response(func, hass, connection, msg),
             task_name,
+            eager_start=True,
         )
 
     return schedule_handler

@@ -1,4 +1,5 @@
 """Test the moehlenhoff_alpha2 config flow."""
+
 from unittest.mock import patch
 
 from homeassistant import config_entries

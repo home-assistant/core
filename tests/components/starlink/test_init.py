@@ -1,4 +1,5 @@
 """Tests Starlink integration init/unload."""
+
 from homeassistant.components.starlink.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_IP_ADDRESS

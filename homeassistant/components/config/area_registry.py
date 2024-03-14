@@ -1,4 +1,5 @@
 """HTTP views to interact with the area registry."""
+
 from __future__ import annotations
 
 from typing import Any
