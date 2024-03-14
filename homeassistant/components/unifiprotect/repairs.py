@@ -69,10 +69,7 @@ class EAConfirm(ProtectRepair):
             )
 
         nvr = await self._api.get_nvr()
-        if (
-            await nvr.get_is_prerelease()
-            or nvr.release_channel != FirmwareReleaseChannel.RELEASE
-        ):
+        if nvr.release_channel != FirmwareReleaseChannel.RELEASE:
             return await self.async_step_confirm()
         await self.hass.config_entries.async_reload(self._entry.entry_id)
         return self.async_create_entry(data={})

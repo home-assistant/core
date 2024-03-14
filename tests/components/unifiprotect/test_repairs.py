@@ -126,8 +126,9 @@ async def test_ea_warning_fix(
 
     new_nvr = copy(ufp.api.bootstrap.nvr)
     new_nvr.version = Version("2.2.6")
+    new_nvr.release_channel = "release"
     mock_msg = Mock()
-    mock_msg.changed_data = {"version": "2.2.6"}
+    mock_msg.changed_data = {"version": "2.2.6", "releaseChannel": "release"}
     mock_msg.new_obj = new_nvr
 
     ufp.api.bootstrap.nvr = new_nvr
