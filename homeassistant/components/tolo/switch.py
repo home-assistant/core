@@ -21,7 +21,6 @@ from .const import DOMAIN
 class ToloSwitchEntityDescription(SwitchEntityDescription):
     """Class describing TOLO switch entities."""
 
-    key: str
     getter: Callable[[ToloStatus], bool]
     setter: Callable[[ToloClient, bool], bool]
 
