@@ -1,5 +1,7 @@
 """Wrapper for global settings stored in the The Things network entry."""
 import logging
+from types import MappingProxyType
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 
@@ -44,13 +46,17 @@ class TTN_EntrySettings:
 
         if not hasattr(self.__entry, "entities"):
             self.__entry.entities = {}
-        return self.__entry.entities
+        return self.__entry.entities  # type: ignore[attr-defined]
 
-    def get_options(self) -> dict:
+    def get_coordinator(self):
+        """Get coordinator."""
+        return self.__entry.coordinator
+
+    def get_options(self) -> MappingProxyType[str, Any]:
         """Get integration options."""
         return self.__entry.options
 
-    def get_device_options(self, device_id) -> dict:
+    def get_device_options(self, device_id) -> dict[str, Any]:
         """Get device options stored in the entry."""
         devices = self.get_options().get(OPTIONS_MENU_EDIT_DEVICES, {})
         return devices.get(device_id, {})

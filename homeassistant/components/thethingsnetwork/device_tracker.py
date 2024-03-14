@@ -1,10 +1,13 @@
 """The Things Network's integration device trackers."""
 
 
-from ttn_client import TTN_BaseValue, TTN_DeviceTrackerValue
+from typing import Any
+
+from ttn_client import TTNBaseValue, TTNDeviceTrackerValue
 
 from homeassistant.components import zone
 from homeassistant.components.device_tracker import TrackerEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
@@ -13,19 +16,21 @@ from homeassistant.const import (
     STATE_NOT_HOME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import OPTIONS_FIELD_ENTITY_TYPE_DEVICE_TRACKER
 from .entity import TTN_Entity
 from .entry_settings import TTN_EntrySettings
 
 
-async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Add entities for TTN."""
 
-    entry.coordinator.register_platform_entity_class(
-        TtnDeviceTracker, async_add_entities
-    )
-    entry.coordinator.async_add_entities()
+    coordinator = TTN_EntrySettings(entry).get_coordinator()
+    coordinator.register_platform_entity_class(TtnDeviceTracker, async_add_entities)
+    coordinator.async_add_entities()
 
 
 async def async_unload_entry(hass: HomeAssistant, entry, async_remove_entity) -> None:
@@ -36,7 +41,7 @@ class TtnDeviceTracker(TTN_Entity, TrackerEntity):
     """Represents a TTN Home Assistant BinarySensor."""
 
     @staticmethod
-    def manages_uplink(entrySettings: TTN_EntrySettings, ttn_value: TTN_BaseValue):
+    def manages_uplink(entrySettings: TTN_EntrySettings, ttn_value: TTNBaseValue):
         """Check if this class maps to this ttn_value."""
 
         entity_type = entrySettings.get_entity_type(
@@ -45,11 +50,10 @@ class TtnDeviceTracker(TTN_Entity, TrackerEntity):
 
         if entity_type:
             return entity_type == OPTIONS_FIELD_ENTITY_TYPE_DEVICE_TRACKER
-        else:
-            return isinstance(ttn_value, TTN_DeviceTrackerValue)
+        return isinstance(ttn_value, TTNDeviceTrackerValue)
 
     @property
-    def location_accuracy(self):
+    def location_accuracy(self) -> int:
         """Return the location accuracy of the device.
 
         Value in meters.
@@ -77,7 +81,7 @@ class TtnDeviceTracker(TTN_Entity, TrackerEntity):
         return self._state["altitude"]
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the device."""
         if self.location_name:
             return self.location_name
@@ -97,7 +101,7 @@ class TtnDeviceTracker(TTN_Entity, TrackerEntity):
         return None
 
     @property
-    def state_attributes(self):
+    def state_attributes(self) -> dict[str, Any] | None:
         """Return the device state attributes."""
         attr = {}
         attr.update(super().state_attributes)

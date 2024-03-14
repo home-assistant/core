@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/angelnu/home_assistant_thethingsnetwork/issues",
-  "requirements": ["ttn_client==0.0.2"]
+  "requirements": ["ttn_client==0.0.3"]
 }

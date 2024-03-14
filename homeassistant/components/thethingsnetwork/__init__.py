@@ -7,6 +7,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_APP_ID, CONF_HOSTNAME, DOMAIN, PLATFORMS, TTN_API_HOSTNAME
 from .coordinator import TTNCoordinator
@@ -24,7 +25,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize of The Things Network component."""
 
     if DOMAIN in config:
@@ -52,10 +53,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     # Create coordinator to fetch TTN updates
-    entry.coordinator = TTNCoordinator(hass, entry)
+    entry.coordinator = coordinator = TTNCoordinator(hass, entry)
 
     # Fetch all existing values in the TTN storage DB - NOTE: the free TTN only keeps 24 hours
-    await entry.coordinator.async_config_entry_first_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
     # Trigger the creation of entities for each supported platform
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -66,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
     _LOGGER.debug(

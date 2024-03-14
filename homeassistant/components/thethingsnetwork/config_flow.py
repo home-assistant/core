@@ -1,14 +1,21 @@
 """The Things Network's integration config flow."""
 
 from collections import OrderedDict
+from collections.abc import Mapping
 import copy
 import logging
+from typing import Any
 
-from ttn_client import TTN_AuthError, TTN_Client
+from ttn_client import TTNAuthError, TTNClient
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import (
+    HANDLERS,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.core import callback
 
 from .const import (
@@ -48,8 +55,8 @@ from .entry_settings import TTN_EntrySettings
 _LOGGER = logging.getLogger(__name__)
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class TTNFlowHandler(config_entries.ConfigFlow):
+@HANDLERS.register(DOMAIN)
+class TTNFlowHandler(ConfigFlow):
     """Handle a config flow."""
 
     VERSION = 1
@@ -73,7 +80,7 @@ class TTNFlowHandler(config_entries.ConfigFlow):
             }
         )
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """User initiated config flow."""
         errors = {}
         if user_input is not None:
@@ -81,7 +88,7 @@ class TTNFlowHandler(config_entries.ConfigFlow):
             self.__app_id = user_input[CONF_APP_ID]
             self.__access_key = user_input[CONF_ACCESS_KEY]
 
-            connection_error = await self.__connection_errors
+            connection_error = await self.__connection_error
 
             if connection_error:
                 errors["base"] = connection_error
@@ -92,7 +99,9 @@ class TTNFlowHandler(config_entries.ConfigFlow):
             step_id="user", data_schema=self.schema, errors=errors
         )
 
-    async def async_step_reauth(self, user_input=None):
+    async def async_step_reauth(
+        self, user_input: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by a reauth event."""
         entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         assert entry is not None
@@ -102,7 +111,7 @@ class TTNFlowHandler(config_entries.ConfigFlow):
         self.__access_key = entry.data[CONF_ACCESS_KEY]
         return await self.async_step_reauth_confirm()
 
-    async def async_step_reauth_confirm(self, user_input=None):
+    async def async_step_reauth_confirm(self, user_input=None) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         if user_input is None:
             return self.async_show_form(
@@ -114,7 +123,7 @@ class TTNFlowHandler(config_entries.ConfigFlow):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> config_entries.OptionsFlow:
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Get the options flow for this handler."""
         return TTNOptionsFlowHandler(config_entry)
 
@@ -137,11 +146,11 @@ class TTNFlowHandler(config_entries.ConfigFlow):
         )
 
     @property
-    async def __connection_errors(self) -> dict[str] | None:
+    async def __connection_error(self) -> str | None:
         """Test if we can connect with the given settings."""
 
         try:
-            client = TTN_Client(
+            client = TTNClient(
                 self.__hostname,
                 self.__app_id,
                 self.__access_key,
@@ -149,16 +158,16 @@ class TTNFlowHandler(config_entries.ConfigFlow):
             )
             await client.fetch_data()
             return None
-        except TTN_AuthError:
+        except TTNAuthError:
             # Raising ConfigEntryAuthFailed will cancel future updates
             # and start a config flow with SOURCE_REAUTH (async_step_reauth)
-            _LOGGER.error("TTN_AuthError")
-            return {"invalid_auth"}
+            _LOGGER.error("TTNAuthError")
+            return "invalid_auth"
 
-        return {"connection_error"}
+        return "connection_error"
 
 
-class TTNOptionsFlowHandler(config_entries.OptionsFlow):
+class TTNOptionsFlowHandler(OptionsFlow):
     """Handle integration options."""
 
     def __init__(self, entry: ConfigEntry) -> None:
