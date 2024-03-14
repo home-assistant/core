@@ -8,8 +8,7 @@
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of the Shelly device to connect to.",
-          "port": "The IP port of the Shelly device to connect to (default is 80)."
+          "host": "The hostname or IP address of the Shelly device to connect to."
         }
       },
       "credentials": {
