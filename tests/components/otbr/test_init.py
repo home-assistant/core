@@ -1,4 +1,5 @@
 """Test the Open Thread Border Router integration."""
+
 import asyncio
 from http import HTTPStatus
 from typing import Any
@@ -244,7 +245,7 @@ async def test_import_insecure_dataset(hass: HomeAssistant, dataset: bytes) -> N
 @pytest.mark.parametrize(
     "error",
     [
-        asyncio.TimeoutError,
+        TimeoutError,
         python_otbr_api.OTBRError,
         aiohttp.ClientError,
     ],

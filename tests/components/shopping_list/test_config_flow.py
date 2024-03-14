@@ -1,4 +1,5 @@
 """Test config flow."""
+
 from homeassistant.components.shopping_list.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.core import HomeAssistant

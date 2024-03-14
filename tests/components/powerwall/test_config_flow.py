@@ -1,6 +1,5 @@
 """Test the Powerwall config flow."""
 
-import asyncio
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
@@ -61,7 +60,7 @@ async def test_form_source_user(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.parametrize("exc", (PowerwallUnreachableError, asyncio.TimeoutError))
+@pytest.mark.parametrize("exc", (PowerwallUnreachableError, TimeoutError))
 async def test_form_cannot_connect(hass: HomeAssistant, exc: Exception) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
@@ -160,7 +159,7 @@ async def test_already_configured(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_DHCP},
         data=dhcp.DhcpServiceInfo(
             ip="1.1.1.1",
-            macaddress="AA:BB:CC:DD:EE:FF",
+            macaddress="aabbcceeddff",
             hostname="any",
         ),
     )
@@ -187,7 +186,7 @@ async def test_already_configured_with_ignored(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.1.1.1",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname="00GGX",
             ),
         )
@@ -226,7 +225,7 @@ async def test_dhcp_discovery_manual_configure(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.1.1.1",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname="any",
             ),
         )
@@ -265,7 +264,7 @@ async def test_dhcp_discovery_auto_configure(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.1.1.1",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname="00GGX",
             ),
         )
@@ -306,7 +305,7 @@ async def test_dhcp_discovery_cannot_connect(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.1.1.1",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname="00GGX",
             ),
         )
@@ -377,7 +376,7 @@ async def test_dhcp_discovery_update_ip_address(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.1.1.1",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname=MOCK_GATEWAY_DIN.lower(),
             ),
         )
@@ -411,7 +410,7 @@ async def test_dhcp_discovery_does_not_update_ip_when_auth_fails(
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.1.1.1",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname=MOCK_GATEWAY_DIN.lower(),
             ),
         )
@@ -445,7 +444,7 @@ async def test_dhcp_discovery_does_not_update_ip_when_auth_successful(
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.1.1.1",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname=MOCK_GATEWAY_DIN.lower(),
             ),
         )
@@ -477,7 +476,7 @@ async def test_dhcp_discovery_updates_unique_id(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.2.3.4",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname=MOCK_GATEWAY_DIN.lower(),
             ),
         )
@@ -498,7 +497,7 @@ async def test_dhcp_discovery_updates_unique_id_when_entry_is_failed(
         unique_id="1.2.3.4",
     )
     entry.add_to_hass(hass)
-    entry.state = config_entries.ConfigEntryState.SETUP_ERROR
+    entry.mock_state(hass, config_entries.ConfigEntryState.SETUP_ERROR)
     mock_powerwall = await _mock_powerwall_site_name(hass, "Some site")
 
     with patch(
@@ -513,7 +512,7 @@ async def test_dhcp_discovery_updates_unique_id_when_entry_is_failed(
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.2.3.4",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname=MOCK_GATEWAY_DIN.lower(),
             ),
         )
@@ -549,7 +548,7 @@ async def test_discovered_wifi_does_not_update_ip_if_is_still_online(
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.2.3.5",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname=MOCK_GATEWAY_DIN.lower(),
             ),
         )
@@ -586,7 +585,7 @@ async def test_discovered_wifi_does_not_update_ip_online_but_access_denied(
         # the discovery flow to probe to see if its online
         # which will result in an access denied error, which
         # means its still online and we should not update the ip
-        mock_powerwall.get_meters.side_effect = asyncio.TimeoutError
+        mock_powerwall.get_meters.side_effect = TimeoutError
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
         await hass.async_block_till_done()
 
@@ -595,7 +594,7 @@ async def test_discovered_wifi_does_not_update_ip_online_but_access_denied(
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.2.3.5",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname=MOCK_GATEWAY_DIN.lower(),
             ),
         )

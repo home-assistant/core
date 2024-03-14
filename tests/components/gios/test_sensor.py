@@ -1,4 +1,6 @@
 """Test sensor of GIOS integration."""
+
+from copy import deepcopy
 from datetime import timedelta
 import json
 from unittest.mock import patch
@@ -43,7 +45,7 @@ async def test_sensor(hass: HomeAssistant, entity_registry: er.EntityRegistry) -
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
-    assert state.attributes.get(ATTR_ICON) == "mdi:molecule"
+    assert state.attributes.get(ATTR_ICON) is None
 
     entry = entity_registry.async_get("sensor.home_benzene")
     assert entry
@@ -276,22 +278,24 @@ async def test_availability(hass: HomeAssistant) -> None:
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-        state = hass.states.get("sensor.home_pm2_5")
-        assert state
-        assert state.state == STATE_UNAVAILABLE
+    state = hass.states.get("sensor.home_pm2_5")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
-        state = hass.states.get("sensor.home_pm2_5_index")
-        assert state
-        assert state.state == STATE_UNAVAILABLE
+    state = hass.states.get("sensor.home_pm2_5_index")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
-        state = hass.states.get("sensor.home_air_quality_index")
-        assert state
-        assert state.state == STATE_UNAVAILABLE
+    state = hass.states.get("sensor.home_air_quality_index")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
+    incomplete_sensors = deepcopy(sensors)
+    incomplete_sensors["pm2.5"] = {}
     future = utcnow() + timedelta(minutes=120)
     with patch(
         "homeassistant.components.gios.Gios._get_all_sensors",
-        return_value=sensors,
+        return_value=incomplete_sensors,
     ), patch(
         "homeassistant.components.gios.Gios._get_indexes",
         return_value={},
@@ -299,21 +303,22 @@ async def test_availability(hass: HomeAssistant) -> None:
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-        state = hass.states.get("sensor.home_pm2_5")
-        assert state
-        assert state.state == "4"
+    # There is no PM2.5 data so the state should be unavailable
+    state = hass.states.get("sensor.home_pm2_5")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
-        # Indexes are empty so the state should be unavailable
-        state = hass.states.get("sensor.home_air_quality_index")
-        assert state
-        assert state.state == STATE_UNAVAILABLE
+    # Indexes are empty so the state should be unavailable
+    state = hass.states.get("sensor.home_air_quality_index")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
-        # Indexes are empty so the state should be unavailable
-        state = hass.states.get("sensor.home_pm2_5_index")
-        assert state
-        assert state.state == STATE_UNAVAILABLE
+    # Indexes are empty so the state should be unavailable
+    state = hass.states.get("sensor.home_pm2_5_index")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
-        future = utcnow() + timedelta(minutes=180)
+    future = utcnow() + timedelta(minutes=180)
     with patch(
         "homeassistant.components.gios.Gios._get_all_sensors", return_value=sensors
     ), patch(
@@ -323,17 +328,17 @@ async def test_availability(hass: HomeAssistant) -> None:
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-        state = hass.states.get("sensor.home_pm2_5")
-        assert state
-        assert state.state == "4"
+    state = hass.states.get("sensor.home_pm2_5")
+    assert state
+    assert state.state == "4"
 
-        state = hass.states.get("sensor.home_pm2_5_index")
-        assert state
-        assert state.state == "good"
+    state = hass.states.get("sensor.home_pm2_5_index")
+    assert state
+    assert state.state == "good"
 
-        state = hass.states.get("sensor.home_air_quality_index")
-        assert state
-        assert state.state == "good"
+    state = hass.states.get("sensor.home_air_quality_index")
+    assert state
+    assert state.state == "good"
 
 
 async def test_invalid_indexes(hass: HomeAssistant) -> None:

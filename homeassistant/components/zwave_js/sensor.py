@@ -1,10 +1,11 @@
 """Representation of Z-Wave sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, cast
+from typing import Any
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
@@ -19,7 +20,6 @@ from zwave_js_server.model.controller.statistics import ControllerStatisticsData
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.node.statistics import NodeStatisticsDataType
-from zwave_js_server.model.value import ConfigurationValue
 from zwave_js_server.util.command_class.meter import get_meter_type
 
 from homeassistant.components.sensor import (
@@ -799,7 +799,6 @@ class ZWaveConfigParameterSensor(ZWaveListSensor):
         super().__init__(
             config_entry, driver, info, entity_description, unit_of_measurement
         )
-        self._primary_value = cast(ConfigurationValue, self.info.primary_value)
 
         property_key_name = self.info.primary_value.property_key_name
         # Entity class attributes

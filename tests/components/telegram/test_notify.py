@@ -1,4 +1,5 @@
 """The tests for the telegram.notify platform."""
+
 from unittest.mock import patch
 
 from homeassistant import config as hass_config

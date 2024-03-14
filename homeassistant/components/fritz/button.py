@@ -1,4 +1,5 @@
 """Switches for AVM Fritz!Box buttons."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -23,16 +24,11 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class FritzButtonDescriptionMixin:
-    """Mixin to describe a Button entity."""
+@dataclass(frozen=True, kw_only=True)
+class FritzButtonDescription(ButtonEntityDescription):
+    """Class to describe a Button entity."""
 
     press_action: Callable
-
-
-@dataclass(frozen=True)
-class FritzButtonDescription(ButtonEntityDescription, FritzButtonDescriptionMixin):
-    """Class to describe a Button entity."""
 
 
 BUTTONS: Final = [
@@ -59,7 +55,6 @@ BUTTONS: Final = [
     FritzButtonDescription(
         key="cleanup",
         translation_key="cleanup",
-        icon="mdi:broom",
         entity_category=EntityCategory.CONFIG,
         press_action=lambda avm_wrapper: avm_wrapper.async_trigger_cleanup(),
     ),

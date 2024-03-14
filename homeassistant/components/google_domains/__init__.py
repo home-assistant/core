@@ -1,4 +1,5 @@
 """Support for Google Domains."""
+
 import asyncio
 from datetime import timedelta
 import logging
@@ -80,7 +81,7 @@ async def _update_google_domains(hass, session, domain, user, password, timeout)
     except aiohttp.ClientError:
         _LOGGER.warning("Can't connect to Google Domains API")
 
-    except asyncio.TimeoutError:
+    except TimeoutError:
         _LOGGER.warning("Timeout from Google Domains API for domain: %s", domain)
 
     return False

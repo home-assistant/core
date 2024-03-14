@@ -1,6 +1,5 @@
 """Test for a Home Assistant bridge that changes fan features at runtime."""
 
-
 from homeassistant.components.fan import FanEntityFeature
 from homeassistant.const import ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant
@@ -136,6 +135,7 @@ async def test_bridge_with_two_fans_one_removed(
 
     # Verify the first fan is still there
     fan_state = hass.states.get("fan.living_room_fan")
+    assert entity_registry.async_get("fan.living_room_fan") is not None
     assert (
         fan_state.attributes[ATTR_SUPPORTED_FEATURES]
         is FanEntityFeature.SET_SPEED
@@ -144,3 +144,4 @@ async def test_bridge_with_two_fans_one_removed(
     )
     # The second fan should have been removed
     assert not hass.states.get("fan.ceiling_fan")
+    assert not entity_registry.async_get("fan.ceiling_fan")

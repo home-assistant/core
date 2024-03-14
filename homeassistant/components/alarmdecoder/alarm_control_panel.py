@@ -1,4 +1,5 @@
 """Support for AlarmDecoder-based alarm control panels (Honeywell/DSC)."""
+
 from __future__ import annotations
 
 import voluptuous as vol

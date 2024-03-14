@@ -1,5 +1,4 @@
 """Lightlink cluster handlers module for Zigbee Home Automation."""
-import asyncio
 
 import zigpy.exceptions
 from zigpy.zcl.clusters.lightlink import LightLink
@@ -32,7 +31,7 @@ class LightLinkClusterHandler(ClusterHandler):
 
         try:
             rsp = await self.cluster.get_group_identifiers(0)
-        except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as exc:
+        except (zigpy.exceptions.ZigbeeException, TimeoutError) as exc:
             self.warning("Couldn't get list of groups: %s", str(exc))
             return
 

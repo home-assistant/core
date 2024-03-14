@@ -1,49 +1,42 @@
 """UniFi Protect data migrations."""
+
 from __future__ import annotations
 
 import logging
 
-from aiohttp.client_exceptions import ServerDisconnectedError
 from pyunifiprotect import ProtectApiClient
 from pyunifiprotect.data import NVR, Bootstrap, ProtectAdoptableDeviceModel
-from pyunifiprotect.exceptions import ClientError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_migrate_data(
-    hass: HomeAssistant, entry: ConfigEntry, protect: ProtectApiClient
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    protect: ProtectApiClient,
+    bootstrap: Bootstrap,
 ) -> None:
     """Run all valid UniFi Protect data migrations."""
 
     _LOGGER.debug("Start Migrate: async_migrate_buttons")
-    await async_migrate_buttons(hass, entry, protect)
+    await async_migrate_buttons(hass, entry, protect, bootstrap)
     _LOGGER.debug("Completed Migrate: async_migrate_buttons")
 
     _LOGGER.debug("Start Migrate: async_migrate_device_ids")
-    await async_migrate_device_ids(hass, entry, protect)
+    await async_migrate_device_ids(hass, entry, protect, bootstrap)
     _LOGGER.debug("Completed Migrate: async_migrate_device_ids")
 
 
-async def async_get_bootstrap(protect: ProtectApiClient) -> Bootstrap:
-    """Get UniFi Protect bootstrap or raise appropriate HA error."""
-
-    try:
-        bootstrap = await protect.get_bootstrap()
-    except (TimeoutError, ClientError, ServerDisconnectedError) as err:
-        raise ConfigEntryNotReady from err
-
-    return bootstrap
-
-
 async def async_migrate_buttons(
-    hass: HomeAssistant, entry: ConfigEntry, protect: ProtectApiClient
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    protect: ProtectApiClient,
+    bootstrap: Bootstrap,
 ) -> None:
     """Migrate existing Reboot button unique IDs from {device_id} to {deivce_id}_reboot.
 
@@ -63,7 +56,6 @@ async def async_migrate_buttons(
         _LOGGER.debug("No button entities need migration")
         return
 
-    bootstrap = await async_get_bootstrap(protect)
     count = 0
     for button in to_migrate:
         device = bootstrap.get_device_from_id(button.unique_id)
@@ -94,7 +86,10 @@ async def async_migrate_buttons(
 
 
 async def async_migrate_device_ids(
-    hass: HomeAssistant, entry: ConfigEntry, protect: ProtectApiClient
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    protect: ProtectApiClient,
+    bootstrap: Bootstrap,
 ) -> None:
     """Migrate unique IDs from {device_id}_{name} format to {mac}_{name} format.
 
@@ -119,7 +114,6 @@ async def async_migrate_device_ids(
         _LOGGER.debug("No entities need migration to MAC address ID")
         return
 
-    bootstrap = await async_get_bootstrap(protect)
     count = 0
     for entity in to_migrate:
         parts = entity.unique_id.split("_")

@@ -1,4 +1,5 @@
 """TOLO Sauna climate controls (main sauna control)."""
+
 from __future__ import annotations
 
 from typing import Any

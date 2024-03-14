@@ -1,4 +1,5 @@
 """Number for Shelly."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -29,7 +30,7 @@ from .entity import (
 )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class BlockNumberDescription(BlockEntityDescription, NumberEntityDescription):
     """Class to describe a BLOCK sensor."""
 
@@ -40,7 +41,7 @@ class BlockNumberDescription(BlockEntityDescription, NumberEntityDescription):
 NUMBERS: dict[tuple[str, str], BlockNumberDescription] = {
     ("device", "valvePos"): BlockNumberDescription(
         key="device|valvepos",
-        icon="mdi:pipe-valve",
+        translation_key="valve_position",
         name="Valve position",
         native_unit_of_measurement=PERCENTAGE,
         available=lambda block: cast(int, block.valveError) != 1,

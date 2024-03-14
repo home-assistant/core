@@ -1,4 +1,5 @@
 """Test schemas."""
+
 import logging
 
 import pytest

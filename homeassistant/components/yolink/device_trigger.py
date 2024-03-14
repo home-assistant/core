@@ -1,4 +1,5 @@
 """Provides device triggers for YoLink."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -54,17 +55,15 @@ async def async_get_triggers(
     if not registry_device or registry_device.model != ATTR_DEVICE_SMART_REMOTER:
         return []
 
-    triggers = []
-    for trigger in DEVICE_TRIGGER_TYPES[ATTR_DEVICE_SMART_REMOTER]:
-        triggers.append(
-            {
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_PLATFORM: "device",
-                CONF_TYPE: trigger,
-            }
-        )
-    return triggers
+    return [
+        {
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_PLATFORM: "device",
+            CONF_TYPE: trigger,
+        }
+        for trigger in DEVICE_TRIGGER_TYPES[ATTR_DEVICE_SMART_REMOTER]
+    ]
 
 
 async def async_attach_trigger(

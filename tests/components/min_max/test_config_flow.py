@@ -1,4 +1,5 @@
 """Test the Min/Max config flow."""
+
 from unittest.mock import patch
 
 import pytest

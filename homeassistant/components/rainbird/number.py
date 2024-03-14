@@ -1,4 +1,5 @@
 """The number platform for rainbird."""
+
 from __future__ import annotations
 
 import logging
@@ -41,7 +42,6 @@ class RainDelayNumber(CoordinatorEntity[RainbirdUpdateCoordinator], NumberEntity
     _attr_native_max_value = 14
     _attr_native_step = 1
     _attr_native_unit_of_measurement = UnitOfTime.DAYS
-    _attr_icon = "mdi:water-off"
     _attr_translation_key = "rain_delay"
     _attr_has_entity_name = True
 

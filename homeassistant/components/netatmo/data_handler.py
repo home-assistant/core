@@ -1,7 +1,7 @@
 """The Netatmo data handler."""
+
 from __future__ import annotations
 
-import asyncio
 from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -239,7 +239,7 @@ class NetatmoDataHandler:
             _LOGGER.debug(err)
             has_error = True
 
-        except (asyncio.TimeoutError, aiohttp.ClientConnectorError) as err:
+        except (TimeoutError, aiohttp.ClientConnectorError) as err:
             _LOGGER.debug(err)
             return True
 

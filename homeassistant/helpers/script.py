@@ -1,4 +1,5 @@
 """Helpers to execute scripts."""
+
 from __future__ import annotations
 
 import asyncio
@@ -274,9 +275,9 @@ async def async_validate_actions_config(
     hass: HomeAssistant, actions: list[ConfigType]
 ) -> list[ConfigType]:
     """Validate a list of actions."""
-    return await asyncio.gather(
-        *(async_validate_action_config(hass, action) for action in actions)
-    )
+    # No gather here because async_validate_action_config is unlikely
+    # to suspend and the overhead of creating many tasks is not worth it
+    return [await async_validate_action_config(hass, action) for action in actions]
 
 
 async def async_validate_action_config(
@@ -391,6 +392,7 @@ class _ScriptRun:
         self._context = context
         self._log_exceptions = log_exceptions
         self._step = -1
+        self._started = False
         self._stop = asyncio.Event()
         self._stopped = asyncio.Event()
         self._conversation_response: str | None | UndefinedType = UNDEFINED
@@ -419,6 +421,7 @@ class _ScriptRun:
 
     async def async_run(self) -> ScriptRunResult | None:
         """Run script."""
+        self._started = True
         # Push the script to the script execution stack
         if (script_stack := script_stack_cv.get()) is None:
             script_stack = []
@@ -500,7 +503,12 @@ class _ScriptRun:
     async def async_stop(self) -> None:
         """Stop script run."""
         self._stop.set()
-        await self._stopped.wait()
+        # If the script was never started
+        # the stopped event will never be
+        # set because the script will never
+        # start running
+        if self._started:
+            await self._stopped.wait()
 
     def _handle_exception(
         self, exception: Exception, continue_on_error: bool, log_exceptions: bool
@@ -595,7 +603,7 @@ class _ScriptRun:
         try:
             async with asyncio.timeout(delay):
                 await self._stop.wait()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             trace_set_result(delay=delay, done=True)
 
     async def _async_wait_template_step(self):
@@ -643,7 +651,7 @@ class _ScriptRun:
         try:
             async with asyncio.timeout(timeout) as to_context:
                 await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
-        except asyncio.TimeoutError as ex:
+        except TimeoutError as ex:
             self._variables["wait"]["remaining"] = 0.0
             if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
                 self._log(_TIMEOUT_MSG)
@@ -1023,7 +1031,7 @@ class _ScriptRun:
         try:
             async with asyncio.timeout(timeout) as to_context:
                 await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
-        except asyncio.TimeoutError as ex:
+        except TimeoutError as ex:
             self._variables["wait"]["remaining"] = 0.0
             if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
                 self._log(_TIMEOUT_MSG)
@@ -1592,7 +1600,7 @@ class Script:
             await self.async_stop(update_state=False, spare=run)
 
         if started_action:
-            self._hass.async_run_job(started_action)
+            started_action()
         self.last_triggered = utcnow()
         self._changed()
 

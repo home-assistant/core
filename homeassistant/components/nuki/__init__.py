@@ -1,4 +1,5 @@
 """The nuki component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -209,6 +210,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name=f"Nuki Bridge {bridge_id}",
         model="Hardware Bridge",
         sw_version=info["versions"]["firmwareVersion"],
+        serial_number=parse_id(info["ids"]["hardwareId"]),
     )
 
     try:
@@ -304,7 +306,7 @@ class NukiCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enfo
     async def _async_update_data(self) -> None:
         """Fetch data from Nuki bridge."""
         try:
-            # Note: asyncio.TimeoutError and aiohttp.ClientError are already
+            # Note: TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
             async with asyncio.timeout(10):
                 events = await self.hass.async_add_executor_job(
@@ -384,4 +386,5 @@ class NukiEntity(CoordinatorEntity[NukiCoordinator], Generic[_NukiDeviceT]):
             model=self._nuki_device.device_model_str.capitalize(),
             sw_version=self._nuki_device.firmware_version,
             via_device=(DOMAIN, self.coordinator.bridge_id),
+            serial_number=parse_id(self._nuki_device.nuki_id),
         )

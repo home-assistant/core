@@ -43,7 +43,6 @@ from homeassistant.helpers.event import (
     EventStateChangedData,
     async_track_state_added_domain,
 )
-from homeassistant.helpers.typing import EventType
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
@@ -54,7 +53,9 @@ _DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
 _ENTITY_REGISTRY_UPDATE_FIELDS = ["aliases", "name", "original_name"]
 
 REGEX_TYPE = type(re.compile(""))
-TRIGGER_CALLBACK_TYPE = Callable[[str, RecognizeResult], Awaitable[str | None]]
+TRIGGER_CALLBACK_TYPE = Callable[
+    [str, RecognizeResult, str | None], Awaitable[str | None]
+]
 METADATA_CUSTOM_SENTENCE = "hass_custom_sentence"
 METADATA_CUSTOM_FILE = "hass_custom_file"
 
@@ -115,7 +116,7 @@ def async_setup(hass: core.HomeAssistant) -> None:
         async_should_expose(hass, DOMAIN, entity_id)
 
     @core.callback
-    def async_entity_state_listener(event: EventType[EventStateChangedData]) -> None:
+    def async_entity_state_listener(event: core.Event[EventStateChangedData]) -> None:
         """Set expose flag on new entities."""
         async_should_expose(hass, DOMAIN, event.data["entity_id"])
 
@@ -162,17 +163,17 @@ class DefaultAgent(AbstractConversationAgent):
 
         self.hass.bus.async_listen(
             ar.EVENT_AREA_REGISTRY_UPDATED,
-            self._async_handle_area_registry_changed,  # type: ignore[arg-type]
+            self._async_handle_area_registry_changed,
             run_immediately=True,
         )
         self.hass.bus.async_listen(
             er.EVENT_ENTITY_REGISTRY_UPDATED,
-            self._async_handle_entity_registry_changed,  # type: ignore[arg-type]
+            self._async_handle_entity_registry_changed,
             run_immediately=True,
         )
         self.hass.bus.async_listen(
             EVENT_STATE_CHANGED,
-            self._async_handle_state_changed,  # type: ignore[arg-type]
+            self._async_handle_state_changed,
             run_immediately=True,
         )
         async_listen_entity_updates(
@@ -223,22 +224,22 @@ class DefaultAgent(AbstractConversationAgent):
         # Check if a trigger matched
         if isinstance(result, SentenceTriggerResult):
             # Gather callback responses in parallel
-            trigger_responses = await asyncio.gather(
-                *(
-                    self._trigger_sentences[trigger_id].callback(
-                        result.sentence, trigger_result
-                    )
-                    for trigger_id, trigger_result in result.matched_triggers.items()
+            trigger_callbacks = [
+                self._trigger_sentences[trigger_id].callback(
+                    result.sentence, trigger_result, user_input.device_id
                 )
-            )
+                for trigger_id, trigger_result in result.matched_triggers.items()
+            ]
 
             # Use last non-empty result as response.
             #
             # There may be multiple copies of a trigger running when editing in
             # the UI, so it's critical that we filter out empty responses here.
             response_text: str | None = None
-            for trigger_response in trigger_responses:
-                response_text = response_text or trigger_response
+            for trigger_future in asyncio.as_completed(trigger_callbacks):
+                if trigger_response := await trigger_future:
+                    response_text = trigger_response
+                    break
 
             # Convert to conversation result
             response = intent.IntentResponse(language=language)
@@ -308,6 +309,20 @@ class DefaultAgent(AbstractConversationAgent):
             error_response_type, error_response_args = _get_no_states_matched_response(
                 no_states_error
             )
+            return _make_error_result(
+                language,
+                intent.IntentResponseErrorCode.NO_VALID_TARGETS,
+                self._get_error_text(
+                    error_response_type, lang_intents, **error_response_args
+                ),
+                conversation_id,
+            )
+        except intent.DuplicateNamesMatchedError as duplicate_names_error:
+            # Intent was valid, but two or more entities with the same name matched.
+            (
+                error_response_type,
+                error_response_args,
+            ) = _get_duplicate_names_matched_response(duplicate_names_error)
             return _make_error_result(
                 language,
                 intent.IntentResponseErrorCode.NO_VALID_TARGETS,
@@ -682,14 +697,14 @@ class DefaultAgent(AbstractConversationAgent):
 
     @core.callback
     def _async_handle_area_registry_changed(
-        self, event: EventType[ar.EventAreaRegistryUpdatedData]
+        self, event: core.Event[ar.EventAreaRegistryUpdatedData]
     ) -> None:
         """Clear area area cache when the area registry has changed."""
         self._slot_lists = None
 
     @core.callback
     def _async_handle_entity_registry_changed(
-        self, event: EventType[er.EventEntityRegistryUpdatedData]
+        self, event: core.Event[er.EventEntityRegistryUpdatedData]
     ) -> None:
         """Clear names list cache when an entity registry entry has changed."""
         if event.data["action"] != "update" or not any(
@@ -700,7 +715,7 @@ class DefaultAgent(AbstractConversationAgent):
 
     @core.callback
     def _async_handle_state_changed(
-        self, event: EventType[EventStateChangedData]
+        self, event: core.Event[EventStateChangedData]
     ) -> None:
         """Clear names list cache when a state is added or removed from the state machine."""
         if event.data["old_state"] and event.data["new_state"]:
@@ -724,7 +739,12 @@ class DefaultAgent(AbstractConversationAgent):
             if async_should_expose(self.hass, DOMAIN, state.entity_id)
         ]
 
-        # Gather exposed entity names
+        # Gather exposed entity names.
+        #
+        # NOTE: We do not pass entity ids in here because multiple entities may
+        # have the same name. The intent matcher doesn't gather all matching
+        # values for a list, just the first. So we will need to match by name no
+        # matter what.
         entity_names = []
         for state in states:
             # Checked against "requires_context" and "excludes_context" in hassil
@@ -740,7 +760,7 @@ class DefaultAgent(AbstractConversationAgent):
 
             if not entity:
                 # Default name
-                entity_names.append((state.name, state.entity_id, context))
+                entity_names.append((state.name, state.name, context))
                 continue
 
             if entity.aliases:
@@ -748,12 +768,15 @@ class DefaultAgent(AbstractConversationAgent):
                     if not alias.strip():
                         continue
 
-                    entity_names.append((alias, state.entity_id, context))
+                    entity_names.append((alias, alias, context))
 
             # Default name
-            entity_names.append((state.name, state.entity_id, context))
+            entity_names.append((state.name, state.name, context))
 
-        # Expose all areas
+        # Expose all areas.
+        #
+        # We pass in area id here with the expectation that no two areas will
+        # share the same name or alias.
         areas = ar.async_get(self.hass)
         area_names = []
         for area in areas.async_list_areas():
@@ -982,6 +1005,20 @@ def _get_no_states_matched_response(
 
     # Default error
     return ErrorKey.NO_INTENT, {}
+
+
+def _get_duplicate_names_matched_response(
+    duplicate_names_error: intent.DuplicateNamesMatchedError,
+) -> tuple[ErrorKey, dict[str, Any]]:
+    """Return key and template arguments for error when intent returns duplicate matches."""
+
+    if duplicate_names_error.area:
+        return ErrorKey.DUPLICATE_ENTITIES_IN_AREA, {
+            "entity": duplicate_names_error.name,
+            "area": duplicate_names_error.area,
+        }
+
+    return ErrorKey.DUPLICATE_ENTITIES, {"entity": duplicate_names_error.name}
 
 
 def _collect_list_references(expression: Expression, list_names: set[str]) -> None:

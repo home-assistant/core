@@ -1,4 +1,5 @@
 """The tests for Select device triggers."""
+
 from __future__ import annotations
 
 import pytest

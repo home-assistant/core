@@ -1,4 +1,5 @@
 """Test the Reolink config flow."""
+
 from datetime import timedelta
 import json
 from typing import Any
@@ -26,6 +27,7 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.util.dt import utcnow
 
 from .conftest import (
+    DHCP_FORMATTED_MAC,
     TEST_HOST,
     TEST_HOST2,
     TEST_MAC,
@@ -353,7 +355,7 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) -> No
     dhcp_data = dhcp.DhcpServiceInfo(
         ip=TEST_HOST,
         hostname="Reolink",
-        macaddress=TEST_MAC,
+        macaddress=DHCP_FORMATTED_MAC,
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -462,7 +464,7 @@ async def test_dhcp_ip_update(
     dhcp_data = dhcp.DhcpServiceInfo(
         ip=TEST_HOST2,
         hostname="Reolink",
-        macaddress=TEST_MAC,
+        macaddress=DHCP_FORMATTED_MAC,
     )
 
     if attr is not None:
@@ -472,19 +474,18 @@ async def test_dhcp_ip_update(
         const.DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_data
     )
 
-    expected_calls = []
-    for host in host_call_list:
-        expected_calls.append(
-            call(
-                host,
-                TEST_USERNAME,
-                TEST_PASSWORD,
-                port=TEST_PORT,
-                use_https=TEST_USE_HTTPS,
-                protocol=DEFAULT_PROTOCOL,
-                timeout=DEFAULT_TIMEOUT,
-            )
+    expected_calls = [
+        call(
+            host,
+            TEST_USERNAME,
+            TEST_PASSWORD,
+            port=TEST_PORT,
+            use_https=TEST_USE_HTTPS,
+            protocol=DEFAULT_PROTOCOL,
+            timeout=DEFAULT_TIMEOUT,
         )
+        for host in host_call_list
+    ]
 
     assert reolink_connect_class.call_args_list == expected_calls
 

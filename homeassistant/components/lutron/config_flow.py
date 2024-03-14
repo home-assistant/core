@@ -1,4 +1,5 @@
 """Config flow to configure the Lutron integration."""
+
 from __future__ import annotations
 
 import logging
@@ -8,9 +9,8 @@ from urllib.error import HTTPError
 from pylutron import Lutron
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
@@ -24,7 +24,7 @@ class LutronConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """First step in the config flow."""
 
         # Check if a configuration entry already exists
@@ -74,7 +74,9 @@ class LutronConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
+    async def async_step_import(
+        self, import_config: dict[str, Any]
+    ) -> ConfigFlowResult:
         """Attempt to import the existing configuration."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")

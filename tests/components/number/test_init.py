@@ -1,4 +1,5 @@
 """The tests for the Number component."""
+
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock
@@ -688,7 +689,7 @@ async def test_restore_number_restore_state(
             38.0,
         ),
         (
-            SensorDeviceClass.VOLUME_FLOW_RATE,
+            NumberDeviceClass.VOLUME_FLOW_RATE,
             UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
             UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
             UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
@@ -696,7 +697,7 @@ async def test_restore_number_restore_state(
             "13.2",
         ),
         (
-            SensorDeviceClass.VOLUME_FLOW_RATE,
+            NumberDeviceClass.VOLUME_FLOW_RATE,
             UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
             UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
             UnitOfVolumeFlowRate.LITERS_PER_MINUTE,

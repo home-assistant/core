@@ -1,4 +1,5 @@
 """Test the myStrom init."""
+
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 from pymystrom.exceptions import MyStromConnectionError

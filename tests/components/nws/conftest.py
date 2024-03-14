@@ -1,4 +1,5 @@
 """Fixtures for National Weather Service tests."""
+
 from unittest.mock import AsyncMock, patch
 
 import pytest

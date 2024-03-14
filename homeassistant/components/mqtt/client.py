@@ -1,4 +1,5 @@
 """Support for MQTT message handling."""
+
 from __future__ import annotations
 
 import asyncio
@@ -811,9 +812,11 @@ class MQTT:
         subscriptions: list[Subscription] = []
         if topic in self._simple_subscriptions:
             subscriptions.extend(self._simple_subscriptions[topic])
-        for subscription in self._wildcard_subscriptions:
-            if subscription.matcher(topic):
-                subscriptions.append(subscription)
+        subscriptions.extend(
+            subscription
+            for subscription in self._wildcard_subscriptions
+            if subscription.matcher(topic)
+        )
         return subscriptions
 
     @callback
@@ -921,7 +924,7 @@ class MQTT:
         try:
             async with asyncio.timeout(TIMEOUT_ACK):
                 await self._pending_operations[mid].wait()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.warning(
                 "No ACK from MQTT server in %s seconds (mid: %s)", TIMEOUT_ACK, mid
             )

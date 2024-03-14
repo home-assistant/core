@@ -1,4 +1,5 @@
 """Support to embed Sonos."""
+
 from __future__ import annotations
 
 import asyncio
@@ -393,7 +394,7 @@ class SonosDiscoveryManager:
                 OSError,
                 SoCoException,
                 Timeout,
-                asyncio.TimeoutError,
+                TimeoutError,
             ) as ex:
                 if not self.hosts_in_error.get(ip_addr):
                     _LOGGER.warning(
@@ -447,7 +448,7 @@ class SonosDiscoveryManager:
                     OSError,
                     SoCoException,
                     Timeout,
-                    asyncio.TimeoutError,
+                    TimeoutError,
                 ) as ex:
                     _LOGGER.warning("Discovery message failed to %s : %s", ip_addr, ex)
             elif not known_speaker.available:
@@ -492,7 +493,8 @@ class SonosDiscoveryManager:
                     self.hass, f"{SONOS_SPEAKER_ACTIVITY}-{uid}", source
                 )
 
-    async def _async_ssdp_discovered_player(
+    @callback
+    def _async_ssdp_discovered_player(
         self, info: ssdp.SsdpServiceInfo, change: ssdp.SsdpChange
     ) -> None:
         uid = info.upnp[ssdp.ATTR_UPNP_UDN]

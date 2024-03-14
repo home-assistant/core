@@ -1,4 +1,5 @@
 """Test the Hi-Link HLK-SW16 config flow."""
+
 import asyncio
 from unittest.mock import patch
 
@@ -189,7 +190,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.hlk_sw16.config_flow.connect_client",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
         return_value=None,
     ):
         result2 = await hass.config_entries.flow.async_configure(

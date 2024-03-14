@@ -1,4 +1,5 @@
 """Tests for the Twente Milieu config flow."""
+
 from unittest.mock import MagicMock
 
 import pytest

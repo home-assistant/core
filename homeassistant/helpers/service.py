@@ -1,4 +1,5 @@
 """Service calling related helpers."""
+
 from __future__ import annotations
 
 import asyncio
@@ -43,6 +44,7 @@ from homeassistant.exceptions import (
     UnknownUser,
 )
 from homeassistant.loader import Integration, async_get_integrations, bind_hass
+from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.yaml import load_yaml_dict
 from homeassistant.util.yaml.loader import JSON_TYPE
 
@@ -487,33 +489,46 @@ def async_extract_referenced_entity_ids(
 
     # Find devices for targeted areas
     selected.referenced_devices.update(selector.device_ids)
-    for device_entry in dev_reg.devices.values():
-        if device_entry.area_id in selector.area_ids:
-            selected.referenced_devices.add(device_entry.id)
+
+    if selector.area_ids:
+        for device_entry in dev_reg.devices.values():
+            if device_entry.area_id in selector.area_ids:
+                selected.referenced_devices.add(device_entry.id)
 
     if not selector.area_ids and not selected.referenced_devices:
         return selected
 
-    for ent_entry in ent_reg.entities.values():
+    entities = ent_reg.entities
+    # Add indirectly referenced by area
+    selected.indirectly_referenced.update(
+        entry.entity_id
+        for area_id in selector.area_ids
+        # The entity's area matches a targeted area
+        for entry in entities.get_entries_for_area_id(area_id)
         # Do not add entities which are hidden or which are config
         # or diagnostic entities.
-        if ent_entry.entity_category is not None or ent_entry.hidden_by is not None:
-            continue
-
+        if entry.entity_category is None and entry.hidden_by is None
+    )
+    # Add indirectly referenced by device
+    selected.indirectly_referenced.update(
+        entry.entity_id
+        for device_id in selected.referenced_devices
+        for entry in entities.get_entries_for_device_id(device_id)
+        # Do not add entities which are hidden or which are config
+        # or diagnostic entities.
         if (
-            # The entity's area matches a targeted area
-            ent_entry.area_id in selector.area_ids
-            # The entity's device matches a device referenced by an area and the entity
-            # has no explicitly set area
-            or (
-                not ent_entry.area_id
-                and ent_entry.device_id in selected.referenced_devices
+            entry.entity_category is None
+            and entry.hidden_by is None
+            and (
+                # The entity's device matches a device referenced
+                # by an area and the entity
+                # has no explicitly set area
+                not entry.area_id
+                # The entity's device matches a targeted device
+                or device_id in selector.device_ids
             )
-            # The entity's device matches a targeted device
-            or ent_entry.device_id in selector.device_ids
-        ):
-            selected.indirectly_referenced.add(ent_entry.entity_id)
-
+        )
+    )
     return selected
 
 
@@ -618,16 +633,18 @@ async def async_get_all_descriptions(
         ints_or_excs = await async_get_integrations(hass, domains_with_missing_services)
         integrations: list[Integration] = []
         for domain, int_or_exc in ints_or_excs.items():
-            if type(int_or_exc) is Integration:  # noqa: E721
+            if type(int_or_exc) is Integration and int_or_exc.has_services:  # noqa: E721
                 integrations.append(int_or_exc)
                 continue
             if TYPE_CHECKING:
                 assert isinstance(int_or_exc, Exception)
             _LOGGER.error("Failed to load integration: %s", domain, exc_info=int_or_exc)
-        contents = await hass.async_add_executor_job(
-            _load_services_files, hass, integrations
-        )
-        loaded = dict(zip(domains_with_missing_services, contents))
+
+        if integrations:
+            contents = await hass.async_add_executor_job(
+                _load_services_files, hass, integrations
+            )
+            loaded = dict(zip(domains_with_missing_services, contents))
 
     # Load translations for all service domains
     translations = await translation.async_get_translations(
@@ -640,7 +657,7 @@ async def async_get_all_descriptions(
         descriptions[domain] = {}
         domain_descriptions = descriptions[domain]
 
-        for service_name in services_map:
+        for service_name, service in services_map.items():
             cache_key = (domain, service_name)
             description = descriptions_cache.get(cache_key)
             if description is not None:
@@ -695,11 +712,10 @@ async def async_get_all_descriptions(
             if "target" in yaml_description:
                 description["target"] = yaml_description["target"]
 
-            if (
-                response := hass.services.supports_response(domain, service_name)
-            ) != SupportsResponse.NONE:
+            response = service.supports_response
+            if response is not SupportsResponse.NONE:
                 description["response"] = {
-                    "optional": response == SupportsResponse.OPTIONAL,
+                    "optional": response is SupportsResponse.OPTIONAL,
                 }
 
             descriptions_cache[cache_key] = description
@@ -926,7 +942,7 @@ async def entity_service_call(
         # Context expires if the turn on commands took a long time.
         # Set context again so it's there when we update
         entity.async_set_context(call.context)
-        tasks.append(asyncio.create_task(entity.async_update_ha_state(True)))
+        tasks.append(create_eager_task(entity.async_update_ha_state(True)))
 
     if tasks:
         done, pending = await asyncio.wait(tasks)
@@ -949,9 +965,11 @@ async def _handle_entity_call(
 
     task: asyncio.Future[ServiceResponse] | None
     if isinstance(func, str):
-        task = hass.async_run_hass_job(
-            HassJob(partial(getattr(entity, func), **data))  # type: ignore[arg-type]
+        job = HassJob(
+            partial(getattr(entity, func), **data),  # type: ignore[arg-type]
+            job_type=entity.get_hassjob_type(func),
         )
+        task = hass.async_run_hass_job(job)
     else:
         task = hass.async_run_hass_job(func, entity, data)
 
@@ -977,7 +995,7 @@ async def _handle_entity_call(
 
 async def _async_admin_handler(
     hass: HomeAssistant,
-    service_job: HassJob[[None], Callable[[ServiceCall], Awaitable[None] | None]],
+    service_job: HassJob[[ServiceCall], Awaitable[None] | None],
     call: ServiceCall,
 ) -> None:
     """Run an admin service."""

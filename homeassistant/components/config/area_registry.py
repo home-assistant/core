@@ -1,4 +1,5 @@
 """HTTP views to interact with the area registry."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -10,7 +11,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.area_registry import AreaEntry, async_get
 
 
-async def async_setup(hass: HomeAssistant) -> bool:
+@callback
+def async_setup(hass: HomeAssistant) -> bool:
     """Enable the Area Registry views."""
     websocket_api.async_register_command(hass, websocket_list_areas)
     websocket_api.async_register_command(hass, websocket_create_area)
