@@ -549,8 +549,8 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     def _play_media(
         self, media_type: MediaType | str, media_id: str, is_radio: bool, **kwargs: Any
     ) -> None:
-        _LOGGER.debug("_play_media media_type %s media_id %s", media_type, media_id)
         """Wrap sync calls to async_play_media."""
+        _LOGGER.debug("_play_media media_type %s media_id %s", media_type, media_id)
         enqueue = kwargs.get(ATTR_MEDIA_ENQUEUE, MediaPlayerEnqueue.REPLACE)
 
         if media_type == "favorite_item_id":
