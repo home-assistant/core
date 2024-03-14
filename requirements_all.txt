@@ -902,7 +902,7 @@ gTTS==2.2.4
 gardena-bluetooth==1.4.1
 
 # homeassistant.components.google_assistant_sdk
-gassist-text==0.0.10
+gassist-text==0.0.11
 
 # homeassistant.components.google
 gcal-sync==6.0.3
@@ -1031,7 +1031,7 @@ habitipy==0.2.0
 habluetooth==2.4.2
 
 # homeassistant.components.cloud
-hass-nabucasa==0.78.0
+hass-nabucasa==0.79.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -1474,7 +1474,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.3.1
+opower==0.4.0
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6

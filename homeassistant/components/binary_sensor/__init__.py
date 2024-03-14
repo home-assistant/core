@@ -28,6 +28,8 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
+from . import group as group_pre_import  # noqa: F401
+
 if TYPE_CHECKING:
     from functools import cached_property
 else:

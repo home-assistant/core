@@ -556,10 +556,11 @@ def _drop_foreign_key_constraints(
 ) -> None:
     """Drop foreign key constraints for a table on specific columns."""
     inspector = sqlalchemy.inspect(engine)
-    drops = []
-    for foreign_key in inspector.get_foreign_keys(table):
-        if foreign_key["name"] and foreign_key["constrained_columns"] == columns:
-            drops.append(ForeignKeyConstraint((), (), name=foreign_key["name"]))
+    drops = [
+        ForeignKeyConstraint((), (), name=foreign_key["name"])
+        for foreign_key in inspector.get_foreign_keys(table)
+        if foreign_key["name"] and foreign_key["constrained_columns"] == columns
+    ]
 
     # Bind the ForeignKeyConstraints to the table
     old_table = Table(table, MetaData(), *drops)  # noqa: F841

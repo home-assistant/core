@@ -52,9 +52,11 @@ from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-from .const import CONF_HIDE_MEMBERS
+from .const import (
+    CONF_HIDE_MEMBERS,
+    DOMAIN,  # noqa: F401
+)
 
-DOMAIN = "group"
 GROUP_ORDER = "group_order"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
@@ -241,7 +243,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[REG_KEY] = GroupIntegrationRegistry()
 
-    await async_process_integration_platforms(hass, DOMAIN, _process_group_platform)
+    await async_process_integration_platforms(
+        hass, DOMAIN, _process_group_platform, wait_for_platforms=True
+    )
 
     await _async_process_config(hass, config)
 

@@ -124,18 +124,18 @@ class SynologyPhotosMediaSource(MediaSource):
                     can_expand=True,
                 )
             ]
-            for album in albums:
-                ret.append(
-                    BrowseMediaSource(
-                        domain=DOMAIN,
-                        identifier=f"{item.identifier}/{album.album_id}",
-                        media_class=MediaClass.DIRECTORY,
-                        media_content_type=MediaClass.IMAGE,
-                        title=album.name,
-                        can_play=False,
-                        can_expand=True,
-                    )
+            ret.extend(
+                BrowseMediaSource(
+                    domain=DOMAIN,
+                    identifier=f"{item.identifier}/{album.album_id}",
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_type=MediaClass.IMAGE,
+                    title=album.name,
+                    can_play=False,
+                    can_expand=True,
                 )
+                for album in albums
+            )
 
             return ret
 

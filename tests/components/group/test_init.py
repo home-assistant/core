@@ -1232,6 +1232,8 @@ async def test_group_vacuum_on(hass: HomeAssistant) -> None:
 
 async def test_device_tracker_not_home(hass: HomeAssistant) -> None:
     """Test group of device_tracker not_home."""
+    await async_setup_component(hass, "device_tracker", {})
+    await hass.async_block_till_done()
     hass.states.async_set("device_tracker.one", "not_home")
     hass.states.async_set("device_tracker.two", "not_home")
     hass.states.async_set("device_tracker.three", "not_home")

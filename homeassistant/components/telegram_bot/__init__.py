@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import importlib
 import io
 from ipaddress import ip_network
 import logging
@@ -41,6 +40,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import async_get_loaded_integration
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -355,15 +355,21 @@ async def load_data(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Telegram bot component."""
-    if not config[DOMAIN]:
+    domain_config: list[dict[str, Any]] = config[DOMAIN]
+
+    if not domain_config:
         return False
 
-    for p_config in config[DOMAIN]:
+    platforms = await async_get_loaded_integration(hass, DOMAIN).async_get_platforms(
+        {p_config[CONF_PLATFORM] for p_config in domain_config}
+    )
+
+    for p_config in domain_config:
         # Each platform config gets its own bot
         bot = initialize_bot(p_config)
-        p_type = p_config.get(CONF_PLATFORM)
+        p_type: str = p_config[CONF_PLATFORM]
 
-        platform = importlib.import_module(f".{p_config[CONF_PLATFORM]}", __name__)
+        platform = platforms[p_type]
 
         _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
         try:

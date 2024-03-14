@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from ring_doorbell.generic import RingGeneric
+from ring_doorbell import RingGeneric
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,

@@ -2397,9 +2397,9 @@ async def test_cached_entity_property_class_attribute(hass: HomeAssistant) -> No
         EntityWithClassAttribute4,
     )
 
-    entities: list[tuple[entity.Entity, entity.Entity]] = []
-    for cls in classes:
-        entities.append((cls(), cls()))
+    entities: list[tuple[entity.Entity, entity.Entity]] = [
+        (cls(), cls()) for cls in classes
+    ]
 
     for ent in entities:
         assert getattr(ent[0], property) == values[0]
