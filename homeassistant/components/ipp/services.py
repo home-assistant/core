@@ -66,10 +66,10 @@ async def service_dump(hass: HomeAssistant, call: ServiceCall) -> ServiceRespons
 
     operation = call.data[SERVICE_IPP_ATTR_OPERATION]
     payload = call.data[SERVICE_IPP_ATTR_PAYLOAD]
-
     response = await ipp.raw(operation, payload)
 
     return {
-        "operation": operation,
+        "operation": operation.name,
+        "payload": payload,
         "response": b64encode(response).decode("ascii"),
     }

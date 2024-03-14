@@ -5,13 +5,15 @@ dump:
       selector:
         text:
     port:
+      default: 631
       example: 631
       selector:
         number:
           min: 1
           max: 65535
     base_path:
-      example: "/ipp/print"
+      default: "/ipp/print"
+      example: "/ipp/print2"
       selector:
         text:
     ssl:
@@ -22,7 +24,16 @@ dump:
         boolean:
     operation:
       selector:
-        text:
+        select:
+          options:
+            - "GET_JOB_ATTRIBUTES"
+            - "GET_JOBS"
+            - "GET_PRINTER_ATTRIBUTES"
+            - "GET_PRINTER_SUPPORTED_VALUES"
+            - "GET_SUBSCRIPTION_ATTRIBUTES"
+            - "GET_SUBSCRIPTIONS"
+            - "GET_SYSTEM_ATTRIBUTES"
+            - "GET_SYSTEM_SUPPORTED_VALUES"
     payload:
       example: "{}"
       selector:
