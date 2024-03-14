@@ -558,7 +558,7 @@ def async_get_exception_message(
         return message
 
     # We return the translation key when was not found in the cache
-    return localize_key
+    return translation_key
 
 
 @callback

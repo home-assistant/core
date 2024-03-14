@@ -13,8 +13,6 @@ if TYPE_CHECKING:
 class HomeAssistantError(Exception):
     """General Home Assistant exception occurred."""
 
-    _message: str = ""
-
     def __init__(
         self,
         *args: object,
@@ -34,7 +32,6 @@ class HomeAssistantError(Exception):
             args = (message,)
 
         super().__init__(*args)
-
         self.translation_domain = translation_domain
         self.translation_key = translation_key
         self.translation_placeholders = translation_placeholders

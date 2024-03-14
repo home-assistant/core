@@ -79,7 +79,7 @@ def test_template_message(arg: str | Exception, expected: str) -> None:
         (
             (),
             {"translation_domain": "test", "translation_key": "test"},
-            "component.test.exceptions.test.message",
+            "test",
         ),
         (
             (),
