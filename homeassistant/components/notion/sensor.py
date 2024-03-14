@@ -17,7 +17,6 @@ from . import NotionEntity
 from .const import DOMAIN, SENSOR_MOLD, SENSOR_TEMPERATURE
 from .coordinator import NotionDataUpdateCoordinator
 
-
 SENSOR_DESCRIPTIONS: dict[ListenerKind, SensorEntityDescription] = {
     ListenerKind.MOLD: SensorEntityDescription(
         key=SENSOR_MOLD,
