@@ -20,7 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 class ArveConfigFlowHadler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Arve."""
 
-    VERSION = 1
 
     async def _show_setup_form(self, errors: dict[str, str] | None = None):
         """Show the setup form to the user."""
