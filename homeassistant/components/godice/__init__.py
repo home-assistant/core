@@ -17,9 +17,15 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up godice from a config entry."""
 
+    async def on_disconnected_callback(_ble_data):
+        await hass.config_entries.async_reload(entry.entry_id)
+
     dice = create_dice(hass, entry)
     try:
-        await dice.connect()
+        await dice.connect(on_disconnected_callback)
+        await dice.pulse_led(
+            pulse_count=2, on_time_ms=50, off_time_ms=20, rgb_tuple=(0, 255, 0)
+        )
     except Exception as err:
         raise ConfigEntryNotReady("Device not found") from err
 

@@ -9,7 +9,7 @@ import godice
 import pytest
 
 from homeassistant.components.godice.const import DOMAIN, SCAN_INTERVAL
-from homeassistant.components.godice.dice import ConnectionState, DiceProxy
+from homeassistant.components.godice.dice import DiceProxy
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -37,22 +37,16 @@ async def test_sensor_reading(hass: HomeAssistant, fake_dice) -> None:
     config_entry.add_to_hass(hass)
 
     rolled_number_cb = None
-    conn_state_cb = None
 
     def store_rolled_number_cb(cb):
         nonlocal rolled_number_cb
         rolled_number_cb = cb
-
-    def store_conn_state_cb(cb):
-        nonlocal conn_state_cb
-        conn_state_cb = cb
 
     color = godice.Color.BLUE
     battery_level = 99
     rolled_number = 4
 
     fake_dice.subscribe_number_notification.side_effect = store_rolled_number_cb
-    fake_dice.subscribe_connection_notification.side_effect = store_conn_state_cb
     fake_dice.get_battery_level.return_value = battery_level
     fake_dice.get_color.return_value = color
 
@@ -62,13 +56,6 @@ async def test_sensor_reading(hass: HomeAssistant, fake_dice) -> None:
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-
-    await conn_state_cb(ConnectionState.CONNECTED)
-    await hass.async_block_till_done()
-
-    connection = hass.states.get(f"sensor.{GODICE_DEVICE_SERVICE_INFO.name}_connection")
-    assert connection is not None
-    assert connection.state == "CONNECTED"
 
     color_sensor = hass.states.get(f"sensor.{GODICE_DEVICE_SERVICE_INFO.name}_color")
     assert color_sensor is not None
@@ -116,114 +103,78 @@ async def test_sensor_reading(hass: HomeAssistant, fake_dice) -> None:
     assert battery_level_sensor is not None
     assert battery_level_sensor.state == str(battery_level)
 
-    await conn_state_cb(ConnectionState.CONNECTING)
-    await hass.async_block_till_done()
-
-    connection = hass.states.get(f"sensor.{GODICE_DEVICE_SERVICE_INFO.name}_connection")
-    assert connection is not None
-    assert connection.state == "CONNECTING"
-
-    color_sensor = hass.states.get(f"sensor.{GODICE_DEVICE_SERVICE_INFO.name}_color")
-    assert color_sensor is not None
-    assert color_sensor.state == color.name
-
-    rolled_number_sensor = hass.states.get(
-        f"sensor.{GODICE_DEVICE_SERVICE_INFO.name}_rolled_number"
-    )
-    assert rolled_number_sensor is not None
-    assert rolled_number_sensor.state == str(rolled_number)
-
-    battery_level_sensor = hass.states.get(
-        f"sensor.{GODICE_DEVICE_SERVICE_INFO.name}_battery_level"
-    )
-    assert battery_level_sensor is not None
-    assert battery_level_sensor.state == str(battery_level)
-
-    await conn_state_cb(ConnectionState.DISCONNECTED)
-    await hass.async_block_till_done()
-
-    connection = hass.states.get(f"sensor.{GODICE_DEVICE_SERVICE_INFO.name}_connection")
-    assert connection is not None
-    assert connection.state == "DISCONNECTED"
-
-    color_sensor = hass.states.get(f"sensor.{GODICE_DEVICE_SERVICE_INFO.name}_color")
-    assert color_sensor is not None
-    assert color_sensor.state == color.name
-
-    rolled_number_sensor = hass.states.get(
-        f"sensor.{GODICE_DEVICE_SERVICE_INFO.name}_rolled_number"
-    )
-    assert rolled_number_sensor is not None
-    assert rolled_number_sensor.state == str(rolled_number)
-
-    battery_level_sensor = hass.states.get(
-        f"sensor.{GODICE_DEVICE_SERVICE_INFO.name}_battery_level"
-    )
-    assert battery_level_sensor is not None
-    assert battery_level_sensor.state == str(battery_level)
-
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
 
-async def test_dice_proxy(hass: HomeAssistant, fake_dice) -> None:
-    """Verify DiceProxy returns cached values when device connection lost."""
-    conn_handler = AsyncMock()
-    proxy = DiceProxy(conn_handler)
+async def test_connection_proxy(hass: HomeAssistant, fake_dice) -> None:
+    """Verify DiceProxy establishes connection and notifies when connection is lost."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=GODICE_DEVICE_SERVICE_INFO.address,
+        data={
+            "name": GODICE_DEVICE_SERVICE_INFO.name,
+            "address": GODICE_DEVICE_SERVICE_INFO.address,
+        },
+    )
+    config_entry.add_to_hass(hass)
+    proxy = DiceProxy(hass, config_entry)
 
     _rolled_number_cb = None
-    _conn_state = None
     _rolled_number = None
 
     async def store_rolled_number_cb(cb):
         nonlocal _rolled_number_cb
         _rolled_number_cb = cb
 
-    async def conn_state_cb(val):
-        nonlocal _conn_state
-        _conn_state = val
-
     async def rolled_number_cb(val, _rollstate):
         nonlocal _rolled_number
         _rolled_number = val
 
-    fake_dice.subscribe_number_notification.side_effect = store_rolled_number_cb
-
-    await proxy.subscribe_connection_notification(conn_state_cb)
-    await proxy.subscribe_number_notification(rolled_number_cb)
-
+    mock = AsyncMock()
     with patch(
         "godice.create",
         return_value=fake_dice,
+    ), patch(
+        "homeassistant.components.godice.dice.establish_connection",
+        return_value=mock,
+    ), patch(
+        "homeassistant.components.godice.dice.close_stale_connections",
+        return_value=mock,
     ):
         color = godice.Color.BLUE
         battery_level = 40
+        rolled_number = 5
         fake_dice.get_color.return_value = color
         fake_dice.get_battery_level.return_value = battery_level
+        fake_dice.subscribe_number_notification.side_effect = store_rolled_number_cb
 
-        await proxy.on_connected(None)
-        assert _conn_state == ConnectionState.CONNECTED
+        assert (await proxy.get_color()) is None
+        assert (await proxy.get_battery_level()) is None
+
+        await proxy.connect(None)
         assert (await proxy.get_color()) == color
         assert (await proxy.get_battery_level()) == battery_level
-        await _rolled_number_cb(2, None)
-        assert _rolled_number == 2
+        await proxy.subscribe_number_notification(rolled_number_cb)
+        await _rolled_number_cb(rolled_number, None)
+        assert _rolled_number == rolled_number
 
-        await proxy.on_reconnecting()
-        old_battery_level = battery_level
-        new_battery_level = 99
-        fake_dice.get_battery_level.return_value = new_battery_level
-        assert _conn_state == ConnectionState.CONNECTING
-        assert (await proxy.get_color()) == color
-        assert (await proxy.get_battery_level()) == old_battery_level
+        await proxy.disconnect()
+        # emulate disconnect event generated by Bleak when disconnected
+        proxy._on_disconnected_handler(None)
+        assert (await proxy.get_color()) is None
+        assert (await proxy.get_battery_level()) is None
 
-        await proxy.on_connected(None)
-        assert _conn_state == ConnectionState.CONNECTED
+        disconn_cb = AsyncMock()
+        await proxy.connect(disconn_cb)
         assert (await proxy.get_color()) == color
-        assert (await proxy.get_battery_level()) == new_battery_level
-        await _rolled_number_cb(5, None)
-        assert _rolled_number == 5
+        assert (await proxy.get_battery_level()) == battery_level
+        await proxy.subscribe_number_notification(rolled_number_cb)
+        await _rolled_number_cb(rolled_number, None)
+        assert _rolled_number == rolled_number
 
-        await proxy.on_disconnected()
-        assert _conn_state == ConnectionState.DISCONNECTED
-        assert (await proxy.get_color()) == color
-        assert (await proxy.get_battery_level()) == new_battery_level
+        # emulate disconnect event generated by Bleak when disconnected
+        proxy._on_disconnected_handler(None)
+        assert (await proxy.get_color()) is None
+        assert (await proxy.get_battery_level()) is None
+        disconn_cb.assert_called_once()

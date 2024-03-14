@@ -5,7 +5,6 @@ import logging
 from godice import Color as DiceColor
 
 from homeassistant import const
-from homeassistant.components import persistent_notification
 from homeassistant.components.sensor import (
     RestoreSensor,
     SensorDeviceClass,
@@ -18,7 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .dice import ConnectionState, DiceConnectionObserver
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,11 +28,6 @@ COLOR_SENSOR_DESCR = SensorEntityDescription(
     key="color",
     device_class=SensorDeviceClass.ENUM,
     options=[color.name for color in DiceColor],
-)
-CONNECTION_SENSOR_DESCR = SensorEntityDescription(
-    key="connection",
-    device_class=SensorDeviceClass.ENUM,
-    options=[state.name for state in ConnectionState],
 )
 BATTERY_SENSOR_DESCR = SensorEntityDescription(
     key="battery_level",
@@ -55,7 +48,6 @@ async def async_setup_entry(
     devinfo = data["device_info"]
 
     entry_ctors = [
-        DiceConnectionSensor,
         DiceColorSensor,
         BatteryLevelSensor,
         DiceNumberSensor,
@@ -65,7 +57,7 @@ async def async_setup_entry(
     async_add_entities(entries)
 
 
-class BaseSensor(SensorEntity, DiceConnectionObserver):
+class BaseSensor(SensorEntity):
     """Base for concrete sensors."""
 
     _attr_should_poll = False
@@ -77,39 +69,6 @@ class BaseSensor(SensorEntity, DiceConnectionObserver):
         self._attr_device_info = devinfo
         self._attr_unique_id = f"{devinfo['name']}_{self.entity_description.key}"
         self._attr_translation_key = entity_description.key
-
-
-class DiceConnectionSensor(BaseSensor):
-    """Represents connection state."""
-
-    def __init__(self, devinfo, device) -> None:
-        """Set default values."""
-        descr = CONNECTION_SENSOR_DESCR
-        super().__init__(descr, devinfo)
-        self.dice = device
-
-    async def async_added_to_hass(self) -> None:
-        """Subscribe on connection state events."""
-        await self.dice.subscribe_connection_notification(self._handle_conn_update)
-
-    async def _handle_conn_update(self, conn_state):
-        self._attr_native_value = conn_state.name
-        self.async_write_ha_state()
-
-        if conn_state == ConnectionState.CONNECTED:
-            await self.dice.pulse_led(2, 50, 20, (0, 255, 0))
-        elif conn_state == ConnectionState.CONNECTING:
-            persistent_notification.async_create(
-                self.hass,
-                "Connection to GoDice lost, reconnecting. Make sure GoDice is charged and move it closer to the hub.",
-                title="GoDice connection is lost",
-            )
-        elif conn_state == ConnectionState.DISCONNECTED:
-            persistent_notification.async_create(
-                self.hass,
-                "Could not find GoDice. Keep it closer to the hub or consider setting up a bluetooth-proxy. Reload the integration once ready",
-                title="GoDice disconnected",
-            )
 
 
 class DiceColorSensor(RestoreSensor, BaseSensor):
@@ -144,7 +103,7 @@ class BatteryLevelSensor(BaseSensor):
 
     async def async_update(self) -> None:
         """Poll battery level."""
-        _LOGGER.debug("Update battery level")
+        _LOGGER.debug("Battery level update")
         self._attr_native_value = await self.dice.get_battery_level()
 
 
