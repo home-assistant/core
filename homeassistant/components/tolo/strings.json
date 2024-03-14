@@ -83,6 +83,9 @@
     "switch": {
       "aroma_therapy_on": {
         "name": "Aroma Therapy"
+      },
+      "salt_bath_on": {
+        "name": "Salt Bath"
       }
     }
   }
