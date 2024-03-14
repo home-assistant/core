@@ -100,7 +100,7 @@ class TTNCoordinator(DataUpdateCoordinator):
         """Register a TTN_Entity handling for a platform.
 
         New entries discovered by this coordinator will be checked with each registered platform.
-        If their `manages_uplink` mehtod returns True then they will be added to their platform.
+        If their `manages_uplink` method returns True then they will be added to their platform.
         """
 
         self.__entity_class_register.append(
@@ -110,6 +110,8 @@ class TTNCoordinator(DataUpdateCoordinator):
         )
 
     def async_add_entities(self, data=None):
+        """Create new entities out of received TTN data if they are seen for the first time."""
+
         for entity_class in self.__entity_class_register:
             entity_class.async_add_entities(data if data else self.data)
 

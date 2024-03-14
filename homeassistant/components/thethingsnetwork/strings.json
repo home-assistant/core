@@ -79,9 +79,9 @@
     }
   },
   "issues": {
-      "manual_migration": {
-          "description": "Configuring {domain} using YAML was removed as part of migrating to [The Things Network v3](https://www.thethingsnetwork.org/forum/c/v2-to-v3-upgrade/102). [The Things Network v2 has shutted down](https://www.thethingsnetwork.org/forum/t/the-things-network-v2-is-permanently-shutting-down-completed/50710).\n\nPlease remove the {domain} entry from the configuration.yaml and add re-add the integration using the config_flow",
-          "title": "The {domain} YAML configuration is not supported"
-      }
+    "manual_migration": {
+      "description": "Configuring {domain} using YAML was removed as part of migrating to [The Things Network v3](https://www.thethingsnetwork.org/forum/c/v2-to-v3-upgrade/102). [The Things Network v2 has shutted down](https://www.thethingsnetwork.org/forum/t/the-things-network-v2-is-permanently-shutting-down-completed/50710).\n\nPlease remove the {domain} entry from the configuration.yaml and add re-add the integration using the config_flow",
+      "title": "The {domain} YAML configuration is not supported"
+    }
   }
 }
