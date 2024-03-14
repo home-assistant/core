@@ -27,18 +27,13 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 @pytest.fixture
 def mock_ring_auth():
     """Mock ring_doorbell.Auth."""
-    with patch("ring_doorbell.Auth", autospec=True) as mock_ring_auth:
+    with patch(
+        "homeassistant.components.ring.config_flow.Auth", autospec=True
+    ) as mock_ring_auth:
         mock_ring_auth.return_value.fetch_token.return_value = {
             "access_token": "mock-token"
         }
         yield mock_ring_auth.return_value
-
-
-@pytest.fixture
-def mock_ring():
-    """Mock ring_doorbell.Ring."""
-    with patch("ring_doorbell.Ring", autospec=True) as mock_ring:
-        yield mock_ring.return_value
 
 
 @pytest.fixture
@@ -60,7 +55,6 @@ async def mock_added_config_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_ring_auth: Mock,
-    mock_ring: Mock,
 ) -> MockConfigEntry:
     """Mock ConfigEntry that's been added to HA."""
     mock_config_entry.add_to_hass(hass)

@@ -11,6 +11,7 @@ from enum import Enum, IntFlag, auto
 import functools as ft
 import logging
 import math
+from operator import attrgetter
 import sys
 from timeit import default_timer as timer
 from types import FunctionType
@@ -331,24 +332,11 @@ class CachedProperties(type):
                 Raises AttributeError if the __attr_ attribute does not exist
                 """
                 # Invalidate the cache of the cached property
-                try:  # noqa: SIM105  suppress is much slower
-                    delattr(o, name)
-                except AttributeError:
-                    pass
+                o.__dict__.pop(name, None)
                 # Delete the __attr_ attribute
                 delattr(o, private_attr_name)
 
             return _deleter
-
-        def getter(name: str) -> Callable[[Any], Any]:
-            """Create a getter for an _attr_ property."""
-            private_attr_name = f"__attr_{name}"
-
-            def _getter(o: Any) -> Any:
-                """Get an _attr_ property from the backing __attr attribute."""
-                return getattr(o, private_attr_name)
-
-            return _getter
 
         def setter(name: str) -> Callable[[Any, Any], None]:
             """Create a setter for an _attr_ property."""
@@ -363,16 +351,16 @@ class CachedProperties(type):
                 if getattr(o, private_attr_name, _SENTINEL) == val:
                     return
                 setattr(o, private_attr_name, val)
-                try:  # noqa: SIM105  suppress is much slower
-                    delattr(o, name)
-                except AttributeError:
-                    pass
+                # Invalidate the cache of the cached property
+                o.__dict__.pop(name, None)
 
             return _setter
 
         def make_property(name: str) -> property:
             """Help create a property object."""
-            return property(fget=getter(name), fset=setter(name), fdel=deleter(name))
+            return property(
+                fget=attrgetter(f"__attr_{name}"), fset=setter(name), fdel=deleter(name)
+            )
 
         def wrap_attr(cls: CachedProperties, property_name: str) -> None:
             """Wrap a cached property's corresponding _attr in a property.

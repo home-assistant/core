@@ -56,6 +56,7 @@ from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.trace import trace_get, trace_path
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.dt import parse_datetime
 
 from .config import ScriptConfig
@@ -227,7 +228,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         await asyncio.wait(
             [
-                asyncio.create_task(script_entity.async_turn_off())
+                create_eager_task(script_entity.async_turn_off())
                 for script_entity in script_entities
             ]
         )
@@ -576,7 +577,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         script_stack_cv.set([])
 
         self._changed.clear()
-        self.hass.async_create_task(coro)
+        self.hass.async_create_task(coro, eager_start=True)
         # Wait for first state change so we can guarantee that
         # it is written to the State Machine before we return.
         await self._changed.wait()
