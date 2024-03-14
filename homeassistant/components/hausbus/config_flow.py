@@ -1,13 +1,14 @@
 """Config flow for Haus-Bus integration."""
+
 from __future__ import annotations
 
 import logging
 from typing import Any
 
-import voluptuous as vol  # type: ignore[import]
+import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
@@ -20,11 +21,9 @@ STEP_USER_SCHEMA = vol.Schema({})
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for hausbus."""
 
-    VERSION = 1
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:

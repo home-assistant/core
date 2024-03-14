@@ -1,4 +1,5 @@
 """Support for Haus-Bus lights."""
+
 import colorsys
 from typing import Any, cast
 
@@ -65,8 +66,6 @@ async def async_setup_entry(
 class HausbusLight(HausbusChannel, LightEntity):
     """Representation of a Haus-Bus light."""
 
-    TYPE = DOMAIN
-
     def __init__(
         self,
         instance_id: int,
@@ -97,7 +96,7 @@ class HausbusLight(HausbusChannel, LightEntity):
             return True
         return False
 
-    def get_hardware_status(self):
+    def get_hardware_status(self) -> None:
         """Request status of a light channel from hardware."""
         if isinstance(self._channel, Dimmer):
             cast(Dimmer, self._channel.getStatus())
@@ -106,7 +105,7 @@ class HausbusLight(HausbusChannel, LightEntity):
         if isinstance(self._channel, RGBDimmer):
             cast(RGBDimmer, self._channel.getStatus())
 
-    def set_light_color(self, red: int, green: int, blue: int):
+    def set_light_color(self, red: int, green: int, blue: int) -> None:
         """Set the color of a light channel."""
         hue, saturation, value = colorsys.rgb_to_hsv(
             red / 100.0,
@@ -120,12 +119,12 @@ class HausbusLight(HausbusChannel, LightEntity):
         }
         self.async_update_callback(**params)
 
-    def set_light_brightness(self, brightness: int):
+    def set_light_brightness(self, brightness: int) -> None:
         """Set the brightness of a light channel."""
         params = {ATTR_ON_STATE: 1, ATTR_BRIGHTNESS: (brightness * 255) // 100}
         self.async_update_callback(**params)
 
-    def light_turn_off(self):
+    def light_turn_off(self) -> None:
         """Turn off a light channel."""
         params = {
             ATTR_ON_STATE: 0,
@@ -133,7 +132,7 @@ class HausbusLight(HausbusChannel, LightEntity):
         self.async_update_callback(**params)
 
     @staticmethod
-    def handle_light_event(data: Any, channel: HausbusChannel):
+    def handle_light_event(data: Any, channel: HausbusChannel) -> None:
         """Handle light events from Haus-Bus."""
         if not isinstance(channel, HausbusLight):
             return
