@@ -10,9 +10,12 @@ from .exceptions import EntityNotFoundError
 
 
 def get_position_data(
-    hass: HomeAssistant, registry_id: str
+    hass: HomeAssistant, registry_id: str | None
 ) -> tuple[float, float] | None:
     """Extract longitude and latitude from a device tracker."""
+    if registry_id is None:
+        raise EntityNotFoundError("Failed to process registry ID")
+
     registry = er.async_get(hass)
     registry_entry = registry.async_get(registry_id)
     if registry_entry is None:

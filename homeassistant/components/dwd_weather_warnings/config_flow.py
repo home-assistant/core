@@ -16,6 +16,8 @@ from .const import CONF_REGION_DEVICE_TRACKER, CONF_REGION_IDENTIFIER, DOMAIN
 from .exceptions import EntityNotFoundError
 from .util import get_position_data
 
+EXCLUSIVE_OPTIONS = (CONF_REGION_IDENTIFIER, CONF_REGION_DEVICE_TRACKER)
+
 
 class DwdWeatherWarningsConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the config flow for the dwd_weather_warnings integration."""
@@ -29,12 +31,10 @@ class DwdWeatherWarningsConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict = {}
 
         if user_input is not None:
-            valid_options = (CONF_REGION_IDENTIFIER, CONF_REGION_DEVICE_TRACKER)
-
             # Check, if either CONF_REGION_IDENTIFIER or CONF_GPS_TRACKER has been set.
-            if all(k not in user_input for k in valid_options):
+            if all(k not in user_input for k in EXCLUSIVE_OPTIONS):
                 errors["base"] = "no_identifier"
-            elif all(k in user_input for k in valid_options):
+            elif all(k in user_input for k in EXCLUSIVE_OPTIONS):
                 errors["base"] = "ambiguous_identifier"
             elif CONF_REGION_IDENTIFIER in user_input:
                 # Validate region identifier using the API
@@ -51,7 +51,7 @@ class DwdWeatherWarningsConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._abort_if_unique_id_configured()
 
                     return self.async_create_entry(title=identifier, data=user_input)
-            elif CONF_REGION_DEVICE_TRACKER in user_input:
+            else:  # CONF_REGION_DEVICE_TRACKER
                 device_tracker = user_input[CONF_REGION_DEVICE_TRACKER]
                 registry = er.async_get(self.hass)
                 entity_entry = registry.async_get(device_tracker)

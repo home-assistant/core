@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 from dwdwfsapi import DwdWeatherWarningsAPI
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 
 from .const import (
     CONF_REGION_DEVICE_TRACKER,
@@ -23,26 +21,13 @@ from .util import get_position_data
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    region_identifier: str = entry.data.get(CONF_REGION_IDENTIFIER, None)
-    device_tracker: str = entry.data.get(CONF_REGION_DEVICE_TRACKER, None)
-
     # Initialize the API and coordinator based on the specified data.
-    if region_identifier is not None:
+    if (region_identifier := entry.data.get(CONF_REGION_IDENTIFIER)) is not None:
         api = await hass.async_add_executor_job(
             DwdWeatherWarningsAPI, region_identifier
         )
-    elif device_tracker is not None:
-        registry = er.async_get(hass)
-
-        try:
-            device_tracker = er.async_validate_entity_id(registry, device_tracker)
-        except vol.Invalid:
-            # The entity/UUID is invalid or not associated with an entity registry item.
-            LOGGER.error(
-                "Failed to setup dwd_weather_warnings for unknown entity %s",
-                device_tracker,
-            )
-            return False
+    else:
+        device_tracker = entry.data.get(CONF_REGION_DEVICE_TRACKER)
 
         try:
             position = get_position_data(hass, device_tracker)
