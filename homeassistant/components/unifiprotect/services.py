@@ -16,7 +16,7 @@ from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -164,7 +164,7 @@ async def remove_privacy_zone(hass: HomeAssistant, call: ServiceCall) -> None:
             break
 
     if remove_index is None:
-        raise HomeAssistantError(
+        raise ServiceValidationError(
             f"Could not find privacy zone with name {name} on camera {camera.display_name}."
         )
 
