@@ -162,6 +162,10 @@ class OptionsFlowHandler(OptionsFlow):
                     CONST_KEY_SECRET, default=self.config_entry.data[CONST_KEY_SECRET]
                 ): str,
                 vol.Required(
+                    CONST_PROMPT_CONTEXT,
+                    default=self.config_entry.data[CONST_PROMPT_CONTEXT],
+                ): str,
+                vol.Required(
                     CONST_MODEL_ID, default=self.config_entry.data[CONST_MODEL_ID]
                 ): selector.SelectSelector(
                     selector.SelectSelectorConfig(options=CONST_MODEL_LIST),
