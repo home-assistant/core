@@ -117,6 +117,7 @@ async def test_call_setup_entry(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert entry.supports_unload
+    assert entry.supports_migrate
 
 
 async def test_call_setup_entry_without_reload_support(hass: HomeAssistant) -> None:
@@ -146,6 +147,7 @@ async def test_call_setup_entry_without_reload_support(hass: HomeAssistant) -> N
     assert len(mock_setup_entry.mock_calls) == 1
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert not entry.supports_unload
+    assert entry.supports_migrate
 
 
 @pytest.mark.parametrize(("major_version", "minor_version"), [(2, 1), (1, 2), (2, 2)])
