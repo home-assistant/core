@@ -240,10 +240,9 @@ class DashboardsCollection(collection.DictStorageCollection):
         updated = False
 
         for item in data["items"] or []:
-            url_path = item[CONF_URL_PATH]
-            if url_path == "map" or "-" in url_path:
-                continue
-            item[CONF_URL_PATH] = f"lovelace-{url_path}"
+            if "-" not in item[CONF_URL_PATH]:
+                updated = True
+                item[CONF_URL_PATH] = f"lovelace-{item[CONF_URL_PATH]}"
 
         if updated:
             await self.store.async_save(data)
