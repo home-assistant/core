@@ -6,7 +6,8 @@ from datetime import timedelta
 import logging
 
 from aiohttp.client_exceptions import ServerDisconnectedError
-from pyunifiprotect.data import Bootstrap, FirmwareReleaseChannel
+from pyunifiprotect.data import Bootstrap
+from pyunifiprotect.data.types import FirmwareReleaseChannel
 from pyunifiprotect.exceptions import ClientError, NotAuthorized
 
 # Import the test_util.anonymize module from the pyunifiprotect package
@@ -119,12 +120,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ir.async_create_issue(
             hass,
             DOMAIN,
-            "ea_warning_channel",
+            "ea_channel_warning",
             is_fixable=True,
             is_persistent=True,
             learn_more_url="https://www.home-assistant.io/integrations/unifiprotect#about-unifi-early-access",
             severity=IssueSeverity.WARNING,
-            translation_key="ea_warning_channel",
+            translation_key="ea_channel_warning",
             translation_placeholders={"version": str(nvr_info.version)},
             data={"entry_id": entry.entry_id},
         )
@@ -150,7 +151,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     "version": str(nvr_info.version),
                 },
             )
-            ir.async_delete_issue(hass, DOMAIN, "ea_warning")
+            ir.async_delete_issue(hass, DOMAIN, "ea_channel_warning")
             _LOGGER.exception("Error setting up UniFi Protect integration: %s", err)
         raise
 

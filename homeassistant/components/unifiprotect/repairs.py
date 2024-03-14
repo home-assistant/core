@@ -6,7 +6,7 @@ import logging
 from typing import cast
 
 from pyunifiprotect import ProtectApiClient
-from pyunifiprotect.data import FirmwareReleaseChannel
+from pyunifiprotect.data.types import FirmwareReleaseChannel
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
@@ -128,7 +128,7 @@ async def async_create_fix_flow(
     data: dict[str, str | int | float | None] | None,
 ) -> RepairsFlow:
     """Create flow."""
-    if data is not None and issue_id == "ea_warning":
+    if data is not None and issue_id == "ea_channel_warning":
         entry_id = cast(str, data["entry_id"])
         if (entry := hass.config_entries.async_get_entry(entry_id)) is not None:
             api = async_create_api_client(hass, entry)
