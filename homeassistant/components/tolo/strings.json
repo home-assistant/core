@@ -65,8 +65,8 @@
       "aroma_therapy_slot": {
         "name": "Aroma therapy slot",
         "state": {
-          "a": "A",
-          "b": "B"
+          "a": "Slot A",
+          "b": "Slot B"
         }
       }
     },
