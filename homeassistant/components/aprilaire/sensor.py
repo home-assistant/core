@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -98,7 +98,7 @@ SENSOR_TYPES: tuple[AprilaireSensorDescription, ...] = (
         translation_key="indoor_temperature_controlling_sensor",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=None,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         status_key=Attribute.INDOOR_TEMPERATURE_CONTROLLING_SENSOR_STATUS,
         status_sensor_available_value=0,
         status_sensor_exists_values=[0, 1, 2],
@@ -110,6 +110,7 @@ SENSOR_TYPES: tuple[AprilaireSensorDescription, ...] = (
         translation_key="outdoor_temperature_controlling_sensor",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         status_key=Attribute.OUTDOOR_TEMPERATURE_CONTROLLING_SENSOR_STATUS,
         status_sensor_available_value=0,
         status_sensor_exists_values=[0, 1, 2],
@@ -239,3 +240,11 @@ class AprilaireSensor(BaseAprilaireEntity, SensorEntity):
             return cast(StateType, raw_value)
 
         return self.entity_description.value_fn(self, raw_value)
+
+    @property
+    def suggested_display_precision(self) -> int | None:
+        """Return the suggested number of decimal digits for display."""
+        if self.unit_of_measurement == UnitOfTemperature.CELSIUS:
+            return 1
+
+        return 0
