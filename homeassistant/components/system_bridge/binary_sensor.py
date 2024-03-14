@@ -16,7 +16,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import SystemBridgeCoordinatorData, SystemBridgeDataUpdateCoordinator
+from .coordinator import SystemBridgeDataUpdateCoordinator
+from .data import SystemBridgeData
 from .entity import SystemBridgeEntity
 
 
@@ -27,7 +28,7 @@ class SystemBridgeBinarySensorEntityDescription(BinarySensorEntityDescription):
     value_fn: Callable = round
 
 
-def camera_in_use(data: SystemBridgeCoordinatorData) -> bool | None:
+def camera_in_use(data: SystemBridgeData) -> bool | None:
     """Return if any camera is in use."""
     if data.system.camera_usage is not None:
         return len(data.system.camera_usage) > 0
@@ -39,18 +40,18 @@ BASE_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ...] 
         key="camera_in_use",
         translation_key="camera_in_use",
         icon="mdi:webcam",
-        value=camera_in_use,
+        value_fn=camera_in_use,
     ),
     SystemBridgeBinarySensorEntityDescription(
         key="pending_reboot",
         translation_key="pending_reboot",
         icon="mdi:restart",
-        value=lambda data: data.system.pending_reboot,
+        value_fn=lambda data: data.system.pending_reboot,
     ),
     SystemBridgeBinarySensorEntityDescription(
         key="version_available",
         device_class=BinarySensorDeviceClass.UPDATE,
-        value=lambda data: data.system.version_newer_available,
+        value_fn=lambda data: data.system.version_newer_available,
     ),
 )
 
@@ -58,7 +59,7 @@ BATTERY_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ..
     SystemBridgeBinarySensorEntityDescription(
         key="battery_is_charging",
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
-        value=lambda data: data.battery.is_charging,
+        value_fn=lambda data: data.battery.is_charging,
     ),
 )
 
@@ -109,4 +110,4 @@ class SystemBridgeBinarySensor(SystemBridgeEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the boolean state of the binary sensor."""
-        return self.entity_description.value(self.coordinator.data)
+        return self.entity_description.value_fn(self.coordinator.data)
