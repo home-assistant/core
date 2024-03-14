@@ -3130,7 +3130,12 @@ async def test_async_run_job_deprecated(
         pass
 
     hass.async_run_job(_test)
-    assert "async_run_job is deprecated" in caplog.text
+    assert (
+        "Detected code that calls `async_run_job`, which is deprecated "
+        "and will be removed in Home Assistant 2025.4; Please review "
+        "https://developers.home-assistant.io//blog/2024/03/13/deprecate_add_run_job"
+        " for replacement options"
+    ) in caplog.text
 
 
 async def test_async_add_job_deprecated(
@@ -3142,4 +3147,9 @@ async def test_async_add_job_deprecated(
         pass
 
     hass.async_add_job(_test)
-    assert "async_add_job is deprecated" in caplog.text
+    assert (
+        "Detected code that calls `async_add_job`, which is deprecated "
+        "and will be removed in Home Assistant 2025.4; Please review "
+        "https://developers.home-assistant.io//blog/2024/03/13/deprecate_add_run_job"
+        " for replacement options"
+    ) in caplog.text
