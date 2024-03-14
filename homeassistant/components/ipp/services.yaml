@@ -1,0 +1,29 @@
+dump:
+  fields:
+    host:
+      example: "192.168.1.50"
+      selector:
+        text:
+    port:
+      example: 631
+      selector:
+        number:
+          min: 1
+          max: 65535
+    base_path:
+      example: "/ipp/print"
+      selector:
+        text:
+    ssl:
+      selector:
+        boolean:
+    verify_ssl:
+      selector:
+        boolean:
+    operation:
+      selector:
+        text:
+    payload:
+      example: "{}"
+      selector:
+        object:

@@ -18,3 +18,10 @@ ATTR_URI_SUPPORTED = "uri_supported"
 CONF_BASE_PATH = "base_path"
 CONF_SERIAL = "serial"
 CONF_TLS = "tls"
+
+# Service Attributes
+SERVICE_IPP_ATTR_OPERATION = "operation"
+SERVICE_IPP_ATTR_PAYLOAD = "payload"
+
+# Services
+SERVICE_IPP_DUMP = "dump"
