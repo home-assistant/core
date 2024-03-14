@@ -13,9 +13,8 @@ from pytedee_async import (
 import voluptuous as vol
 
 from homeassistant.components.webhook import async_generate_id as webhook_generate_id
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_WEBHOOK_ID
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN, NAME
