@@ -52,7 +52,7 @@ from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from . import device_registry as dr, storage
 from .device_registry import EVENT_DEVICE_REGISTRY_UPDATED
-from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes
+from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
 from .registry import BaseRegistry
 from .typing import UNDEFINED, UndefinedType
 
@@ -311,6 +311,41 @@ class RegistryEntry:
             )
         return None
 
+    @cached_property
+    def as_storage_fragment(self) -> json_fragment:
+        """Return a json fragment for storage."""
+        return json_fragment(
+            json_bytes(
+                {
+                    "aliases": list(self.aliases),
+                    "area_id": self.area_id,
+                    "capabilities": self.capabilities,
+                    "config_entry_id": self.config_entry_id,
+                    "device_class": self.device_class,
+                    "device_id": self.device_id,
+                    "disabled_by": self.disabled_by,
+                    "entity_category": self.entity_category,
+                    "entity_id": self.entity_id,
+                    "hidden_by": self.hidden_by,
+                    "icon": self.icon,
+                    "id": self.id,
+                    "has_entity_name": self.has_entity_name,
+                    "labels": list(self.labels),
+                    "name": self.name,
+                    "options": self.options,
+                    "original_device_class": self.original_device_class,
+                    "original_icon": self.original_icon,
+                    "original_name": self.original_name,
+                    "platform": self.platform,
+                    "supported_features": self.supported_features,
+                    "translation_key": self.translation_key,
+                    "unique_id": self.unique_id,
+                    "previous_unique_id": self.previous_unique_id,
+                    "unit_of_measurement": self.unit_of_measurement,
+                }
+            )
+        )
+
     @callback
     def write_unavailable_state(self, hass: HomeAssistant) -> None:
         """Write the unavailable state to the state machine."""
@@ -340,7 +375,7 @@ class RegistryEntry:
         hass.states.async_set(self.entity_id, STATE_UNAVAILABLE, attrs)
 
 
-@attr.s(slots=True, frozen=True)
+@attr.s(frozen=True)
 class DeletedRegistryEntry:
     """Deleted Entity Registry Entry."""
 
@@ -356,6 +391,22 @@ class DeletedRegistryEntry:
     def _domain_default(self) -> str:
         """Compute domain value."""
         return split_entity_id(self.entity_id)[0]
+
+    @cached_property
+    def as_storage_fragment(self) -> json_fragment:
+        """Return a json fragment for storage."""
+        return json_fragment(
+            json_bytes(
+                {
+                    "config_entry_id": self.config_entry_id,
+                    "entity_id": self.entity_id,
+                    "id": self.id,
+                    "orphaned_timestamp": self.orphaned_timestamp,
+                    "platform": self.platform,
+                    "unique_id": self.unique_id,
+                }
+            )
+        )
 
 
 class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
@@ -1197,51 +1248,12 @@ class EntityRegistry(BaseRegistry):
     @callback
     def _data_to_save(self) -> dict[str, Any]:
         """Return data of entity registry to store in a file."""
-        data: dict[str, Any] = {}
-
-        data["entities"] = [
-            {
-                "aliases": list(entry.aliases),
-                "area_id": entry.area_id,
-                "capabilities": entry.capabilities,
-                "config_entry_id": entry.config_entry_id,
-                "device_class": entry.device_class,
-                "device_id": entry.device_id,
-                "disabled_by": entry.disabled_by,
-                "entity_category": entry.entity_category,
-                "entity_id": entry.entity_id,
-                "hidden_by": entry.hidden_by,
-                "icon": entry.icon,
-                "id": entry.id,
-                "has_entity_name": entry.has_entity_name,
-                "labels": list(entry.labels),
-                "name": entry.name,
-                "options": entry.options,
-                "original_device_class": entry.original_device_class,
-                "original_icon": entry.original_icon,
-                "original_name": entry.original_name,
-                "platform": entry.platform,
-                "supported_features": entry.supported_features,
-                "translation_key": entry.translation_key,
-                "unique_id": entry.unique_id,
-                "previous_unique_id": entry.previous_unique_id,
-                "unit_of_measurement": entry.unit_of_measurement,
-            }
-            for entry in self.entities.values()
-        ]
-        data["deleted_entities"] = [
-            {
-                "config_entry_id": entry.config_entry_id,
-                "entity_id": entry.entity_id,
-                "id": entry.id,
-                "orphaned_timestamp": entry.orphaned_timestamp,
-                "platform": entry.platform,
-                "unique_id": entry.unique_id,
-            }
-            for entry in self.deleted_entities.values()
-        ]
-
-        return data
+        return {
+            "entities": [entry.as_storage_fragment for entry in self.entities.values()],
+            "deleted_entities": [
+                entry.as_storage_fragment for entry in self.deleted_entities.values()
+            ],
+        }
 
     @callback
     def async_clear_label_id(self, label_id: str) -> None:
