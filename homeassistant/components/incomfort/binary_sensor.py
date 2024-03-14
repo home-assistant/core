@@ -1,4 +1,5 @@
 """Support for an Intergas heater via an InComfort/InTouch Lan2RF gateway."""
+
 from __future__ import annotations
 
 from typing import Any

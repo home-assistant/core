@@ -1,4 +1,5 @@
 """Philips Hue lights platform tests."""
+
 from unittest.mock import Mock
 
 import aiohue
@@ -174,13 +175,15 @@ LIGHT_GAMUT = color.GamutType(
 LIGHT_GAMUT_TYPE = "A"
 
 
-async def setup_bridge(hass, mock_bridge_v1):
+async def setup_bridge(hass: HomeAssistant, mock_bridge_v1):
     """Load the Hue light platform with the provided bridge."""
     hass.config.components.add(hue.DOMAIN)
     config_entry = create_config_entry()
     config_entry.add_to_hass(hass)
-    config_entry.state = ConfigEntryState.LOADED
-    config_entry.options = {CONF_ALLOW_HUE_GROUPS: True}
+    hass.config_entries.async_update_entry(
+        config_entry, options={CONF_ALLOW_HUE_GROUPS: True}
+    )
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     mock_bridge_v1.config_entry = config_entry
     hass.data[hue.DOMAIN] = {config_entry.entry_id: mock_bridge_v1}
     await hass.config_entries.async_forward_entry_setup(config_entry, "light")
@@ -410,6 +413,8 @@ async def test_group_removed(hass: HomeAssistant, mock_bridge_v1) -> None:
     await hass.services.async_call(
         "light", "turn_on", {"entity_id": "light.group_1"}, blocking=True
     )
+    # Wait for the group to be updated
+    await hass.async_block_till_done()
 
     # 2x group update, 1x light update, 1 turn on request
     assert len(mock_bridge_v1.mock_requests) == 4
@@ -437,6 +442,8 @@ async def test_light_removed(hass: HomeAssistant, mock_bridge_v1) -> None:
     await hass.services.async_call(
         "light", "turn_on", {"entity_id": "light.hue_lamp_1"}, blocking=True
     )
+    # Wait for the light to be updated
+    await hass.async_block_till_done()
 
     # 2x light update, 1 group update, 1 turn on request
     assert len(mock_bridge_v1.mock_requests) == 4

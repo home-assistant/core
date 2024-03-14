@@ -1,4 +1,5 @@
 """Tests for the Freedompro switch."""
+
 from datetime import timedelta
 from unittest.mock import ANY, patch
 

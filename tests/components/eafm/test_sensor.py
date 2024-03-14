@@ -1,4 +1,5 @@
 """Tests for polling measures."""
+
 import datetime
 
 import aiohttp
@@ -337,6 +338,19 @@ async def test_ignore_no_latest_reading(hass: HomeAssistant, mock_get_station) -
 
     state = hass.states.get("sensor.my_station_water_level_second_stage")
     assert state is None
+
+
+async def test_no_measures(hass: HomeAssistant, mock_get_station) -> None:
+    """Test no measures in the data."""
+    await async_setup_test_fixture(
+        hass,
+        mock_get_station,
+        {
+            "label": "My station",
+        },
+    )
+
+    assert hass.states.async_entity_ids_count() == 0
 
 
 async def test_mark_existing_as_unavailable_if_no_latest(

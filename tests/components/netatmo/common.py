@@ -1,4 +1,5 @@
 """Common methods used across tests for Netatmo."""
+
 from contextlib import contextmanager
 import json
 from typing import Any

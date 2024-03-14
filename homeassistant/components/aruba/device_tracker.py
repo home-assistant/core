@@ -1,4 +1,5 @@
 """Support for Aruba Access Points."""
+
 from __future__ import annotations
 
 import logging

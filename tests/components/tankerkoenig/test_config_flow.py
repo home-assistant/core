@@ -1,4 +1,5 @@
 """Tests for Tankerkoenig config flow."""
+
 from unittest.mock import patch
 
 from aiotankerkoenig.exceptions import TankerkoenigInvalidKeyError

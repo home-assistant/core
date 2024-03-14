@@ -1,4 +1,5 @@
 """The tests device sun light trigger component."""
+
 from datetime import datetime
 from unittest.mock import patch
 

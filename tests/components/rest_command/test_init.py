@@ -1,4 +1,5 @@
 """The tests for the rest command platform."""
+
 import base64
 from http import HTTPStatus
 from unittest.mock import patch

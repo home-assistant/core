@@ -1,7 +1,8 @@
 """Event parser and human readable log generator."""
+
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
 
@@ -103,7 +104,7 @@ class LazyEventPartialState:
 class EventAsRow:
     """Convert an event to a row."""
 
-    data: dict[str, Any]
+    data: Mapping[str, Any]
     context: Context
     context_id_bin: bytes
     time_fired_ts: float

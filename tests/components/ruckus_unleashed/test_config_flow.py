@@ -1,4 +1,5 @@
 """Test the Ruckus Unleashed config flow."""
+
 from copy import deepcopy
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch

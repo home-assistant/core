@@ -1,4 +1,5 @@
 """Validate Modbus configuration."""
+
 from __future__ import annotations
 
 from collections import namedtuple
@@ -8,6 +9,7 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components.climate import HVACMode
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_COMMAND_OFF,
@@ -29,6 +31,7 @@ from .const import (
     CONF_FAN_MODE_REGISTER,
     CONF_FAN_MODE_VALUES,
     CONF_HVAC_MODE_REGISTER,
+    CONF_HVAC_ONOFF_REGISTER,
     CONF_INPUT_TYPE,
     CONF_SLAVE_COUNT,
     CONF_SWAP,
@@ -115,8 +118,8 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
     data_type = config[CONF_DATA_TYPE]
     if data_type == "int":
         data_type = config[CONF_DATA_TYPE] = DataType.INT16
-    count = config.get(CONF_COUNT, None)
-    structure = config.get(CONF_STRUCTURE, None)
+    count = config.get(CONF_COUNT)
+    structure = config.get(CONF_STRUCTURE)
     slave_count = config.get(CONF_SLAVE_COUNT, config.get(CONF_VIRTUAL_COUNT))
     validator = DEFAULT_STRUCT_FORMAT[data_type].validate_parm
     swap_type = config.get(CONF_SWAP)
@@ -145,6 +148,8 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
             raise vol.Invalid(error)
 
     if config[CONF_DATA_TYPE] == DataType.CUSTOM:
+        assert isinstance(structure, str)
+        assert isinstance(count, int)
         try:
             size = struct.calcsize(structure)
         except struct.error as err:
@@ -170,6 +175,26 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
         CONF_STRUCTURE: structure,
         CONF_SWAP: swap_type,
     }
+
+
+def hvac_fixedsize_reglist_validator(value: Any) -> list:
+    """Check the number of registers for target temp. and coerce it to a list, if valid."""
+    if isinstance(value, int):
+        value = [value] * len(HVACMode)
+        return list(value)
+
+    if len(value) == len(HVACMode):
+        _rv = True
+        for svalue in value:
+            if isinstance(svalue, int) is False:
+                _rv = False
+                break
+        if _rv is True:
+            return list(value)
+
+    raise vol.Invalid(
+        f"Invalid target temp register. Required type: integer, allowed 1 or list of {len(HVACMode)} registers"
+    )
 
 
 def nan_validator(value: Any) -> int:
@@ -200,6 +225,34 @@ def duplicate_fan_mode_validator(config: dict[str, Any]) -> dict:
 
     for key in reversed(errors):
         del config[CONF_FAN_MODE_VALUES][key]
+    return config
+
+
+def check_hvac_target_temp_registers(config: dict) -> dict:
+    """Check conflicts among HVAC target temperature registers and HVAC ON/OFF, HVAC register, Fan Modes."""
+
+    if (
+        CONF_HVAC_MODE_REGISTER in config
+        and config[CONF_HVAC_MODE_REGISTER][CONF_ADDRESS] in config[CONF_TARGET_TEMP]
+    ):
+        wrn = f"{CONF_HVAC_MODE_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_HVAC_MODE_REGISTER} is not loaded!"
+        _LOGGER.warning(wrn)
+        del config[CONF_HVAC_MODE_REGISTER]
+    if (
+        CONF_HVAC_ONOFF_REGISTER in config
+        and config[CONF_HVAC_ONOFF_REGISTER] in config[CONF_TARGET_TEMP]
+    ):
+        wrn = f"{CONF_HVAC_ONOFF_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_HVAC_ONOFF_REGISTER} is not loaded!"
+        _LOGGER.warning(wrn)
+        del config[CONF_HVAC_ONOFF_REGISTER]
+    if (
+        CONF_FAN_MODE_REGISTER in config
+        and config[CONF_FAN_MODE_REGISTER][CONF_ADDRESS] in config[CONF_TARGET_TEMP]
+    ):
+        wrn = f"{CONF_FAN_MODE_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_FAN_MODE_REGISTER} is not loaded!"
+        _LOGGER.warning(wrn)
+        del config[CONF_FAN_MODE_REGISTER]
+
     return config
 
 
@@ -251,16 +304,17 @@ def check_config(config: dict) -> dict:
 
     def validate_entity(
         hub_name: str,
+        component: str,
         entity: dict,
         minimum_scan_interval: int,
         ent_names: set,
         ent_addr: set,
     ) -> bool:
         """Validate entity."""
-        name = entity[CONF_NAME]
-        addr = str(entity[CONF_ADDRESS])
+        name = f"{component}.{entity[CONF_NAME]}"
+        addr = f"{hub_name}{entity[CONF_ADDRESS]}"
         scan_interval = entity.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        if scan_interval < 5:
+        if 0 < scan_interval < 5:
             _LOGGER.warning(
                 (
                     "%s %s scan_interval(%d) is lower than 5 seconds, "
@@ -280,16 +334,20 @@ def check_config(config: dict) -> dict:
         ):
             if conf_type in entity:
                 addr += f"_{entity[conf_type]}"
-        inx = entity.get(CONF_SLAVE, None) or entity.get(CONF_DEVICE_ADDRESS, 0)
+        inx = entity.get(CONF_SLAVE) or entity.get(CONF_DEVICE_ADDRESS, 0)
         addr += f"_{inx}"
         loc_addr: set[str] = {addr}
 
         if CONF_TARGET_TEMP in entity:
-            loc_addr.add(f"{entity[CONF_TARGET_TEMP]}_{inx}")
+            loc_addr.add(f"{hub_name}{entity[CONF_TARGET_TEMP]}_{inx}")
         if CONF_HVAC_MODE_REGISTER in entity:
-            loc_addr.add(f"{entity[CONF_HVAC_MODE_REGISTER][CONF_ADDRESS]}_{inx}")
+            loc_addr.add(
+                f"{hub_name}{entity[CONF_HVAC_MODE_REGISTER][CONF_ADDRESS]}_{inx}"
+            )
         if CONF_FAN_MODE_REGISTER in entity:
-            loc_addr.add(f"{entity[CONF_FAN_MODE_REGISTER][CONF_ADDRESS]}_{inx}")
+            loc_addr.add(
+                f"{hub_name}{entity[CONF_FAN_MODE_REGISTER][CONF_ADDRESS]}_{inx}"
+            )
 
         dup_addrs = ent_addr.intersection(loc_addr)
         if len(dup_addrs) > 0:
@@ -314,15 +372,18 @@ def check_config(config: dict) -> dict:
         if not validate_modbus(hub, hub_name_inx):
             del config[hub_inx]
             continue
-        for _component, conf_key in PLATFORMS:
+        minimum_scan_interval = 9999
+        no_entities = True
+        for component, conf_key in PLATFORMS:
             if conf_key not in hub:
                 continue
+            no_entities = False
             entity_inx = 0
             entities = hub[conf_key]
-            minimum_scan_interval = 9999
             while entity_inx < len(entities):
                 if not validate_entity(
                     hub[CONF_NAME],
+                    component,
                     entities[entity_inx],
                     minimum_scan_interval,
                     ent_names,
@@ -331,7 +392,11 @@ def check_config(config: dict) -> dict:
                     del entities[entity_inx]
                 else:
                     entity_inx += 1
-
+        if no_entities:
+            err = f"Modbus {hub[CONF_NAME]} contain no entities, this will cause instability,  please add at least one entity!"
+            _LOGGER.warning(err)
+            # Ensure timeout is not started/handled.
+            hub[CONF_TIMEOUT] = -1
         if hub[CONF_TIMEOUT] >= minimum_scan_interval:
             hub[CONF_TIMEOUT] = minimum_scan_interval - 1
             _LOGGER.warning(

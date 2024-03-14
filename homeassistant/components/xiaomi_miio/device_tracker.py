@@ -1,4 +1,5 @@
 """Support for Xiaomi Mi WiFi Repeater 2."""
+
 from __future__ import annotations
 
 import logging
@@ -61,18 +62,14 @@ class XiaomiMiioDeviceScanner(DeviceScanner):
 
     async def async_scan_devices(self):
         """Scan for devices and return a list containing found device IDs."""
-        devices = []
         try:
             station_info = await self.hass.async_add_executor_job(self.device.status)
             _LOGGER.debug("Got new station info: %s", station_info)
-
-            for device in station_info.associated_stations:
-                devices.append(device["mac"])
-
         except DeviceException as ex:
             _LOGGER.error("Unable to fetch the state: %s", ex)
+            return []
 
-        return devices
+        return [device["mac"] for device in station_info.associated_stations]
 
     async def async_get_device_name(self, device):
         """Return None.

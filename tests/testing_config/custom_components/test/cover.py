@@ -2,6 +2,7 @@
 
 Call init before using it in your tests to ensure clean test data.
 """
+
 from typing import Any
 
 from homeassistant.components.cover import CoverEntity, CoverEntityFeature

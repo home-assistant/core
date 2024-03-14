@@ -1,4 +1,5 @@
 """Entity representing a Sonos Alarm."""
+
 from __future__ import annotations
 
 import datetime

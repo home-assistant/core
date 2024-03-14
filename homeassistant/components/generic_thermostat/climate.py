@@ -1,4 +1,5 @@
 """Adds support for generic thermostat units."""
+
 from __future__ import annotations
 
 import asyncio
@@ -15,6 +16,7 @@ from homeassistant.components.climate import (
     PRESET_ACTIVITY,
     PRESET_AWAY,
     PRESET_COMFORT,
+    PRESET_ECO,
     PRESET_HOME,
     PRESET_NONE,
     PRESET_SLEEP,
@@ -58,7 +60,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, PLATFORMS
 
@@ -86,6 +88,7 @@ CONF_PRESETS = {
     for p in (
         PRESET_AWAY,
         PRESET_COMFORT,
+        PRESET_ECO,
         PRESET_HOME,
         PRESET_SLEEP,
         PRESET_ACTIVITY,
@@ -410,9 +413,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         # Get default temp from super class
         return super().max_temp
 
-    async def _async_sensor_changed(
-        self, event: EventType[EventStateChangedData]
-    ) -> None:
+    async def _async_sensor_changed(self, event: Event[EventStateChangedData]) -> None:
         """Handle temperature changes."""
         new_state = event.data["new_state"]
         if new_state is None or new_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
@@ -435,7 +436,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             await self._async_heater_turn_off()
 
     @callback
-    def _async_switch_changed(self, event: EventType[EventStateChangedData]) -> None:
+    def _async_switch_changed(self, event: Event[EventStateChangedData]) -> None:
         """Handle heater switch state changes."""
         new_state = event.data["new_state"]
         old_state = event.data["old_state"]

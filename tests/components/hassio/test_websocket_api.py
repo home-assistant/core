@@ -1,4 +1,5 @@
 """Test websocket API."""
+
 import pytest
 
 from homeassistant.components.hassio.const import (
@@ -171,6 +172,7 @@ async def test_websocket_supervisor_api_error(
     aioclient_mock.get(
         "http://127.0.0.1/ping",
         json={"result": "error", "message": "example error"},
+        status=400,
     )
 
     await websocket_client.send_json(
@@ -183,7 +185,37 @@ async def test_websocket_supervisor_api_error(
     )
 
     msg = await websocket_client.receive_json()
+    assert msg["error"]["code"] == "unknown_error"
     assert msg["error"]["message"] == "example error"
+
+
+async def test_websocket_supervisor_api_error_without_msg(
+    hassio_env,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test Supervisor websocket api error."""
+    assert await async_setup_component(hass, "hassio", {})
+    websocket_client = await hass_ws_client(hass)
+    aioclient_mock.get(
+        "http://127.0.0.1/ping",
+        json={},
+        status=400,
+    )
+
+    await websocket_client.send_json(
+        {
+            WS_ID: 1,
+            WS_TYPE: WS_TYPE_API,
+            ATTR_ENDPOINT: "/ping",
+            ATTR_METHOD: "get",
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["error"]["code"] == "unknown_error"
+    assert msg["error"]["message"] == ""
 
 
 async def test_websocket_non_admin_user(

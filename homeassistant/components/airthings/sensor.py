@@ -1,4 +1,5 @@
 """Support for Airthings sensors."""
+
 from __future__ import annotations
 
 from airthings import AirthingsDevice
@@ -47,7 +48,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "pressure": SensorEntityDescription(
         key="pressure",
-        device_class=SensorDeviceClass.PRESSURE,
+        device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         native_unit_of_measurement=UnitOfPressure.MBAR,
     ),
     "battery": SensorEntityDescription(

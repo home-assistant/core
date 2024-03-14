@@ -1,4 +1,5 @@
 """Webhook tests for mobile_app."""
+
 from binascii import unhexlify
 from http import HTTPStatus
 from unittest.mock import patch

@@ -1,4 +1,5 @@
 """Support for IQVIA sensors."""
+
 from __future__ import annotations
 
 from statistics import mean
@@ -232,14 +233,10 @@ class IndexSensor(IQVIAEntity, SensorEntity):
             if self.entity_description.key in (
                 TYPE_ALLERGY_TODAY,
                 TYPE_ALLERGY_TOMORROW,
-            ):
-                data = self.coordinator.data.get("Location")
-            elif self.entity_description.key in (
                 TYPE_ASTHMA_TODAY,
                 TYPE_ASTHMA_TOMORROW,
+                TYPE_DISEASE_TODAY,
             ):
-                data = self.coordinator.data.get("Location")
-            elif self.entity_description.key == TYPE_DISEASE_TODAY:
                 data = self.coordinator.data.get("Location")
         except KeyError:
             return

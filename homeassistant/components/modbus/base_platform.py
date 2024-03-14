@@ -1,4 +1,5 @@
 """Base implementation for all modbus platforms."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -101,7 +102,7 @@ class BasePlatform(Entity):
             )
 
         self._hub = hub
-        self._slave = entry.get(CONF_SLAVE, None) or entry.get(CONF_DEVICE_ADDRESS, 0)
+        self._slave = entry.get(CONF_SLAVE) or entry.get(CONF_DEVICE_ADDRESS, 0)
         self._address = int(entry[CONF_ADDRESS])
         self._input_type = entry[CONF_INPUT_TYPE]
         self._value: str | None = None
@@ -127,7 +128,7 @@ class BasePlatform(Entity):
 
         self._min_value = get_optional_numeric_config(CONF_MIN_VALUE)
         self._max_value = get_optional_numeric_config(CONF_MAX_VALUE)
-        self._nan_value = entry.get(CONF_NAN_VALUE, None)
+        self._nan_value = entry.get(CONF_NAN_VALUE)
         self._zero_suppress = get_optional_numeric_config(CONF_ZERO_SUPPRESS)
 
     @abstractmethod
@@ -183,7 +184,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         self._structure: str = config[CONF_STRUCTURE]
         self._scale = config[CONF_SCALE]
         self._offset = config[CONF_OFFSET]
-        self._slave_count = config.get(CONF_SLAVE_COUNT, None) or config.get(
+        self._slave_count = config.get(CONF_SLAVE_COUNT) or config.get(
             CONF_VIRTUAL_COUNT, 0
         )
         self._slave_size = self._count = config[CONF_COUNT]
@@ -199,6 +200,8 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             self._precision = config.get(CONF_PRECISION, 2)
         else:
             self._precision = config.get(CONF_PRECISION, 0)
+            if self._precision > 0 or self._scale != int(self._scale):
+                self._value_is_int = False
 
     def _swap_registers(self, registers: list[int], slave_count: int) -> list[int]:
         """Do swap as needed."""

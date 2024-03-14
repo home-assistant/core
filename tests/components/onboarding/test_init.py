@@ -1,4 +1,5 @@
 """Tests for the init."""
+
 from typing import Any
 from unittest.mock import Mock, patch
 

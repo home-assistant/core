@@ -1,4 +1,5 @@
 """Tests for common SonosSpeaker behavior."""
+
 from unittest.mock import patch
 
 import pytest

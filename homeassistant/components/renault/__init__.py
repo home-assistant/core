@@ -1,4 +1,5 @@
 """Support for Renault devices."""
+
 import aiohttp
 from renault_api.gigya.exceptions import GigyaException
 

@@ -1,5 +1,8 @@
 """Test initialization of tedee."""
 
+from unittest.mock import MagicMock
+
+
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import MagicMock, patch

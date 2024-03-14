@@ -1,4 +1,5 @@
 """Support for the IBM Watson IoT Platform."""
+
 import logging
 import queue
 import threading
