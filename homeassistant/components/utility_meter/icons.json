@@ -13,6 +13,6 @@
   },
   "services": {
     "reset": "mdi:numeric-0-box-outline",
-    "calibrate": "mdi:scale-balance"
+    "calibrate": "mdi:auto-fix"
   }
 }
