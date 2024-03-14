@@ -13,6 +13,8 @@ if TYPE_CHECKING:
 class HomeAssistantError(Exception):
     """General Home Assistant exception occurred."""
 
+    _message: str = ""
+
     def __init__(
         self,
         *args: object,
@@ -21,7 +23,18 @@ class HomeAssistantError(Exception):
         translation_placeholders: dict[str, str] | None = None,
     ) -> None:
         """Initialize exception."""
+        # pylint: disable-next=import-outside-toplevel
+        from .helpers.translation import async_get_exception_message
+
+        if not args and (
+            message := async_get_exception_message(
+                translation_domain, translation_key, translation_placeholders
+            )
+        ):
+            args = (message,)
+
         super().__init__(*args)
+
         self.translation_domain = translation_domain
         self.translation_key = translation_key
         self.translation_placeholders = translation_placeholders
@@ -67,7 +80,7 @@ class NoEntitySpecifiedError(HomeAssistantError):
 class TemplateError(HomeAssistantError):
     """Error during template rendering."""
 
-    def __init__(self, exception: Exception | str) -> None:
+    def __init__(self, exception: Exception | str | None = None) -> None:
         """Init the error."""
         if isinstance(exception, str):
             super().__init__(exception)

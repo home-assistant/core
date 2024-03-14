@@ -2,14 +2,20 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 
+from homeassistant.core import HomeAssistant, async_get_hass
 from homeassistant.exceptions import (
     ConditionErrorContainer,
     ConditionErrorIndex,
     ConditionErrorMessage,
+    HomeAssistantError,
     TemplateError,
 )
+
+from .common import async_mock_service
 
 
 def test_conditionerror_format() -> None:
@@ -62,3 +68,42 @@ def test_template_message(arg: str | Exception, expected: str) -> None:
     """Ensure we can create TemplateError."""
     template_error = TemplateError(arg)
     assert str(template_error) == expected
+
+
+@pytest.mark.parametrize(
+    ("exception_args", "exception_kwargs", "message"),
+    [
+        ((), {}, ""),
+        (("bla",), {}, "bla"),
+        ((None,), {}, "None"),
+        ((TypeError("bla"),), {}, "bla"),
+        (
+            (),
+            {"translation_domain": "test", "translation_key": "bla"},
+            "component.test.exceptions.bla.message",
+        ),
+    ],
+)
+async def test_home_assistant_error(
+    hass: HomeAssistant,
+    exception_args: tuple[Any,],
+    exception_kwargs: dict[str, Any],
+    message: str,
+) -> None:
+    """Test edge cases with HomeAssistantError."""
+
+    assert async_get_hass() is hass
+    async_mock_service(
+        hass,
+        "test_domain",
+        "test_service",
+        raise_exception=HomeAssistantError(*exception_args, **exception_kwargs),
+    )
+    with pytest.raises(HomeAssistantError, match=message) as exc:
+        await hass.services.async_call(
+            "test_domain",
+            "test_service",
+            service_data={},
+            blocking=True,
+        )
+    assert str(exc.value) == message
