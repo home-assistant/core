@@ -232,23 +232,6 @@ class DashboardsCollection(collection.DictStorageCollection):
             storage.Store(hass, DASHBOARDS_STORAGE_VERSION, DASHBOARDS_STORAGE_KEY),
         )
 
-    async def _async_load_data(self) -> collection.SerializedStorageCollection | None:
-        """Load the data."""
-        if (data := await self.store.async_load()) is None:
-            return data
-
-        updated = False
-
-        for item in data["items"] or []:
-            if "-" not in item[CONF_URL_PATH]:
-                updated = True
-                item[CONF_URL_PATH] = f"lovelace-{item[CONF_URL_PATH]}"
-
-        if updated:
-            await self.store.async_save(data)
-
-        return data
-
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         if "-" not in data[CONF_URL_PATH]:
