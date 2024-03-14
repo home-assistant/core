@@ -157,6 +157,20 @@
           "description": "The doorbells to link to the chime."
         }
       }
+    },
+    "remove_privacy_zone": {
+      "name": "Remove camera privacy zone",
+      "description": "Use to remove a privacy zone from a camera.",
+      "fields": {
+        "device_id": {
+          "name": "Camera",
+          "description": "Camera you want to remove privacy zone from."
+        },
+        "name": {
+          "name": "Privacy Zone Name",
+          "description": "The name of the zone to remove."
+        }
+      }
     }
   }
 }
