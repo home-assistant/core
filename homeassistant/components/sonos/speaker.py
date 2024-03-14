@@ -127,7 +127,6 @@ class SonosSpeaker:
             zone_group_state_sub.callback = self.async_dispatch_event
             self._subscriptions.append(zone_group_state_sub)
         self._subscription_lock: asyncio.Lock | None = None
-        self._event_dispatchers: dict[str, Callable] = {}
         self._last_activity: float = NEVER_TIME
         self._last_event_cache: dict[str, Any] = {}
         self.activity_stats: ActivityStatistics = ActivityStatistics(self.zone_name)
@@ -188,15 +187,6 @@ class SonosSpeaker:
             self._battery_poll_timer = async_track_time_interval(
                 self.hass, self.async_poll_battery, BATTERY_SCAN_INTERVAL
             )
-
-        self._event_dispatchers = {
-            "AlarmClock": self.async_dispatch_alarms,
-            "AVTransport": self.async_dispatch_media_update,
-            "ContentDirectory": self.async_dispatch_favorites,
-            "DeviceProperties": self.async_dispatch_device_properties,
-            "RenderingControl": self.async_update_volume,
-            "ZoneGroupTopology": self.async_update_groups,
-        }
 
         self.websocket = SonosWebsocket(
             self.soco.ip_address,
@@ -452,7 +442,7 @@ class SonosSpeaker:
         # Save most recently processed event variables for cache and diagnostics
         self._last_event_cache[event.service.service_type] = event.variables
         dispatcher = self._event_dispatchers[event.service.service_type]
-        dispatcher(event)
+        dispatcher(self, event)
 
     @callback
     def async_dispatch_alarms(self, event: SonosEvent) -> None:
@@ -1149,3 +1139,12 @@ class SonosSpeaker:
         """Update information about current volume settings."""
         self.volume = self.soco.volume
         self.muted = self.soco.mute
+
+    _event_dispatchers = {
+        "AlarmClock": async_dispatch_alarms,
+        "AVTransport": async_dispatch_media_update,
+        "ContentDirectory": async_dispatch_favorites,
+        "DeviceProperties": async_dispatch_device_properties,
+        "RenderingControl": async_update_volume,
+        "ZoneGroupTopology": async_update_groups,
+    }
