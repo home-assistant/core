@@ -12,7 +12,7 @@
     }
   },
   "services": {
-    "reset": "mdi:reset",
+    "reset": "mdi:refresh",
     "calibrate": "mdi:scale-balance"
   }
 }
