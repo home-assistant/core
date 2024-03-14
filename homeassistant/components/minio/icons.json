@@ -1,0 +1,7 @@
+{
+  "services": {
+    "get": "mdi:cloud-download",
+    "put": "mdi:cloud-upload",
+    "remove": "mdi:delete"
+  }
+}

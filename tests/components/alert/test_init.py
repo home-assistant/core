@@ -342,6 +342,6 @@ async def test_done_message_state_tracker_reset_on_cancel(hass: HomeAssistant) -
     entity._cancel = lambda *args: None
     assert entity._send_done_message is False
     entity._send_done_message = True
-    hass.async_add_job(entity.end_alerting)
+    await entity.end_alerting()
     await hass.async_block_till_done()
     assert entity._send_done_message is False

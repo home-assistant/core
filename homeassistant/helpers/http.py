@@ -175,8 +175,7 @@ class HomeAssistantView:
 
             handler = request_handler_factory(hass, self, handler)
 
-            for url in urls:
-                routes.append(router.add_route(method, url, handler))
+            routes.extend(router.add_route(method, url, handler) for url in urls)
 
         # Use `get` because CORS middleware is not be loaded in emulated_hue
         if self.cors_allowed:

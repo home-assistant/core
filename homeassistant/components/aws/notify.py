@@ -230,15 +230,14 @@ class AWSSQS(AWSNotify):
         async with self.session.create_client(
             self.service, **self.aws_config
         ) as client:
-            tasks = []
-            for target in kwargs.get(ATTR_TARGET, []):
-                tasks.append(
-                    client.send_message(
-                        QueueUrl=target,
-                        MessageBody=json_body,
-                        MessageAttributes=message_attributes,
-                    )
+            tasks = [
+                client.send_message(
+                    QueueUrl=target,
+                    MessageBody=json_body,
+                    MessageAttributes=message_attributes,
                 )
+                for target in kwargs.get(ATTR_TARGET, [])
+            ]
 
             if tasks:
                 await asyncio.gather(*tasks)

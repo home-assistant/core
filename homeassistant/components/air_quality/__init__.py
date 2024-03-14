@@ -17,6 +17,8 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, StateType
 
+from . import group as group_pre_import  # noqa: F401
+
 _LOGGER: Final = logging.getLogger(__name__)
 
 ATTR_AQI: Final = "air_quality_index"

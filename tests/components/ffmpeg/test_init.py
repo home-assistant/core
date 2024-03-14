@@ -27,7 +27,7 @@ def async_start(hass, entity_id=None):
     This is a legacy helper method. Do not use it for new tests.
     """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_START, data))
+    hass.create_task(hass.services.async_call(DOMAIN, SERVICE_START, data))
 
 
 @callback
@@ -37,7 +37,7 @@ def async_stop(hass, entity_id=None):
     This is a legacy helper method. Do not use it for new tests.
     """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_STOP, data))
+    hass.create_task(hass.services.async_call(DOMAIN, SERVICE_STOP, data))
 
 
 @callback
@@ -47,7 +47,7 @@ def async_restart(hass, entity_id=None):
     This is a legacy helper method. Do not use it for new tests.
     """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_RESTART, data))
+    hass.create_task(hass.services.async_call(DOMAIN, SERVICE_RESTART, data))
 
 
 class MockFFmpegDev(ffmpeg.FFmpegBase):

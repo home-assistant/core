@@ -35,6 +35,14 @@ from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
+from . import group as group_pre_import  # noqa: F401
+from .const import (  # noqa: F401
+    STATE_CLEANING,
+    STATE_DOCKED,
+    STATE_ERROR,
+    STATE_RETURNING,
+)
+
 if TYPE_CHECKING:
     from functools import cached_property
 else:
@@ -63,11 +71,6 @@ SERVICE_START = "start"
 SERVICE_PAUSE = "pause"
 SERVICE_STOP = "stop"
 
-
-STATE_CLEANING = "cleaning"
-STATE_DOCKED = "docked"
-STATE_RETURNING = "returning"
-STATE_ERROR = "error"
 
 STATES = [STATE_CLEANING, STATE_DOCKED, STATE_RETURNING, STATE_ERROR]
 

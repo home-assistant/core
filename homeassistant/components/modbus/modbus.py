@@ -69,6 +69,7 @@ from .const import (
     TCP,
     UDP,
 )
+from .validators import check_config
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -127,6 +128,8 @@ async def async_modbus_setup(
 
     await async_setup_reload_service(hass, DOMAIN, [DOMAIN])
 
+    if config[DOMAIN]:
+        config[DOMAIN] = check_config(hass, config[DOMAIN])
     if DOMAIN in hass.data and config[DOMAIN] == []:
         hubs = hass.data[DOMAIN]
         for name in hubs:
