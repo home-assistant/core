@@ -1329,7 +1329,7 @@ async def test_pymodbus_constructor_fail(
         ]
     }
     with mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusTcpClient", autospec=True
+        "homeassistant.components.modbus.modbus.AsyncModbusTcpClient", autospec=True
     ) as mock_pb:
         caplog.set_level(logging.ERROR)
         mock_pb.side_effect = ModbusException("test no class")
@@ -1529,7 +1529,7 @@ async def test_stop_restart(
 async def test_write_no_client(hass: HomeAssistant, mock_modbus) -> None:
     """Run test for service stop and write without client."""
 
-    mock_modbus.reset()
+    await mock_modbus.reset()
     data = {
         ATTR_HUB: TEST_MODBUS_NAME,
     }
