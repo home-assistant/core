@@ -86,7 +86,13 @@
     },
     "set_asyncio_debug": {
       "name": "Set asyncio debug",
-      "description": "Enable or disable asyncio debug."
+      "description": "Enable or disable asyncio debug.",
+      "fields": {
+        "enabled": {
+          "name": "Enabled",
+          "description": "Whether to enable or disable asyncio debug."
+        }
+      }
     }
   }
 }
