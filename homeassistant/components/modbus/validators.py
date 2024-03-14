@@ -356,7 +356,7 @@ def validate_entity(
     scan_interval = entity.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     if 0 < scan_interval < 5:
         err = (
-            f"{hub_name} {name} scan_intervalscan_interval is lower than 5 seconds, "
+            f"{hub_name} {name} scan_interval is lower than 5 seconds, "
             "which may cause Home Assistant stability issues"
         )
         _LOGGER.warning(err)
