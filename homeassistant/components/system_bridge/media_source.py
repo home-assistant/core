@@ -88,22 +88,21 @@ class SystemBridgeSource(MediaSource):
 
     def _build_bridges(self) -> BrowseMediaSource:
         """Build bridges for System Bridge media."""
-        children = []
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if entry.entry_id is not None:
-                children.append(
-                    BrowseMediaSource(
-                        domain=DOMAIN,
-                        identifier=entry.entry_id,
-                        media_class=MediaClass.DIRECTORY,
-                        media_content_type="",
-                        title=entry.title,
-                        can_play=False,
-                        can_expand=True,
-                        children=[],
-                        children_media_class=MediaClass.DIRECTORY,
-                    )
-                )
+        children = [
+            BrowseMediaSource(
+                domain=DOMAIN,
+                identifier=entry.entry_id,
+                media_class=MediaClass.DIRECTORY,
+                media_content_type="",
+                title=entry.title,
+                can_play=False,
+                can_expand=True,
+                children=[],
+                children_media_class=MediaClass.DIRECTORY,
+            )
+            for entry in self.hass.config_entries.async_entries(DOMAIN)
+            if entry.entry_id is not None
+        ]
 
         return BrowseMediaSource(
             domain=DOMAIN,

@@ -28,12 +28,10 @@ async def async_setup_entry(
     coordinator: RingDataCoordinator = hass.data[DOMAIN][config_entry.entry_id][
         RING_DEVICES_COORDINATOR
     ]
-    sirens = []
 
-    for device in devices["chimes"]:
-        sirens.append(RingChimeSiren(device, coordinator))
-
-    async_add_entities(sirens)
+    async_add_entities(
+        RingChimeSiren(device, coordinator) for device in devices["chimes"]
+    )
 
 
 class RingChimeSiren(RingEntity, SirenEntity):

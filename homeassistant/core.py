@@ -525,13 +525,15 @@ class HomeAssistant:
             raise ValueError("Don't call add_job with None")
         if asyncio.iscoroutine(target):
             self.loop.call_soon_threadsafe(
-                functools.partial(self.async_add_job, target, eager_start=True)
+                functools.partial(self.async_create_task, target, eager_start=True)
             )
             return
         if TYPE_CHECKING:
             target = cast(Callable[..., Any], target)
         self.loop.call_soon_threadsafe(
-            functools.partial(self.async_add_job, target, *args, eager_start=True)
+            functools.partial(
+                self.async_add_hass_job, HassJob(target), *args, eager_start=True
+            )
         )
 
     @overload
@@ -1264,7 +1266,7 @@ _FilterableJobType = tuple[
 @dataclass(slots=True)
 class _OneTimeListener:
     hass: HomeAssistant
-    listener: Callable[[Event], Coroutine[Any, Any, None] | None]
+    listener_job: HassJob[[Event], Coroutine[Any, Any, None] | None]
     remove: CALLBACK_TYPE | None = None
 
     @callback
@@ -1275,14 +1277,14 @@ class _OneTimeListener:
             return
         self.remove()
         self.remove = None
-        self.hass.async_run_job(self.listener, event)
+        self.hass.async_run_hass_job(self.listener_job, event)
 
     def __repr__(self) -> str:
         """Return the representation of the listener and source module."""
-        module = inspect.getmodule(self.listener)
+        module = inspect.getmodule(self.listener_job.target)
         if module:
-            return f"<_OneTimeListener {module.__name__}:{self.listener}>"
-        return f"<_OneTimeListener {self.listener}>"
+            return f"<_OneTimeListener {module.__name__}:{self.listener_job.target}>"
+        return f"<_OneTimeListener {self.listener_job.target}>"
 
 
 class EventBus:
@@ -1472,7 +1474,7 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        one_time_listener = _OneTimeListener(self._hass, listener)
+        one_time_listener = _OneTimeListener(self._hass, HassJob(listener))
         remove = self._async_listen_filterable_job(
             event_type,
             (

@@ -203,7 +203,7 @@ aiodhcpwatcher==0.8.1
 aiodiscover==1.6.1
 
 # homeassistant.components.dnsip
-aiodns==3.0.0
+aiodns==3.1.1
 
 # homeassistant.components.eafm
 aioeafm==0.1.2
@@ -389,7 +389,7 @@ aioymaps==1.2.2
 airly==1.1.0
 
 # homeassistant.components.airthings_ble
-airthings-ble==0.6.1
+airthings-ble==0.7.1
 
 # homeassistant.components.airthings
 airthings-cloud==0.2.0
@@ -517,7 +517,7 @@ bring-api==0.5.6
 broadlink==0.18.3
 
 # homeassistant.components.brother
-brother==4.0.0
+brother==4.0.2
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==1.0.5
@@ -1450,7 +1450,7 @@ pyinsteon==1.5.3
 pyipma==3.0.7
 
 # homeassistant.components.ipp
-pyipp==0.14.5
+pyipp==0.15.0
 
 # homeassistant.components.iqvia
 pyiqvia==2022.04.0
@@ -1852,7 +1852,7 @@ qingping-ble==0.10.0
 qnapstats==0.4.0
 
 # homeassistant.components.radio_browser
-radios==0.2.0
+radios==0.3.1
 
 # homeassistant.components.radiotherm
 radiotherm==2.1.0
@@ -1882,7 +1882,7 @@ rflink==0.0.66
 ring-doorbell[listen]==0.8.7
 
 # homeassistant.components.roku
-rokuecp==0.19.1
+rokuecp==0.19.2
 
 # homeassistant.components.romy
 romy==0.0.7

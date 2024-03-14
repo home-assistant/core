@@ -96,13 +96,11 @@ async def async_setup_entry(
             )
 
         runtimes = coordinator.runtimes[-1]
-        for sensor_name in runtimes:
-            if sensor_name in RUNTIME_DEVICES:
-                entities.append(
-                    VenstarSensor(
-                        coordinator, config_entry, RUNTIME_ENTITY, sensor_name
-                    )
-                )
+        entities.extend(
+            VenstarSensor(coordinator, config_entry, RUNTIME_ENTITY, sensor_name)
+            for sensor_name in runtimes
+            if sensor_name in RUNTIME_DEVICES
+        )
 
     for description in INFO_ENTITIES:
         try:
