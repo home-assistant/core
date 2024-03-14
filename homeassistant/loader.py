@@ -1691,7 +1691,7 @@ def async_suggest_report_issue(
 
 @callback
 def async_config_flow_needs_preload(component: ComponentProtocol) -> bool:
-    """Test if a component needs to be preloaded.
+    """Test if a config_flow for a component needs to be preloaded.
 
     Currently we need to preload a the config flow if the integration
     has a config flow and the component has an async_migrate_entry method
