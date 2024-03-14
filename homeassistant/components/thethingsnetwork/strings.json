@@ -1,0 +1,87 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to The Thinks Network v3 App",
+        "description": "Enter the API hostname, app id and access key for your TTN application.\n\nYou can find your access key in the [The Things Network console](https://eu1.cloud.thethings.network/console/) -> Applications -> application_id -> API keys",
+        "data": {
+          "hostname": "Hostname",
+          "app_id": "Application ID",
+          "access_key": "Access Key"
+        }
+      },
+      "reauth_confirm": {
+        "description": "The Thinks Network application `{app_id}` could not be connected.\n\nYou can find your access key in the [The Things Network console](https://eu1.cloud.thethings.network/console/) -> Applications -> {app_id} -> API keys"
+      }
+    },
+    "abort": {
+      "already_configured": "Application ID is already configured",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Select edit menu",
+        "data": {
+          "selected_menu": "What do you want to edit?"
+        }
+      },
+      "integration_settings": {
+        "title": "Integration settings",
+        "data": {
+          "first_fetch_time": "first fetch time (hours)",
+          "refresh_time": "refresh period (seconds)"
+        }
+      },
+      "device_select": {
+        "title": "Device selection",
+        "data": {
+          "selected_device": "Select a device"
+        }
+      },
+      "device_edit": {
+        "title": "Edit device",
+        "description": "Device: {selected_device}",
+        "data": {
+          "name": "Device friendly name"
+        }
+      },
+
+      "field_select": {
+        "title": "Field selection",
+        "data": {
+          "selected_device": "Select a field"
+        }
+      },
+      "field_edit": {
+        "title": "Edit field",
+        "description": "Field: {selected_field}",
+        "data": {
+          "device_scope": "Scope for field (device or global)",
+          "name": "Field friendly name",
+          "entity_type": "Type",
+          "unit_of_measurement": "Unit of measurement",
+          "device_class": "Device class",
+          "icon": "Icon",
+          "picture": "Picture",
+          "supported_features": "Supported features",
+          "context_recent_time_s": "Context recent time (seconds)"
+        }
+      }
+    },
+    "abort": {
+      "no_devices": "No devices available to configure",
+      "no_fields": "No fields available to configure"
+    }
+  },
+  "issues": {
+      "manual_migration": {
+          "description": "Configuring {domain} using YAML was removed as part of migrating to [The Things Network v3](https://www.thethingsnetwork.org/forum/c/v2-to-v3-upgrade/102). [The Things Network v2 has shutted down](https://www.thethingsnetwork.org/forum/t/the-things-network-v2-is-permanently-shutting-down-completed/50710).\n\nPlease remove the {domain} entry from the configuration.yaml and add re-add the integration using the config_flow",
+          "title": "The {domain} YAML configuration is not supported"
+      }
+  }
+}
