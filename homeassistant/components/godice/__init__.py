@@ -17,8 +17,9 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up godice from a config entry."""
 
-    async def on_disconnected_callback(_ble_data):
-        await hass.config_entries.async_reload(entry.entry_id)
+    async def on_disconnected_callback(_ble_data, is_disconnected_by_request):
+        if not is_disconnected_by_request:
+            await hass.config_entries.async_reload(entry.entry_id)
 
     dice = create_dice(hass, entry)
     try:

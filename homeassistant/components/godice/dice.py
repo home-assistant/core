@@ -29,19 +29,19 @@ class DiceDelegate:
 
     async def get_color(self):
         """Get Dice color."""
-        return await self.dice.get_color()
+        return await self._dice.get_color()
 
     async def get_battery_level(self):
         """Get Dice battery level."""
-        return await self.dice.get_battery_level()
+        return await self._dice.get_battery_level()
 
     async def subscribe_number_notification(self, callback):
         """Subscribe for receiving notifications with new numbers when Dice is rolled."""
-        await self.dice.subscribe_number_notification(callback)
+        await self._dice.subscribe_number_notification(callback)
 
     async def pulse_led(self, *args, **kwargs):
         """Pulse built-in LEDs."""
-        await self.dice.pulse_led(*args, **kwargs)
+        await self._dice.pulse_led(*args, **kwargs)
 
 
 class NoopDice:
@@ -71,15 +71,15 @@ class DiceProxy(DiceDelegate):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Init connection data."""
-        self.mac = entry.data["address"]
-        self.hass = hass
-        self.dice = NoopDice()
+        self._mac = entry.data["address"]
+        self._hass = hass
+        self._dice = NoopDice()
         self._conn_lock = asyncio.Lock()
         self._bledev: BLEDevice | None = None
         self._bledev_upd_cancel = bluetooth.async_register_callback(
             hass,
             self._upd_bledev,
-            bluetooth.BluetoothCallbackMatcher({bluetooth.match.ADDRESS: self.mac}),
+            bluetooth.BluetoothCallbackMatcher({bluetooth.match.ADDRESS: self._mac}),
             bluetooth.BluetoothScanningMode.ACTIVE,
         )
         self._disconnect_cb = None
@@ -92,23 +92,23 @@ class DiceProxy(DiceDelegate):
             _LOGGER.debug("Connecting")
             self._disconnect_cb = disconnect_cb
             self._bledev = self._bledev or bluetooth.async_ble_device_from_address(
-                self.hass, self.mac
+                self._hass, self._mac
             )
             try:
                 self._client = await establish_connection(
                     client_class=BleakClient,
                     device=self._bledev,
-                    name=self.mac,
+                    name=self._mac,
                     disconnected_callback=self._on_disconnected_handler,
                     max_attempts=3,
                     use_services_cache=True,
                 )
+                dice = godice.create(self._client, godice.Shell.D6)
+                await dice.connect()
+                self._dice = dice
                 self._disconnect_handler = (
                     self._on_connection_lost_after_connected_handler
                 )
-                dice = godice.create(self._client, godice.Shell.D6)
-                await dice.connect()
-                self.dice = dice
                 _LOGGER.debug("Connection completed")
             except BleakError as e:
                 _LOGGER.debug("Connection attempts timed out")
@@ -119,13 +119,13 @@ class DiceProxy(DiceDelegate):
         """Disconnect from the Dice."""
         async with self._conn_lock:
             self._disconnect_handler = self._on_disconnected_by_request_handler
-            await self.dice.disconnect()
+            await self._dice.disconnect()
             await close_stale_connections(self._bledev)
 
     def _upd_bledev(
         self,
         service_info: bluetooth.BluetoothServiceInfoBleak,
-        change: bluetooth.BluetoothChange,
+        _change: bluetooth.BluetoothChange,
     ):
         self._bledev = service_info.device
 
@@ -133,17 +133,19 @@ class DiceProxy(DiceDelegate):
         _LOGGER.debug("Connection lost while connecting. Reconnection is skipped")
 
     def _on_connection_lost_after_connected_handler(self, data):
-        _LOGGER.debug("Connection lost. Reconnection started")
-        self._disconnect_handler = self._on_disconnected_while_reloading_handler
-        self.hass.create_task(self._disconnect_cb(data))
+        _LOGGER.debug("Connection lost")
+        self._disconnect_handler = self._on_disconnected_noop_handler
+        self._hass.create_task(self._disconnect_cb(data, False))
 
-    def _on_disconnected_by_request_handler(self, _data):
-        _LOGGER.debug("Disconnected by request. Reconnection is skipped")
+    def _on_disconnected_by_request_handler(self, data):
+        _LOGGER.debug("Disconnected by request")
+        self._disconnect_handler = self._on_disconnected_noop_handler
+        self._hass.create_task(self._disconnect_cb(data, True))
 
-    def _on_disconnected_while_reloading_handler(self, _data):
-        _LOGGER.debug("Disconnected while reloading. Reconnection is skipped")
+    def _on_disconnected_noop_handler(self, _data):
+        _LOGGER.debug("Extra disconnect event. Skipping handling")
 
     def _on_disconnected_handler(self, data):
         _LOGGER.debug("Disconnect event received")
-        self.dice = NoopDice()
+        self._dice = NoopDice()
         self._disconnect_handler(data)
