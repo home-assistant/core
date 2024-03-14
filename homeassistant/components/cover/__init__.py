@@ -1,4 +1,5 @@
 """Support for Cover devices."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -42,6 +43,8 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+
+from . import group as group_pre_import  # noqa: F401
 
 if TYPE_CHECKING:
     from functools import cached_property
@@ -481,7 +484,7 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def _get_toggle_function(
         self, fns: dict[str, Callable[_P, _R]]
     ) -> Callable[_P, _R]:
-        if CoverEntityFeature.STOP | self.supported_features and (
+        if self.supported_features & CoverEntityFeature.STOP and (
             self.is_closing or self.is_opening
         ):
             return fns["stop"]

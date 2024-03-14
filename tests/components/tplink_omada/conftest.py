@@ -1,4 +1,5 @@
 """Test fixtures for TP-Link Omada integration."""
+
 from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, MagicMock, patch

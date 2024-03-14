@@ -1,4 +1,5 @@
 """Tests for the SmartThings config flow module."""
+
 from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4

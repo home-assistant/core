@@ -1,4 +1,5 @@
 """Decorator service for the media_player.play_media service."""
+
 from collections.abc import Callable
 import logging
 from pathlib import Path

@@ -1,4 +1,5 @@
 """iAlarm integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -28,7 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         async with asyncio.timeout(10):
             mac = await hass.async_add_executor_job(ialarm.get_mac)
-    except (asyncio.TimeoutError, ConnectionError) as ex:
+    except (TimeoutError, ConnectionError) as ex:
         raise ConfigEntryNotReady from ex
 
     coordinator = IAlarmDataUpdateCoordinator(hass, ialarm, mac)
@@ -53,7 +54,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class IAlarmDataUpdateCoordinator(DataUpdateCoordinator[None]):
+class IAlarmDataUpdateCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching iAlarm data."""
 
     def __init__(self, hass: HomeAssistant, ialarm: IAlarm, mac: str) -> None:

@@ -1,4 +1,5 @@
 """The vizio component."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -67,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONF_APPS not in hass.data[DOMAIN]
         and entry.data[CONF_DEVICE_CLASS] == MediaPlayerDeviceClass.TV
     ):
-        store: Store = Store(hass, 1, DOMAIN)
+        store: Store[list[dict[str, Any]]] = Store(hass, 1, DOMAIN)
         coordinator = VizioAppsDataUpdateCoordinator(hass, store)
         await coordinator.async_config_entry_first_refresh()
         hass.data[DOMAIN][CONF_APPS] = coordinator
@@ -97,10 +98,10 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return unload_ok
 
 
-class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
+class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):  # pylint: disable=hass-enforce-coordinator-module
     """Define an object to hold Vizio app config data."""
 
-    def __init__(self, hass: HomeAssistant, store: Store) -> None:
+    def __init__(self, hass: HomeAssistant, store: Store[list[dict[str, Any]]]) -> None:
         """Initialize."""
         super().__init__(
             hass,

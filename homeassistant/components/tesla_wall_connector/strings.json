@@ -30,8 +30,23 @@
       }
     },
     "sensor": {
-      "evse_state": {
-        "name": "State"
+      "status": {
+        "name": "Status",
+        "state": {
+          "booting": "Booting",
+          "not_connected": "Vehicle not connected",
+          "connected": "Vehicle connected",
+          "ready": "Ready to charge",
+          "negociating": "Negociating connection",
+          "error": "Error",
+          "charging_finished": "Charging finished",
+          "waiting_car": "Waiting for car",
+          "charging_reduced": "Charging (reduced)",
+          "charging": "Charging"
+        }
+      },
+      "status_code": {
+        "name": "Status code"
       },
       "handle_temp_c": {
         "name": "Handle temperature"
@@ -59,6 +74,9 @@
       },
       "voltage_c_v": {
         "name": "Phase C voltage"
+      },
+      "session_energy_wh": {
+        "name": "Session energy"
       }
     }
   }

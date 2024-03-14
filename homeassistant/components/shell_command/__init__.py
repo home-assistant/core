@@ -1,4 +1,5 @@
 """Expose regular shell commands as services."""
+
 from __future__ import annotations
 
 import asyncio
@@ -90,7 +91,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         try:
             async with asyncio.timeout(COMMAND_TIMEOUT):
                 stdout_data, stderr_data = await process.communicate()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.error(
                 "Timed out running command: `%s`, after: %ss", cmd, COMMAND_TIMEOUT
             )

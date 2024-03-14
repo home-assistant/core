@@ -1,4 +1,5 @@
 """Support for Honeywell Lyric climate platform."""
+
 from __future__ import annotations
 
 import asyncio
@@ -125,23 +126,22 @@ async def async_setup_entry(
     """Set up the Honeywell Lyric climate platform based on a config entry."""
     coordinator: DataUpdateCoordinator[Lyric] = hass.data[DOMAIN][entry.entry_id]
 
-    entities = []
-
-    for location in coordinator.data.locations:
-        for device in location.devices:
-            entities.append(
-                LyricClimate(
-                    coordinator,
-                    ClimateEntityDescription(
-                        key=f"{device.macID}_thermostat",
-                        name=device.name,
-                    ),
-                    location,
-                    device,
-                )
+    async_add_entities(
+        (
+            LyricClimate(
+                coordinator,
+                ClimateEntityDescription(
+                    key=f"{device.macID}_thermostat",
+                    name=device.name,
+                ),
+                location,
+                device,
             )
-
-    async_add_entities(entities, True)
+            for location in coordinator.data.locations
+            for device in location.devices
+        ),
+        True,
+    )
 
     platform = entity_platform.async_get_current_platform()
 
@@ -173,6 +173,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         PRESET_TEMPORARY_HOLD,
         PRESET_VACATION_HOLD,
     ]
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -182,6 +183,12 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         device: LyricDevice,
     ) -> None:
         """Initialize Honeywell Lyric climate entity."""
+        # Define thermostat type (TCC - e.g., Lyric round; LCC - e.g., T5,6)
+        if device.changeableValues.thermostatSetpointStatus:
+            self._attr_thermostat_type = LyricThermostatType.LCC
+        else:
+            self._attr_thermostat_type = LyricThermostatType.TCC
+
         # Use the native temperature unit from the device settings
         if device.units == "Fahrenheit":
             self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
@@ -207,12 +214,10 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             self._attr_hvac_modes.append(HVACMode.HEAT_COOL)
 
         # Setup supported features
-        if device.changeableValues.thermostatSetpointStatus:
+        if self._attr_thermostat_type is LyricThermostatType.LCC:
             self._attr_supported_features = SUPPORT_FLAGS_LCC
-            self._attr_thermostat_type = LyricThermostatType.LCC
         else:
             self._attr_supported_features = SUPPORT_FLAGS_TCC
-            self._attr_thermostat_type = LyricThermostatType.TCC
 
         # Setup supported fan modes
         if device_fan_modes := device.settings.attributes.get("fan", {}).get(
@@ -225,6 +230,11 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             ]
             self._attr_supported_features = (
                 self._attr_supported_features | ClimateEntityFeature.FAN_MODE
+            )
+
+        if len(self.hvac_modes) > 1:
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
             )
 
         super().__init__(
@@ -328,20 +338,19 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
 
-        if device.changeableValues.autoChangeoverActive:
+        if device.changeableValues.mode == LYRIC_HVAC_MODE_HEAT_COOL:
             if target_temp_low is None or target_temp_high is None:
                 raise HomeAssistantError(
                     "Could not find target_temp_low and/or target_temp_high in"
                     " arguments"
                 )
 
-            # If the device supports "Auto" mode, don't pass the mode when setting the
-            # temperature
-            mode = (
-                None
-                if device.changeableValues.mode == LYRIC_HVAC_MODE_HEAT_COOL
-                else HVAC_MODES[device.changeableValues.heatCoolMode]
-            )
+            # If TCC device pass the heatCoolMode value, otherwise
+            # if LCC device can skip the mode altogether
+            if self._attr_thermostat_type is LyricThermostatType.TCC:
+                mode = HVAC_MODES[device.changeableValues.heatCoolMode]
+            else:
+                mode = None
 
             _LOGGER.debug("Set temperature: %s - %s", target_temp_low, target_temp_high)
             try:
@@ -385,12 +394,12 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         await self.coordinator.async_refresh()
 
     async def _async_set_hvac_mode_tcc(self, hvac_mode: HVACMode) -> None:
+        """Set hvac mode for TCC devices (e.g., Lyric round)."""
         if LYRIC_HVAC_MODES[hvac_mode] == LYRIC_HVAC_MODE_HEAT_COOL:
             # If the system is off, turn it to Heat first then to Auto,
-            # otherwise it turns to.
-            # Auto briefly and then reverts to Off (perhaps related to
-            # heatCoolMode). This is the behavior that happens with the
-            # native app as well, so likely a bug in the api itself
+            # otherwise it turns to Auto briefly and then reverts to Off.
+            # This is the behavior that happens with the native app as well,
+            # so likely a bug in the api itself.
             if HVAC_MODES[self.device.changeableValues.mode] == HVACMode.OFF:
                 _LOGGER.debug(
                     "HVAC mode passed to lyric: %s",
@@ -432,11 +441,23 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             )
 
     async def _async_set_hvac_mode_lcc(self, hvac_mode: HVACMode) -> None:
+        """Set hvac mode for LCC devices (e.g., T5,6)."""
         _LOGGER.debug("HVAC mode passed to lyric: %s", LYRIC_HVAC_MODES[hvac_mode])
+        # Set autoChangeoverActive to True if the mode being passed is Auto
+        # otherwise leave unchanged.
+        if (
+            LYRIC_HVAC_MODES[hvac_mode] == LYRIC_HVAC_MODE_HEAT_COOL
+            and not self.device.changeableValues.autoChangeoverActive
+        ):
+            auto_changeover = True
+        else:
+            auto_changeover = None
+
         await self._update_thermostat(
             self.location,
             self.device,
             mode=LYRIC_HVAC_MODES[hvac_mode],
+            autoChangeoverActive=auto_changeover,
         )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:

@@ -1,4 +1,5 @@
 """Provides functionality to interact with fans."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -38,6 +39,8 @@ from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
+
+from . import group as group_pre_import  # noqa: F401
 
 if TYPE_CHECKING:
     from functools import cached_property

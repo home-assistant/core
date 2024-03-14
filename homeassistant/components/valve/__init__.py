@@ -1,4 +1,5 @@
 """Support for Valve devices."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -186,9 +187,10 @@ class ValveEntity(Entity):
 
     @final
     @property
-    def state_attributes(self) -> dict[str, Any]:
+    def state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
-
+        if not self.reports_position:
+            return None
         return {ATTR_CURRENT_POSITION: self.current_valve_position}
 
     @property

@@ -1,4 +1,5 @@
 """Test the Loqed config flow."""
+
 from ipaddress import ip_address
 import json
 from unittest.mock import Mock, patch

@@ -1,4 +1,5 @@
 """The qbittorrent component."""
+
 import logging
 
 from qbittorrentapi import APIConnectionError, Forbidden403Error, LoginFailed

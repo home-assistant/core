@@ -1,4 +1,5 @@
 """Tests of the initialization of the venstar integration."""
+
 from unittest.mock import patch
 
 from homeassistant.components.venstar.const import DOMAIN as VENSTAR_DOMAIN

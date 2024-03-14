@@ -1,4 +1,5 @@
 """Config flow for Fully Kiosk Browser integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -10,8 +11,8 @@ from fullykiosk import FullyKiosk
 from fullykiosk.exceptions import FullyKioskError
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.dhcp import DhcpServiceInfo
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -19,7 +20,6 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
@@ -27,7 +27,7 @@ from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from .const import DEFAULT_PORT, DOMAIN, LOGGER
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class FullyKioskConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fully Kiosk Browser."""
 
     VERSION = 1
@@ -42,7 +42,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         user_input: dict[str, Any],
         errors: dict[str, str],
         description_placeholders: dict[str, str] | Any = None,
-    ) -> FlowResult | None:
+    ) -> ConfigFlowResult | None:
         fully = FullyKiosk(
             async_get_clientsession(self.hass),
             host,
@@ -58,7 +58,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except (
             ClientConnectorError,
             FullyKioskError,
-            asyncio.TimeoutError,
+            TimeoutError,
         ) as error:
             LOGGER.debug(error.args, exc_info=True)
             errors["base"] = "cannot_connect"
@@ -85,7 +85,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         placeholders: dict[str, str] = {}
@@ -110,7 +110,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle dhcp discovery."""
         mac = format_mac(discovery_info.macaddress)
 
@@ -129,7 +131,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm discovery."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -157,7 +159,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_mqtt(self, discovery_info: MqttServiceInfo) -> FlowResult:
+    async def async_step_mqtt(
+        self, discovery_info: MqttServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by MQTT discovery."""
         device_info: dict[str, Any] = json.loads(discovery_info.payload)
         device_id: str = device_info["deviceId"]
