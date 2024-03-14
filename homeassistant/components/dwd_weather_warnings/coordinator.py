@@ -33,11 +33,18 @@ class DwdWeatherWarningsCoordinator(DataUpdateCoordinator[None]):
         self._api = DwdWeatherWarningsAPI(None)
         self._device_tracker = None
 
-        # Do necessary setup of API when using a region identifier.
-        if region_identifier := entry.data.get(CONF_REGION_IDENTIFIER):
-            self._api = DwdWeatherWarningsAPI(region_identifier)
+    async def async_config_entry_first_refresh(self) -> None:
+        """Perform first refresh."""
+        if region_identifier := self.config_entry.data.get(CONF_REGION_IDENTIFIER):
+            self._api = await self.hass.async_add_executor_job(
+                DwdWeatherWarningsAPI, region_identifier
+            )
         else:
-            self._device_tracker = entry.data.get(CONF_REGION_DEVICE_TRACKER)
+            self._device_tracker = self.config_entry.data.get(
+                CONF_REGION_DEVICE_TRACKER
+            )
+
+        await super().async_config_entry_first_refresh()
 
     async def _async_update_data(self) -> None:
         """Get the latest data from the DWD Weather Warnings API."""
