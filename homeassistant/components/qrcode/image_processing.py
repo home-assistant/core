@@ -21,11 +21,10 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the QR code image processing platform."""
-    entities = []
-    for camera in config[CONF_SOURCE]:
-        entities.append(QrEntity(camera[CONF_ENTITY_ID], camera.get(CONF_NAME)))
-
-    add_entities(entities)
+    add_entities(
+        QrEntity(camera[CONF_ENTITY_ID], camera.get(CONF_NAME))
+        for camera in config[CONF_SOURCE]
+    )
 
 
 class QrEntity(ImageProcessingEntity):

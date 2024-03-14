@@ -109,23 +109,20 @@ def setup_platform(
         )
         return
 
-    entities = []
     if CONF_CLASSIFIER not in config:
         dest_path = hass.config.path(DEFAULT_CLASSIFIER_PATH)
         _get_default_classifier(dest_path)
         config[CONF_CLASSIFIER] = {"Face": dest_path}
 
-    for camera in config[CONF_SOURCE]:
-        entities.append(
-            OpenCVImageProcessor(
-                hass,
-                camera[CONF_ENTITY_ID],
-                camera.get(CONF_NAME),
-                config[CONF_CLASSIFIER],
-            )
+    add_entities(
+        OpenCVImageProcessor(
+            hass,
+            camera[CONF_ENTITY_ID],
+            camera.get(CONF_NAME),
+            config[CONF_CLASSIFIER],
         )
-
-    add_entities(entities)
+        for camera in config[CONF_SOURCE]
+    )
 
 
 class OpenCVImageProcessor(ImageProcessingEntity):

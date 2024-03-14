@@ -3,8 +3,8 @@
 import logging
 from typing import Any
 
+from ring_doorbell import RingGeneric
 from ring_doorbell.const import CHIME_TEST_SOUND_KINDS, KIND_DING
-from ring_doorbell.generic import RingGeneric
 
 from homeassistant.components.siren import ATTR_TONE, SirenEntity, SirenEntityFeature
 from homeassistant.config_entries import ConfigEntry
@@ -28,12 +28,10 @@ async def async_setup_entry(
     coordinator: RingDataCoordinator = hass.data[DOMAIN][config_entry.entry_id][
         RING_DEVICES_COORDINATOR
     ]
-    sirens = []
 
-    for device in devices["chimes"]:
-        sirens.append(RingChimeSiren(device, coordinator))
-
-    async_add_entities(sirens)
+    async_add_entities(
+        RingChimeSiren(device, coordinator) for device in devices["chimes"]
+    )
 
 
 class RingChimeSiren(RingEntity, SirenEntity):
