@@ -146,7 +146,7 @@ async def _async_get_handle_dhcp_packet(
         integration_matchers,
     )
     with patch("aiodhcpwatcher.async_start"):
-        dhcp_watcher.async_start()
+        await dhcp_watcher.async_start()
 
     def _async_handle_dhcp_request(request: aiodhcpwatcher.DHCPRequest) -> None:
         dhcp_watcher._async_process_dhcp_request(request)
