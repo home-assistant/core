@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from typing import Any, Optional
 
-from ttn_client import TTN_SensorValue
+from ttn_client import TTNSensorValue
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -35,7 +35,7 @@ class TTN_Entity(CoordinatorEntity, Entity):
         """Get unique_id which is derived from device_id and field_id."""
         return f"{device_id}_{field_id}"
 
-    def __init__(self, entry, coordinator, ttn_value: TTN_SensorValue) -> None:
+    def __init__(self, entry, coordinator, ttn_value: TTNSensorValue) -> None:
         """Initialize a The Things Network Data Storage sensor."""
 
         self.__entry = entry

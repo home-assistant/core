@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 import traceback
 
-from ttn_client import TTN_AuthError, TTN_Client
+from ttn_client import TTNAuthError, TTNClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -48,7 +48,7 @@ class TTNCoordinator(DataUpdateCoordinator):
         self.__entry: ConfigEntry = entry
         self.__entity_class_register: list[TTNCoordinator.__RegisteredEntityClass] = []
 
-        self.__client = TTN_Client(
+        self.__client = TTNClient(
             entry.data[CONF_HOSTNAME],
             entry.data[CONF_APP_ID],
             entry.data[CONF_ACCESS_KEY],
@@ -75,10 +75,10 @@ class TTNCoordinator(DataUpdateCoordinator):
 
             # Return measurements
             return measurements
-        except TTN_AuthError as err:
+        except TTNAuthError as err:
             # Raising ConfigEntryAuthFailed will cancel future updates
             # and start a config flow with SOURCE_REAUTH (async_step_reauth)
-            _LOGGER.error("TTN_AuthError")
+            _LOGGER.error("TTNAuthError")
             raise ConfigEntryAuthFailed from err
         except Exception as err:
             _LOGGER.error(err)
