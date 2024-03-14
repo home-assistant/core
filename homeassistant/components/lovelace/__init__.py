@@ -19,6 +19,7 @@ from homeassistant.loader import async_get_integration
 
 from . import dashboard, resources, websocket
 from .const import (  # noqa: F401
+    CONF_ALLOW_SINGLE_WORD,
     CONF_ICON,
     CONF_REQUIRE_ADMIN,
     CONF_SHOW_IN_SIDEBAR,
@@ -262,7 +263,7 @@ async def _create_map_dashboard(hass: HomeAssistant):
         "dashboards_collection"
     ]
     await dashboards_collection.async_create_item(
-        {CONF_TITLE: "Map", CONF_URL_PATH: "map"}
+        {CONF_ALLOW_SINGLE_WORD: True, CONF_TITLE: "Map", CONF_URL_PATH: "map"}
     )
 
     map_store: dashboard.LovelaceStorage = hass.data[DOMAIN]["dashboards"]["map"]
