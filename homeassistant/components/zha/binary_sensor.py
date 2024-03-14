@@ -327,5 +327,4 @@ class AqaraE1CurtainMotorOpenedByHandBinarySensor(BinarySensor):
     _unique_id_suffix = "hand_open"
     _attribute_name = "hand_open"
     _attr_translation_key = "hand_open"
-    _attr_icon = "mdi:hand-wave"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
