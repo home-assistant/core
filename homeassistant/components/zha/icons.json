@@ -5,6 +5,20 @@
         "default": "mdi:hand-wave"
       }
     },
+    "climate": {
+      "legrand_thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "comfort_minus_1": "mdi:numeric-1-circle",
+              "comfort_minus_2": "mdi:numeric-2-circle",
+              "frost_protection": "mdi:snowflake-thermometer",
+              "off": "mdi:power"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "timer_duration": {
         "default": "mdi:timer"

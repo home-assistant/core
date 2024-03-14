@@ -3,7 +3,6 @@
 For more details on this platform, please refer to the documentation
 at https://home-assistant.io/components/zha.climate/
 """
-
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -822,4 +821,71 @@ class ZONNSMARTThermostat(Thermostat):
         if preset == self.PRESET_FROST:
             return await self._thrm.write_attributes_safe(
                 {"operation_preset": 4}, manufacturer=mfg_code
+            )
+
+
+@MULTI_MATCH(
+    cluster_handler_names={CLUSTER_HANDLER_THERMOSTAT, "cable_outlet_cluster"},
+    stop_on_match_group=CLUSTER_HANDLER_THERMOSTAT,
+)
+class LegrandCableOutletThermostat(Thermostat):
+    """Legrand Cable outlet Thermostat implementation."""
+
+    _attr_translation_key = "legrand_thermostat"
+
+    PRESET_COMFORT_MINUS_1 = "comfort_minus_1"
+    PRESET_COMFORT_MINUS_2 = "comfort_minus_2"
+    PRESET_FROST_PROTECTION = "frost_protection"
+    PRESET_OFF = "off"
+
+    OPERATION_PRESET_TO_PRESET = {
+        0: PRESET_COMFORT,
+        1: PRESET_COMFORT_MINUS_1,
+        2: PRESET_COMFORT_MINUS_2,
+        3: PRESET_ECO,
+        4: PRESET_FROST_PROTECTION,
+        5: PRESET_OFF,
+    }
+
+    PRESET_TO_OPERATION_PRESET = {
+        PRESET_COMFORT: 0,
+        PRESET_COMFORT_MINUS_1: 1,
+        PRESET_COMFORT_MINUS_2: 2,
+        PRESET_ECO: 3,
+        PRESET_FROST_PROTECTION: 4,
+        PRESET_OFF: 5,
+    }
+
+    def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs):
+        """Initialize ZHA Thermostat instance."""
+        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
+        self._presets = [
+            PRESET_COMFORT,
+            self.PRESET_COMFORT_MINUS_1,
+            self.PRESET_COMFORT_MINUS_2,
+            PRESET_ECO,
+            self.PRESET_FROST_PROTECTION,
+            self.PRESET_OFF,
+        ]
+        self._supported_flags |= ClimateEntityFeature.PRESET_MODE
+
+    @property
+    def current_temperature(self):
+        """Return the current temperature."""
+
+        return None
+
+    async def async_attribute_updated(self, attr_id, attr_name, value):
+        """Handle attribute update from device."""
+        if attr_name == "operation_preset":
+            self._preset = self.OPERATION_PRESET_TO_PRESET.get(value, self.PRESET_OFF)
+        await super().async_attribute_updated(attr_id, attr_name, value)
+
+    async def async_preset_handler(self, preset: str, enable: bool = False) -> None:
+        """Set the preset mode."""
+        mfg_code = self._zha_device.manufacturer_code
+        operation_preset = self.PRESET_TO_OPERATION_PRESET.get(preset)
+        if operation_preset is not None:
+            return await self._thrm.write_attributes_safe(
+                {"operation_preset": operation_preset}, manufacturer=mfg_code
             )

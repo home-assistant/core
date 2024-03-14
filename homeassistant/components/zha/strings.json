@@ -588,6 +588,19 @@
     "climate": {
       "thermostat": {
         "name": "[%key:component::climate::entity_component::_::name%]"
+      },
+      "legrand_thermostat": {
+        "name": "[%key:component::climate::entity_component::_::name%]",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "comfort_minus_1": "Comfort -1 °C",
+              "comfort_minus_2": "Comfort -2 °C",
+              "frost_protection": "Frost protection",
+              "off": "[%key:common::state::off%]"
+            }
+          }
+        }
       }
     },
     "cover": {
@@ -997,11 +1010,14 @@
       "linkage_alarm": {
         "name": "Linkage alarm"
       },
-      "buzzer_manual_mute": {
-        "name": "Buzzer manual mute"
+      "led_dark": {
+        "name": "Led dark"
       },
-      "buzzer_manual_alarm": {
-        "name": "Buzzer manual alarm"
+      "led_on": {
+        "name": "Led on"
+      },
+      "wire_pilot_enabled": {
+        "name": "Wire pilot mode"
       }
     }
   }
