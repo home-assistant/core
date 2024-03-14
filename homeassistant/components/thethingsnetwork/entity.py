@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any, Optional
+from typing import Optional
 
 from ttn_client import TTNSensorValue
 
@@ -15,11 +15,9 @@ from .const import (
     DOMAIN,
     OPTIONS_DEVICE_NAME,
     OPTIONS_FIELD_CONTEXT_RECENT_TIME_S,
-    OPTIONS_FIELD_DEVICE_CLASS,
     OPTIONS_FIELD_ICON,
     OPTIONS_FIELD_NAME,
     OPTIONS_FIELD_PICTURE,
-    OPTIONS_FIELD_SUPPORTED_FEATURES,
     OPTIONS_FIELD_UNIT_MEASUREMENT,
 )
 from .entry_settings import TTN_EntrySettings
@@ -39,7 +37,7 @@ class TTN_Entity(CoordinatorEntity, Entity):
         """Initialize a The Things Network Data Storage sensor."""
 
         self.__entry = entry
-        self.__ttn_value = ttn_value
+        self._ttn_value = ttn_value
 
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator, context=self.unique_id)
@@ -49,10 +47,8 @@ class TTN_Entity(CoordinatorEntity, Entity):
 
         # Values from options
         self._unit_of_measurement = None
-        self.__device_class = None
         self.__icon = None
         self.__picture = None
-        self.__supported_features = None
         self.__context_recent_time_s = 5
 
         self.__refresh_names()
@@ -97,12 +93,12 @@ class TTN_Entity(CoordinatorEntity, Entity):
         )
         if (
             my_entity_update
-            and my_entity_update.received_at > self.__ttn_value.received_at
+            and my_entity_update.received_at > self._ttn_value.received_at
         ):
             _LOGGER.debug(
                 "Received update for %s: %s", self.unique_id, my_entity_update
             )
-            self.__ttn_value = my_entity_update
+            self._ttn_value = my_entity_update
             self.async_write_ha_state()
 
     # ---------------
@@ -118,48 +114,6 @@ class TTN_Entity(CoordinatorEntity, Entity):
     def name(self) -> Optional[str]:
         """Return the name of the entity."""
         return self.__name
-
-    @property
-    def state(self):
-        """Return the state of the entity."""
-        return self.__ttn_value.value
-
-    @property
-    def entitiy_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        # if self._ttn_data_storage.data is not None:
-
-        # TBD - add more info in the TTN upstream message such as signal strength, transmission time, etc
-        return {}
-
-    @property
-    def capability_attributes(self) -> Optional[dict[str, Any]]:
-        """Return the capability attributes.
-
-        Attributes that explain the capabilities of an entity.
-
-        Implemented by component base class. Convention for attribute names
-        is lowercase snake_case.
-        """
-        return {}
-
-    @property
-    def state_attributes(self) -> Optional[dict[str, Any]]:
-        """Return the state attributes.
-
-        Implemented by component base class. Convention for attribute names
-        is lowercase snake_case.
-        """
-        return {}
-
-    @property
-    def extra_state_attributes(self) -> Optional[dict[str, Any]]:
-        """Return device specific state attributes.
-
-        Implemented by platform classes. Convention for attribute names
-        is lowercase snake_case.
-        """
-        return {}
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -180,11 +134,6 @@ class TTN_Entity(CoordinatorEntity, Entity):
         )
 
     @property
-    def device_class(self) -> Optional[str]:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return self.__device_class
-
-    @property
     def icon(self) -> Optional[str]:
         """Return the icon to use in the frontend, if any."""
         return self.__icon
@@ -193,25 +142,6 @@ class TTN_Entity(CoordinatorEntity, Entity):
     def entity_picture(self) -> Optional[str]:
         """Return the entity picture to use in the frontend, if any."""
         return self.__picture
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return True if unable to access real state of the entity."""
-        return False
-
-    @property
-    def force_update(self) -> bool:
-        """Return True if state updates should be forced.
-
-        If True, a state change will be triggered anytime the state property is
-        updated, not just when the value changes.
-        """
-        return False
-
-    @property
-    def supported_features(self) -> Optional[int]:
-        """Flag supported features."""
-        return self.__supported_features
 
     @property
     def context_recent_time(self) -> timedelta:
@@ -255,12 +185,8 @@ class TTN_Entity(CoordinatorEntity, Entity):
         )
         field_name = field_opts.get(OPTIONS_FIELD_NAME, field_name)
         self._unit_of_measurement = field_opts.get(OPTIONS_FIELD_UNIT_MEASUREMENT, None)
-        self.__device_class = field_opts.get(OPTIONS_FIELD_DEVICE_CLASS, None)
         self.__icon = field_opts.get(OPTIONS_FIELD_ICON, None)
         self.__picture = field_opts.get(OPTIONS_FIELD_PICTURE, None)
-        self.__supported_features = field_opts.get(
-            OPTIONS_FIELD_SUPPORTED_FEATURES, None
-        )
         self.__context_recent_time_s = field_opts.get(
             OPTIONS_FIELD_CONTEXT_RECENT_TIME_S, 5
         )

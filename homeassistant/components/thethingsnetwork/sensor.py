@@ -1,6 +1,5 @@
 """The Things Network's integration sensors."""
 
-from typing import Optional
 
 from ttn_client import TTNBaseValue, TTNSensorValue
 
@@ -44,6 +43,11 @@ class TtnDataSensor(TTN_Entity, SensorEntity):
         return isinstance(ttn_value, TTNSensorValue)
 
     @property
-    def unit_of_measurement(self) -> Optional[str]:
+    def native_value(self) -> float | int | str:
+        """Return the state of the entity."""
+        return self._ttn_value.value
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
