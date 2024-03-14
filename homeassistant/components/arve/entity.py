@@ -32,7 +32,7 @@ class ArveDeviceEntity(Entity):
             self._attr_available = True
         except ArveError:
             if self._attr_available:
-                LOGGER.debug(
+                LOGGER.warning(
                     "An error occurred while updating Arve device", exc_info=True
                 )
             self._attr_available = False

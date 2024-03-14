@@ -9,8 +9,8 @@ from asyncarve import Arve, ArveConnectionError, ArveSensPro
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_SECRET, CONF_NAME
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
@@ -19,8 +19,6 @@ _LOGGER = logging.getLogger(__name__)
 
 class ArveConfigFlowHadler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Arve."""
-
-    VERSION = 1
 
     async def _show_setup_form(self, errors: dict[str, str] | None = None):
         """Show the setup form to the user."""
@@ -38,19 +36,13 @@ class ArveConfigFlowHadler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
 
         if user_input is None:
             return await self._show_setup_form(user_input)
 
-        self._async_abort_entries_match(
-            {
-                CONF_ACCESS_TOKEN: user_input[CONF_ACCESS_TOKEN],
-                CONF_CLIENT_SECRET: user_input[CONF_CLIENT_SECRET],
-                CONF_NAME: user_input[CONF_NAME],
-            }
-        )
+        self._async_abort_entries_match(user_input)
 
         errors = {}
 
@@ -72,9 +64,5 @@ class ArveConfigFlowHadler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title=info.name,
-            data={
-                CONF_ACCESS_TOKEN: user_input[CONF_ACCESS_TOKEN],
-                CONF_CLIENT_SECRET: user_input[CONF_CLIENT_SECRET],
-                CONF_NAME: user_input[CONF_NAME],
-            },
+            data=user_input,
         )

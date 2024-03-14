@@ -22,7 +22,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DATA_ARVE_CLIENT, DOMAIN, LOGGER
 from .entity import ArveDeviceEntity
 
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=60)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -30,7 +30,6 @@ class ArveDeviceEntityDescription(SensorEntityDescription):
     """Describes Arve device entity."""
 
     value_fn: Callable[[Arve], Coroutine[Any, Any, int | float]]
-    # value_fn: int | float
 
 
 SENSORS: tuple[ArveDeviceEntityDescription, ...] = (
@@ -118,7 +117,7 @@ class ArveDevice(ArveDeviceEntity, SensorEntity):
             ]
         )
 
-        LOGGER.info(self._attr_unique_id)
+        LOGGER.debug(self._attr_unique_id)
 
         self.name = description.key
 

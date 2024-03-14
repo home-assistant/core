@@ -4,9 +4,23 @@ from unittest.mock import AsyncMock, patch
 from homeassistant import config_entries
 from homeassistant.components.arve.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.arve.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_SECRET, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+CREDENTIALS = {
+    CONF_ACCESS_TOKEN: "test-access-token",
+    CONF_CLIENT_SECRET: "test-client-secret",
+    CONF_NAME: "test-name",
+}
+
+
+async def create_entry(result, mock_setup_entry: AsyncMock):
+    """Create test entry."""
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Name of the device"
+    assert result["data"] == CREDENTIALS
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -23,22 +37,11 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
+            CREDENTIALS,
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Name of the device"
-    assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
+    create_entry(result, mock_setup_entry)
 
 
 async def test_form_invalid_auth(
@@ -55,11 +58,7 @@ async def test_form_invalid_auth(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
+            CREDENTIALS,
         )
 
     assert result["type"] == FlowResultType.FORM
@@ -74,22 +73,11 @@ async def test_form_invalid_auth(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
+            CREDENTIALS,
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Name of the device"
-    assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
+    create_entry(result, mock_setup_entry)
 
 
 async def test_form_cannot_connect(
@@ -106,11 +94,7 @@ async def test_form_cannot_connect(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
+            CREDENTIALS,
         )
 
     assert result["type"] == FlowResultType.FORM
@@ -126,19 +110,8 @@ async def test_form_cannot_connect(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
+            CREDENTIALS,
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Name of the device"
-    assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
+    create_entry(result, mock_setup_entry)

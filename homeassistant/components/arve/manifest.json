@@ -3,11 +3,7 @@
   "name": "Arve",
   "codeowners": ["@ikalnyi"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/arve",
-  "homekit": {},
   "iot_class": "cloud_polling",
-  "requirements": ["asyncarve==0.0.4"],
-  "ssdp": [],
-  "zeroconf": []
+  "requirements": ["asyncarve==0.0.4"]
 }
