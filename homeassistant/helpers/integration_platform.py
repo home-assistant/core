@@ -1,4 +1,5 @@
 """Helpers to help with integration platforms."""
+
 from __future__ import annotations
 
 import asyncio
@@ -10,7 +11,7 @@ from types import ModuleType
 from typing import Any
 
 from homeassistant.const import EVENT_COMPONENT_LOADED
-from homeassistant.core import HassJob, HomeAssistant, callback
+from homeassistant.core import Event, HassJob, HomeAssistant, callback
 from homeassistant.loader import (
     Integration,
     async_get_integrations,
@@ -20,8 +21,6 @@ from homeassistant.loader import (
 )
 from homeassistant.setup import ATTR_COMPONENT, EventComponentLoaded
 from homeassistant.util.logging import catch_log_exception
-
-from .typing import EventType
 
 _LOGGER = logging.getLogger(__name__)
 DATA_INTEGRATION_PLATFORMS = "integration_platforms"
@@ -40,7 +39,7 @@ class IntegrationPlatform:
 def _async_integration_platform_component_loaded(
     hass: HomeAssistant,
     integration_platforms: list[IntegrationPlatform],
-    event: EventType[EventComponentLoaded],
+    event: Event[EventComponentLoaded],
 ) -> None:
     """Process integration platforms for a component."""
     if "." in (component_name := event.data[ATTR_COMPONENT]):
@@ -157,6 +156,7 @@ async def async_process_integration_platforms(
     platform_name: str,
     # Any = platform.
     process_platform: Callable[[HomeAssistant, str, Any], Awaitable[None] | None],
+    wait_for_platforms: bool = False,
 ) -> None:
     """Process a specific platform for all current and future loaded integrations."""
     if DATA_INTEGRATION_PLATFORMS not in hass.data:
@@ -194,6 +194,36 @@ async def async_process_integration_platforms(
     if not top_level_components:
         return
 
+    # We create a task here for two reasons:
+    #
+    # 1. We want the integration that provides the integration platform to
+    #    not be delayed by waiting on each individual platform to be processed
+    #    since the import or the integration platforms themselves may have to
+    #    schedule I/O or executor jobs.
+    #
+    # 2. We want the behavior to be the same as if the integration that has
+    #    the integration platform is loaded after the platform is processed.
+    #
+    # We use hass.async_create_task instead of asyncio.create_task because
+    # we want to make sure that startup waits for the task to complete.
+    #
+    future = hass.async_create_task(
+        _async_process_integration_platforms(
+            hass, platform_name, top_level_components.copy(), process_job
+        ),
+        eager_start=True,
+    )
+    if wait_for_platforms:
+        await future
+
+
+async def _async_process_integration_platforms(
+    hass: HomeAssistant,
+    platform_name: str,
+    top_level_components: set[str],
+    process_job: HassJob,
+) -> None:
+    """Process integration platforms for a component."""
     integrations = await async_get_integrations(hass, top_level_components)
     loaded_integrations: list[Integration] = [
         integration

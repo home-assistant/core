@@ -1,4 +1,5 @@
 """Mail (SMTP) notification service."""
+
 from __future__ import annotations
 
 from email.mime.application import MIMEApplication

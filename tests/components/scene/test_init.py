@@ -1,4 +1,5 @@
 """The tests for the Scene component."""
+
 import io
 from unittest.mock import patch
 

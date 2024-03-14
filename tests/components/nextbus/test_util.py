@@ -1,4 +1,5 @@
 """Test NextBus util functions."""
+
 from typing import Any
 
 import pytest

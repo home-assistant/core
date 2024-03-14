@@ -1,4 +1,5 @@
 """Support for voltage, power & energy sensors for VeSync outlets."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -35,18 +36,11 @@ from .const import DEV_TYPE_TO_HA, DOMAIN, SKU_TO_BASE_DEVICE, VS_DISCOVERY, VS_
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class VeSyncSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class VeSyncSensorEntityDescription(SensorEntityDescription):
+    """Describe VeSync sensor entity."""
 
     value_fn: Callable[[VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch], StateType]
-
-
-@dataclass(frozen=True)
-class VeSyncSensorEntityDescription(
-    SensorEntityDescription, VeSyncSensorEntityDescriptionMixin
-):
-    """Describe VeSync sensor entity."""
 
     exists_fn: Callable[[VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch], bool] = (
         lambda _: True

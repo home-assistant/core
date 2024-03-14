@@ -1,4 +1,5 @@
 """Test area_registry API."""
+
 import pytest
 from pytest_unordered import unordered
 

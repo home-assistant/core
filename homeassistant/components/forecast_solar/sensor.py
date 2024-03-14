@@ -1,4 +1,5 @@
 """Support for the Forecast.Solar sensor service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

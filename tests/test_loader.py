@@ -1,4 +1,5 @@
 """Test to verify that we can load components."""
+
 import asyncio
 import os
 import sys
@@ -6,6 +7,7 @@ import threading
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
+from awesomeversion import AwesomeVersion
 import pytest
 
 from homeassistant import loader
@@ -165,6 +167,57 @@ async def test_custom_integration_version_not_valid(
         "The custom integration 'test_bad_version' does not have a valid version key"
         " (bad) in the manifest file and was blocked from loading."
     ) in caplog.text
+
+
+@pytest.mark.parametrize(
+    "blocked_versions",
+    [
+        loader.BlockedIntegration(None, "breaks Home Assistant"),
+        loader.BlockedIntegration(AwesomeVersion("2.0.0"), "breaks Home Assistant"),
+    ],
+)
+async def test_custom_integration_version_blocked(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+    blocked_versions,
+) -> None:
+    """Test that we log a warning when custom integrations have a blocked version."""
+    with patch.dict(
+        loader.BLOCKED_CUSTOM_INTEGRATIONS, {"test_blocked_version": blocked_versions}
+    ):
+        with pytest.raises(loader.IntegrationNotFound):
+            await loader.async_get_integration(hass, "test_blocked_version")
+
+        assert (
+            "Version 1.0.0 of custom integration 'test_blocked_version' breaks"
+            " Home Assistant and was blocked from loading, please report it to the"
+            " author of the 'test_blocked_version' custom integration"
+        ) in caplog.text
+
+
+@pytest.mark.parametrize(
+    "blocked_versions",
+    [
+        loader.BlockedIntegration(AwesomeVersion("0.9.9"), "breaks Home Assistant"),
+        loader.BlockedIntegration(AwesomeVersion("1.0.0"), "breaks Home Assistant"),
+    ],
+)
+async def test_custom_integration_version_not_blocked(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+    blocked_versions,
+) -> None:
+    """Test that we log a warning when custom integrations have a blocked version."""
+    with patch.dict(
+        loader.BLOCKED_CUSTOM_INTEGRATIONS, {"test_blocked_version": blocked_versions}
+    ):
+        await loader.async_get_integration(hass, "test_blocked_version")
+
+        assert (
+            "Version 1.0.0 of custom integration 'test_blocked_version'"
+        ) not in caplog.text
 
 
 async def test_get_integration(hass: HomeAssistant) -> None:
@@ -1045,7 +1098,7 @@ async def test_async_suggest_report_issue(
 def test_import_executor_default(hass: HomeAssistant) -> None:
     """Test that import_executor defaults."""
     custom_comp = mock_integration(hass, MockModule("any_random"), built_in=False)
-    assert custom_comp.import_executor is False
+    assert custom_comp.import_executor is True
     built_in_comp = mock_integration(hass, MockModule("other_random"), built_in=True)
     assert built_in_comp.import_executor is True
 
@@ -1070,7 +1123,7 @@ async def test_hass_components_use_reported(
     )
     integration_frame = frame.IntegrationFrame(
         custom_integration=True,
-        frame=mock_integration_frame,
+        _frame=mock_integration_frame,
         integration="test_integration_frame",
         module="custom_components.test_integration_frame",
         relative_filename="custom_components/test_integration_frame/__init__.py",
@@ -1117,7 +1170,7 @@ async def test_async_get_component_preloads_config_and_config_flow(
         await executor_import_integration.async_get_component()
 
     assert len(platform_exists_calls[0]) == len(loader.BASE_PRELOAD_PLATFORMS)
-    assert mock_import.call_count == 2 + len(loader.BASE_PRELOAD_PLATFORMS)
+    assert mock_import.call_count == 1 + len(loader.BASE_PRELOAD_PLATFORMS)
     assert (
         mock_import.call_args_list[0][0][0]
         == "homeassistant.components.executor_import"
@@ -1188,10 +1241,9 @@ async def test_async_get_component_loads_loop_if_already_in_sys_modules(
     ), patch("homeassistant.loader.importlib.import_module", import_module):
         module = await integration.async_get_component()
 
-    # Everything is there so we should load in the event loop
-    # since it will all be cached
-    assert "loaded_executor=False" in caplog.text
-    assert "loaded_executor=True" not in caplog.text
+    # Everything is already in the integration cache
+    # so it should not have to call the load
+    assert "loaded_executor" not in caplog.text
     assert module is module_mock
 
 
@@ -1623,3 +1675,21 @@ async def test_async_get_platforms_concurrent_loads(
 
     assert imports == [button_module_name]
     assert integration.get_platform_cached("button") is button_module_mock
+
+
+async def test_integration_warnings(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test integration warnings."""
+    await loader.async_get_integration(hass, "test_package_loaded_loop")
+    assert "configured to to import its code in the event loop" in caplog.text
+
+
+async def test_has_services(hass: HomeAssistant, enable_custom_integrations) -> None:
+    """Test has_services."""
+    integration = await loader.async_get_integration(hass, "test")
+    assert integration.has_services is False
+    integration = await loader.async_get_integration(hass, "test_with_services")
+    assert integration.has_services is True

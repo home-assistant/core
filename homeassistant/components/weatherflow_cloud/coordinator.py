@@ -1,4 +1,5 @@
 """Data coordinator for WeatherFlow Cloud Data."""
+
 from datetime import timedelta
 
 from aiohttp import ClientResponseError

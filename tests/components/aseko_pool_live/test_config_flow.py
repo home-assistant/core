@@ -1,4 +1,5 @@
 """Test the Aseko Pool Live config flow."""
+
 from unittest.mock import patch
 
 from aioaseko import AccountInfo, APIUnavailable, InvalidAuthCredentials

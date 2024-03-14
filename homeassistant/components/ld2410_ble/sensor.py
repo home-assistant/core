@@ -1,6 +1,5 @@
 """LD2410 BLE integration sensor platform."""
 
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,

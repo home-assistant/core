@@ -1,4 +1,5 @@
 """Support for HomematicIP Cloud button devices."""
+
 from __future__ import annotations
 
 from homematicip.aio.device import AsyncWallMountedGarageDoorController

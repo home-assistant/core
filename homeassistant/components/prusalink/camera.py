@@ -1,4 +1,5 @@
 """Camera entity for PrusaLink."""
+
 from __future__ import annotations
 
 from homeassistant.components.camera import Camera

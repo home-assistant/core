@@ -1,4 +1,5 @@
 """Support for Lutron Homeworks lights."""
+
 from __future__ import annotations
 
 import logging
@@ -96,11 +97,6 @@ class HomeworksLight(HomeworksEntity, LightEntity):
         self._controller.fade_dim(
             float((level * 100.0) / 255.0), self._rate, 0, self._addr
         )
-
-    @property
-    def extra_state_attributes(self) -> dict[str, str]:
-        """Supported attributes."""
-        return {"homeworks_address": self._addr}
 
     @property
     def is_on(self) -> bool:

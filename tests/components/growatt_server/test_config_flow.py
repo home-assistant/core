@@ -1,4 +1,5 @@
 """Tests for the Growatt server config flow."""
+
 from copy import deepcopy
 from unittest.mock import patch
 

@@ -1,4 +1,5 @@
 """Static file handling for HTTP component."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -11,8 +12,6 @@ from aiohttp.web import FileResponse, Request, StreamResponse
 from aiohttp.web_exceptions import HTTPForbidden, HTTPNotFound
 from aiohttp.web_urldispatcher import StaticResource
 from lru import LRU
-
-from homeassistant.core import HomeAssistant
 
 from .const import KEY_HASS
 
@@ -48,7 +47,7 @@ class CachingStaticResource(StaticResource):
         rel_url = request.match_info["filename"]
         key = (rel_url, self._directory)
         if (filepath_content_type := PATH_CACHE.get(key)) is None:
-            hass: HomeAssistant = request.app[KEY_HASS]
+            hass = request.app[KEY_HASS]
             try:
                 filepath = await hass.async_add_executor_job(_get_file_path, *key)
             except (ValueError, FileNotFoundError) as error:

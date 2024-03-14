@@ -1,4 +1,5 @@
 """Test config entries API."""
+
 from collections import OrderedDict
 from http import HTTPStatus
 from unittest.mock import ANY, AsyncMock, patch

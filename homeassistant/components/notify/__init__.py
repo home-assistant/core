@@ -1,4 +1,5 @@
 """Provides functionality to notify people."""
+
 from __future__ import annotations
 
 import asyncio

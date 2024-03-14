@@ -1,4 +1,5 @@
 """Support for Tellstick covers using Tellstick Net."""
+
 from typing import Any
 
 from homeassistant.components import cover

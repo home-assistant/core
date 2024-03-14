@@ -1,4 +1,5 @@
 """Configure pytest for Litter-Robot tests."""
+
 from __future__ import annotations
 
 from typing import Any

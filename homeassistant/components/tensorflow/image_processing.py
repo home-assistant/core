@@ -1,4 +1,5 @@
 """Support for performing TensorFlow classification on images."""
+
 from __future__ import annotations
 
 import io

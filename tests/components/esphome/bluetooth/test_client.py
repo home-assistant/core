@@ -1,4 +1,5 @@
 """Tests for ESPHomeClient."""
+
 from __future__ import annotations
 
 from aioesphomeapi import APIClient, APIVersion, BluetoothProxyFeature, DeviceInfo

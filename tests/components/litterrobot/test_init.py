@@ -1,4 +1,5 @@
 """Test Litter-Robot setup process."""
+
 from unittest.mock import MagicMock, patch
 
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException

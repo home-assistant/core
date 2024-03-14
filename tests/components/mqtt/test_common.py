@@ -1,4 +1,5 @@
 """Common test objects."""
+
 from collections.abc import Iterable
 from contextlib import suppress
 import copy
@@ -1709,10 +1710,8 @@ async def help_test_publishing_with_custom_encoding(
 
     # setup test entities using discovery
     mqtt_mock = await mqtt_mock_entry()
-    item: int = 0
-    for component_config in setup_config:
+    for item, component_config in enumerate(setup_config):
         conf = json.dumps(component_config)
-        item += 1
         async_fire_mqtt_message(
             hass, f"homeassistant/{domain}/component_{item}/config", conf
         )

@@ -1,4 +1,5 @@
 """The switch entities for musiccast."""
+
 from typing import Any
 
 from aiomusiccast.capabilities import BinarySetter

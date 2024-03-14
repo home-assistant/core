@@ -1,4 +1,5 @@
 """Tests for the PS4 Integration."""
+
 from unittest.mock import MagicMock, patch
 
 from homeassistant import config_entries, data_entry_flow

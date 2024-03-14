@@ -1,4 +1,5 @@
 """Test the Nobø Ecohub config flow."""
+
 from unittest.mock import PropertyMock, patch
 
 from homeassistant import config_entries
