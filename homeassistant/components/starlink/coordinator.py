@@ -6,6 +6,7 @@ import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from zoneinfo import ZoneInfo
 
 from starlink_grpc import (
     AlertDict,
@@ -46,7 +47,7 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
     def __init__(self, hass: HomeAssistant, name: str, url: str) -> None:
         """Initialize an UpdateCoordinator for a group of sensors."""
         self.channel_context = ChannelContext(target=url)
-
+        self.timezone = ZoneInfo(hass.config.time_zone)
         super().__init__(
             hass,
             _LOGGER,

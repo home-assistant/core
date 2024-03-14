@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from datetime import UTC, time
+from datetime import UTC, datetime, time, tzinfo
 import math
 
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
@@ -32,7 +32,7 @@ async def async_setup_entry(
 class StarlinkTimeEntityDescription(TimeEntityDescription):
     """Describes a Starlink time entity."""
 
-    value_fn: Callable[[StarlinkData], time | None]
+    value_fn: Callable[[StarlinkData, tzinfo], time | None]
     update_fn: Callable[[StarlinkUpdateCoordinator, time], Awaitable[None]]
     available_fn: Callable[[StarlinkData], bool]
 
@@ -45,7 +45,9 @@ class StarlinkTimeEntity(StarlinkEntity, TimeEntity):
     @property
     def native_value(self) -> time | None:
         """Return the value reported by the time."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        return self.entity_description.value_fn(
+            self.coordinator.data, self.coordinator.timezone
+        )
 
     @property
     def available(self) -> bool:
@@ -57,33 +59,39 @@ class StarlinkTimeEntity(StarlinkEntity, TimeEntity):
         return await self.entity_description.update_fn(self.coordinator, value)
 
 
-def _utc_minutes_to_time(utc_minutes: int) -> time:
+def _utc_minutes_to_time(utc_minutes: int, timezone: tzinfo) -> time:
     hour = math.floor(utc_minutes / 60)
     minute = utc_minutes % 60
-    utc = time(hour=hour, minute=minute, tzinfo=UTC)
-    return utc
+    utc = datetime.now(UTC).replace(hour=hour, minute=minute, second=0, microsecond=0)
+    return utc.astimezone(timezone).time()
 
 
-def _time_to_utc_minutes(t: time) -> int:
-    return (t.hour * 60) + t.minute
+def _time_to_utc_minutes(t: time, timezone: tzinfo) -> int:
+    zoned_time = datetime.now(timezone).replace(
+        hour=t.hour, minute=t.minute, second=0, microsecond=0
+    )
+    utc_time = zoned_time.astimezone(UTC).time()
+    return (utc_time.hour * 60) + utc_time.minute
 
 
 TIMES = [
     StarlinkTimeEntityDescription(
         key="sleep_start",
         translation_key="sleep_start",
-        value_fn=lambda data: _utc_minutes_to_time(data.sleep[0]),
+        value_fn=lambda data, timezone: _utc_minutes_to_time(data.sleep[0], timezone),
         update_fn=lambda coordinator, time: coordinator.async_set_sleep_start(
-            _time_to_utc_minutes(time)
+            _time_to_utc_minutes(time, coordinator.timezone)
         ),
         available_fn=lambda data: data.sleep[2],
     ),
     StarlinkTimeEntityDescription(
         key="sleep_end",
         translation_key="sleep_end",
-        value_fn=lambda data: _utc_minutes_to_time(data.sleep[0] + data.sleep[1]),
+        value_fn=lambda data, timezone: _utc_minutes_to_time(
+            data.sleep[0] + data.sleep[1], timezone
+        ),
         update_fn=lambda coordinator, time: coordinator.async_set_sleep_duration(
-            _time_to_utc_minutes(time)
+            _time_to_utc_minutes(time, coordinator.timezone)
         ),
         available_fn=lambda data: data.sleep[2],
     ),
