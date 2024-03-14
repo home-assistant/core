@@ -2,7 +2,7 @@
 import logging
 from typing import Any
 
-from aioautomower.utils import async_structure_token
+from aioautomower.utils import structure_token
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.data_entry_flow import FlowResult
@@ -27,7 +27,7 @@ class HusqvarnaConfigFlowHandler(
         """Create an entry for the flow."""
         token = data[CONF_TOKEN]
         user_id = token[CONF_USER_ID]
-        structured_token = await async_structure_token(token[CONF_ACCESS_TOKEN])
+        structured_token = structure_token(token[CONF_ACCESS_TOKEN])
         first_name = structured_token.user.first_name
         last_name = structured_token.user.last_name
         await self.async_set_unique_id(user_id)

@@ -924,7 +924,7 @@ class Recorder(threading.Thread):
             # that is pending before running the task
             if TYPE_CHECKING:
                 assert isinstance(task, RecorderTask)
-            if not task.commit_before:
+            if task.commit_before:
                 self._commit_event_session_or_retry()
             return task.run(self)
         except exc.DatabaseError as err:

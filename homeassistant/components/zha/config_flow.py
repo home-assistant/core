@@ -491,23 +491,27 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
 
     VERSION = 4
 
-    async def _set_unique_id_or_update_path(
+    async def _set_unique_id_and_update_ignored_flow(
         self, unique_id: str, device_path: str
     ) -> None:
-        """Set the flow's unique ID and update the device path if it isn't unique."""
+        """Set the flow's unique ID and update the device path in an ignored flow."""
         current_entry = await self.async_set_unique_id(unique_id)
 
         if not current_entry:
             return
 
-        self._abort_if_unique_id_configured(
-            updates={
-                CONF_DEVICE: {
-                    **current_entry.data.get(CONF_DEVICE, {}),
-                    CONF_DEVICE_PATH: device_path,
-                },
-            }
-        )
+        if current_entry.source != config_entries.SOURCE_IGNORE:
+            self._abort_if_unique_id_configured()
+        else:
+            # Only update the current entry if it is an ignored discovery
+            self._abort_if_unique_id_configured(
+                updates={
+                    CONF_DEVICE: {
+                        **current_entry.data.get(CONF_DEVICE, {}),
+                        CONF_DEVICE_PATH: device_path,
+                    },
+                }
+            )
 
     @staticmethod
     @callback
@@ -575,7 +579,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
         description = discovery_info.description
         dev_path = discovery_info.device
 
-        await self._set_unique_id_or_update_path(
+        await self._set_unique_id_and_update_ignored_flow(
             unique_id=f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}",
             device_path=dev_path,
         )
@@ -625,7 +629,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
         node_name = local_name.removesuffix(".local")
         device_path = f"socket://{discovery_info.host}:{port}"
 
-        await self._set_unique_id_or_update_path(
+        await self._set_unique_id_and_update_ignored_flow(
             unique_id=node_name,
             device_path=device_path,
         )
@@ -650,7 +654,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
         device_settings = discovery_data["port"]
         device_path = device_settings[CONF_DEVICE_PATH]
 
-        await self._set_unique_id_or_update_path(
+        await self._set_unique_id_and_update_ignored_flow(
             unique_id=f"{name}_{radio_type.name}_{device_path}",
             device_path=device_path,
         )
