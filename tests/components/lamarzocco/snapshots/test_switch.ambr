@@ -236,11 +236,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:water-boiler',
+    'original_icon': None,
     'original_name': 'Steam boiler',
     'platform': 'lamarzocco',
     'previous_unique_id': None,

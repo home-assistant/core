@@ -12,7 +12,7 @@ from homeassistant.components.bluetooth import BluetoothServiceInfo
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
-    ConfigFlowResult
+    ConfigFlowResult,
     OptionsFlow,
     OptionsFlowWithConfigEntry,
 )
@@ -235,7 +235,7 @@ class LmOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options for the custom component."""
         if user_input:
             self.hass.config_entries.async_update_entry(
