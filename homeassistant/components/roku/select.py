@@ -115,15 +115,13 @@ async def async_setup_entry(
     coordinator: RokuDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     device: RokuDevice = coordinator.data
 
-    entities: list[RokuSelectEntity] = []
-
-    for description in ENTITIES:
-        entities.append(
-            RokuSelectEntity(
-                coordinator=coordinator,
-                description=description,
-            )
+    entities: list[RokuSelectEntity] = [
+        RokuSelectEntity(
+            coordinator=coordinator,
+            description=description,
         )
+        for description in ENTITIES
+    ]
 
     if len(device.channels) > 0:
         entities.append(

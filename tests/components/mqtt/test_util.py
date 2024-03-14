@@ -159,10 +159,8 @@ async def test_waiting_for_client_not_loaded(
         unsubs.append(await mqtt.async_subscribe(hass, "test_topic", lambda msg: None))
 
     # Simulate some integration waiting for the client to become available
-    hass.async_add_job(_async_just_in_time_subscribe)
-    hass.async_add_job(_async_just_in_time_subscribe)
-    hass.async_add_job(_async_just_in_time_subscribe)
-    hass.async_add_job(_async_just_in_time_subscribe)
+    for _ in range(4):
+        hass.async_create_task(_async_just_in_time_subscribe())
 
     assert entry.state == ConfigEntryState.NOT_LOADED
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -210,7 +208,7 @@ async def test_waiting_for_client_entry_fails(
     async def _async_just_in_time_subscribe() -> Callable[[], None]:
         assert not await mqtt.async_wait_for_mqtt_client(hass)
 
-    hass.async_add_job(_async_just_in_time_subscribe)
+    hass.async_create_task(_async_just_in_time_subscribe())
     assert entry.state == ConfigEntryState.NOT_LOADED
     with patch(
         "homeassistant.components.mqtt.async_setup_entry",
@@ -238,7 +236,7 @@ async def test_waiting_for_client_setup_fails(
     async def _async_just_in_time_subscribe() -> Callable[[], None]:
         assert not await mqtt.async_wait_for_mqtt_client(hass)
 
-    hass.async_add_job(_async_just_in_time_subscribe)
+    hass.async_create_task(_async_just_in_time_subscribe())
     assert entry.state == ConfigEntryState.NOT_LOADED
 
     # Simulate MQTT setup fails before the client would become available

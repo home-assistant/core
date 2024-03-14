@@ -188,8 +188,6 @@ def get_block_input_triggers(
     if not is_block_momentary_input(device.settings, block, True):
         return []
 
-    triggers = []
-
     if block.type == "device" or get_number_of_channels(device, block) == 1:
         subtype = "button"
     else:
@@ -203,20 +201,12 @@ def get_block_input_triggers(
     else:
         trigger_types = BASIC_INPUTS_EVENTS_TYPES
 
-    for trigger_type in trigger_types:
-        triggers.append((trigger_type, subtype))
-
-    return triggers
+    return [(trigger_type, subtype) for trigger_type in trigger_types]
 
 
 def get_shbtn_input_triggers() -> list[tuple[str, str]]:
     """Return list of input triggers for SHBTN models."""
-    triggers = []
-
-    for trigger_type in SHBTN_INPUTS_EVENTS_TYPES:
-        triggers.append((trigger_type, "button"))
-
-    return triggers
+    return [(trigger_type, "button") for trigger_type in SHBTN_INPUTS_EVENTS_TYPES]
 
 
 @singleton.singleton("shelly_coap")
