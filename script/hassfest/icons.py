@@ -47,7 +47,7 @@ def ensure_not_same_as_default(value: dict) -> dict:
     return value
 
 
-def icon_schema(integration_type: str) -> vol.Schema:
+def icon_schema(integration_type: str, overwrite_entity_component: bool) -> vol.Schema:
     """Create a icon schema."""
 
     state_validator = cv.schema_with_slug_keys(
@@ -78,7 +78,7 @@ def icon_schema(integration_type: str) -> vol.Schema:
     )
 
     if integration_type in ("entity", "helper", "system"):
-        if integration_type != "entity":
+        if integration_type != "entity" or overwrite_entity_component:
             field = vol.Optional("entity_component")
         else:
             field = vol.Required("entity_component")
@@ -126,7 +126,9 @@ def validate_icon_file(config: Config, integration: Integration) -> None:  # noq
         integration.add_error("icons", f"Invalid JSON in {name}: {err}")
         return
 
-    schema = icon_schema(integration.integration_type)
+    overwrite_entity_component = name in ("notify", "image_processing")
+
+    schema = icon_schema(integration.integration_type, overwrite_entity_component)
 
     try:
         schema(icons)
