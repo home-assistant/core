@@ -9,21 +9,20 @@ from vacuum_map_parser_base.config.image_config import ImageConfig
 from vacuum_map_parser_base.config.size import Sizes
 from vacuum_map_parser_roborock.map_data_parser import RoborockMapDataParser
 
-from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN, ImageEntity
+from homeassistant.components.image import ImageEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity, async_get
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN, IMAGE_CACHE_INTERVAL, IMAGE_DRAWABLES, MAP_SLEEP
 from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockCoordinatedEntity
-from .models import RoborockImageExtraStoredData
+from .roborock_storage import RoborockStorage, get_roborock_storage
 
 
 async def async_setup_entry(
@@ -59,41 +58,26 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity, RestoreEntity):
         unique_id: str,
         coordinator: RoborockDataUpdateCoordinator,
         map_flag: int,
-        starting_map: bytes | None,
+        starting_map: bytes,
         map_name: str,
+        roborock_storage: RoborockStorage,
+        create_map: bool,
     ) -> None:
         """Initialize a Roborock map."""
         RoborockCoordinatedEntity.__init__(self, unique_id, coordinator)
         ImageEntity.__init__(self, coordinator.hass)
-        self._attr_name = map_name
+        self._attr_name: str = map_name
         self.parser = RoborockMapDataParser(
             ColorsPalette(), Sizes(), IMAGE_DRAWABLES, ImageConfig(), []
         )
         self._attr_image_last_updated = dt_util.utcnow()
         self.map_flag = map_flag
-        self.cached_map = (
-            self._create_image(starting_map) if starting_map is not None else None
-        )
+        if create_map:
+            self.cached_map = self._create_image(starting_map)
+        else:
+            self.cached_map = starting_map
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
-
-    @property
-    def extra_restore_state_data(self) -> RoborockImageExtraStoredData:
-        """Return number specific state data to be restored."""
-        # Cached map should never be None at this point. It is only None when it is
-        # being restored from the stored data and that happens before this step.
-        assert self.cached_map is not None
-        return RoborockImageExtraStoredData(self.map_flag, self.cached_map)
-
-    async def async_added_to_hass(self) -> None:
-        """Restore ATTR_CHANGED_BY on startup since it is likely no longer in the activity log."""
-        extra_stored_data = await self.async_get_last_extra_data()
-        if extra_stored_data:
-            roborock_extra_stored_data = RoborockImageExtraStoredData.from_dict(
-                extra_stored_data.as_dict()
-            )
-            self.cached_map = roborock_extra_stored_data.cached_image
-            self.map_flag = roborock_extra_stored_data.map_flag
-        await super().async_added_to_hass()
+        self._roborock_storage = roborock_storage
 
     @property
     def is_selected(self) -> bool:
@@ -124,6 +108,9 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity, RestoreEntity):
         if self.is_map_valid():
             map_data: bytes = await self.cloud_api.get_map_v1()
             self.cached_map = self._create_image(map_data)
+            await self._roborock_storage.async_save_map(
+                self._attr_name, self.cached_map
+            )
         return self.cached_map
 
     def _create_image(self, map_bytes: bytes) -> bytes:
@@ -148,7 +135,8 @@ async def create_coordinator_maps(
     Only one map can be loaded at a time per device.
     """
     entities = []
-    entity_registry = er.async_get(hass)
+    assert coord.config_entry is not None
+    roborock_storage = await get_roborock_storage(hass, coord.config_entry.entry_id)
     cur_map = coord.current_map
     # This won't be None at this point as the coordinator will have run first.
     assert cur_map is not None
@@ -157,19 +145,16 @@ async def create_coordinator_maps(
     maps_info = sorted(
         coord.maps.items(), key=lambda data: data[0] == cur_map, reverse=True
     )
-    for map_flag, map_name in maps_info:
+    maps = await asyncio.gather(
+        *(roborock_storage.async_load_map(map_name) for map_name in coord.maps.values())
+    )
+    storage_updates = []
+    for (map_flag, map_name), storage_map in zip(maps_info, maps):
         unique_id = f"{slugify(coord.roborock_device_info.device.duid)}_map_{map_name}"
         # Load the map - so we can access it with get_map_v1
-        api_data: bytes | None = None
-        if (
-            not (
-                entity_id := entity_registry.async_get_entity_id(
-                    IMAGE_DOMAIN, DOMAIN, unique_id
-                )
-            )
-            or (restore_data := async_get(hass).last_states.get(entity_id)) is None
-            or restore_data.extra_data is None
-        ):
+        api_data: bytes | None = storage_map
+        create_map = False
+        if api_data is None:
             # Only get the map data on startup if a) we haven't added the entity before
             # b) The entity does not have the needed restore data.
             if map_flag != cur_map:
@@ -180,15 +165,22 @@ async def create_coordinator_maps(
                 await asyncio.sleep(MAP_SLEEP)
             # Get the map data
             api_data = await coord.cloud_api.get_map_v1()
-        entities.append(
-            RoborockMap(
-                unique_id,
-                coord,
-                map_flag,
-                api_data,
-                map_name,
-            )
+            create_map = True
+        roborock_map = RoborockMap(
+            unique_id,
+            coord,
+            map_flag,
+            api_data,
+            map_name,
+            roborock_storage,
+            create_map,
         )
+        entities.append(roborock_map)
+        if create_map:
+            storage_updates.append(
+                roborock_storage.async_save_map(map_name, roborock_map.cached_map)
+            )
+    await asyncio.gather(*storage_updates)
     if len(coord.maps) != 1:
         # Set the map back to the map the user previously had selected so that it
         # does not change the end user's app.

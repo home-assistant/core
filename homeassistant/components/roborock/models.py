@@ -1,14 +1,11 @@
 """Roborock Models."""
 from __future__ import annotations
 
-import base64
 from dataclasses import dataclass
 from typing import Any
 
 from roborock.containers import HomeDataDevice, HomeDataProduct, NetworkInfo
 from roborock.roborock_typing import DeviceProp
-
-from homeassistant.helpers.restore_state import ExtraStoredData
 
 
 @dataclass

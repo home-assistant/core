@@ -1,96 +1,119 @@
+"""Roborock storage."""
+import dataclasses
 import logging
 import os
-from typing import Any
+import time
+
 from homeassistant.core import DOMAIN, HomeAssistant
-from homeassistant.helpers.storage import Store
 
 _LOGGER = logging.getLogger(__name__)
 MAP_PATHS = f"{DOMAIN}/roborock/maps"
 STORAGE_KEY = "roborock.storage"
 STORAGE_VERSION = 1
+MAP_UPDATE_FREQUENCY = 3600  # Only save the map once every hour.
 
 
-async def get_roborock_storage(hass: HomeAssistant):
+async def get_roborock_storage(hass: HomeAssistant, entry_id: str):
+    """Get a roborock storage object for a given config entry."""
     map_path = hass.config.path(MAP_PATHS)
 
     def mkdir() -> None:
         os.makedirs(map_path, exist_ok=True)
 
     await hass.async_add_executor_job(mkdir)
-    store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY, private=True)
-    return RoborockStorage(hass, store, map_path)
+    return RoborockStorage(hass, map_path, entry_id)
+
+
+@dataclasses.dataclass
+class RoborockMapEntry:
+    """Describe a map entry stored on disk."""
+
+    map_name: str
+    content: bytes
+    time: float
 
 
 class RoborockStorage:
+    """Store Roborock data."""
+
     def __init__(
-        self, hass: HomeAssistant, store: Store[dict[str, Any]], map_path: setattr
+        self,
+        hass: HomeAssistant,
+        map_path: str,
+        entry_id: str,
     ) -> None:
-        """Initialize NestEventMediaStore."""
+        """Initialize RoborockStorage."""
         self._hass = hass
-        self._store = store
-        self._data: dict[str, Any] | None = None
+        self._data: dict[str, RoborockMapEntry] = {}
         self._map_path = map_path
+        self._entry_id = entry_id
 
-    async def async_load(self) -> dict | None:
-        """Load data."""
-        if self._data is None:
-            self._devices = await self._get_devices()
-            if (data := await self._store.async_load()) is None:
-                _LOGGER.debug("Loaded empty event store")
-                self._data = {}
-            else:
-                _LOGGER.debug("Loaded event store with %d records", len(data))
-                self._data = data
-        return self._data
+    def _should_update(self, map_entry: RoborockMapEntry | None, content: bytes):
+        return (
+            map_entry is None
+            or time.time() - map_entry.time > MAP_UPDATE_FREQUENCY
+            or content != map_entry.content
+        )
 
-    async def async_load_maps(self, media_key: str) -> bytes | None:
-        """Load media content."""
-        filename = self.get_media_filename(media_key)
+    def _get_map_filename(self, map_name: str):
+        return self._hass.config.path(f"{MAP_PATHS}/{self._entry_id}/{map_name}")
 
-        def load_media(filename: str) -> bytes | None:
+    async def async_load_map(self, map_name: str) -> bytes | None:
+        """Load map content."""
+        filename = self._get_map_filename(map_name)
+
+        def load_map(filename: str) -> bytes | None:
             if not os.path.exists(filename):
                 return None
-            _LOGGER.debug("Reading event media from disk store: %s", filename)
-            with open(filename, "rb") as media:
-                return media.read()
+            _LOGGER.debug("Reading map from disk store: %s", filename)
+            with open(filename, "rb") as stored_map:
+                return stored_map.read()
 
         try:
-            return await self._hass.async_add_executor_job(load_media, filename)
+            map_data = await self._hass.async_add_executor_job(load_map, filename)
         except OSError as err:
-            _LOGGER.error("Unable to read media file: %s %s", filename, err)
+            _LOGGER.error("Unable to read map file: %s %s", filename, err)
             return None
+        if map_data is None:
+            return None
+        self._data[map_name] = RoborockMapEntry(
+            map_name,
+            map_data,
+            time.time(),
+        )
+        return self._data[map_name].content
 
-    async def async_save_maps(self, media_key: str, content: bytes) -> None:
-        """Write media content."""
-        filename = self.get_media_filename(media_key)
+    async def async_save_map(self, map_name: str, content: bytes) -> None:
+        """Write map if it should be updated."""
+        map_entry = self._data.get(map_name)
+        if not self._should_update(map_entry, content):
+            return None
+        filename = self._get_map_filename(map_name)
 
-        def save_media(filename: str, content: bytes) -> None:
+        def save_map(filename: str, content: bytes) -> None:
             os.makedirs(os.path.dirname(filename), exist_ok=True)
-            if os.path.exists(filename):
-                _LOGGER.debug(
-                    "Event media already exists, not overwriting: %s", filename
-                )
-                return
-            _LOGGER.debug("Saving event media to disk store: %s", filename)
-            with open(filename, "wb") as media:
-                media.write(content)
+            _LOGGER.debug("Saving event map to disk store: %s", filename)
+            with open(filename, "wb") as stored_map:
+                stored_map.write(content)
 
         try:
-            await self._hass.async_add_executor_job(save_media, filename, content)
+            await self._hass.async_add_executor_job(save_map, filename, content)
         except OSError as err:
-            _LOGGER.error("Unable to write media file: %s %s", filename, err)
+            _LOGGER.error("Unable to write map file: %s %s", filename, err)
+        else:
+            self._data[map_name] = RoborockMapEntry(map_name, content, time.time())
 
-    async def async_remove_map(self, media_key: str) -> None:
-        """Remove media content."""
-        filename = self.get_media_filename(media_key)
+    async def async_remove_map(self, map_name: str) -> None:
+        """Remove map."""
+        filename = self._get_map_filename(map_name)
 
-        def remove_media(filename: str) -> None:
+        def remove_map(filename: str) -> None:
             if not os.path.exists(filename):
                 return None
-            _LOGGER.debug("Removing event media from disk store: %s", filename)
+            _LOGGER.debug("Removing map from disk store: %s", filename)
             os.remove(filename)
 
         try:
-            await self._hass.async_add_executor_job(remove_media, filename)
+            await self._hass.async_add_executor_job(remove_map, filename)
         except OSError as err:
-            _LOGGER.error("Unable to remove media file: %s %s", filename, err)
+            _LOGGER.error("Unable to remove map file: %s %s", filename, err)
