@@ -45,7 +45,7 @@ async def async_setup_entry(
     """Setups Dice sensors."""
     data = hass.data[DOMAIN][config_entry.entry_id]
     device = data["device"]
-    devinfo = data["device_info"]
+    device_info = data["device_info"]
 
     entry_ctors = [
         DiceColorSensor,
@@ -53,7 +53,7 @@ async def async_setup_entry(
         DiceNumberSensor,
     ]
 
-    entries = [ctor(devinfo, device) for ctor in entry_ctors]
+    entries = [ctor(device_info, device) for ctor in entry_ctors]
     async_add_entities(entries)
 
 

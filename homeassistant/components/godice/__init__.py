@@ -29,8 +29,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except Exception as err:
         raise ConfigEntryNotReady("Device not found") from err
 
-    data = hass.data.setdefault(DOMAIN, {})
-    data[entry.entry_id] = {"device": dice, "device_info": create_devinfo(entry)}
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        "device": dice,
+        "device_info": create_devinfo(entry),
+    }
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
