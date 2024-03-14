@@ -55,10 +55,8 @@ async def async_setup_entry(
     @callback
     async def async_add_light(channel: HausbusChannel) -> None:
         """Add light from Haus-Bus."""
-        entities: list[HausbusLight] = []
         if isinstance(channel, HausbusLight):
-            entities.append(channel)
-        async_add_entities(entities)
+            async_add_entities([channel])
 
     gateway.register_platform_add_channel_callback(async_add_light, DOMAIN)
 
