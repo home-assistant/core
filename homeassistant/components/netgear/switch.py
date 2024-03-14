@@ -1,4 +1,5 @@
 """Support for Netgear switches."""
+
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
@@ -35,15 +36,13 @@ SWITCH_TYPES = [
 class NetgearSwitchEntityDescriptionRequired:
     """Required attributes of NetgearSwitchEntityDescription."""
 
+
+@dataclass(frozen=True, kw_only=True)
+class NetgearSwitchEntityDescription(SwitchEntityDescription):
+    """Class describing Netgear Switch entities."""
+
     update: Callable[[NetgearRouter], bool]
     action: Callable[[NetgearRouter], bool]
-
-
-@dataclass(frozen=True)
-class NetgearSwitchEntityDescription(
-    SwitchEntityDescription, NetgearSwitchEntityDescriptionRequired
-):
-    """Class describing Netgear Switch entities."""
 
 
 ROUTER_SWITCH_TYPES = [
@@ -105,13 +104,10 @@ async def async_setup_entry(
     """Set up switches for Netgear component."""
     router = hass.data[DOMAIN][entry.entry_id][KEY_ROUTER]
 
-    # Router entities
-    router_entities = []
-
-    for description in ROUTER_SWITCH_TYPES:
-        router_entities.append(NetgearRouterSwitchEntity(router, description))
-
-    async_add_entities(router_entities)
+    async_add_entities(
+        NetgearRouterSwitchEntity(router, description)
+        for description in ROUTER_SWITCH_TYPES
+    )
 
     # Entities per network device
     coordinator = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR]

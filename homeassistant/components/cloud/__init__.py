@@ -1,4 +1,5 @@
 """Component to integrate the Home Assistant cloud."""
+
 from __future__ import annotations
 
 import asyncio

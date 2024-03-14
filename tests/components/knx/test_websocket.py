@@ -1,4 +1,5 @@
 """KNX Websocket Tests."""
+
 from typing import Any
 from unittest.mock import patch
 

@@ -1,4 +1,5 @@
 """Tests for init module."""
+
 import http
 import time
 from unittest.mock import MagicMock

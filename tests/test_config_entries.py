@@ -1,4 +1,5 @@
 """Test the config manager."""
+
 from __future__ import annotations
 
 import asyncio
@@ -116,6 +117,7 @@ async def test_call_setup_entry(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert entry.supports_unload
+    assert entry.supports_migrate
 
 
 async def test_call_setup_entry_without_reload_support(hass: HomeAssistant) -> None:
@@ -145,6 +147,7 @@ async def test_call_setup_entry_without_reload_support(hass: HomeAssistant) -> N
     assert len(mock_setup_entry.mock_calls) == 1
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert not entry.supports_unload
+    assert entry.supports_migrate
 
 
 @pytest.mark.parametrize(("major_version", "minor_version"), [(2, 1), (1, 2), (2, 2)])
@@ -288,6 +291,7 @@ async def test_call_async_migrate_entry_failure_not_supported(
     )
     entry.add_to_hass(hass)
     assert not entry.supports_unload
+    entry.supports_migrate = True
 
     mock_setup_entry = AsyncMock(return_value=True)
 
@@ -4332,7 +4336,12 @@ async def test_task_tracking(hass: HomeAssistant) -> None:
     await asyncio.sleep(0)
     hass.loop.call_soon(event.set)
     await entry._async_process_on_unload(hass)
-    assert results == ["on_unload", "background", "background", "normal"]
+    assert results == [
+        "on_unload",
+        "background",
+        "background",
+        "normal",
+    ]
 
 
 async def test_preview_supported(

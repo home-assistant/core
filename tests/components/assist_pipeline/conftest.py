@@ -1,4 +1,5 @@
 """Test fixtures for voice assistant."""
+
 from __future__ import annotations
 
 from collections.abc import AsyncIterable, Generator

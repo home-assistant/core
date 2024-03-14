@@ -1,4 +1,5 @@
 """The tests for the Command line Binary sensor platform."""
+
 from __future__ import annotations
 
 import asyncio
@@ -323,7 +324,7 @@ async def test_availability(
     hass.states.async_set("sensor.input1", "on")
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_state = hass.states.get("binary_sensor.test")
     assert entity_state
@@ -334,7 +335,7 @@ async def test_availability(
     with mock_asyncio_subprocess_run(b"0"):
         freezer.tick(timedelta(minutes=1))
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_state = hass.states.get("binary_sensor.test")
     assert entity_state

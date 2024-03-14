@@ -1,4 +1,5 @@
 """Helper functions for qBittorrent."""
+
 from qbittorrent.client import Client
 
 

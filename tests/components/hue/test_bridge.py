@@ -1,4 +1,5 @@
 """Test Hue bridge."""
+
 import asyncio
 from unittest.mock import patch
 

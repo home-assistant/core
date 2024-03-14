@@ -1,4 +1,5 @@
 """Manage config entries in Home Assistant."""
+
 from __future__ import annotations
 
 import asyncio
@@ -348,6 +349,9 @@ class ConfigEntry:
         # Supports remove device
         self.supports_remove_device: bool | None = None
 
+        # Supports migrate
+        self.supports_migrate: bool | None = None
+
         # Supports options
         self._supports_options: bool | None = None
 
@@ -490,6 +494,7 @@ class ConfigEntry:
             self.supports_remove_device = await support_remove_from_device(
                 hass, self.domain
             )
+
         try:
             component = await integration.async_get_component()
         except ImportError as err:
@@ -505,7 +510,12 @@ class ConfigEntry:
                 )
             return
 
-        if domain_is_integration:
+        if self.supports_migrate is None:
+            self.supports_migrate = hasattr(component, "async_migrate_entry")
+
+        if domain_is_integration and self.supports_migrate:
+            # Avoid loading the config_flow module unless we need to check
+            # the version to see if we need to migrate
             try:
                 await integration.async_get_platforms(("config_flow",))
             except ImportError as err:
@@ -639,7 +649,11 @@ class ConfigEntry:
         # Check again when we fire in case shutdown
         # has started so we do not block shutdown
         if not hass.is_stopping:
-            hass.async_create_task(self.async_setup(hass), eager_start=True)
+            hass.async_create_task(
+                self.async_setup(hass),
+                f"config entry retry {self.domain} {self.title}",
+                eager_start=True,
+            )
 
     @callback
     def async_shutdown(self) -> None:
@@ -782,11 +796,7 @@ class ConfigEntry:
         if same_major_version and self.minor_version == handler.MINOR_VERSION:
             return True
 
-        if not (integration := self._integration_for_domain):
-            integration = await loader.async_get_integration(hass, self.domain)
-        component = await integration.async_get_component()
-        supports_migrate = hasattr(component, "async_migrate_entry")
-        if not supports_migrate:
+        if not self.supports_migrate:
             if same_major_version:
                 return True
             _LOGGER.error(
@@ -795,6 +805,11 @@ class ConfigEntry:
                 self.domain,
             )
             return False
+
+        if not (integration := self._integration_for_domain):
+            integration = await loader.async_get_integration(hass, self.domain)
+
+        component = await integration.async_get_component()
 
         try:
             result = await component.async_migrate_entry(hass, self)
@@ -1026,7 +1041,13 @@ class ConfigEntry:
 
         Background tasks are automatically canceled when config entry is unloaded.
 
-        target: target to call.
+        A background task is different from a normal task:
+
+          - Will not block startup
+          - Will be automatically cancelled on shutdown
+          - Calls to async_block_till_done will not wait for completion
+
+        This method must be run in the event loop.
         """
         task = hass.async_create_background_task(target, name, eager_start)
         if task.done():

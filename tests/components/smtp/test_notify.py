@@ -1,4 +1,5 @@
 """The tests for the notify smtp platform."""
+
 from pathlib import Path
 import re
 from unittest.mock import patch

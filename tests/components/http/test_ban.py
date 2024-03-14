@@ -1,4 +1,5 @@
 """The tests for the Home Assistant HTTP component."""
+
 from http import HTTPStatus
 from ipaddress import ip_address
 import os
@@ -15,7 +16,6 @@ from homeassistant.components.http.ban import (
     IP_BANS_FILE,
     KEY_BAN_MANAGER,
     KEY_FAILED_LOGIN_ATTEMPTS,
-    IpBanManager,
     process_success_login,
     setup_bans,
 )
@@ -215,7 +215,7 @@ async def test_access_from_supervisor_ip(
     ):
         client = await aiohttp_client(app)
 
-    manager: IpBanManager = app[KEY_BAN_MANAGER]
+    manager = app[KEY_BAN_MANAGER]
 
     with patch(
         "homeassistant.components.hassio.HassIO.get_resolution_info",
@@ -288,7 +288,7 @@ async def test_ip_bans_file_creation(
     ):
         client = await aiohttp_client(app)
 
-    manager: IpBanManager = app[KEY_BAN_MANAGER]
+    manager = app[KEY_BAN_MANAGER]
     m_open = mock_open()
 
     with patch("homeassistant.components.http.ban.open", m_open, create=True):
@@ -408,7 +408,7 @@ async def test_single_ban_file_entry(
     setup_bans(hass, app, 2)
     mock_real_ip(app)("200.201.202.204")
 
-    manager: IpBanManager = app[KEY_BAN_MANAGER]
+    manager = app[KEY_BAN_MANAGER]
     m_open = mock_open()
 
     with patch("homeassistant.components.http.ban.open", m_open, create=True):

@@ -1,4 +1,5 @@
 """Analytics helper class for the analytics integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -192,7 +193,7 @@ class Analytics:
         system_info = await async_get_system_info(hass)
         integrations = []
         custom_integrations = []
-        addons = []
+        addons: list[dict[str, Any]] = []
         payload: dict = {
             ATTR_UUID: self.uuid,
             ATTR_VERSION: HA_VERSION,
@@ -266,15 +267,15 @@ class Analytics:
                         for addon in supervisor_info[ATTR_ADDONS]
                     )
                 )
-                for addon in installed_addons:
-                    addons.append(
-                        {
-                            ATTR_SLUG: addon[ATTR_SLUG],
-                            ATTR_PROTECTED: addon[ATTR_PROTECTED],
-                            ATTR_VERSION: addon[ATTR_VERSION],
-                            ATTR_AUTO_UPDATE: addon[ATTR_AUTO_UPDATE],
-                        }
-                    )
+                addons.extend(
+                    {
+                        ATTR_SLUG: addon[ATTR_SLUG],
+                        ATTR_PROTECTED: addon[ATTR_PROTECTED],
+                        ATTR_VERSION: addon[ATTR_VERSION],
+                        ATTR_AUTO_UPDATE: addon[ATTR_AUTO_UPDATE],
+                    }
+                    for addon in installed_addons
+                )
 
         if self.preferences.get(ATTR_USAGE, False):
             payload[ATTR_CERTIFICATE] = hass.http.ssl_certificate is not None

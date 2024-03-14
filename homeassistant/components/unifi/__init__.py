@@ -49,6 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     hub.async_update_device_registry()
+    hub.entity_loader.load_entities()
 
     if len(hass.data[UNIFI_DOMAIN]) == 1:
         async_setup_services(hass)

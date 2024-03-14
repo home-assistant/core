@@ -1,4 +1,5 @@
 """Config flow to configure the Synology DSM integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping

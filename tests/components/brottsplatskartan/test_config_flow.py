@@ -1,4 +1,5 @@
 """Test the Brottsplatskartan config flow."""
+
 from __future__ import annotations
 
 import pytest

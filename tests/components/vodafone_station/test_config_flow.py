@@ -1,4 +1,5 @@
 """Tests for Vodafone Station config flow."""
+
 from unittest.mock import patch
 
 from aiovodafone import exceptions as aiovodafone_exceptions

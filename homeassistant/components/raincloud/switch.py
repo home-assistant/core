@@ -1,4 +1,5 @@
 """Support for Melnor RainCloud sprinkler water timer."""
+
 from __future__ import annotations
 
 import logging
@@ -46,13 +47,14 @@ def setup_platform(
     raincloud = hass.data[DATA_RAINCLOUD].data
     default_watering_timer = config[CONF_WATERING_TIME]
 
-    sensors = []
-    for sensor_type in config[CONF_MONITORED_CONDITIONS]:
-        # create a sensor for each zone managed by faucet
-        for zone in raincloud.controller.faucet.zones:
-            sensors.append(RainCloudSwitch(default_watering_timer, zone, sensor_type))
-
-    add_entities(sensors, True)
+    add_entities(
+        (
+            RainCloudSwitch(default_watering_timer, zone, sensor_type)
+            for zone in raincloud.controller.faucet.zones
+            for sensor_type in config[CONF_MONITORED_CONDITIONS]
+        ),
+        True,
+    )
 
 
 class RainCloudSwitch(RainCloudEntity, SwitchEntity):

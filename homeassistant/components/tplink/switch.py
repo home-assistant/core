@@ -1,4 +1,5 @@
 """Support for TPLink HS100/HS110/HS200 smart switch."""
+
 from __future__ import annotations
 
 import logging
@@ -36,8 +37,10 @@ async def async_setup_entry(
     if device.is_strip:
         # Historically we only add the children if the device is a strip
         _LOGGER.debug("Initializing strip with %s sockets", len(device.children))
-        for child in device.children:
-            entities.append(SmartPlugSwitchChild(device, parent_coordinator, child))
+        entities.extend(
+            SmartPlugSwitchChild(device, parent_coordinator, child)
+            for child in device.children
+        )
     elif device.is_plug:
         entities.append(SmartPlugSwitch(device, parent_coordinator))
 

@@ -1,4 +1,5 @@
 """The tests for the image_processing component."""
+
 from unittest.mock import PropertyMock, patch
 
 import pytest

@@ -1,4 +1,5 @@
 """Test different accessory types: Camera."""
+
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 from uuid import UUID

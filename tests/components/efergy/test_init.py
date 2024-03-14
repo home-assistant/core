@@ -1,4 +1,5 @@
 """Test Efergy integration."""
+
 from pyefergy import exceptions
 
 from homeassistant.components.efergy.const import DEFAULT_NAME, DOMAIN

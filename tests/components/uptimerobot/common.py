@@ -1,4 +1,5 @@
 """Common constants and functions for UptimeRobot tests."""
+
 from __future__ import annotations
 
 from enum import Enum

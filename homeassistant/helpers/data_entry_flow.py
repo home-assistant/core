@@ -1,4 +1,5 @@
 """Helpers for the data entry flow."""
+
 from __future__ import annotations
 
 from http import HTTPStatus

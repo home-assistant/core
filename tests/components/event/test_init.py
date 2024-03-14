@@ -1,4 +1,5 @@
 """The tests for the event integration."""
+
 from collections.abc import Generator
 from typing import Any
 

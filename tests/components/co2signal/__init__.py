@@ -1,4 +1,5 @@
 """Tests for the CO2 Signal integration."""
+
 from aioelectricitymaps.models import (
     CarbonIntensityData,
     CarbonIntensityResponse,
