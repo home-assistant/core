@@ -19,9 +19,6 @@
   },
   "entity": {
     "sensor": {
-      "plant_name": {
-        "name": "Plant name"
-      },
       "scientific_name": {
         "name": "Scientific name"
       },
