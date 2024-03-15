@@ -74,10 +74,16 @@ class ToloSwitchEntity(ToloSaunaCoordinatorEntity, SwitchEntity):
         """Return if the switch is currently on."""
         return self.entity_description.getter(self.coordinator.data.status)
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        self.entity_description.setter(self.coordinator.client, True)
+        await self.hass.async_add_executor_job(
+            lambda: self.entity_description.setter(self.coordinator.client, True)
+        )
+        await self.coordinator.async_request_refresh()
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        self.entity_description.setter(self.coordinator.client, False)
+        await self.hass.async_add_executor_job(
+            lambda: self.entity_description.setter(self.coordinator.client, False)
+        )
+        await self.coordinator.async_request_refresh()

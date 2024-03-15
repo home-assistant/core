@@ -121,31 +121,49 @@ class SaunaClimate(ToloSaunaCoordinatorEntity, ClimateEntity):
             return FAN_ON
         return FAN_OFF
 
-    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
         if hvac_mode == HVACMode.OFF:
-            self._set_power_and_fan(False, False)
+            await self._async_set_power_and_fan(False, False)
         if hvac_mode == HVACMode.HEAT:
-            self._set_power_and_fan(True, False)
+            await self._async_set_power_and_fan(True, False)
         if hvac_mode == HVACMode.DRY:
-            self._set_power_and_fan(False, True)
+            await self._async_set_power_and_fan(False, True)
 
-    def set_fan_mode(self, fan_mode: str) -> None:
+        await self.coordinator.async_request_refresh()
+
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
-        self.coordinator.client.set_fan_on(fan_mode == FAN_ON)
+        await self.hass.async_add_executor_job(
+            lambda: self.coordinator.client.set_fan_on(fan_mode == FAN_ON)
+        )
+        await self.coordinator.async_request_refresh()
 
-    def set_humidity(self, humidity: int) -> None:
+    async def async_set_humidity(self, humidity: int) -> None:
         """Set desired target humidity."""
-        self.coordinator.client.set_target_humidity(humidity)
+        await self.hass.async_add_executor_job(
+            lambda: self.coordinator.client.set_target_humidity(humidity)
+        )
+        await self.coordinator.async_request_refresh()
 
-    def set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set desired target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
 
-        self.coordinator.client.set_target_temperature(round(temperature))
+        await self.hass.async_add_executor_job(
+            lambda: self.coordinator.client.set_target_temperature(round(temperature))
+        )
+        await self.coordinator.async_request_refresh()
 
     def _set_power_and_fan(self, power_on: bool, fan_on: bool) -> None:
         """Shortcut for setting power and fan of TOLO device on one method."""
         self.coordinator.client.set_power_on(power_on)
         self.coordinator.client.set_fan_on(fan_on)
+
+    async def _async_set_power_and_fan(self, power_on: bool, fan_on: bool) -> None:
+        """Shortcut for setting power and fan of TOLO device on one method."""
+        await self.hass.async_add_executor_job(
+            lambda: self._set_power_and_fan(power_on, fan_on)
+        )
+        await self.coordinator.async_request_refresh()

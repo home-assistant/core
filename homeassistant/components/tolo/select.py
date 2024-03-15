@@ -88,6 +88,9 @@ class ToloSelectEntity(ToloSaunaCoordinatorEntity, SelectEntity):
         """Return current select option."""
         return self.entity_description.getter(self.coordinator.data.settings)
 
-    def select_option(self, option: str) -> None:
+    async def async_select_option(self, option: str) -> None:
         """Select a select option."""
-        self.entity_description.setter(self.coordinator.client, option)
+        await self.hass.async_add_executor_job(
+            lambda: self.entity_description.setter(self.coordinator.client, option)
+        )
+        await self.coordinator.async_request_refresh()

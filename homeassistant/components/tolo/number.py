@@ -97,10 +97,17 @@ class ToloNumberEntity(ToloSaunaCoordinatorEntity, NumberEntity):
         """Return the value of this TOLO Number entity."""
         return self.entity_description.getter(self.coordinator.data.settings) or 0
 
-    def set_native_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set the value of this TOLO Number entity."""
         int_value = int(value)
         if int_value == 0:
-            self.entity_description.setter(self.coordinator.client, None)
+            await self.hass.async_add_executor_job(
+                lambda: self.entity_description.setter(self.coordinator.client, None)
+            )
             return
-        self.entity_description.setter(self.coordinator.client, int_value)
+
+        await self.hass.async_add_executor_job(
+            lambda: self.entity_description.setter(self.coordinator.client, int_value)
+        )
+
+        await self.coordinator.async_request_refresh()

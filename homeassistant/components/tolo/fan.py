@@ -41,15 +41,21 @@ class ToloFan(ToloSaunaCoordinatorEntity, FanEntity):
         """Return if sauna fan is running."""
         return self.coordinator.data.status.fan_on
 
-    def turn_on(
+    async def async_turn_on(
         self,
         percentage: int | None = None,
         preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
         """Turn on sauna fan."""
-        self.coordinator.client.set_fan_on(True)
+        await self.hass.async_add_executor_job(
+            lambda: self.coordinator.client.set_fan_on(True)
+        )
+        await self.coordinator.async_request_refresh()
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off sauna fan."""
-        self.coordinator.client.set_fan_on(False)
+        await self.hass.async_add_executor_job(
+            lambda: self.coordinator.client.set_fan_on(False)
+        )
+        await self.coordinator.async_request_refresh()

@@ -48,6 +48,9 @@ class ToloLampNextColorButton(ToloSaunaCoordinatorEntity, ButtonEntity):
             and self.coordinator.data.settings.lamp_mode == LampMode.MANUAL
         )
 
-    def press(self) -> None:
+    async def async_press(self) -> None:
         """Execute action when lamp change color button was pressed."""
-        self.coordinator.client.lamp_change_color()
+        await self.hass.async_add_executor_job(
+            self.coordinator.client.lamp_change_color
+        )
+        await self.coordinator.async_request_refresh()
