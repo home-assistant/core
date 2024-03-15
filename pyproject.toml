@@ -638,7 +638,6 @@ select = [
     "TRY302", # Remove exception handler; error is immediately re-raised
     "UP", # pyupgrade
     "W", # pycodestyle
-    "YTT",
 ]
 
 ignore = [
@@ -655,6 +654,8 @@ ignore = [
     # https://github.com/astral-sh/ruff/issues/7491
     # "PLC1901", # Lots of false positives
 
+    # False positives https://github.com/astral-sh/ruff/issues/5386
+    "PLC0208", # Use a sequence type instead of a `set` when iterating over values
     "PLR0911", # Too many return statements ({returns} > {max_returns})
     "PLR0912", # Too many branches ({branches} > {max_branches})
     "PLR0913", # Too many arguments to function call ({c_args} > {max_args})
