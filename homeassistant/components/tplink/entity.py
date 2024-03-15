@@ -5,6 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable, Coroutine
 from typing import Any, Concatenate, ParamSpec, TypeVar
+import logging
 
 from kasa import (
     AuthenticationException,
@@ -23,6 +24,8 @@ from .coordinator import TPLinkDataUpdateCoordinator
 _T = TypeVar("_T", bound="CoordinatedTPLinkEntity")
 _P = ParamSpec("_P")
 
+
+_LOGGER = logging.getLogger(__name__)
 
 def async_refresh_after(
     func: Callable[Concatenate[_T, _P], Awaitable[None]],
@@ -104,5 +107,11 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._async_update_attrs()
+        try:
+            self._async_update_attrs()
+            self._attr_available = True
+        except Exception as ex:
+            _LOGGER.warning("Unable to read data for %s: %s", self.entity_description, ex)
+            self._attr_available = False
+
         super()._handle_coordinator_update()
