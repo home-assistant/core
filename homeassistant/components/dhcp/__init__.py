@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -132,18 +131,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # For the passive classes we need to start listening
     # for state changes and connect the dispatchers before
     # everything else starts up or we will miss events
-    for passive_cls in (DeviceTrackerRegisteredWatcher, DeviceTrackerWatcher):
-        passive_watcher = passive_cls(hass, address_data, integration_matchers)
-        passive_watcher.async_start()
-        watchers.append(passive_watcher)
+    device_watcher = DeviceTrackerWatcher(hass, address_data, integration_matchers)
+    device_watcher.async_start()
+    watchers.append(device_watcher)
+
+    device_tracker_registered_watcher = DeviceTrackerRegisteredWatcher(
+        hass, address_data, integration_matchers
+    )
+    device_tracker_registered_watcher.async_start()
+    watchers.append(device_tracker_registered_watcher)
 
     async def _async_initialize(event: Event) -> None:
         await aiodhcpwatcher.async_init()
 
-        for active_cls in (DHCPWatcher, NetworkWatcher):
-            active_watcher = active_cls(hass, address_data, integration_matchers)
-            active_watcher.async_start()
-            watchers.append(active_watcher)
+        network_watcher = NetworkWatcher(hass, address_data, integration_matchers)
+        network_watcher.async_start()
+        watchers.append(network_watcher)
+
+        dhcp_watcher = DHCPWatcher(hass, address_data, integration_matchers)
+        await dhcp_watcher.async_start()
+        watchers.append(dhcp_watcher)
 
         @callback
         def _async_stop(event: Event) -> None:
@@ -156,7 +163,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class WatcherBase(ABC):
+class WatcherBase:
     """Base class for dhcp and device tracker watching."""
 
     def __init__(
@@ -179,11 +186,6 @@ class WatcherBase(ABC):
         if self._unsub:
             self._unsub()
             self._unsub = None
-
-    @abstractmethod
-    @callback
-    def async_start(self) -> None:
-        """Start the watcher."""
 
     @callback
     def async_process_client(
@@ -403,10 +405,9 @@ class DHCPWatcher(WatcherBase):
             response.ip_address, response.hostname, response.mac_address
         )
 
-    @callback
-    def async_start(self) -> None:
+    async def async_start(self) -> None:
         """Start watching for dhcp packets."""
-        self._unsub = aiodhcpwatcher.start(self._async_process_dhcp_request)
+        self._unsub = await aiodhcpwatcher.async_start(self._async_process_dhcp_request)
 
 
 @lru_cache(maxsize=4096, typed=True)
