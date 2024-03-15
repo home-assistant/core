@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from aiohttp import ClientError
 import pytest
 
+from homeassistant.components.myuplink.const import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -15,6 +16,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+
+from tests.common import load_fixture
 
 TEST_PLATFORM = Platform.SWITCH
 pytestmark = pytest.mark.parametrize("platforms", [(TEST_PLATFORM,)])
@@ -94,3 +97,19 @@ async def test_api_failure(
         )
         await hass.async_block_till_done()
         mock_myuplink_client.async_set_device_points.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "load_device_points_file",
+    [load_fixture("device_points_nibe_smo20.json", DOMAIN)],
+)
+async def test_entity_registry_smo20(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_myuplink_client: MagicMock,
+    setup_platform: None,
+) -> None:
+    """Test that the entities are registered in the entity registry."""
+
+    entry = entity_registry.async_get(ENTITY_ID)
+    assert entry.unique_id == ENTITY_UID
