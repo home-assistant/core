@@ -390,6 +390,12 @@ async def test_set_asyncio_debug(
     original_level = logging.getLogger().getEffectiveLevel()
     logging.getLogger().setLevel(logging.WARNING)
 
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SET_ASYNCIO_DEBUG, {CONF_ENABLED: False}, blocking=True
+    )
+    # Ensure logging level is only increased if we enable
+    assert logging.getLogger().getEffectiveLevel() == logging.WARNING
+
     await hass.services.async_call(DOMAIN, SERVICE_SET_ASYNCIO_DEBUG, {}, blocking=True)
     assert hass.loop.get_debug() is True
 
