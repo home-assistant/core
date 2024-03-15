@@ -1,6 +1,5 @@
 """ConfigFlow for EGPS devices."""
 
-import asyncio
 from typing import Any
 
 from pyegps import get_device, search_for_devices
@@ -23,7 +22,7 @@ class EGPSConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if CONF_DEVICE_API_ID in user_input:
                 devId = user_input[CONF_DEVICE_API_ID]
-                dev = await asyncio.to_thread(get_device, device_id=devId)
+                dev = await self.hass.async_add_executor_job(get_device, devId)
                 if dev is not None:
                     await self.async_set_unique_id(dev.device_id)
                     self._abort_if_unique_id_configured()
@@ -36,7 +35,7 @@ class EGPSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         currently_configured = self._async_current_ids(include_ignore=True)
         try:
-            found_devices = await asyncio.to_thread(search_for_devices)
+            found_devices = await self.hass.async_add_executor_job(search_for_devices)
         except (MissingLibrary, UsbError) as err:
             LOGGER.error("Unable to access USB devices: %s", err)
             return self.async_abort(reason="usb_error")
