@@ -280,7 +280,9 @@ async def test_loading_saving_data(
         orig_entry2.entity_id, "light", {"minimum_brightness": 20}
     )
     entity_registry.async_update_entity(
-        orig_entry2.entity_id, labels={"label1", "label2"}
+        orig_entry2.entity_id,
+        categories={"scope", "id"},
+        labels={"label1", "label2"},
     )
     orig_entry2 = entity_registry.async_get(orig_entry2.entity_id)
     orig_entry3 = entity_registry.async_get_or_create("light", "hue", "ABCD")
@@ -310,6 +312,7 @@ async def test_loading_saving_data(
     assert orig_entry4 == new_entry4
 
     assert new_entry2.area_id == "mock-area-id"
+    assert new_entry2.categories == {"scope", "id"}
     assert new_entry2.capabilities == {"max": 100}
     assert new_entry2.config_entry_id == mock_config.entry_id
     assert new_entry2.device_class == "user-class"
@@ -1847,3 +1850,76 @@ async def test_entries_for_label(entity_registry: er.EntityRegistry) -> None:
 
     assert not er.async_entries_for_label(entity_registry, "unknown")
     assert not er.async_entries_for_label(entity_registry, "")
+
+
+async def test_removing_categories(entity_registry: er.EntityRegistry) -> None:
+    """Make sure we can clear categories."""
+    entry = entity_registry.async_get_or_create(
+        domain="light",
+        platform="hue",
+        unique_id="5678",
+    )
+    entry = entity_registry.async_update_entity(
+        entry.entity_id, categories={"scope1": "id", "scope2": "id"}
+    )
+
+    entity_registry.async_clear_category_id("scope1", "id")
+    entry_cleared_scope1 = entity_registry.async_get(entry.entity_id)
+
+    entity_registry.async_clear_category_id("scope2", "id")
+    entry_cleared_scope2 = entity_registry.async_get(entry.entity_id)
+
+    assert entry_cleared_scope1
+    assert entry_cleared_scope2
+    assert entry != entry_cleared_scope1
+    assert entry != entry_cleared_scope2
+    assert entry_cleared_scope1 != entry_cleared_scope2
+    assert entry.categories == {"scope1": "id", "scope2": "id"}
+    assert entry_cleared_scope1.categories == {"scope2": "id"}
+    assert not entry_cleared_scope2.categories
+
+
+async def test_entries_for_category(entity_registry: er.EntityRegistry) -> None:
+    """Test getting entity entries by category."""
+    entity_registry.async_get_or_create(
+        domain="light",
+        platform="hue",
+        unique_id="000",
+    )
+    entry = entity_registry.async_get_or_create(
+        domain="light",
+        platform="hue",
+        unique_id="123",
+    )
+    category_1 = entity_registry.async_update_entity(
+        entry.entity_id, categories={"scope1": "id"}
+    )
+    entry = entity_registry.async_get_or_create(
+        domain="light",
+        platform="hue",
+        unique_id="456",
+    )
+    category_2 = entity_registry.async_update_entity(
+        entry.entity_id, categories={"scope2": "id"}
+    )
+    entry = entity_registry.async_get_or_create(
+        domain="light",
+        platform="hue",
+        unique_id="789",
+    )
+    category_1_and_2 = entity_registry.async_update_entity(
+        entry.entity_id, categories={"scope1": "id", "scope2": "id"}
+    )
+
+    entries = er.async_entries_for_category(entity_registry, "scope1", "id")
+    assert len(entries) == 2
+    assert entries == [category_1, category_1_and_2]
+
+    entries = er.async_entries_for_category(entity_registry, "scope2", "id")
+    assert len(entries) == 2
+    assert entries == [category_2, category_1_and_2]
+
+    assert not er.async_entries_for_category(entity_registry, "unknown", "id")
+    assert not er.async_entries_for_category(entity_registry, "", "id")
+    assert not er.async_entries_for_category(entity_registry, "scope1", "unknown")
+    assert not er.async_entries_for_category(entity_registry, "scope1", "")
