@@ -45,7 +45,7 @@ RUN git clone --depth 1 https://github.com/home-assistant/hass-release \
 
 USER vscode
 ENV VIRTUAL_ENV="/home/vscode/.local/ha-venv"
-RUN uv venv --system-site-packages $VIRTUAL_ENV
+RUN uv venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 WORKDIR /tmp
@@ -56,7 +56,6 @@ COPY homeassistant/package_constraints.txt homeassistant/package_constraints.txt
 RUN uv pip install -r requirements.txt
 COPY requirements_test.txt requirements_test_pre_commit.txt ./
 RUN uv pip install -r requirements_test.txt
-RUN sudo rm -rf requirements.txt requirements_test.txt requirements_test_pre_commit.txt homeassistant/
 
 WORKDIR /workspaces
 
