@@ -13,6 +13,7 @@ from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, MATCH_ALL
 from homeassistant.core import (
+    Context,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -305,7 +306,7 @@ async def async_register_tool(
     """Register a function that the assistant may execute."""
     agent = await conversation._get_agent_manager(hass).async_get_agent(agent_id)
     if not isinstance(agent, OpenAIAgent):
-        raise RuntimeError("Agent ID must correspond to openai_conversation agent")
+        raise TypeError("Agent ID must correspond to openai_conversation agent")
     agent.register_tool(specification, async_callback)
 
 
@@ -316,5 +317,5 @@ async def async_unregister_tool(
     """Remove the function from the list of available tools for the assistant."""
     agent = await conversation._get_agent_manager(hass).async_get_agent(agent_id)
     if not isinstance(agent, OpenAIAgent):
-        raise RuntimeError("Agent ID must correspond to openai_conversation agent")
+        raise TypeError("Agent ID must correspond to openai_conversation agent")
     agent.unregister_tool(function_name)

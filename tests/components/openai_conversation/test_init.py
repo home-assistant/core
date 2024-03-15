@@ -319,7 +319,7 @@ async def test_function_exception(
     )
 
     with pytest.raises(
-        RuntimeError, match="Agent ID must correspond to openai_conversation agent"
+        TypeError, match="Agent ID must correspond to openai_conversation agent"
     ):
         await openai_conversation.async_register_tool(
             hass,
@@ -329,7 +329,7 @@ async def test_function_exception(
         )
 
     with pytest.raises(
-        RuntimeError, match="Agent ID must correspond to openai_conversation agent"
+        TypeError, match="Agent ID must correspond to openai_conversation agent"
     ):
         await openai_conversation.async_unregister_tool(
             hass,
