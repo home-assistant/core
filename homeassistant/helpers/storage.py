@@ -374,10 +374,6 @@ class Store(Generic[_T]):
                 return
 
             data = self._data
-
-            if "data_func" in data:
-                data["data"] = data.pop("data_func")()
-
             self._data = None
 
             if self._read_only:
@@ -394,6 +390,9 @@ class Store(Generic[_T]):
     def _write_data(self, path: str, data: dict) -> None:
         """Write the data."""
         os.makedirs(os.path.dirname(path), exist_ok=True)
+
+        if "data_func" in data:
+            data["data"] = data.pop("data_func")()
 
         _LOGGER.debug("Writing data for %s to %s", self.key, path)
         json_helper.save_json(

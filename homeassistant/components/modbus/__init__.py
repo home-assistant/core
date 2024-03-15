@@ -132,7 +132,6 @@ from .const import (  # noqa: F401
 )
 from .modbus import ModbusHub, async_modbus_setup
 from .validators import (
-    check_config,
     check_hvac_target_temp_registers,
     duplicate_fan_mode_validator,
     hvac_fixedsize_reglist_validator,
@@ -418,7 +417,6 @@ CONFIG_SCHEMA = vol.Schema(
             [
                 vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA),
             ],
-            check_config,
         ),
     },
     extra=vol.ALLOW_EXTRA,

@@ -114,10 +114,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
             LOGGER.debug("Discovered deCONZ gateways %s", pformat(self.bridges))
 
         if self.bridges:
-            hosts = []
-
-            for bridge in self.bridges:
-                hosts.append(bridge[CONF_HOST])
+            hosts = [bridge[CONF_HOST] for bridge in self.bridges]
 
             hosts.append(CONF_MANUAL_INPUT)
 

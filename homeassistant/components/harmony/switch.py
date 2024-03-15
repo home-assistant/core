@@ -8,7 +8,7 @@ from homeassistant.components.script import scripts_with_entity
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HassJob, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
@@ -83,13 +83,14 @@ class HarmonyActivitySwitch(HarmonyEntity, SwitchEntity):
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
+        activity_update_job = HassJob(self._async_activity_update)
         self.async_on_remove(
             self._data.async_subscribe(
                 HarmonyCallback(
-                    connected=self.async_got_connected,
-                    disconnected=self.async_got_disconnected,
-                    activity_starting=self._async_activity_update,
-                    activity_started=self._async_activity_update,
+                    connected=HassJob(self.async_got_connected),
+                    disconnected=HassJob(self.async_got_disconnected),
+                    activity_starting=activity_update_job,
+                    activity_started=activity_update_job,
                     config_updated=None,
                 )
             )

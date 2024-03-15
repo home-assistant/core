@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections import OrderedDict
 from collections.abc import AsyncGenerator, Generator, Mapping, Sequence
 from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime, timedelta
@@ -295,7 +296,9 @@ async def async_test_home_assistant(
         },
     )
     hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, hass.config_entries._async_shutdown
+        EVENT_HOMEASSISTANT_STOP,
+        hass.config_entries._async_shutdown,
+        run_immediately=True,
     )
 
     # Load the registries
@@ -618,6 +621,27 @@ def mock_registry(
     return registry
 
 
+def mock_area_registry(
+    hass: HomeAssistant, mock_entries: dict[str, ar.AreaEntry] | None = None
+) -> ar.AreaRegistry:
+    """Mock the Area Registry.
+
+    This should only be used if you need to mock/re-stage a clean mocked
+    area registry in your current hass object. It can be useful to,
+    for example, pre-load the registry with items.
+
+    This mock will thus replace the existing registry in the running hass.
+
+    If you just need to access the existing registry, use the `area_registry`
+    fixture instead.
+    """
+    registry = ar.AreaRegistry(hass)
+    registry.areas = mock_entries or OrderedDict()
+
+    hass.data[ar.DATA_REGISTRY] = registry
+    return registry
+
+
 def mock_device_registry(
     hass: HomeAssistant,
     mock_entries: dict[str, dr.DeviceEntry] | None = None,
@@ -878,7 +902,9 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
         def _async_on_stop(_: Event) -> None:
             self.async_shutdown()
 
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_on_stop)
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, _async_on_stop, run_immediately=True
+        )
 
 
 class MockToggleEntity(entity.ToggleEntity):
@@ -1330,6 +1356,10 @@ def mock_storage(
         # To ensure that the data can be serialized
         _LOGGER.debug("Writing data to %s: %s", store.key, data_to_write)
         raise_contains_mocks(data_to_write)
+
+        if "data_func" in data_to_write:
+            data_to_write["data"] = data_to_write.pop("data_func")()
+
         encoder = store._encoder
         if encoder and encoder is not JSONEncoder:
             # If they pass a custom encoder that is not the
@@ -1337,7 +1367,7 @@ def mock_storage(
             dump = ft.partial(json.dumps, cls=store._encoder)
         else:
             dump = _orjson_default_encoder
-        data[store.key] = json.loads(dump(data_to_write))
+        data[store.key] = json_loads(dump(data_to_write))
 
     async def mock_remove(store: storage.Store) -> None:
         """Remove data."""

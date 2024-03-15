@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from ring_doorbell.generic import RingGeneric
+from ring_doorbell import RingGeneric
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -143,17 +143,12 @@ class HistoryRingSensor(RingSensor):
         return attrs
 
 
-@dataclass(frozen=True)
-class RingRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class RingSensorEntityDescription(SensorEntityDescription):
+    """Describes Ring sensor entity."""
 
     category: list[str]
     cls: type[RingSensor]
-
-
-@dataclass(frozen=True)
-class RingSensorEntityDescription(SensorEntityDescription, RingRequiredKeysMixin):
-    """Describes Ring sensor entity."""
 
     kind: str | None = None
 

@@ -315,8 +315,8 @@ build.json @home-assistant/supervisor
 /tests/components/drop_connect/ @ChandlerSystems @pfrazer
 /homeassistant/components/dsmr/ @Robbie1221 @frenck
 /tests/components/dsmr/ @Robbie1221 @frenck
-/homeassistant/components/dsmr_reader/ @depl0y @glodenox
-/tests/components/dsmr_reader/ @depl0y @glodenox
+/homeassistant/components/dsmr_reader/ @sorted-bits @glodenox
+/tests/components/dsmr_reader/ @sorted-bits @glodenox
 /homeassistant/components/duotecno/ @cereal2nd
 /tests/components/duotecno/ @cereal2nd
 /homeassistant/components/dwd_weather_warnings/ @runningman84 @stephan192 @andarotajo
@@ -1190,6 +1190,8 @@ build.json @home-assistant/supervisor
 /tests/components/senz/ @milanmeu
 /homeassistant/components/serial/ @fabaff
 /homeassistant/components/seven_segments/ @fabaff
+/homeassistant/components/seventeentrack/ @shaiu
+/tests/components/seventeentrack/ @shaiu
 /homeassistant/components/sfr_box/ @epenet
 /tests/components/sfr_box/ @epenet
 /homeassistant/components/sharkiq/ @JeffResc @funkybunch

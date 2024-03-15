@@ -21,7 +21,11 @@ CATEGORY_BASED_DESCRIPTIONS: dict[str, dict[str, SwitchEntityDescription]] = {
     "NIBEF": {
         "50004": SwitchEntityDescription(
             key="temporary_lux",
-            icon="mdi:water-alert-outline",
+            translation_key="temporary_lux",
+        ),
+        "50005": SwitchEntityDescription(
+            key="boost_ventilation",
+            translation_key="boost_ventilation",
         ),
     },
 }
