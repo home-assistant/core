@@ -1,3 +1,0 @@
-homekit:
-  - name: reloadable
-    port: 45678

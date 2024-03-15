@@ -1,8 +1,0 @@
-{
-  "command": 80,
-  "status": "ok",
-  "data": {
-    "temperature": 71,
-    "wet": false
-  }
-}

@@ -31,7 +31,6 @@ from homeassistant.const import (
     CONF_ZONE,
     DOMAIN_RASCALSCHEDULER,
     EVENT_HOMEASSISTANT_STARTED,
-    SCHEDULING_POLICY,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -589,13 +588,12 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         if enable_automation:
             await self.async_enable()
 
-        if self.raw_config:
+        if self.raw_config and self.unique_id:
             self._routine = create_routine(
                 hass=self.hass,
                 name=self.raw_config["alias"],
-                routine_id=self.unique_id,
+                routine_id=str(self.unique_id),
                 action_script=self.raw_config["action"],
-                scheduling_policy=SCHEDULING_POLICY,
             )
             self._routine.output()
 

@@ -1,1 +1,0 @@
-"""ibeacon session fixtures."""
