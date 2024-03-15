@@ -1,0 +1,29 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Please enter either a Claim Token or an Access URL.",
+        "data": {
+          "api_token": "Claim Token or Access URL"
+        }
+      }
+    },
+    "error": {
+      "auth_error": "Authentication failed. This could be because access has been revoked or if the credentials are incorrect",
+      "claim_error": "The claim token either does not exist or has already been used claimed by someone else. Receiving this could mean that the user\u2019s transaction information has been compromised",
+      "invalid_claim_token": "The claim token is invalid and could not be decoded",
+      "payment_required": "You presented a valid access url, however payment is required before you can obtain data",
+      "url_error": "There was an issue parsing the Account URL"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "balance": {
+        "name": "Balance"
+      },
+      "last_update": {
+        "name": "Last update"
+      }
+    }
+  }
+}
