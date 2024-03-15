@@ -78,7 +78,6 @@ class Number(CoordinatedTPLinkEntity, NumberEntity):
             native_min_value=feature.minimum_value,
             native_max_value=feature.maximum_value,
         )
-        self._async_update_attrs()
 
     @async_refresh_after
     async def async_set_native_value(self, value: float) -> None:

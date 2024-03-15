@@ -78,7 +78,6 @@ class Switch(CoordinatedTPLinkEntity, SwitchEntity):
         self.entity_description = SwitchEntityDescription(
             key=id_, translation_key=id_, name=feature.name, icon=feature.icon
         )
-        self._async_update_attrs()
 
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:

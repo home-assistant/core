@@ -75,7 +75,6 @@ class BinarySensor(CoordinatedTPLinkEntity, BinarySensorEntity):
         self.entity_description = BinarySensorEntityDescription(
             key=id_, translation_key=id_, name=feature.name, icon=feature.icon
         )
-        self._async_update_attrs()
 
     @callback
     def _async_update_attrs(self) -> None:

@@ -186,11 +186,6 @@ class Sensor(CoordinatedTPLinkEntity, SensorEntity):
         """Update the entity's attributes."""
         self._attr_native_value = self._feature.value
 
-    @property
-    def native_value(self):
-        """Return the sensors state."""
-        return self._feature.value
-
 
 class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
     """Representation of a TPLink sensor."""
