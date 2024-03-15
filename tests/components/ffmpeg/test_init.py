@@ -276,3 +276,16 @@ async def test_legacy_ffmpeg(
 
     manager = get_ffmpeg_manager(hass)
     assert "ffserver" in manager.ffmpeg_stream_content_type
+
+
+async def test_ffmpeg_using_official_image(
+    hass: HomeAssistant,
+) -> None:
+    """Test ffmpeg using official image is the new ffmpeg content type."""
+    with assert_setup_component(1), patch(
+        "homeassistant.components.ffmpeg.is_official_image", return_value=True
+    ):
+        await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+
+    manager = get_ffmpeg_manager(hass)
+    assert "ffmpeg" in manager.ffmpeg_stream_content_type
