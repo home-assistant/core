@@ -13,6 +13,15 @@
       "volume": {
         "default": "mdi:bell-ring"
       },
+      "doorbell_volume": {
+        "default": "mdi:bell-ring"
+      },
+      "mic_volume": {
+        "default": "mdi:microphone"
+      },
+      "voice_volume": {
+        "default": "mdi:account-voice"
+      },
       "wifi_signal_category": {
         "default": "mdi:wifi"
       },

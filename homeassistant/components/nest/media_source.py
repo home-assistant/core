@@ -490,9 +490,10 @@ def _browse_clip_preview(
     event_id: MediaId, device: Device, event: ClipPreviewSession
 ) -> BrowseMediaSource:
     """Build a BrowseMediaSource for a specific clip preview event."""
-    types = []
-    for event_type in event.event_types:
-        types.append(MEDIA_SOURCE_EVENT_TITLE_MAP.get(event_type, "Event"))
+    types = [
+        MEDIA_SOURCE_EVENT_TITLE_MAP.get(event_type, "Event")
+        for event_type in event.event_types
+    ]
     return BrowseMediaSource(
         domain=DOMAIN,
         identifier=event_id.identifier,

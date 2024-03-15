@@ -423,9 +423,9 @@ async def test_exception_struct_validator(do_config) -> None:
         ],
     ],
 )
-async def test_check_config(do_config) -> None:
+async def test_check_config(hass: HomeAssistant, do_config) -> None:
     """Test duplicate modbus validator."""
-    check_config(do_config)
+    check_config(hass, do_config)
     assert len(do_config) == 1
 
 
@@ -476,9 +476,9 @@ async def test_check_config(do_config) -> None:
         ],
     ],
 )
-async def test_check_config_sensor(do_config) -> None:
+async def test_check_config_sensor(hass: HomeAssistant, do_config) -> None:
     """Test duplicate entity validator."""
-    check_config(do_config)
+    check_config(hass, do_config)
     assert len(do_config[0][CONF_SENSORS]) == 1
 
 
@@ -691,9 +691,9 @@ async def test_check_config_sensor(do_config) -> None:
         ],
     ],
 )
-async def test_check_config_climate(do_config) -> None:
+async def test_check_config_climate(hass: HomeAssistant, do_config) -> None:
     """Test duplicate entity validator."""
-    check_config(do_config)
+    check_config(hass, do_config)
     assert len(do_config[0][CONF_CLIMATES]) == 1
 
 
@@ -913,9 +913,9 @@ async def test_duplicate_fan_mode_validator(do_config) -> None:
         ),
     ],
 )
-async def test_duplicate_addresses(do_config, sensor_cnt) -> None:
+async def test_duplicate_addresses(hass: HomeAssistant, do_config, sensor_cnt) -> None:
     """Test duplicate entity validator."""
-    check_config(do_config)
+    check_config(hass, do_config)
     use_inx = len(do_config) - 1
     assert len(do_config[use_inx][CONF_SENSORS]) == sensor_cnt
 
@@ -948,9 +948,9 @@ async def test_duplicate_addresses(do_config, sensor_cnt) -> None:
         ],
     ],
 )
-async def test_no_duplicate_names(do_config) -> None:
+async def test_no_duplicate_names(hass: HomeAssistant, do_config) -> None:
     """Test duplicate entity validator."""
-    check_config(do_config)
+    check_config(hass, do_config)
     assert len(do_config[0][CONF_SENSORS]) == 1
     assert len(do_config[0][CONF_BINARY_SENSORS]) == 1
 
@@ -1329,7 +1329,7 @@ async def test_pymodbus_constructor_fail(
         ]
     }
     with mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusTcpClient", autospec=True
+        "homeassistant.components.modbus.modbus.AsyncModbusTcpClient", autospec=True
     ) as mock_pb:
         caplog.set_level(logging.ERROR)
         mock_pb.side_effect = ModbusException("test no class")
@@ -1529,7 +1529,7 @@ async def test_stop_restart(
 async def test_write_no_client(hass: HomeAssistant, mock_modbus) -> None:
     """Run test for service stop and write without client."""
 
-    mock_modbus.reset()
+    await mock_modbus.reset()
     data = {
         ATTR_HUB: TEST_MODBUS_NAME,
     }

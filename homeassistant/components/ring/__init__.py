@@ -5,7 +5,7 @@ from __future__ import annotations
 from functools import partial
 import logging
 
-import ring_doorbell
+from ring_doorbell import Auth, Ring
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import APPLICATION_NAME, CONF_TOKEN, __version__
@@ -39,10 +39,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
         )
 
-    auth = ring_doorbell.Auth(
+    auth = Auth(
         f"{APPLICATION_NAME}/{__version__}", entry.data[CONF_TOKEN], token_updater
     )
-    ring = ring_doorbell.Ring(auth)
+    ring = Ring(auth)
 
     devices_coordinator = RingDataCoordinator(hass, ring)
     notifications_coordinator = RingNotificationsCoordinator(hass, ring)

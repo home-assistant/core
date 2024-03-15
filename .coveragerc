@@ -747,7 +747,6 @@ omit =
     homeassistant/components/lyric/climate.py
     homeassistant/components/lyric/sensor.py
     homeassistant/components/mailgun/notify.py
-    homeassistant/components/map/*
     homeassistant/components/mastodon/notify.py
     homeassistant/components/matrix/__init__.py
     homeassistant/components/matrix/notify.py
@@ -927,7 +926,6 @@ omit =
     homeassistant/components/onvif/sensor.py
     homeassistant/components/onvif/util.py
     homeassistant/components/open_meteo/weather.py
-    homeassistant/components/opencv/*
     homeassistant/components/openevse/sensor.py
     homeassistant/components/openexchangerates/__init__.py
     homeassistant/components/openexchangerates/coordinator.py
@@ -1430,6 +1428,7 @@ omit =
     homeassistant/components/tolo/number.py
     homeassistant/components/tolo/select.py
     homeassistant/components/tolo/sensor.py
+    homeassistant/components/tolo/switch.py
     homeassistant/components/toon/__init__.py
     homeassistant/components/toon/binary_sensor.py
     homeassistant/components/toon/climate.py
