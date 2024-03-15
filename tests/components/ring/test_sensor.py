@@ -81,7 +81,7 @@ async def test_history(
     await setup_platform(hass, Platform.SENSOR)
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(True)
 
     front_door_last_activity_state = hass.states.get("sensor.front_door_last_activity")
     assert front_door_last_activity_state.state == "2017-03-05T15:03:40+00:00"
