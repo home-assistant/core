@@ -54,6 +54,6 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, dict[str, Any]]]):
         except FytaConnectionError as ex:
             raise ConfigEntryNotReady from ex
         except (FytaAuthentificationError, FytaPasswordError) as ex:
-            raise ConfigEntryAuthFailed from ex
+            raise ConfigEntryError from ex
 
         return True
