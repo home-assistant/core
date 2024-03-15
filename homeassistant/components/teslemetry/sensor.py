@@ -42,7 +42,7 @@ from .entity import (
 )
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
-ChargeStates = {
+CHARGE_STATES = {
     "Starting": "starting",
     "Charging": "charging",
     "Stopped": "stopped",
@@ -51,7 +51,7 @@ ChargeStates = {
     "NoPower": "no_power",
 }
 
-ShiftStates = {"P": "p", "D": "d", "R": "r", "N": "n"}
+SHIFT_STATES = {"P": "p", "D": "d", "R": "r", "N": "n"}
 
 
 @dataclass(frozen=True, kw_only=True)
