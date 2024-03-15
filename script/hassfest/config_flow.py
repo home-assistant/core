@@ -105,7 +105,7 @@ def _generate_and_validate(integrations: dict[str, Integration], config: Config)
         else:
             domains["integration"].append(domain)
 
-            # check if config flow supports some flows show UI elements
+            # check if config flow supports some flows to show UI elements
             config_flow_file = integration.path / "config_flow.py"
             config_flow = ast.parse(config_flow_file.read_text())
             for flow_type in _supports(config_flow):
