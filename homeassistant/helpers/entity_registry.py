@@ -67,7 +67,7 @@ EVENT_ENTITY_REGISTRY_UPDATED = "entity_registry_updated"
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 13
+STORAGE_VERSION_MINOR = 14
 STORAGE_KEY = "core.entity_registry"
 
 CLEANUP_INTERVAL = 3600 * 24
@@ -164,6 +164,7 @@ class RegistryEntry:
     previous_unique_id: str | None = attr.ib(default=None)
     aliases: set[str] = attr.ib(factory=set)
     area_id: str | None = attr.ib(default=None)
+    categories: dict[str, str] = attr.ib(factory=dict)
     capabilities: Mapping[str, Any] | None = attr.ib(default=None)
     config_entry_id: str | None = attr.ib(default=None)
     device_class: str | None = attr.ib(default=None)
@@ -262,6 +263,7 @@ class RegistryEntry:
         # it every time
         return {
             "area_id": self.area_id,
+            "categories": self.categories,
             "config_entry_id": self.config_entry_id,
             "device_id": self.device_id,
             "disabled_by": self.disabled_by,
@@ -319,6 +321,7 @@ class RegistryEntry:
                 {
                     "aliases": list(self.aliases),
                     "area_id": self.area_id,
+                    "categories": self.categories,
                     "capabilities": self.capabilities,
                     "config_entry_id": self.config_entry_id,
                     "device_class": self.device_class,
@@ -497,6 +500,11 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
             # Version 1.13 adds labels
             for entity in data["entities"]:
                 entity["labels"] = []
+
+        if old_major_version == 1 and old_minor_version < 14:
+            # Version 1.14 adds categories
+            for entity in data["entities"]:
+                entity["categories"] = {}
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -952,6 +960,7 @@ class EntityRegistry(BaseRegistry):
         *,
         aliases: set[str] | UndefinedType = UNDEFINED,
         area_id: str | None | UndefinedType = UNDEFINED,
+        categories: dict[str, str] | UndefinedType = UNDEFINED,
         capabilities: Mapping[str, Any] | None | UndefinedType = UNDEFINED,
         config_entry_id: str | None | UndefinedType = UNDEFINED,
         device_class: str | None | UndefinedType = UNDEFINED,
@@ -1003,6 +1012,7 @@ class EntityRegistry(BaseRegistry):
         for attr_name, value in (
             ("aliases", aliases),
             ("area_id", area_id),
+            ("categories", categories),
             ("capabilities", capabilities),
             ("config_entry_id", config_entry_id),
             ("device_class", device_class),
@@ -1081,6 +1091,7 @@ class EntityRegistry(BaseRegistry):
         *,
         aliases: set[str] | UndefinedType = UNDEFINED,
         area_id: str | None | UndefinedType = UNDEFINED,
+        categories: dict[str, str] | UndefinedType = UNDEFINED,
         capabilities: Mapping[str, Any] | None | UndefinedType = UNDEFINED,
         config_entry_id: str | None | UndefinedType = UNDEFINED,
         device_class: str | None | UndefinedType = UNDEFINED,
@@ -1106,6 +1117,7 @@ class EntityRegistry(BaseRegistry):
             entity_id,
             aliases=aliases,
             area_id=area_id,
+            categories=categories,
             capabilities=capabilities,
             config_entry_id=config_entry_id,
             device_class=device_class,
@@ -1196,6 +1208,7 @@ class EntityRegistry(BaseRegistry):
                 entities[entity["entity_id"]] = RegistryEntry(
                     aliases=set(entity["aliases"]),
                     area_id=entity["area_id"],
+                    categories=entity["categories"],
                     capabilities=entity["capabilities"],
                     config_entry_id=entity["config_entry_id"],
                     device_class=entity["device_class"],
@@ -1254,6 +1267,17 @@ class EntityRegistry(BaseRegistry):
                 entry.as_storage_fragment for entry in self.deleted_entities.values()
             ],
         }
+
+    @callback
+    def async_clear_category_id(self, scope: str, category_id: str) -> None:
+        """Clear category id from registry entries."""
+        for entity_id, entry in self.entities.items():
+            if (
+                existing_category_id := entry.categories.get(scope)
+            ) and category_id == existing_category_id:
+                categories = entry.categories.copy()
+                del categories[scope]
+                self.async_update_entity(entity_id, categories=categories)
 
     @callback
     def async_clear_label_id(self, label_id: str) -> None:
@@ -1345,6 +1369,21 @@ def async_entries_for_label(
 
 
 @callback
+def async_entries_for_category(
+    registry: EntityRegistry, scope: str, category_id: str
+) -> list[RegistryEntry]:
+    """Return entries that match a category in a scope."""
+    return [
+        entry
+        for entry in registry.entities.values()
+        if (
+            (existing_category_id := entry.categories.get(scope))
+            and category_id == existing_category_id
+        )
+    ]
+
+
+@callback
 def async_entries_for_config_entry(
     registry: EntityRegistry, config_entry_id: str
 ) -> list[RegistryEntry]:
@@ -1386,13 +1425,13 @@ def async_config_entry_disabled_by_changed(
 def _async_setup_cleanup(hass: HomeAssistant, registry: EntityRegistry) -> None:
     """Clean up device registry when entities removed."""
     # pylint: disable-next=import-outside-toplevel
-    from . import event, label_registry as lr
+    from . import category_registry as cr, event, label_registry as lr
 
     @callback
-    def _label_removed_from_registry_filter(
-        event: lr.EventLabelRegistryUpdated,
+    def _removed_from_registry_filter(
+        event: lr.EventLabelRegistryUpdated | cr.EventCategoryRegistryUpdated,
     ) -> bool:
-        """Filter all except for the remove action from label registry events."""
+        """Filter all except for the remove action from registry events."""
         return event.data["action"] == "remove"
 
     @callback
@@ -1402,8 +1441,21 @@ def _async_setup_cleanup(hass: HomeAssistant, registry: EntityRegistry) -> None:
 
     hass.bus.async_listen(
         event_type=lr.EVENT_LABEL_REGISTRY_UPDATED,
-        event_filter=_label_removed_from_registry_filter,
+        event_filter=_removed_from_registry_filter,
         listener=_handle_label_registry_update,
+    )
+
+    @callback
+    def _handle_category_registry_update(
+        event: cr.EventCategoryRegistryUpdated,
+    ) -> None:
+        """Update entity that have a category that has been removed."""
+        registry.async_clear_category_id(event.data["scope"], event.data["category_id"])
+
+    hass.bus.async_listen(
+        event_type=cr.EVENT_CATEGORY_REGISTRY_UPDATED,
+        event_filter=_removed_from_registry_filter,
+        listener=_handle_category_registry_update,
     )
 
     @callback
