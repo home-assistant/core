@@ -152,8 +152,8 @@ class FFmpegManager:
         self.hass = hass
         self._cache = {}  # type: ignore[var-annotated]
         self._bin = ffmpeg_bin
-        self._major_version: int | None = None
         self._version: str | None = None
+        self._major_version: int | None = None
 
     @cached_property
     def binary(self) -> str:
