@@ -60,7 +60,7 @@ DEFAULT_BINARY = "ffmpeg"
 # because we use a different content-type so it
 # only important to update this version if the
 # content-type changes again in the future
-OFFICAL_IMAGE_VERSION = "6.0"
+OFFICIAL_IMAGE_VERSION = "6.0"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -164,7 +164,7 @@ class FFmpegManager:
         """Return ffmpeg version."""
         if self._version is None:
             if is_official_image():
-                self._version = OFFICAL_IMAGE_VERSION
+                self._version = OFFICIAL_IMAGE_VERSION
                 self._major_version = int(self._version.split(".")[0])
             elif (
                 (version := await FFVersion(self._bin).get_version())
