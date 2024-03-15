@@ -9,11 +9,10 @@ from .common import setup_platform
 
 
 async def test_entity_registry(
-    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker, entity_registry: er.EntityRegistry,
 ) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, Platform.BUTTON)
-    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get("button.ingress_open_door")
     assert entry.unique_id == "185036587-open_door"

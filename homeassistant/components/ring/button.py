@@ -27,13 +27,11 @@ async def async_setup_entry(
         RING_DEVICES_COORDINATOR
     ]
 
-    buttons = [
+    async_add_entities(
         RingDoorButton(device, devices_coordinator, BUTTON_DESCRIPTION)
         for device in devices["other"]
         if device.has_capability("open")
-    ]
-
-    async_add_entities(buttons)
+    )
 
 
 class RingDoorButton(RingEntity, ButtonEntity):
