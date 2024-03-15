@@ -34,13 +34,6 @@ _LOGGER = logging.getLogger(__name__)
 
 ENTITY_ID = "sun.sun"
 
-
-# The algorithm used here is somewhat complicated. It aims to cut down
-# the number of sensor updates over the day. It's documented best in
-# the PR for the change, see the Discussion section of:
-# https://github.com/home-assistant/core/pull/23832
-
-
 STATE_ATTR_AZIMUTH = "azimuth"
 STATE_ATTR_ELEVATION = "elevation"
 STATE_ATTR_RISING = "rising"
@@ -50,6 +43,12 @@ STATE_ATTR_NEXT_MIDNIGHT = "next_midnight"
 STATE_ATTR_NEXT_NOON = "next_noon"
 STATE_ATTR_NEXT_RISING = "next_rising"
 STATE_ATTR_NEXT_SETTING = "next_setting"
+
+# The algorithm used here is somewhat complicated. It aims to cut down
+# the number of sensor updates over the day. It's documented best in
+# the PR for the change, see the Discussion section of:
+# https://github.com/home-assistant/core/pull/23832
+
 
 # As documented in wikipedia: https://en.wikipedia.org/wiki/Twilight
 # sun is:
