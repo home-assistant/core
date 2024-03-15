@@ -22,7 +22,6 @@ from .const import (
     ATTR_DATA,
     ATTR_ENDPOINT,
     ATTR_METHOD,
-    ATTR_RESULT,
     ATTR_SESSION_DATA_USER_ID,
     ATTR_TIMEOUT,
     ATTR_WS_EVENT,
@@ -132,9 +131,6 @@ async def websocket_supervisor_api(
             payload=payload,
             source="core.websocket_api",
         )
-
-        if result.get(ATTR_RESULT) == "error":
-            raise HassioAPIError(result.get("message"))
     except HassioAPIError as err:
         _LOGGER.error("Failed to to call %s - %s", msg[ATTR_ENDPOINT], err)
         connection.send_error(

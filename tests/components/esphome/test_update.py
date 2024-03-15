@@ -208,15 +208,25 @@ async def test_update_static_info(
 
 
 @pytest.mark.parametrize(
-    "expected_disconnect_state", [(True, STATE_ON), (False, STATE_UNAVAILABLE)]
+    ("expected_disconnect", "expected_state", "has_deep_sleep"),
+    [
+        (True, STATE_ON, False),
+        (False, STATE_UNAVAILABLE, False),
+        (True, STATE_ON, True),
+        (False, STATE_ON, True),
+    ],
 )
 async def test_update_device_state_for_availability(
     hass: HomeAssistant,
-    stub_reconnect,
-    expected_disconnect_state: tuple[bool, str],
-    mock_config_entry,
-    mock_device_info,
+    expected_disconnect: bool,
+    expected_state: str,
+    has_deep_sleep: bool,
     mock_dashboard,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
 ) -> None:
     """Test ESPHome update entity changes availability with the device."""
     mock_dashboard["configured"] = [
@@ -226,45 +236,20 @@ async def test_update_device_state_for_availability(
         },
     ]
     await async_get_dashboard(hass).async_refresh()
-
-    signal_device_updated = f"esphome_{mock_config_entry.entry_id}_on_device_update"
-    runtime_data = Mock(
-        available=True,
-        expected_disconnect=False,
-        device_info=mock_device_info,
-        signal_device_updated=signal_device_updated,
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        states=[],
+        device_info={"has_deep_sleep": has_deep_sleep},
     )
 
-    with patch(
-        "homeassistant.components.esphome.update.DomainData.get_entry_data",
-        return_value=runtime_data,
-    ):
-        assert await hass.config_entries.async_forward_entry_setup(
-            mock_config_entry, "update"
-        )
-
-    state = hass.states.get("update.none_firmware")
+    state = hass.states.get("update.test_firmware")
     assert state is not None
-    assert state.state == "on"
-
-    expected_disconnect, expected_state = expected_disconnect_state
-
-    runtime_data.available = False
-    runtime_data.expected_disconnect = expected_disconnect
-    async_dispatcher_send(hass, signal_device_updated)
-
-    state = hass.states.get("update.none_firmware")
+    assert state.state == STATE_ON
+    await mock_device.mock_disconnect(expected_disconnect)
+    state = hass.states.get("update.test_firmware")
     assert state.state == expected_state
-
-    # Deep sleep devices should still be available
-    runtime_data.device_info = dataclasses.replace(
-        runtime_data.device_info, has_deep_sleep=True
-    )
-
-    async_dispatcher_send(hass, signal_device_updated)
-
-    state = hass.states.get("update.none_firmware")
-    assert state.state == "on"
 
 
 async def test_update_entity_dashboard_not_available_startup(

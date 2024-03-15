@@ -15,7 +15,8 @@
       "name": "AccuWeather",
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "acer_projector": {
       "name": "Acer Projector",
@@ -3022,7 +3023,8 @@
       "name": "KNX",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_push"
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "kodi": {
       "name": "Kodi",
@@ -4181,12 +4183,6 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
-    "opencv": {
-      "name": "OpenCV",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
-    },
     "openerz": {
       "name": "Open ERZ",
       "integration_type": "hub",
@@ -5271,8 +5267,8 @@
     },
     "seventeentrack": {
       "name": "17TRACK",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "sfr_box": {
@@ -5484,6 +5480,11 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_push"
+    },
+    "smud": {
+      "name": "Sacramento Municipal Utility District (SMUD)",
+      "integration_type": "virtual",
+      "supported_by": "opower"
     },
     "snapcast": {
       "name": "Snapcast",
@@ -5737,7 +5738,8 @@
     "sun": {
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "calculated"
+      "iot_class": "calculated",
+      "single_config_entry": true
     },
     "sunweg": {
       "name": "Sun WEG",

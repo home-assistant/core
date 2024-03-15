@@ -546,6 +546,7 @@ omit =
     homeassistant/components/homematic/sensor.py
     homeassistant/components/homematic/switch.py
     homeassistant/components/homeworks/__init__.py
+    homeassistant/components/homeworks/binary_sensor.py
     homeassistant/components/homeworks/button.py
     homeassistant/components/homeworks/light.py
     homeassistant/components/horizon/media_player.py
@@ -746,7 +747,6 @@ omit =
     homeassistant/components/lyric/climate.py
     homeassistant/components/lyric/sensor.py
     homeassistant/components/mailgun/notify.py
-    homeassistant/components/map/*
     homeassistant/components/mastodon/notify.py
     homeassistant/components/matrix/__init__.py
     homeassistant/components/matrix/notify.py
@@ -890,6 +890,7 @@ omit =
     homeassistant/components/notify_events/notify.py
     homeassistant/components/notion/__init__.py
     homeassistant/components/notion/binary_sensor.py
+    homeassistant/components/notion/coordinator.py
     homeassistant/components/notion/sensor.py
     homeassistant/components/notion/util.py
     homeassistant/components/nsw_fuel_station/sensor.py
@@ -925,7 +926,6 @@ omit =
     homeassistant/components/onvif/sensor.py
     homeassistant/components/onvif/util.py
     homeassistant/components/open_meteo/weather.py
-    homeassistant/components/opencv/*
     homeassistant/components/openevse/sensor.py
     homeassistant/components/openexchangerates/__init__.py
     homeassistant/components/openexchangerates/coordinator.py
@@ -1183,7 +1183,6 @@ omit =
     homeassistant/components/serial_pm/sensor.py
     homeassistant/components/sesame/lock.py
     homeassistant/components/seven_segments/image_processing.py
-    homeassistant/components/seventeentrack/sensor.py
     homeassistant/components/shodan/sensor.py
     homeassistant/components/sia/__init__.py
     homeassistant/components/sia/alarm_control_panel.py
@@ -1429,6 +1428,7 @@ omit =
     homeassistant/components/tolo/number.py
     homeassistant/components/tolo/select.py
     homeassistant/components/tolo/sensor.py
+    homeassistant/components/tolo/switch.py
     homeassistant/components/toon/__init__.py
     homeassistant/components/toon/binary_sensor.py
     homeassistant/components/toon/climate.py

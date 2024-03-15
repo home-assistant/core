@@ -19,8 +19,7 @@ from .config_flow import get_master_gateway
 from .const import CONF_GROUP_ID_BASE, CONF_MASTER_GATEWAY, DOMAIN, PLATFORMS
 from .deconz_event import async_setup_events, async_unload_events
 from .errors import AuthenticationRequired, CannotConnect
-from .gateway import DeconzGateway
-from .hub import get_deconz_api
+from .hub import DeconzHub, get_deconz_api
 from .services import async_setup_services, async_unload_services
 
 
@@ -38,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         await async_update_master_gateway(hass, config_entry)
 
     try:
-        api = await get_deconz_api(hass, config_entry.data)
+        api = await get_deconz_api(hass, config_entry)
     except CannotConnect as err:
         raise ConfigEntryNotReady from err
     except AuthenticationRequired as err:
@@ -47,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     if not hass.data[DOMAIN]:
         async_setup_services(hass)
 
-    gateway = hass.data[DOMAIN][config_entry.entry_id] = DeconzGateway(
+    gateway = hass.data[DOMAIN][config_entry.entry_id] = DeconzHub(
         hass, config_entry, api
     )
     await gateway.async_update_device_registry()
@@ -68,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload deCONZ config entry."""
-    gateway: DeconzGateway = hass.data[DOMAIN].pop(config_entry.entry_id)
+    gateway: DeconzHub = hass.data[DOMAIN].pop(config_entry.entry_id)
     async_unload_events(gateway)
 
     if not hass.data[DOMAIN]:

@@ -109,6 +109,12 @@ CUSTOM_WARNING = (
     "cause stability problems, be sure to disable it if you "
     "experience issues with Home Assistant"
 )
+IMPORT_EVENT_LOOP_WARNING = (
+    "We found an integration %s which is configured to "
+    "to import its code in the event loop. This component might "
+    "cause stability problems, be sure to disable it if you "
+    "experience issues with Home Assistant"
+)
 
 _UNDEF = object()  # Internal; not helpers.typing.UNDEFINED due to circular dependency
 
@@ -653,6 +659,9 @@ class Integration:
                 None if is_virtual else set(os.listdir(file_path)),
             )
 
+            if not integration.import_executor:
+                _LOGGER.warning(IMPORT_EVENT_LOOP_WARNING, integration.domain)
+
             if integration.is_built_in:
                 return integration
 
@@ -821,14 +830,18 @@ class Integration:
     def import_executor(self) -> bool:
         """Import integration in the executor."""
         # If the integration does not explicitly set import_executor, we default to
-        # True if it's a built-in integration and False if it's a custom integration.
-        # In the future, we want to default to True for all integrations.
-        return self.manifest.get("import_executor", self.is_built_in)
+        # True.
+        return self.manifest.get("import_executor", True)
 
     @cached_property
     def has_translations(self) -> bool:
         """Return if the integration has translations."""
         return "translations" in self._top_level_files
+
+    @cached_property
+    def has_services(self) -> bool:
+        """Return if the integration has services."""
+        return "services.yaml" in self._top_level_files
 
     @property
     def mqtt(self) -> list[str] | None:
@@ -948,10 +961,7 @@ class Integration:
 
         # Some integrations fail on import because they call functions incorrectly.
         # So we do it before validating config to catch these errors.
-        load_executor = self.import_executor and (
-            self.pkg_path not in sys.modules
-            or (self.config_flow and f"{self.pkg_path}.config_flow" not in sys.modules)
-        )
+        load_executor = self.import_executor and self.pkg_path not in sys.modules
         if not load_executor:
             comp = self._get_component()
             if debug:
@@ -1038,6 +1048,12 @@ class Integration:
 
         if preload_platforms:
             for platform_name in self.platforms_exists(self._platforms_to_preload):
+                if (
+                    platform_name == "config_flow"
+                    and not async_config_flow_needs_preload(cache[domain])
+                ):
+                    continue
+
                 with suppress(ImportError):
                     self.get_platform(platform_name)
 
@@ -1671,3 +1687,15 @@ def async_suggest_report_issue(
         )
 
     return f"create a bug report at {issue_tracker}"
+
+
+@callback
+def async_config_flow_needs_preload(component: ComponentProtocol) -> bool:
+    """Test if a config_flow for a component needs to be preloaded.
+
+    Currently we need to preload a the config flow if the integration
+    has a config flow and the component has an async_migrate_entry method
+    because it means that config_entries will always have to load
+    it to check if it needs to be migrated.
+    """
+    return hasattr(component, "async_migrate_entry")
