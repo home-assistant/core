@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import json
 import pathlib
 from typing import Any
@@ -11,6 +12,7 @@ from .model import Brand, Config, Integration
 from .serializer import format_python_namespace
 
 UNIQUE_ID_IGNORE = {"huawei_lte", "mqtt", "adguard"}
+NEEDS_PRELOAD = {"async_get_options_flow", "async_step_reconfigure"}
 
 
 def _validate_integration(config: Config, integration: Integration) -> None:
@@ -62,12 +64,29 @@ def _validate_integration(config: Config, integration: Integration) -> None:
     )
 
 
+def _needs_preload(module: ast.Module) -> bool:
+    """Test if config flow needs to be preloaded list functions."""
+    for item in module.body:
+        if type(item) != ast.ClassDef:
+            continue
+
+        for cls_item in item.body:
+            if type(cls_item) not in (ast.FunctionDef, ast.AsyncFunctionDef):
+                continue
+
+            if cls_item.name in NEEDS_PRELOAD:
+                return True
+
+    return False
+
+
 def _generate_and_validate(integrations: dict[str, Integration], config: Config) -> str:
     """Validate and generate config flow data."""
     domains: dict[str, list[str]] = {
         "integration": [],
         "helper": [],
     }
+    needs_preload: set[str] = set()
 
     for domain in sorted(integrations):
         integration = integrations[domain]
@@ -81,7 +100,13 @@ def _generate_and_validate(integrations: dict[str, Integration], config: Config)
         else:
             domains["integration"].append(domain)
 
-    return format_python_namespace({"FLOWS": domains})
+            # check if config flow needed to be preloaded to show UI elements
+            config_flow_file = integration.path / "config_flow.py"
+            config_flow = ast.parse(config_flow_file.read_text())
+            if _needs_preload(config_flow):
+                needs_preload.add(domain)
+
+    return format_python_namespace({"FLOWS": domains, "PRELOAD_FLOWS": needs_preload})
 
 
 def _populate_brand_integrations(

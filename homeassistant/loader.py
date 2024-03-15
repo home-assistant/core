@@ -32,7 +32,7 @@ from .const import Platform
 from .core import HomeAssistant, callback
 from .generated.application_credentials import APPLICATION_CREDENTIALS
 from .generated.bluetooth import BLUETOOTH
-from .generated.config_flows import FLOWS
+from .generated.config_flows import FLOWS, PRELOAD_FLOWS
 from .generated.dhcp import DHCP
 from .generated.mqtt import MQTT
 from .generated.ssdp import SSDP
@@ -1698,4 +1698,6 @@ def async_config_flow_needs_preload(component: ComponentProtocol) -> bool:
     because it means that config_entries will always have to load
     it to check if it needs to be migrated.
     """
-    return hasattr(component, "async_migrate_entry")
+    return hasattr(component, "async_migrate_entry") or (
+        hasattr(component, "DOMAIN") and component.DOMAIN in PRELOAD_FLOWS
+    )
