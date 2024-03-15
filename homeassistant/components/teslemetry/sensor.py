@@ -454,7 +454,6 @@ class TeslemetryVehicleTimeSensorEntity(TeslemetryVehicleEntity, SensorEntity):
     """Base class for Teslemetry vehicle metric sensors."""
 
     entity_description: TeslemetryTimeEntityDescription
-    _last_value: int | None = None
 
     def __init__(
         self,
@@ -473,11 +472,7 @@ class TeslemetryVehicleTimeSensorEntity(TeslemetryVehicleEntity, SensorEntity):
     @property
     def native_value(self) -> datetime | None:
         """Return the state of the sensor."""
-        if (value := self._value) == self._last_value:
-            # No change
-            return None
-        self._last_value = value
-        return self._get_timestamp(value)
+        return self._get_timestamp(self._value)
 
     @property
     def available(self) -> bool:
