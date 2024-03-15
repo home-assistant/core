@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import re
-from typing import Generic, TypeVar
+from typing import TYPE_CHECKING, Generic, TypeVar
 
 from haffmpeg.core import HAFFmpeg
 from haffmpeg.tools import IMAGE_JPEG, FFVersion, ImageFrame
@@ -24,8 +24,15 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.system_info import is_official_image
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
+
 
 _HAFFmpegT = TypeVar("_HAFFmpegT", bound=HAFFmpeg)
 
@@ -67,7 +74,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     manager = FFmpegManager(hass, conf.get(CONF_FFMPEG_BIN, DEFAULT_BINARY))
 
-    await manager.async_get_version()
+    await manager.async_setup()
 
     # Register service
     async def async_service_handle(service: ServiceCall) -> None:
@@ -139,35 +146,30 @@ class FFmpegManager:
         self.hass = hass
         self._cache = {}  # type: ignore[var-annotated]
         self._bin = ffmpeg_bin
-        self._version: str | None = None
-        self._major_version: int | None = None
+        self._content_type = CONTENT_TYPE_MULTIPART.format("ffmpeg")
 
     @property
     def binary(self) -> str:
         """Return ffmpeg binary from config."""
         return self._bin
 
-    async def async_get_version(self) -> tuple[str | None, int | None]:
-        """Return ffmpeg version."""
+    async def async_setup(self) -> None:
+        """Set up ffmpeg."""
+        if is_official_image():
+            # official image, no need to check the ffmpeg
+            # version as it will always be > 3
+            return
+        if (
+            (version := await FFVersion(self._bin).get_version())
+            and (result := re.search(r"(\d+)\.", version))
+            and (int(result.group(1))) <= 3
+        ):
+            self._content_type = CONTENT_TYPE_MULTIPART.format("ffserver")
 
-        ffversion = FFVersion(self._bin)
-        self._version = await ffversion.get_version()
-
-        self._major_version = None
-        if self._version is not None:
-            result = re.search(r"(\d+)\.", self._version)
-            if result is not None:
-                self._major_version = int(result.group(1))
-
-        return self._version, self._major_version
-
-    @property
+    @cached_property
     def ffmpeg_stream_content_type(self) -> str:
         """Return HTTP content type for ffmpeg stream."""
-        if self._major_version is not None and self._major_version > 3:
-            return CONTENT_TYPE_MULTIPART.format("ffmpeg")
-
-        return CONTENT_TYPE_MULTIPART.format("ffserver")
+        return self._content_type
 
 
 class FFmpegBase(Entity, Generic[_HAFFmpegT]):
