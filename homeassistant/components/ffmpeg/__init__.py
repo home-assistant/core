@@ -57,8 +57,8 @@ CONF_OUTPUT = "output"
 DEFAULT_BINARY = "ffmpeg"
 
 # Currently we only care if the version is < 3
-# because we use a different content-type so it
-# only important to update this version if the
+# because we use a different content-type
+# It is only important to update this version if the
 # content-type changes again in the future
 OFFICIAL_IMAGE_VERSION = "6.0"
 
