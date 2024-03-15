@@ -1,4 +1,5 @@
 """Tests for the Twitch component."""
+
 import asyncio
 from collections.abc import AsyncGenerator, AsyncIterator
 from dataclasses import dataclass
@@ -152,6 +153,7 @@ class TwitchMock:
         self,
         token: str,
         scope: list[AuthScope],
+        refresh_token: str | None = None,
         validate: bool = True,
     ) -> None:
         """Set user authentication."""

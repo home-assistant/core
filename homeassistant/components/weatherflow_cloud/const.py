@@ -1,4 +1,5 @@
 """Constants for the WeatherflowCloud integration."""
+
 import logging
 
 DOMAIN = "weatherflow_cloud"

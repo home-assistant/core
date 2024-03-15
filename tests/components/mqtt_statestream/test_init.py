@@ -1,4 +1,5 @@
 """The tests for the MQTT statestream component."""
+
 from unittest.mock import ANY, call
 
 import pytest

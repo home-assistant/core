@@ -1,4 +1,5 @@
 """Support for KWB Easyfire."""
+
 from __future__ import annotations
 
 from pykwb import kwb
@@ -71,16 +72,14 @@ def setup_platform(
 
     easyfire.run_thread()
 
-    sensors = []
-    for sensor in easyfire.get_sensors():
-        if (sensor.sensor_type != kwb.PROP_SENSOR_RAW) or (
-            sensor.sensor_type == kwb.PROP_SENSOR_RAW and raw
-        ):
-            sensors.append(KWBSensor(easyfire, sensor, client_name))
-
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, lambda event: easyfire.stop_thread())
 
-    add_entities(sensors)
+    add_entities(
+        KWBSensor(easyfire, sensor, client_name)
+        for sensor in easyfire.get_sensors()
+        if (sensor.sensor_type != kwb.PROP_SENSOR_RAW)
+        or (sensor.sensor_type == kwb.PROP_SENSOR_RAW and raw)
+    )
 
 
 class KWBSensor(SensorEntity):

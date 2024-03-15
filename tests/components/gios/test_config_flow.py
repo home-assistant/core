@@ -1,4 +1,5 @@
 """Define tests for the GIOS config flow."""
+
 import json
 from unittest.mock import patch
 

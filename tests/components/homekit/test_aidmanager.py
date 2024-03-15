@@ -1,4 +1,5 @@
 """Tests for the HomeKit AID manager."""
+
 import os
 from unittest.mock import patch
 

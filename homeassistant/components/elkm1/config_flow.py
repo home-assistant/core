@@ -1,4 +1,5 @@
 """Config flow for Elk-M1 Control integration."""
+
 from __future__ import annotations
 
 import logging

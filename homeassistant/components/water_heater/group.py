@@ -1,11 +1,10 @@
 """Describe group states."""
 
-
 from homeassistant.components.group import GroupIntegrationRegistry
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant, callback
 
-from . import (
+from .const import (
     STATE_ECO,
     STATE_ELECTRIC,
     STATE_GAS,

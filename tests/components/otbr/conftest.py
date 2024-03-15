@@ -1,4 +1,5 @@
 """Test fixtures for the Open Thread Border Router integration."""
+
 from unittest.mock import Mock, patch
 
 import pytest

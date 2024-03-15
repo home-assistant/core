@@ -1,4 +1,5 @@
 """Tests for iAqualink config flow."""
+
 from unittest.mock import patch
 
 from iaqualink.exception import (

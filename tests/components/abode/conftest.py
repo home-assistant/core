@@ -1,4 +1,5 @@
 """Configuration for Abode tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 

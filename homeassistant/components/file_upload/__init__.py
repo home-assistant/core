@@ -1,4 +1,5 @@
 """The File Upload integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -13,7 +14,7 @@ import tempfile
 from aiohttp import BodyPartReader, web
 import voluptuous as vol
 
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
@@ -145,7 +146,7 @@ class FileUploadView(HomeAssistantView):
         except ValueError as err:
             raise web.HTTPBadRequest from err
 
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
         file_id = ulid_hex()
 
         if DOMAIN not in hass.data:
@@ -199,7 +200,7 @@ class FileUploadView(HomeAssistantView):
     @RequestDataValidator({vol.Required("file_id"): str})
     async def delete(self, request: web.Request, data: dict[str, str]) -> web.Response:
         """Delete a file."""
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
 
         if DOMAIN not in hass.data:
             raise web.HTTPNotFound()

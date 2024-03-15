@@ -1,4 +1,5 @@
 """Test Subaru component setup and updates."""
+
 from unittest.mock import patch
 
 from subarulink import InvalidCredentials, SubaruException

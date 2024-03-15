@@ -1,4 +1,5 @@
 """Component for the Somfy MyLink device supporting the Synergy API."""
+
 import logging
 
 from somfy_mylink_synergy import SomfyMyLinkSynergy

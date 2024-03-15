@@ -1,4 +1,5 @@
 """Test Lastfm config flow."""
+
 from unittest.mock import patch
 
 from pylast import WSError

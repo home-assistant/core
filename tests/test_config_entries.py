@@ -1,4 +1,5 @@
 """Test the config manager."""
+
 from __future__ import annotations
 
 import asyncio
@@ -116,6 +117,7 @@ async def test_call_setup_entry(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert entry.supports_unload
+    assert entry.supports_migrate
 
 
 async def test_call_setup_entry_without_reload_support(hass: HomeAssistant) -> None:
@@ -145,6 +147,7 @@ async def test_call_setup_entry_without_reload_support(hass: HomeAssistant) -> N
     assert len(mock_setup_entry.mock_calls) == 1
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert not entry.supports_unload
+    assert entry.supports_migrate
 
 
 @pytest.mark.parametrize(("major_version", "minor_version"), [(2, 1), (1, 2), (2, 2)])
@@ -288,6 +291,7 @@ async def test_call_async_migrate_entry_failure_not_supported(
     )
     entry.add_to_hass(hass)
     assert not entry.supports_unload
+    entry.supports_migrate = True
 
     mock_setup_entry = AsyncMock(return_value=True)
 
@@ -378,7 +382,7 @@ async def test_remove_entry(
     MockConfigEntry(domain="test_other", entry_id="test3").add_to_manager(manager)
 
     # Check all config entries exist
-    assert [item.entry_id for item in manager.async_entries()] == [
+    assert manager.async_entry_ids() == [
         "test1",
         "test2",
         "test3",
@@ -408,7 +412,7 @@ async def test_remove_entry(
     assert mock_remove_entry.call_count == 1
 
     # Check that config entry was removed.
-    assert [item.entry_id for item in manager.async_entries()] == ["test1", "test3"]
+    assert manager.async_entry_ids() == ["test1", "test3"]
 
     # Check that entity state has been removed
     assert hass.states.get("light.test_entity") is None
@@ -469,7 +473,7 @@ async def test_remove_entry_handles_callback_error(
     entry = MockConfigEntry(domain="test", entry_id="test1")
     entry.add_to_manager(manager)
     # Check all config entries exist
-    assert [item.entry_id for item in manager.async_entries()] == ["test1"]
+    assert manager.async_entry_ids() == ["test1"]
     # Setup entry
     await entry.async_setup(hass)
     await hass.async_block_till_done()
@@ -482,7 +486,7 @@ async def test_remove_entry_handles_callback_error(
     # Check the remove callback was invoked.
     assert mock_remove_entry.call_count == 1
     # Check that config entry was removed.
-    assert [item.entry_id for item in manager.async_entries()] == []
+    assert manager.async_entry_ids() == []
 
 
 async def test_remove_entry_raises(
@@ -502,7 +506,7 @@ async def test_remove_entry_raises(
     ).add_to_manager(manager)
     MockConfigEntry(domain="test", entry_id="test3").add_to_manager(manager)
 
-    assert [item.entry_id for item in manager.async_entries()] == [
+    assert manager.async_entry_ids() == [
         "test1",
         "test2",
         "test3",
@@ -511,7 +515,7 @@ async def test_remove_entry_raises(
     result = await manager.async_remove("test2")
 
     assert result == {"require_restart": True}
-    assert [item.entry_id for item in manager.async_entries()] == ["test1", "test3"]
+    assert manager.async_entry_ids() == ["test1", "test3"]
 
 
 async def test_remove_entry_if_not_loaded(
@@ -526,7 +530,7 @@ async def test_remove_entry_if_not_loaded(
     MockConfigEntry(domain="comp", entry_id="test2").add_to_manager(manager)
     MockConfigEntry(domain="test", entry_id="test3").add_to_manager(manager)
 
-    assert [item.entry_id for item in manager.async_entries()] == [
+    assert manager.async_entry_ids() == [
         "test1",
         "test2",
         "test3",
@@ -535,7 +539,7 @@ async def test_remove_entry_if_not_loaded(
     result = await manager.async_remove("test2")
 
     assert result == {"require_restart": False}
-    assert [item.entry_id for item in manager.async_entries()] == ["test1", "test3"]
+    assert manager.async_entry_ids() == ["test1", "test3"]
 
     assert len(mock_unload_entry.mock_calls) == 0
 
@@ -550,7 +554,7 @@ async def test_remove_entry_if_integration_deleted(
     MockConfigEntry(domain="comp", entry_id="test2").add_to_manager(manager)
     MockConfigEntry(domain="test", entry_id="test3").add_to_manager(manager)
 
-    assert [item.entry_id for item in manager.async_entries()] == [
+    assert manager.async_entry_ids() == [
         "test1",
         "test2",
         "test3",
@@ -559,7 +563,7 @@ async def test_remove_entry_if_integration_deleted(
     result = await manager.async_remove("test2")
 
     assert result == {"require_restart": False}
-    assert [item.entry_id for item in manager.async_entries()] == ["test1", "test3"]
+    assert manager.async_entry_ids() == ["test1", "test3"]
 
     assert len(mock_unload_entry.mock_calls) == 0
 
@@ -3911,9 +3915,9 @@ async def test_entry_reload_concurrency(
         ),
     )
     mock_platform(hass, "comp.config_flow", None)
-    tasks = []
-    for _ in range(15):
-        tasks.append(asyncio.create_task(manager.async_reload(entry.entry_id)))
+    tasks = [
+        asyncio.create_task(manager.async_reload(entry.entry_id)) for _ in range(15)
+    ]
     await asyncio.gather(*tasks)
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert loaded == 1
@@ -4332,7 +4336,12 @@ async def test_task_tracking(hass: HomeAssistant) -> None:
     await asyncio.sleep(0)
     hass.loop.call_soon(event.set)
     await entry._async_process_on_unload(hass)
-    assert results == ["on_unload", "background", "background", "normal"]
+    assert results == [
+        "on_unload",
+        "background",
+        "background",
+        "normal",
+    ]
 
 
 async def test_preview_supported(

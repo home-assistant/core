@@ -1,4 +1,5 @@
 """Test ZHA light."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, call, patch, sentinel
 

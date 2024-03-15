@@ -1,4 +1,5 @@
 """The tests for the Monoprice Blackbird media player platform."""
+
 from collections import defaultdict
 from unittest import mock
 

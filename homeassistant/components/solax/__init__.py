@@ -1,4 +1,5 @@
 """The solax component."""
+
 from solax import real_time_api
 
 from homeassistant.config_entries import ConfigEntry

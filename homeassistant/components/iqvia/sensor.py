@@ -1,4 +1,5 @@
 """Support for IQVIA sensors."""
+
 from __future__ import annotations
 
 from statistics import mean

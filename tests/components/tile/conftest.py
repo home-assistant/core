@@ -1,4 +1,5 @@
 """Define test fixtures for Tile."""
+
 import json
 from unittest.mock import AsyncMock, Mock, patch
 

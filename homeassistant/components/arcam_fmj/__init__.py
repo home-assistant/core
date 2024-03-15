@@ -1,4 +1,5 @@
 """Arcam component."""
+
 import asyncio
 from asyncio import timeout
 import logging

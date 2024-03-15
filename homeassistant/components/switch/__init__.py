@@ -1,4 +1,5 @@
 """Component to interface with switches that can be controlled remotely."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -32,6 +33,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
+from . import group as group_pre_import  # noqa: F401
 from .const import DOMAIN
 
 if TYPE_CHECKING:

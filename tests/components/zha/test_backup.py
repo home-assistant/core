@@ -1,4 +1,5 @@
 """Unit tests for ZHA backup platform."""
+
 from unittest.mock import AsyncMock
 
 from zigpy.application import ControllerApplication

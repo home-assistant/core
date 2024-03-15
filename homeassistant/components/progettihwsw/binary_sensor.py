@@ -1,4 +1,5 @@
 """Control binary sensor instances."""
+
 import asyncio
 from datetime import timedelta
 import logging
@@ -28,7 +29,6 @@ async def async_setup_entry(
     """Set up the binary sensors from a config entry."""
     board_api = hass.data[DOMAIN][config_entry.entry_id]
     input_count = config_entry.data["input_count"]
-    binary_sensors = []
 
     async def async_update_data():
         """Fetch data from API endpoint of board."""
@@ -44,16 +44,14 @@ async def async_setup_entry(
     )
     await coordinator.async_refresh()
 
-    for i in range(1, int(input_count) + 1):
-        binary_sensors.append(
-            ProgettihwswBinarySensor(
-                coordinator,
-                f"Input #{i}",
-                setup_input(board_api, i),
-            )
+    async_add_entities(
+        ProgettihwswBinarySensor(
+            coordinator,
+            f"Input #{i}",
+            setup_input(board_api, i),
         )
-
-    async_add_entities(binary_sensors)
+        for i in range(1, int(input_count) + 1)
+    )
 
 
 class ProgettihwswBinarySensor(CoordinatorEntity, BinarySensorEntity):

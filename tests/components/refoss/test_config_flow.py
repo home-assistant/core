@@ -1,4 +1,5 @@
 """Tests for the refoss Integration."""
+
 from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries, data_entry_flow
