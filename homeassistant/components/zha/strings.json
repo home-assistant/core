@@ -823,6 +823,9 @@
       },
       "keypad_lockout": {
         "name": "Keypad lockout"
+      },
+      "device_mode": {
+        "name": "Device mode"
       }
     },
     "sensor": {
