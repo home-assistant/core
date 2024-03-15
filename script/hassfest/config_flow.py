@@ -69,7 +69,7 @@ def _validate_integration(config: Config, integration: Integration) -> None:
 
 
 def _supports(module: ast.Module) -> Generator[str, None, None]:
-    """Test if needs to be preloaded based on list functions."""
+    """Test if config flow has support for based on list functions."""
     for item in module.body:
         if type(item) != ast.ClassDef:
             continue
