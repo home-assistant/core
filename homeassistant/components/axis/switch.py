@@ -1,16 +1,42 @@
 """Support for Axis switches."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any
 
 from axis.models.event import Event, EventOperation, EventTopic
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import (
+    SwitchDeviceClass,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .entity import AxisEventEntity
 from .hub import AxisHub
+
+
+@dataclass(frozen=True, kw_only=True)
+class AxisSwitchEntityDescription(SwitchEntityDescription):
+    """Axis switch entity description."""
+
+    event_topic: EventTopic
+    name_fn: Callable[[AxisHub, Event], str]
+    supported_fn: Callable[[AxisHub, Event], bool]
+
+
+ENTITY_DESCRIPTION = AxisSwitchEntityDescription(
+    key="Relay port control",
+    device_class=SwitchDeviceClass.OUTLET,
+    entity_category=EntityCategory.CONFIG,
+    event_topic=EventTopic.RELAY,
+    supported_fn=lambda hub, event: isinstance(int(event.id), int),
+    name_fn=lambda hub, event: hub.api.vapix.ports[event.id].name,
+)
 
 
 async def async_setup_entry(
@@ -24,7 +50,8 @@ async def async_setup_entry(
     @callback
     def async_create_entity(event: Event) -> None:
         """Create Axis switch entity."""
-        async_add_entities([AxisSwitch(event, hub)])
+        if ENTITY_DESCRIPTION.supported_fn(hub, event):
+            async_add_entities([AxisSwitch(hub, event)])
 
     hub.api.event.subscribe(
         async_create_entity,
@@ -36,11 +63,12 @@ async def async_setup_entry(
 class AxisSwitch(AxisEventEntity, SwitchEntity):
     """Representation of a Axis switch."""
 
-    def __init__(self, event: Event, hub: AxisHub) -> None:
+    entity_description = ENTITY_DESCRIPTION
+
+    def __init__(self, hub: AxisHub, event: Event) -> None:
         """Initialize the Axis switch."""
         super().__init__(event, hub)
-        if event.id and hub.api.vapix.ports[event.id].name:
-            self._attr_name = hub.api.vapix.ports[event.id].name
+        self._attr_name = self.entity_description.name_fn(hub, event) or self._attr_name
         self._attr_is_on = event.is_tripped
 
     @callback
