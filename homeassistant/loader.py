@@ -1048,12 +1048,6 @@ class Integration:
 
         if preload_platforms:
             for platform_name in self.platforms_exists(self._platforms_to_preload):
-                if (
-                    platform_name == "config_flow"
-                    and not async_config_flow_needs_preload(cache[domain])
-                ):
-                    continue
-
                 with suppress(ImportError):
                     self.get_platform(platform_name)
 
@@ -1687,15 +1681,3 @@ def async_suggest_report_issue(
         )
 
     return f"create a bug report at {issue_tracker}"
-
-
-@callback
-def async_config_flow_needs_preload(component: ComponentProtocol) -> bool:
-    """Test if a config_flow for a component needs to be preloaded.
-
-    Currently we need to preload a the config flow if the integration
-    has a config flow and the component has an async_migrate_entry method
-    because it means that config_entries will always have to load
-    it to check if it needs to be migrated.
-    """
-    return hasattr(component, "async_migrate_entry")
