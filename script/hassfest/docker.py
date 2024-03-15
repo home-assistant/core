@@ -23,7 +23,8 @@ ARG QEMU_CPU
 
 # Set shell
 SHELL ["/bin/ash", "-o", "pipefail", "-c"]
-RUN curl --proto '=https' --tlsv1.2 -LsSf https://github.com/astral-sh/uv/releases/download/0.1.17/uv-installer.sh | sh
+# Install uv
+RUN pip3 install {uv_requirement}
 
 WORKDIR /usr/src
 
@@ -72,6 +73,15 @@ WORKDIR /config
 """
 
 
+def _get_uv_requirement() -> str:
+    with open("requirements_test.txt") as fp:
+        for l_no, line in enumerate(fp):
+            if line.startswith("uv"):
+                return line
+
+    raise RuntimeError("Could not find uv requirement in requirements_test.txt")
+
+
 def _generate_dockerfile() -> str:
     timeout = (
         core.STOPPING_STAGE_SHUTDOWN_TIMEOUT
@@ -82,7 +92,9 @@ def _generate_dockerfile() -> str:
         + thread.THREADING_SHUTDOWN_TIMEOUT
         + 10
     )
-    return DOCKERFILE_TEMPLATE.format(timeout=timeout * 1000)
+    return DOCKERFILE_TEMPLATE.format(
+        timeout=timeout * 1000, uv_requirement=_get_uv_requirement()
+    )
 
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:
