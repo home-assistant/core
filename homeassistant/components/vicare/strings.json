@@ -286,7 +286,7 @@
           "standby": "Standby"
         }
       },
-      "ess_discharge_currentday": {
+      "ess_discharge_today": {
         "name": "Battery discharge today"
       },
       "pcc_current_power_exchange": {
