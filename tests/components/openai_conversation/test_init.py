@@ -318,6 +318,8 @@ async def test_function_exception(
         async_callback=mock_tool,
     )
 
+    assert await async_setup_component(hass, "homeassistant", {})
+
     with pytest.raises(
         TypeError, match="Agent ID must correspond to openai_conversation agent"
     ):
