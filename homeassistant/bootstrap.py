@@ -51,6 +51,13 @@ from .components import (
     webhook as webhook_pre_import,  # noqa: F401
     websocket_api as websocket_api_pre_import,  # noqa: F401
 )
+
+# Ensure group config_flow is imported so it does not need the import
+# executor since config_flows are preloaded when the component is loaded.
+# Even though group is pre-imported above we would have still had to wait
+# for the config flow to be imported when the import executor is the most
+# busy.
+from .components.group import config_flow as group_config_flow  # noqa: F401
 from .components.sensor import recorder as sensor_recorder  # noqa: F401
 from .const import (
     FORMAT_DATETIME,
