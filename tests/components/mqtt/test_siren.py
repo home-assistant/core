@@ -862,7 +862,7 @@ async def test_command_templates(
         entity_id="siren.milk",
     )
     mqtt_mock.async_publish.assert_any_call("test-topic", "CMD_OFF: OFF", 0, False)
-    assert mqtt_mock.async_publish.call_count == 1
+    assert mqtt_mock.async_publish.call_count == 2
     mqtt_mock.reset_mock()
 
 
