@@ -254,6 +254,17 @@ async def test_async_get_image_with_extra_cmd_width_height(hass: HomeAssistant) 
     ]
 
 
+async def test_modern_ffmpeg(
+    hass: HomeAssistant,
+) -> None:
+    """Test modern ffmpeg uses the new ffmpeg content type."""
+    with assert_setup_component(1):
+        await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+
+    manager = get_ffmpeg_manager(hass)
+    assert "ffmpeg" in manager.ffmpeg_stream_content_type
+
+
 async def test_legacy_ffmpeg(
     hass: HomeAssistant,
 ) -> None:
