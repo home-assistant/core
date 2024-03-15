@@ -143,7 +143,7 @@ def _async_wol_buttons_list(
         data_fritz.wol_buttons[avm_wrapper.unique_id] = set()
 
     for mac, device in avm_wrapper.devices.items():
-        if _is_tracked(mac, data_fritz.wol_buttons.values()):  # pragma: no cover
+        if _is_tracked(mac, data_fritz.wol_buttons.values()):
             _LOGGER.debug("Skipping wol button creation for device %s", device.hostname)
             continue
 
