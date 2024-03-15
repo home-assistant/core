@@ -27,15 +27,6 @@ from .const import (
     SIGNAL_EVENTS_CHANGED,
     SIGNAL_POSITION_CHANGED,
     STATE_ABOVE_HORIZON,
-    STATE_ATTR_AZIMUTH,
-    STATE_ATTR_ELEVATION,
-    STATE_ATTR_NEXT_DAWN,
-    STATE_ATTR_NEXT_DUSK,
-    STATE_ATTR_NEXT_MIDNIGHT,
-    STATE_ATTR_NEXT_NOON,
-    STATE_ATTR_NEXT_RISING,
-    STATE_ATTR_NEXT_SETTING,
-    STATE_ATTR_RISING,
     STATE_BELOW_HORIZON,
 )
 
@@ -49,6 +40,16 @@ ENTITY_ID = "sun.sun"
 # the PR for the change, see the Discussion section of:
 # https://github.com/home-assistant/core/pull/23832
 
+
+STATE_ATTR_AZIMUTH = "azimuth"
+STATE_ATTR_ELEVATION = "elevation"
+STATE_ATTR_RISING = "rising"
+STATE_ATTR_NEXT_DAWN = "next_dawn"
+STATE_ATTR_NEXT_DUSK = "next_dusk"
+STATE_ATTR_NEXT_MIDNIGHT = "next_midnight"
+STATE_ATTR_NEXT_NOON = "next_noon"
+STATE_ATTR_NEXT_RISING = "next_rising"
+STATE_ATTR_NEXT_SETTING = "next_setting"
 
 # As documented in wikipedia: https://en.wikipedia.org/wiki/Twilight
 # sun is:
