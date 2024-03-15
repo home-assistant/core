@@ -651,7 +651,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         else:
             _LOGGER.error('Sonos does not support a media type of "%s"', media_type)
 
-    def _play_media_queue(self, soco: SoCo, item: MusicServiceItem, enqueue: str):
+    def _play_media_queue(
+        self, soco: SoCo, item: MusicServiceItem, enqueue: MediaPlayerEnqueue
+    ):
         """Manage adding, replacing, playing items onto the sonos queue."""
         _LOGGER.debug(
             "_play_media_queue item_id [%s] title [%s] enqueue [%s]",
