@@ -19,8 +19,6 @@ async def async_get_config_entry_diagnostics(
         config_entry.entry_id
     ]
 
-    diagnostics_data = {
+    return {
         "coordinator_data": coordinator.data,
     }
-
-    return diagnostics_data
