@@ -64,10 +64,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def _is_tracked(mac: str, current_devices: ValuesView) -> bool:
     """Check if device is already tracked."""
-    for tracked in current_devices:
-        if mac in tracked:
-            return True
-    return False
+    return any(mac in tracked for tracked in current_devices)
 
 
 def device_filter_out_from_trackers(

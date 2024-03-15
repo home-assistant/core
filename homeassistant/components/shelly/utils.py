@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from ipaddress import IPv4Address
 from typing import Any, cast
 
 from aiohttp.web import Request, WebSocketResponse
 from aioshelly.block_device import COAP, Block, BlockDevice
 from aioshelly.const import (
     BLOCK_GENERATIONS,
+    DEFAULT_COAP_PORT,
     MODEL_1L,
     MODEL_DIMMER,
     MODEL_DIMMER_2,
@@ -19,6 +21,7 @@ from aioshelly.const import (
 )
 from aioshelly.rpc_device import RpcDevice, WsServer
 
+from homeassistant.components import network
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -36,7 +39,6 @@ from .const import (
     BASIC_INPUTS_EVENTS_TYPES,
     CONF_COAP_PORT,
     CONF_GEN,
-    DEFAULT_COAP_PORT,
     DEVICES_WITHOUT_FIRMWARE_CHANGELOG,
     DOMAIN,
     FIRMWARE_UNSUPPORTED_ISSUE_ID,
@@ -186,8 +188,6 @@ def get_block_input_triggers(
     if not is_block_momentary_input(device.settings, block, True):
         return []
 
-    triggers = []
-
     if block.type == "device" or get_number_of_channels(device, block) == 1:
         subtype = "button"
     else:
@@ -201,32 +201,42 @@ def get_block_input_triggers(
     else:
         trigger_types = BASIC_INPUTS_EVENTS_TYPES
 
-    for trigger_type in trigger_types:
-        triggers.append((trigger_type, subtype))
-
-    return triggers
+    return [(trigger_type, subtype) for trigger_type in trigger_types]
 
 
 def get_shbtn_input_triggers() -> list[tuple[str, str]]:
     """Return list of input triggers for SHBTN models."""
-    triggers = []
-
-    for trigger_type in SHBTN_INPUTS_EVENTS_TYPES:
-        triggers.append((trigger_type, "button"))
-
-    return triggers
+    return [(trigger_type, "button") for trigger_type in SHBTN_INPUTS_EVENTS_TYPES]
 
 
 @singleton.singleton("shelly_coap")
 async def get_coap_context(hass: HomeAssistant) -> COAP:
     """Get CoAP context to be used in all Shelly Gen1 devices."""
     context = COAP()
+
+    adapters = await network.async_get_adapters(hass)
+    LOGGER.debug("Network adapters: %s", adapters)
+
+    ipv4: list[IPv4Address] = []
+    if not network.async_only_default_interface_enabled(adapters):
+        ipv4.extend(
+            address
+            for address in await network.async_get_enabled_source_ips(hass)
+            if address.version == 4
+            and not (
+                address.is_link_local
+                or address.is_loopback
+                or address.is_multicast
+                or address.is_unspecified
+            )
+        )
+    LOGGER.debug("Network IPv4 addresses: %s", ipv4)
     if DOMAIN in hass.data:
         port = hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT)
     else:
         port = DEFAULT_COAP_PORT
     LOGGER.info("Starting CoAP context with UDP port %s", port)
-    await context.initialize(port)
+    await context.initialize(port, ipv4)
 
     @callback
     def shutdown_listener(ev: Event) -> None:

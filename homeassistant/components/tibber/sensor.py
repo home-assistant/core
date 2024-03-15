@@ -295,8 +295,10 @@ async def async_setup_entry(
             entities.append(TibberSensorElPrice(home))
             if coordinator is None:
                 coordinator = TibberDataCoordinator(hass, tibber_connection)
-            for entity_description in SENSORS:
-                entities.append(TibberDataSensor(home, coordinator, entity_description))
+            entities.extend(
+                TibberDataSensor(home, coordinator, entity_description)
+                for entity_description in SENSORS
+            )
 
         if home.has_real_time_consumption:
             await home.rt_subscribe(

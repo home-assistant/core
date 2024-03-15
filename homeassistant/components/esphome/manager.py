@@ -455,7 +455,7 @@ class ESPHomeManager:
 
         self.device_id = _async_setup_device_registry(hass, entry, entry_data)
 
-        entry_data.async_update_device_state(hass)
+        entry_data.async_update_device_state()
         await entry_data.async_update_static_infos(
             hass, entry, entity_infos, device_info.mac_address
         )
@@ -510,7 +510,7 @@ class ESPHomeManager:
             # since it generates a lot of state changed events and database
             # writes when we already know we're shutting down and the state
             # will be cleared anyway.
-            entry_data.async_update_device_state(hass)
+            entry_data.async_update_device_state()
 
     async def on_connect_error(self, err: Exception) -> None:
         """Start reauth flow if appropriate connect error type."""
@@ -543,11 +543,15 @@ class ESPHomeManager:
         # "Unable to remove unknown listener
         # <function EventBus.async_listen_once.<locals>.onetime_listener>"
         entry_data.cleanup_callbacks.append(
-            hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, self.on_stop)
+            hass.bus.async_listen(
+                EVENT_HOMEASSISTANT_STOP, self.on_stop, run_immediately=True
+            )
         )
         entry_data.cleanup_callbacks.append(
             hass.bus.async_listen(
-                EVENT_LOGGING_CHANGED, self._async_handle_logging_changed
+                EVENT_LOGGING_CHANGED,
+                self._async_handle_logging_changed,
+                run_immediately=True,
             )
         )
 
@@ -773,8 +777,7 @@ def _setup_services(
             # New service
             to_register.append(service)
 
-    for service in old_services.values():
-        to_unregister.append(service)
+    to_unregister.extend(old_services.values())
 
     entry_data.services = {serv.key: serv for serv in services}
 

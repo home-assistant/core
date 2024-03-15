@@ -62,15 +62,15 @@ async def async_setup_entry(
         SyncThruMainSensor(coordinator, name),
         SyncThruActiveAlertSensor(coordinator, name),
     ]
-
-    for key in supp_toner:
-        entities.append(SyncThruTonerSensor(coordinator, name, key))
-    for key in supp_drum:
-        entities.append(SyncThruDrumSensor(coordinator, name, key))
-    for key in supp_tray:
-        entities.append(SyncThruInputTraySensor(coordinator, name, key))
-    for int_key in supp_output_tray:
-        entities.append(SyncThruOutputTraySensor(coordinator, name, int_key))
+    entities.extend(SyncThruTonerSensor(coordinator, name, key) for key in supp_toner)
+    entities.extend(SyncThruDrumSensor(coordinator, name, key) for key in supp_drum)
+    entities.extend(
+        SyncThruInputTraySensor(coordinator, name, key) for key in supp_tray
+    )
+    entities.extend(
+        SyncThruOutputTraySensor(coordinator, name, int_key)
+        for int_key in supp_output_tray
+    )
 
     async_add_entities(entities)
 
