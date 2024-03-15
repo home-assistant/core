@@ -64,9 +64,9 @@ class TeslemetrySensorEntityDescription(SensorEntityDescription):
 VEHICLE_DESCRIPTIONS: tuple[TeslemetrySensorEntityDescription, ...] = (
     TeslemetrySensorEntityDescription(
         key="charge_state_charging_state",
-        options=list(ChargeStates.values()),
+        options=list(CHARGE_STATES.values()),
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda value: ChargeStates.get(cast(str, value)),
+        value_fn=lambda value: CHARGE_STATES.get(cast(str, value)),
     ),
     TeslemetrySensorEntityDescription(
         key="charge_state_battery_level",
@@ -167,9 +167,9 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySensorEntityDescription, ...] = (
     ),
     TeslemetrySensorEntityDescription(
         key="drive_state_shift_state",
-        options=list(ShiftStates.values()),
+        options=list(SHIFT_STATES.values()),
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda x: ShiftStates.get(str(x), "p"),
+        value_fn=lambda x: SHIFT_STATES.get(str(x), "p"),
         entity_registry_enabled_default=False,
     ),
     TeslemetrySensorEntityDescription(
