@@ -590,6 +590,7 @@ async def test_supervisor_issues_initial_failure(
 
     with patch("homeassistant.components.hassio.issues.REQUEST_REFRESH_DELAY", new=0.1):
         result = await async_setup_component(hass, "hassio", {})
+        await hass.async_block_till_done()
         assert result
 
         client = await hass_ws_client(hass)
