@@ -1,4 +1,5 @@
 """Test the Yeelight config flow."""
+
 from ipaddress import ip_address
 from unittest.mock import patch
 
@@ -488,7 +489,7 @@ async def test_discovered_by_homekit_and_dhcp(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
-                ip=IP_ADDRESS, macaddress="aa:bb:cc:dd:ee:ff", hostname="mock_hostname"
+                ip=IP_ADDRESS, macaddress="aabbccddeeff", hostname="mock_hostname"
             ),
         )
         await hass.async_block_till_done()
@@ -502,7 +503,7 @@ async def test_discovered_by_homekit_and_dhcp(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
-                ip=IP_ADDRESS, macaddress="00:00:00:00:00:00", hostname="mock_hostname"
+                ip=IP_ADDRESS, macaddress="000000000000", hostname="mock_hostname"
             ),
         )
         await hass.async_block_till_done()
@@ -518,7 +519,7 @@ async def test_discovered_by_homekit_and_dhcp(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
-                ip="1.2.3.5", macaddress="00:00:00:00:00:01", hostname="mock_hostname"
+                ip="1.2.3.5", macaddress="000000000001", hostname="mock_hostname"
             ),
         )
         await hass.async_block_till_done()
@@ -532,7 +533,7 @@ async def test_discovered_by_homekit_and_dhcp(hass: HomeAssistant) -> None:
         (
             config_entries.SOURCE_DHCP,
             dhcp.DhcpServiceInfo(
-                ip=IP_ADDRESS, macaddress="aa:bb:cc:dd:ee:ff", hostname="mock_hostname"
+                ip=IP_ADDRESS, macaddress="aabbccddeeff", hostname="mock_hostname"
             ),
         ),
         (
@@ -600,7 +601,7 @@ async def test_discovered_by_dhcp_or_homekit(hass: HomeAssistant, source, data) 
         (
             config_entries.SOURCE_DHCP,
             dhcp.DhcpServiceInfo(
-                ip=IP_ADDRESS, macaddress="aa:bb:cc:dd:ee:ff", hostname="mock_hostname"
+                ip=IP_ADDRESS, macaddress="aabbccddeeff", hostname="mock_hostname"
             ),
         ),
         (
@@ -824,7 +825,7 @@ async def test_discovery_adds_missing_ip_id_only(hass: HomeAssistant) -> None:
         (
             config_entries.SOURCE_DHCP,
             dhcp.DhcpServiceInfo(
-                ip=IP_ADDRESS, macaddress="aa:bb:cc:dd:ee:ff", hostname="mock_hostname"
+                ip=IP_ADDRESS, macaddress="aabbccddeeff", hostname="mock_hostname"
             ),
         ),
         (

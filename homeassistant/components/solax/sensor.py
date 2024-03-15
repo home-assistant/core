@@ -1,4 +1,5 @@
 """Support for Solax inverter via local API."""
+
 from __future__ import annotations
 
 import asyncio
@@ -102,8 +103,12 @@ async def async_setup_entry(
     serial = resp.serial_number
     version = resp.version
     endpoint = RealTimeDataEndpoint(hass, api)
-    hass.async_add_job(endpoint.async_refresh)
-    async_track_time_interval(hass, endpoint.async_refresh, SCAN_INTERVAL)
+    entry.async_create_background_task(
+        hass, endpoint.async_refresh(), f"solax {entry.title} initial refresh"
+    )
+    entry.async_on_unload(
+        async_track_time_interval(hass, endpoint.async_refresh, SCAN_INTERVAL)
+    )
     devices = []
     for sensor, (idx, measurement) in api.inverter.sensor_map().items():
         description = SENSOR_DESCRIPTIONS[(measurement.unit, measurement.is_monotonic)]

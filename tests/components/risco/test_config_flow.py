@@ -1,4 +1,5 @@
 """Test the Risco config flow."""
+
 from unittest.mock import PropertyMock, patch
 
 import pytest
@@ -383,14 +384,14 @@ async def test_ha_to_risco_schema(hass: HomeAssistant) -> None:
     )
 
     # Test an HA state that isn't used
-    with pytest.raises(vol.error.MultipleInvalid):
+    with pytest.raises(vol.error.Invalid):
         await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={**TEST_HA_TO_RISCO, "armed_custom_bypass": "D"},
         )
 
     # Test a combo that can't be selected
-    with pytest.raises(vol.error.MultipleInvalid):
+    with pytest.raises(vol.error.Invalid):
         await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={**TEST_HA_TO_RISCO, "armed_night": "A"},

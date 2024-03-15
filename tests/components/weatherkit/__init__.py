@@ -1,4 +1,5 @@
 """Tests for the Apple WeatherKit integration."""
+
 from unittest.mock import patch
 
 from apple_weatherkit import DataSetType

@@ -1,4 +1,5 @@
 """The tests for recording streams."""
+
 import asyncio
 from datetime import timedelta
 from io import BytesIO

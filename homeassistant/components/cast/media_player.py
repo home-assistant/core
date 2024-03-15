@@ -1,4 +1,5 @@
 """Provide functionality to interact with Cast devices on the network."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -61,6 +62,7 @@ from .const import (
     SIGNAL_CAST_DISCOVERED,
     SIGNAL_CAST_REMOVED,
     SIGNAL_HASS_CAST_SHOW_VIEW,
+    HomeAssistantControllerData,
 )
 from .discovery import setup_internal_discovery
 from .helpers import (
@@ -240,7 +242,8 @@ class CastDevice:
             self._status_listener.invalidate()
             self._status_listener = None
 
-    async def _async_cast_discovered(self, discover: ChromecastInfo) -> None:
+    @callback
+    def _async_cast_discovered(self, discover: ChromecastInfo) -> None:
         """Handle discovery of new Chromecast."""
         if self._cast_info.uuid != discover.uuid:
             # Discovered is not our device.
@@ -389,15 +392,15 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         self.media_status_received = dt_util.utcnow()
         self.schedule_update_ha_state()
 
-    def load_media_failed(self, item, error_code):
+    def load_media_failed(self, queue_item_id, error_code):
         """Handle load media failed."""
         _LOGGER.debug(
-            "[%s %s] Load media failed with code %s(%s) for item %s",
+            "[%s %s] Load media failed with code %s(%s) for queue_item_id %s",
             self.entity_id,
             self._cast_info.friendly_name,
             error_code,
             MEDIA_PLAYER_ERROR_CODES.get(error_code, "unknown code"),
-            item,
+            queue_item_id,
         )
 
     def new_connection_status(self, connection_status):
@@ -951,7 +954,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
     def _handle_signal_show_view(
         self,
-        controller: HomeAssistantController,
+        controller_data: HomeAssistantControllerData,
         entity_id: str,
         view_path: str,
         url_path: str | None,
@@ -961,6 +964,23 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             return
 
         if self._hass_cast_controller is None:
+
+            def unregister() -> None:
+                """Handle request to unregister the handler."""
+                if not self._hass_cast_controller or not self._chromecast:
+                    return
+                _LOGGER.debug(
+                    "[%s %s] Unregistering HomeAssistantController",
+                    self.entity_id,
+                    self._cast_info.friendly_name,
+                )
+
+                self._chromecast.unregister_handler(self._hass_cast_controller)
+                self._hass_cast_controller = None
+
+            controller = HomeAssistantController(
+                **controller_data, unregister=unregister
+            )
             self._hass_cast_controller = controller
             self._chromecast.register_handler(controller)
 

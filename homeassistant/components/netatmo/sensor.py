@@ -1,4 +1,5 @@
 """Support for the Netatmo sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -51,8 +52,8 @@ from .const import (
     SIGNAL_NAME,
 )
 from .data_handler import HOME, PUBLIC, NetatmoDataHandler, NetatmoDevice, NetatmoRoom
+from .entity import NetatmoBaseEntity
 from .helper import NetatmoArea
-from .netatmo_entity_base import NetatmoBase
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,16 +71,11 @@ SUPPORTED_PUBLIC_SENSOR_TYPES: tuple[str, ...] = (
 )
 
 
-@dataclass(frozen=True)
-class NetatmoRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class NetatmoSensorEntityDescription(SensorEntityDescription):
+    """Describes Netatmo sensor entity."""
 
     netatmo_name: str
-
-
-@dataclass(frozen=True)
-class NetatmoSensorEntityDescription(SensorEntityDescription, NetatmoRequiredKeysMixin):
-    """Describes Netatmo sensor entity."""
 
 
 SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
@@ -399,7 +395,7 @@ async def async_setup_entry(
     await add_public_entities(False)
 
 
-class NetatmoWeatherSensor(NetatmoBase, SensorEntity):
+class NetatmoWeatherSensor(NetatmoBaseEntity, SensorEntity):
     """Implementation of a Netatmo weather/home coach sensor."""
 
     _attr_has_entity_name = True
@@ -478,7 +474,7 @@ class NetatmoWeatherSensor(NetatmoBase, SensorEntity):
         self.async_write_ha_state()
 
 
-class NetatmoClimateBatterySensor(NetatmoBase, SensorEntity):
+class NetatmoClimateBatterySensor(NetatmoBaseEntity, SensorEntity):
     """Implementation of a Netatmo sensor."""
 
     entity_description: NetatmoSensorEntityDescription
@@ -525,7 +521,7 @@ class NetatmoClimateBatterySensor(NetatmoBase, SensorEntity):
         self._attr_native_value = self._module.battery
 
 
-class NetatmoSensor(NetatmoBase, SensorEntity):
+class NetatmoSensor(NetatmoBaseEntity, SensorEntity):
     """Implementation of a Netatmo sensor."""
 
     entity_description: NetatmoSensorEntityDescription
@@ -613,7 +609,7 @@ def process_wifi(strength: int) -> str:
     return "Full"
 
 
-class NetatmoRoomSensor(NetatmoBase, SensorEntity):
+class NetatmoRoomSensor(NetatmoBaseEntity, SensorEntity):
     """Implementation of a Netatmo room sensor."""
 
     entity_description: NetatmoSensorEntityDescription
@@ -662,7 +658,7 @@ class NetatmoRoomSensor(NetatmoBase, SensorEntity):
         self.async_write_ha_state()
 
 
-class NetatmoPublicSensor(NetatmoBase, SensorEntity):
+class NetatmoPublicSensor(NetatmoBaseEntity, SensorEntity):
     """Represent a single sensor in a Netatmo."""
 
     _attr_has_entity_name = True

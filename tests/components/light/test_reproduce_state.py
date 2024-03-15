@@ -1,4 +1,5 @@
 """Test reproduce state for Light."""
+
 import pytest
 
 from homeassistant.components import light

@@ -1,4 +1,5 @@
 """Methods and classes related to executing Z-Wave commands."""
+
 from __future__ import annotations
 
 import asyncio

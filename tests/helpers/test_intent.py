@@ -1,4 +1,5 @@
 """Tests for the intent helpers."""
+
 import asyncio
 from unittest.mock import MagicMock, patch
 
@@ -176,6 +177,14 @@ def test_async_validate_slots() -> None:
     )
 
 
+def test_async_validate_slots_no_schema() -> None:
+    """Test async_validate_slots of IntentHandler with no schema."""
+    handler1 = MockIntentHandler(None)
+    assert handler1.async_validate_slots({"name": {"value": "kitchen"}}) == {
+        "name": {"value": "kitchen"}
+    }
+
+
 async def test_cant_turn_on_lock(hass: HomeAssistant) -> None:
     """Test that we can't turn on entities that don't support it."""
     assert await async_setup_component(hass, "homeassistant", {})
@@ -192,7 +201,7 @@ async def test_cant_turn_on_lock(hass: HomeAssistant) -> None:
     )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR
-    assert result.response.error_code == intent.IntentResponseErrorCode.NO_INTENT_MATCH
+    assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
 
 
 def test_async_register(hass: HomeAssistant) -> None:

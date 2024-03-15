@@ -1,4 +1,6 @@
 """The tests for the image component."""
+
+import datetime
 from http import HTTPStatus
 import ssl
 from unittest.mock import MagicMock, patch
@@ -287,3 +289,52 @@ async def test_fetch_image_url_wrong_content_type(
 
     resp = await client.get("/api/image_proxy/image.test")
     assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+
+
+async def test_image_stream(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test image stream."""
+
+    mock_integration(hass, MockModule(domain="test"))
+    mock_image = MockURLImageEntity(hass)
+    mock_platform(hass, "test.image", MockImagePlatform([mock_image]))
+    assert await async_setup_component(
+        hass, image.DOMAIN, {"image": {"platform": "test"}}
+    )
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    close_future = hass.loop.create_future()
+    original_get_still_stream = image.async_get_still_stream
+
+    async def _wrap_async_get_still_stream(*args, **kwargs):
+        result = await original_get_still_stream(*args, **kwargs)
+        hass.loop.call_soon(close_future.set_result, None)
+        return result
+
+    with patch(
+        "homeassistant.components.image.async_get_still_stream",
+        _wrap_async_get_still_stream,
+    ):
+        with patch.object(mock_image, "async_image", return_value=b""):
+            resp = await client.get("/api/image_proxy_stream/image.test")
+            assert not resp.closed
+            assert resp.status == HTTPStatus.OK
+
+            mock_image.image_last_updated = datetime.datetime.now()
+            mock_image.async_write_ha_state()
+            # Two blocks to ensure the frame is written
+            await hass.async_block_till_done()
+            await hass.async_block_till_done()
+
+        with patch.object(mock_image, "async_image", return_value=None):
+            mock_image.image_last_updated = datetime.datetime.now()
+            mock_image.async_write_ha_state()
+            # Two blocks to ensure the frame is written
+            await hass.async_block_till_done()
+            await hass.async_block_till_done()
+
+    await close_future
+    assert resp.closed

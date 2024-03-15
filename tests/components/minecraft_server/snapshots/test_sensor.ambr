@@ -3,7 +3,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Latency',
-      'icon': 'mdi:signal',
       'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
@@ -17,7 +16,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Players online',
-      'icon': 'mdi:account-multiple',
       'unit_of_measurement': 'players',
     }),
     'context': <ANY>,
@@ -31,7 +29,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Players max',
-      'icon': 'mdi:account-multiple',
       'unit_of_measurement': 'players',
     }),
     'context': <ANY>,
@@ -45,7 +42,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server World message',
-      'icon': 'mdi:minecraft',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_world_message',
@@ -58,7 +54,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Version',
-      'icon': 'mdi:numeric',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_version',
@@ -71,7 +66,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Protocol version',
-      'icon': 'mdi:numeric',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_protocol_version',
@@ -84,7 +78,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Map name',
-      'icon': 'mdi:map',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_map_name',
@@ -97,7 +90,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Game mode',
-      'icon': 'mdi:cog',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_game_mode',
@@ -110,7 +102,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Edition',
-      'icon': 'mdi:minecraft',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_edition',
@@ -123,7 +114,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Latency',
-      'icon': 'mdi:signal',
       'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
@@ -137,7 +127,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Players online',
-      'icon': 'mdi:account-multiple',
       'players_list': list([
         'Player 1',
         'Player 2',
@@ -156,7 +145,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Players max',
-      'icon': 'mdi:account-multiple',
       'unit_of_measurement': 'players',
     }),
     'context': <ANY>,
@@ -170,7 +158,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server World message',
-      'icon': 'mdi:minecraft',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_world_message',
@@ -183,7 +170,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Version',
-      'icon': 'mdi:numeric',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_version',
@@ -196,7 +182,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Protocol version',
-      'icon': 'mdi:numeric',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_protocol_version',
@@ -209,7 +194,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Latency',
-      'icon': 'mdi:signal',
       'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
@@ -223,7 +207,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Players online',
-      'icon': 'mdi:account-multiple',
       'unit_of_measurement': 'players',
     }),
     'context': <ANY>,
@@ -237,7 +220,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Players max',
-      'icon': 'mdi:account-multiple',
       'unit_of_measurement': 'players',
     }),
     'context': <ANY>,
@@ -251,7 +233,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server World message',
-      'icon': 'mdi:minecraft',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_world_message',
@@ -264,7 +245,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Version',
-      'icon': 'mdi:numeric',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_version',
@@ -277,7 +257,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Protocol version',
-      'icon': 'mdi:numeric',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_protocol_version',
@@ -290,7 +269,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Map name',
-      'icon': 'mdi:map',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_map_name',
@@ -303,7 +281,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Game mode',
-      'icon': 'mdi:cog',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_game_mode',
@@ -316,7 +293,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Edition',
-      'icon': 'mdi:minecraft',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_edition',
@@ -329,7 +305,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Latency',
-      'icon': 'mdi:signal',
       'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
@@ -343,7 +318,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Players online',
-      'icon': 'mdi:account-multiple',
       'players_list': list([
         'Player 1',
         'Player 2',
@@ -362,7 +336,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Players max',
-      'icon': 'mdi:account-multiple',
       'unit_of_measurement': 'players',
     }),
     'context': <ANY>,
@@ -376,7 +349,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server World message',
-      'icon': 'mdi:minecraft',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_world_message',
@@ -389,7 +361,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Version',
-      'icon': 'mdi:numeric',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_version',
@@ -402,7 +373,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Protocol version',
-      'icon': 'mdi:numeric',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_protocol_version',

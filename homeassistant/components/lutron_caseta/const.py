@@ -14,6 +14,9 @@ LUTRON_CASETA_BUTTON_EVENT = "lutron_caseta_button_event"
 
 BRIDGE_DEVICE_ID = "1"
 
+DEVICE_TYPE_WHITE_TUNE = "WhiteTune"
+DEVICE_TYPE_SPECTRUM_TUNE = "SpectrumTune"
+
 MANUFACTURER = "Lutron Electronics Co., Inc"
 
 ATTR_SERIAL = "serial"

@@ -1,4 +1,5 @@
 """Test pushbullet integration."""
+
 from unittest.mock import MagicMock, patch
 
 from pushover_complete import BadAPIRequestError

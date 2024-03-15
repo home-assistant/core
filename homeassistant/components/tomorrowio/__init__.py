@@ -1,4 +1,5 @@
 """The Tomorrow.io integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -163,7 +164,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return unload_ok
 
 
-class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):  # pylint: disable=hass-enforce-coordinator-module
     """Define an object to hold Tomorrow.io data."""
 
     def __init__(self, hass: HomeAssistant, api: TomorrowioV4) -> None:

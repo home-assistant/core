@@ -1,4 +1,5 @@
 """Support for LaMetric sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -32,7 +33,6 @@ SENSORS = [
     LaMetricSensorEntityDescription(
         key="rssi",
         translation_key="rssi",
-        icon="mdi:wifi",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=PERCENTAGE,

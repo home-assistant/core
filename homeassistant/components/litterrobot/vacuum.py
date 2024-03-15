@@ -1,4 +1,5 @@
 """Support for Litter-Robot "Vacuum"."""
+
 from __future__ import annotations
 
 from datetime import time
@@ -20,11 +21,7 @@ from homeassistant.components.vacuum import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import (
-    config_validation as cv,
-    entity_platform,
-    issue_registry as ir,
-)
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
@@ -79,11 +76,7 @@ class LitterRobotCleaner(LitterRobotEntity[LitterRobot], StateVacuumEntity):
     """Litter-Robot "Vacuum" Cleaner."""
 
     _attr_supported_features = (
-        VacuumEntityFeature.START
-        | VacuumEntityFeature.STATE
-        | VacuumEntityFeature.STOP
-        | VacuumEntityFeature.TURN_OFF
-        | VacuumEntityFeature.TURN_ON
+        VacuumEntityFeature.START | VacuumEntityFeature.STATE | VacuumEntityFeature.STOP
     )
 
     @property
@@ -96,42 +89,6 @@ class LitterRobotCleaner(LitterRobotEntity[LitterRobot], StateVacuumEntity):
         """Return the status of the cleaner."""
         return (
             f"{self.robot.status.text}{' (Sleeping)' if self.robot.is_sleeping else ''}"
-        )
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the cleaner on, starting a clean cycle."""
-        await self.robot.set_power_status(True)
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            "service_deprecation_turn_on",
-            breaks_in_ha_version="2024.2.0",
-            is_fixable=True,
-            is_persistent=True,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="service_deprecation_turn_on",
-            translation_placeholders={
-                "old_service": "vacuum.turn_on",
-                "new_service": "vacuum.start",
-            },
-        )
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the unit off, stopping any cleaning in progress as is."""
-        await self.robot.set_power_status(False)
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            "service_deprecation_turn_off",
-            breaks_in_ha_version="2024.2.0",
-            is_fixable=True,
-            is_persistent=True,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="service_deprecation_turn_off",
-            translation_placeholders={
-                "old_service": "vacuum.turn_off",
-                "new_service": "vacuum.stop",
-            },
         )
 
     async def async_start(self) -> None:

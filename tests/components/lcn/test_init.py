@@ -1,4 +1,5 @@
 """Test init of LCN integration."""
+
 from unittest.mock import patch
 
 from pypck.connection import (

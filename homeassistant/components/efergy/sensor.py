@@ -1,4 +1,5 @@
 """Support for Efergy sensors."""
+
 from __future__ import annotations
 
 import dataclasses
@@ -96,7 +97,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key=CONF_CURRENT_VALUES,
-        name="Power Usage",
+        translation_key="power_usage",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -126,15 +127,15 @@ async def async_setup_entry(
                 description,
                 entity_registry_enabled_default=len(api.sids) > 1,
             )
-            for sid in api.sids:
-                sensors.append(
-                    EfergySensor(
-                        api,
-                        description,
-                        entry.entry_id,
-                        sid=sid,
-                    )
+            sensors.extend(
+                EfergySensor(
+                    api,
+                    description,
+                    entry.entry_id,
+                    sid=sid,
                 )
+                for sid in api.sids
+            )
     async_add_entities(sensors, True)
 
 
@@ -156,7 +157,8 @@ class EfergySensor(EfergyEntity, SensorEntity):
         super().__init__(api, server_unique_id)
         self.entity_description = description
         if description.key == CONF_CURRENT_VALUES:
-            self._attr_name = f"{description.name}_{'' if sid is None else sid}"
+            assert sid is not None
+            self._attr_translation_placeholders = {"sid": str(sid)}
         self._attr_unique_id = (
             f"{server_unique_id}/{description.key}_{'' if sid is None else sid}"
         )

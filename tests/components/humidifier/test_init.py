@@ -1,4 +1,5 @@
 """The tests for the humidifier component."""
+
 from enum import Enum
 from types import ModuleType
 from unittest.mock import MagicMock
@@ -13,7 +14,7 @@ from homeassistant.components.humidifier import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.common import import_and_test_deprecated_constant_enum
+from tests.common import help_test_all, import_and_test_deprecated_constant_enum
 
 
 class MockHumidifierEntity(HumidifierEntity):
@@ -48,10 +49,16 @@ async def test_sync_turn_off(hass: HomeAssistant) -> None:
 
 
 def _create_tuples(enum: Enum, constant_prefix: str) -> list[tuple[Enum, str]]:
-    result = []
-    for enum in enum:
-        result.append((enum, constant_prefix))
-    return result
+    return [(enum_field, constant_prefix) for enum_field in enum]
+
+
+@pytest.mark.parametrize(
+    "module",
+    [humidifier, humidifier.const],
+)
+def test_all(module: ModuleType) -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(module)
 
 
 @pytest.mark.parametrize(

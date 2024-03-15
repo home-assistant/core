@@ -1,4 +1,5 @@
 """Test the Volvo On Call config flow."""
+
 from unittest.mock import Mock, patch
 
 from aiohttp import ClientResponseError

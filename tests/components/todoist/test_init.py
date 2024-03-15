@@ -1,4 +1,5 @@
 """Unit tests for the Todoist integration."""
+
 from http import HTTPStatus
 from unittest.mock import AsyncMock
 
