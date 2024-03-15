@@ -24,7 +24,7 @@ PLATFORMS: list[Platform] = [
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up duotecno from a config entry."""
 
-    controller = PyDuotecno()
+    controller = PyDuotecno(hass)
     try:
         await controller.connect(
             entry.data[CONF_HOST], entry.data[CONF_PORT], entry.data[CONF_PASSWORD]
