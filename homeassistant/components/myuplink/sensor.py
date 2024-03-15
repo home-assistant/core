@@ -81,10 +81,10 @@ DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
     "m3/h": SensorEntityDescription(
         key="airflow",
+        translation_key="airflow",
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
-        icon="mdi:weather-windy",
     ),
     "s": SensorEntityDescription(
         key="seconds",
@@ -101,22 +101,22 @@ CATEGORY_BASED_DESCRIPTIONS: dict[str, dict[str, SensorEntityDescription]] = {
     "NIBEF": {
         "43108": SensorEntityDescription(
             key="fan_mode",
-            icon="mdi:fan",
+            translation_key="fan_mode",
         ),
         "43427": SensorEntityDescription(
             key="status_compressor",
+            translation_key="status_compressor",
             device_class=SensorDeviceClass.ENUM,
-            icon="mdi:heat-pump-outline",
         ),
         "49993": SensorEntityDescription(
             key="elect_add",
+            translation_key="elect_add",
             device_class=SensorDeviceClass.ENUM,
-            icon="mdi:heat-wave",
         ),
         "49994": SensorEntityDescription(
             key="priority",
+            translation_key="priority",
             device_class=SensorDeviceClass.ENUM,
-            icon="mdi:priority-high",
         ),
     },
     "NIBE": {},

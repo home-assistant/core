@@ -8,8 +8,11 @@ from collections.abc import Callable
 import logging
 from typing import Any
 
-from pymodbus.client import ModbusSerialClient, ModbusTcpClient, ModbusUdpClient
-from pymodbus.client.base import ModbusBaseClient
+from pymodbus.client import (
+    AsyncModbusSerialClient,
+    AsyncModbusTcpClient,
+    AsyncModbusUdpClient,
+)
 from pymodbus.exceptions import ModbusException
 from pymodbus.pdu import ModbusResponse
 from pymodbus.transaction import ModbusAsciiFramer, ModbusRtuFramer, ModbusSocketFramer
@@ -275,7 +278,7 @@ class ModbusHub:
         else:
             client_config[CONF_RETRIES] = 3
         # generic configuration
-        self._client: ModbusBaseClient | None = None
+        self._client: AsyncModbusSerialClient | AsyncModbusTcpClient | AsyncModbusUdpClient | None = None
         self._async_cancel_listener: Callable[[], None] | None = None
         self._in_error = False
         self._lock = asyncio.Lock()
@@ -285,10 +288,10 @@ class ModbusHub:
         self._config_delay = client_config[CONF_DELAY]
         self._pb_request: dict[str, RunEntry] = {}
         self._pb_class = {
-            SERIAL: ModbusSerialClient,
-            TCP: ModbusTcpClient,
-            UDP: ModbusUdpClient,
-            RTUOVERTCP: ModbusTcpClient,
+            SERIAL: AsyncModbusSerialClient,
+            TCP: AsyncModbusTcpClient,
+            UDP: AsyncModbusUdpClient,
+            RTUOVERTCP: AsyncModbusTcpClient,
         }
         self._pb_params = {
             "port": client_config[CONF_PORT],
@@ -336,9 +339,14 @@ class ModbusHub:
     async def async_pb_connect(self) -> None:
         """Connect to device, async."""
         async with self._lock:
-            if not await self.hass.async_add_executor_job(self.pb_connect):
-                err = f"{self.name} connect failed, retry in pymodbus"
+            try:
+                await self._client.connect()  # type: ignore[union-attr]
+            except ModbusException as exception_error:
+                err = f"{self.name} connect failed, retry in pymodbus  ({str(exception_error)})"
                 self._log_error(err, error_state=False)
+                return
+            message = f"modbus {self.name} communication open"
+            _LOGGER.info(message)
 
     async def async_setup(self) -> bool:
         """Set up pymodbus client."""
@@ -392,26 +400,14 @@ class ModbusHub:
                 message = f"modbus {self.name} communication closed"
                 _LOGGER.warning(message)
 
-    def pb_connect(self) -> bool:
-        """Connect client."""
-        try:
-            self._client.connect()  # type: ignore[union-attr]
-        except ModbusException as exception_error:
-            self._log_error(str(exception_error), error_state=False)
-            return False
-
-        message = f"modbus {self.name} communication open"
-        _LOGGER.info(message)
-        return True
-
-    def pb_call(
+    async def low_level_pb_call(
         self, slave: int | None, address: int, value: int | list[int], use_call: str
     ) -> ModbusResponse | None:
         """Call sync. pymodbus."""
         kwargs = {"slave": slave} if slave else {}
         entry = self._pb_request[use_call]
         try:
-            result: ModbusResponse = entry.func(address, value, **kwargs)
+            result: ModbusResponse = await entry.func(address, value, **kwargs)
         except ModbusException as exception_error:
             error = (
                 f"Error: device: {slave} address: {address} -> {str(exception_error)}"
@@ -448,9 +444,7 @@ class ModbusHub:
         async with self._lock:
             if not self._client:
                 return None
-            result = await self.hass.async_add_executor_job(
-                self.pb_call, unit, address, value, use_call
-            )
+            result = await self.low_level_pb_call(unit, address, value, use_call)
             if self._msg_wait:
                 # small delay until next request/response
                 await asyncio.sleep(self._msg_wait)
