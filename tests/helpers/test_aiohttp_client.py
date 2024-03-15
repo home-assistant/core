@@ -288,7 +288,7 @@ async def test_sending_named_tuple(
     session = client.async_create_clientsession(hass)
     resp = await session.post("http://127.0.0.1/rgb", json={"rgb": RGBColor(4, 3, 2)})
     assert resp.status == 200
-    assert await resp.json() == {"rgb": [4,3,2]}
+    assert await resp.json() == {"rgb": [4, 3, 2]}
     assert aioclient_mock.mock_calls[0][2]["rgb"] == RGBColor(4, 3, 2)
 
 
