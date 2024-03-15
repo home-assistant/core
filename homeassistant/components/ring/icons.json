@@ -22,6 +22,9 @@
       "voice_volume": {
         "default": "mdi:account-voice"
       },
+      "open_door": {
+        "default": "mdi:door-closed-lock"
+      },
       "wifi_signal_category": {
         "default": "mdi:wifi"
       },

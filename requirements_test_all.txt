@@ -727,6 +727,9 @@ freebox-api==1.1.0
 # homeassistant.components.fritzbox_callmonitor
 fritzconnection[qr]==1.13.2
 
+# homeassistant.components.fyta
+fyta_cli==0.3.3
+
 # homeassistant.components.google_translate
 gTTS==2.2.4
 
@@ -1164,7 +1167,7 @@ openerz-api==0.3.0
 openhomedevice==2.2.0
 
 # homeassistant.components.opower
-opower==0.4.0
+opower==0.4.1
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6

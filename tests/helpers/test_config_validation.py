@@ -1591,7 +1591,7 @@ def test_config_entry_only_schema_cant_find_module() -> None:
 def test_config_entry_only_schema_no_hass(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test if the the hass context is not set in our context."""
+    """Test if the hass context is not set in our context."""
     with patch(
         "homeassistant.helpers.config_validation.async_get_hass",
         side_effect=HomeAssistantError,
