@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import json
 import logging
-from typing import Callable, Literal
+from typing import Literal
 
 import openai
 import voluptuous as vol
