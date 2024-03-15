@@ -13,7 +13,7 @@ from fyta_cli.fyta_exceptions import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,5 +53,3 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, dict[str, Any]]]):
             raise ConfigEntryNotReady from ex
         except (FytaAuthentificationError, FytaPasswordError) as ex:
             raise ConfigEntryError from ex
-
-        return True
