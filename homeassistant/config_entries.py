@@ -45,6 +45,7 @@ from .exceptions import (
     ConfigEntryNotReady,
     HomeAssistantError,
 )
+from .generated.config_flows import FLOW_SUPPORTS
 from .helpers import device_registry, entity_registry, issue_registry as ir, storage
 from .helpers.debounce import Debouncer
 from .helpers.dispatcher import async_dispatcher_send
@@ -353,10 +354,10 @@ class ConfigEntry:
         self.supports_migrate: bool | None = None
 
         # Supports options
-        self._supports_options: bool | None = None
+        self.supports_options = domain in FLOW_SUPPORTS["options"]
 
         # Supports reconfigure
-        self._supports_reconfigure: bool | None = None
+        self.supports_reconfigure = domain in FLOW_SUPPORTS["reconfigure"]
 
         # Listeners to call on update
         self.update_listeners: list[UpdateListenerType] = []
@@ -419,30 +420,6 @@ class ConfigEntry:
 
         super().__setattr__(key, value)
         self.clear_cache()
-
-    @property
-    def supports_options(self) -> bool:
-        """Return if entry supports config options."""
-        if self._supports_options is None and (handler := HANDLERS.get(self.domain)):
-            # work out if handler has support for options flow
-            object.__setattr__(
-                self, "_supports_options", handler.async_supports_options_flow(self)
-            )
-        return self._supports_options or False
-
-    @property
-    def supports_reconfigure(self) -> bool:
-        """Return if entry supports config options."""
-        if self._supports_reconfigure is None and (
-            handler := HANDLERS.get(self.domain)
-        ):
-            # work out if handler has support for reconfigure step
-            object.__setattr__(
-                self,
-                "_supports_reconfigure",
-                hasattr(handler, "async_step_reconfigure"),
-            )
-        return self._supports_reconfigure or False
 
     def clear_cache(self) -> None:
         """Clear cached properties."""

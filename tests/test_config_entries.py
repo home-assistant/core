@@ -30,6 +30,7 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     HomeAssistantError,
 )
+from homeassistant.generated.config_flows import FLOW_SUPPORTS
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
@@ -1340,8 +1341,10 @@ async def test_entry_options(
     """Test that we can set options on an entry."""
     mock_integration(hass, MockModule("test"))
     mock_platform(hass, "test.config_flow", None)
-    entry = MockConfigEntry(domain="test", data={"first": True}, options=None)
-    entry.add_to_manager(manager)
+
+    with patch.dict(FLOW_SUPPORTS, {"options": ["test"]}):
+        entry = MockConfigEntry(domain="test", data={"first": True}, options=None)
+        entry.add_to_manager(manager)
 
     class TestFlow:
         """Test flow."""

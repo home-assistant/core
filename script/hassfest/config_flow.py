@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import ast
+from collections.abc import Generator
 import json
 import pathlib
 from typing import Any
@@ -11,6 +13,10 @@ from .model import Brand, Config, Integration
 from .serializer import format_python_namespace
 
 UNIQUE_ID_IGNORE = {"huawei_lte", "mqtt", "adguard"}
+FLOW_SUPPORT_FUNC_MAP = {
+    "async_get_options_flow": "options",
+    "async_step_reconfigure": "reconfigure",
+}
 
 
 def _validate_integration(config: Config, integration: Integration) -> None:
@@ -62,11 +68,29 @@ def _validate_integration(config: Config, integration: Integration) -> None:
     )
 
 
+def _supports(module: ast.Module) -> Generator[str, None, None]:
+    """Test if needs to be preloaded based on list functions."""
+    for item in module.body:
+        if type(item) != ast.ClassDef:
+            continue
+
+        for cls_item in item.body:
+            if type(cls_item) not in (ast.FunctionDef, ast.AsyncFunctionDef):
+                continue
+
+            if cls_item.name in FLOW_SUPPORT_FUNC_MAP:
+                yield FLOW_SUPPORT_FUNC_MAP[cls_item.name]
+
+
 def _generate_and_validate(integrations: dict[str, Integration], config: Config) -> str:
     """Validate and generate config flow data."""
     domains: dict[str, list[str]] = {
         "integration": [],
         "helper": [],
+    }
+    supports: dict[str, list[str]] = {
+        "options": [],
+        "reconfigure": [],
     }
 
     for domain in sorted(integrations):
@@ -81,7 +105,13 @@ def _generate_and_validate(integrations: dict[str, Integration], config: Config)
         else:
             domains["integration"].append(domain)
 
-    return format_python_namespace({"FLOWS": domains})
+            # check if config flow supports some flows show UI elements
+            config_flow_file = integration.path / "config_flow.py"
+            config_flow = ast.parse(config_flow_file.read_text())
+            for flow_type in _supports(config_flow):
+                supports[flow_type].append(domain)
+
+    return format_python_namespace({"FLOWS": domains, "FLOW_SUPPORTS": supports})
 
 
 def _populate_brand_integrations(
