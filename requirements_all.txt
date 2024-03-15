@@ -203,7 +203,7 @@ aioaseko==0.1.1
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2024.3.2
+aioautomower==2024.3.3
 
 # homeassistant.components.azure_devops
 aioazuredevops==1.3.5
@@ -218,13 +218,13 @@ aiobotocore==2.9.1
 aiocomelit==0.9.0
 
 # homeassistant.components.dhcp
-aiodhcpwatcher==0.8.1
+aiodhcpwatcher==1.0.0
 
 # homeassistant.components.dhcp
-aiodiscover==1.6.1
+aiodiscover==2.0.0
 
 # homeassistant.components.dnsip
-aiodns==3.0.0
+aiodns==3.1.1
 
 # homeassistant.components.eafm
 aioeafm==0.1.2
@@ -315,7 +315,7 @@ aionanoleaf==0.2.1
 aionotion==2024.03.0
 
 # homeassistant.components.oncue
-aiooncue==0.3.5
+aiooncue==0.3.7
 
 # homeassistant.components.openexchangerates
 aioopenexchangerates==0.4.0
@@ -416,7 +416,7 @@ aioymaps==1.2.2
 airly==1.1.0
 
 # homeassistant.components.airthings_ble
-airthings-ble==0.6.1
+airthings-ble==0.7.1
 
 # homeassistant.components.airthings
 airthings-cloud==0.2.0
@@ -581,7 +581,7 @@ bluemaestro-ble==0.2.3
 bluetooth-adapters==0.18.0
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==1.3.0
+bluetooth-auto-recovery==1.4.0
 
 # homeassistant.components.bluetooth
 # homeassistant.components.ld2410_ble
@@ -606,7 +606,7 @@ bring-api==0.5.6
 broadlink==0.18.3
 
 # homeassistant.components.brother
-brother==4.0.0
+brother==4.0.2
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==1.0.5
@@ -902,7 +902,7 @@ gTTS==2.2.4
 gardena-bluetooth==1.4.1
 
 # homeassistant.components.google_assistant_sdk
-gassist-text==0.0.10
+gassist-text==0.0.11
 
 # homeassistant.components.google
 gcal-sync==6.0.3
@@ -1016,7 +1016,7 @@ h2==4.1.0
 ha-av==10.1.1
 
 # homeassistant.components.ffmpeg
-ha-ffmpeg==3.1.0
+ha-ffmpeg==3.2.0
 
 # homeassistant.components.iotawatt
 ha-iotawattpy==0.1.1
@@ -1031,7 +1031,7 @@ habitipy==0.2.0
 habluetooth==2.4.2
 
 # homeassistant.components.cloud
-hass-nabucasa==0.78.0
+hass-nabucasa==0.79.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -1474,7 +1474,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.3.1
+opower==0.4.0
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1872,7 +1872,7 @@ pyintesishome==1.8.0
 pyipma==3.0.7
 
 # homeassistant.components.ipp
-pyipp==0.14.5
+pyipp==0.15.0
 
 # homeassistant.components.iqvia
 pyiqvia==2022.04.0
@@ -2403,7 +2403,7 @@ qnapstats==0.4.0
 quantum-gateway==0.0.8
 
 # homeassistant.components.radio_browser
-radios==0.2.0
+radios==0.3.1
 
 # homeassistant.components.radiotherm
 radiotherm==2.1.0
@@ -2451,7 +2451,7 @@ rjpl==0.3.6
 rocketchat-API==0.6.1
 
 # homeassistant.components.roku
-rokuecp==0.19.1
+rokuecp==0.19.2
 
 # homeassistant.components.romy
 romy==0.0.7
@@ -2716,7 +2716,7 @@ tmb==0.0.4
 todoist-api-python==2.1.2
 
 # homeassistant.components.tolo
-tololib==0.1.0b4
+tololib==1.1.0
 
 # homeassistant.components.toon
 toonapi==0.3.0
@@ -2833,7 +2833,7 @@ watchdog==2.3.1
 waterfurnace==1.1.0
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==0.1.17
+weatherflow4py==0.2.13
 
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.2

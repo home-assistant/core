@@ -52,9 +52,11 @@ from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-from .const import CONF_HIDE_MEMBERS
+from .const import (
+    CONF_HIDE_MEMBERS,
+    DOMAIN,  # noqa: F401
+)
 
-DOMAIN = "group"
 GROUP_ORDER = "group_order"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
@@ -185,13 +187,11 @@ def groups_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
     if DOMAIN not in hass.data:
         return []
 
-    groups = []
-
-    for group in hass.data[DOMAIN].entities:
-        if entity_id in group.tracking:
-            groups.append(group.entity_id)
-
-    return groups
+    return [
+        group.entity_id
+        for group in hass.data[DOMAIN].entities
+        if entity_id in group.tracking
+    ]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -243,7 +243,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[REG_KEY] = GroupIntegrationRegistry()
 
-    await async_process_integration_platforms(hass, DOMAIN, _process_group_platform)
+    await async_process_integration_platforms(
+        hass, DOMAIN, _process_group_platform, wait_for_platforms=True
+    )
 
     await _async_process_config(hass, config)
 
