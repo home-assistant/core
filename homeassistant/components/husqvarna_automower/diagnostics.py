@@ -1,6 +1,7 @@
 """Diagnostics support for Husqvarna Automower."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -20,6 +21,7 @@ TO_REDACT = {
     CONF_REFRESH_TOKEN,
     POSITIONS,
 }
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_get_config_entry_diagnostics(
@@ -34,5 +36,11 @@ async def async_get_device_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
     coordinator: AutomowerDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    mower_id = list(next(iter(device.identifiers)))[1]
+    for identifier in device.identifiers:
+        if identifier[0] == DOMAIN:
+            if (
+                coordinator.data[identifier[1]].system.serial_number
+                == device.serial_number
+            ):
+                mower_id = identifier[1]
     return async_redact_data(coordinator.data[mower_id].to_dict(), TO_REDACT)
