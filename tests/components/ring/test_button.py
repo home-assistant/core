@@ -9,7 +9,9 @@ from .common import setup_platform
 
 
 async def test_entity_registry(
-    hass: HomeAssistant, requests_mock: requests_mock.Mocker, entity_registry: er.EntityRegistry,
+    hass: HomeAssistant,
+    requests_mock: requests_mock.Mocker,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, Platform.BUTTON)
