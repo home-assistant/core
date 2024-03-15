@@ -117,9 +117,9 @@ DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
     "rpm": SensorEntityDescription(
         key="rpm",
+        translation_key="rpm",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
-        icon="mdi:rotate-right",
         suggested_display_precision=0,
     ),
     "s": SensorEntityDescription(
