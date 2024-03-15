@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 class HomeAssistantError(Exception):
     """General Home Assistant exception occurred."""
 
+    _message: str | None = None
     _translate: bool = False
 
     def __init__(
@@ -34,8 +35,13 @@ class HomeAssistantError(Exception):
 
     def __str__(self) -> str:
         """Return exception message string from translation cache."""
+        if self._message:
+            return self._message
+
         if not self._translate:
-            return super().__str__()
+            self._message = super().__str__()
+            return self._message
+
         if TYPE_CHECKING:
             assert self.translation_key is not None
             assert self.translation_domain is not None
@@ -43,9 +49,10 @@ class HomeAssistantError(Exception):
         # pylint: disable-next=import-outside-toplevel
         from .helpers.translation import async_get_exception_message
 
-        return async_get_exception_message(
+        self._message = async_get_exception_message(
             self.translation_domain, self.translation_key, self.translation_placeholders
         )
+        return self._message
 
 
 class ConfigValidationError(HomeAssistantError, ExceptionGroup[Exception]):
@@ -66,7 +73,7 @@ class ConfigValidationError(HomeAssistantError, ExceptionGroup[Exception]):
             translation_key=translation_key,
             translation_placeholders=translation_placeholders,
         )
-        self._translate = bool(translation_domain and translation_key)
+        self._message = message
 
 
 class ServiceValidationError(HomeAssistantError):
