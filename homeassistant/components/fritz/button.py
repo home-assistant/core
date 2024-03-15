@@ -85,14 +85,14 @@ async def async_setup_entry(
         return
 
     data_fritz: FritzData = hass.data[DATA_FRITZ]
-    entities_list += await _async_wol_buttons_list(avm_wrapper, data_fritz)
+    entities_list += _async_wol_buttons_list(avm_wrapper, data_fritz)
 
     async_add_entities(entities_list)
 
     @callback
-    async def async_update_avm_device() -> None:
+    def async_update_avm_device() -> None:
         """Update the values of the AVM device."""
-        async_add_entities(await _async_wol_buttons_list(avm_wrapper, data_fritz))
+        async_add_entities(_async_wol_buttons_list(avm_wrapper, data_fritz))
 
     entry.async_on_unload(
         async_dispatcher_connect(
@@ -129,7 +129,8 @@ class FritzButton(ButtonEntity):
         await self.entity_description.press_action(self.avm_wrapper)
 
 
-async def _async_wol_buttons_list(
+@callback
+def _async_wol_buttons_list(
     avm_wrapper: AvmWrapper,
     data_fritz: FritzData,
 ) -> list[FritzBoxWOLButton]:
