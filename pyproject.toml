@@ -580,10 +580,14 @@ filterwarnings = [
 [tool.ruff.lint]
 select = [
     "B002", # Python does not support the unary prefix increment
+    "B005", # Using .strip() with multi-character strings is misleading
     "B007", # Loop control variable {name} not used within loop body
     "B014", # Exception handler with duplicate exception
+    "B015", # Pointless comparison. Did you mean to assign a value? Otherwise, prepend assert or remove it.
     "B023", # Function definition does not bind loop variable {name}
     "B026", # Star-arg unpacking after a keyword argument is strongly discouraged
+    "B027", # {name} is an empty method in an abstract base class, but has no abstract decorator
+    "B032", # Possible unintentional type annotation (using :). Did you mean to assign (using =)?
     "B904", # Use raise from to specify exception cause
     "C", # complexity
     "COM818", # Trailing comma on bare tuple prohibited
@@ -634,6 +638,7 @@ select = [
     "TRY302", # Remove exception handler; error is immediately re-raised
     "UP", # pyupgrade
     "W", # pycodestyle
+    "YTT",
 ]
 
 ignore = [
@@ -650,8 +655,6 @@ ignore = [
     # https://github.com/astral-sh/ruff/issues/7491
     # "PLC1901", # Lots of false positives
 
-    # False positives https://github.com/astral-sh/ruff/issues/5386
-    "PLC0208", # Use a sequence type instead of a `set` when iterating over values
     "PLR0911", # Too many return statements ({returns} > {max_returns})
     "PLR0912", # Too many branches ({branches} > {max_branches})
     "PLR0913", # Too many arguments to function call ({c_args} > {max_args})

@@ -938,7 +938,7 @@ async def test_websocket_change_channel(
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
 
-    change_channel_mock.mock_calls == [call(ANY, new_channel)]
+    assert change_channel_mock.mock_calls == [call(ANY, new_channel)]
 
 
 @pytest.mark.parametrize(
