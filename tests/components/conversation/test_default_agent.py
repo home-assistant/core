@@ -150,7 +150,7 @@ async def test_conversation_agent(
     init_components,
 ) -> None:
     """Test DefaultAgent."""
-    agent = await conversation._get_agent_manager(hass).async_get_agent(
+    agent = await conversation.get_agent_manager(hass).async_get_agent(
         conversation.HOME_ASSISTANT_AGENT
     )
     with patch(
@@ -252,7 +252,7 @@ async def test_trigger_sentences(hass: HomeAssistant, init_components) -> None:
     trigger_sentences = ["It's party time", "It is time to party"]
     trigger_response = "Cowabunga!"
 
-    agent = await conversation._get_agent_manager(hass).async_get_agent(
+    agent = await conversation.get_agent_manager(hass).async_get_agent(
         conversation.HOME_ASSISTANT_AGENT
     )
     assert isinstance(agent, conversation.DefaultAgent)

@@ -514,7 +514,7 @@ async def test_trigger_with_device_id(hass: HomeAssistant) -> None:
         },
     )
 
-    agent = await conversation._get_agent_manager(hass).async_get_agent()
+    agent = await conversation.get_agent_manager(hass).async_get_agent()
     assert isinstance(agent, conversation.DefaultAgent)
 
     result = await agent.async_process(

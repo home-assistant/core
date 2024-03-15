@@ -69,7 +69,7 @@ SERVICE_RELOAD = "reload"
 def agent_id_validator(value: Any) -> str:
     """Validate agent ID."""
     hass = core.async_get_hass()
-    manager = _get_agent_manager(hass)
+    manager = get_agent_manager(hass)
     if not manager.async_is_valid_agent_id(cv.string(value)):
         raise vol.Invalid("invalid agent ID")
     return value
@@ -108,7 +108,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 @singleton.singleton("conversation_agent")
 @core.callback
-def _get_agent_manager(hass: HomeAssistant) -> AgentManager:
+def get_agent_manager(hass: HomeAssistant) -> AgentManager:
     """Get the active agent."""
     manager = AgentManager(hass)
     manager.async_setup()
@@ -123,7 +123,7 @@ def async_set_agent(
     agent: AbstractConversationAgent,
 ) -> None:
     """Set the agent to handle the conversations."""
-    _get_agent_manager(hass).async_set_agent(config_entry.entry_id, agent)
+    get_agent_manager(hass).async_set_agent(config_entry.entry_id, agent)
 
 
 @core.callback
@@ -133,7 +133,7 @@ def async_unset_agent(
     config_entry: ConfigEntry,
 ) -> None:
     """Set the agent to handle the conversations."""
-    _get_agent_manager(hass).async_unset_agent(config_entry.entry_id)
+    get_agent_manager(hass).async_unset_agent(config_entry.entry_id)
 
 
 async def async_get_conversation_languages(
@@ -145,7 +145,7 @@ async def async_get_conversation_languages(
     If no agent is specified, return a set with the union of languages supported by
     all conversation agents.
     """
-    agent_manager = _get_agent_manager(hass)
+    agent_manager = get_agent_manager(hass)
     languages: set[str] = set()
 
     agent_ids: Iterable[str]
@@ -166,7 +166,7 @@ async def async_get_conversation_languages(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the process service."""
-    agent_manager = _get_agent_manager(hass)
+    agent_manager = get_agent_manager(hass)
 
     if config_intents := config.get(DOMAIN, {}).get("intents"):
         hass.data[DATA_CONFIG] = config_intents
@@ -257,7 +257,7 @@ async def websocket_prepare(
     msg: dict[str, Any],
 ) -> None:
     """Reload intents."""
-    manager = _get_agent_manager(hass)
+    manager = get_agent_manager(hass)
     agent = await manager.async_get_agent(msg.get("agent_id"))
     await agent.async_prepare(msg.get("language"))
     connection.send_result(msg["id"])
@@ -275,7 +275,7 @@ async def websocket_list_agents(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """List conversation agents and, optionally, if they support a given language."""
-    manager = _get_agent_manager(hass)
+    manager = get_agent_manager(hass)
 
     country = msg.get("country")
     language = msg.get("language")
@@ -313,7 +313,7 @@ async def websocket_hass_agent_debug(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Return intents that would be matched by the default agent for a list of sentences."""
-    agent = await _get_agent_manager(hass).async_get_agent(HOME_ASSISTANT_AGENT)
+    agent = await get_agent_manager(hass).async_get_agent(HOME_ASSISTANT_AGENT)
     assert isinstance(agent, DefaultAgent)
     results = [
         await agent.async_recognize(
@@ -513,7 +513,7 @@ def async_get_agent_info(
     agent_id: str | None = None,
 ) -> AgentInfo | None:
     """Get information on the agent or None if not found."""
-    manager = _get_agent_manager(hass)
+    manager = get_agent_manager(hass)
 
     if agent_id is None:
         agent_id = manager.default_agent
@@ -535,7 +535,7 @@ async def async_converse(
     device_id: str | None = None,
 ) -> ConversationResult:
     """Process text and get intent."""
-    agent = await _get_agent_manager(hass).async_get_agent(agent_id)
+    agent = await get_agent_manager(hass).async_get_agent(agent_id)
 
     if language is None:
         language = hass.config.language
