@@ -31,7 +31,18 @@ import re
 import threading
 import time
 from time import monotonic
-from typing import TYPE_CHECKING, Any, Generic, Literal, ParamSpec, Self, cast, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Generic,
+    Literal,
+    NotRequired,
+    ParamSpec,
+    Self,
+    TypedDict,
+    cast,
+    overload,
+)
 from urllib.parse import urlparse
 
 from typing_extensions import TypeVar
@@ -1534,6 +1545,16 @@ class EventBus:
             )
 
 
+class CompressedState(TypedDict):
+    """Compressed dict of a state."""
+
+    s: str  # COMPRESSED_STATE_STATE
+    a: ReadOnlyDict[str, Any]  # COMPRESSED_STATE_ATTRIBUTES
+    c: str | dict[str, Any]  # COMPRESSED_STATE_CONTEXT
+    lc: float  # COMPRESSED_STATE_LAST_CHANGED
+    lu: NotRequired[float]  # COMPRESSED_STATE_LAST_UPDATED
+
+
 class State:
     """Object to represent a state within the state machine.
 
@@ -1663,7 +1684,7 @@ class State:
         return json_fragment(self.as_dict_json)
 
     @cached_property
-    def as_compressed_state(self) -> dict[str, Any]:
+    def as_compressed_state(self) -> CompressedState:
         """Build a compressed dict of a state for adds.
 
         Omits the lu (last_updated) if it matches (lc) last_changed.
@@ -1678,7 +1699,7 @@ class State:
             # to avoid callers outside of this module
             # from misusing it by mistake.
             context = state_context._as_dict  # pylint: disable=protected-access
-        compressed_state = {
+        compressed_state: CompressedState = {
             COMPRESSED_STATE_STATE: self.state,
             COMPRESSED_STATE_ATTRIBUTES: self.attributes,
             COMPRESSED_STATE_CONTEXT: context,
