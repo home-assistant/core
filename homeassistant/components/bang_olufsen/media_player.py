@@ -50,8 +50,12 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
-from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
+from homeassistant.helpers.device_registry import DeviceEntry, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
@@ -281,7 +285,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             async_dispatcher_connect(
                 self.hass,
                 f"{self._unique_id}_{WebsocketNotification.CONFIGURATION}",
-                self._update_name,
+                self._update_name_and_beolink,
             )
         )
 
@@ -300,10 +304,6 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
         # Get overall device state once. This is handled by WebSocket events the rest of the time.
         product_state = await self._client.get_product_state()
-
-        # Set the entity name to the device's friendly name
-        beolink_self = await self._client.get_beolink_self()
-        self._attr_name = beolink_self.friendly_name
 
         # Get volume information.
         if product_state.volume:
@@ -333,10 +333,8 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         # If the device has been updated with new sources, then the API will fail here.
         await self._update_sources()
 
-        # Update beolink attributes.
-        await self._update_beolink(should_update=False)
-
-        self.async_write_ha_state()
+        # Update beolink attributes and device name.
+        await self._update_name_and_beolink()
 
     async def _update_sources(self, update_ha_state: bool = False) -> None:
         """Get sources for the specific product."""
@@ -461,12 +459,18 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
         self.async_write_ha_state()
 
-    async def _update_name(self) -> None:
+    async def _update_name_and_beolink(self) -> None:
         """Update the device friendly name."""
-        beolink_self = await self._client.get_beolink_self()
-        self._attr_name = beolink_self.friendly_name
-
         await self._update_beolink(should_update=False)
+
+        beolink_self = await self._client.get_beolink_self()
+
+        # Update device name
+        device_registry = dr.async_get(self.hass)
+        device_registry.async_update_device(
+            device_id=cast(DeviceEntry, self.device_entry).id,
+            name=beolink_self.friendly_name,
+        )
 
         self.async_write_ha_state()
 
