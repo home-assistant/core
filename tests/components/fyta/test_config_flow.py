@@ -17,8 +17,6 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
-
 USERNAME = "fyta_user"
 PASSWORD = "fyta_pass"
 ACCESS_TOKEN = "123xyz"
