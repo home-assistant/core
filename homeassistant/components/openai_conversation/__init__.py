@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Literal
+from typing import Callable, Literal
 
 import openai
 import voluptuous as vol
@@ -149,14 +149,14 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
         self.hass = hass
         self.entry = entry
         self.history: dict[str, list[dict]] = {}
-        self.tools: list[tuple[dict, callable]] = []
+        self.tools: list[tuple[dict, Callable]] = []
 
     @property
     def supported_languages(self) -> list[str] | Literal["*"]:
         """Return a list of supported languages."""
         return MATCH_ALL
 
-    def register_tool(self, specification: dict, async_callback: callable) -> None:
+    def register_tool(self, specification: dict, async_callback: Callable) -> None:
         """Register a function that the assistant may execute."""
         if specification["function"]["name"] in [
             tool[0]["function"]["name"] for tool in self.tools
@@ -301,7 +301,7 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
 
 @callback
 async def async_register_tool(
-    hass: HomeAssistant, agent_id: str, specification: dict, async_callback: callable
+    hass: HomeAssistant, agent_id: str, specification: dict, async_callback: Callable
 ) -> None:
     """Register a function that the assistant may execute."""
     agent = await conversation._get_agent_manager(hass).async_get_agent(agent_id)
