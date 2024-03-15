@@ -1,4 +1,5 @@
 """Define tests for the OpenUV config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from pyopenuv.errors import InvalidApiKeyError

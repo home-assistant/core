@@ -1,4 +1,5 @@
 """The Coolmaster integration."""
+
 from pycoolmasternet_async import CoolMasterNet
 
 from homeassistant.config_entries import ConfigEntry

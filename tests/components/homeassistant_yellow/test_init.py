@@ -1,4 +1,5 @@
 """Test the Home Assistant Yellow integration."""
+
 from unittest.mock import patch
 
 import pytest

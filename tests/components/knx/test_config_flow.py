@@ -1,4 +1,5 @@
 """Test the KNX config flow."""
+
 from contextlib import contextmanager
 from unittest.mock import Mock, patch
 

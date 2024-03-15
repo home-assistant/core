@@ -1,4 +1,5 @@
 """The tests for the Xiaomi vacuum platform."""
+
 from datetime import datetime, time, timedelta
 from unittest import mock
 from unittest.mock import MagicMock, patch

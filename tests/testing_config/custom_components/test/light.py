@@ -2,6 +2,7 @@
 
 Call init before using it in your tests to ensure clean test data.
 """
+
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.const import STATE_OFF, STATE_ON
 

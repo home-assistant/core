@@ -1,4 +1,5 @@
 """Utilities to help convert mp4s to fmp4s."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -169,7 +170,7 @@ def read_init(bytes_io: BufferedIOBase) -> bytes:
 
 ZERO32 = b"\x00\x00\x00\x00"
 ONE32 = b"\x00\x01\x00\x00"
-NEGONE32 = b"\xFF\xFF\x00\x00"
+NEGONE32 = b"\xff\xff\x00\x00"
 XYW_ROW = ZERO32 + ZERO32 + b"\x40\x00\x00\x00"
 ROTATE_RIGHT = (ZERO32 + ONE32 + ZERO32) + (NEGONE32 + ZERO32 + ZERO32)
 ROTATE_LEFT = (ZERO32 + NEGONE32 + ZERO32) + (ONE32 + ZERO32 + ZERO32)

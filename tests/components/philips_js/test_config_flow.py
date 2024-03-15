@@ -1,4 +1,5 @@
 """Test the Philips TV config flow."""
+
 from unittest.mock import ANY
 
 from haphilipsjs import PairingFailure

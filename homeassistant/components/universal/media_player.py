@@ -1,4 +1,5 @@
 """Combination of multiple media players for a universal controller."""
+
 from __future__ import annotations
 
 from copy import copy
@@ -78,7 +79,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
@@ -92,7 +93,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.service import async_call_from_config
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 ATTR_ACTIVE_CHILD = "active_child"
 
@@ -185,7 +186,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
         @callback
         def _async_on_dependency_update(
-            event: EventType[EventStateChangedData],
+            event: Event[EventStateChangedData],
         ) -> None:
             """Update ha state when dependencies update."""
             self.async_set_context(event.context)
@@ -193,7 +194,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
         @callback
         def _async_on_template_update(
-            event: EventType[EventStateChangedData] | None,
+            event: Event[EventStateChangedData] | None,
             updates: list[TrackTemplateResult],
         ) -> None:
             """Update state when template state changes."""

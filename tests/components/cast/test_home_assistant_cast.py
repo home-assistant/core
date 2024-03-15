@@ -1,4 +1,5 @@
 """Test Home Assistant Cast."""
+
 from unittest.mock import patch
 
 import pytest

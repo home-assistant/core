@@ -1,4 +1,5 @@
 """Provide functionality to keep track of devices."""
+
 from __future__ import annotations
 
 from functools import partial
@@ -13,6 +14,7 @@ from homeassistant.helpers.deprecation import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
+from . import group as group_pre_import  # noqa: F401
 from .config_entry import (  # noqa: F401
     ScannerEntity,
     TrackerEntity,

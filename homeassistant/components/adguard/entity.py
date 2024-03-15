@@ -1,4 +1,5 @@
 """AdGuard Home base entity."""
+
 from __future__ import annotations
 
 from adguardhome import AdGuardHome, AdGuardHomeError

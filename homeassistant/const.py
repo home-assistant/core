@@ -1,4 +1,5 @@
 """Constants used by Home Assistant components."""
+
 from __future__ import annotations
 
 from enum import StrEnum
@@ -508,6 +509,9 @@ ATTR_AREA_ID: Final = "area_id"
 
 # Contains one string, the device ID
 ATTR_DEVICE_ID: Final = "device_id"
+
+# Contains one string or a list of strings, each being an floor id
+ATTR_FLOOR_ID: Final = "floor_id"
 
 # String with a friendly name for the entity
 ATTR_FRIENDLY_NAME: Final = "friendly_name"
@@ -1214,6 +1218,7 @@ CONCENTRATION_PARTS_PER_BILLION: Final = "ppb"
 class UnitOfSpeed(StrEnum):
     """Speed units."""
 
+    BEAUFORT = "Beaufort"
     FEET_PER_SECOND = "ft/s"
     METERS_PER_SECOND = "m/s"
     KILOMETERS_PER_HOUR = "km/h"

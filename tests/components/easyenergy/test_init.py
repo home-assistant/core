@@ -1,4 +1,5 @@
 """Tests for the easyEnergy integration."""
+
 from unittest.mock import MagicMock, patch
 
 from easyenergy import EasyEnergyConnectionError

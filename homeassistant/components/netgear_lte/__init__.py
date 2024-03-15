@@ -1,4 +1,5 @@
 """Support for Netgear LTE modems."""
+
 from datetime import timedelta
 
 from aiohttp.cookiejar import CookieJar

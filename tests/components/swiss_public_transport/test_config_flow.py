@@ -1,4 +1,5 @@
 """Test the swiss_public_transport config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from opendata_transport.exceptions import (

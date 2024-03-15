@@ -1,6 +1,5 @@
 """Tests for the Android IP Webcam integration."""
 
-
 from unittest.mock import Mock
 
 import aiohttp

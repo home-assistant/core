@@ -1,4 +1,5 @@
 """Test the Govee BLE sensors."""
+
 from datetime import timedelta
 import time
 

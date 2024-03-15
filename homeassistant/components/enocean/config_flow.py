@@ -2,14 +2,14 @@
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_DEVICE
 
 from . import dongle
 from .const import DOMAIN, ERROR_INVALID_DONGLE_PATH, LOGGER
 
 
-class EnOceanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle the enOcean config flows."""
 
     VERSION = 1

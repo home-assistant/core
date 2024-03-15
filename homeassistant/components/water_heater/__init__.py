@@ -1,4 +1,5 @@
 """Support for water heater devices."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -40,6 +41,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.unit_conversion import TemperatureConverter
+
+from . import group as group_pre_import  # noqa: F401
 
 if TYPE_CHECKING:
     from functools import cached_property
