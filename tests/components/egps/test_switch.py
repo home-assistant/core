@@ -1,4 +1,5 @@
 """Test the switch functionality."""
+
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 

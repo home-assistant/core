@@ -1,4 +1,5 @@
 """Tests for egps config flow."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 

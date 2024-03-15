@@ -1,4 +1,5 @@
 """Energenie Power-Strip (EGPS) integration."""
+
 from pyegps import PowerStripUSB, get_device
 from pyegps.exceptions import MissingLibrary, UsbError
 

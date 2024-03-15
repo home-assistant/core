@@ -1,4 +1,5 @@
 """Configure tests for egps."""
+
 from collections.abc import Generator
 from typing import Final
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -11,7 +12,7 @@ from homeassistant.const import CONF_NAME
 
 from tests.common import MockConfigEntry
 
-DEMO_CONFIG_ENTRY: Final = {
+DEMO_CONFIG_DATA: Final = {
     CONF_NAME: "Unit Test",
     CONF_DEVICE_API_ID: "DYPS:00:11:22",
 }
@@ -20,7 +21,7 @@ DEMO_CONFIG_ENTRY: Final = {
 @pytest.fixture
 def demo_config_data() -> dict:
     """Return valid user input."""
-    return {CONF_DEVICE_API_ID: DEMO_CONFIG_ENTRY[CONF_DEVICE_API_ID]}
+    return {CONF_DEVICE_API_ID: DEMO_CONFIG_DATA[CONF_DEVICE_API_ID]}
 
 
 @pytest.fixture
@@ -28,8 +29,8 @@ def valid_config_entry() -> MockConfigEntry:
     """Return a valid egps config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        data=DEMO_CONFIG_ENTRY,
-        unique_id=DEMO_CONFIG_ENTRY[CONF_DEVICE_API_ID],
+        data=DEMO_CONFIG_DATA,
+        unique_id=DEMO_CONFIG_DATA[CONF_DEVICE_API_ID],
     )
 
 
@@ -47,14 +48,14 @@ def patch_pyegps_get_device() -> MagicMock:
     """Fixture for a mocked FakePowerStrip."""
 
     fkObj = FakePowerStrip(
-        devId=DEMO_CONFIG_ENTRY[CONF_DEVICE_API_ID], number_of_sockets=4
+        devId=DEMO_CONFIG_DATA[CONF_DEVICE_API_ID], number_of_sockets=4
     )
     fkObj.release = lambda: True
 
     usb_device_mock = MagicMock(wraps=fkObj)
     usb_device_mock.get_device_type.return_value = "PowerStrip"
     usb_device_mock.numberOfSockets = 4
-    usb_device_mock.device_id = DEMO_CONFIG_ENTRY[CONF_DEVICE_API_ID]
+    usb_device_mock.device_id = DEMO_CONFIG_DATA[CONF_DEVICE_API_ID]
     usb_device_mock.manufacturer = "Energenie"
     usb_device_mock.name = "MockedUSBDevice"
 

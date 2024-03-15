@@ -1,4 +1,5 @@
 """ConfigFlow for EGPS devices."""
+
 import asyncio
 from typing import Any
 
@@ -6,17 +7,17 @@ from pyegps import get_device, search_for_devices
 from pyegps.exceptions import MissingLibrary, UsbError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
 from .const import CONF_DEVICE_API_ID, DOMAIN, LOGGER
 
 
-class ConfigFLow(config_entries.ConfigFlow, domain=DOMAIN):
+class EGPSConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the config flow for EGPM devices."""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Initiate user flow."""
 
         if user_input is not None:
