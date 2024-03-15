@@ -179,6 +179,7 @@ FLOWS = {
         "fronius",
         "frontier_silicon",
         "fully_kiosk",
+        "fyta",
         "garages_amsterdam",
         "gardena_bluetooth",
         "gdacs",

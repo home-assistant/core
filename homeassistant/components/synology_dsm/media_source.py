@@ -91,20 +91,18 @@ class SynologyPhotosMediaSource(MediaSource):
     ) -> list[BrowseMediaSource]:
         """Handle browsing different diskstations."""
         if not item.identifier:
-            ret = []
-            for entry in self.entries:
-                ret.append(
-                    BrowseMediaSource(
-                        domain=DOMAIN,
-                        identifier=entry.unique_id,
-                        media_class=MediaClass.DIRECTORY,
-                        media_content_type=MediaClass.IMAGE,
-                        title=f"{entry.title} - {entry.unique_id}",
-                        can_play=False,
-                        can_expand=True,
-                    )
+            return [
+                BrowseMediaSource(
+                    domain=DOMAIN,
+                    identifier=entry.unique_id,
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_type=MediaClass.IMAGE,
+                    title=f"{entry.title} - {entry.unique_id}",
+                    can_play=False,
+                    can_expand=True,
                 )
-            return ret
+                for entry in self.entries
+            ]
         identifier = SynologyPhotosMediaSourceIdentifier(item.identifier)
         diskstation: SynologyDSMData = self.hass.data[DOMAIN][identifier.unique_id]
 
@@ -126,18 +124,18 @@ class SynologyPhotosMediaSource(MediaSource):
                     can_expand=True,
                 )
             ]
-            for album in albums:
-                ret.append(
-                    BrowseMediaSource(
-                        domain=DOMAIN,
-                        identifier=f"{item.identifier}/{album.album_id}",
-                        media_class=MediaClass.DIRECTORY,
-                        media_content_type=MediaClass.IMAGE,
-                        title=album.name,
-                        can_play=False,
-                        can_expand=True,
-                    )
+            ret.extend(
+                BrowseMediaSource(
+                    domain=DOMAIN,
+                    identifier=f"{item.identifier}/{album.album_id}",
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_type=MediaClass.IMAGE,
+                    title=album.name,
+                    can_play=False,
+                    can_expand=True,
                 )
+                for album in albums
+            )
 
             return ret
 
