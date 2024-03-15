@@ -107,7 +107,7 @@ async def test_observer_discovery(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
 
-    assert mock_observer.mock_calls == [call.start(), call.stop()]
+    assert mock_observer.mock_calls == [call.start(), call.__bool__(), call.stop()]
 
 
 @pytest.mark.skipif(
