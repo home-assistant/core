@@ -1,4 +1,11 @@
-"""Common methods used across the tests for ring devices."""
+"""Module for ring device mocks.
+
+Creates a MagicMock for all device families, i.e. chimes, doorbells, stickup_cams and other.
+
+Each device entry in the devices.json will have a MagicMock instead of the RingObject.
+
+Mocks the api calls on the devices such as history() and health().
+"""
 
 from copy import deepcopy
 from datetime import datetime
@@ -19,6 +26,7 @@ def _convert_ring_created_at_to_time(fixture):
     return fixture
 
 
+DEVICES_FIXTURE = load_json_value_fixture("devices.json", "ring")
 DOORBOT_HISTORY = _convert_ring_created_at_to_time(
     load_json_value_fixture("doorbot_history.json", "ring")
 )
@@ -32,23 +40,21 @@ DEVICE_ALERTS = load_json_value_fixture("ding_active.json", "ring")
 
 
 def get_devices():
-    """Return mock devices."""
-    devices_fixture = load_json_value_fixture("devices.json", "ring")
+    """Return mock devices keyed by device_type and then device_id."""
     devices = {}
     for device_family, mock_generator in MOCK_GENERATORS.items():
         devices[device_family] = {
             doorbot["id"]: mock_generator(doorbot)
-            for doorbot in devices_fixture[device_family]
+            for doorbot in DEVICES_FIXTURE[device_family]
         }
     return devices
 
 
 def get_devices_data():
-    """Return devices json for diagnostics testing."""
-    devices_fixture = load_json_value_fixture("devices.json", "ring")
+    """Return devices json used by the diagnostics module."""
     return {
         device_type: {obj["id"]: obj for obj in devices}
-        for device_type, devices in devices_fixture.items()
+        for device_type, devices in DEVICES_FIXTURE.items()
     }
 
 
@@ -61,6 +67,11 @@ def get_active_alerts():
 
 
 def _update_health_data(mock, fixture):
+    """Update health data on the the device.
+
+    Once update_health_data is called on the device it reports
+    health data from the fixture. Prior to that it returns None.
+    """
     mock.configure_mock(
         wifi_signal_category=fixture["device_health"].get("latest_signal_category"),
         wifi_signal_strength=fixture["device_health"].get("latest_signal_strength"),
@@ -76,7 +87,9 @@ def _mocked_doorbell(device_dict):
     ):
         battery_life = min(100, battery_life)
 
+    # Set the device attributes
     doorbell.configure_mock(**device_dict)
+    # Mimic the Properties on the device
     doorbell.configure_mock(
         model="Doorbell",
         name=device_dict["description"],
@@ -86,7 +99,7 @@ def _mocked_doorbell(device_dict):
         wifi_signal_category=None,
     )
     doorbell.has_capability.side_effect = lambda c: c in capabilities
-
+    # Mock the history api call
     doorbell.history.return_value = DOORBOT_HISTORY
 
     doorbell.configure_mock(wifi_signal_category=None, wifi_signal_strength=None)
@@ -175,6 +188,7 @@ def _mocked_other(device_dict):
     return other
 
 
+# For each device_type the value is the function used to create the mock
 MOCK_GENERATORS = {
     "authorized_doorbots": _mocked_doorbell,
     "chimes": _mocked_chime,
