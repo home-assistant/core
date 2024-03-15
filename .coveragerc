@@ -926,7 +926,6 @@ omit =
     homeassistant/components/onvif/sensor.py
     homeassistant/components/onvif/util.py
     homeassistant/components/open_meteo/weather.py
-    homeassistant/components/opencv/*
     homeassistant/components/openevse/sensor.py
     homeassistant/components/openexchangerates/__init__.py
     homeassistant/components/openexchangerates/coordinator.py
