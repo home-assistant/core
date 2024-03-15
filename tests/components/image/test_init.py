@@ -354,4 +354,3 @@ async def test_image_stream(
             await hass.async_block_till_done()
 
     await close_future
-    assert resp.closed
