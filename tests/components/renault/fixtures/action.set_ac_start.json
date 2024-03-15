@@ -1,7 +1,0 @@
-{
-  "data": {
-    "type": "HvacStart",
-    "id": "guid",
-    "attributes": { "action": "start", "targetTemperature": 21.0 }
-  }
-}

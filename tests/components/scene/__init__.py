@@ -1,1 +1,0 @@
-"""Tests for scene component."""

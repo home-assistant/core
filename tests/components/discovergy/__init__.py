@@ -1,1 +1,0 @@
-"""Test the Discovergy integration."""

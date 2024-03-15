@@ -43,7 +43,7 @@ from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN, LOGGER, RASC_ACK, RASC_COMPLETE, RASC_RESPONSE, RASC_START
-from .scheduler import RascalSchedulerEntity
+from .scheduler import RascalScheduler
 
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_platform import EntityPlatform
@@ -63,7 +63,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the RASC component."""
     component = hass.data[DOMAIN] = RASC(LOGGER, DOMAIN, hass)
-    hass.data[DOMAIN_RASCALSCHEDULER] = RascalSchedulerEntity(hass)
+    hass.data[DOMAIN_RASCALSCHEDULER] = RascalScheduler(hass)
 
     await component.async_load()
 

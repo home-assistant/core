@@ -1,8 +1,0 @@
-{
-  "powerOnBehavior": 1,
-  "powerOnBrightness": 20,
-  "powerOnTemperature": 213,
-  "switchOnDurationMs": 100,
-  "switchOffDurationMs": 300,
-  "colorChangeDurationMs": 100
-}

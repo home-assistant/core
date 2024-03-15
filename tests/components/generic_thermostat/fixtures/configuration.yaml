@@ -1,5 +1,0 @@
-climate:
-  - platform: generic_thermostat
-    name: reload
-    heater: switch.any
-    target_sensor: sensor.any

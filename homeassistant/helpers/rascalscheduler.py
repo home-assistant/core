@@ -1,6 +1,7 @@
 """Helpers to execute rascal entities."""
 from __future__ import annotations
 
+from datetime import datetime, timedelta
 import logging
 import re
 
@@ -47,7 +48,7 @@ def add_entity_in_lineage(hass: HomeAssistant, entity_id: str) -> None:
             _LOGGER.info("Create queue: %s", entity_id)
             rascal = hass.data.get(DOMAIN_RASCALSCHEDULER)
             if rascal is not None:
-                rascal.lienage_table.add_entity(entity_id)
+                rascal.lineage_table.add_entity(entity_id)
 
 
 def delete_entity_in_lineage(hass: HomeAssistant, entity_id: str) -> None:
@@ -60,7 +61,7 @@ def delete_entity_in_lineage(hass: HomeAssistant, entity_id: str) -> None:
         _LOGGER.info("Delete queue: %s", entity_id)
 
 
-def async_get_device_id_from_entity_id(hass: HomeAssistant, entity_id: str) -> str:
+def get_device_id_from_entity_id(hass: HomeAssistant, entity_id: str) -> str:
     """Get device ID from an entity ID.
 
     Raises ValueError if entity or device ID is invalid.
@@ -74,7 +75,7 @@ def async_get_device_id_from_entity_id(hass: HomeAssistant, entity_id: str) -> s
     return str(entity_entry.device_id)
 
 
-def async_get_entity_id_from_number(hass: HomeAssistant, entity_id: str) -> str:
+def get_entity_id_from_number(hass: HomeAssistant, entity_id: str) -> str:
     """Get entity_id from number."""
     pattern = re.compile("^[^.]+[.][^.]+$")
     if not pattern.match(entity_id):
@@ -84,6 +85,23 @@ def async_get_entity_id_from_number(hass: HomeAssistant, entity_id: str) -> str:
     return str(entity_id)
 
 
-def async_get_routine_id(action_id: str) -> str:
+def get_routine_id(action_id: str) -> str:
     """Get routine id from action id."""
     return action_id.split(".")[0]
+
+
+def generate_duration() -> timedelta:
+    """Get a random duration."""
+    return timedelta(seconds=2)
+
+
+def string_to_datetime(dt: str) -> datetime:
+    """Convert string into datetime."""
+    return datetime.strptime(
+        datetime.now().strftime("%Y-%m-%d") + " " + dt, "%Y-%m-%d %H%M%S"
+    )
+
+
+def datetime_to_string(dt: datetime) -> str:
+    """Convert datetime to string."""
+    return dt.strftime("%H%M%S")
