@@ -31,8 +31,6 @@ class TibberConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
 
-        self._async_abort_entries_match()
-
         if user_input is not None:
             access_token = user_input[CONF_ACCESS_TOKEN].replace(" ", "")
 
