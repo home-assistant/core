@@ -14,7 +14,20 @@ from homeassistant.helpers.typing import ConfigType
 # to wait for the import executor when its busy later
 # in the startup process.
 from . import sensor as sensor_pre_import  # noqa: F401
-from .const import DOMAIN, STATE_ABOVE_HORIZON, STATE_BELOW_HORIZON  # noqa: F401
+from .const import (  # noqa: F401  # noqa: F401
+    DOMAIN,
+    STATE_ABOVE_HORIZON,
+    STATE_ATTR_AZIMUTH,
+    STATE_ATTR_ELEVATION,
+    STATE_ATTR_NEXT_DAWN,
+    STATE_ATTR_NEXT_DUSK,
+    STATE_ATTR_NEXT_MIDNIGHT,
+    STATE_ATTR_NEXT_NOON,
+    STATE_ATTR_NEXT_RISING,
+    STATE_ATTR_NEXT_SETTING,
+    STATE_ATTR_RISING,
+    STATE_BELOW_HORIZON,
+)
 from .entity import Sun
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
