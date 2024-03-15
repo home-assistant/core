@@ -2,6 +2,7 @@
 
 import logging
 
+from motionblindsble.const import MotionBlindType
 from motionblindsble.device import MotionDevice
 
 from homeassistant.config_entries import ConfigEntry
@@ -40,7 +41,7 @@ class MotionblindsBLEEntity(Entity):
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, entry.data[CONF_ADDRESS])},
             manufacturer=MANUFACTURER,
-            model=entry.data[CONF_BLIND_TYPE],
+            model=MotionBlindType[entry.data[CONF_BLIND_TYPE].upper()].value,
             name=device.display_name,
         )
 
