@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from .storage import Store
 
 SAVE_DELAY = 10
-SAVE_DELAY_LONG = 300
+SAVE_DELAY_LONG = 180
 
 
 class BaseRegistry(ABC):
