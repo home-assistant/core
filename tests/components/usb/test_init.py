@@ -85,7 +85,7 @@ async def test_observer_discovery(
 
     def _create_mock_monitor_observer(monitor, callback, name):
         nonlocal mock_observer
-        hass.async_create_task(_mock_monitor_observer_callback(callback))
+        hass.create_task(_mock_monitor_observer_callback(callback))
         mock_observer = MagicMock()
         return mock_observer
 

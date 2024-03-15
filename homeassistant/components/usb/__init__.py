@@ -235,8 +235,6 @@ class USBDiscovery:
         ):
             return
 
-        observer.start()
-
         def _stop_observer(event: Event) -> None:
             observer.stop()
 
@@ -269,9 +267,12 @@ class USBDiscovery:
             )
             return None
 
-        return MonitorObserver(
+        observer = MonitorObserver(
             monitor, callback=self._device_discovered, name="usb-observer"
         )
+
+        observer.start()
+        return observer
 
     def _device_discovered(self, device: Device) -> None:
         """Call when the observer discovers a new usb tty device."""
