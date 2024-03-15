@@ -148,7 +148,7 @@ class FFmpegManager:
         self._bin = ffmpeg_bin
         self._content_type = CONTENT_TYPE_MULTIPART.format("ffmpeg")
 
-    @property
+    @cached_property
     def binary(self) -> str:
         """Return ffmpeg binary from config."""
         return self._bin
