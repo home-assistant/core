@@ -131,6 +131,8 @@ async def async_modbus_setup(
 
     if config[DOMAIN]:
         config[DOMAIN] = check_config(hass, config[DOMAIN])
+        if not config[DOMAIN]:
+            return False
     if DOMAIN in hass.data and config[DOMAIN] == []:
         hubs = hass.data[DOMAIN]
         for name in hubs:
