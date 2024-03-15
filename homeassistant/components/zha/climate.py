@@ -3,7 +3,6 @@
 For more details on this platform, please refer to the documentation
 at https://home-assistant.io/components/zha.climate/
 """
-
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -826,20 +825,17 @@ class ZONNSMARTThermostat(Thermostat):
 
 
 @MULTI_MATCH(
-    cluster_handler_names={CLUSTER_HANDLER_THERMOSTAT, "cable_outlet_cluster"},
-    stop_on_match_group=CLUSTER_HANDLER_THERMOSTAT,
+    cluster_handler_names={"cable_outlet_cluster"},
 )
-class LegrandCableOutletThermostat(Thermostat):
+class LegrandCableOutletThermostat(ZhaEntity, ClimateEntity):
     """Legrand Cable outlet Thermostat implementation."""
-
-    _attr_translation_key = "legrand_thermostat"
 
     PRESET_COMFORT_MINUS_1 = "comfort_minus_1"
     PRESET_COMFORT_MINUS_2 = "comfort_minus_2"
     PRESET_FROST_PROTECTION = "frost_protection"
     PRESET_OFF = "off"
 
-    OPERATION_PRESET_TO_PRESET = {
+    HEAT_MODE_2_PRESET = {
         0: PRESET_COMFORT,
         1: PRESET_COMFORT_MINUS_1,
         2: PRESET_COMFORT_MINUS_2,
@@ -848,7 +844,7 @@ class LegrandCableOutletThermostat(Thermostat):
         5: PRESET_OFF,
     }
 
-    PRESET_TO_OPERATION_PRESET = {
+    PRESET_2_HEAT_MODE = {
         PRESET_COMFORT: 0,
         PRESET_COMFORT_MINUS_1: 1,
         PRESET_COMFORT_MINUS_2: 2,
@@ -857,10 +853,58 @@ class LegrandCableOutletThermostat(Thermostat):
         PRESET_OFF: 5,
     }
 
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_translation_key: str = "legrand_thermostat"
+    _enable_turn_on_off_backwards_compatibility = False
+
     def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs):
         """Initialize ZHA Thermostat instance."""
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
-        self._presets = [
+        self._cable_outlet = self.cluster_handlers.get("cable_outlet_cluster")
+        self._heat_mode = self._cable_outlet.cluster.get("heat_mode", 5)
+
+    async def async_added_to_hass(self) -> None:
+        """Run when about to be added to hass."""
+        await super().async_added_to_hass()
+        self.async_accept_signal(
+            self._cable_outlet, SIGNAL_ATTR_UPDATED, self.async_attribute_updated
+        )
+
+    async def async_attribute_updated(self, attr_id, attr_name, value):
+        """Handle attribute update from device."""
+
+        if attr_name == "heat_mode":
+            self._heat_mode = value
+        self.async_write_ha_state()
+
+    @property
+    def hvac_mode(self) -> HVACMode | None:
+        """Return HVAC operation mode."""
+
+        heat_mode = self._heat_mode
+        if heat_mode == 5:
+            return HVACMode.OFF
+        if heat_mode >= 0:
+            return HVACMode.HEAT
+        return None
+
+    @property
+    def hvac_modes(self) -> list[HVACMode]:
+        """Return the list of available HVAC operation modes."""
+        return [HVACMode.HEAT, HVACMode.OFF]
+
+    @property
+    def preset_mode(self) -> str:
+        """Return current preset mode."""
+
+        heat_mode = self._heat_mode
+        return self.HEAT_MODE_2_PRESET.get(heat_mode, self.PRESET_OFF)
+
+    @property
+    def preset_modes(self) -> list[str] | None:
+        """Return supported preset modes."""
+
+        return [
             PRESET_COMFORT,
             self.PRESET_COMFORT_MINUS_1,
             self.PRESET_COMFORT_MINUS_2,
@@ -868,25 +912,46 @@ class LegrandCableOutletThermostat(Thermostat):
             self.PRESET_FROST_PROTECTION,
             self.PRESET_OFF,
         ]
-        self._supported_flags |= ClimateEntityFeature.PRESET_MODE
 
     @property
-    def current_temperature(self):
-        """Return the current temperature."""
+    def supported_features(self) -> ClimateEntityFeature:
+        """Return the list of supported features."""
 
-        return None
+        return (
+            ClimateEntityFeature.PRESET_MODE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
+        )
 
-    async def async_attribute_updated(self, attr_id, attr_name, value):
-        """Handle attribute update from device."""
-        if attr_name == "operation_preset":
-            self._preset = self.OPERATION_PRESET_TO_PRESET.get(value, self.PRESET_OFF)
-        await super().async_attribute_updated(attr_id, attr_name, value)
-
-    async def async_preset_handler(self, preset: str, enable: bool = False) -> None:
-        """Set the preset mode."""
-        mfg_code = self._zha_device.manufacturer_code
-        operation_preset = self.PRESET_TO_OPERATION_PRESET.get(preset)
-        if operation_preset is not None:
-            return await self._thrm.write_attributes_safe(
-                {"operation_preset": operation_preset}, manufacturer=mfg_code
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set new target operation mode."""
+        if hvac_mode not in self.hvac_modes:
+            self.warning(
+                "can't set '%s' mode. Supported modes are: %s",
+                hvac_mode,
+                self.hvac_modes,
             )
+            return
+
+        if hvac_mode == self.hvac_mode:
+            return
+
+        heat_mode = 5 if hvac_mode == HVACMode.OFF else 0
+        mfg_code = self._zha_device.manufacturer_code
+        await self._cable_outlet.write_attributes_safe(
+            {"heat_mode": heat_mode}, manufacturer=mfg_code
+        )
+        self.async_write_ha_state()
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set new preset mode."""
+        if self.preset_modes and (preset_mode not in self.preset_modes):
+            self.debug("Preset mode '%s' is not supported", preset_mode)
+            return
+
+        heat_mode = self.PRESET_2_HEAT_MODE.get(preset_mode)
+        mfg_code = self._zha_device.manufacturer_code
+        await self._cable_outlet.write_attributes_safe(
+            {"heat_mode": heat_mode}, manufacturer=mfg_code
+        )
+        self.async_write_ha_state()
