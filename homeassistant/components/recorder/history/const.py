@@ -1,7 +1,9 @@
 """Constants for history."""
 
-STATE_KEY = "state"
-LAST_CHANGED_KEY = "last_changed"
+from typing import Final
+
+STATE_KEY: Final = "state"
+LAST_CHANGED_KEY: Final = "last_changed"
 
 SIGNIFICANT_DOMAINS = {
     "climate",

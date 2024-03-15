@@ -36,6 +36,11 @@ from ..models import (
     process_timestamp,
     row_to_compressed_state,
 )
+from ..models.state import (
+    HistoryCompressedState,
+    HistoryMinimalCompressedState,
+    HistoryMinimalState,
+)
 from ..util import execute_stmt_lambda_element, session_scope
 from .const import (
     LAST_CHANGED_KEY,
@@ -103,7 +108,15 @@ def get_significant_states(
     minimal_response: bool = False,
     no_attributes: bool = False,
     compressed_state_format: bool = False,
-) -> MutableMapping[str, list[State | dict[str, Any]]]:
+) -> MutableMapping[
+    str,
+    list[
+        State
+        | HistoryCompressedState
+        | HistoryMinimalCompressedState
+        | HistoryMinimalState
+    ],
+]:
     """Wrap get_significant_states_with_session with an sql session."""
     with session_scope(hass=hass, read_only=True) as session:
         return get_significant_states_with_session(
@@ -196,7 +209,15 @@ def get_significant_states_with_session(
     minimal_response: bool = False,
     no_attributes: bool = False,
     compressed_state_format: bool = False,
-) -> MutableMapping[str, list[State | dict[str, Any]]]:
+) -> MutableMapping[
+    str,
+    list[
+        State
+        | HistoryCompressedState
+        | HistoryMinimalCompressedState
+        | HistoryMinimalState
+    ],
+]:
     """Return states changes during UTC period start_time - end_time.
 
     entity_ids is an optional iterable of entities to include in the results.
@@ -643,7 +664,15 @@ def _sorted_states_to_dict(
     compressed_state_format: bool = False,
     descending: bool = False,
     no_attributes: bool = False,
-) -> MutableMapping[str, list[State | dict[str, Any]]]:
+) -> MutableMapping[
+    str,
+    list[
+        State
+        | HistoryCompressedState
+        | HistoryMinimalCompressedState
+        | HistoryMinimalState
+    ],
+]:
     """Convert SQL results into JSON friendly data structure.
 
     This takes our state list and turns it into a JSON friendly data
@@ -658,21 +687,26 @@ def _sorted_states_to_dict(
     field_map = _FIELD_MAP
     state_class: Callable[
         [Row, dict[str, dict[str, Any]], float | None, str, str, float | None, bool],
-        State | dict[str, Any],
+        State,
+    ] | Callable[
+        [Row, dict[str, dict[str, Any]], float | None, str, str, float | None, bool],
+        HistoryCompressedState | HistoryMinimalCompressedState,
     ]
     if compressed_state_format:
         state_class = row_to_compressed_state
-        attr_time = COMPRESSED_STATE_LAST_UPDATED
-        attr_state = COMPRESSED_STATE_STATE
     else:
         state_class = LazyState
-        attr_time = LAST_CHANGED_KEY
-        attr_state = STATE_KEY
 
     # Set all entity IDs to empty lists in result set to maintain the order
-    result: dict[str, list[State | dict[str, Any]]] = {
-        entity_id: [] for entity_id in entity_ids
-    }
+    result: dict[
+        str,
+        list[
+            State
+            | HistoryCompressedState
+            | HistoryMinimalCompressedState
+            | HistoryMinimalState
+        ],
+    ] = {entity_id: [] for entity_id in entity_ids}
     metadata_id_to_entity_id: dict[int, str] = {}
     metadata_id_to_entity_id = {
         v: k for k, v in entity_id_to_metadata_id.items() if v is not None
@@ -746,8 +780,8 @@ def _sorted_states_to_dict(
             # Compressed state format uses the timestamp directly
             ent_results.extend(
                 {
-                    attr_state: (prev_state := state),
-                    attr_time: row[last_updated_ts_idx],
+                    COMPRESSED_STATE_STATE: (prev_state := state),
+                    COMPRESSED_STATE_LAST_UPDATED: row[last_updated_ts_idx],
                 }
                 for row in group
                 if (state := row[state_idx]) != prev_state
@@ -758,8 +792,10 @@ def _sorted_states_to_dict(
         _utc_from_timestamp = dt_util.utc_from_timestamp
         ent_results.extend(
             {
-                attr_state: (prev_state := state),  # noqa: F841
-                attr_time: _utc_from_timestamp(row[last_updated_ts_idx]).isoformat(),
+                STATE_KEY: (prev_state := state),  # noqa: F841
+                LAST_CHANGED_KEY: _utc_from_timestamp(
+                    row[last_updated_ts_idx]
+                ).isoformat(),
             }
             for row in group
             if (state := row[state_idx]) != prev_state

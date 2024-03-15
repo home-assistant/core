@@ -13,6 +13,10 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.recorder import get_instance, history
+from homeassistant.components.recorder.models.state import (
+    HistoryCompressedState,
+    HistoryMinimalCompressedState,
+)
 from homeassistant.components.websocket_api import messages
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.const import (
@@ -297,22 +301,31 @@ async def _async_send_historical_states(
     return last_time_dt if last_time_ts != 0 else None
 
 
-def _history_compressed_state(state: State, no_attributes: bool) -> dict[str, Any]:
-    """Convert a state to a compressed state."""
-    comp_state: dict[str, Any] = {COMPRESSED_STATE_STATE: state.state}
+def _history_compressed_state(
+    state: State, no_attributes: bool
+) -> HistoryCompressedState | HistoryMinimalCompressedState:
+    """Convert a state to a compressed state.
+
+    Returns HistoryMinimalCompressedState if no_attributes is True.
+    """
+    comp_state: dict[str, Any] = {
+        COMPRESSED_STATE_STATE: state.state,
+        COMPRESSED_STATE_LAST_UPDATED: state.last_updated_timestamp,
+    }
     if not no_attributes or state.domain in history.NEED_ATTRIBUTE_DOMAINS:
         comp_state[COMPRESSED_STATE_ATTRIBUTES] = state.attributes
-    comp_state[COMPRESSED_STATE_LAST_UPDATED] = state.last_updated_timestamp
     if state.last_changed != state.last_updated:
         comp_state[COMPRESSED_STATE_LAST_CHANGED] = state.last_changed_timestamp
-    return comp_state
+    return comp_state  # type: ignore[return-value]
 
 
 def _events_to_compressed_states(
     events: Iterable[Event], no_attributes: bool
-) -> MutableMapping[str, list[dict[str, Any]]]:
+) -> MutableMapping[str, list[HistoryCompressedState | HistoryMinimalCompressedState]]:
     """Convert events to a compressed states."""
-    states_by_entity_ids: dict[str, list[dict[str, Any]]] = {}
+    states_by_entity_ids: dict[
+        str, list[HistoryCompressedState | HistoryMinimalCompressedState]
+    ] = {}
     for event in events:
         state: State = event.data["new_state"]
         entity_id: str = state.entity_id

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import MutableMapping
 from datetime import datetime
-from typing import Any
 
 from sqlalchemy.orm.session import Session
 
@@ -12,6 +11,11 @@ from homeassistant.core import HomeAssistant, State
 
 from ... import recorder
 from ..filters import Filters
+from ..models.state import (
+    HistoryCompressedState,
+    HistoryMinimalCompressedState,
+    HistoryMinimalState,
+)
 from .const import NEED_ATTRIBUTE_DOMAINS, SIGNIFICANT_DOMAINS
 from .modern import (
     get_full_significant_states_with_session as _modern_get_full_significant_states_with_session,
@@ -92,7 +96,15 @@ def get_significant_states(
     minimal_response: bool = False,
     no_attributes: bool = False,
     compressed_state_format: bool = False,
-) -> MutableMapping[str, list[State | dict[str, Any]]]:
+) -> MutableMapping[
+    str,
+    list[
+        State
+        | HistoryCompressedState
+        | HistoryMinimalCompressedState
+        | HistoryMinimalState
+    ],
+]:
     """Return a dict of significant states during a time period."""
     if not recorder.get_instance(hass).states_meta_manager.active:
         from .legacy import (  # pylint: disable=import-outside-toplevel
@@ -128,7 +140,15 @@ def get_significant_states_with_session(
     minimal_response: bool = False,
     no_attributes: bool = False,
     compressed_state_format: bool = False,
-) -> MutableMapping[str, list[State | dict[str, Any]]]:
+) -> MutableMapping[
+    str,
+    list[
+        State
+        | HistoryCompressedState
+        | HistoryMinimalCompressedState
+        | HistoryMinimalState
+    ],
+]:
     """Return a dict of significant states during a time period."""
     if not recorder.get_instance(hass).states_meta_manager.active:
         from .legacy import (  # pylint: disable=import-outside-toplevel

@@ -35,6 +35,11 @@ from ..models.legacy import (
     legacy_row_to_compressed_state,
     legacy_row_to_compressed_state_pre_schema_31,
 )
+from ..models.state import (
+    HistoryCompressedState,
+    HistoryMinimalCompressedState,
+    HistoryMinimalState,
+)
 from ..util import execute_stmt_lambda_element, session_scope
 from .common import _schema_version
 from .const import (
@@ -209,7 +214,15 @@ def get_significant_states(
     minimal_response: bool = False,
     no_attributes: bool = False,
     compressed_state_format: bool = False,
-) -> MutableMapping[str, list[State | dict[str, Any]]]:
+) -> MutableMapping[
+    str,
+    list[
+        State
+        | HistoryCompressedState
+        | HistoryMinimalCompressedState
+        | HistoryMinimalState
+    ],
+]:
     """Wrap get_significant_states_with_session with an sql session."""
     with session_scope(hass=hass, read_only=True) as session:
         return get_significant_states_with_session(
@@ -317,7 +330,15 @@ def get_significant_states_with_session(
     minimal_response: bool = False,
     no_attributes: bool = False,
     compressed_state_format: bool = False,
-) -> MutableMapping[str, list[State | dict[str, Any]]]:
+) -> MutableMapping[
+    str,
+    list[
+        State
+        | HistoryCompressedState
+        | HistoryMinimalCompressedState
+        | HistoryMinimalState
+    ],
+]:
     """Return states changes during UTC period start_time - end_time.
 
     entity_ids is an optional iterable of entities to include in the results.
@@ -693,7 +714,15 @@ def _sorted_states_to_dict(
     minimal_response: bool = False,
     no_attributes: bool = False,
     compressed_state_format: bool = False,
-) -> MutableMapping[str, list[State | dict[str, Any]]]:
+) -> MutableMapping[
+    str,
+    list[
+        State
+        | HistoryCompressedState
+        | HistoryMinimalCompressedState
+        | HistoryMinimalState
+    ],
+]:
     """Convert SQL results into JSON friendly data structure.
 
     This takes our state list and turns it into a JSON friendly data
@@ -709,7 +738,9 @@ def _sorted_states_to_dict(
     _process_timestamp: Callable[[datetime], float | str]
     field_map = _FIELD_MAP if schema_version >= 31 else _FIELD_MAP_PRE_SCHEMA_31
     state_class: Callable[
-        [Row, dict[str, dict[str, Any]], datetime | None], State | dict[str, Any]
+        [Row, dict[str, dict[str, Any]], datetime | None], State
+    ] | Callable[
+        [Row, dict[str, dict[str, Any]], datetime | None], HistoryCompressedState
     ]
     if compressed_state_format:
         if schema_version >= 31:
@@ -728,7 +759,15 @@ def _sorted_states_to_dict(
         attr_time = LAST_CHANGED_KEY
         attr_state = STATE_KEY
 
-    result: dict[str, list[State | dict[str, Any]]] = defaultdict(list)
+    result: dict[
+        str,
+        list[
+            State
+            | HistoryCompressedState
+            | HistoryMinimalCompressedState
+            | HistoryMinimalState
+        ],
+    ] = defaultdict(list)
     # Set all entity IDs to empty lists in result set to maintain the order
     for ent_id in entity_ids:
         result[ent_id] = []
@@ -795,8 +834,8 @@ def _sorted_states_to_dict(
             for row in group:
                 if (state := row[state_idx]) != prev_state:
                     ent_results.append(
-                        {
-                            attr_state: state,
+                        {  # type: ignore[arg-type]
+                            attr_state: state,  # type: ignore[misc]
                             attr_time: _process_timestamp(row[last_updated_idx]),
                         }
                     )
@@ -809,8 +848,8 @@ def _sorted_states_to_dict(
                 if (state := row[state_idx]) != prev_state:
                     ent_results.append(
                         {
-                            attr_state: state,
-                            attr_time: row[last_updated_ts_idx],
+                            COMPRESSED_STATE_STATE: state,
+                            COMPRESSED_STATE_LAST_UPDATED: row[last_updated_ts_idx],
                         }
                     )
                     prev_state = state
@@ -819,8 +858,8 @@ def _sorted_states_to_dict(
             if (state := row[state_idx]) != prev_state:
                 ent_results.append(
                     {
-                        attr_state: state,
-                        attr_time: process_timestamp_to_utc_isoformat(
+                        STATE_KEY: state,
+                        LAST_CHANGED_KEY: process_timestamp_to_utc_isoformat(
                             dt_util.utc_from_timestamp(row[last_updated_ts_idx])
                         ),
                     }

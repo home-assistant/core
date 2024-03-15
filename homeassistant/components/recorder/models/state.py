@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, NotRequired, TypedDict
 
 from sqlalchemy.engine.row import Row
 
@@ -38,6 +38,35 @@ def extract_metadata_ids(
         for metadata_id in entity_id_to_metadata_id.values()
         if metadata_id is not None
     ]
+
+
+class HistoryCompressedState(TypedDict):
+    """Compressed dict of a state."""
+
+    s: str  # COMPRESSED_STATE_STATE
+    a: dict[str, Any]  # COMPRESSED_STATE_ATTRIBUTES
+    lc: NotRequired[float]  # COMPRESSED_STATE_LAST_CHANGED
+    lu: float  # COMPRESSED_STATE_LAST_UPDATED
+
+
+class HistoryMinimalCompressedState(TypedDict):
+    """Minimal compressed dict of a state.
+
+    This excludes attributes, context, and last_changed.
+    """
+
+    s: str  # COMPRESSED_STATE_STATE
+    lu: float  # COMPRESSED_STATE_LAST_UPDATED
+
+
+class HistoryMinimalState(TypedDict):
+    """Minimal dict of a state.
+
+    This excludes attributes, context, and last_changed.
+    """
+
+    state: str
+    last_changed: str
 
 
 class LazyState(State):
@@ -117,8 +146,11 @@ def row_to_compressed_state(
     state: str,
     last_updated_ts: float | None,
     no_attributes: bool,
-) -> dict[str, Any]:
-    """Convert a database row to a compressed state schema 41 and later."""
+) -> HistoryCompressedState | HistoryMinimalCompressedState:
+    """Convert a database row to a compressed state schema 41 and later.
+
+    Returns HistoryMinimalCompressedState if no_attributes is True.
+    """
     comp_state: dict[str, Any] = {COMPRESSED_STATE_STATE: state}
     if not no_attributes:
         comp_state[COMPRESSED_STATE_ATTRIBUTES] = decode_attributes_from_source(
@@ -132,4 +164,4 @@ def row_to_compressed_state(
         and row_last_updated_ts != row_last_changed_ts
     ):
         comp_state[COMPRESSED_STATE_LAST_CHANGED] = row_last_changed_ts
-    return comp_state
+    return comp_state  # type: ignore[return-value]

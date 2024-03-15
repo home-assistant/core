@@ -16,6 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, State
 import homeassistant.util.dt as dt_util
 
+from .state import HistoryCompressedState
 from .state_attributes import decode_attributes_from_source
 from .time import (
     process_datetime_to_timestamp,
@@ -144,9 +145,11 @@ def legacy_row_to_compressed_state_pre_schema_31(
     row: Row,
     attr_cache: dict[str, dict[str, Any]],
     start_time: datetime | None,
-) -> dict[str, Any]:
+) -> HistoryCompressedState:
     """Convert a database row to a compressed state before schema 31."""
-    comp_state = {
+    # mypy correctly complains about COMPRESSED_STATE_LAST_UPDATED missing, however
+    # we unconditionally add it later so the type of the return dictionary is correct
+    comp_state: HistoryCompressedState = {  # type: ignore[typeddict-item]
         COMPRESSED_STATE_STATE: row.state,
         COMPRESSED_STATE_ATTRIBUTES: decode_attributes_from_row_legacy(row, attr_cache),
     }
@@ -272,9 +275,11 @@ def legacy_row_to_compressed_state(
     attr_cache: dict[str, dict[str, Any]],
     start_time: datetime | None,
     entity_id: str | None = None,
-) -> dict[str, Any]:
+) -> HistoryCompressedState:
     """Convert a database row to a compressed state schema 31 and later."""
-    comp_state = {
+    # mypy correctly complains about COMPRESSED_STATE_LAST_UPDATED missing, however
+    # we unconditionally add it later so the type of the return dictionary is correct
+    comp_state: HistoryCompressedState = {  # type: ignore[typeddict-item]
         COMPRESSED_STATE_STATE: row.state,
         COMPRESSED_STATE_ATTRIBUTES: decode_attributes_from_row_legacy(row, attr_cache),
     }
