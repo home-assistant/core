@@ -1,4 +1,5 @@
 """The tests for Kira sensor platform."""
+
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.kira import sensor as kira
@@ -13,8 +14,7 @@ DEVICES = []
 
 def add_entities(devices):
     """Mock add devices."""
-    for device in devices:
-        DEVICES.append(device)
+    DEVICES.extend(devices)
 
 
 @patch("homeassistant.components.kira.sensor.KiraReceiver.schedule_update_ha_state")

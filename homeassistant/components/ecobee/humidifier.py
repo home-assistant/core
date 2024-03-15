@@ -1,4 +1,5 @@
 """Support for using humidifier with ecobee thermostats."""
+
 from __future__ import annotations
 
 from datetime import timedelta

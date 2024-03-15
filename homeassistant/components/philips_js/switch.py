@@ -1,4 +1,5 @@
 """Philips TV menu switches."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -45,7 +46,6 @@ class PhilipsTVScreenSwitch(PhilipsJsEntity, SwitchEntity):
 
         super().__init__(coordinator)
 
-        self._attr_icon = "mdi:television-shimmer"
         self._attr_unique_id = f"{coordinator.unique_id}_screenstate"
 
     @property
@@ -84,7 +84,6 @@ class PhilipsTVAmbilightHueSwitch(PhilipsJsEntity, SwitchEntity):
 
         super().__init__(coordinator)
 
-        self._attr_icon = "mdi:television-ambient-light"
         self._attr_unique_id = f"{coordinator.unique_id}_ambi_hue"
 
     @property

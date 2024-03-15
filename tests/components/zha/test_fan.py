@@ -1,4 +1,5 @@
 """Test ZHA fan."""
+
 from unittest.mock import AsyncMock, call, patch
 
 import pytest

@@ -1,4 +1,5 @@
 """Test the Flick Electric config flow."""
+
 from unittest.mock import patch
 
 from pyflick.authentication import AuthException

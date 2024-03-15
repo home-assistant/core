@@ -1,4 +1,5 @@
 """Test the OctoPrint buttons."""
+
 from unittest.mock import patch
 
 from pyoctoprintapi import OctoprintPrinterInfo

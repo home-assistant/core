@@ -1,4 +1,5 @@
 """Test helpers for myuplink."""
+
 from collections.abc import AsyncGenerator, Generator
 import time
 from typing import Any
@@ -93,7 +94,7 @@ def load_systems_jv_file(load_systems_file: str) -> dict[str, Any]:
 @pytest.fixture(scope="session")
 def load_systems_file() -> str:
     """Load fixture file for systems."""
-    return load_fixture("systems.json", DOMAIN)
+    return load_fixture("systems-2dev.json", DOMAIN)
 
 
 @pytest.fixture

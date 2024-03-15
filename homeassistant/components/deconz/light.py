@@ -1,4 +1,5 @@
 """Support for deCONZ lights."""
+
 from __future__ import annotations
 
 from typing import Any, TypedDict, TypeVar
@@ -35,7 +36,7 @@ from homeassistant.util.color import color_hs_to_xy
 
 from .const import DOMAIN as DECONZ_DOMAIN, POWER_PLUGS
 from .deconz_device import DeconzDevice
-from .gateway import DeconzGateway, get_gateway_from_config_entry
+from .hub import DeconzHub, get_gateway_from_config_entry
 
 DECONZ_GROUP = "is_deconz_group"
 EFFECT_TO_DECONZ = {
@@ -63,6 +64,7 @@ FLASH_TO_DECONZ = {FLASH_SHORT: LightAlert.SHORT, FLASH_LONG: LightAlert.LONG}
 
 DECONZ_TO_COLOR_MODE = {
     LightColorMode.CT: ColorMode.COLOR_TEMP,
+    LightColorMode.GRADIENT: ColorMode.XY,
     LightColorMode.HS: ColorMode.HS,
     LightColorMode.XY: ColorMode.XY,
 }
@@ -164,8 +166,9 @@ class DeconzBaseLight(DeconzDevice[_LightDeviceT], LightEntity):
     """Representation of a deCONZ light."""
 
     TYPE = DOMAIN
+    _attr_color_mode = ColorMode.UNKNOWN
 
-    def __init__(self, device: _LightDeviceT, gateway: DeconzGateway) -> None:
+    def __init__(self, device: _LightDeviceT, gateway: DeconzHub) -> None:
         """Set up light."""
         super().__init__(device, gateway)
 
@@ -331,7 +334,7 @@ class DeconzGroup(DeconzBaseLight[Group]):
 
     _attr_has_entity_name = True
 
-    def __init__(self, device: Group, gateway: DeconzGateway) -> None:
+    def __init__(self, device: Group, gateway: DeconzHub) -> None:
         """Set up group and create an unique id."""
         self._unique_id = f"{gateway.bridgeid}-{device.deconz_id}"
         super().__init__(device, gateway)

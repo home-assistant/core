@@ -1,4 +1,5 @@
 """Tests for the storage helper."""
+
 import asyncio
 from datetime import timedelta
 import json
@@ -115,7 +116,7 @@ async def test_loading_parallel(
     results = await asyncio.gather(store.async_load(), store.async_load())
 
     assert results[0] == MOCK_DATA
-    assert results[0] is results[1]
+    assert results[1] == MOCK_DATA
     assert caplog.text.count(f"Loading data for {store.key}")
 
 
@@ -706,8 +707,8 @@ async def test_loading_corrupt_core_file(
         assert issue_entry.translation_placeholders["storage_key"] == storage_key
         assert issue_entry.issue_domain == HOMEASSISTANT_DOMAIN
         assert (
-            issue_entry.translation_placeholders["error"]
-            == "unexpected character: line 1 column 1 (char 0)"
+            "unexpected character: line 1 column 1 (char 0)"
+            in issue_entry.translation_placeholders["error"]
         )
 
         files = await hass.async_add_executor_job(
@@ -767,8 +768,8 @@ async def test_loading_corrupt_file_known_domain(
         assert issue_entry.translation_placeholders["storage_key"] == storage_key
         assert issue_entry.issue_domain == "testdomain"
         assert (
-            issue_entry.translation_placeholders["error"]
-            == "unexpected content after document: line 1 column 17 (char 16)"
+            "unexpected content after document: line 1 column 17 (char 16)"
+            in issue_entry.translation_placeholders["error"]
         )
 
         files = await hass.async_add_executor_job(
@@ -795,6 +796,25 @@ async def test_os_error_is_fatal(tmpdir: py.path.local) -> None:
         ):
             await store.async_load()
 
+        # Verify second load is also failing
+        with pytest.raises(OSError), patch(
+            "homeassistant.helpers.storage.json_util.load_json", side_effect=OSError
+        ):
+            await store.async_load()
+
+        await hass.async_stop(force=True)
+
+
+async def test_json_load_failure(tmpdir: py.path.local) -> None:
+    """Test json load raising HomeAssistantError."""
+    async with async_test_home_assistant() as hass:
+        tmp_storage = await hass.async_add_executor_job(tmpdir.mkdir, "temp_storage")
+        hass.config.config_dir = tmp_storage
+
+        store = storage.Store(
+            hass, MOCK_VERSION_2, MOCK_KEY, minor_version=MOCK_MINOR_VERSION_1
+        )
+        await store.async_save({"hello": "world"})
         base_os_error = OSError()
         base_os_error.errno = 30
         home_assistant_error = HomeAssistantError()

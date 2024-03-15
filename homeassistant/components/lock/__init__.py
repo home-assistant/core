@@ -1,4 +1,5 @@
 """Component to interface with locks that can be controlled remotely."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -40,6 +41,8 @@ from homeassistant.helpers.deprecation import (
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, StateType
+
+from . import group as group_pre_import  # noqa: F401
 
 if TYPE_CHECKING:
     from functools import cached_property

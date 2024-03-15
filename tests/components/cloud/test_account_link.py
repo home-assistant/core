@@ -1,4 +1,5 @@
 """Test account link services."""
+
 import asyncio
 import logging
 from time import time

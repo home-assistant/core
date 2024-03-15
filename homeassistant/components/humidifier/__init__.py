@@ -1,4 +1,5 @@
 """Provides functionality to interact with humidifier devices."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -33,6 +34,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
+from . import group as group_pre_import  # noqa: F401
 from .const import (  # noqa: F401
     _DEPRECATED_DEVICE_CLASS_DEHUMIDIFIER,
     _DEPRECATED_DEVICE_CLASS_HUMIDIFIER,

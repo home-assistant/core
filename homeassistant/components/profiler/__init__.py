@@ -1,4 +1,5 @@
 """The profiler integration."""
+
 import asyncio
 from contextlib import suppress
 from datetime import timedelta

@@ -1,4 +1,5 @@
 """The tests for Fan device actions."""
+
 import pytest
 from pytest_unordered import unordered
 

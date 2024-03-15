@@ -1,4 +1,5 @@
 """Mastodon platform for notify component."""
+
 from __future__ import annotations
 
 from typing import Any

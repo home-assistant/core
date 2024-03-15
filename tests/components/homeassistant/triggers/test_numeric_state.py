@@ -1,4 +1,5 @@
 """The tests for numeric state automation."""
+
 from datetime import timedelta
 import logging
 from unittest.mock import patch
@@ -1206,7 +1207,10 @@ async def test_if_not_fires_on_entities_change_with_for_after_stop(
                     "below": below,
                     "for": {"seconds": 5},
                 },
-                "action": {"service": "test.automation"},
+                "action": [
+                    {"delay": "0.0001"},
+                    {"service": "test.automation"},
+                ],
             }
         },
     )
@@ -1832,7 +1836,10 @@ async def test_attribute_if_not_fires_on_entities_change_with_for_after_stop(
                     "attribute": "test-measurement",
                     "for": 5,
                 },
-                "action": {"service": "test.automation"},
+                "action": [
+                    {"delay": "0.0001"},
+                    {"service": "test.automation"},
+                ],
             }
         },
     )

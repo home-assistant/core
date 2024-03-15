@@ -1,4 +1,5 @@
 """The tests for the Rfxtrx component."""
+
 from __future__ import annotations
 
 from unittest.mock import ANY, call
@@ -212,6 +213,7 @@ async def test_reconnect(rfxtrx, hass: HomeAssistant) -> None:
         rfxtrx.event_callback,
         rfxtrxmod.ConnectionLost(),
     )
+    await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
     rfxtrx.connect.call_count = 2

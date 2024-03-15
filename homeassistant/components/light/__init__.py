@@ -1,4 +1,5 @@
 """Provides functionality to interact with lights."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -32,6 +33,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 import homeassistant.util.color as color_util
+
+from . import group as group_pre_import  # noqa: F401
 
 if TYPE_CHECKING:
     from functools import cached_property
@@ -1336,5 +1339,5 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return if light color mode issues should be reported."""
         if not self.platform:
             return True
-        # philips_js and zha have known issues, we don't need users to open issues
-        return self.platform.platform_name not in {"philips_js", "zha"}
+        # philips_js has known issues, we don't need users to open issues
+        return self.platform.platform_name not in {"philips_js"}

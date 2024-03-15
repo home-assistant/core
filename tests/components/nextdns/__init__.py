@@ -1,4 +1,5 @@
 """Tests for the NextDNS integration."""
+
 from unittest.mock import patch
 
 from nextdns import (
