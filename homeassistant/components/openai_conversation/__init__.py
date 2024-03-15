@@ -305,7 +305,7 @@ async def async_register_tool(
     hass: HomeAssistant, agent_id: str, specification: dict, async_callback: Callable
 ) -> None:
     """Register a function that the assistant may execute."""
-    agent = await conversation._get_agent_manager(hass).async_get_agent(agent_id)
+    agent = await conversation._get_agent_manager(hass).async_get_agent(agent_id)  # pylint: disable=protected-access
     if not isinstance(agent, OpenAIAgent):
         raise TypeError("Agent ID must correspond to openai_conversation agent")
     agent.register_tool(specification, async_callback)
@@ -316,7 +316,7 @@ async def async_unregister_tool(
     hass: HomeAssistant, agent_id: str, function_name: str
 ) -> None:
     """Remove the function from the list of available tools for the assistant."""
-    agent = await conversation._get_agent_manager(hass).async_get_agent(agent_id)
+    agent = await conversation._get_agent_manager(hass).async_get_agent(agent_id)  # pylint: disable=protected-access
     if not isinstance(agent, OpenAIAgent):
         raise TypeError("Agent ID must correspond to openai_conversation agent")
     agent.unregister_tool(function_name)
