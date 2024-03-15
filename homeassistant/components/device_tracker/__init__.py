@@ -1,4 +1,5 @@
 """Provide functionality to keep track of devices."""
+
 from __future__ import annotations
 
 from functools import partial
@@ -6,12 +7,14 @@ from functools import partial
 from homeassistant.const import ATTR_GPS_ACCURACY, STATE_HOME  # noqa: F401
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.deprecation import (
+    all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
+from . import group as group_pre_import  # noqa: F401
 from .config_entry import (  # noqa: F401
     ScannerEntity,
     TrackerEntity,
@@ -57,12 +60,6 @@ from .legacy import (  # noqa: F401
     see,
 )
 
-# As we import deprecated constants from the const module, we need to add these two functions
-# otherwise this module will be logged for using deprecated constants and not the custom component
-# Both can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
-
 
 @bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
@@ -83,3 +80,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await async_setup_legacy_integration(hass, config)
 
     return True
+
+
+# As we import deprecated constants from the const module, we need to add these two functions
+# otherwise this module will be logged for using deprecated constants and not the custom component
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

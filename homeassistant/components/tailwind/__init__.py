@@ -1,4 +1,5 @@
 """Integration for Tailwind devices."""
+
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
@@ -9,7 +10,7 @@ from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN
 from .coordinator import TailwindDataUpdateCoordinator
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.COVER, Platform.BUTTON, Platform.NUMBER]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.COVER, Platform.NUMBER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

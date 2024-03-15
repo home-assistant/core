@@ -1,4 +1,5 @@
 """Validate the energy preferences provide valid data."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence

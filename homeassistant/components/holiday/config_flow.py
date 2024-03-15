@@ -1,15 +1,15 @@
 """Config flow for Holiday integration."""
+
 from __future__ import annotations
 
 from typing import Any
 
-from babel import Locale
+from babel import Locale, UnknownLocaleError
 from holidays import list_supported_countries
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_COUNTRY
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
     CountrySelector,
     CountrySelectorConfig,
@@ -23,7 +23,7 @@ from .const import CONF_PROVINCE, DOMAIN
 SUPPORTED_COUNTRIES = list_supported_countries(include_aliases=False)
 
 
-class HolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Holiday."""
 
     VERSION = 1
@@ -34,7 +34,7 @@ class HolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is not None:
             self.data = user_input
@@ -46,7 +46,12 @@ class HolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             self._async_abort_entries_match({CONF_COUNTRY: user_input[CONF_COUNTRY]})
 
-            locale = Locale(self.hass.config.language)
+            try:
+                locale = Locale.parse(self.hass.config.language, sep="-")
+            except UnknownLocaleError:
+                # Default to (US) English if language not recognized by babel
+                # Mainly an issue with English flavors such as "en-GB"
+                locale = Locale("en")
             title = locale.territories[selected_country]
             return self.async_create_entry(title=title, data=user_input)
 
@@ -66,7 +71,7 @@ class HolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_province(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the province step."""
         if user_input is not None:
             combined_input: dict[str, Any] = {**self.data, **user_input}
@@ -81,7 +86,12 @@ class HolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             )
 
-            locale = Locale(self.hass.config.language)
+            try:
+                locale = Locale.parse(self.hass.config.language, sep="-")
+            except UnknownLocaleError:
+                # Default to (US) English if language not recognized by babel
+                # Mainly an issue with English flavors such as "en-GB"
+                locale = Locale("en")
             province_str = f", {province}" if province else ""
             name = f"{locale.territories[country]}{province_str}"
 

@@ -1,4 +1,5 @@
 """Common stuff for Fritz!Tools tests."""
+
 from homeassistant.components import ssdp
 from homeassistant.components.fritz.const import DOMAIN
 from homeassistant.components.ssdp import ATTR_UPNP_FRIENDLY_NAME, ATTR_UPNP_UDN
@@ -131,6 +132,21 @@ MOCK_FB_SERVICES: dict[str, dict] = {
             "NewExternalIPAddress": "1.2.3.4",
         },
         "GetPortMappingNumberOfEntries": {},
+    },
+    "WLANConfiguration1": {
+        "GetInfo": {
+            "NewEnable": True,
+            "NewStatus": "Up",
+            "NewSSID": "MyWifi",
+            "NewBeaconType": "11iandWPA3",
+            "NewX_AVM-DE_PossibleBeaconTypes": "None,11i,11iandWPA3",
+            "NewStandard": "ax",
+            "NewBSSID": "1C:ED:6F:12:34:13",
+        },
+        "GetSSID": {
+            "NewSSID": "MyWifi",
+        },
+        "GetSecurityKeys": {"NewKeyPassphrase": "1234567890"},
     },
     "X_AVM-DE_Homeauto1": {
         "GetGenericDeviceInfos": [

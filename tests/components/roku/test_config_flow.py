@@ -1,4 +1,5 @@
 """Test the Roku config flow."""
+
 import dataclasses
 from unittest.mock import MagicMock
 

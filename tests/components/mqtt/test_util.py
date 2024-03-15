@@ -134,13 +134,12 @@ async def test_return_default_get_file_path(
         assert await hass.async_add_executor_job(_get_file_path, tempdir)
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [])
 async def test_waiting_for_client_not_loaded(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test waiting for client while mqtt entry is not yet loaded."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     await hass.async_block_till_done()
 
     entry = MockConfigEntry(
@@ -160,10 +159,8 @@ async def test_waiting_for_client_not_loaded(
         unsubs.append(await mqtt.async_subscribe(hass, "test_topic", lambda msg: None))
 
     # Simulate some integration waiting for the client to become available
-    hass.async_add_job(_async_just_in_time_subscribe)
-    hass.async_add_job(_async_just_in_time_subscribe)
-    hass.async_add_job(_async_just_in_time_subscribe)
-    hass.async_add_job(_async_just_in_time_subscribe)
+    for _ in range(4):
+        hass.async_create_task(_async_just_in_time_subscribe())
 
     assert entry.state == ConfigEntryState.NOT_LOADED
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -172,7 +169,6 @@ async def test_waiting_for_client_not_loaded(
         unsub()
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [])
 async def test_waiting_for_client_loaded(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
@@ -199,7 +195,7 @@ async def test_waiting_for_client_entry_fails(
     mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test waiting for client where mqtt entry is failing."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     await hass.async_block_till_done()
 
     entry = MockConfigEntry(
@@ -212,7 +208,7 @@ async def test_waiting_for_client_entry_fails(
     async def _async_just_in_time_subscribe() -> Callable[[], None]:
         assert not await mqtt.async_wait_for_mqtt_client(hass)
 
-    hass.async_add_job(_async_just_in_time_subscribe)
+    hass.async_create_task(_async_just_in_time_subscribe())
     assert entry.state == ConfigEntryState.NOT_LOADED
     with patch(
         "homeassistant.components.mqtt.async_setup_entry",
@@ -227,7 +223,7 @@ async def test_waiting_for_client_setup_fails(
     mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test waiting for client where mqtt entry is failing during setup."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     await hass.async_block_till_done()
 
     entry = MockConfigEntry(
@@ -240,7 +236,7 @@ async def test_waiting_for_client_setup_fails(
     async def _async_just_in_time_subscribe() -> Callable[[], None]:
         assert not await mqtt.async_wait_for_mqtt_client(hass)
 
-    hass.async_add_job(_async_just_in_time_subscribe)
+    hass.async_create_task(_async_just_in_time_subscribe())
     assert entry.state == ConfigEntryState.NOT_LOADED
 
     # Simulate MQTT setup fails before the client would become available
@@ -254,7 +250,7 @@ async def test_waiting_for_client_timeout(
     hass: HomeAssistant,
 ) -> None:
     """Test waiting for client with timeout."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     await hass.async_block_till_done()
 
     entry = MockConfigEntry(
@@ -273,7 +269,7 @@ async def test_waiting_for_client_with_disabled_entry(
     hass: HomeAssistant,
 ) -> None:
     """Test waiting for client with timeout."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     await hass.async_block_till_done()
 
     entry = MockConfigEntry(

@@ -1,4 +1,5 @@
 """StarLine Account."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -23,6 +24,12 @@ from .const import (
     DEFAULT_SCAN_OBD_INTERVAL,
     DOMAIN,
 )
+
+
+def _parse_datetime(dt_str: str | None) -> str | None:
+    if dt_str is None or (parsed := dt_util.parse_datetime(dt_str)) is None:
+        return None
+    return parsed.replace(tzinfo=dt_util.UTC).isoformat()
 
 
 class StarlineAccount:
@@ -143,9 +150,7 @@ class StarlineAccount:
     def gps_attrs(device: StarlineDevice) -> dict[str, Any]:
         """Attributes for device tracker."""
         return {
-            "updated": dt_util.utc_from_timestamp(device.position["ts"])
-            .replace(tzinfo=None)
-            .isoformat(),
+            "updated": dt_util.utc_from_timestamp(device.position["ts"]).isoformat(),
             "online": device.online,
         }
 
@@ -155,7 +160,7 @@ class StarlineAccount:
         return {
             "operator": device.balance.get("operator"),
             "state": device.balance.get("state"),
-            "updated": device.balance.get("ts"),
+            "updated": _parse_datetime(device.balance.get("ts")),
         }
 
     @staticmethod

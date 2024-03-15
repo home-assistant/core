@@ -1,4 +1,5 @@
 """Support for Hydrawise cloud switches."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -81,7 +82,7 @@ async def async_setup_entry(
     ]
     async_add_entities(
         HydrawiseSwitch(coordinator, description, controller, zone)
-        for controller in coordinator.data.controllers
+        for controller in coordinator.data.controllers.values()
         for zone in controller.zones
         for description in SWITCH_TYPES
     )

@@ -1,4 +1,5 @@
 """Standard setup for tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, create_autospec, patch
 

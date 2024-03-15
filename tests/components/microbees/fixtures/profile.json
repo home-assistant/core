@@ -1,0 +1,9 @@
+{
+  "id": 54321,
+  "username": "test@microbees.com",
+  "firstName": "Test",
+  "lastName": "Microbees",
+  "email": "test@microbees.com",
+  "locale": "it",
+  "timeZone": "Europe/Rome"
+}

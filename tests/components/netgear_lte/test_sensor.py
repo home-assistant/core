@@ -1,56 +1,28 @@
 """The tests for Netgear LTE sensor platform."""
-import pytest
 
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
-    PERCENTAGE,
-    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    UnitOfInformation,
-)
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.components.netgear_lte.const import DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 
-@pytest.mark.usefixtures("setup_integration", "entity_registry_enabled_by_default")
-async def test_sensors(hass: HomeAssistant) -> None:
+async def test_sensors(
+    hass: HomeAssistant,
+    entity_registry_enabled_by_default: None,
+    setup_integration: None,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
     """Test for successfully setting up the Netgear LTE sensor platform."""
-    state = hass.states.get("sensor.netgear_lte_cell_id")
-    assert state.state == "12345678"
-    state = hass.states.get("sensor.netgear_lte_connection_text")
-    assert state.state == "4G"
-    state = hass.states.get("sensor.netgear_lte_connection_type")
-    assert state.state == "IPv4AndIPv6"
-    state = hass.states.get("sensor.netgear_lte_current_band")
-    assert state.state == "LTE B4"
-    state = hass.states.get("sensor.netgear_lte_current_ps_service_type")
-    assert state.state == "LTE"
-    state = hass.states.get("sensor.netgear_lte_radio_quality")
-    assert state.state == "52"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
-    state = hass.states.get("sensor.netgear_lte_register_network_display")
-    assert state.state == "T-Mobile"
-    state = hass.states.get("sensor.netgear_lte_rx_level")
-    assert state.state == "-113"
-    assert (
-        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
-    )
-    state = hass.states.get("sensor.netgear_lte_sms")
-    assert state.state == "1"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "unread"
-    state = hass.states.get("sensor.netgear_lte_sms_total")
-    assert state.state == "1"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "messages"
-    state = hass.states.get("sensor.netgear_lte_tx_level")
-    assert state.state == "4"
-    assert (
-        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
-    )
-    state = hass.states.get("sensor.netgear_lte_upstream")
-    assert state.state == "LTE"
-    state = hass.states.get("sensor.netgear_lte_usage")
-    assert state.state == "40.5"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfInformation.MEBIBYTES
-    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.DATA_SIZE
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+
+    assert entity_entries
+    for entity_entry in entity_entries:
+        if entity_entry.domain != SENSOR_DOMAIN:
+            continue
+        assert hass.states.get(entity_entry.entity_id) == snapshot(
+            name=entity_entry.entity_id
+        )

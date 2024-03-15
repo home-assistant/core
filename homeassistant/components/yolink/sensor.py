@@ -1,4 +1,5 @@
 """YoLink Sensor."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -22,6 +23,7 @@ from yolink.const import (
     ATTR_DEVICE_TH_SENSOR,
     ATTR_DEVICE_THERMOSTAT,
     ATTR_DEVICE_VIBRATION_SENSOR,
+    ATTR_DEVICE_WATER_DEPTH_SENSOR,
     ATTR_GARAGE_DOOR_CONTROLLER,
 )
 from yolink.device import YoLinkDevice
@@ -37,6 +39,7 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfLength,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -48,21 +51,13 @@ from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
 
-@dataclass(frozen=True)
-class YoLinkSensorEntityDescriptionMixin:
-    """Mixin for device type."""
-
-    exists_fn: Callable[[YoLinkDevice], bool] = lambda _: True
-
-
-@dataclass(frozen=True)
-class YoLinkSensorEntityDescription(
-    YoLinkSensorEntityDescriptionMixin, SensorEntityDescription
-):
+@dataclass(frozen=True, kw_only=True)
+class YoLinkSensorEntityDescription(SensorEntityDescription):
     """YoLink SensorEntityDescription."""
 
-    value: Callable = lambda state: state
+    exists_fn: Callable[[YoLinkDevice], bool] = lambda _: True
     should_update_entity: Callable = lambda state: True
+    value: Callable = lambda state: state
 
 
 SENSOR_DEVICE_TYPE = [
@@ -80,6 +75,7 @@ SENSOR_DEVICE_TYPE = [
     ATTR_DEVICE_TH_SENSOR,
     ATTR_DEVICE_THERMOSTAT,
     ATTR_DEVICE_VIBRATION_SENSOR,
+    ATTR_DEVICE_WATER_DEPTH_SENSOR,
     ATTR_DEVICE_LOCK,
     ATTR_DEVICE_MANIPULATOR,
     ATTR_DEVICE_CO_SMOKE_SENSOR,
@@ -99,6 +95,7 @@ BATTERY_POWER_SENSOR = [
     ATTR_DEVICE_LOCK,
     ATTR_DEVICE_MANIPULATOR,
     ATTR_DEVICE_CO_SMOKE_SENSOR,
+    ATTR_DEVICE_WATER_DEPTH_SENSOR,
 ]
 
 MCU_DEV_TEMPERATURE_SENSOR = [
@@ -122,7 +119,7 @@ def cvt_volume(val: int | None) -> str | None:
     if val is None:
         return None
     volume_level = {1: "low", 2: "medium", 3: "high"}
-    return volume_level.get(val, None)
+    return volume_level.get(val)
 
 
 SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
@@ -172,7 +169,6 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         key="state",
         translation_key="power_failure_alarm",
         device_class=SensorDeviceClass.ENUM,
-        icon="mdi:flash",
         options=["normal", "alert", "off"],
         exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
     ),
@@ -180,7 +176,6 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         key="mute",
         translation_key="power_failure_alarm_mute",
         device_class=SensorDeviceClass.ENUM,
-        icon="mdi:volume-mute",
         options=["muted", "unmuted"],
         exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
         value=lambda value: "muted" if value is True else "unmuted",
@@ -189,7 +184,6 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         key="sound",
         translation_key="power_failure_alarm_volume",
         device_class=SensorDeviceClass.ENUM,
-        icon="mdi:volume-high",
         options=["low", "medium", "high"],
         exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
         value=cvt_volume,
@@ -198,10 +192,15 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         key="beep",
         translation_key="power_failure_alarm_beep",
         device_class=SensorDeviceClass.ENUM,
-        icon="mdi:bullhorn",
         options=["enabled", "disabled"],
         exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
         value=lambda value: "enabled" if value is True else "disabled",
+    ),
+    YoLinkSensorEntityDescription(
+        key="waterDepth",
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.METERS,
+        exists_fn=lambda device: device.device_type in ATTR_DEVICE_WATER_DEPTH_SENSOR,
     ),
 )
 
@@ -218,18 +217,16 @@ async def async_setup_entry(
         for device_coordinator in device_coordinators.values()
         if device_coordinator.device.device_type in SENSOR_DEVICE_TYPE
     ]
-    entities = []
-    for sensor_device_coordinator in sensor_device_coordinators:
-        for description in SENSOR_TYPES:
-            if description.exists_fn(sensor_device_coordinator.device):
-                entities.append(
-                    YoLinkSensorEntity(
-                        config_entry,
-                        sensor_device_coordinator,
-                        description,
-                    )
-                )
-    async_add_entities(entities)
+    async_add_entities(
+        YoLinkSensorEntity(
+            config_entry,
+            sensor_device_coordinator,
+            description,
+        )
+        for sensor_device_coordinator in sensor_device_coordinators
+        for description in SENSOR_TYPES
+        if description.exists_fn(sensor_device_coordinator.device)
+    )
 
 
 class YoLinkSensorEntity(YoLinkEntity, SensorEntity):

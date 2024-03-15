@@ -1,4 +1,5 @@
 """Support for OSO Energy water heaters."""
+
 from typing import Any
 
 from apyosoenergyapi.helper.const import OSOEnergyWaterHeaterData
@@ -44,11 +45,9 @@ async def async_setup_entry(
     """Set up OSO Energy heater based on a config entry."""
     osoenergy = hass.data[DOMAIN][entry.entry_id]
     devices = osoenergy.session.device_list.get("water_heater")
-    entities = []
-    if devices:
-        for dev in devices:
-            entities.append(OSOEnergyWaterHeater(osoenergy, dev))
-    async_add_entities(entities, True)
+    if not devices:
+        return
+    async_add_entities((OSOEnergyWaterHeater(osoenergy, dev) for dev in devices), True)
 
 
 class OSOEnergyWaterHeater(

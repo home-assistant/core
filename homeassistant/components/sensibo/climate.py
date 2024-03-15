@@ -1,4 +1,5 @@
 """Support for Sensibo wifi-enabled home thermostats."""
+
 from __future__ import annotations
 
 from bisect import bisect_left
@@ -173,9 +174,9 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_ENABLE_CLIMATE_REACT,
         {
-            vol.Required(ATTR_HIGH_TEMPERATURE_THRESHOLD): float,
+            vol.Required(ATTR_HIGH_TEMPERATURE_THRESHOLD): vol.Coerce(float),
             vol.Required(ATTR_HIGH_TEMPERATURE_STATE): dict,
-            vol.Required(ATTR_LOW_TEMPERATURE_THRESHOLD): float,
+            vol.Required(ATTR_LOW_TEMPERATURE_THRESHOLD): vol.Coerce(float),
             vol.Required(ATTR_LOW_TEMPERATURE_STATE): dict,
             vol.Required(ATTR_SMART_TYPE): vol.In(
                 ["temperature", "feelsLike", "humidity"]
@@ -191,6 +192,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     _attr_name = None
     _attr_precision = PRECISION_TENTHS
     _attr_translation_key = "climate_device"
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, coordinator: SensiboDataUpdateCoordinator, device_id: str
@@ -207,7 +209,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
 
     def get_features(self) -> ClimateEntityFeature:
         """Get supported features."""
-        features = ClimateEntityFeature(0)
+        features = ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
         for key in self.device_data.full_features:
             if key in FIELD_TO_FLAG:
                 features |= FIELD_TO_FLAG[key]
@@ -228,11 +230,9 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     @property
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac operation modes."""
-        hvac_modes = []
         if TYPE_CHECKING:
             assert self.device_data.hvac_modes
-        for mode in self.device_data.hvac_modes:
-            hvac_modes.append(SENSIBO_TO_HA[mode])
+        hvac_modes = [SENSIBO_TO_HA[mode] for mode in self.device_data.hvac_modes]
         return hvac_modes if hvac_modes else [HVACMode.OFF]
 
     @property

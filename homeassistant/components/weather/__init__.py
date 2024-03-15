@@ -1,4 +1,5 @@
 """Weather component that handles meteorological data for your location."""
+
 from __future__ import annotations
 
 import abc
@@ -60,6 +61,7 @@ from homeassistant.util.dt import utcnow
 from homeassistant.util.json import JsonValueType
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
+from . import group as group_pre_import  # noqa: F401
 from .const import (  # noqa: F401
     ATTR_WEATHER_APPARENT_TEMPERATURE,
     ATTR_WEATHER_CLOUD_COVERAGE,
@@ -430,7 +432,7 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
     @cached_property
     def native_apparent_temperature(self) -> float | None:
         """Return the apparent temperature in native units."""
-        return self._attr_native_temperature
+        return self._attr_native_apparent_temperature
 
     @cached_property
     def native_temperature(self) -> float | None:

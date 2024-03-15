@@ -1,4 +1,5 @@
 """Component to embed Google Cast."""
+
 from __future__ import annotations
 
 from typing import Protocol
@@ -8,7 +9,7 @@ from pychromecast import Chromecast
 from homeassistant.components.media_player import BrowseMedia, MediaType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.integration_platform import (
@@ -66,7 +67,8 @@ class CastProtocol(Protocol):
         """
 
 
-async def _register_cast_platform(
+@callback
+def _register_cast_platform(
     hass: HomeAssistant, integration_domain: str, platform: CastProtocol
 ):
     """Register a cast platform."""

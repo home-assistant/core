@@ -1,4 +1,5 @@
 """Tests for the TotalConnect alarm control panel device."""
+
 from datetime import timedelta
 from unittest.mock import patch
 

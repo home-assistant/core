@@ -1,4 +1,5 @@
 """Test Home Assistant date util methods."""
+
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
@@ -145,6 +146,12 @@ def test_parse_datetime_converts_correctly() -> None:
 def test_parse_datetime_returns_none_for_incorrect_format() -> None:
     """Test parse_datetime returns None if incorrect format."""
     assert dt_util.parse_datetime("not a datetime string") is None
+
+
+def test_parse_datetime_raises_for_incorrect_format() -> None:
+    """Test parse_datetime raises ValueError if raise_on_error is set with an incorrect format."""
+    with pytest.raises(ValueError):
+        dt_util.parse_datetime("not a datetime string", raise_on_error=True)
 
 
 @pytest.mark.parametrize(

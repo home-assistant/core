@@ -1,4 +1,5 @@
 """The tests for the siren component."""
+
 from types import ModuleType
 from unittest.mock import MagicMock
 
@@ -13,7 +14,7 @@ from homeassistant.components.siren import (
 from homeassistant.components.siren.const import SirenEntityFeature
 from homeassistant.core import HomeAssistant
 
-from tests.common import import_and_test_deprecated_constant_enum
+from tests.common import help_test_all, import_and_test_deprecated_constant_enum
 
 
 class MockSirenEntity(SirenEntity):
@@ -110,6 +111,15 @@ async def test_missing_tones_dict(hass: HomeAssistant) -> None:
         process_turn_on_params(siren, {"tone": 3})
 
 
+@pytest.mark.parametrize(
+    "module",
+    [siren, siren.const],
+)
+def test_all(module: ModuleType) -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(module)
+
+
 @pytest.mark.parametrize(("enum"), list(SirenEntityFeature))
 @pytest.mark.parametrize(("module"), [siren, siren.const])
 def test_deprecated_constants(
@@ -119,3 +129,20 @@ def test_deprecated_constants(
 ) -> None:
     """Test deprecated constants."""
     import_and_test_deprecated_constant_enum(caplog, module, enum, "SUPPORT_", "2025.1")
+
+
+def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+    """Test deprecated supported features ints."""
+
+    class MockSirenEntity(siren.SirenEntity):
+        _attr_supported_features = 1
+
+    entity = MockSirenEntity()
+    assert entity.supported_features is siren.SirenEntityFeature(1)
+    assert "MockSirenEntity" in caplog.text
+    assert "is using deprecated supported features values" in caplog.text
+    assert "Instead it should use" in caplog.text
+    assert "SirenEntityFeature.TURN_ON" in caplog.text
+    caplog.clear()
+    assert entity.supported_features is siren.SirenEntityFeature(1)
+    assert "is using deprecated supported features values" not in caplog.text

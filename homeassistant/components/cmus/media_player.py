@@ -1,4 +1,5 @@
 """Support for interacting with and controlling the cmus music player."""
+
 from __future__ import annotations
 
 import logging
@@ -94,7 +95,6 @@ class CmusDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SEEK
         | MediaPlayerEntityFeature.PLAY
     )
-    _attr_volume_step = 5 / 100
 
     def __init__(self, device, name, server):
         """Initialize the CMUS device."""
@@ -153,6 +153,30 @@ class CmusDevice(MediaPlayerEntity):
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self._remote.cmus.set_volume(int(volume * 100))
+
+    def volume_up(self) -> None:
+        """Set the volume up."""
+        left = self.status["set"].get("vol_left")
+        right = self.status["set"].get("vol_right")
+        if left != right:
+            current_volume = float(left + right) / 2
+        else:
+            current_volume = left
+
+        if current_volume <= 100:
+            self._remote.cmus.set_volume(int(current_volume) + 5)
+
+    def volume_down(self) -> None:
+        """Set the volume down."""
+        left = self.status["set"].get("vol_left")
+        right = self.status["set"].get("vol_right")
+        if left != right:
+            current_volume = float(left + right) / 2
+        else:
+            current_volume = left
+
+        if current_volume <= 100:
+            self._remote.cmus.set_volume(int(current_volume) - 5)
 
     def play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any

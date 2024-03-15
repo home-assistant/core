@@ -1,4 +1,5 @@
 """Test the Nmap Tracker config flow."""
+
 from unittest.mock import patch
 
 import pytest
@@ -195,7 +196,7 @@ async def test_options_flow(hass: HomeAssistant, mock_get_source_ip) -> None:
         },
     )
     config_entry.add_to_hass(hass)
-    hass.state = CoreState.stopped
+    hass.set_state(CoreState.stopped)
 
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

@@ -1,4 +1,5 @@
 """The air-Q integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -56,4 +57,4 @@ class AirQCoordinator(DataUpdateCoordinator):
                     hw_version=info["hw_version"],
                 )
             )
-        return await self.airq.get_latest_data()
+        return await self.airq.get_latest_data()  # type: ignore[no-any-return]

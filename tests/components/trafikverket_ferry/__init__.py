@@ -1,4 +1,5 @@
 """Tests for the Trafikverket Ferry integration."""
+
 from __future__ import annotations
 
 from homeassistant.components.trafikverket_ferry.const import (

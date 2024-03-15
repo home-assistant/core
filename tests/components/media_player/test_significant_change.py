@@ -1,4 +1,5 @@
 """Test the Media Player significant change platform."""
+
 import pytest
 
 from homeassistant.components.media_player import (
@@ -51,7 +52,11 @@ async def test_significant_state_change() -> None:
             {ATTR_ENTITY_PICTURE_LOCAL: "new_value"},
             True,
         ),
-        ({ATTR_GROUP_MEMBERS: "old_value"}, {ATTR_GROUP_MEMBERS: "new_value"}, True),
+        (
+            {ATTR_GROUP_MEMBERS: ["old1", "old2"]},
+            {ATTR_GROUP_MEMBERS: ["old1", "new"]},
+            False,
+        ),
         ({ATTR_INPUT_SOURCE: "old_value"}, {ATTR_INPUT_SOURCE: "new_value"}, True),
         (
             {ATTR_MEDIA_ALBUM_ARTIST: "old_value"},

@@ -1,4 +1,5 @@
 """The test for the sql sensor platform."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -20,6 +21,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfInformation,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
@@ -55,6 +57,22 @@ async def test_query_basic(recorder_mock: Recorder, hass: HomeAssistant) -> None
     state = hass.states.get("sensor.select_value_sql_query")
     assert state.state == "5"
     assert state.attributes["value"] == 5
+
+
+async def test_query_cte(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+    """Test the SQL sensor with CTE."""
+    config = {
+        "db_url": "sqlite://",
+        "query": "WITH test AS (SELECT 1 AS row_num, 10 AS state) SELECT state FROM test WHERE row_num = 1 LIMIT 1;",
+        "column": "state",
+        "name": "Select value SQL query CTE",
+        "unique_id": "very_unique_id",
+    }
+    await init_integration(hass, config)
+
+    state = hass.states.get("sensor.select_value_sql_query_cte")
+    assert state.state == "10"
+    assert state.attributes["state"] == 10
 
 
 async def test_query_value_template(
@@ -230,7 +248,7 @@ async def test_invalid_url_on_update(
             hass,
             dt_util.utcnow() + timedelta(minutes=1),
         )
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "sqlite://****:****@homeassistant.local" in caplog.text
 
@@ -269,7 +287,7 @@ async def test_templates_with_yaml(
         hass,
         dt_util.utcnow() + timedelta(minutes=1),
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.get_values_with_template")
     assert state.state == "5"
@@ -283,7 +301,7 @@ async def test_templates_with_yaml(
         hass,
         dt_util.utcnow() + timedelta(minutes=2),
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.get_values_with_template")
     assert state.state == STATE_UNAVAILABLE
@@ -296,7 +314,7 @@ async def test_templates_with_yaml(
         hass,
         dt_util.utcnow() + timedelta(minutes=3),
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.get_values_with_template")
     assert state.state == "5"
@@ -385,9 +403,9 @@ async def test_attributes_from_yaml_setup(
     state = hass.states.get("sensor.get_value")
 
     assert state.state == "5"
-    assert state.attributes["device_class"] == SensorDeviceClass.DATA_RATE
+    assert state.attributes["device_class"] == SensorDeviceClass.DATA_SIZE
     assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
-    assert state.attributes["unit_of_measurement"] == "MiB"
+    assert state.attributes["unit_of_measurement"] == UnitOfInformation.MEBIBYTES
 
 
 async def test_binary_data_from_yaml_setup(
@@ -470,7 +488,7 @@ async def test_no_issue_when_view_has_the_text_entity_id_in_it(
             hass,
             dt_util.utcnow() + timedelta(minutes=1),
         )
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
         "Query contains entity_id but does not reference states_meta" not in caplog.text
@@ -604,7 +622,7 @@ async def test_query_recover_from_rollback(
     ):
         freezer.tick(timedelta(minutes=1))
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert "sqlite3.OperationalError" in caplog.text
 
     state = hass.states.get("sensor.select_value_sql_query")
@@ -613,8 +631,18 @@ async def test_query_recover_from_rollback(
 
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.select_value_sql_query")
     assert state.state == "5"
     assert state.attributes.get("value") == 5
+
+
+async def test_setup_without_recorder(hass: HomeAssistant) -> None:
+    """Test the SQL sensor without recorder."""
+
+    assert await async_setup_component(hass, DOMAIN, YAML_CONFIG)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.get_value")
+    assert state.state == "5"

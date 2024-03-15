@@ -5,6 +5,8 @@ from __future__ import annotations
 import datetime as dt
 import logging
 
+from reolink_aio.enums import VodRequestType
+
 from homeassistant.components.camera import DOMAIN as CAM_DOMAIN, DynamicStreamSettings
 from homeassistant.components.media_player import MediaClass, MediaType
 from homeassistant.components.media_source.error import Unresolvable
@@ -56,7 +58,14 @@ class ReolinkVODMediaSource(MediaSource):
         channel = int(channel_str)
 
         host = self.data[config_entry_id].host
-        mime_type, url = await host.api.get_vod_source(channel, filename, stream_res)
+
+        vod_type = VodRequestType.RTMP
+        if host.api.is_nvr:
+            vod_type = VodRequestType.FLV
+
+        mime_type, url = await host.api.get_vod_source(
+            channel, filename, stream_res, vod_type
+        )
         if _LOGGER.isEnabledFor(logging.DEBUG):
             url_log = f"{url.split('&user=')[0]}&user=xxxxx&password=xxxxx"
             _LOGGER.debug(
@@ -234,7 +243,6 @@ class ReolinkVODMediaSource(MediaSource):
         start = now - dt.timedelta(days=31)
         end = now
 
-        children: list[BrowseMediaSource] = []
         if _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug(
                 "Requesting recording days of %s from %s to %s",
@@ -245,19 +253,19 @@ class ReolinkVODMediaSource(MediaSource):
         statuses, _ = await host.api.request_vod_files(
             channel, start, end, status_only=True, stream=stream
         )
-        for status in statuses:
-            for day in status.days:
-                children.append(
-                    BrowseMediaSource(
-                        domain=DOMAIN,
-                        identifier=f"DAY|{config_entry_id}|{channel}|{stream}|{status.year}|{status.month}|{day}",
-                        media_class=MediaClass.DIRECTORY,
-                        media_content_type=MediaType.PLAYLIST,
-                        title=f"{status.year}/{status.month}/{day}",
-                        can_play=False,
-                        can_expand=True,
-                    )
-                )
+        children: list[BrowseMediaSource] = [
+            BrowseMediaSource(
+                domain=DOMAIN,
+                identifier=f"DAY|{config_entry_id}|{channel}|{stream}|{status.year}|{status.month}|{day}",
+                media_class=MediaClass.DIRECTORY,
+                media_content_type=MediaType.PLAYLIST,
+                title=f"{status.year}/{status.month}/{day}",
+                can_play=False,
+                can_expand=True,
+            )
+            for status in statuses
+            for day in status.days
+        ]
 
         return BrowseMediaSource(
             domain=DOMAIN,

@@ -7,6 +7,7 @@ for token refresh and for testing:
 
 The tests below exercise both cases during integration setup.
 """
+
 import time
 from unittest.mock import patch
 

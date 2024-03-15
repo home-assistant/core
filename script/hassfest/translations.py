@@ -1,4 +1,5 @@
 """Validate integration translation files."""
+
 from __future__ import annotations
 
 from functools import partial
@@ -33,6 +34,7 @@ ALLOW_NAME_TRANSLATION = {
     "garages_amsterdam",
     "generic",
     "google_travel_time",
+    "holiday",
     "homekit_controller",
     "islamic_prayer_times",
     "local_calendar",
@@ -310,6 +312,12 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 },
                 slug_validator=vol.Any("_", cv.slug),
             ),
+            vol.Optional("device"): cv.schema_with_slug_keys(
+                {
+                    vol.Optional("name"): translation_value_validator,
+                },
+                slug_validator=translation_key_validator,
+            ),
             vol.Optional("entity"): cv.schema_with_slug_keys(
                 cv.schema_with_slug_keys(
                     {
@@ -433,7 +441,10 @@ def gen_platform_strings_schema(config: Config, integration: Integration) -> vol
 
 
 ONBOARDING_SCHEMA = vol.Schema(
-    {vol.Required("area"): {str: translation_value_validator}}
+    {
+        vol.Required("area"): {str: translation_value_validator},
+        vol.Required("dashboard"): {str: {"title": translation_value_validator}},
+    }
 )
 
 

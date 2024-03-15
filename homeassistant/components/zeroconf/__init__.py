@@ -1,7 +1,7 @@
 """Support for exposing Home Assistant via Zeroconf."""
+
 from __future__ import annotations
 
-import asyncio
 import contextlib
 from contextlib import suppress
 from dataclasses import dataclass
@@ -215,9 +215,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     aio_zc = await _async_get_instance(hass, **zc_args)
     zeroconf = cast(HaZeroconf, aio_zc.zeroconf)
-    zeroconf_types, homekit_models = await asyncio.gather(
-        async_get_zeroconf(hass), async_get_homekit(hass)
-    )
+    zeroconf_types = await async_get_zeroconf(hass)
+    homekit_models = await async_get_homekit(hass)
     homekit_model_lookup, homekit_model_matchers = _build_homekit_model_lookups(
         homekit_models
     )
@@ -321,12 +320,11 @@ async def _async_register_hass_zc_service(
 
 def _match_against_props(matcher: dict[str, str], props: dict[str, str | None]) -> bool:
     """Check a matcher to ensure all values in props."""
-    return not any(
-        key
-        for key in matcher
-        if key not in props
-        or not _memorized_fnmatch((props[key] or "").lower(), matcher[key])
-    )
+    for key, value in matcher.items():
+        prop_val = props.get(key)
+        if prop_val is None or not _memorized_fnmatch(prop_val.lower(), value):
+            return False
+    return True
 
 
 def is_homekit_paired(props: dict[str, Any]) -> bool:
@@ -365,9 +363,11 @@ class ZeroconfDiscovery:
         # We want to make sure we know about other HomeAssistant
         # instances as soon as possible to avoid name conflicts
         # so we always browse for ZEROCONF_TYPE
-        for hk_type in (ZEROCONF_TYPE, *HOMEKIT_TYPES):
-            if hk_type not in self.zeroconf_types:
-                types.append(hk_type)
+        types.extend(
+            hk_type
+            for hk_type in (ZEROCONF_TYPE, *HOMEKIT_TYPES)
+            if hk_type not in self.zeroconf_types
+        )
         _LOGGER.debug("Starting Zeroconf browser for: %s", types)
         self.async_service_browser = AsyncServiceBrowser(
             self.zeroconf, types, handlers=[self.async_service_update]
@@ -417,10 +417,11 @@ class ZeroconfDiscovery:
         if async_service_info.load_from_cache(zeroconf):
             self._async_process_service_update(async_service_info, service_type, name)
         else:
-            self.hass.async_create_task(
+            self.hass.async_create_background_task(
                 self._async_lookup_and_process_service_update(
                     zeroconf, async_service_info, service_type, name
-                )
+                ),
+                name=f"zeroconf lookup {name}.{service_type}",
             )
 
     async def _async_lookup_and_process_service_update(

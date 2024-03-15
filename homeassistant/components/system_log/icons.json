@@ -1,0 +1,6 @@
+{
+  "services": {
+    "clear": "mdi:delete",
+    "write": "mdi:pencil"
+  }
+}

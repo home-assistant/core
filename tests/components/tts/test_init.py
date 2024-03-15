@@ -1,4 +1,5 @@
 """The tests for the TTS component."""
+
 import asyncio
 from http import HTTPStatus
 from typing import Any
@@ -40,12 +41,6 @@ from tests.common import async_mock_service, mock_restore_cache
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 ORIG_WRITE_TAGS = tts.SpeechManager.write_tags
-
-
-@pytest.fixture
-async def setup_tts(hass: HomeAssistant, mock_tts: None) -> None:
-    """Mock TTS."""
-    assert await async_setup_component(hass, tts.DOMAIN, {"tts": {"platform": "test"}})
 
 
 class DefaultEntity(tts.TextToSpeechEntity):
@@ -1307,7 +1302,7 @@ async def test_tags_with_wave() -> None:
     # below data represents an empty wav file
     tts_data = bytes.fromhex(
         "52 49 46 46 24 00 00 00 57 41 56 45 66 6d 74 20 10 00 00 00 01 00 02 00"
-        + "22 56 00 00 88 58 01 00 04 00 10 00 64 61 74 61 00 00 00 00"
+        "22 56 00 00 88 58 01 00 04 00 10 00 64 61 74 61 00 00 00 00"
     )
 
     tagged_data = ORIG_WRITE_TAGS(
@@ -1406,7 +1401,9 @@ def test_resolve_engine(hass: HomeAssistant, setup: str, engine_id: str) -> None
 
     with patch.dict(
         hass.data[tts.DATA_TTS_MANAGER].providers, {}, clear=True
-    ), patch.dict(hass.data[tts.DOMAIN]._platforms, {}, clear=True):
+    ), patch.dict(hass.data[tts.DOMAIN]._platforms, {}, clear=True), patch.dict(
+        hass.data[tts.DOMAIN]._entities, {}, clear=True
+    ):
         assert tts.async_resolve_engine(hass, None) is None
 
     with patch.dict(hass.data[tts.DATA_TTS_MANAGER].providers, {"cloud": object()}):

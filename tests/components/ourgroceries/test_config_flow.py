@@ -1,11 +1,11 @@
 """Test the OurGroceries config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.ourgroceries.config_flow import (
-    AsyncIOTimeoutError,
     ClientError,
     InvalidLoginException,
 )
@@ -49,7 +49,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     [
         (InvalidLoginException, "invalid_auth"),
         (ClientError, "cannot_connect"),
-        (AsyncIOTimeoutError, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
         (Exception, "unknown"),
     ],
 )

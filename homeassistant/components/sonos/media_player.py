@@ -1,4 +1,5 @@
 """Support to interface with Sonos players."""
+
 from __future__ import annotations
 
 import datetime
@@ -67,6 +68,7 @@ _LOGGER = logging.getLogger(__name__)
 
 LONG_SERVICE_TIMEOUT = 30.0
 UNJOIN_SERVICE_TIMEOUT = 0.1
+VOLUME_INCREMENT = 2
 
 REPEAT_TO_SONOS = {
     RepeatMode.OFF: False,
@@ -211,7 +213,6 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     )
     _attr_media_content_type = MediaType.MUSIC
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
-    _attr_volume_step = 2 / 100
 
     def __init__(self, speaker: SonosSpeaker) -> None:
         """Initialize the media player entity."""
@@ -372,6 +373,16 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     def source(self) -> str | None:
         """Name of the current input source."""
         return self.media.source_name or None
+
+    @soco_error()
+    def volume_up(self) -> None:
+        """Volume up media player."""
+        self.soco.volume += VOLUME_INCREMENT
+
+    @soco_error()
+    def volume_down(self) -> None:
+        """Volume down media player."""
+        self.soco.volume -= VOLUME_INCREMENT
 
     @soco_error()
     def set_volume_level(self, volume: float) -> None:

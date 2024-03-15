@@ -1,4 +1,5 @@
 """Platform for switch integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -19,23 +20,20 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Get all devices and setup the switch devices via config entry."""
-    entities = []
 
-    for gateway in hass.data[DOMAIN][entry.entry_id]["gateways"]:
-        for device in gateway.binary_switch_devices:
-            for binary_switch in device.binary_switch_property:
-                # Exclude the binary switch which also has multi_level_switches here,
-                # because those are implemented as light entities now.
-                if not hasattr(device, "multi_level_switch_property"):
-                    entities.append(
-                        DevoloSwitch(
-                            homecontrol=gateway,
-                            device_instance=device,
-                            element_uid=binary_switch,
-                        )
-                    )
-
-    async_add_entities(entities)
+    async_add_entities(
+        DevoloSwitch(
+            homecontrol=gateway,
+            device_instance=device,
+            element_uid=binary_switch,
+        )
+        for gateway in hass.data[DOMAIN][entry.entry_id]["gateways"]
+        for device in gateway.binary_switch_devices
+        for binary_switch in device.binary_switch_property
+        # Exclude the binary switch which also has multi_level_switches here,
+        # because those are implemented as light entities now.
+        if not hasattr(device, "multi_level_switch_property")
+    )
 
 
 class DevoloSwitch(DevoloDeviceEntity, SwitchEntity):

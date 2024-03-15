@@ -1,18 +1,25 @@
 """Support for transport.opendata.ch."""
+
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
 from homeassistant import config_entries, core
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+)
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_NAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -42,11 +49,13 @@ async def async_setup_entry(
     """Set up the sensor from a config entry created in the integrations UI."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    name = config_entry.title
+    unique_id = config_entry.unique_id
+
+    if TYPE_CHECKING:
+        assert unique_id
 
     async_add_entities(
-        [SwissPublicTransportSensor(coordinator, name)],
-        True,
+        [SwissPublicTransportSensor(coordinator, unique_id)],
     )
 
 
@@ -100,27 +109,45 @@ class SwissPublicTransportSensor(
     """Implementation of a Swiss public transport sensor."""
 
     _attr_attribution = "Data provided by transport.opendata.ch"
-    _attr_icon = "mdi:bus"
+    _attr_has_entity_name = True
+    _attr_translation_key = "departure"
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def __init__(
-        self, coordinator: SwissPublicTransportDataUpdateCoordinator, name: str
+        self,
+        coordinator: SwissPublicTransportDataUpdateCoordinator,
+        unique_id: str,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._coordinator = coordinator
-        self._attr_name = name
+        self._attr_unique_id = f"{unique_id}_departure"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            manufacturer="Opendata.ch",
+            entry_type=DeviceEntryType.SERVICE,
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Prepare the extra attributes at start."""
+        self._async_update_attrs()
+        await super().async_added_to_hass()
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle the state update and prepare the extra state attributes."""
+        self._async_update_attrs()
+        return super()._handle_coordinator_update()
+
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update the extra state attributes based on the coordinator data."""
         self._attr_extra_state_attributes = {
             key: value
             for key, value in self.coordinator.data.items()
             if key not in {"departure"}
         }
-        return super()._handle_coordinator_update()
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> datetime | None:
         """Return the state of the sensor."""
         return self.coordinator.data["departure"]

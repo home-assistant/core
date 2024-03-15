@@ -1,4 +1,5 @@
 """Tests for Pegel Online config flow."""
+
 from unittest.mock import patch
 
 from aiohttp.client_exceptions import ClientError

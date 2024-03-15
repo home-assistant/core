@@ -1,4 +1,5 @@
 """Services for easyEnergy integration."""
+
 from __future__ import annotations
 
 from datetime import date, datetime
@@ -111,7 +112,8 @@ def __get_coordinator(
             },
         )
 
-    return hass.data[DOMAIN][entry_id]
+    coordinator: EasyEnergyDataUpdateCoordinator = hass.data[DOMAIN][entry_id]
+    return coordinator
 
 
 async def __get_prices(

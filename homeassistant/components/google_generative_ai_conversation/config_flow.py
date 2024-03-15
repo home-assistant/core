@@ -1,4 +1,5 @@
 """Config flow for Google Generative AI Conversation integration."""
+
 from __future__ import annotations
 
 from functools import partial
@@ -8,13 +9,17 @@ from types import MappingProxyType
 from typing import Any
 
 from google.api_core.exceptions import ClientError
-import google.generativeai as palm
+import google.generativeai as genai
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -23,11 +28,13 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     CONF_CHAT_MODEL,
+    CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
     DEFAULT_CHAT_MODEL,
+    DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_K,
@@ -50,6 +57,7 @@ DEFAULT_OPTIONS = types.MappingProxyType(
         CONF_TEMPERATURE: DEFAULT_TEMPERATURE,
         CONF_TOP_P: DEFAULT_TOP_P,
         CONF_TOP_K: DEFAULT_TOP_K,
+        CONF_MAX_TOKENS: DEFAULT_MAX_TOKENS,
     }
 )
 
@@ -59,18 +67,18 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    palm.configure(api_key=data[CONF_API_KEY])
-    await hass.async_add_executor_job(partial(palm.list_models))
+    genai.configure(api_key=data[CONF_API_KEY])
+    await hass.async_add_executor_job(partial(genai.list_models))
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Google Generative AI Conversation."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -100,22 +108,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
         """Create the options flow."""
-        return OptionsFlow(config_entry)
+        return GoogleGenerativeAIOptionsFlow(config_entry)
 
 
-class OptionsFlow(config_entries.OptionsFlow):
+class GoogleGenerativeAIOptionsFlow(OptionsFlow):
     """Google Generative AI config flow options handler."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(
@@ -161,5 +169,10 @@ def google_generative_ai_config_option_schema(
             CONF_TOP_K,
             description={"suggested_value": options[CONF_TOP_K]},
             default=DEFAULT_TOP_K,
+        ): int,
+        vol.Optional(
+            CONF_MAX_TOKENS,
+            description={"suggested_value": options[CONF_MAX_TOKENS]},
+            default=DEFAULT_MAX_TOKENS,
         ): int,
     }

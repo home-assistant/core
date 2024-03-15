@@ -248,6 +248,11 @@ ZEROCONF = {
             "domain": "volumio",
         },
     ],
+    "_aicu-http._tcp.local.": [
+        {
+            "domain": "romy",
+        },
+    ],
     "_airplay._tcp.local.": [
         {
             "domain": "apple_tv",
@@ -344,6 +349,11 @@ ZEROCONF = {
             },
         },
     ],
+    "_bangolufsen._tcp.local.": [
+        {
+            "domain": "bang_olufsen",
+        },
+    ],
     "_bbxsrv._tcp.local.": [
         {
             "domain": "blebox",
@@ -399,6 +409,11 @@ ZEROCONF = {
     "_elg._tcp.local.": [
         {
             "domain": "elgato",
+        },
+    ],
+    "_elmax-ssl._tcp.local.": [
+        {
+            "domain": "elmax",
         },
     ],
     "_enphase-envoy._tcp.local.": [
@@ -610,6 +625,11 @@ ZEROCONF = {
             "domain": "plugwise",
         },
     ],
+    "_powerview-g3._tcp.local.": [
+        {
+            "domain": "hunterdouglas_powerview",
+        },
+    ],
     "_powerview._tcp.local.": [
         {
             "domain": "hunterdouglas_powerview",
@@ -619,6 +639,11 @@ ZEROCONF = {
         {
             "domain": "brother",
             "name": "brother*",
+        },
+    ],
+    "_rabbitair._udp.local.": [
+        {
+            "domain": "rabbitair",
         },
     ],
     "_raop._tcp.local.": [
@@ -698,6 +723,11 @@ ZEROCONF = {
     "_system-bridge._tcp.local.": [
         {
             "domain": "system_bridge",
+        },
+    ],
+    "_technove-stations._tcp.local.": [
+        {
+            "domain": "technove",
         },
     ],
     "_touch-able._tcp.local.": [
