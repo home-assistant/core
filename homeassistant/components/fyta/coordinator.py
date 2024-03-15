@@ -42,9 +42,7 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, dict[str, Any]]]):
         if self.fyta.expiration is None or self.fyta.expiration < datetime.now():
             await self.renew_authentication()
 
-        data = await self.fyta.update_all_plants()
-
-        return data
+        return await self.fyta.update_all_plants()
 
     async def renew_authentication(self) -> None:
         """Renew access token for FYTA API."""
