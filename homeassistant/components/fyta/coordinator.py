@@ -46,7 +46,7 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, dict[str, Any]]]):
 
         return data
 
-    async def renew_authentication(self) -> bool:
+    async def renew_authentication(self) -> None:
         """Renew access token for FYTA API."""
 
         try:
