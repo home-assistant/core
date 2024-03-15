@@ -1,30 +1,14 @@
 """Test the System Bridge config flow."""
 
-from unittest.mock import patch
-
-from systembridgeconnector.exceptions import (
-    AuthenticationException,
-    ConnectionClosedException,
-    ConnectionErrorException,
-)
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.system_bridge.const import DOMAIN
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import (
-    FIXTURE_AUTH_INPUT,
-    FIXTURE_DATA_RESPONSE,
-    FIXTURE_USER_INPUT,
-    FIXTURE_UUID,
-    FIXTURE_ZEROCONF,
-    FIXTURE_ZEROCONF_BAD,
-    FIXTURE_ZEROCONF_INPUT,
-    mock_data_listener,
-)
-
-from tests.common import MockConfigEntry
+from . import FIXTURE_USER_INPUT
 
 
 async def test_show_user_form(hass: HomeAssistant) -> None:
@@ -37,6 +21,7 @@ async def test_show_user_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
+@pytest.mark.usefixtures("mock_setup_entry", "mock_websocket_client")
 async def test_user_flow(hass: HomeAssistant) -> None:
     """Test full user flow."""
     result = await hass.config_entries.flow.async_init(
@@ -69,7 +54,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "test-bridge"
+    assert result2["title"] == FIXTURE_USER_INPUT[CONF_HOST]
     assert result2["data"] == FIXTURE_USER_INPUT
     assert len(mock_setup_entry.mock_calls) == 1
 

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from datetime import timedelta
 import logging
 from typing import Any
 
@@ -33,7 +32,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, MODULES
+from .const import DOMAIN, MODULES, SCAN_INTERVAL
 from .data import SystemBridgeData
 
 
@@ -63,7 +62,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
             hass,
             LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=30),
+            update_interval=SCAN_INTERVAL,
         )
 
     @property
@@ -130,6 +129,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
     async def _listen_for_data(self) -> None:
         """Listen for events from the WebSocket."""
         try:
+            self.logger.info("Listening for data for %s", self.title)
             await self.websocket_client.listen(callback=self.async_handle_module)
         except AuthenticationException as exception:
             self.last_update_success = False

@@ -7,11 +7,15 @@ from typing import Any
 
 from systembridgeconnector.const import TYPE_DATA_UPDATE
 from systembridgemodels.const import MODEL_SYSTEM
-from systembridgemodels.modules import System
+from systembridgemodels.fixtures.modules.system import FIXTURE_SYSTEM
 from systembridgemodels.response import Response
 
 from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
+
+FIXTURE_TITLE = "TestSystem"
+
+FIXTURE_REQUEST_ID = "test"
 
 FIXTURE_MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
 FIXTURE_UUID = "e91bf575-56f3-4c83-8f42-70ac17adcd33"
@@ -26,13 +30,13 @@ FIXTURE_USER_INPUT = {
 
 FIXTURE_ZEROCONF_INPUT = {
     CONF_TOKEN: "abc-123-def-456-ghi",
-    CONF_HOST: "1.1.1.1",
+    CONF_HOST: "127.0.0.1",
     CONF_PORT: "9170",
 }
 
 FIXTURE_ZEROCONF = zeroconf.ZeroconfServiceInfo(
-    ip_address=ip_address("1.1.1.1"),
-    ip_addresses=[ip_address("1.1.1.1")],
+    ip_address=ip_address("127.0.0.1"),
+    ip_addresses=[ip_address("127.0.0.1")],
     port=9170,
     hostname="test-bridge.local.",
     type="_system-bridge._tcp.local.",
@@ -41,7 +45,7 @@ FIXTURE_ZEROCONF = zeroconf.ZeroconfServiceInfo(
         "address": "http://test-bridge:9170",
         "fqdn": "test-bridge",
         "host": "test-bridge",
-        "ip": "1.1.1.1",
+        "ip": "127.0.0.1",
         "mac": FIXTURE_MAC_ADDRESS,
         "port": "9170",
         "uuid": FIXTURE_UUID,
@@ -49,8 +53,8 @@ FIXTURE_ZEROCONF = zeroconf.ZeroconfServiceInfo(
 )
 
 FIXTURE_ZEROCONF_BAD = zeroconf.ZeroconfServiceInfo(
-    ip_address=ip_address("1.1.1.1"),
-    ip_addresses=[ip_address("1.1.1.1")],
+    ip_address=ip_address("127.0.0.1"),
+    ip_addresses=[ip_address("127.0.0.1")],
     port=9170,
     hostname="test-bridge.local.",
     type="_system-bridge._tcp.local.",
@@ -58,23 +62,6 @@ FIXTURE_ZEROCONF_BAD = zeroconf.ZeroconfServiceInfo(
     properties={
         "something": "bad",
     },
-)
-
-
-FIXTURE_SYSTEM = System(
-    boot_time=1,
-    fqdn="",
-    hostname="1.1.1.1",
-    ip_address_4="1.1.1.1",
-    mac_address=FIXTURE_MAC_ADDRESS,
-    platform="",
-    platform_version="",
-    uptime=1,
-    uuid=FIXTURE_UUID,
-    version="",
-    version_latest="",
-    version_newer_available=False,
-    users=[],
 )
 
 FIXTURE_DATA_RESPONSE = Response(
@@ -105,12 +92,7 @@ FIXTURE_DATA_RESPONSE_BAD = Response(
 )
 
 
-async def mock_data_listener(
-    self,
-    callback: Callable[[str, Any], Awaitable[None]] | None = None,
-    _: bool = False,
-):
-    """Mock websocket data listener."""
-    if callback is not None:
-        # Simulate data received from the websocket
-        await callback(MODEL_SYSTEM, FIXTURE_SYSTEM)
+async def add_data(callback: Callable[[str, Any], Awaitable[None]]):
+    """Add data to the callback."""
+
+    await callback(MODEL_SYSTEM, FIXTURE_SYSTEM)
