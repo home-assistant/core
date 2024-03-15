@@ -130,21 +130,21 @@ class SaunaClimate(ToloSaunaCoordinatorEntity, ClimateEntity):
         if hvac_mode == HVACMode.DRY:
             await self._async_set_power_and_fan(False, True)
 
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
         await self.hass.async_add_executor_job(
             lambda: self.coordinator.client.set_fan_on(fan_mode == FAN_ON)
         )
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh()
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Set desired target humidity."""
         await self.hass.async_add_executor_job(
             lambda: self.coordinator.client.set_target_humidity(humidity)
         )
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set desired target temperature."""
@@ -154,7 +154,7 @@ class SaunaClimate(ToloSaunaCoordinatorEntity, ClimateEntity):
         await self.hass.async_add_executor_job(
             lambda: self.coordinator.client.set_target_temperature(round(temperature))
         )
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh()
 
     def _set_power_and_fan(self, power_on: bool, fan_on: bool) -> None:
         """Shortcut for setting power and fan of TOLO device on one method."""
@@ -166,4 +166,4 @@ class SaunaClimate(ToloSaunaCoordinatorEntity, ClimateEntity):
         await self.hass.async_add_executor_job(
             lambda: self._set_power_and_fan(power_on, fan_on)
         )
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh()

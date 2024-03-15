@@ -51,11 +51,11 @@ class ToloFan(ToloSaunaCoordinatorEntity, FanEntity):
         await self.hass.async_add_executor_job(
             lambda: self.coordinator.client.set_fan_on(True)
         )
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off sauna fan."""
         await self.hass.async_add_executor_job(
             lambda: self.coordinator.client.set_fan_on(False)
         )
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh()

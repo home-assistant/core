@@ -93,4 +93,4 @@ class ToloSelectEntity(ToloSaunaCoordinatorEntity, SelectEntity):
         await self.hass.async_add_executor_job(
             lambda: self.entity_description.setter(self.coordinator.client, option)
         )
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh()

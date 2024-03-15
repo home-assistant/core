@@ -48,11 +48,11 @@ class ToloLight(ToloSaunaCoordinatorEntity, LightEntity):
         await self.hass.async_add_executor_job(
             lambda: self.coordinator.client.set_lamp_on(True)
         )
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off TOLO Sauna lamp."""
         await self.hass.async_add_executor_job(
             lambda: self.coordinator.client.set_lamp_on(False)
         )
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh()

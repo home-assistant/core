@@ -110,4 +110,4 @@ class ToloNumberEntity(ToloSaunaCoordinatorEntity, NumberEntity):
             lambda: self.entity_description.setter(self.coordinator.client, int_value)
         )
 
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh()

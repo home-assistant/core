@@ -53,4 +53,4 @@ class ToloLampNextColorButton(ToloSaunaCoordinatorEntity, ButtonEntity):
         await self.hass.async_add_executor_job(
             self.coordinator.client.lamp_change_color
         )
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh()

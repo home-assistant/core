@@ -79,11 +79,11 @@ class ToloSwitchEntity(ToloSaunaCoordinatorEntity, SwitchEntity):
         await self.hass.async_add_executor_job(
             lambda: self.entity_description.setter(self.coordinator.client, True)
         )
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.hass.async_add_executor_job(
             lambda: self.entity_description.setter(self.coordinator.client, False)
         )
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh()
