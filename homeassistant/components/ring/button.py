@@ -1,4 +1,4 @@
-"""Component providing HA sensor support for Ring Buttons."""
+"""Component providing support for Ring buttons."""
 
 from __future__ import annotations
 
