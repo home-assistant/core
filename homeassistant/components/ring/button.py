@@ -26,13 +26,12 @@ async def async_setup_entry(
     devices_coordinator: RingDataCoordinator = hass.data[DOMAIN][config_entry.entry_id][
         RING_DEVICES_COORDINATOR
     ]
-    buttons = []
 
-    for device in devices["other"]:
-        if device.has_capability("open"):
-            buttons.append(
-                RingDoorButton(device, devices_coordinator, BUTTON_DESCRIPTION)
-            )
+    buttons = [
+        RingDoorButton(device, devices_coordinator, BUTTON_DESCRIPTION)
+        for device in devices["other"]
+        if device.has_capability("open")
+    ]
 
     async_add_entities(buttons)
 
