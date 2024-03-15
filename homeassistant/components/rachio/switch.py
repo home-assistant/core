@@ -566,7 +566,6 @@ class RachioSchedule(RachioSwitch):
 class RachioValve(CoordinatorEntity[RachioUpdateCoordinator], SwitchEntity):
     """Representation of one smart hose timer valve."""
 
-    _attr_icon = "mdi:water"
 
     def __init__(
         self, person, base, data, coordinator: RachioUpdateCoordinator
