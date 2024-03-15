@@ -25,6 +25,7 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import (
     CONF_DATA_TYPE,
@@ -44,6 +45,7 @@ from .const import (
     CONF_WRITE_TYPE,
     DEFAULT_HUB,
     DEFAULT_SCAN_INTERVAL,
+    MODBUS_DOMAIN as DOMAIN,
     PLATFORMS,
     SERIAL,
     DataType,
@@ -110,6 +112,29 @@ DEFAULT_STRUCT_FORMAT = {
         "?", 0, PARM_IS_LEGAL(DEMANDED, DEMANDED, ILLEGAL, ILLEGAL, ILLEGAL)
     ),
 }
+
+
+def modbus_create_issue(
+    hass: HomeAssistant, key: str, subs: list[str], err: str
+) -> None:
+    """Create issue modbus style."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        key,
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key=key,
+        translation_placeholders={
+            "sub_1": subs[0],
+            "sub_2": subs[1],
+            "sub_3": subs[2],
+            "integration": DOMAIN,
+        },
+        issue_domain=DOMAIN,
+        learn_more_url="https://www.home-assistant.io/integrations/modbus",
+    )
+    _LOGGER.warning(err)
 
 
 def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
@@ -289,12 +314,28 @@ def validate_modbus(
             DEFAULT_HUB if not hub_name_inx else f"{DEFAULT_HUB}_{hub_name_inx}"
         )
         hub_name_inx += 1
-        err = f"Modbus host/port {host} is missing name, added {hub[CONF_NAME]}!"
-        _LOGGER.warning(err)
+        modbus_create_issue(
+            hass,
+            "missing_modbus_name",
+            [
+                "name",
+                host,
+                hub[CONF_NAME],
+            ],
+            f"Modbus host/port {host} is missing name, added {hub[CONF_NAME]}!",
+        )
     name = hub[CONF_NAME]
     if host in hosts or name in hub_names:
-        err = f"Modbus {name} host/port {host} is duplicate, not loaded!"
-        _LOGGER.warning(err)
+        modbus_create_issue(
+            hass,
+            "duplicate_modbus_entry",
+            [
+                host,
+                hub[CONF_NAME],
+                "",
+            ],
+            f"Modbus {name} host/port {host} is duplicate, not loaded!",
+        )
         return False
     hosts.add(host)
     hub_names.add(name)
@@ -315,15 +356,11 @@ def validate_entity(
     addr = f"{hub_name}{entity[CONF_ADDRESS]}"
     scan_interval = entity.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     if 0 < scan_interval < 5:
-        _LOGGER.warning(
-            (
-                "%s %s scan_interval(%d) is lower than 5 seconds, "
-                "which may cause Home Assistant stability issues"
-            ),
-            hub_name,
-            name,
-            scan_interval,
+        err = (
+            f"{hub_name} {name} scan_interval is lower than 5 seconds, "
+            "which may cause Home Assistant stability issues"
         )
+        _LOGGER.warning(err)
     entity[CONF_SCAN_INTERVAL] = scan_interval
     minimum_scan_interval = min(scan_interval, minimum_scan_interval)
     for conf_type in (
@@ -337,7 +374,6 @@ def validate_entity(
     inx = entity.get(CONF_SLAVE) or entity.get(CONF_DEVICE_ADDRESS, 0)
     addr += f"_{inx}"
     loc_addr: set[str] = {addr}
-
     if CONF_TARGET_TEMP in entity:
         loc_addr.add(f"{hub_name}{entity[CONF_TARGET_TEMP]}_{inx}")
     if CONF_HVAC_MODE_REGISTER in entity:
@@ -348,15 +384,28 @@ def validate_entity(
     dup_addrs = ent_addr.intersection(loc_addr)
     if len(dup_addrs) > 0:
         for addr in dup_addrs:
-            err = (
-                f"Modbus {hub_name}/{name} address {addr} is duplicate, second"
-                " entry not loaded!"
+            modbus_create_issue(
+                hass,
+                "duplicate_entity_entry",
+                [
+                    f"{hub_name}/{name}",
+                    addr,
+                    "",
+                ],
+                f"Modbus {hub_name}/{name} address {addr} is duplicate, second entry not loaded!",
             )
-            _LOGGER.warning(err)
         return False
     if name in ent_names:
-        err = f"Modbus {hub_name}/{name} is duplicate, second entry not loaded!"
-        _LOGGER.warning(err)
+        modbus_create_issue(
+            hass,
+            "duplicate_entity_name",
+            [
+                f"{hub_name}/{name}",
+                "",
+                "",
+            ],
+            f"Modbus {hub_name}/{name} is duplicate, second entry not loaded!",
+        )
         return False
     ent_names.add(name)
     ent_addr.update(loc_addr)
