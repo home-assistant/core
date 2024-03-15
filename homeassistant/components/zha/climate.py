@@ -853,7 +853,6 @@ class LegrandCableOutletThermostat(ZhaEntity, ClimateEntity):
         PRESET_OFF: 5,
     }
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key: str = "legrand_thermostat"
     _enable_turn_on_off_backwards_compatibility = False
 
