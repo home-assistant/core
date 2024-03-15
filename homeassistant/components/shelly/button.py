@@ -1,8 +1,10 @@
 """Button for Shelly."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+from functools import partial
 from typing import TYPE_CHECKING, Any, Final, Generic, TypeVar
 
 from aioshelly.const import RPC_GENERATIONS
@@ -30,18 +32,11 @@ _ShellyCoordinatorT = TypeVar(
 )
 
 
-@dataclass(frozen=True)
-class ShellyButtonDescriptionMixin(Generic[_ShellyCoordinatorT]):
-    """Mixin to describe a Button entity."""
+@dataclass(frozen=True, kw_only=True)
+class ShellyButtonDescription(ButtonEntityDescription, Generic[_ShellyCoordinatorT]):
+    """Class to describe a Button entity."""
 
     press_action: Callable[[_ShellyCoordinatorT], Coroutine[Any, Any, None]]
-
-
-@dataclass(frozen=True)
-class ShellyButtonDescription(
-    ButtonEntityDescription, ShellyButtonDescriptionMixin[_ShellyCoordinatorT]
-):
-    """Class to describe a Button entity."""
 
     supported: Callable[[_ShellyCoordinatorT], bool] = lambda _: True
 
@@ -57,7 +52,7 @@ BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
     ShellyButtonDescription[ShellyBlockCoordinator](
         key="self_test",
         name="Self test",
-        icon="mdi:progress-wrench",
+        translation_key="self_test",
         entity_category=EntityCategory.DIAGNOSTIC,
         press_action=lambda coordinator: coordinator.device.trigger_shelly_gas_self_test(),
         supported=lambda coordinator: coordinator.device.model in SHELLY_GAS_MODELS,
@@ -65,7 +60,7 @@ BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
     ShellyButtonDescription[ShellyBlockCoordinator](
         key="mute",
         name="Mute",
-        icon="mdi:volume-mute",
+        translation_key="mute",
         entity_category=EntityCategory.CONFIG,
         press_action=lambda coordinator: coordinator.device.trigger_shelly_gas_mute(),
         supported=lambda coordinator: coordinator.device.model in SHELLY_GAS_MODELS,
@@ -73,7 +68,7 @@ BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
     ShellyButtonDescription[ShellyBlockCoordinator](
         key="unmute",
         name="Unmute",
-        icon="mdi:volume-high",
+        translation_key="unmute",
         entity_category=EntityCategory.CONFIG,
         press_action=lambda coordinator: coordinator.device.trigger_shelly_gas_unmute(),
         supported=lambda coordinator: coordinator.device.model in SHELLY_GAS_MODELS,
@@ -83,8 +78,8 @@ BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
 
 @callback
 def async_migrate_unique_ids(
-    entity_entry: er.RegistryEntry,
     coordinator: ShellyRpcCoordinator | ShellyBlockCoordinator,
+    entity_entry: er.RegistryEntry,
 ) -> dict[str, Any] | None:
     """Migrate button unique IDs."""
     if not entity_entry.entity_id.startswith("button"):
@@ -117,35 +112,25 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set buttons for device."""
-
-    @callback
-    def _async_migrate_unique_ids(
-        entity_entry: er.RegistryEntry,
-    ) -> dict[str, Any] | None:
-        """Migrate button unique IDs."""
-        if TYPE_CHECKING:
-            assert coordinator is not None
-        return async_migrate_unique_ids(entity_entry, coordinator)
-
-    coordinator: ShellyRpcCoordinator | ShellyBlockCoordinator | None = None
+    entry_data = get_entry_data(hass)[config_entry.entry_id]
+    coordinator: ShellyRpcCoordinator | ShellyBlockCoordinator | None
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
-        coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
+        coordinator = entry_data.rpc
     else:
-        coordinator = get_entry_data(hass)[config_entry.entry_id].block
+        coordinator = entry_data.block
 
-    if coordinator is not None:
-        await er.async_migrate_entries(
-            hass, config_entry.entry_id, _async_migrate_unique_ids
-        )
+    if TYPE_CHECKING:
+        assert coordinator is not None
 
-        entities: list[ShellyButton] = []
+    await er.async_migrate_entries(
+        hass, config_entry.entry_id, partial(async_migrate_unique_ids, coordinator)
+    )
 
-        for button in BUTTONS:
-            if not button.supported(coordinator):
-                continue
-            entities.append(ShellyButton(coordinator, button))
-
-        async_add_entities(entities)
+    async_add_entities(
+        ShellyButton(coordinator, button)
+        for button in BUTTONS
+        if button.supported(coordinator)
+    )
 
 
 class ShellyButton(

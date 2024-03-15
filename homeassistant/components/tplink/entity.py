@@ -1,4 +1,5 @@
 """Common code for tplink."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
@@ -40,7 +41,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator]):
         """Initialize the switch."""
         super().__init__(coordinator)
         self.device: SmartDevice = device
-        self._attr_unique_id = self.device.device_id
+        self._attr_unique_id = device.device_id
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, device.mac)},
             identifiers={(DOMAIN, str(device.device_id))},

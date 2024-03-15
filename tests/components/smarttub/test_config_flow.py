@@ -1,4 +1,5 @@
 """Test the smarttub config flow."""
+
 from unittest.mock import patch
 
 from smarttub import LoginFailed

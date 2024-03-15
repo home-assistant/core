@@ -1,4 +1,5 @@
 """The tests for the Monoprice Blackbird media player platform."""
+
 from collections import defaultdict
 from unittest import mock
 
@@ -287,10 +288,10 @@ async def test_state(hass: HomeAssistant, media_player_entity, mock_blackbird) -
 async def test_supported_features(media_player_entity) -> None:
     """Test supported features property."""
     assert (
-        MediaPlayerEntityFeature.TURN_ON
+        media_player_entity.supported_features
+        == MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.SELECT_SOURCE
-        == media_player_entity.supported_features
     )
 
 

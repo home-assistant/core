@@ -1,4 +1,5 @@
 """Device tracker support for OPNSense routers."""
+
 from __future__ import annotations
 
 from homeassistant.components.device_tracker import DeviceScanner
@@ -32,9 +33,7 @@ class OPNSenseDeviceScanner(DeviceScanner):
         """Create dict with mac address keys from list of devices."""
         out_devices = {}
         for device in devices:
-            if not self.interfaces:
-                out_devices[device["mac"]] = device
-            elif device["intf_description"] in self.interfaces:
+            if not self.interfaces or device["intf_description"] in self.interfaces:
                 out_devices[device["mac"]] = device
         return out_devices
 

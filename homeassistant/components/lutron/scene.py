@@ -1,4 +1,5 @@
 """Support for Lutron scenes."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -27,11 +28,8 @@ async def async_setup_entry(
     entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
-        [
-            LutronScene(area_name, keypad, device, entry_data.client)
-            for area_name, keypad, device, led in entry_data.scenes
-        ],
-        True,
+        LutronScene(area_name, keypad, device, entry_data.client)
+        for area_name, keypad, device, led in entry_data.scenes
     )
 
 

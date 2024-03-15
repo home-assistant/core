@@ -1,5 +1,5 @@
 """The tests for the VoiceRSS speech platform."""
-import asyncio
+
 from http import HTTPStatus
 
 import pytest
@@ -213,7 +213,7 @@ async def test_service_say_timeout(
     """Test service call say with http timeout."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-    aioclient_mock.post(URL, data=FORM_DATA, exc=asyncio.TimeoutError())
+    aioclient_mock.post(URL, data=FORM_DATA, exc=TimeoutError())
 
     config = {tts.DOMAIN: {"platform": "voicerss", "api_key": "1234567xx"}}
 

@@ -1,4 +1,5 @@
 """Cover support for switch entities."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -17,13 +18,13 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import EventStateChangedData
-from homeassistant.helpers.typing import EventType
 
-from .entity import BaseEntity
+from .const import CONF_INVERT
+from .entity import BaseInvertableEntity
 
 
 async def async_setup_entry(
@@ -43,6 +44,7 @@ async def async_setup_entry(
                 hass,
                 config_entry.title,
                 COVER_DOMAIN,
+                config_entry.options[CONF_INVERT],
                 entity_id,
                 config_entry.entry_id,
             )
@@ -50,7 +52,7 @@ async def async_setup_entry(
     )
 
 
-class CoverSwitch(BaseEntity, CoverEntity):
+class CoverSwitch(BaseInvertableEntity, CoverEntity):
     """Represents a Switch as a Cover."""
 
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
@@ -59,7 +61,7 @@ class CoverSwitch(BaseEntity, CoverEntity):
         """Open the cover."""
         await self.hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
+            SERVICE_TURN_OFF if self._invert_state else SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: self._switch_entity_id},
             blocking=True,
             context=self._context,
@@ -69,7 +71,7 @@ class CoverSwitch(BaseEntity, CoverEntity):
         """Close cover."""
         await self.hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
+            SERVICE_TURN_ON if self._invert_state else SERVICE_TURN_OFF,
             {ATTR_ENTITY_ID: self._switch_entity_id},
             blocking=True,
             context=self._context,
@@ -77,7 +79,7 @@ class CoverSwitch(BaseEntity, CoverEntity):
 
     @callback
     def async_state_changed_listener(
-        self, event: EventType[EventStateChangedData] | None = None
+        self, event: Event[EventStateChangedData] | None = None
     ) -> None:
         """Handle child updates."""
         super().async_state_changed_listener(event)
@@ -87,4 +89,7 @@ class CoverSwitch(BaseEntity, CoverEntity):
         ):
             return
 
-        self._attr_is_closed = state.state != STATE_ON
+        if self._invert_state:
+            self._attr_is_closed = state.state == STATE_ON
+        else:
+            self._attr_is_closed = state.state != STATE_ON

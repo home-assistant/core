@@ -1,4 +1,5 @@
 """SFR Box coordinator."""
+
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging

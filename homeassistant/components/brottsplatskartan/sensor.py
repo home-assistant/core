@@ -1,4 +1,5 @@
 """Sensor platform for Brottsplatskartan information."""
+
 from __future__ import annotations
 
 from collections import defaultdict

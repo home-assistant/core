@@ -1,4 +1,5 @@
 """Tests for the Steamist integration."""
+
 from __future__ import annotations
 
 from contextlib import contextmanager

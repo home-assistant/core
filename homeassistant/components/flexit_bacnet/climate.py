@@ -1,4 +1,5 @@
 """The Flexit Nordic (BACnet) integration."""
+
 import asyncio.exceptions
 from typing import Any
 
@@ -15,6 +16,7 @@ from homeassistant.components.climate import (
     PRESET_HOME,
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -37,12 +39,12 @@ from .entity import FlexitEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_devices: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Flexit Nordic unit."""
     coordinator: FlexitCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    async_add_devices([FlexitClimateEntity(coordinator)])
+    async_add_entities([FlexitClimateEntity(coordinator)])
 
 
 class FlexitClimateEntity(FlexitEntity, ClimateEntity):
@@ -62,13 +64,17 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
     ]
 
     _attr_supported_features = (
-        ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
+        ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
 
     _attr_target_temperature_step = PRECISION_HALVES
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_max_temp = MAX_TEMP
     _attr_min_temp = MIN_TEMP
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator: FlexitCoordinator) -> None:
         """Initialize the Flexit unit."""
@@ -78,6 +84,13 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
     async def async_update(self) -> None:
         """Refresh unit state."""
         await self.device.update()
+
+    @property
+    def hvac_action(self) -> HVACAction | None:
+        """Return current HVAC action."""
+        if self.device.electric_heater:
+            return HVACAction.HEATING
+        return HVACAction.FAN
 
     @property
     def current_temperature(self) -> float:

@@ -339,7 +339,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'An unexpected error occurred while handling the intent',
+          'speech': 'An unexpected error occurred',
         }),
       }),
     }),
@@ -352,14 +352,14 @@
       'card': dict({
       }),
       'data': dict({
-        'code': 'no_valid_targets',
+        'code': 'no_intent_match',
       }),
       'language': 'en',
       'response_type': 'error',
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No device or entity named do something',
+          'speech': "Sorry, I couldn't understand that",
         }),
       }),
     }),
@@ -379,7 +379,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'An unexpected error occurred while handling the intent',
+          'speech': 'An unexpected error occurred',
         }),
       }),
     }),
@@ -519,7 +519,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No device or entity named late added alias',
+          'speech': 'Sorry, I am not aware of any device called late added alias',
         }),
       }),
     }),
@@ -539,7 +539,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No area named kitchen',
+          'speech': 'Sorry, I am not aware of any device called kitchen light',
         }),
       }),
     }),
@@ -679,7 +679,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No area named late added',
+          'speech': 'Sorry, I am not aware of any device called late added light',
         }),
       }),
     }),
@@ -759,7 +759,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No area named kitchen',
+          'speech': 'Sorry, I am not aware of any device called kitchen light',
         }),
       }),
     }),
@@ -779,7 +779,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No area named my cool',
+          'speech': 'Sorry, I am not aware of any device called my cool light',
         }),
       }),
     }),
@@ -919,7 +919,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No area named kitchen',
+          'speech': 'Sorry, I am not aware of any device called kitchen light',
         }),
       }),
     }),
@@ -969,7 +969,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No area named renamed',
+          'speech': 'Sorry, I am not aware of any device called renamed light',
         }),
       }),
     }),
@@ -1252,14 +1252,14 @@
       'card': dict({
       }),
       'data': dict({
-        'code': 'no_valid_targets',
+        'code': 'no_intent_match',
       }),
       'language': 'en',
       'response_type': 'error',
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No device or entity named test text',
+          'speech': "Sorry, I couldn't understand that",
         }),
       }),
     }),
@@ -1292,14 +1292,14 @@
       'card': dict({
       }),
       'data': dict({
-        'code': 'no_valid_targets',
+        'code': 'no_intent_match',
       }),
       'language': 'en',
       'response_type': 'error',
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No device or entity named test text',
+          'speech': "Sorry, I couldn't understand that",
         }),
       }),
     }),
@@ -1312,14 +1312,14 @@
       'card': dict({
       }),
       'data': dict({
-        'code': 'no_valid_targets',
+        'code': 'no_intent_match',
       }),
       'language': 'en',
       'response_type': 'error',
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No device or entity named test text',
+          'speech': "Sorry, I couldn't understand that",
         }),
       }),
     }),
@@ -1352,14 +1352,14 @@
       'card': dict({
       }),
       'data': dict({
-        'code': 'no_valid_targets',
+        'code': 'no_intent_match',
       }),
       'language': 'en',
       'response_type': 'error',
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No device or entity named test text',
+          'speech': "Sorry, I couldn't understand that",
         }),
       }),
     }),
@@ -1403,13 +1403,18 @@
         'intent': dict({
           'name': 'HassTurnOn',
         }),
+        'match': True,
+        'sentence_template': '<turn> on (<area> <name>|<name> [in <area>])',
         'slots': dict({
           'name': 'my cool light',
         }),
+        'source': 'builtin',
         'targets': dict({
           'light.kitchen': dict({
             'matched': True,
           }),
+        }),
+        'unmatched_slots': dict({
         }),
       }),
       dict({
@@ -1423,13 +1428,18 @@
         'intent': dict({
           'name': 'HassTurnOff',
         }),
+        'match': True,
+        'sentence_template': '[<turn>] (<area> <name>|<name> [in <area>]) [to] off',
         'slots': dict({
           'name': 'my cool light',
         }),
+        'source': 'builtin',
         'targets': dict({
           'light.kitchen': dict({
             'matched': True,
           }),
+        }),
+        'unmatched_slots': dict({
         }),
       }),
       dict({
@@ -1448,14 +1458,19 @@
         'intent': dict({
           'name': 'HassTurnOn',
         }),
+        'match': True,
+        'sentence_template': '<turn> on [all] <light> in <area>',
         'slots': dict({
           'area': 'kitchen',
           'domain': 'light',
         }),
+        'source': 'builtin',
         'targets': dict({
           'light.kitchen': dict({
             'matched': True,
           }),
+        }),
+        'unmatched_slots': dict({
         }),
       }),
       dict({
@@ -1479,34 +1494,23 @@
         'intent': dict({
           'name': 'HassGetState',
         }),
+        'match': True,
+        'sentence_template': '[tell me] how many {on_off_domains:domain} (is|are) {on_off_states:state} [in <area>]',
         'slots': dict({
           'area': 'kitchen',
-          'domain': 'light',
+          'domain': 'lights',
           'state': 'on',
         }),
+        'source': 'builtin',
         'targets': dict({
           'light.kitchen': dict({
             'matched': False,
           }),
         }),
-      }),
-      dict({
-        'details': dict({
-          'domain': dict({
-            'name': 'domain',
-            'text': '',
-            'value': 'script',
-          }),
-        }),
-        'intent': dict({
-          'name': 'HassTurnOn',
-        }),
-        'slots': dict({
-          'domain': 'script',
-        }),
-        'targets': dict({
+        'unmatched_slots': dict({
         }),
       }),
+      None,
     ]),
   })
 # ---
@@ -1517,5 +1521,118 @@
       'text': 'my cool light',
       'value': 'my cool light',
     }),
+  })
+# ---
+# name: test_ws_hass_agent_debug_custom_sentence
+  dict({
+    'results': list([
+      dict({
+        'details': dict({
+          'beer_style': dict({
+            'name': 'beer_style',
+            'text': 'lager',
+            'value': 'lager',
+          }),
+        }),
+        'file': 'en/beer.yaml',
+        'intent': dict({
+          'name': 'OrderBeer',
+        }),
+        'match': True,
+        'sentence_template': "I'd like to order a {beer_style} [please]",
+        'slots': dict({
+          'beer_style': 'lager',
+        }),
+        'source': 'custom',
+        'targets': dict({
+        }),
+        'unmatched_slots': dict({
+        }),
+      }),
+    ]),
+  })
+# ---
+# name: test_ws_hass_agent_debug_null_result
+  dict({
+    'results': list([
+      None,
+    ]),
+  })
+# ---
+# name: test_ws_hass_agent_debug_out_of_range
+  dict({
+    'results': list([
+      dict({
+        'details': dict({
+          'brightness': dict({
+            'name': 'brightness',
+            'text': '100%',
+            'value': 100,
+          }),
+          'name': dict({
+            'name': 'name',
+            'text': 'test light',
+            'value': 'test light',
+          }),
+        }),
+        'intent': dict({
+          'name': 'HassLightSet',
+        }),
+        'match': True,
+        'sentence_template': '[<numeric_value_set>] <name> brightness [to] <brightness>',
+        'slots': dict({
+          'brightness': '100%',
+          'name': 'test light',
+        }),
+        'source': 'builtin',
+        'targets': dict({
+          'light.demo_1234': dict({
+            'matched': True,
+          }),
+        }),
+        'unmatched_slots': dict({
+        }),
+      }),
+    ]),
+  })
+# ---
+# name: test_ws_hass_agent_debug_out_of_range.1
+  dict({
+    'results': list([
+      dict({
+        'details': dict({
+          'name': dict({
+            'name': 'name',
+            'text': 'test light',
+            'value': 'test light',
+          }),
+        }),
+        'intent': dict({
+          'name': 'HassLightSet',
+        }),
+        'match': False,
+        'sentence_template': '[<numeric_value_set>] <name> brightness [to] <brightness>',
+        'slots': dict({
+          'name': 'test light',
+        }),
+        'source': 'builtin',
+        'targets': dict({
+        }),
+        'unmatched_slots': dict({
+          'brightness': 1001,
+        }),
+      }),
+    ]),
+  })
+# ---
+# name: test_ws_hass_agent_debug_sentence_trigger
+  dict({
+    'results': list([
+      dict({
+        'match': True,
+        'sentence_template': 'hello[ world]',
+        'source': 'trigger',
+      }),
+    ]),
   })
 # ---

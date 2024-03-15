@@ -1,4 +1,5 @@
 """Tests for the Risco initialization."""
+
 import pytest
 
 from homeassistant.components.risco import CannotConnectError

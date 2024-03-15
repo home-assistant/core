@@ -1,4 +1,5 @@
 """Tests for Efergy integration."""
+
 from unittest.mock import AsyncMock, patch
 
 from pyefergy import exceptions

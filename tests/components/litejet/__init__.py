@@ -1,4 +1,5 @@
 """Tests for the litejet component."""
+
 from homeassistant.components import scene, switch
 from homeassistant.components.litejet import DOMAIN
 from homeassistant.const import CONF_PORT

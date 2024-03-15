@@ -1,4 +1,5 @@
 """Provide the legacy TTS service provider interface."""
+
 from __future__ import annotations
 
 from abc import abstractmethod

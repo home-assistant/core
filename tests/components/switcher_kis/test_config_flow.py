@@ -1,4 +1,5 @@
 """Test the Switcher config flow."""
+
 from unittest.mock import patch
 
 import pytest
@@ -45,7 +46,7 @@ async def test_user_setup(hass: HomeAssistant, mock_bridge) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     assert mock_bridge.is_running is False
     assert len(hass.data[DOMAIN][DATA_DISCOVERY].result()) == 2
@@ -72,7 +73,7 @@ async def test_user_setup_abort_no_devices_found(
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     assert mock_bridge.is_running is False
     assert len(hass.data[DOMAIN][DATA_DISCOVERY].result()) == 0

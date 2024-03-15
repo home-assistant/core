@@ -1,4 +1,5 @@
 """The surepetcare integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -102,7 +103,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class SurePetcareDataCoordinator(DataUpdateCoordinator[dict[int, SurepyEntity]]):
+class SurePetcareDataCoordinator(DataUpdateCoordinator[dict[int, SurepyEntity]]):  # pylint: disable=hass-enforce-coordinator-module
     """Handle Surepetcare data."""
 
     def __init__(self, entry: ConfigEntry, hass: HomeAssistant) -> None:
