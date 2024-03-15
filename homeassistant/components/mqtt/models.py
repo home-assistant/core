@@ -116,6 +116,8 @@ class MqttOriginInfo(TypedDict, total=False):
 class MqttCommandTemplateException(ServiceValidationError):
     """Handle MqttCommandTemplate exceptions."""
 
+    _message: str
+
     def __init__(
         self,
         *args: object,
@@ -147,6 +149,8 @@ class MqttCommandTemplateException(ServiceValidationError):
 
 class MqttCommandTemplate:
     """Class for rendering MQTT payload with command templates."""
+
+    _message: str
 
     def __init__(
         self,
@@ -226,6 +230,8 @@ class MqttCommandTemplate:
 
 class MqttValueTemplateException(TemplateError):
     """Handle MqttValueTemplate exceptions."""
+
+    _message: str
 
     def __init__(
         self,
