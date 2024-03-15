@@ -155,12 +155,9 @@ class FFmpegManager:
 
     async def async_setup(self) -> None:
         """Set up ffmpeg."""
-        if is_official_image():
-            # official image, no need to check the ffmpeg
-            # version as it will always be > 3
-            return
         if (
-            (version := await FFVersion(self._bin).get_version())
+            not is_official_image()
+            and (version := await FFVersion(self._bin).get_version())
             and (result := re.search(r"(\d+)\.", version))
             and (int(result.group(1))) <= 3
         ):
