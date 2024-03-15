@@ -686,20 +686,15 @@ class BluesoundPlayer(MediaPlayerEntity):
         if self._status is None or (self.is_grouped and not self.is_master):
             return None
 
-        sources = []
+        sources = [source["title"] for source in self._preset_items]
 
-        for source in self._preset_items:
-            sources.append(source["title"])
+        sources.extend(
+            source["title"]
+            for source in self._services_items
+            if source["type"] in ("LocalMusic", "RadioService")
+        )
 
-        for source in [
-            x
-            for x in self._services_items
-            if x["type"] in ("LocalMusic", "RadioService")
-        ]:
-            sources.append(source["title"])
-
-        for source in self._capture_items:
-            sources.append(source["title"])
+        sources.extend(source["title"] for source in self._capture_items)
 
         return sources
 

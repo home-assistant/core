@@ -232,16 +232,16 @@ class MailboxPlatformsView(MailboxView):
 
     async def get(self, request: web.Request) -> web.Response:
         """Retrieve list of platforms."""
-        platforms: list[dict[str, Any]] = []
-        for mailbox in self.mailboxes:
-            platforms.append(
+        return self.json(
+            [
                 {
                     "name": mailbox.name,
                     "has_media": mailbox.has_media,
                     "can_delete": mailbox.can_delete,
                 }
-            )
-        return self.json(platforms)
+                for mailbox in self.mailboxes
+            ]
+        )
 
 
 class MailboxMessageView(MailboxView):
