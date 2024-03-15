@@ -126,7 +126,6 @@ async def test_duplicate_entry(hass: HomeAssistant, mock_fyta: AsyncMock) -> Non
         domain=DOMAIN,
         title=USERNAME,
         data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
-        unique_id="fyta_unique_id",
     )
     entry.add_to_hass(hass)
 
