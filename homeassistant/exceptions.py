@@ -34,14 +34,15 @@ class HomeAssistantError(Exception):
 
     def __str__(self) -> str:
         """Return exception message string from translation cache."""
-        # pylint: disable-next=import-outside-toplevel
-        from .helpers.translation import async_get_exception_message
-
         if not self._translate:
             return super().__str__()
         if TYPE_CHECKING:
             assert self.translation_key is not None
             assert self.translation_domain is not None
+
+        # pylint: disable-next=import-outside-toplevel
+        from .helpers.translation import async_get_exception_message
+
         return async_get_exception_message(
             self.translation_domain, self.translation_key, self.translation_placeholders
         )
