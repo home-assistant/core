@@ -1051,6 +1051,7 @@ class Integration:
                 if (
                     platform_name == "config_flow"
                     and not async_config_flow_needs_preload(cache[domain])
+                    and self.is_built_in
                 ):
                     continue
 
