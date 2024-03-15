@@ -531,18 +531,15 @@ def async_translations_loaded(hass: HomeAssistant, components: set[str]) -> bool
 
 @callback
 def async_get_exception_message(
-    translation_domain: str | None,
-    translation_key: str | None,
+    translation_domain: str,
+    translation_key: str,
     translation_placeholders: dict[str, str] | None = None,
-) -> str | None:
+) -> str:
     """Return a translated exception message.
 
     Defaults to English, requires translations to already be cached.
     """
     language = "en"
-    if translation_domain is None or translation_key is None:
-        return None
-
     hass = async_get_hass()
     localize_key = (
         f"component.{translation_domain}.exceptions.{translation_key}.message"

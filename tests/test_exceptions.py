@@ -12,6 +12,7 @@ from homeassistant.exceptions import (
     ConditionErrorContainer,
     ConditionErrorIndex,
     ConditionErrorMessage,
+    ConfigValidationError,
     HomeAssistantError,
     TemplateError,
 )
@@ -70,20 +71,22 @@ def test_template_message(arg: str | Exception, expected: str) -> None:
 
 
 @pytest.mark.parametrize(
-    ("exception_args", "exception_kwargs", "message"),
+    ("exception_args", "exception_kwargs", "translation_key", "message"),
     [
-        ((), {}, ""),
-        (("bla",), {}, "bla"),
-        ((None,), {}, "None"),
-        ((TypeError("bla"),), {}, "bla"),
+        ((), {}, "", ""),
+        (("bla",), {}, "bla", "bla"),
+        ((None,), {}, "None", "None"),
+        ((TypeError("bla"),), {}, "bla", "bla"),
         (
             (),
             {"translation_domain": "test", "translation_key": "test"},
+            "test",
             "test",
         ),
         (
             (),
             {"translation_domain": "test", "translation_key": "bla"},
+            "bla",
             "{bla} from cache",
         ),
         (
@@ -93,6 +96,7 @@ def test_template_message(arg: str | Exception, expected: str) -> None:
                 "translation_key": "bla",
                 "translation_placeholders": {"bla": "Bla"},
             },
+            "bla",
             "Bla from cache",
         ),
     ],
@@ -101,13 +105,68 @@ async def test_home_assistant_error(
     hass: HomeAssistant,
     exception_args: tuple[Any,],
     exception_kwargs: dict[str, Any],
+    translation_key: str,
     message: str,
 ) -> None:
     """Test edge cases with HomeAssistantError."""
 
-    with pytest.raises(HomeAssistantError, match=message) as exc, patch(
+    with pytest.raises(HomeAssistantError, match=translation_key) as exc:
+        raise HomeAssistantError(*exception_args, **exception_kwargs)
+    with patch(
         "homeassistant.helpers.translation.async_get_cached_translations",
         return_value={"component.test.exceptions.bla.message": "{bla} from cache"},
     ):
-        raise HomeAssistantError(*exception_args, **exception_kwargs)
-    assert str(exc.value) == message
+        assert str(exc.value) == message
+
+
+@pytest.mark.parametrize(
+    ("exception_args", "exception_kwargs", "translation_key", "message"),
+    [
+        (("", [ValueError("invalid")]), {}, "", " (1 sub-exception)"),
+        (("bla", [ValueError("invalid")]), {}, "bla", "bla (1 sub-exception)"),
+        (
+            ("milk overflow", [TypeError("bla")]),
+            {},
+            "milk",
+            "milk overflow (1 sub-exception)",
+        ),
+        (
+            ("beer", [ValueError("invalid")]),
+            {"translation_domain": "test", "translation_key": "test"},
+            "test",
+            "test",
+        ),
+        (
+            ("beer", [ValueError("invalid")]),
+            {"translation_domain": "test", "translation_key": "bla"},
+            "bla",
+            "{bla} from cache",
+        ),
+        (
+            ("beer", [ValueError("invalid")]),
+            {
+                "translation_domain": "test",
+                "translation_key": "bla",
+                "translation_placeholders": {"bla": "Bla"},
+            },
+            "bla",
+            "Bla from cache",
+        ),
+    ],
+)
+async def test_configuration_validation_error(
+    hass: HomeAssistant,
+    exception_args: tuple[Any,],
+    exception_kwargs: dict[str, Any],
+    translation_key: str,
+    message: str,
+) -> None:
+    """Test edge cases with ConfigValidationError."""
+
+    with pytest.raises(ConfigValidationError, match=translation_key) as exc:
+        raise ConfigValidationError(*exception_args, **exception_kwargs)
+    with patch(
+        "homeassistant.helpers.translation.async_get_cached_translations",
+        return_value={"component.test.exceptions.bla.message": "{bla} from cache"},
+    ):
+        assert str(exc.value) == message

@@ -13,6 +13,8 @@ if TYPE_CHECKING:
 class HomeAssistantError(Exception):
     """General Home Assistant exception occurred."""
 
+    _translate: bool = False
+
     def __init__(
         self,
         *args: object,
@@ -21,20 +23,28 @@ class HomeAssistantError(Exception):
         translation_placeholders: dict[str, str] | None = None,
     ) -> None:
         """Initialize exception."""
-        # pylint: disable-next=import-outside-toplevel
-        from .helpers.translation import async_get_exception_message
-
-        if not args and (
-            message := async_get_exception_message(
-                translation_domain, translation_key, translation_placeholders
-            )
-        ):
-            args = (message,)
+        if not args and translation_key and translation_domain:
+            self._translate = True
+            args = (translation_key,)
 
         super().__init__(*args)
         self.translation_domain = translation_domain
         self.translation_key = translation_key
         self.translation_placeholders = translation_placeholders
+
+    def __str__(self) -> str:
+        """Return exception message string from translation cache."""
+        # pylint: disable-next=import-outside-toplevel
+        from .helpers.translation import async_get_exception_message
+
+        if not self._translate:
+            return super().__str__()
+        if TYPE_CHECKING:
+            assert self.translation_key is not None
+            assert self.translation_domain is not None
+        return async_get_exception_message(
+            self.translation_domain, self.translation_key, self.translation_placeholders
+        )
 
 
 class ConfigValidationError(HomeAssistantError, ExceptionGroup[Exception]):
@@ -55,11 +65,7 @@ class ConfigValidationError(HomeAssistantError, ExceptionGroup[Exception]):
             translation_key=translation_key,
             translation_placeholders=translation_placeholders,
         )
-        self._message = message
-
-    def __str__(self) -> str:
-        """Return exception message string."""
-        return self._message
+        self._translate = bool(translation_domain and translation_key)
 
 
 class ServiceValidationError(HomeAssistantError):
