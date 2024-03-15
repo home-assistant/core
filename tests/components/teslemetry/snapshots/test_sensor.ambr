@@ -591,6 +591,9 @@
     'state': 'unknown',
   })
 # ---
+# name: test_sensors[sensor.test_battery_level]
+  'unknown'
+# ---
 # name: test_sensors[sensor.test_battery_range-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
