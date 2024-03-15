@@ -56,6 +56,8 @@ CONF_OUTPUT = "output"
 
 DEFAULT_BINARY = "ffmpeg"
 
+OFFICAL_IMAGE_VERSION = "6.0"
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -74,7 +76,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     manager = FFmpegManager(hass, conf.get(CONF_FFMPEG_BIN, DEFAULT_BINARY))
 
-    await manager.async_setup()
+    await manager.async_get_version()
 
     # Register service
     async def async_service_handle(service: ServiceCall) -> None:
@@ -146,27 +148,37 @@ class FFmpegManager:
         self.hass = hass
         self._cache = {}  # type: ignore[var-annotated]
         self._bin = ffmpeg_bin
-        self._content_type = CONTENT_TYPE_MULTIPART.format("ffmpeg")
+        self._major_version: int | None = None
+        self._version: str | None = None
 
     @cached_property
     def binary(self) -> str:
         """Return ffmpeg binary from config."""
         return self._bin
 
-    async def async_setup(self) -> None:
-        """Set up ffmpeg."""
-        if (
-            not is_official_image()
-            and (version := await FFVersion(self._bin).get_version())
-            and (major_version := re.search(r"(\d+)\.", version))
-            and (int(major_version.group(1))) <= 3
-        ):
-            self._content_type = CONTENT_TYPE_MULTIPART.format("ffserver")
+    async def async_get_version(self) -> tuple[str | None, int | None]:
+        """Return ffmpeg version."""
+        if self._version is None:
+            if is_official_image():
+                self._version = OFFICAL_IMAGE_VERSION
+                self._major_version = int(self._version.split(".")[0])
+            elif (
+                (version := await FFVersion(self._bin).get_version())
+                and (result := re.search(r"(\d+)\.", version))
+                and (major_version := int(result.group(1)))
+            ):
+                self._version = version
+                self._major_version = major_version
+
+        return self._version, self._major_version
 
     @cached_property
     def ffmpeg_stream_content_type(self) -> str:
         """Return HTTP content type for ffmpeg stream."""
-        return self._content_type
+        if self._major_version is not None and self._major_version > 3:
+            return CONTENT_TYPE_MULTIPART.format("ffmpeg")
+
+        return CONTENT_TYPE_MULTIPART.format("ffserver")
 
 
 class FFmpegBase(Entity, Generic[_HAFFmpegT]):
