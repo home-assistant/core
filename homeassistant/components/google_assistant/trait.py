@@ -308,7 +308,6 @@ class _Trait(ABC):
         """Return the attributes of this trait for this entity."""
         raise NotImplementedError
 
-    @abstractmethod
     def query_notifications(self) -> dict[str, Any] | None:
         """Return notifications payload."""
 
