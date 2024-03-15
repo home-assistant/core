@@ -2,26 +2,20 @@
 
 from __future__ import annotations
 
-import logging
-
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
+# The sensor platform is pre-imported here to ensure
+# it gets loaded when the base component is loaded
+# as we will always load it and we do not want to have
+# to wait for the import executor when its busy later
+# in the startup process.
 from . import sensor as sensor_pre_import  # noqa: F401
-from .const import (  # noqa: F401
-    DOMAIN,
-    SIGNAL_EVENTS_CHANGED,
-    SIGNAL_POSITION_CHANGED,
-    STATE_ABOVE_HORIZON,
-    STATE_BELOW_HORIZON,
-)
+from .const import DOMAIN, STATE_ABOVE_HORIZON, STATE_BELOW_HORIZON  # noqa: F401
 from .entity import Sun
-
-_LOGGER = logging.getLogger(__name__)
-
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
