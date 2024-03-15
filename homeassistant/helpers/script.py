@@ -77,6 +77,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.util import slugify
+from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.dt import utcnow
 
 from . import condition, config_validation as cv, service, template
@@ -1611,7 +1612,7 @@ class Script:
         self._changed()
 
         try:
-            return await asyncio.shield(run.async_run())
+            return await asyncio.shield(create_eager_task(run.async_run()))
         except asyncio.CancelledError:
             await run.async_stop()
             self._changed()
