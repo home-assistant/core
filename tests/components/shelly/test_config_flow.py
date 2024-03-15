@@ -27,7 +27,7 @@ from homeassistant.setup import async_setup_component
 
 from . import init_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
@@ -1030,6 +1030,7 @@ async def test_zeroconf_already_configured_triggers_refresh_mac_in_name(
 
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     mock_rpc_device.mock_disconnected()
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(mock_rpc_device.initialize.mock_calls) == 2
 
@@ -1062,6 +1063,7 @@ async def test_zeroconf_already_configured_triggers_refresh(
 
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     mock_rpc_device.mock_disconnected()
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(mock_rpc_device.initialize.mock_calls) == 2
 
@@ -1100,6 +1102,7 @@ async def test_zeroconf_sleeping_device_not_triggers_refresh(
 
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     mock_rpc_device.mock_disconnected()
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(mock_rpc_device.initialize.mock_calls) == 0
     assert "device did not update" not in caplog.text
