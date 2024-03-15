@@ -37,6 +37,11 @@
         "name": "Ding"
       }
     },
+    "button": {
+      "open_door": {
+        "name": "Open door"
+      }
+    },
     "light": {
       "light": {
         "name": "[%key:component::light::title%]"
