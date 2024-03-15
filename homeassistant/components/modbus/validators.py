@@ -130,8 +130,9 @@ def modbus_create_issue(
             "sub_2": subs[1],
             "sub_3": subs[2],
             "integration": DOMAIN,
-            "url": "https://www.home-assistant.io/integrations/modbus",
         },
+        issue_domain=DOMAIN,
+        learn_more_url="https://www.home-assistant.io/integrations/modbus",
     )
     _LOGGER.warning(err)
 
