@@ -663,7 +663,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             soco.clear_queue()
 
         if enqueue in (MediaPlayerEnqueue.ADD, MediaPlayerEnqueue.REPLACE):
-            new_pos = soco.add_to_queue(item, timeout=LONG_SERVICE_TIMEOUT)
+            soco.add_to_queue(item, timeout=LONG_SERVICE_TIMEOUT)
             if enqueue == MediaPlayerEnqueue.REPLACE:
                 soco.play_from_queue(0)
         else:
