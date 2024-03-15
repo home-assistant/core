@@ -158,8 +158,8 @@ class FFmpegManager:
         if (
             not is_official_image()
             and (version := await FFVersion(self._bin).get_version())
-            and (major_ver := re.search(r"(\d+)\.", version))
-            and (int(major_ver.group(1))) <= 3
+            and (major_version := re.search(r"(\d+)\.", version))
+            and (int(major_version.group(1))) <= 3
         ):
             self._content_type = CONTENT_TYPE_MULTIPART.format("ffserver")
 
