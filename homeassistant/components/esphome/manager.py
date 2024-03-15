@@ -543,11 +543,15 @@ class ESPHomeManager:
         # "Unable to remove unknown listener
         # <function EventBus.async_listen_once.<locals>.onetime_listener>"
         entry_data.cleanup_callbacks.append(
-            hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, self.on_stop)
+            hass.bus.async_listen(
+                EVENT_HOMEASSISTANT_STOP, self.on_stop, run_immediately=True
+            )
         )
         entry_data.cleanup_callbacks.append(
             hass.bus.async_listen(
-                EVENT_LOGGING_CHANGED, self._async_handle_logging_changed
+                EVENT_LOGGING_CHANGED,
+                self._async_handle_logging_changed,
+                run_immediately=True,
             )
         )
 
