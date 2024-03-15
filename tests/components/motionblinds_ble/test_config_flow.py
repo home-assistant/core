@@ -64,7 +64,7 @@ async def test_config_flow_manual_success(
         {const.CONF_BLIND_TYPE: MotionBlindType.ROLLER.name.lower()},
     )
     assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"MotionBlind {TEST_MAC.upper()}"
+    assert result["title"] == f"Motionblind {TEST_MAC.upper()}"
     assert result["data"] == {
         CONF_ADDRESS: TEST_ADDRESS,
         const.CONF_LOCAL_NAME: TEST_NAME,
@@ -110,7 +110,7 @@ async def test_config_flow_manual_error_invalid_mac(
         {const.CONF_BLIND_TYPE: MotionBlindType.ROLLER.name.lower()},
     )
     assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"MotionBlind {TEST_MAC.upper()}"
+    assert result["title"] == f"Motionblind {TEST_MAC.upper()}"
     assert result["data"] == {
         CONF_ADDRESS: TEST_ADDRESS,
         const.CONF_LOCAL_NAME: TEST_NAME,
@@ -194,7 +194,7 @@ async def test_config_flow_manual_error_could_not_find_motor(
         {const.CONF_BLIND_TYPE: MotionBlindType.ROLLER.name.lower()},
     )
     assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"MotionBlind {TEST_MAC.upper()}"
+    assert result["title"] == f"Motionblind {TEST_MAC.upper()}"
     assert result["data"] == {
         CONF_ADDRESS: TEST_ADDRESS,
         const.CONF_LOCAL_NAME: TEST_NAME,
@@ -246,7 +246,7 @@ async def test_config_flow_bluetooth_success(
     )
 
     assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"MotionBlind {TEST_MAC.upper()}"
+    assert result["title"] == f"Motionblind {TEST_MAC.upper()}"
     assert result["data"] == {
         CONF_ADDRESS: TEST_ADDRESS,
         const.CONF_LOCAL_NAME: TEST_NAME,
