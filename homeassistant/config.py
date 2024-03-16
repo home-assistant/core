@@ -1435,6 +1435,8 @@ def extract_domain_configs(config: ConfigType, domain: str) -> Sequence[str]:
 class _PlatformIntegration:
     """Class to hold platform integration information."""
 
+    path: str  # integration.platform; ex: filter.sensor
+    name: str  # integration; ex: filter
     integration: Integration  # <Integration filter>
     config: ConfigType  # un-validated config
     validated_config: ConfigType  # component validated config
@@ -1453,7 +1455,7 @@ async def _async_load_and_validate_platform_integration(
         exc_info = ConfigExceptionInfo(
             exc,
             ConfigErrorTranslationKey.PLATFORM_COMPONENT_LOAD_EXC,
-            f"{p_integration.integration.domain}.{domain}",
+            p_integration.path,
             p_integration.config,
             integration_docs,
         )
@@ -1472,7 +1474,7 @@ async def _async_load_and_validate_platform_integration(
         exc_info = ConfigExceptionInfo(
             exc,
             ConfigErrorTranslationKey.PLATFORM_CONFIG_VALIDATION_ERR,
-            f"{p_integration.integration.domain}.{domain}",
+            p_integration.path,
             p_integration.config,
             p_integration.integration.documentation,
         )
@@ -1481,7 +1483,7 @@ async def _async_load_and_validate_platform_integration(
         exc_info = ConfigExceptionInfo(
             exc,
             ConfigErrorTranslationKey.PLATFORM_SCHEMA_VALIDATOR_ERR,
-            p_integration.integration.domain,
+            p_integration.name,
             p_integration.config,
             p_integration.integration.documentation,
         )
@@ -1653,7 +1655,7 @@ async def async_process_component_config(  # noqa: C901
             continue
 
         platform_integration = _PlatformIntegration(
-            p_integration, p_config, p_validated
+            platform_path, p_name, p_integration, p_config, p_validated
         )
         platform_integrations_to_load.append(platform_integration)
 
