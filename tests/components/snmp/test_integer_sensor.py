@@ -10,6 +10,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from pysnmp.hlapi import Integer32
 
+
 @pytest.fixture(autouse=True)
 def hlapi_mock():
     """Mock out 3rd party API."""

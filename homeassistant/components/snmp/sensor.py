@@ -165,7 +165,9 @@ async def async_setup_platform(
     errindication, _, _, _ = get_result
 
     if errindication and not accept_errors:
-        _LOGGER.error(f"Please check the details in the configuration file: {errindication}")
+        _LOGGER.error(
+            f"Please check the details in the configuration file: {errindication}"
+        )
         return
 
     name = config.get(CONF_NAME, Template(DEFAULT_NAME, hass))
@@ -260,8 +262,10 @@ class SnmpData:
         from pysnmp.proto.rfc1902 import Opaque
         from pyasn1.codec.ber import decoder
         from struct import unpack
-        
-        _LOGGER.debug(f"SNMP OID {self._baseoid} received type={type(value)} and data {bytes(value)}")
+
+        _LOGGER.debug(
+            f"SNMP OID {self._baseoid} received type={type(value)} and data {bytes(value)}"
+        )
         if isinstance(value, NoSuchObject):
             _LOGGER.error(
                 f"SNMP error for OID {self._baseoid}: "
@@ -273,7 +277,7 @@ class SnmpData:
             # Float data type is not supported by the pyasn1 library,
             # so we need to decode this type ourselves based on:
             # https://tools.ietf.org/html/draft-perkins-opaque-01
-            if bytes(value).startswith(b'\x9f\x78'):
+            if bytes(value).startswith(b"\x9f\x78"):
                 return str(unpack("!f", bytes(value)[3:])[0])
             # Otherwise Opaque types should be asn1 encoded
             try:
@@ -281,6 +285,6 @@ class SnmpData:
                 return str(decoded_value)
             # pylint: disable=broad-except
             except Exception as decode_exception:
-                _LOGGER.error(f'SNMP error in decoding opaque type: {decode_exception}')
+                _LOGGER.error(f"SNMP error in decoding opaque type: {decode_exception}")
                 return self._default_value
         return str(value)

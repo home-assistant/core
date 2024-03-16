@@ -10,10 +10,11 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from pysnmp.proto.rfc1902 import Opaque
 
+
 @pytest.fixture(autouse=True)
 def hlapi_mock():
     """Mock out 3rd party API."""
-    mock_data = Opaque(value=b'\x9fx\x04=\xa4\x00\x00')
+    mock_data = Opaque(value=b"\x9fx\x04=\xa4\x00\x00")
     with patch(
         "homeassistant.components.snmp.sensor.getCmd",
         return_value=(None, None, None, [[mock_data]]),
