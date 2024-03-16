@@ -3,7 +3,7 @@
 from typing import Any
 
 from requests.exceptions import ConnectTimeout, HTTPError
-from rova.rova import Rova
+from rova import rova
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -28,13 +28,17 @@ class RovaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _check_area(self, zip_code: str, number: str, suffix: str) -> bool:
         """Check if rova collects garbage at this location."""
-        api = Rova(zip_code, number, suffix)
+        api = rova.Rova(zip_code, number, suffix)
 
         try:
-            return api.is_rova_area()
+            response = api.is_rova_area()
+            if not response:
+                self._errors = {"base": "invalid_rova_area"}
+                return False
         except (ConnectTimeout, HTTPError):
             self._errors = {"base": "could_not_connect"}
             return False
+        return True
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -63,8 +67,6 @@ class RovaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_HOUSE_NUMBER_SUFFIX: suffix,
                     },
                 )
-
-            self._errors = {"base": "invalid_rova_area"}
 
         else:
             user_input = {
