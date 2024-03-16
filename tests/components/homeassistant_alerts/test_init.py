@@ -323,33 +323,33 @@ async def test_alerts_refreshed_on_component_load(
     ):
         assert await async_setup_component(hass, DOMAIN, {})
 
-    client = await hass_ws_client(hass)
+        client = await hass_ws_client(hass)
 
-    await client.send_json({"id": 1, "type": "repairs/list_issues"})
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert msg["result"] == {
-        "issues": [
-            {
-                "breaks_in_ha_version": None,
-                "created": ANY,
-                "dismissed_version": None,
-                "domain": "homeassistant_alerts",
-                "ignored": False,
-                "is_fixable": False,
-                "issue_id": f"{alert}.markdown_{integration}",
-                "issue_domain": integration,
-                "learn_more_url": None,
-                "severity": "warning",
-                "translation_key": "alert",
-                "translation_placeholders": {
-                    "title": f"Title for {alert}",
-                    "description": f"Content for {alert}",
-                },
-            }
-            for alert, integration in initial_alerts
-        ]
-    }
+        await client.send_json({"id": 1, "type": "repairs/list_issues"})
+        msg = await client.receive_json()
+        assert msg["success"]
+        assert msg["result"] == {
+            "issues": [
+                {
+                    "breaks_in_ha_version": None,
+                    "created": ANY,
+                    "dismissed_version": None,
+                    "domain": "homeassistant_alerts",
+                    "ignored": False,
+                    "is_fixable": False,
+                    "issue_id": f"{alert}.markdown_{integration}",
+                    "issue_domain": integration,
+                    "learn_more_url": None,
+                    "severity": "warning",
+                    "translation_key": "alert",
+                    "translation_placeholders": {
+                        "title": f"Title for {alert}",
+                        "description": f"Content for {alert}",
+                    },
+                }
+                for alert, integration in initial_alerts
+            ]
+        }
 
     with patch(
         "homeassistant.components.homeassistant_alerts.__version__",
@@ -368,33 +368,33 @@ async def test_alerts_refreshed_on_component_load(
         freezer.tick(COMPONENT_LOADED_COOLDOWN + 1)
         await hass.async_block_till_done()
 
-    client = await hass_ws_client(hass)
+        client = await hass_ws_client(hass)
 
-    await client.send_json({"id": 2, "type": "repairs/list_issues"})
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert msg["result"] == {
-        "issues": [
-            {
-                "breaks_in_ha_version": None,
-                "created": ANY,
-                "dismissed_version": None,
-                "domain": "homeassistant_alerts",
-                "ignored": False,
-                "is_fixable": False,
-                "issue_id": f"{alert}.markdown_{integration}",
-                "issue_domain": integration,
-                "learn_more_url": None,
-                "severity": "warning",
-                "translation_key": "alert",
-                "translation_placeholders": {
-                    "title": f"Title for {alert}",
-                    "description": f"Content for {alert}",
-                },
-            }
-            for alert, integration in late_alerts
-        ]
-    }
+        await client.send_json({"id": 2, "type": "repairs/list_issues"})
+        msg = await client.receive_json()
+        assert msg["success"]
+        assert msg["result"] == {
+            "issues": [
+                {
+                    "breaks_in_ha_version": None,
+                    "created": ANY,
+                    "dismissed_version": None,
+                    "domain": "homeassistant_alerts",
+                    "ignored": False,
+                    "is_fixable": False,
+                    "issue_id": f"{alert}.markdown_{integration}",
+                    "issue_domain": integration,
+                    "learn_more_url": None,
+                    "severity": "warning",
+                    "translation_key": "alert",
+                    "translation_placeholders": {
+                        "title": f"Title for {alert}",
+                        "description": f"Content for {alert}",
+                    },
+                }
+                for alert, integration in late_alerts
+            ]
+        }
 
 
 @pytest.mark.parametrize(
