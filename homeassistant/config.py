@@ -1597,7 +1597,7 @@ async def async_process_component_config(  # noqa: C901
 
     #
     # Since bootstrap will order base platform (ie sensor) integrations
-    # first, we eagerly gathering importing the platforms that need to be
+    # first, we eagerly gather importing the platforms that need to be
     # validated for the base platform since everything that uses the
     # base platform has to wait for it to finish.
     #
