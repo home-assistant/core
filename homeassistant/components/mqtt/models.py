@@ -116,6 +116,8 @@ class MqttOriginInfo(TypedDict, total=False):
 class MqttCommandTemplateException(ServiceValidationError):
     """Handle MqttCommandTemplate exceptions."""
 
+    _message: str
+
     def __init__(
         self,
         *args: object,
@@ -139,6 +141,10 @@ class MqttCommandTemplateException(ServiceValidationError):
             f"{type(base_exception).__name__}: {base_exception} rendering template{entity_id_log}"
             f", template: '{command_template}' and payload: {value_log}"
         )
+
+    def __str__(self) -> str:
+        """Return exception message string."""
+        return self._message
 
 
 class MqttCommandTemplate:
@@ -223,6 +229,8 @@ class MqttCommandTemplate:
 class MqttValueTemplateException(TemplateError):
     """Handle MqttValueTemplate exceptions."""
 
+    _message: str
+
     def __init__(
         self,
         *args: object,
@@ -244,6 +252,10 @@ class MqttValueTemplateException(TemplateError):
             f"{type(base_exception).__name__}: {base_exception} rendering template{entity_id_log}"
             f", template: '{value_template}'{default_payload_log} and payload: {payload_log}"
         )
+
+    def __str__(self) -> str:
+        """Return exception message string."""
+        return self._message
 
 
 class MqttValueTemplate:
