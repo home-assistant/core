@@ -122,7 +122,7 @@ class RovaData:
     def __init__(self, api) -> None:
         """Initialize the data object."""
         self.api = api
-        self.data: list[dict[str, Any]] = []
+        self.data: dict[str, Any] = {}
 
     @Throttle(UPDATE_DELAY)
     def update(self):
@@ -134,7 +134,7 @@ class RovaData:
             LOGGER.error("Could not retrieve data, retry again later")
             return
 
-        self.data = []
+        self.data = {}
 
         for item in items:
             date = datetime.strptime(item["Date"], "%Y-%m-%dT%H:%M:%S").replace(
