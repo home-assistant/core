@@ -1680,15 +1680,14 @@ async def async_process_component_config(  # noqa: C901
             integration_docs,
             config_exceptions,
         )
-        results = await asyncio.gather(
-            *(
-                create_eager_task(async_load_and_validate(p_integration))
-                for p_integration in platforms_integrations_to_load
-            )
-        )
         platforms.extend(
             validated_config
-            for validated_config in results
+            for validated_config in await asyncio.gather(
+                *(
+                    create_eager_task(async_load_and_validate(p_integration))
+                    for p_integration in platforms_integrations_to_load
+                )
+            )
             if validated_config is not None
         )
 
