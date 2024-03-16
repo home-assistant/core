@@ -22,7 +22,6 @@ from pysnmp.hlapi.asyncio import (
 )
 from pysnmp.proto.rfc1902 import Opaque
 from pysnmp.proto.rfc1905 import NoSuchObject
-
 import voluptuous as vol
 
 from homeassistant.components.sensor import CONF_STATE_CLASS, PLATFORM_SCHEMA
