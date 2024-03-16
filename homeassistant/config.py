@@ -1439,6 +1439,7 @@ async def _async_load_and_validate_platform(
     p_name: str,
     p_integration: Integration,
     p_config: ConfigType,
+    p_validated: ConfigType,
 ) -> ConfigType | None:
     """Load a platform and validate its config."""
     try:
@@ -1456,7 +1457,7 @@ async def _async_load_and_validate_platform(
 
     # Validate platform specific schema
     if not hasattr(platform, "PLATFORM_SCHEMA"):
-        return p_config
+        return p_validated
 
     try:
         return platform.PLATFORM_SCHEMA(p_config)  # type: ignore[no-any-return]
@@ -1596,7 +1597,7 @@ async def async_process_component_config(  # noqa: C901
     if component_platform_schema is None:
         return IntegrationConfigInfo(config, [])
 
-    platforms_to_load: list[tuple[str, str, Integration, ConfigType]] = []
+    platforms_to_load: list[tuple[str, str, Integration, ConfigType, ConfigType]] = []
     platforms: list[ConfigType] = []
     for p_name, p_config in config_per_platform(config, domain):
         # Validate component specific platform schema
@@ -1644,7 +1645,9 @@ async def async_process_component_config(  # noqa: C901
             config_exceptions.append(exc_info)
             continue
 
-        platforms_to_load.append((platform_path, p_name, p_integration, p_config))
+        platforms_to_load.append(
+            (platform_path, p_name, p_integration, p_config, p_validated)
+        )
 
     #
     # Since bootstrap will order base platform (ie sensor) integrations
@@ -1674,9 +1677,10 @@ async def async_process_component_config(  # noqa: C901
                         p_name,
                         p_integration,
                         p_config,
+                        p_validated,
                     )
                 )
-                for platform_path, p_name, p_integration, p_config in platforms_to_load
+                for platform_path, p_name, p_integration, p_config, p_validated in platforms_to_load
             )
         )
         platforms.extend(
