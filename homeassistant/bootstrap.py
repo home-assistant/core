@@ -832,7 +832,12 @@ async def _async_resolve_domains_to_setup(
     # time it gets to it.
     hass.async_create_background_task(
         translation.async_load_integrations(
-            hass, {*BASE_PLATFORMS, *platform_integrations, *domains_to_setup}
+            hass,
+            {
+                *BASE_PLATFORMS,
+                *chain.from_iterable(platform_integrations.values()),
+                *domains_to_setup,
+            },
         ),
         "load translations",
         eager_start=True,
