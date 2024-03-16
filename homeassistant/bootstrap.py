@@ -677,6 +677,7 @@ async def async_setup_multi_components(
     # Avoid creating tasks for domains that were setup in a previous stage
     domains_not_yet_setup = domains - hass.config.components
     # Sort the domains to setup so base platforms are setup first
+    # as everything has to wait for them at some point
     setup_order = sorted(domains_not_yet_setup, key=SETUP_ORDER_SORT_KEY, reverse=True)
     _LOGGER.debug("Setup order: %s", setup_order)
     futures = {
@@ -685,8 +686,6 @@ async def async_setup_multi_components(
             f"setup component {domain}",
             eager_start=True,
         )
-        # The sort will put base platforms at the end of the list
-        # so we reverse it to start them first
         for domain in setup_order
     }
     results = await asyncio.gather(*futures.values(), return_exceptions=True)
