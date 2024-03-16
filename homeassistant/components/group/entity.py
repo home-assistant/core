@@ -25,13 +25,7 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
 )
 
-from .const import (
-    ATTR_AUTO,
-    ATTR_ORDER,
-    DOMAIN,  # noqa: F401
-    GROUP_ORDER,
-    REG_KEY,
-)
+from .const import ATTR_AUTO, ATTR_ORDER, DOMAIN, GROUP_ORDER, REG_KEY
 from .registry import GroupIntegrationRegistry
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"

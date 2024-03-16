@@ -508,7 +508,7 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> dict:
         await merge_packages_config(hass, config, core_config.get(CONF_PACKAGES, {}))
     except vol.Invalid as exc:
         suffix = ""
-        if annotation := find_annotation(config, [CONF_CORE, CONF_PACKAGES] + exc.path):
+        if annotation := find_annotation(config, [CONF_CORE, CONF_PACKAGES, *exc.path]):
             suffix = f" at {_relpath(hass, annotation[0])}, line {annotation[1]}"
         _LOGGER.error(
             "Invalid package configuration '%s'%s: %s", CONF_PACKAGES, suffix, exc
@@ -1497,7 +1497,7 @@ async def _async_load_and_validate_platform_integration(
     return None
 
 
-async def async_process_component_config(  # noqa: C901
+async def async_process_component_config(
     hass: HomeAssistant,
     config: ConfigType,
     integration: Integration,
