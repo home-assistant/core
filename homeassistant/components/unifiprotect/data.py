@@ -59,6 +59,63 @@ def async_last_update_was_successful(hass: HomeAssistant, entry: ConfigEntry) ->
     )
 
 
+@callback
+def _async_debug_log_event(event: Event) -> None:
+    if not _LOGGER.isEnabledFor(logging.DEBUG):
+        return
+
+    _LOGGER.debug("event WS msg: %s", event.dict())
+    if event.type not in SMART_EVENTS:
+        return
+
+    camera = event.camera
+    if camera is None:
+        return
+
+    if event.end is None:
+        _LOGGER.debug(
+            "%s (%s): New smart detection started for %s (%s)",
+            camera.name,
+            camera.mac,
+            event.smart_detect_types,
+            event.id,
+        )
+        smart_settings = camera.smart_detect_settings
+        for smart_type in event.smart_detect_types:
+            is_audio = event.type == EventType.SMART_AUDIO_DETECT
+            if is_audio:
+                if smart_type.audio_type is None:
+                    return
+
+                is_enabled = (
+                    smart_settings.audio_types is not None
+                    and smart_type.audio_type in smart_settings.audio_types
+                )
+                last_event = camera.get_last_smart_audio_detect_event(
+                    smart_type.audio_type
+                )
+            else:
+                is_enabled = smart_type in smart_settings.object_types
+                last_event = camera.get_last_smart_detect_event(smart_type)
+
+            _LOGGER.debug(
+                "Event info (%s):\n    is_smart_detected: %s\n    is_recording_enabled: %s\n    is_enabled: %s\n    event: %s",
+                smart_type,
+                camera.is_smart_detected,
+                camera.is_recording_enabled,
+                is_enabled,
+                last_event,
+            )
+    else:
+        _LOGGER.debug(
+            "%s (%s): Smart detection ended for %s (%s)",
+            camera.name,
+            camera.mac,
+            event.smart_detect_types,
+            event.id,
+        )
+
+
 class ProtectData:
     """Coordinate updates."""
 
@@ -230,51 +287,7 @@ class ProtectData:
 
         # trigger updates for camera that the event references
         elif isinstance(obj, Event):  # type: ignore[unreachable]
-            if _LOGGER.isEnabledFor(logging.DEBUG):
-                _LOGGER.debug("event WS msg: %s", obj.dict())
-            if obj.type in SMART_EVENTS:
-                if obj.camera is not None:
-                    if obj.end is None:
-                        _LOGGER.debug(
-                            "%s (%s): New smart detection started for %s (%s)",
-                            obj.camera.name,
-                            obj.camera.mac,
-                            obj.smart_detect_types,
-                            obj.id,
-                        )
-                        for smart_type in obj.smart_detect_types:
-                            smart_settings = obj.camera.smart_detect_settings
-                            is_audio = obj.type == EventType.SMART_AUDIO_DETECT
-                            if is_audio:
-                                is_enabled = (
-                                    smart_settings.audio_types is not None
-                                    and smart_type in smart_settings.audio_types
-                                )
-                                event = obj.camera.get_last_smart_audio_detect_event(
-                                    smart_type
-                                )
-                            else:
-                                is_enabled = smart_type in smart_settings.object_types
-                                event = obj.camera.get_last_smart_detect_event(
-                                    smart_type
-                                )
-
-                            _LOGGER.debug(
-                                "Event info:\n    is_smart_detected: %s\n    is_recording_enabled: %s\n    is_enabled: %s\n    event: %s",
-                                obj.camera.is_smart_detected,
-                                obj.camera.is_recording_enabled,
-                                is_enabled,
-                                event,
-                            )
-                    else:
-                        _LOGGER.debug(
-                            "%s (%s): Smart detection ended for %s (%s)",
-                            obj.camera.name,
-                            obj.camera.mac,
-                            obj.smart_detect_types,
-                            obj.id,
-                        )
-
+            _async_debug_log_event(obj)
             if obj.type is EventType.DEVICE_ADOPTED:
                 if obj.metadata is not None and obj.metadata.device_id is not None:
                     device = self.api.bootstrap.get_device_from_id(
