@@ -91,7 +91,7 @@ class NoEntitySpecifiedError(HomeAssistantError):
 class TemplateError(HomeAssistantError):
     """Error during template rendering."""
 
-    def __init__(self, exception: Exception | str | None = None) -> None:
+    def __init__(self, exception: Exception | str) -> None:
         """Init the error."""
         if isinstance(exception, str):
             super().__init__(exception)
