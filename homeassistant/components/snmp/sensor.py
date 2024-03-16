@@ -133,7 +133,7 @@ async def async_setup_platform(
         try:
             target = Udp6TransportTarget((host, port), timeout=DEFAULT_TIMEOUT)
         except PySnmpError as err:
-            _LOGGER.error("Invalid SNMP host: %s", err)
+            _LOGGER.error(f"Invalid SNMP host: {err}")
             return
 
     if version == "3":
@@ -243,12 +243,10 @@ class SnmpData:
         errindication, errstatus, errindex, restable = get_result
 
         if errindication and not self._accept_errors:
-            _LOGGER.error("SNMP error: %s", errindication)
+            _LOGGER.error(f"SNMP error: {errindication}")
         elif errstatus and not self._accept_errors:
             _LOGGER.error(
-                "SNMP error: %s at %s",
-                errstatus.prettyPrint(),
-                errindex and restable[-1][int(errindex) - 1] or "?",
+                f"SNMP error: {errstatus.prettyPrint()} at {restable[-1][int(errindex) - 1] if errindex else '?'}"
             )
         elif (errindication or errstatus) and self._accept_errors:
             self.value = self._default_value

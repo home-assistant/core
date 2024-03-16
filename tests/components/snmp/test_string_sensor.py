@@ -1,6 +1,6 @@
 """SNMP sensor tests."""
 
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -8,13 +8,12 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
+from pysnmp.proto.rfc1902 import OctetString
 
 @pytest.fixture(autouse=True)
 def hlapi_mock():
     """Mock out 3rd party API."""
-    mock_data = MagicMock()
-    mock_data.prettyPrint = Mock(return_value="13.5")
+    mock_data = OctetString("98F")
     with patch(
         "homeassistant.components.snmp.sensor.getCmd",
         return_value=(None, None, None, [[mock_data]]),
@@ -37,7 +36,7 @@ async def test_basic_config(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.snmp")
-    assert state.state == "13.5"
+    assert state.state == "98F"
     assert state.attributes == {"friendly_name": "SNMP"}
 
 
@@ -53,11 +52,8 @@ async def test_entity_config(hass: HomeAssistant) -> None:
             # Entity configuration
             "icon": "{{'mdi:one_two_three'}}",
             "picture": "{{'blabla.png'}}",
-            "device_class": "temperature",
             "name": "{{'SNMP' + ' ' + 'Sensor'}}",
-            "state_class": "measurement",
             "unique_id": "very_unique",
-            "unit_of_measurement": "°C",
         },
     }
 
@@ -68,12 +64,9 @@ async def test_entity_config(hass: HomeAssistant) -> None:
     assert entity_registry.async_get("sensor.snmp_sensor").unique_id == "very_unique"
 
     state = hass.states.get("sensor.snmp_sensor")
-    assert state.state == "13.5"
+    assert state.state == "98F"
     assert state.attributes == {
-        "device_class": "temperature",
         "entity_picture": "blabla.png",
         "friendly_name": "SNMP Sensor",
         "icon": "mdi:one_two_three",
-        "state_class": "measurement",
-        "unit_of_measurement": "°C",
     }
