@@ -11,9 +11,10 @@ from .const import (
     LIVE_STATUS,
     METADATA,
     PRODUCTS,
-    RESPONSE_OK,
     VEHICLE_DATA,
     WAKE_UP_ONLINE,
+    COMMAND_OK,
+    SITE_INFO,
 )
 
 
@@ -24,6 +25,7 @@ def mock_metadata():
         "homeassistant.components.teslemetry.Teslemetry.metadata", return_value=METADATA
     ) as mock_products:
         yield mock_products
+)
 
 
 @pytest.fixture(autouse=True)
@@ -70,7 +72,7 @@ def mock_request():
     """Mock Tesla Fleet API Vehicle Specific class."""
     with patch(
         "homeassistant.components.teslemetry.Teslemetry._request",
-        return_value=RESPONSE_OK,
+        return_value=COMMAND_OK,
     ) as mock_request:
         yield mock_request
 
@@ -81,5 +83,15 @@ def mock_live_status():
     with patch(
         "homeassistant.components.teslemetry.EnergySpecific.live_status",
         side_effect=lambda: deepcopy(LIVE_STATUS),
+    ) as mock_live_status:
+        yield mock_live_status
+
+
+@pytest.fixture(autouse=True)
+def mock_site_info():
+    """Mock Teslemetry Energy Specific site_info method."""
+    with patch(
+        "homeassistant.components.teslemetry.EnergySpecific.site_info",
+        side_effect=lambda: deepcopy(SITE_INFO),
     ) as mock_live_status:
         yield mock_live_status
