@@ -1,4 +1,5 @@
 """Sensor platform that for Ping integration."""
+
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -101,7 +102,9 @@ class PingSensor(PingEntity, SensorEntity):
         coordinator: PingUpdateCoordinator,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, f"{config_entry.entry_id}-{description.key}")
+        super().__init__(
+            config_entry, coordinator, f"{config_entry.entry_id}-{description.key}"
+        )
 
         self.entity_description = description
 

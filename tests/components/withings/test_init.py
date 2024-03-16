@@ -1,4 +1,5 @@
 """Tests for the Withings component."""
+
 from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -411,7 +412,7 @@ async def test_setup_with_cloud(
 
         for config_entry in hass.config_entries.async_entries("withings"):
             await hass.config_entries.async_remove(config_entry.entry_id)
-            fake_delete_cloudhook.call_count == 2
+            assert fake_delete_cloudhook.call_count == 2
 
         await hass.async_block_till_done()
         assert not hass.config_entries.async_entries(DOMAIN)

@@ -1,4 +1,5 @@
 """Helpers for mobile_app."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -140,16 +141,6 @@ def error_response(
         status=status,
         headers=headers,
     )
-
-
-def supports_encryption() -> bool:
-    """Test if we support encryption."""
-    try:
-        import nacl  # noqa: F401 pylint: disable=import-outside-toplevel
-
-        return True
-    except OSError:
-        return False
 
 
 def safe_registration(registration: dict) -> dict:

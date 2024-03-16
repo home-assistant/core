@@ -1,4 +1,5 @@
 """Helpers for config validation using voluptuous."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Hashable
@@ -28,6 +29,7 @@ from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
+    ATTR_FLOOR_ID,
     CONF_ABOVE,
     CONF_ALIAS,
     CONF_ATTRIBUTE,
@@ -623,7 +625,7 @@ def string(value: Any) -> str:
     # This is expected to be the most common case, so check it first.
     if (
         type(value) is str  # noqa: E721
-        or type(value) is NodeStrClass  # noqa: E721
+        or type(value) is NodeStrClass
         or isinstance(value, str)
     ):
         return value
@@ -904,7 +906,7 @@ def _deprecated_or_removed(
             try:
                 near = (
                     f"near {config.__config_file__}"  # type: ignore[attr-defined]
-                    f":{config.__line__} "
+                    f":{config.__line__} "  # type: ignore[attr-defined]
                 )
             except AttributeError:
                 near = ""
@@ -1215,6 +1217,9 @@ ENTITY_SERVICE_FIELDS = {
     vol.Optional(ATTR_AREA_ID): vol.Any(
         ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
     ),
+    vol.Optional(ATTR_FLOOR_ID): vol.Any(
+        ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
+    ),
 }
 
 TARGET_SERVICE_FIELDS = {
@@ -1232,12 +1237,13 @@ TARGET_SERVICE_FIELDS = {
     vol.Optional(ATTR_AREA_ID): vol.Any(
         ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
     ),
+    vol.Optional(ATTR_FLOOR_ID): vol.Any(
+        ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
+    ),
 }
 
 
-def make_entity_service_schema(
-    schema: dict, *, extra: int = vol.PREVENT_EXTRA
-) -> vol.Schema:
+def _make_entity_service_schema(schema: dict, extra: int) -> vol.Schema:
     """Create an entity service schema."""
     return vol.Schema(
         vol.All(
@@ -1253,6 +1259,21 @@ def make_entity_service_schema(
             has_at_least_one_key(*ENTITY_SERVICE_FIELDS),
         )
     )
+
+
+BASE_ENTITY_SCHEMA = _make_entity_service_schema({}, vol.PREVENT_EXTRA)
+
+
+def make_entity_service_schema(
+    schema: dict, *, extra: int = vol.PREVENT_EXTRA
+) -> vol.Schema:
+    """Create an entity service schema."""
+    if not schema and extra == vol.PREVENT_EXTRA:
+        # If the schema is empty and we don't allow extra keys, we can return
+        # the base schema and avoid compiling a new schema which is the case
+        # for ~50% of services.
+        return BASE_ENTITY_SCHEMA
+    return _make_entity_service_schema(schema, extra)
 
 
 SCRIPT_CONVERSATION_RESPONSE_SCHEMA = vol.Any(template, None)

@@ -1,4 +1,5 @@
 """Test ZHA WebSocket API."""
+
 from __future__ import annotations
 
 from binascii import unhexlify
@@ -703,7 +704,13 @@ async def test_ws_permit_with_qr_code(
         {ID: 14, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}", **params}
     )
 
-    msg = await zha_client.receive_json()
+    msg_type = None
+    while msg_type != const.TYPE_RESULT:
+        # There will be logging events coming over the websocket
+        # as well so we want to ignore those
+        msg = await zha_client.receive_json()
+        msg_type = msg["type"]
+
     assert msg["id"] == 14
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
@@ -760,7 +767,13 @@ async def test_ws_permit_ha12(
         {ID: 14, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}", **params}
     )
 
-    msg = await zha_client.receive_json()
+    msg_type = None
+    while msg_type != const.TYPE_RESULT:
+        # There will be logging events coming over the websocket
+        # as well so we want to ignore those
+        msg = await zha_client.receive_json()
+        msg_type = msg["type"]
+
     assert msg["id"] == 14
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
@@ -925,7 +938,7 @@ async def test_websocket_change_channel(
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
 
-    change_channel_mock.mock_calls == [call(ANY, new_channel)]
+    change_channel_mock.assert_has_calls([call(ANY, new_channel)])
 
 
 @pytest.mark.parametrize(

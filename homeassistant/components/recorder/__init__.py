@@ -1,4 +1,5 @@
 """Support for recording details."""
+
 from __future__ import annotations
 
 import logging

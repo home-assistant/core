@@ -1,4 +1,5 @@
 """The tests for the utility_meter sensor platform."""
+
 from datetime import timedelta
 
 from freezegun import freeze_time

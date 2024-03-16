@@ -1,4 +1,5 @@
 """Support for Homekit climate devices."""
+
 from __future__ import annotations
 
 import logging
@@ -200,7 +201,8 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
 
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
-        return super().get_characteristic_types() + [
+        return [
+            *super().get_characteristic_types(),
             CharacteristicsTypes.ACTIVE,
             CharacteristicsTypes.CURRENT_HEATER_COOLER_STATE,
             CharacteristicsTypes.TARGET_HEATER_COOLER_STATE,
@@ -478,7 +480,8 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
 
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
-        return super().get_characteristic_types() + [
+        return [
+            *super().get_characteristic_types(),
             CharacteristicsTypes.HEATING_COOLING_CURRENT,
             CharacteristicsTypes.HEATING_COOLING_TARGET,
             CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD,

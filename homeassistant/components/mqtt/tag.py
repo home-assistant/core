@@ -1,8 +1,10 @@
 """Provides tag scanning for MQTT."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 import functools
+import logging
 
 import voluptuous as vol
 
@@ -15,7 +17,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
-from .const import ATTR_DISCOVERY_HASH, CONF_QOS, CONF_TOPIC, TEMPLATE_ERRORS
+from .const import ATTR_DISCOVERY_HASH, CONF_QOS, CONF_TOPIC
 from .discovery import MQTTDiscoveryPayload
 from .mixins import (
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
@@ -25,9 +27,16 @@ from .mixins import (
     send_discovery_done,
     update_device,
 )
-from .models import MqttValueTemplate, ReceiveMessage, ReceivePayloadType
+from .models import (
+    MqttValueTemplate,
+    MqttValueTemplateException,
+    ReceiveMessage,
+    ReceivePayloadType,
+)
 from .subscription import EntitySubscription
 from .util import get_mqtt_data, valid_subscribe_topic
+
+_LOGGER = logging.getLogger(__name__)
 
 LOG_NAME = "Tag"
 
@@ -138,7 +147,8 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdate):
         async def tag_scanned(msg: ReceiveMessage) -> None:
             try:
                 tag_id = str(self._value_template(msg.payload, "")).strip()
-            except TEMPLATE_ERRORS:
+            except MqttValueTemplateException as exc:
+                _LOGGER.warning(exc)
                 return
             if not tag_id:  # No output from template, ignore
                 return

@@ -1,4 +1,5 @@
 """Test blueprint importing."""
+
 import json
 from pathlib import Path
 

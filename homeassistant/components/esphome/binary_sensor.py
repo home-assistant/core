@@ -1,4 +1,5 @@
 """Support for ESPHome binary sensors."""
+
 from __future__ import annotations
 
 from aioesphomeapi import BinarySensorInfo, BinarySensorState, EntityInfo

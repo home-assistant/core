@@ -1,4 +1,5 @@
 """Publish simple item state changes via MQTT."""
+
 import json
 import logging
 

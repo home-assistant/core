@@ -1,4 +1,5 @@
 """Common methods used across tests for Rituals Perfume Genie."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch

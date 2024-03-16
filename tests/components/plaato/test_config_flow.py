@@ -1,4 +1,5 @@
 """Test the Plaato config flow."""
+
 from unittest.mock import patch
 
 from pyplaato.models.device import PlaatoDeviceType

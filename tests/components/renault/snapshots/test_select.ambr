@@ -101,7 +101,7 @@
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:calendar-remove',
+      'original_icon': None,
       'original_name': 'Charge mode',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -117,7 +117,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Charge mode',
-        'icon': 'mdi:calendar-remove',
         'options': list([
           'always',
           'always_charging',
@@ -194,7 +193,7 @@
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:calendar-remove',
+      'original_icon': None,
       'original_name': 'Charge mode',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -210,7 +209,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Charge mode',
-        'icon': 'mdi:calendar-remove',
         'options': list([
           'always',
           'always_charging',
@@ -287,7 +285,7 @@
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:calendar-remove',
+      'original_icon': None,
       'original_name': 'Charge mode',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -303,7 +301,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Charge mode',
-        'icon': 'mdi:calendar-remove',
         'options': list([
           'always',
           'always_charging',
@@ -420,7 +417,7 @@
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:calendar-remove',
+      'original_icon': None,
       'original_name': 'Charge mode',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -436,7 +433,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Charge mode',
-        'icon': 'mdi:calendar-remove',
         'options': list([
           'always',
           'always_charging',
@@ -513,7 +509,7 @@
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:calendar-remove',
+      'original_icon': None,
       'original_name': 'Charge mode',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -529,7 +525,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Charge mode',
-        'icon': 'mdi:calendar-remove',
         'options': list([
           'always',
           'always_charging',
@@ -606,7 +601,7 @@
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:calendar-clock',
+      'original_icon': None,
       'original_name': 'Charge mode',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -622,7 +617,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Charge mode',
-        'icon': 'mdi:calendar-clock',
         'options': list([
           'always',
           'always_charging',

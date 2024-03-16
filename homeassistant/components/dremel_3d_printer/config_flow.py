@@ -1,4 +1,5 @@
 """Config flow for Dremel 3D Printer (3D20, 3D40, 3D45)."""
+
 from __future__ import annotations
 
 from json.decoder import JSONDecodeError

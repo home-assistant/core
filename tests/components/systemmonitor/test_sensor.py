@@ -60,7 +60,6 @@ async def test_sensor(
         "state_class": "measurement",
         "unit_of_measurement": "MiB",
         "device_class": "data_size",
-        "icon": "mdi:memory",
         "friendly_name": "System Monitor Memory free",
     }
 
@@ -473,10 +472,7 @@ async def test_exception_handling_disk_sensor(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (
-        "Error fetching System Monitor Disk / coordinator data: OS error for /"
-        in caplog.text
-    )
+    assert "OS error for /" in caplog.text
 
     disk_sensor = hass.states.get("sensor.system_monitor_disk_free")
     assert disk_sensor is not None
@@ -489,10 +485,7 @@ async def test_exception_handling_disk_sensor(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (
-        "Error fetching System Monitor Disk / coordinator data: OS error for /"
-        in caplog.text
-    )
+    assert "OS error for /" in caplog.text
 
     disk_sensor = hass.states.get("sensor.system_monitor_disk_free")
     assert disk_sensor is not None

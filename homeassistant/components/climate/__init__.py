@@ -1,4 +1,5 @@
 """Provides functionality to interact with climate devices."""
+
 from __future__ import annotations
 
 import asyncio
@@ -41,6 +42,7 @@ from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.unit_conversion import TemperatureConverter
 
+from . import group as group_pre_import  # noqa: F401
 from .const import (  # noqa: F401
     _DEPRECATED_HVAC_MODE_AUTO,
     _DEPRECATED_HVAC_MODE_COOL,
@@ -645,8 +647,6 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         elif mode_type == "fan":
             translation_key = "not_valid_fan_mode"
         raise ServiceValidationError(
-            f"The {mode_type}_mode {mode} is not a valid {mode_type}_mode:"
-            f" {modes_str}",
             translation_domain=DOMAIN,
             translation_key=translation_key,
             translation_placeholders={

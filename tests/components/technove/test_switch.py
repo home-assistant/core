@@ -1,4 +1,5 @@
 """Tests for the TechnoVE switch platform."""
+
 from unittest.mock import MagicMock
 
 import pytest

@@ -1,4 +1,5 @@
 """Test the legacy tts setup."""
+
 from __future__ import annotations
 
 import pytest

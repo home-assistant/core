@@ -1,4 +1,5 @@
 """Validation utility functions for ecobee services."""
+
 from datetime import datetime
 
 import voluptuous as vol

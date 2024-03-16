@@ -1,4 +1,5 @@
 """Component providing select entities for UniFi Protect."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -45,6 +46,7 @@ INFRARED_MODES = [
     {"id": IRLEDMode.AUTO.value, "name": "Auto"},
     {"id": IRLEDMode.ON.value, "name": "Always Enable"},
     {"id": IRLEDMode.AUTO_NO_LED.value, "name": "Auto (Filter Only, no LED's)"},
+    {"id": IRLEDMode.CUSTOM.value, "name": "Auto (Custom Lux)"},
     {"id": IRLEDMode.OFF.value, "name": "Always Disable"},
 ]
 
@@ -129,8 +131,10 @@ def _get_doorbell_options(api: ProtectApiClient) -> list[dict[str, Any]]:
 
 def _get_paired_camera_options(api: ProtectApiClient) -> list[dict[str, Any]]:
     options = [{"id": TYPE_EMPTY_VALUE, "name": "Not Paired"}]
-    for camera in api.bootstrap.cameras.values():
-        options.append({"id": camera.id, "name": camera.display_name or camera.type})
+    options.extend(
+        {"id": camera.id, "name": camera.display_name or camera.type}
+        for camera in api.bootstrap.cameras.values()
+    )
 
     return options
 

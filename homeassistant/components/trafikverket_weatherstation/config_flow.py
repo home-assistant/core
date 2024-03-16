@@ -1,4 +1,5 @@
 """Adds config flow for Trafikverket Weather integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping

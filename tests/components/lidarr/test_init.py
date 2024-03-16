@@ -1,4 +1,5 @@
 """Test Lidarr integration."""
+
 from homeassistant.components.lidarr.const import DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant

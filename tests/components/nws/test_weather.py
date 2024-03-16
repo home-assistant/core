@@ -1,4 +1,5 @@
 """Tests for the NWS weather component."""
+
 from datetime import timedelta
 from unittest.mock import patch
 

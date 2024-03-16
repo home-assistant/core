@@ -1,4 +1,5 @@
 """Config flow for HERE Travel Time integration."""
+
 from __future__ import annotations
 
 import logging

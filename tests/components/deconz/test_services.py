@@ -1,4 +1,5 @@
 """deCONZ service tests."""
+
 from unittest.mock import patch
 
 import pytest
