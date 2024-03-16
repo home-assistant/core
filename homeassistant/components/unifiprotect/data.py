@@ -242,6 +242,30 @@ class ProtectData:
                             obj.smart_detect_types,
                             obj.id,
                         )
+                        for smart_type in obj.smart_detect_types:
+                            smart_settings = obj.camera.smart_detect_settings
+                            is_audio = obj.type == EventType.SMART_AUDIO_DETECT
+                            if is_audio:
+                                is_enabled = (
+                                    smart_settings.audio_types is not None
+                                    and smart_type in smart_settings.audio_types
+                                )
+                                event = obj.camera.get_last_smart_audio_detect_event(
+                                    smart_type
+                                )
+                            else:
+                                is_enabled = smart_type in smart_settings.object_types
+                                event = obj.camera.get_last_smart_detect_event(
+                                    smart_type
+                                )
+
+                            _LOGGER.debug(
+                                "Event info:\n    is_smart_detected: %s\n    is_recording_enabled: %s\n    is_enabled: %s\n    event: %s",
+                                obj.camera.is_smart_detected,
+                                obj.camera.is_recording_enabled,
+                                is_enabled,
+                                event,
+                            )
                     else:
                         _LOGGER.debug(
                             "%s (%s): Smart detection ended for %s (%s)",
