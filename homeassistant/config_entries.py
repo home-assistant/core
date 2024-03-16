@@ -1591,7 +1591,9 @@ class ConfigEntries:
             old_conf_migrate_func=_old_conf_migrator,
         )
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, self._async_shutdown, run_immediately=True
+        )
 
         if config is None:
             self._entries = ConfigEntryItems(self.hass)
