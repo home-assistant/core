@@ -1136,7 +1136,7 @@ class HomeAssistant:
             if (
                 not handle.cancelled()
                 and (args := handle._args)  # pylint: disable=protected-access
-                and type(job := args[0]) is HassJob  # noqa: E721
+                and type(job := args[0]) is HassJob
                 and job.cancel_on_shutdown
             ):
                 handle.cancel()
@@ -1595,7 +1595,7 @@ class State:
         # State only creates and expects a ReadOnlyDict so
         # there is no need to check for subclassing with
         # isinstance here so we can use the faster type check.
-        if type(attributes) is not ReadOnlyDict:  # noqa: E721
+        if type(attributes) is not ReadOnlyDict:
             self.attributes = ReadOnlyDict(attributes or {})
         else:
             self.attributes = attributes
