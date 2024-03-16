@@ -103,16 +103,12 @@ class AxisLight(AxisEventEntity, LightEntity):
     async def async_added_to_hass(self) -> None:
         """Subscribe lights events."""
         await super().async_added_to_hass()
-
-        current_intensity = (
+        self.current_intensity = (
             await self.hub.api.vapix.light_control.get_current_intensity(self._light_id)
         )
-        self.current_intensity = current_intensity
-
-        max_intensity = await self.hub.api.vapix.light_control.get_valid_intensity(
-            self._light_id
-        )
-        self.max_intensity = max_intensity.high
+        self.max_intensity = (
+            await self.hub.api.vapix.light_control.get_valid_intensity(self._light_id)
+        ).high
 
     @callback
     def async_event_callback(self, event: Event) -> None:
@@ -143,7 +139,6 @@ class AxisLight(AxisEventEntity, LightEntity):
 
     async def async_update(self) -> None:
         """Update brightness."""
-        current_intensity = (
+        self.current_intensity = (
             await self.hub.api.vapix.light_control.get_current_intensity(self._light_id)
         )
-        self.current_intensity = current_intensity
