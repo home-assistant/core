@@ -733,7 +733,7 @@ async def _async_resolve_domains_to_setup(
     # that are defined under base platforms right away since we do not require
     # the manifest to list them as dependencies and we want to avoid the lock
     # contention when multiple integrations try to load them at once
-    additional_manifests = {
+    additional_manifests_to_load = {
         *BASE_PLATFORMS,
         *chain.from_iterable(platform_integrations.values()),
     }
@@ -742,13 +742,13 @@ async def _async_resolve_domains_to_setup(
     # that will have to be loaded and start right-away
     integration_cache: dict[str, loader.Integration] = {}
     to_resolve: set[str] = domains_to_setup
-    while to_resolve or additional_manifests:
+    while to_resolve or additional_manifests_to_load:
         old_to_resolve: set[str] = to_resolve
         to_resolve = set()
 
-        if additional_manifests:
-            to_get = {*old_to_resolve, *additional_manifests}
-            additional_manifests.clear()
+        if additional_manifests_to_load:
+            to_get = {*old_to_resolve, *additional_manifests_to_load}
+            additional_manifests_to_load.clear()
         else:
             to_get = old_to_resolve
 
@@ -766,7 +766,7 @@ async def _async_resolve_domains_to_setup(
             # loop to try to group as many as manifest loads in a single
             # call to avoid the creating one-off executor jobs later in
             # the setup process
-            additional_manifests.update(
+            additional_manifests_to_load.update(
                 dep
                 for dep in chain(itg.dependencies, itg.after_dependencies)
                 if dep not in integration_cache
