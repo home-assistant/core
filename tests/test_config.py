@@ -2399,11 +2399,7 @@ async def test_loading_platforms_gathers(hass: HomeAssistant) -> None:
     light_integration = await loader.async_get_integration(hass, "light")
     sensor_integration = await loader.async_get_integration(hass, "sensor")
 
-    order = []
-
-    async def _async_get_component(self, domain: str) -> MockModule:
-        order.append(domain)
-        return MockModule()
+    order: list[tuple[str, str]] = []
 
     async def _async_get_platform(self, platform: str) -> MockModule:
         order.append((self.domain, platform))
@@ -2412,8 +2408,6 @@ async def test_loading_platforms_gathers(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.loader.Integration.async_get_platform",
         _async_get_platform,
-        "homeassistant.loader.Integration.async_get_component",
-        _async_get_component,
     ):
         light_task = hass.async_create_task(
             config.async_process_component_config(
