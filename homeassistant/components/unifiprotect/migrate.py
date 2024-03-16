@@ -80,11 +80,7 @@ def create_repair_if_used(
         scripts = refs["scripts"]
         if automations or scripts:
             items = sorted(
-                set(
-                    chain.from_iterable(
-                        list(automations.values()) + list(scripts.values())
-                    )
-                )
+                set(chain.from_iterable(chain(automations.values(), scripts.values())))
             )
             ir.async_create_issue(
                 hass,
