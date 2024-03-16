@@ -721,7 +721,7 @@ async def _async_resolve_domains_to_setup(
     #
     # `template` has to be loaded to validate the config for sensor
     # so we want to start loading `sensor` as soon as we know
-    # it will be needed. The more platforms under sensor: the longer
+    # it will be needed. The more platforms under `sensor:`, the longer
     # it will take to finish setup for `sensor` because each of these
     # platforms has to be imported before we can validate the config.
     #
