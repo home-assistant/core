@@ -1,5 +1,6 @@
 """Test config utils."""
 
+import asyncio
 from collections import OrderedDict
 import contextlib
 import copy
@@ -15,6 +16,7 @@ import voluptuous as vol
 from voluptuous import Invalid, MultipleInvalid
 import yaml
 
+from homeassistant import config, loader
 import homeassistant.config as config_util
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -2370,3 +2372,84 @@ def test_extract_platform_integrations() -> None:
     ) == {"zone": {"hello 2", "hello"}, "notzone": {"nothello"}}
     assert config_util.extract_platform_integrations(config, {"zoneq"}) == {}
     assert config_util.extract_platform_integrations(config, {"zoneempty"}) == {}
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_loading_platforms_gathers(hass: HomeAssistant) -> None:
+    """Test loading platform integrations gathers."""
+
+    mock_integration(
+        hass,
+        MockModule(
+            domain="platform_int",
+        ),
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="platform_int2",
+        ),
+    )
+
+    mock_platform(hass, "platform_int.light", MockPlatform())
+    mock_platform(hass, "platform_int2.light", MockPlatform())
+    mock_platform(hass, "platform_int.sensor", MockPlatform())
+    mock_platform(hass, "platform_int2.sensor", MockPlatform())
+
+    light_integration = await loader.async_get_integration(hass, "light")
+    sensor_integration = await loader.async_get_integration(hass, "sensor")
+
+    order = []
+
+    async def _async_get_component(self, domain: str) -> MockModule:
+        order.append(domain)
+        return MockModule()
+
+    async def _async_get_platform(self, platform: str) -> MockModule:
+        order.append((self.domain, platform))
+        return MockModule()
+
+    with patch(
+        "homeassistant.loader.Integration.async_get_platform",
+        _async_get_platform,
+        "homeassistant.loader.Integration.async_get_component",
+        _async_get_component,
+    ):
+        light_task = hass.async_create_task(
+            config.async_process_component_config(
+                hass,
+                {
+                    "light": [
+                        {"platform": "platform_int"},
+                        {"platform": "platform_int2"},
+                    ]
+                },
+                light_integration,
+            ),
+            eager_start=True,
+        )
+        sensor_task = hass.async_create_task(
+            config.async_process_component_config(
+                hass,
+                {
+                    "sensor": [
+                        {"platform": "platform_int"},
+                        {"platform": "platform_int2"},
+                    ]
+                },
+                sensor_integration,
+            ),
+            eager_start=True,
+        )
+
+        await asyncio.gather(light_task, sensor_task)
+
+    # Should be called in order so that
+    # all the light platforms are imported
+    # before the sensor platforms
+    assert order == [
+        ("platform_int", "light"),
+        ("platform_int2", "light"),
+        ("platform_int", "sensor"),
+        ("platform_int2", "sensor"),
+    ]
