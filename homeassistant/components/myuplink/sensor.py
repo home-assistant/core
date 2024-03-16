@@ -27,7 +27,7 @@ from homeassistant.helpers.typing import StateType
 from . import MyUplinkDataCoordinator
 from .const import DOMAIN
 from .entity import MyUplinkEntity
-from .helpers import find_matching_platform
+from .helpers import find_matching_platform, skip_entity
 
 DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     "°C": SensorEntityDescription(
@@ -155,6 +155,8 @@ async def async_setup_entry(
     # Setup device point sensors
     for device_id, point_data in coordinator.data.points.items():
         for point_id, device_point in point_data.items():
+            if skip_entity(device_point.category, device_point):
+                continue
             if find_matching_platform(device_point) == Platform.SENSOR:
                 description = get_description(device_point)
                 entity_class = MyUplinkDevicePointSensor

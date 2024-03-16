@@ -34,7 +34,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType
 
@@ -56,7 +55,6 @@ from .const import (
     CONF_BYTESIZE,
     CONF_MSG_WAIT,
     CONF_PARITY,
-    CONF_RETRIES,
     CONF_STOPBITS,
     DEFAULT_HUB,
     MODBUS_DOMAIN as DOMAIN,
@@ -133,6 +131,8 @@ async def async_modbus_setup(
 
     if config[DOMAIN]:
         config[DOMAIN] = check_config(hass, config[DOMAIN])
+        if not config[DOMAIN]:
+            return False
     if DOMAIN in hass.data and config[DOMAIN] == []:
         hubs = hass.data[DOMAIN]
         for name in hubs:
@@ -257,26 +257,6 @@ class ModbusHub:
     def __init__(self, hass: HomeAssistant, client_config: dict[str, Any]) -> None:
         """Initialize the Modbus hub."""
 
-        if CONF_RETRIES in client_config:
-            async_create_issue(
-                hass,
-                DOMAIN,
-                "deprecated_retries",
-                breaks_in_ha_version="2024.7.0",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_retries",
-                translation_placeholders={
-                    "config_key": "retries",
-                    "integration": DOMAIN,
-                    "url": "https://www.home-assistant.io/integrations/modbus",
-                },
-            )
-            _LOGGER.warning(
-                "`retries`: is deprecated and will be removed in version 2024.7"
-            )
-        else:
-            client_config[CONF_RETRIES] = 3
         # generic configuration
         self._client: AsyncModbusSerialClient | AsyncModbusTcpClient | AsyncModbusUdpClient | None = None
         self._async_cancel_listener: Callable[[], None] | None = None

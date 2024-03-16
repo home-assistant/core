@@ -52,6 +52,13 @@ from .components import (
     webhook as webhook_pre_import,  # noqa: F401
     websocket_api as websocket_api_pre_import,  # noqa: F401
 )
+
+# Ensure group config_flow is imported so it does not need the import
+# executor since config_flows are preloaded when the component is loaded.
+# Even though group is pre-imported above we would have still had to wait
+# for the config flow to be imported when the import executor is the most
+# busy.
+from .components.group import config_flow as group_config_flow  # noqa: F401
 from .components.sensor import recorder as sensor_recorder  # noqa: F401
 from .const import (
     FORMAT_DATETIME,
@@ -63,6 +70,7 @@ from .const import (
 from .exceptions import HomeAssistantError
 from .helpers import (
     area_registry,
+    category_registry,
     config_validation as cv,
     device_registry,
     entity,
@@ -343,6 +351,7 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
     template.async_setup(hass)
     await asyncio.gather(
         create_eager_task(area_registry.async_load(hass)),
+        create_eager_task(category_registry.async_load(hass)),
         create_eager_task(device_registry.async_load(hass)),
         create_eager_task(entity_registry.async_load(hass)),
         create_eager_task(floor_registry.async_load(hass)),

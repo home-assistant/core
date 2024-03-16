@@ -1540,8 +1540,8 @@ class State:
     entity_id: the entity that is represented.
     state: the state of the entity
     attributes: extra information on entity and state
-    last_changed: last time the state was changed, not the attributes.
-    last_updated: last time this object was updated.
+    last_changed: last time the state was changed.
+    last_updated: last time the state or attributes were changed.
     context: Context in which it was created
     domain: Domain of this state.
     object_id: Object id of this state.
