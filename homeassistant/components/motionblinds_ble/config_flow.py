@@ -12,10 +12,14 @@ import voluptuous as vol
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
     SelectSelector,
@@ -53,7 +57,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the bluetooth discovery step."""
         _LOGGER.debug(
             "Discovered Motionblinds bluetooth device: %s", discovery_info.as_dict()
@@ -71,7 +75,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -96,13 +100,18 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 )
             return await self.async_step_confirm()
 
+        scanner_count = bluetooth.async_scanner_count(self.hass, connectable=True)
+        if scanner_count == 0:
+            _LOGGER.error("No bluetooth adapter found")
+            return self.async_abort(reason=EXCEPTION_MAP[NoBluetoothAdapter])
+
         return self.async_show_form(
             step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
         )
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm a single device."""
         if user_input is not None:
             self._blind_type = user_input[CONF_BLIND_TYPE]
@@ -127,7 +136,8 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_BLIND_TYPE): SelectSelector(
                         SelectSelectorConfig(
                             options=[
-                                blind_type.value for blind_type in MotionBlindType
+                                blind_type.name.lower()
+                                for blind_type in MotionBlindType
                             ],
                             translation_key=CONF_BLIND_TYPE,
                             mode=SelectSelectorMode.DROPDOWN,
@@ -144,8 +154,8 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Invalid MAC code: %s", mac_code.upper())
             raise InvalidMACCode()
 
-        count = bluetooth.async_scanner_count(self.hass, connectable=True)
-        if count == 0:
+        scanner_count = bluetooth.async_scanner_count(self.hass, connectable=True)
+        if scanner_count == 0:
             _LOGGER.error("No bluetooth adapter found")
             raise NoBluetoothAdapter()
 
@@ -196,7 +206,7 @@ class OptionsFlowHandler(OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

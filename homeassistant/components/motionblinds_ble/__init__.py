@@ -58,13 +58,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _LOGGER.debug("(%s) Setting up device", entry.data[CONF_MAC_CODE])
 
-    hass.data.setdefault(DOMAIN, {})
-
     # Create MotionDevice with BLEDevice
     ble_device = async_ble_device_from_address(hass, entry.data[CONF_ADDRESS])
     device = MotionDevice(
         ble_device if ble_device is not None else entry.data[CONF_ADDRESS],
-        blind_type=MotionBlindType(entry.data[CONF_BLIND_TYPE]),
+        blind_type=MotionBlindType[entry.data[CONF_BLIND_TYPE].upper()],
     )
 
     # Register Home Assistant functions to use in the library
@@ -93,11 +91,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         BluetoothScanningMode.ACTIVE,
     )
 
-    hass.data[DOMAIN][entry.entry_id] = device
-
     # Register OptionsFlow update listener and apply options
     entry.async_on_unload(entry.add_update_listener(update_listener))
     await apply_options(hass, entry)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = device
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

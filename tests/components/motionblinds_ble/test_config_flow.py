@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+from motionblindsble.const import MotionBlindType
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
 from homeassistant.components.motionblinds_ble import const
@@ -12,7 +14,7 @@ from .conftest import TEST_ADDRESS, TEST_MAC, TEST_NAME
 
 from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
-TEST_BLIND_TYPE = const.MotionBlindType.ROLLER
+TEST_BLIND_TYPE = MotionBlindType.ROLLER.name.lower()
 
 BLIND_SERVICE_INFO = BluetoothServiceInfoBleak(
     name=TEST_NAME,
@@ -59,10 +61,10 @@ async def test_config_flow_manual_success(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {const.CONF_BLIND_TYPE: const.MotionBlindType.ROLLER},
+        {const.CONF_BLIND_TYPE: MotionBlindType.ROLLER.name.lower()},
     )
     assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"MotionBlind {TEST_MAC.upper()}"
+    assert result["title"] == f"Motionblind {TEST_MAC.upper()}"
     assert result["data"] == {
         CONF_ADDRESS: TEST_ADDRESS,
         const.CONF_LOCAL_NAME: TEST_NAME,
@@ -105,10 +107,10 @@ async def test_config_flow_manual_error_invalid_mac(
     # Finish flow
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {const.CONF_BLIND_TYPE: const.MotionBlindType.ROLLER},
+        {const.CONF_BLIND_TYPE: MotionBlindType.ROLLER.name.lower()},
     )
     assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"MotionBlind {TEST_MAC.upper()}"
+    assert result["title"] == f"Motionblind {TEST_MAC.upper()}"
     assert result["data"] == {
         CONF_ADDRESS: TEST_ADDRESS,
         const.CONF_LOCAL_NAME: TEST_NAME,
@@ -123,7 +125,18 @@ async def test_config_flow_manual_error_no_bluetooth_adapter(
 ) -> None:
     """No Bluetooth adapter error flow manually initialized by the user."""
 
-    # Initialize
+    # Try step_user with zero Bluetooth adapters
+    with patch(
+        "homeassistant.components.motionblinds_ble.config_flow.bluetooth.async_scanner_count",
+        return_value=0,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == const.ERROR_NO_BLUETOOTH_ADAPTER
+
+    # Try discovery with zero Bluetooth adapters
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -131,7 +144,6 @@ async def test_config_flow_manual_error_no_bluetooth_adapter(
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    # Try with zero Bluetooth adapters
     with patch(
         "homeassistant.components.motionblinds_ble.config_flow.bluetooth.async_scanner_count",
         return_value=0,
@@ -179,10 +191,10 @@ async def test_config_flow_manual_error_could_not_find_motor(
     # Finish flow
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {const.CONF_BLIND_TYPE: const.MotionBlindType.ROLLER},
+        {const.CONF_BLIND_TYPE: MotionBlindType.ROLLER.name.lower()},
     )
     assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"MotionBlind {TEST_MAC.upper()}"
+    assert result["title"] == f"Motionblind {TEST_MAC.upper()}"
     assert result["data"] == {
         CONF_ADDRESS: TEST_ADDRESS,
         const.CONF_LOCAL_NAME: TEST_NAME,
@@ -230,11 +242,11 @@ async def test_config_flow_bluetooth_success(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {const.CONF_BLIND_TYPE: const.MotionBlindType.ROLLER},
+        {const.CONF_BLIND_TYPE: MotionBlindType.ROLLER.name.lower()},
     )
 
     assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"MotionBlind {TEST_MAC.upper()}"
+    assert result["title"] == f"Motionblind {TEST_MAC.upper()}"
     assert result["data"] == {
         CONF_ADDRESS: TEST_ADDRESS,
         const.CONF_LOCAL_NAME: TEST_NAME,
