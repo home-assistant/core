@@ -8,7 +8,7 @@ from motionblindsble.device import MotionDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import CONF_BLIND_TYPE, CONF_MAC_CODE, MANUFACTURER
 
@@ -28,6 +28,7 @@ class MotionblindsBLEEntity(Entity):
         self,
         device: MotionDevice,
         entry: ConfigEntry,
+        entity_description: EntityDescription,
         unique_id_suffix: str | None = None,
     ) -> None:
         """Initialize the entity."""
@@ -38,6 +39,7 @@ class MotionblindsBLEEntity(Entity):
         )
         self._device = device
         self.config_entry = entry
+        self.entity_description = entity_description
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, entry.data[CONF_ADDRESS])},
             manufacturer=MANUFACTURER,
