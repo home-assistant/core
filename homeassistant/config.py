@@ -1434,7 +1434,7 @@ def extract_domain_configs(config: ConfigType, domain: str) -> Sequence[str]:
     return domain_configs
 
 
-async def async_process_component_config(  # noqa: C901
+async def async_process_component_config(
     hass: HomeAssistant,
     config: ConfigType,
     integration: Integration,

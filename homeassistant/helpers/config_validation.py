@@ -625,7 +625,7 @@ def string(value: Any) -> str:
     # This is expected to be the most common case, so check it first.
     if (
         type(value) is str  # noqa: E721
-        or type(value) is NodeStrClass  # noqa: E721
+        or type(value) is NodeStrClass
         or isinstance(value, str)
     ):
         return value

@@ -33,7 +33,7 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
-from .const import DOMAIN, IMAGE_TIMEOUT  # noqa: F401
+from .const import DOMAIN, IMAGE_TIMEOUT
 
 if TYPE_CHECKING:
     from functools import cached_property
