@@ -606,17 +606,12 @@ select = [
     "PERF", # Perflint
     "PGH004", # Use specific rule codes when using noqa
     "PIE800", # Unnecessary dictionary unpacking operators
+    "PL", # pylint
     "PIE804", # Unnecessary dict kwargs
     "PIE790", # Unnecessary pass statement
     "PIE794", # Class field is defined multiple times
     "PIE807", # Prefer list/dict over useless lambda
     "PIE810", # Call startswith/endswith once with a tuple
-    "PLC0414", # Useless import alias. Import alias does not rename original package.
-    "PLC", # pylint
-    "PLE", # pylint
-    "PLR", # pylint
-    "PLW", # pylint
-    "Q000", # Double quotes found but single quotes preferred
     "RUF005", # Consider iterable unpacking instead of concatenation
     "RUF006", # Store a reference to the return value of asyncio.create_task
     # "RUF100", # Unused `noqa` directive; temporarily every now and then to clean them up
@@ -683,10 +678,7 @@ ignore = [
     "E117",
     "D206",
     "D300",
-    "Q000",
-    "Q001",
-    "Q002",
-    "Q003",
+    "Q",
     "COM812",
     "COM819",
     "ISC001",
