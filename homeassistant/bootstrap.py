@@ -678,6 +678,7 @@ async def async_setup_multi_components(
     domains_not_yet_setup = domains - hass.config.components
     # Sort the domains to setup so base platforms are setup first
     setup_order = sorted(domains_not_yet_setup, key=SETUP_ORDER_SORT_KEY, reverse=True)
+    _LOGGER.debug("Setup order: %s", setup_order)
     futures = {
         domain: hass.async_create_task(
             async_setup_component(hass, domain, config),
