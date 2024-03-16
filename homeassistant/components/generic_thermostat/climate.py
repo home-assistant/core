@@ -236,7 +236,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         )
         if len(presets):
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
-            self._attr_preset_modes = [PRESET_NONE] + list(presets.keys())
+            self._attr_preset_modes = [PRESET_NONE, *presets.keys()]
         else:
             self._attr_preset_modes = [PRESET_NONE]
         self._presets = presets

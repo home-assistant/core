@@ -25,7 +25,7 @@ async def anova_api(
     async def get_devices_side_effect():
         if not api_mock.existing_devices:
             api_mock.existing_devices = []
-        api_mock.existing_devices = api_mock.existing_devices + [new_device]
+        api_mock.existing_devices = [*api_mock.existing_devices, new_device]
         return [new_device]
 
     api_mock.authenticate.side_effect = authenticate_side_effect
