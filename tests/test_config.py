@@ -1969,7 +1969,7 @@ async def test_core_store_historic_currency(
     assert issue
     assert issue.translation_placeholders == {"currency": "LTT"}
 
-    await hass.config.async_update(**{"currency": "EUR"})
+    await hass.config.async_update(currency="EUR")
     issue = issue_registry.async_get_issue("homeassistant", issue_id)
     assert not issue
 
@@ -2025,7 +2025,7 @@ async def test_core_store_no_country(
     issue = issue_registry.async_get_issue("homeassistant", issue_id)
     assert issue
 
-    await hass.config.async_update(**{"country": "SE"})
+    await hass.config.async_update(country="SE")
     issue = issue_registry.async_get_issue("homeassistant", issue_id)
     assert not issue
 
