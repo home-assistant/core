@@ -17,17 +17,6 @@ MODELS = {
 }
 
 
-class TeslemetryTimestamp(StrEnum):
-    """Teslemetry Timestamps."""
-
-    VEHICLE_STATE = "vehicle_state_timestamp"
-    DRIVE_STATE = "drive_state_timestamp"
-    CHARGE_STATE = "charge_state_timestamp"
-    CLIMATE_STATE = "climate_state_timestamp"
-    GUI_SETTINGS = "gui_settings_timestamp"
-    VEHICLE_CONFIG = "vehicle_config_timestamp"
-
-
 class TeslemetryState(StrEnum):
     """Teslemetry Vehicle States."""
 
