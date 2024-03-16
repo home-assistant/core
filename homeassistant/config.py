@@ -1435,11 +1435,10 @@ def extract_domain_configs(config: ConfigType, domain: str) -> Sequence[str]:
 class _PlatformIntegration:
     """Class to hold platform integration information."""
 
-    path: str
-    name: str
-    integration: Integration
-    config: ConfigType
-    validated_config: ConfigType
+    path: str  # filter.sensor
+    integration: Integration  # <Integration filter>
+    config: ConfigType  # un-validated config
+    validated_config: ConfigType  # component validated config
 
 
 async def _async_load_and_validate_platform(
@@ -1462,10 +1461,12 @@ async def _async_load_and_validate_platform(
         config_exceptions.append(exc_info)
         return None
 
-    # Validate platform specific schema
+    # If the platform does not have a config schema
+    # the top level component validated schema will be used
     if not hasattr(platform, "PLATFORM_SCHEMA"):
         return p_integration.validated_config
 
+    # Validate platform specific schema
     try:
         return platform.PLATFORM_SCHEMA(p_integration.config)  # type: ignore[no-any-return]
     except vol.Invalid as exc:
@@ -1481,7 +1482,7 @@ async def _async_load_and_validate_platform(
         exc_info = ConfigExceptionInfo(
             exc,
             ConfigErrorTranslationKey.PLATFORM_SCHEMA_VALIDATOR_ERR,
-            p_integration.name,
+            p_integration.integration.domain,
             p_integration.config,
             p_integration.integration.documentation,
         )
@@ -1653,9 +1654,7 @@ async def async_process_component_config(  # noqa: C901
             continue
 
         platforms_to_load.append(
-            _PlatformIntegration(
-                platform_path, p_name, p_integration, p_config, p_validated
-            )
+            _PlatformIntegration(platform_path, p_integration, p_config, p_validated)
         )
 
     #
