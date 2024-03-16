@@ -666,7 +666,7 @@ connect-box==0.2.8
 construct==2.10.68
 
 # homeassistant.components.utility_meter
-croniter==1.0.6
+croniter==2.0.2
 
 # homeassistant.components.crownstone
 crownstone-cloud==1.4.9
@@ -894,6 +894,9 @@ freesms==0.2.0
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
 fritzconnection[qr]==1.13.2
+
+# homeassistant.components.fyta
+fyta_cli==0.3.3
 
 # homeassistant.components.google_translate
 gTTS==2.2.4
@@ -1407,7 +1410,6 @@ numato-gpio==0.12.0
 
 # homeassistant.components.compensation
 # homeassistant.components.iqvia
-# homeassistant.components.opencv
 # homeassistant.components.stream
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
@@ -1449,9 +1451,6 @@ open-meteo==0.3.1
 # homeassistant.components.openai_conversation
 openai==1.3.8
 
-# homeassistant.components.opencv
-# opencv-python-headless==4.6.0.66
-
 # homeassistant.components.openerz
 openerz-api==0.3.0
 
@@ -1474,7 +1473,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.4.0
+opower==0.4.1
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -2084,7 +2083,7 @@ pyrecswitch==1.0.2
 pyrepetierng==0.1.0
 
 # homeassistant.components.risco
-pyrisco==0.5.8
+pyrisco==0.5.10
 
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.6
