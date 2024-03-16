@@ -22,29 +22,11 @@ class RovaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        self._errors: dict[str, str] = {}
-
-    def _check_area(self, zip_code: str, number: str, suffix: str) -> bool:
-        """Check if rova collects garbage at this location."""
-        api = rova.Rova(zip_code, number, suffix)
-
-        try:
-            response = api.is_rova_area()
-            if not response:
-                self._errors = {"base": "invalid_rova_area"}
-                return False
-        except (ConnectTimeout, HTTPError):
-            self._errors = {"base": "could_not_connect"}
-            return False
-        return True
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Step when user initializes a integration."""
-        self._errors = {}
+        errors: dict[str, str] = {}
 
         if self._async_current_entries():
             return self.async_abort(reason="already_configured")
@@ -54,9 +36,12 @@ class RovaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             number = user_input[CONF_HOUSE_NUMBER]
             suffix = user_input[CONF_HOUSE_NUMBER_SUFFIX]
 
-            is_rova_area = await self.hass.async_add_executor_job(
-                self._check_area, zip_code, number, suffix
-            )
+            api = rova.Rova(zip_code, number, suffix)
+
+            try:
+                is_rova_area = await self.hass.async_add_executor_job(api.is_rova_area)
+            except (ConnectTimeout, HTTPError):
+                errors = {"base": "could_not_connect"}
 
             if is_rova_area:
                 return self.async_create_entry(
@@ -67,6 +52,8 @@ class RovaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_HOUSE_NUMBER_SUFFIX: suffix,
                     },
                 )
+
+            errors = {"base": "invalid_rova_area"}
 
         else:
             user_input = {
@@ -89,5 +76,5 @@ class RovaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ): str,
                 }
             ),
-            errors=self._errors,
+            errors=errors,
         )
