@@ -610,6 +610,7 @@ select = [
     "PLR", # pylint
     "PLW", # pylint
     "Q000", # Double quotes found but single quotes preferred
+    "RUF005", # Consider iterable unpacking instead of concatenation
     "RUF006", # Store a reference to the return value of asyncio.create_task
     "S102", # Use of exec detected
     "S103", # bad-file-permissions
