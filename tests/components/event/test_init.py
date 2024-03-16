@@ -49,7 +49,7 @@ async def test_event() -> None:
 
     # No event types defined, should raise
     with pytest.raises(AttributeError):
-        event.event_types
+        _ = event.event_types
 
     # Test retrieving data from entity description
     event.entity_description = EventEntityDescription(

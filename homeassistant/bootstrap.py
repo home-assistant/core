@@ -335,7 +335,7 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
         asyncio event loop. By primeing the cache of uname we can
         avoid the blocking call in the event loop.
         """
-        platform.uname().processor  # pylint: disable=expression-not-assigned
+        _ = platform.uname().processor
 
     # Load the registries and cache the result of platform.uname().processor
     translation.async_setup(hass)
