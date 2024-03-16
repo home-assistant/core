@@ -717,15 +717,14 @@ async def _async_resolve_domains_to_setup(
     # sensor:
     #   - platform: template
     #
-    # template has to be loaded to validate the config for sensor
-    # so we want to start loading the base platforms as soon as possible
+    # `template` has to be loaded to validate the config for sensor
+    # so we want to start loading `sensor` as soon as we know
+    # it will be needed
     domains_to_setup.update(platform_integrations)
 
-    # Load base platforms right away since
-    # we do not require the manifest to list
-    # them as dependencies and we want
-    # to avoid the lock contention when multiple
-    # integrations try to resolve them at once
+    # Load manifests base platforms right away since we do not require the
+    # manifest to list them as dependencies and we want to avoid the lock
+    # contention when multiple integrations try to load them at once
     additional = {*BASE_PLATFORMS, *chain.from_iterable(platform_integrations.values())}
 
     # Resolve all dependencies so we know all integrations
