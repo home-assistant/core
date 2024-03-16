@@ -231,7 +231,7 @@ disable = [
     "duplicate-value", # F
     "eval-used", # S307
     "exec-used", # S102
-    # "expression-not-assigned", # B018, ruff catches new occurrences, needs more work
+    "expression-not-assigned", # B018
     "f-string-without-interpolation", # F541
     "forgotten-debug-statement", # T100
     "format-string-without-interpolation", # F
