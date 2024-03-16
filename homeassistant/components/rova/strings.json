@@ -1,0 +1,21 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Provide your address details",
+        "data": {
+          "zip_code": "Your zip code",
+          "house_number": "Your house number",
+          "house_number_suffix": "A suffix for your house number"
+        }
+      }
+    },
+    "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_rova_area": "Rova does not collect at this address"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}

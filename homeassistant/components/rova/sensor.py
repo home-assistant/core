@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from typing import Any
 
 from requests.exceptions import ConnectTimeout, HTTPError
 from rova.rova import Rova
@@ -14,42 +15,51 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 from homeassistant.util.dt import get_time_zone
 
-from .const import CONF_HOUSE_NUMBER, CONF_HOUSE_NUMBER_SUFFIX, CONF_ZIP_CODE, LOGGER
+from .const import (
+    CONF_HOUSE_NUMBER,
+    CONF_HOUSE_NUMBER_SUFFIX,
+    CONF_ZIP_CODE,
+    DEFAULT_NAME,
+    DOMAIN,
+    LOGGER,
+)
 
 UPDATE_DELAY = timedelta(hours=12)
 SCAN_INTERVAL = timedelta(hours=12)
 
-
-SENSOR_TYPES: dict[str, SensorEntityDescription] = {
-    "bio": SensorEntityDescription(
+SENSOR_TYPES = (
+    SensorEntityDescription(
         key="gft",
         name="bio",
         icon="mdi:recycle",
     ),
-    "paper": SensorEntityDescription(
+    SensorEntityDescription(
         key="papier",
         name="paper",
         icon="mdi:recycle",
+        entity_registry_enabled_default=False,
     ),
-    "plastic": SensorEntityDescription(
+    SensorEntityDescription(
         key="pmd",
         name="plastic",
         icon="mdi:recycle",
+        entity_registry_enabled_default=False,
     ),
-    "residual": SensorEntityDescription(
+    SensorEntityDescription(
         key="restafval",
         name="residual",
         icon="mdi:recycle",
+        entity_registry_enabled_default=False,
     ),
-}
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -64,39 +74,24 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Create the Rova data service and sensors."""
-
-    zip_code = config[CONF_ZIP_CODE]
-    house_number = config[CONF_HOUSE_NUMBER]
-    house_number_suffix = config[CONF_HOUSE_NUMBER_SUFFIX]
-    platform_name = config[CONF_NAME]
-
-    # Create new Rova object to  retrieve data
-    api = Rova(zip_code, house_number, house_number_suffix)
-
-    try:
-        if not api.is_rova_area():
-            LOGGER.error("ROVA does not collect garbage in this area")
-            return
-    except (ConnectTimeout, HTTPError):
-        LOGGER.error("Could not retrieve details from ROVA API")
-        return
+    """Add Rova entry."""
+    # get api from hass
+    api: Rova = hass.data[DOMAIN][entry.entry_id]
 
     # Create rova data service which will retrieve and update the data.
     data_service = RovaData(api)
 
     # Create a new sensor for each garbage type.
     entities = [
-        RovaSensor(platform_name, SENSOR_TYPES[sensor_key], data_service)
-        for sensor_key in config[CONF_MONITORED_CONDITIONS]
+        RovaSensor(DEFAULT_NAME, description, data_service)
+        for description in SENSOR_TYPES
     ]
-    add_entities(entities, True)
+    async_add_entities(entities, True)
 
 
 class RovaSensor(SensorEntity):
@@ -110,6 +105,7 @@ class RovaSensor(SensorEntity):
         self.data_service = data_service
 
         self._attr_name = f"{platform_name}_{description.name}"
+        self._attr_unique_id = f"{platform_name}_{description.name}"
         self._attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def update(self) -> None:
@@ -123,10 +119,10 @@ class RovaSensor(SensorEntity):
 class RovaData:
     """Get and update the latest data from the Rova API."""
 
-    def __init__(self, api):
+    def __init__(self, api) -> None:
         """Initialize the data object."""
         self.api = api
-        self.data = {}
+        self.data: list[dict[str, Any]] = []
 
     @Throttle(UPDATE_DELAY)
     def update(self):
@@ -138,7 +134,7 @@ class RovaData:
             LOGGER.error("Could not retrieve data, retry again later")
             return
 
-        self.data = {}
+        self.data = []
 
         for item in items:
             date = datetime.strptime(item["Date"], "%Y-%m-%dT%H:%M:%S").replace(
