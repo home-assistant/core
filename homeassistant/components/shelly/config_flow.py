@@ -43,6 +43,7 @@ from .utils import (
     get_block_device_sleep_period,
     get_coap_context,
     get_device_entry_gen,
+    get_http_port,
     get_info_auth,
     get_info_gen,
     get_model_name,
@@ -204,8 +205,6 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except DeviceConnectionError:
                 errors["base"] = "cannot_connect"
-            except CustomPortNotSupported:
-                errors["base"] = "custom_port_not_supported"
             except Exception:  # pylint: disable=broad-except
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -355,7 +354,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         assert self.entry is not None
         host = self.entry.data[CONF_HOST]
-        port = self.entry.data.get(CONF_PORT, DEFAULT_HTTP_PORT)
+        port = get_http_port(self.entry.data)
 
         if user_input is not None:
             try:

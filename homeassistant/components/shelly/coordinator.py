@@ -10,17 +10,12 @@ from typing import Any, Generic, TypeVar, cast
 
 from aioshelly.ble import async_ensure_ble_enabled, async_stop_scanner
 from aioshelly.block_device import BlockDevice, BlockUpdateType
-from aioshelly.const import DEFAULT_HTTP_PORT, MODEL_NAMES, MODEL_VALVE
+from aioshelly.const import MODEL_NAMES, MODEL_VALVE
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 from aioshelly.rpc_device import RpcDevice, RpcUpdateType
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import (
-    ATTR_DEVICE_ID,
-    CONF_HOST,
-    CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP,
-)
+from homeassistant.const import ATTR_DEVICE_ID, CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.debounce import Debouncer
@@ -64,6 +59,7 @@ from .const import (
 )
 from .utils import (
     get_device_entry_gen,
+    get_http_port,
     get_rpc_device_wakeup_period,
     update_device_fw_info,
 )
@@ -145,7 +141,7 @@ class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
             model=MODEL_NAMES.get(self.model, self.model),
             sw_version=self.sw_version,
             hw_version=f"gen{get_device_entry_gen(self.entry)} ({self.model})",
-            configuration_url=f"http://{self.entry.data[CONF_HOST]}:{self.entry.data.get(CONF_PORT, DEFAULT_HTTP_PORT)}",
+            configuration_url=f"http://{self.entry.data[CONF_HOST]}:{get_http_port(self.entry.data)}",
         )
         self.device_id = device_entry.id
 
