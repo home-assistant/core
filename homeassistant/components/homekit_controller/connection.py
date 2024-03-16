@@ -145,6 +145,7 @@ class HKDevice:
             cooldown=DEBOUNCE_COOLDOWN,
             immediate=False,
             function=self.async_update,
+            background=True,
         )
 
         self._availability_callbacks: set[CALLBACK_TYPE] = set()
@@ -197,13 +198,19 @@ class HKDevice:
             self._subscribe_timer()
             self._subscribe_timer = None
 
-    async def _async_subscribe(self, _now: datetime) -> None:
+    @callback
+    def _async_subscribe(self, _now: datetime) -> None:
         """Subscribe to characteristics."""
         self._subscribe_timer = None
         if self._pending_subscribes:
             subscribes = self._pending_subscribes.copy()
             self._pending_subscribes.clear()
-            await self.pairing.subscribe(subscribes)
+            self.config_entry.async_create_task(
+                self.hass,
+                self.pairing.subscribe(subscribes),
+                name=f"hkc subscriptions {self.unique_id}",
+                eager_start=True,
+            )
 
     def remove_watchable_characteristics(
         self, characteristics: list[tuple[int, int]]
@@ -279,6 +286,7 @@ class HKDevice:
                 self.hass.bus.async_listen(
                     EVENT_HOMEASSISTANT_STARTED,
                     self._async_populate_ble_accessory_state,
+                    run_immediately=True,
                 )
             )
         else:

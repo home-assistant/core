@@ -1613,7 +1613,7 @@ async def test_light_service_call_color_conversion(
     _, data = entity5.last_call("turn_on")
     assert data == {"brightness": 255, "rgbw_color": (0, 0, 0, 255)}
     _, data = entity6.last_call("turn_on")
-    # The midpoint of the the white channels is warm, compensated by adding green + blue
+    # The midpoint of the white channels is warm, compensated by adding green + blue
     assert data == {"brightness": 255, "rgbww_color": (0, 76, 141, 255, 255)}
     _, data = entity7.last_call("turn_on")
     assert data == {"brightness": 255, "color_temp_kelvin": 5962, "color_temp": 167}
@@ -1686,7 +1686,7 @@ async def test_light_service_call_color_conversion(
     _, data = entity5.last_call("turn_on")
     assert data == {"brightness": 128, "rgbw_color": (0, 0, 0, 255)}
     _, data = entity6.last_call("turn_on")
-    # The midpoint the the white channels is warm, compensated by adding green + blue
+    # The midpoint the white channels is warm, compensated by adding green + blue
     assert data == {"brightness": 128, "rgbww_color": (0, 76, 141, 255, 255)}
     _, data = entity7.last_call("turn_on")
     assert data == {"brightness": 128, "color_temp_kelvin": 5962, "color_temp": 167}
@@ -1759,7 +1759,7 @@ async def test_light_service_call_color_conversion(
     _, data = entity5.last_call("turn_on")
     assert data == {"brightness": 128, "rgbw_color": (1, 0, 0, 255)}
     _, data = entity6.last_call("turn_on")
-    # The midpoint the the white channels is warm, compensated by adding green + blue
+    # The midpoint the white channels is warm, compensated by adding green + blue
     assert data == {"brightness": 128, "rgbww_color": (0, 75, 140, 255, 255)}
     _, data = entity7.last_call("turn_on")
     assert data == {"brightness": 128, "color_temp_kelvin": 5962, "color_temp": 167}
@@ -1796,7 +1796,7 @@ async def test_light_service_call_color_conversion(
     _, data = entity5.last_call("turn_on")
     assert data == {"brightness": 128, "rgbw_color": (128, 0, 0, 64)}
     _, data = entity6.last_call("turn_on")
-    # The midpoint the the white channels is warm, compensated by adding green + blue
+    # The midpoint the white channels is warm, compensated by adding green + blue
     assert data == {"brightness": 128, "rgbww_color": (128, 0, 30, 117, 117)}
     _, data = entity7.last_call("turn_on")
     assert data == {"brightness": 128, "color_temp_kelvin": 3011, "color_temp": 332}
@@ -1833,7 +1833,7 @@ async def test_light_service_call_color_conversion(
     _, data = entity5.last_call("turn_on")
     assert data == {"brightness": 128, "rgbw_color": (255, 255, 255, 255)}
     _, data = entity6.last_call("turn_on")
-    # The midpoint the the white channels is warm, compensated by adding green + blue
+    # The midpoint the white channels is warm, compensated by adding green + blue
     assert data == {"brightness": 128, "rgbww_color": (0, 76, 141, 255, 255)}
     _, data = entity7.last_call("turn_on")
     assert data == {"brightness": 128, "color_temp_kelvin": 5962, "color_temp": 167}
@@ -1904,7 +1904,7 @@ async def test_light_service_call_color_conversion(
     _, data = entity4.last_call("turn_on")
     assert data == {"brightness": 128, "hs_color": (27.429, 27.451)}
     _, data = entity5.last_call("turn_on")
-    # The midpoint the the white channels is warm, compensated by decreasing green + blue
+    # The midpoint the white channels is warm, compensated by decreasing green + blue
     assert data == {"brightness": 128, "rgbw_color": (96, 44, 0, 255)}
     _, data = entity6.last_call("turn_on")
     assert data == {"brightness": 128, "rgbww_color": (255, 255, 255, 255, 255)}

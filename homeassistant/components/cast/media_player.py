@@ -242,7 +242,8 @@ class CastDevice:
             self._status_listener.invalidate()
             self._status_listener = None
 
-    async def _async_cast_discovered(self, discover: ChromecastInfo) -> None:
+    @callback
+    def _async_cast_discovered(self, discover: ChromecastInfo) -> None:
         """Handle discovery of new Chromecast."""
         if self._cast_info.uuid != discover.uuid:
             # Discovered is not our device.
