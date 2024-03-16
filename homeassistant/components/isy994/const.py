@@ -214,7 +214,7 @@ NODE_FILTERS: dict[Platform, dict[str, list[str]]] = {
             "7.13.",
             TYPE_CATEGORY_SAFETY,
         ],  # Does a startswith() match; include the dot
-        FILTER_ZWAVE_CAT: (["104", "112", "138", *list(map(str, range(148, 180)))]),
+        FILTER_ZWAVE_CAT: (["104", "112", "138", *map(str, range(148, 180))]),
     },
     Platform.SENSOR: {
         # This is just a more-readable way of including MOST uoms between 1-100
@@ -222,12 +222,12 @@ NODE_FILTERS: dict[Platform, dict[str, list[str]]] = {
         FILTER_UOM: (
             [
                 "1",
-                *list(map(str, range(3, 11))),
-                *list(map(str, range(12, 51))),
-                *list(map(str, range(52, 66))),
-                *list(map(str, range(69, 78))),
+                *map(str, range(3, 11)),
+                *map(str, range(12, 51)),
+                *map(str, range(52, 66)),
+                *map(str, range(69, 78)),
                 "79",
-                *list(map(str, range(82, 97))),
+                *map(str, range(82, 97)),
             ]
         ),
         FILTER_STATES: [],
@@ -240,7 +240,7 @@ NODE_FILTERS: dict[Platform, dict[str, list[str]]] = {
             "RemoteLinc2_ADV",
         ],
         FILTER_INSTEON_TYPE: ["0.16.", "0.17.", "0.18.", "9.0.", "9.7."],
-        FILTER_ZWAVE_CAT: (["118", "143", *list(map(str, range(180, 186)))]),
+        FILTER_ZWAVE_CAT: (["118", "143", *map(str, range(180, 186))]),
     },
     Platform.LOCK: {
         FILTER_UOM: ["11"],
