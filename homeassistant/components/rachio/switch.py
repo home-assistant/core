@@ -32,30 +32,24 @@ from .const import (
     DEFAULT_MANUAL_RUN_MINS,
     DEFAULT_NAME,
     DOMAIN as DOMAIN_RACHIO,
-    KEY_BATTERY_STATUS,
     KEY_CONNECTED,
     KEY_CURRENT_STATUS,
     KEY_CUSTOM_CROP,
     KEY_CUSTOM_SHADE,
     KEY_CUSTOM_SLOPE,
-    KEY_DEFAULT_RUNTIME,
     KEY_DETECT_FLOW,
     KEY_DEVICE_ID,
     KEY_DURATION,
     KEY_DURATION_MINUTES,
-    KEY_DURATION_SECONDS,
     KEY_ENABLED,
-    KEY_FLOW_DETECTED,
     KEY_ID,
     KEY_IMAGE_URL,
     KEY_NAME,
     KEY_ON,
     KEY_RAIN_DELAY,
     KEY_RAIN_DELAY_END,
-    KEY_REASON,
     KEY_REPORTED_STATE,
     KEY_SCHEDULE_ID,
-    KEY_START_TIME,
     KEY_STATE,
     KEY_SUBTYPE,
     KEY_SUMMARY,
@@ -95,20 +89,14 @@ from .webhooks import (
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_BATTERY_STATUS = "Battery Status"
-ATTR_BUTTON_PRESS_RUNTIME = "Button Press Runtime"
 ATTR_DURATION = "duration"
-ATTR_FLOW_DETECTED = "Flow Detected"
-ATTR_FLOW_DETECTION_ENABLED = "Flow Detection Enabled"
 ATTR_PERCENT = "percent"
 ATTR_SCHEDULE_SUMMARY = "Summary"
 ATTR_SCHEDULE_ENABLED = "Enabled"
 ATTR_SCHEDULE_DURATION = "Duration"
 ATTR_SCHEDULE_TYPE = "Type"
 ATTR_SORT_ORDER = "sortOrder"
-ATTR_STARTED_WATERING = "Started Watering"
 ATTR_WATERING_DURATION = "Watering Duration seconds"
-ATTR_WATERING_REASON = "Watering Reason"
 ATTR_ZONE_NUMBER = "Zone number"
 ATTR_ZONE_SHADE = "Shade"
 ATTR_ZONE_SLOPE = "Slope"
@@ -180,7 +168,7 @@ async def async_setup_entry(
     )
 
     # If only hose timers on account, none of these services apply
-    if len(zone_entities) == 0:
+    if not zone_entities:
         return
 
     hass.services.async_register(
@@ -293,7 +281,6 @@ class RachioRainDelay(RachioSwitch):
 
     _attr_has_entity_name = True
     _attr_translation_key = "rain_delay"
-    _attr_icon = "mdi:camera-timer"
 
     def __init__(self, controller) -> None:
         """Set up a Rachio rain delay switch."""
@@ -566,7 +553,6 @@ class RachioSchedule(RachioSwitch):
 class RachioValve(CoordinatorEntity[RachioUpdateCoordinator], SwitchEntity):
     """Representation of one smart hose timer valve."""
 
-
     def __init__(
         self, person, base, data, coordinator: RachioUpdateCoordinator
     ) -> None:
@@ -598,26 +584,6 @@ class RachioValve(CoordinatorEntity[RachioUpdateCoordinator], SwitchEntity):
     def available(self) -> bool:
         """Return if the valve is available."""
         return self._static_attrs[KEY_CONNECTED]
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the optional state attributes."""
-        _running_attrs = self._static_attrs.get(KEY_CURRENT_STATUS, {})
-        _runtime = int(_running_attrs.get(KEY_DURATION_SECONDS, 0))
-        props = {
-            ATTR_BATTERY_STATUS: self._static_attrs[KEY_BATTERY_STATUS],
-            ATTR_FLOW_DETECTION_ENABLED: self._detect_flow,
-            ATTR_BUTTON_PRESS_RUNTIME: f"{round(int(self._static_attrs[KEY_DEFAULT_RUNTIME]) / 60)} minutes",
-        }
-        if self._attr_is_on:
-            if _runtime > 0:
-                props[ATTR_DURATION] = f"{round(_runtime / 60)} minutes"
-            props[ATTR_WATERING_REASON] = _running_attrs.get(KEY_REASON)
-            props[ATTR_STARTED_WATERING] = _running_attrs.get(KEY_START_TIME)
-            if self._detect_flow:
-                props[ATTR_FLOW_DETECTED] = _running_attrs.get(KEY_FLOW_DETECTED)
-
-        return props
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on this valve."""

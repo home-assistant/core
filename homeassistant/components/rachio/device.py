@@ -106,7 +106,7 @@ class RachioPerson:
                     iro.stop_watering()
 
         # If only hose timers on account, none of these services apply
-        if len(all_controllers) == 0:
+        if not all_controllers:
             return
 
         hass.services.async_register(
@@ -265,10 +265,11 @@ class RachioIro:
         _deinit_webhooks(None)
 
         # Choose which events to listen for and get their IDs
-        event_types = []
-        for event_type in self.rachio.notification.get_webhook_event_type()[1]:
-            if event_type[KEY_NAME] in LISTEN_EVENT_TYPES:
-                event_types.append({"id": event_type[KEY_ID]})
+        event_types = [
+            {"id": event_type[KEY_ID]}
+            for event_type in self.rachio.notification.get_webhook_event_type()[1]
+            if event_type[KEY_NAME] in LISTEN_EVENT_TYPES
+        ]
 
         # Register to listen to these events from the device
         url = self.rachio.webhook_url
