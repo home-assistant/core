@@ -5,10 +5,11 @@ from __future__ import annotations
 import asyncio
 import contextlib
 from datetime import timedelta
+from functools import partial
 from itertools import chain
 import logging
 import logging.handlers
-from operator import itemgetter
+from operator import contains, itemgetter
 import os
 import platform
 import sys
@@ -101,6 +102,9 @@ if TYPE_CHECKING:
     from .runner import RuntimeConfig
 
 _LOGGER = logging.getLogger(__name__)
+
+SETUP_ORDER_SORT_KEY = partial(contains, BASE_PLATFORMS)
+
 
 ERROR_LOG_FILENAME = "home-assistant.log"
 
@@ -671,14 +675,19 @@ async def async_setup_multi_components(
 ) -> None:
     """Set up multiple domains. Log on failure."""
     # Avoid creating tasks for domains that were setup in a previous stage
-    domains_not_yet_setup = domains - hass.config.components
+    # Sort the domains to setup so base platforms are setup first
+    domains_not_yet_setup = sorted(
+        domains - hass.config.components, key=SETUP_ORDER_SORT_KEY
+    )
     futures = {
         domain: hass.async_create_task(
             async_setup_component(hass, domain, config),
             f"setup component {domain}",
             eager_start=True,
         )
-        for domain in domains_not_yet_setup
+        # The sort will put base platforms at the end of the list
+        # so we reverse it to start them first
+        for domain in reversed(domains_not_yet_setup)
     }
     results = await asyncio.gather(*futures.values(), return_exceptions=True)
     for idx, domain in enumerate(futures):
@@ -700,13 +709,25 @@ async def _async_resolve_domains_to_setup(
     platform_integrations = conf_util.extract_platform_integrations(
         config, BASE_PLATFORMS
     )
+    # Make sure we load the base platforms for platform integrations
+    # as soon as possible since every config entry integration will
+    # be waiting for them to be loaded before they can be set up
+    # their platforms.
+    #
+    # For example if we have
+    # sensor:
+    #   - platform: template
+    #
+    # template has to be loaded to validate the config for sensor
+    # so we want to start loading the base platforms as soon as possible
+    domains_to_setup.update(platform_integrations)
 
     # Load base platforms right away since
     # we do not require the manifest to list
     # them as dependencies and we want
     # to avoid the lock contention when multiple
     # integrations try to resolve them at once
-    additional = {*BASE_PLATFORMS, *platform_integrations}
+    additional = {*BASE_PLATFORMS, *chain.from_iterable(platform_integrations.values())}
 
     # Resolve all dependencies so we know all integrations
     # that will have to be loaded and start right-away
