@@ -137,7 +137,7 @@ class APIEventStream(HomeAssistantView):
 
         restrict: list[str] | None = None
         if restrict_str := request.query.get("restrict"):
-            restrict = restrict_str.split(",") + [EVENT_HOMEASSISTANT_STOP]
+            restrict = [*restrict_str.split(","), EVENT_HOMEASSISTANT_STOP]
 
         async def forward_events(event: Event) -> None:
             """Forward events to the open request."""

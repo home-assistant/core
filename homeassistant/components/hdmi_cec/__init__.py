@@ -172,7 +172,7 @@ def parse_mapping(mapping, parents=None):
         if isinstance(addr, (str,)) and isinstance(val, (str,)):
             yield (addr, PhysicalAddress(val))
         else:
-            cur = parents + [addr]
+            cur = [*parents, addr]
             if isinstance(val, dict):
                 yield from parse_mapping(val, cur)
             elif isinstance(val, str):
