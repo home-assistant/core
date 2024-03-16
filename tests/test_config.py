@@ -2391,23 +2391,25 @@ async def test_loading_platforms_gathers(hass: HomeAssistant) -> None:
         ),
     )
 
-    mock_platform(hass, "platform_int.light", MockPlatform())
-    mock_platform(hass, "platform_int2.light", MockPlatform())
-    mock_platform(hass, "platform_int.sensor", MockPlatform())
-    mock_platform(hass, "platform_int2.sensor", MockPlatform())
-
+    # Its important that we do not mock the platforms with mock_platform
+    # as the loader is smart enough to know they are already loaded and
+    # will not create an executor job to load them. We are testing in
+    # what order the executor jobs happen here as we want to make
+    # sure the platform integrations are at the front of the line
     light_integration = await loader.async_get_integration(hass, "light")
     sensor_integration = await loader.async_get_integration(hass, "sensor")
 
     order: list[tuple[str, str]] = []
 
-    async def _async_get_platform(self, platform: str) -> MockModule:
+    def _load_platform(self, platform: str) -> MockModule:
         order.append((self.domain, platform))
         return MockModule()
 
+    # We need to patch what runs in the executor so we are counting
+    # the order that jobs are scheduled in th executor
     with patch(
-        "homeassistant.loader.Integration.async_get_platform",
-        _async_get_platform,
+        "homeassistant.loader.Integration._load_platform",
+        _load_platform,
     ):
         light_task = hass.async_create_task(
             config.async_process_component_config(
