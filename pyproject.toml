@@ -605,6 +605,7 @@ select = [
     "N815", # Variable {name} in class scope should not be mixedCase
     "PERF", # Perflint
     "PGH004", # Use specific rule codes when using noqa
+    "PIE804", # Unnecessary dict kwargs
     "PIE790", # Unnecessary pass statement
     "PIE794", # Class field is defined multiple times
     "PIE807", # Prefer list/dict over useless lambda
