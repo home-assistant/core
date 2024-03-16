@@ -339,25 +339,43 @@ async def async_get_still_stream(
         return True
 
     event = asyncio.Event()
+    timed_out = False
 
     @callback
     def _async_image_state_update(_event: Event[EventStateChangedData]) -> None:
         """Write image to stream."""
         event.set()
 
+    @callback
+    def _async_timeout_reached() -> None:
+        """Handle timeout."""
+        nonlocal timed_out
+        timed_out = True
+        event.set()
+
     hass = request.app[KEY_HASS]
+    loop = hass.loop
     remove = async_track_state_change_event(
         hass,
         image_entity.entity_id,
         _async_image_state_update,
     )
+    timeout_handle = None
     try:
         while True:
             if not await _write_frame():
                 return response
+            # Ensure that an image is sent at least every 55 seconds
+            # Otherwise some devices go blank
+            timeout_handle = loop.call_later(55, _async_timeout_reached)
             await event.wait()
             event.clear()
+            if not timed_out:
+                timeout_handle.cancel()
+            timed_out = False
     finally:
+        if timeout_handle:
+            timeout_handle.cancel()
         remove()
 
 
