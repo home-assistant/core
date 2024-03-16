@@ -709,9 +709,8 @@ async def _async_resolve_domains_to_setup(
         config, BASE_PLATFORMS
     )
     # Make sure we load the base platforms for platform integrations
-    # as soon as possible since every config entry integration will
-    # be waiting for them to be loaded before they can be set up
-    # their platforms.
+    # since every config entry integration will be waiting for them
+    # to be loaded before they can be set up their platforms.
     #
     # For example if we have
     # sensor:
@@ -719,7 +718,12 @@ async def _async_resolve_domains_to_setup(
     #
     # `template` has to be loaded to validate the config for sensor
     # so we want to start loading `sensor` as soon as we know
-    # it will be needed
+    # it will be needed. The more platforms under sensor: the longer
+    # it will take to load `sensor` so we want to start loading it
+    # as soon as possible.
+    #
+    # Thankfully we are migrating away from the platform pattern
+    # so this will be less of a problem in the future.
     domains_to_setup.update(platform_integrations)
 
     # Load manifests base platforms right away since we do not require the
