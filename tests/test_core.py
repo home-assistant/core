@@ -735,7 +735,6 @@ def test_add_job_pending_tasks_coro(hass: HomeAssistant) -> None:
 
     async def test_coro():
         """Test Coro."""
-        pass
 
     for _ in range(2):
         hass.add_job(test_coro())

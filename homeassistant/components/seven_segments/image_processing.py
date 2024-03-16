@@ -96,14 +96,14 @@ class ImageProcessingSsocr(ImageProcessingEntity):
         threshold = ["-t", str(config[CONF_THRESHOLD])]
         extra_arguments = config[CONF_EXTRA_ARGUMENTS].split(" ")
 
-        self._command = (
-            [config[CONF_SSOCR_BIN]]
-            + crop
-            + digits
-            + threshold
-            + rotate
-            + extra_arguments
-        )
+        self._command = [
+            config[CONF_SSOCR_BIN],
+            *crop,
+            *digits,
+            *threshold,
+            *rotate,
+            *extra_arguments,
+        ]
         self._command.append(self.filepath)
 
     @property

@@ -433,15 +433,17 @@ def gather_constraints() -> str:
     return (
         GENERATED_MESSAGE
         + "\n".join(
-            sorted(
-                {
-                    *core_requirements(),
-                    *gather_recursive_requirements("default_config"),
-                    *gather_recursive_requirements("mqtt"),
-                },
-                key=str.lower,
-            )
-            + [""]
+            [
+                *sorted(
+                    {
+                        *core_requirements(),
+                        *gather_recursive_requirements("default_config"),
+                        *gather_recursive_requirements("mqtt"),
+                    },
+                    key=str.lower,
+                ),
+                "",
+            ]
         )
         + CONSTRAINT_BASE
     )
