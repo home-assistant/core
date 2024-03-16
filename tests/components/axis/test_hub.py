@@ -212,7 +212,9 @@ async def test_shutdown(config) -> None:
     entry = Mock()
     entry.data = config
 
-    axis_device = axis.hub.AxisHub(hass, entry, Mock())
+    mock_api = Mock()
+    mock_api.vapix.serial_number = FORMATTED_MAC
+    axis_device = axis.hub.AxisHub(hass, entry, mock_api)
 
     await axis_device.shutdown(None)
 

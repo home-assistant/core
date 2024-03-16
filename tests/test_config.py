@@ -2361,13 +2361,12 @@ def test_extract_platform_integrations() -> None:
         ]
     )
     assert config_util.extract_platform_integrations(config, {"zone"}) == {
-        "hello",
-        "hello 2",
+        "zone": {"hello", "hello 2"}
     }
-    assert config_util.extract_platform_integrations(config, {"zonex"}) == set()
-    assert config_util.extract_platform_integrations(config, {"zoney"}) == set()
+    assert config_util.extract_platform_integrations(config, {"zonex"}) == {}
+    assert config_util.extract_platform_integrations(config, {"zoney"}) == {}
     assert config_util.extract_platform_integrations(
         config, {"zone", "not_valid", "notzone"}
-    ) == {"hello", "hello 2", "nothello"}
-    assert config_util.extract_platform_integrations(config, {"zoneq"}) == set()
-    assert config_util.extract_platform_integrations(config, {"zoneempty"}) == set()
+    ) == {"zone": {"hello 2", "hello"}, "notzone": {"nothello"}}
+    assert config_util.extract_platform_integrations(config, {"zoneq"}) == {}
+    assert config_util.extract_platform_integrations(config, {"zoneempty"}) == {}

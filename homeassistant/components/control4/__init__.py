@@ -138,11 +138,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def get_items_of_category(hass: HomeAssistant, entry: ConfigEntry, category: str):
     """Return a list of all Control4 items with the specified category."""
     director_all_items = hass.data[DOMAIN][entry.entry_id][CONF_DIRECTOR_ALL_ITEMS]
-    return_list = []
-    for item in director_all_items:
-        if "categories" in item and category in item["categories"]:
-            return_list.append(item)
-    return return_list
+    return [
+        item
+        for item in director_all_items
+        if "categories" in item and category in item["categories"]
+    ]
 
 
 class Control4Entity(CoordinatorEntity):

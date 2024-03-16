@@ -1376,13 +1376,13 @@ async def test_light_min_max_mireds(hass: HomeAssistant, hk_driver, events) -> N
             ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP],
             ATTR_BRIGHTNESS: 255,
             ATTR_MAX_MIREDS: 500.5,
-            ATTR_MIN_MIREDS: 100.5,
+            ATTR_MIN_MIREDS: 153.5,
         },
     )
     await hass.async_block_till_done()
     acc = Light(hass, hk_driver, "Light", entity_id, 1, None)
-    acc.char_color_temp.properties["maxValue"] == 500
-    acc.char_color_temp.properties["minValue"] == 100
+    assert acc.char_color_temp.properties["maxValue"] == 500
+    assert acc.char_color_temp.properties["minValue"] == 153
 
 
 async def test_light_set_brightness_and_color_temp(
