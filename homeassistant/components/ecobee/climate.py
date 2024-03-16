@@ -12,6 +12,7 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_ON,
+    PRESET_NONE,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -57,6 +58,8 @@ DEFAULT_RESUME_ALL = False
 PRESET_AWAY_INDEFINITELY = "away_indefinitely"
 PRESET_TEMPERATURE = "temp"
 PRESET_VACATION = "vacation"
+PRESET_HOLD_NEXT_TRANSITION = "next_transition"
+PRESET_HOLD_INDEFINITE = "indefinite"
 AWAY_MODE = "awayMode"
 PRESET_HOME = "home"
 PRESET_SLEEP = "sleep"
@@ -98,6 +101,11 @@ ECOBEE_HVAC_ACTION_TO_HASS = {
     "compHotWater": None,
     "auxHotWater": None,
     "compWaterHeater": None,
+}
+
+PRESET_TO_ECOBEE_HOLD = {
+    PRESET_HOLD_NEXT_TRANSITION: "nextTransition",
+    PRESET_HOLD_INDEFINITE: "indefinite",
 }
 
 SERVICE_CREATE_VACATION = "create_vacation"
@@ -579,7 +587,22 @@ class Thermostat(ClimateEntity):
             self.data.ecobee.set_climate_hold(
                 self.thermostat_index, "away", "indefinite", self.hold_hours()
             )
-        else:
+
+        elif preset_mode == PRESET_TEMPERATURE:
+            self.set_temp_hold(self.current_temperature)
+
+        elif preset_mode in (PRESET_HOLD_NEXT_TRANSITION, PRESET_HOLD_INDEFINITE):
+            self.data.ecobee.set_climate_hold(
+                self.thermostat_index,
+                PRESET_TO_ECOBEE_HOLD[preset_mode],
+                self.hold_preference(),
+                self.hold_hours(),
+            )
+
+        elif preset_mode == PRESET_NONE:
+            self.data.ecobee.resume_program(self.thermostat_index)
+
+        elif preset_mode in self.preset_modes:
             climate_ref = None
 
             for comfort in self.thermostat["program"]["climates"]:
@@ -597,12 +620,20 @@ class Thermostat(ClimateEntity):
             else:
                 _LOGGER.warning("Received unknown preset mode: %s", preset_mode)
 
+        else:
+            self.data.ecobee.set_climate_hold(
+                self.thermostat_index,
+                preset_mode,
+                self.hold_preference(),
+                self.hold_hours(),
+            )
+
     @property
     def preset_modes(self):
         """Return available preset modes."""
         # Return presets provided by the ecobee API, and an indefinite away
         # preset which we handle separately in set_preset_mode().
-        return list(self._preset_modes.values()) + [PRESET_AWAY_INDEFINITELY]
+        return [*self._preset_modes.values(), PRESET_AWAY_INDEFINITELY]
 
     def set_auto_temp_hold(self, heat_temp, cool_temp):
         """Set temperature hold in auto mode."""
