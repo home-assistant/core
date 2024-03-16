@@ -676,7 +676,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             return [self]
         entities = self.get_all_mc_entities()
         clients = [entity for entity in entities if entity.is_part_of_group(self)]
-        return [self] + clients
+        return [self, *clients]
 
     @property
     def musiccast_zone_entity(self) -> MusicCastMediaPlayer:
