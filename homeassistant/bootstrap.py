@@ -676,17 +676,18 @@ async def async_setup_multi_components(
     """Set up multiple domains. Log on failure."""
     # Avoid creating tasks for domains that were setup in a previous stage
     domains_not_yet_setup = domains - hass.config.components
-    # Sort the domains to setup so base platforms are setup first
-    # as everything has to wait for them at some point
-    setup_order = sorted(domains_not_yet_setup, key=SETUP_ORDER_SORT_KEY, reverse=True)
-    _LOGGER.debug("Setup order: %s", setup_order)
+    # Create setup tasks for base platforms first since everything will have
+    # to wait to be imported, and the sooner we can get the base platforms
+    # loaded the sooner we can start loading the rest of the integrations.
     futures = {
         domain: hass.async_create_task(
             async_setup_component(hass, domain, config),
             f"setup component {domain}",
             eager_start=True,
         )
-        for domain in setup_order
+        for domain in sorted(
+            domains_not_yet_setup, key=SETUP_ORDER_SORT_KEY, reverse=True
+        )
     }
     results = await asyncio.gather(*futures.values(), return_exceptions=True)
     for idx, domain in enumerate(futures):
