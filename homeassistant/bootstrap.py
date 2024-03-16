@@ -709,9 +709,11 @@ async def _async_resolve_domains_to_setup(
     platform_integrations = conf_util.extract_platform_integrations(
         config, BASE_PLATFORMS
     )
-    # Make sure we load the base platforms for platform integrations
-    # since every config entry integration will be waiting for them
-    # to be loaded before they can be set up their platforms.
+    # Ensure we setup of base platforms that have platform integrations
+    # are added to domains_to_setup so they can be setup first instead
+    # of discovering them when later when a config entry setup process
+    # notices it needs to be setup and there is already a long line
+    # to use the import executor.
     #
     # For example if we have
     # sensor:
