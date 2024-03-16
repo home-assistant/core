@@ -133,7 +133,7 @@ async def async_setup_platform(
         try:
             target = Udp6TransportTarget((host, port), timeout=DEFAULT_TIMEOUT)
         except PySnmpError as err:
-            _LOGGER.error(f"Invalid SNMP host: {err}")
+            _LOGGER.error("Invalid SNMP host: %s", err)
             return
 
     if version == "3":
@@ -166,7 +166,8 @@ async def async_setup_platform(
 
     if errindication and not accept_errors:
         _LOGGER.error(
-            f"Please check the details in the configuration file: {errindication}"
+            "Please check the details in the configuration file: %s",
+            errindication,
         )
         return
 
@@ -245,10 +246,12 @@ class SnmpData:
         errindication, errstatus, errindex, restable = get_result
 
         if errindication and not self._accept_errors:
-            _LOGGER.error(f"SNMP error: {errindication}")
+            _LOGGER.error("SNMP error: %s", errindication)
         elif errstatus and not self._accept_errors:
             _LOGGER.error(
-                f"SNMP error: {errstatus.prettyPrint()} at {restable[-1][int(errindex) - 1] if errindex else '?'}"
+                "SNMP error: %s at %s",
+                 errstatus.prettyPrint(),
+                 restable[-1][int(errindex) - 1] if errindex else '?'
             )
         elif (errindication or errstatus) and self._accept_errors:
             self.value = self._default_value
@@ -258,18 +261,23 @@ class SnmpData:
 
     def _decode_value(self, value):
         """Decode the different results we could get into strings."""
-        from pysnmp.proto.rfc1905 import NoSuchObject
-        from pysnmp.proto.rfc1902 import Opaque
-        from pyasn1.codec.ber import decoder
         from struct import unpack
 
+        from pyasn1.codec.ber import decoder
+        from pysnmp.proto.rfc1902 import Opaque
+        from pysnmp.proto.rfc1905 import NoSuchObject
+
         _LOGGER.debug(
-            f"SNMP OID {self._baseoid} received type={type(value)} and data {bytes(value)}"
+            "SNMP OID %s received type=%s and data %s",
+            self._baseoid,
+            type(value),
+            bytes(value),
         )
         if isinstance(value, NoSuchObject):
             _LOGGER.error(
-                f"SNMP error for OID {self._baseoid}: "
-                "No Such Object currently exists at this OID"
+                "SNMP error for OID %s: "
+                "No Such Object currently exists at this OID",
+                self._baseoid,
             )
             return self._default_value
 
@@ -285,6 +293,6 @@ class SnmpData:
                 return str(decoded_value)
             # pylint: disable=broad-except
             except Exception as decode_exception:
-                _LOGGER.error(f"SNMP error in decoding opaque type: {decode_exception}")
+                _LOGGER.error("SNMP error in decoding opaque type: %s", decode_exception)
                 return self._default_value
         return str(value)
