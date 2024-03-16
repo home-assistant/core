@@ -1446,7 +1446,7 @@ async def _async_load_and_validate_platform_integration(
     config_exceptions: list[ConfigExceptionInfo],
     p_integration: _PlatformIntegration,
 ) -> ConfigType | None:
-    """Load a platform and validate its config."""
+    """Load a platform integration and validate its config."""
     try:
         platform = await p_integration.integration.async_get_platform(domain)
     except LOAD_EXCEPTIONS as exc:
