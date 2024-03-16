@@ -580,10 +580,13 @@ filterwarnings = [
 [tool.ruff.lint]
 select = [
     "B002", # Python does not support the unary prefix increment
+    "B005", # Using .strip() with multi-character strings is misleading
     "B007", # Loop control variable {name} not used within loop body
     "B014", # Exception handler with duplicate exception
+    "B015", # Pointless comparison. Did you mean to assign a value? Otherwise, prepend assert or remove it.
     "B023", # Function definition does not bind loop variable {name}
     "B026", # Star-arg unpacking after a keyword argument is strongly discouraged
+    "B032", # Possible unintentional type annotation (using :). Did you mean to assign (using =)?
     "B904", # Use raise from to specify exception cause
     "C", # complexity
     "COM818", # Trailing comma on bare tuple prohibited
@@ -607,7 +610,9 @@ select = [
     "PLR", # pylint
     "PLW", # pylint
     "Q000", # Double quotes found but single quotes preferred
+    "RUF005", # Consider iterable unpacking instead of concatenation
     "RUF006", # Store a reference to the return value of asyncio.create_task
+    # "RUF100", # Unused `noqa` directive; temporarily every now and then to clean them up
     "S102", # Use of exec detected
     "S103", # bad-file-permissions
     "S108", # hardcoded-temp-file

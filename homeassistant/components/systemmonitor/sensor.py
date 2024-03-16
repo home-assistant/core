@@ -494,7 +494,7 @@ async def async_setup_platform(
     )
 
 
-async def async_setup_entry(  # noqa: C901
+async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up System Montor sensors based on a config entry."""

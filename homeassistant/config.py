@@ -506,7 +506,7 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> dict:
         await merge_packages_config(hass, config, core_config.get(CONF_PACKAGES, {}))
     except vol.Invalid as exc:
         suffix = ""
-        if annotation := find_annotation(config, [CONF_CORE, CONF_PACKAGES] + exc.path):
+        if annotation := find_annotation(config, [CONF_CORE, CONF_PACKAGES, *exc.path]):
             suffix = f" at {_relpath(hass, annotation[0])}, line {annotation[1]}"
         _LOGGER.error(
             "Invalid package configuration '%s'%s: %s", CONF_PACKAGES, suffix, exc
@@ -1391,9 +1391,14 @@ def config_per_platform(
             yield platform, item
 
 
-def extract_platform_integrations(config: ConfigType, domains: set[str]) -> set[str]:
-    """Find all the platforms in a configuration."""
-    platform_integrations: set[str] = set()
+def extract_platform_integrations(
+    config: ConfigType, domains: set[str]
+) -> dict[str, set[str]]:
+    """Find all the platforms in a configuration.
+
+    Returns a dictionary with domain as key and a set of platforms as value.
+    """
+    platform_integrations: dict[str, set[str]] = {}
     for key, domain_config in config.items():
         try:
             domain = cv.domain_key(key)
@@ -1411,7 +1416,7 @@ def extract_platform_integrations(config: ConfigType, domains: set[str]) -> set[
             except AttributeError:
                 continue
             if platform:
-                platform_integrations.add(platform)
+                platform_integrations.setdefault(domain, set()).add(platform)
     return platform_integrations
 
 
@@ -1429,7 +1434,7 @@ def extract_domain_configs(config: ConfigType, domain: str) -> Sequence[str]:
     return domain_configs
 
 
-async def async_process_component_config(  # noqa: C901
+async def async_process_component_config(
     hass: HomeAssistant,
     config: ConfigType,
     integration: Integration,

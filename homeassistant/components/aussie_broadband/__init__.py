@@ -33,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     # Ignore services that don't support usage data
-    ignore_types = FETCH_TYPES + ["Hardware"]
+    ignore_types = [*FETCH_TYPES, "Hardware"]
 
     try:
         await client.login()
