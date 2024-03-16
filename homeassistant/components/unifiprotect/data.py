@@ -61,9 +61,6 @@ def async_last_update_was_successful(hass: HomeAssistant, entry: ConfigEntry) ->
 
 @callback
 def _async_debug_log_event(event: Event) -> None:
-    if not _LOGGER.isEnabledFor(logging.DEBUG):
-        return
-
     _LOGGER.debug("event WS msg: %s", event.dict())
     if event.type not in SMART_EVENTS:
         return
@@ -287,7 +284,8 @@ class ProtectData:
 
         # trigger updates for camera that the event references
         elif isinstance(obj, Event):  # type: ignore[unreachable]
-            _async_debug_log_event(obj)
+            if _LOGGER.isEnabledFor(logging.DEBUG):
+                _async_debug_log_event(obj)
             if obj.type is EventType.DEVICE_ADOPTED:
                 if obj.metadata is not None and obj.metadata.device_id is not None:
                     device = self.api.bootstrap.get_device_from_id(
