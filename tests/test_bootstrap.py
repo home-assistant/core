@@ -265,6 +265,16 @@ async def test_setup_after_deps_manifests_are_loaded_even_if_not_setup(
         MockModule(
             domain="an_after_dep_of_after_dep",
             async_setup=gen_domain_setup("an_after_dep_of_after_dep"),
+            partial_manifest={
+                "after_dependencies": ["an_after_dep_of_after_dep_of_after_dep"]
+            },
+        ),
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="an_after_dep_of_after_dep_of_after_dep",
+            async_setup=gen_domain_setup("an_after_dep_of_after_dep_of_after_dep"),
         ),
     )
     mock_integration(
@@ -282,10 +292,19 @@ async def test_setup_after_deps_manifests_are_loaded_even_if_not_setup(
 
     assert "normal_integration" in hass.config.components
     assert "cloud" in hass.config.components
+    assert "an_after_dep" not in hass.config.components
+    assert "an_after_dep_of_after_dep" not in hass.config.components
+    assert "an_after_dep_of_after_dep_of_after_dep" not in hass.config.components
     assert order == ["cloud", "normal_integration"]
     assert loader.async_get_loaded_integration(hass, "an_after_dep") is not None
     assert (
         loader.async_get_loaded_integration(hass, "an_after_dep_of_after_dep")
+        is not None
+    )
+    assert (
+        loader.async_get_loaded_integration(
+            hass, "an_after_dep_of_after_dep_of_after_dep"
+        )
         is not None
     )
 
