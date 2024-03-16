@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections import OrderedDict
 from collections.abc import Callable, Iterable, Sequence
 from contextlib import suppress
@@ -65,6 +66,7 @@ from .helpers.entity_values import EntityValues
 from .helpers.typing import ConfigType
 from .loader import ComponentProtocol, Integration, IntegrationNotFound
 from .requirements import RequirementsNotFound, async_get_integration_with_requirements
+from .util.async_ import create_eager_task
 from .util.package import is_docker_env
 from .util.unit_system import get_unit_system, validate_unit_system
 from .util.yaml import SECRET_YAML, Secrets, YamlTypeError, load_yaml_dict
@@ -1543,6 +1545,7 @@ async def async_process_component_config(  # noqa: C901
     if component_platform_schema is None:
         return IntegrationConfigInfo(config, [])
 
+    platforms_to_load: list[tuple[str, Integration, ConfigType]] = []
     platforms: list[ConfigType] = []
     for p_name, p_config in config_per_platform(config, domain):
         # Validate component specific platform schema
@@ -1590,23 +1593,36 @@ async def async_process_component_config(  # noqa: C901
             config_exceptions.append(exc_info)
             continue
 
-        try:
-            platform = await p_integration.async_get_platform(domain)
-        except LOAD_EXCEPTIONS as exc:
-            exc_info = ConfigExceptionInfo(
-                exc,
-                ConfigErrorTranslationKey.PLATFORM_COMPONENT_LOAD_EXC,
-                platform_path,
-                p_config,
-                integration_docs,
-            )
-            config_exceptions.append(exc_info)
-            continue
+        platforms_to_load.append((p_name, p_integration, p_config))
 
-        # Validate platform specific schema
-        if hasattr(platform, "PLATFORM_SCHEMA"):
+    if platforms_to_load:
+
+        async def _async_load_and_validate_platform(
+            p_name: str,
+            p_integration: Integration,
+            p_config: ConfigType,
+            config_exceptions: list[ConfigExceptionInfo],
+        ) -> ConfigType | None:
+            """Load a platform."""
             try:
-                p_validated = platform.PLATFORM_SCHEMA(p_config)
+                platform = await p_integration.async_get_platform(domain)
+            except LOAD_EXCEPTIONS as exc:
+                exc_info = ConfigExceptionInfo(
+                    exc,
+                    ConfigErrorTranslationKey.PLATFORM_COMPONENT_LOAD_EXC,
+                    platform_path,
+                    p_config,
+                    integration_docs,
+                )
+                config_exceptions.append(exc_info)
+                return None
+
+            # Validate platform specific schema
+            if not hasattr(platform, "PLATFORM_SCHEMA"):
+                return p_config
+
+            try:
+                return platform.PLATFORM_SCHEMA(p_config)  # type: ignore[no-any-return]
             except vol.Invalid as exc:
                 exc_info = ConfigExceptionInfo(
                     exc,
@@ -1616,7 +1632,6 @@ async def async_process_component_config(  # noqa: C901
                     p_integration.documentation,
                 )
                 config_exceptions.append(exc_info)
-                continue
             except Exception as exc:  # pylint: disable=broad-except
                 exc_info = ConfigExceptionInfo(
                     exc,
@@ -1626,9 +1641,24 @@ async def async_process_component_config(  # noqa: C901
                     p_integration.documentation,
                 )
                 config_exceptions.append(exc_info)
-                continue
 
-        platforms.append(p_validated)
+            return None
+
+        results = await asyncio.gather(
+            *(
+                create_eager_task(
+                    _async_load_and_validate_platform(
+                        p_name, p_integration, p_config, config_exceptions
+                    )
+                )
+                for p_name, p_integration, p_config in platforms_to_load
+            )
+        )
+        platforms.extend(
+            validated_config
+            for validated_config in results
+            if validated_config is not None
+        )
 
     # Create a copy of the configuration with all config for current
     # component removed and add validated config back in.
