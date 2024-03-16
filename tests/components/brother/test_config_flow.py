@@ -94,7 +94,7 @@ async def test_invalid_hostname(hass: HomeAssistant) -> None:
     assert result["errors"] == {CONF_HOST: "wrong_host"}
 
 
-@pytest.mark.parametrize("exc", [ConnectionError(), TimeoutError()])
+@pytest.mark.parametrize("exc", [ConnectionError, TimeoutError])
 async def test_connection_error(hass: HomeAssistant, exc: Exception) -> None:
     """Test connection to host error."""
     with patch("brother.Brother.initialize"), patch(
@@ -149,7 +149,7 @@ async def test_device_exists_abort(hass: HomeAssistant) -> None:
         assert result["reason"] == "already_configured"
 
 
-@pytest.mark.parametrize("exc", [ConnectionError(), TimeoutError(), SnmpError("error")])
+@pytest.mark.parametrize("exc", [ConnectionError, TimeoutError, SnmpError("error")])
 async def test_zeroconf_exception(hass: HomeAssistant, exc: Exception) -> None:
     """Test we abort zeroconf flow on exception."""
     with patch("brother.Brother.initialize"), patch(
