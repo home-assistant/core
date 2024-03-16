@@ -2,13 +2,13 @@
 
 from unittest.mock import patch
 
+from pysnmp.hlapi import Integer32
 import pytest
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-from pysnmp.hlapi import Integer32
 
 
 @pytest.fixture(autouse=True)

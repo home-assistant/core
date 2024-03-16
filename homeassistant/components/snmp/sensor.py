@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from struct import unpack
 
+from pyasn1.codec.ber import decoder
 from pysnmp.error import PySnmpError
 import pysnmp.hlapi.asyncio as hlapi
 from pysnmp.hlapi.asyncio import (
@@ -18,6 +20,9 @@ from pysnmp.hlapi.asyncio import (
     UsmUserData,
     getCmd,
 )
+from pysnmp.proto.rfc1902 import Opaque
+from pysnmp.proto.rfc1905 import NoSuchObject
+
 import voluptuous as vol
 
 from homeassistant.components.sensor import CONF_STATE_CLASS, PLATFORM_SCHEMA
@@ -250,8 +255,8 @@ class SnmpData:
         elif errstatus and not self._accept_errors:
             _LOGGER.error(
                 "SNMP error: %s at %s",
-                 errstatus.prettyPrint(),
-                 restable[-1][int(errindex) - 1] if errindex else '?'
+                errstatus.prettyPrint(),
+                restable[-1][int(errindex) - 1] if errindex else "?",
             )
         elif (errindication or errstatus) and self._accept_errors:
             self.value = self._default_value
@@ -261,11 +266,6 @@ class SnmpData:
 
     def _decode_value(self, value):
         """Decode the different results we could get into strings."""
-        from struct import unpack
-
-        from pyasn1.codec.ber import decoder
-        from pysnmp.proto.rfc1902 import Opaque
-        from pysnmp.proto.rfc1905 import NoSuchObject
 
         _LOGGER.debug(
             "SNMP OID %s received type=%s and data %s",
@@ -275,8 +275,7 @@ class SnmpData:
         )
         if isinstance(value, NoSuchObject):
             _LOGGER.error(
-                "SNMP error for OID %s: "
-                "No Such Object currently exists at this OID",
+                "SNMP error for OID %s: No Such Object currently exists at this OID",
                 self._baseoid,
             )
             return self._default_value
@@ -293,6 +292,8 @@ class SnmpData:
                 return str(decoded_value)
             # pylint: disable=broad-except
             except Exception as decode_exception:
-                _LOGGER.error("SNMP error in decoding opaque type: %s", decode_exception)
+                _LOGGER.error(
+                    "SNMP error in decoding opaque type: %s", decode_exception
+                )
                 return self._default_value
         return str(value)
