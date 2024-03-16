@@ -1,5 +1,6 @@
 """Teslemetry parent entity class."""
 
+from abc import abstractmethod
 import asyncio
 from typing import Any
 
@@ -81,9 +82,9 @@ class TeslemetryEntity(
         self._async_update_attrs()
         self.async_write_ha_state()
 
+    @abstractmethod
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
-        raise NotImplementedError()
 
 
 class TeslemetryVehicleEntity(TeslemetryEntity):
