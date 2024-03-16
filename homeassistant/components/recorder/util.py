@@ -160,7 +160,7 @@ def execute(
     This method also retries a few times in the case of stale connections.
     """
     debug = _LOGGER.isEnabledFor(logging.DEBUG)
-    for tryno in range(0, RETRIES):
+    for tryno in range(RETRIES):
         try:
             if debug:
                 timer_start = time.perf_counter()

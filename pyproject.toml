@@ -604,6 +604,7 @@ select = [
     "N815", # Variable {name} in class scope should not be mixedCase
     "PERF", # Perflint
     "PGH004", # Use specific rule codes when using noqa
+    "PIE808", # Unnecessary start argument in range
     "PLC0414", # Useless import alias. Import alias does not rename original package.
     "PLC", # pylint
     "PLE", # pylint
