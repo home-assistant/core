@@ -611,6 +611,7 @@ select = [
     "PIE794", # Class field is defined multiple times
     "PIE807", # Prefer list/dict over useless lambda
     "PIE810", # Call startswith/endswith once with a tuple
+    "RUF005", # Consider iterable unpacking instead of concatenation
     "RUF006", # Store a reference to the return value of asyncio.create_task
     # "RUF100", # Unused `noqa` directive; temporarily every now and then to clean them up
     "S102", # Use of exec detected
