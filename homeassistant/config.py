@@ -1619,7 +1619,7 @@ async def async_process_component_config(  # noqa: C901
             p_config: ConfigType,
             config_exceptions: list[ConfigExceptionInfo],
         ) -> ConfigType | None:
-            """Load a platform."""
+            """Load a platform and validate its config."""
             try:
                 platform = await p_integration.async_get_platform(domain)
             except LOAD_EXCEPTIONS as exc:
