@@ -1216,6 +1216,12 @@ async def test_setup_does_base_platforms_first(hass: HomeAssistant) -> None:
         hass, MockModule(domain="sensor", async_setup=gen_domain_setup("sensor"))
     )
     mock_integration(
+        hass,
+        MockModule(
+            domain="binary_sensor", async_setup=gen_domain_setup("binary_sensor")
+        ),
+    )
+    mock_integration(
         hass, MockModule(domain="root", async_setup=gen_domain_setup("root"))
     )
     mock_integration(
@@ -1240,7 +1246,14 @@ async def test_setup_does_base_platforms_first(hass: HomeAssistant) -> None:
     ):
         await bootstrap._async_set_up_integrations(
             hass,
-            {"root": {}, "first_dep": {}, "second_dep": {}, "sensor": {}, "logger": {}},
+            {
+                "root": {},
+                "first_dep": {},
+                "second_dep": {},
+                "sensor": {},
+                "logger": {},
+                "binary_sensor": {},
+            },
         )
 
     assert "sensor" in hass.config.components
@@ -1249,4 +1262,11 @@ async def test_setup_does_base_platforms_first(hass: HomeAssistant) -> None:
     assert "second_dep" in hass.config.components
     # base platforms (sensor) should be setup before other integrations
     # but after logger integrations
-    assert order == ["logger", "sensor", "root", "first_dep", "second_dep"]
+    assert order == [
+        "logger",
+        "sensor",
+        "binary_sensor",
+        "root",
+        "first_dep",
+        "second_dep",
+    ]
