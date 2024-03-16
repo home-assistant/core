@@ -1604,7 +1604,7 @@ async def async_process_component_config(  # noqa: C901
     if component_platform_schema is None:
         return IntegrationConfigInfo(config, [])
 
-    platforms_integrations_to_load: list[_PlatformIntegration] = []
+    platform_integrations_to_load: list[_PlatformIntegration] = []
     platforms: list[ConfigType] = []
     for p_name, p_config in config_per_platform(config, domain):
         # Validate component specific platform schema
@@ -1655,7 +1655,7 @@ async def async_process_component_config(  # noqa: C901
         platform_integration = _PlatformIntegration(
             p_integration, p_config, p_validated
         )
-        platforms_integrations_to_load.append(platform_integration)
+        platform_integrations_to_load.append(platform_integration)
 
     #
     # Since bootstrap will order base platform (ie sensor) integrations
@@ -1673,7 +1673,7 @@ async def async_process_component_config(  # noqa: C901
     # that the base `sensor` platform need to load to do validation and allow
     # all integrations that need the base `sensor` platform to proceed with setup.
     #
-    if platforms_integrations_to_load:
+    if platform_integrations_to_load:
         async_load_and_validate = partial(
             _async_load_and_validate_platform_integration,
             domain,
@@ -1685,7 +1685,7 @@ async def async_process_component_config(  # noqa: C901
             for validated_config in await asyncio.gather(
                 *(
                     create_eager_task(async_load_and_validate(p_integration))
-                    for p_integration in platforms_integrations_to_load
+                    for p_integration in platform_integrations_to_load
                 )
             )
             if validated_config is not None
