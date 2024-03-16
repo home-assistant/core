@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 from dataclasses import dataclass, field
 import json
 from typing import Any, cast
@@ -648,6 +649,10 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         brightness = self.device.status.get(self._brightness.dpcode)
         if brightness is None:
             return None
+        # try to convert brightness to float if it's a string or any other type
+        if not isinstance(brightness, float):
+            with contextlib.suppress(ValueError):
+                brightness = float(brightness)
 
         # Remap value to our scale
         brightness = self._brightness.remap_value_to(brightness)
@@ -684,6 +689,10 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         temperature = self.device.status.get(self._color_temp.dpcode)
         if temperature is None:
             return None
+        # try to convert temperature to float if it's a string or any other type
+        if not isinstance(temperature, float):
+            with contextlib.suppress(ValueError):
+                temperature = float(temperature)
 
         return round(
             self._color_temp.remap_value_to(
