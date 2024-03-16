@@ -134,7 +134,7 @@ async def test_sensor_disabled(
 
     # Test enabling entity.
     updated_entry = entity_registry.async_update_entity(
-        entry.entity_id, **{"disabled_by": None}
+        entry.entity_id, disabled_by=None
     )
 
     assert updated_entry != entry

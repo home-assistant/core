@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not entry.unique_id:
         # If the config entry doesn't already have a unique ID, set one:
         hass.config_entries.async_update_entry(
-            entry, **{"unique_id": entry.data[CONF_ZIP_CODE]}
+            entry, unique_id=entry.data[CONF_ZIP_CODE]
         )
 
     websession = aiohttp_client.async_get_clientsession(hass)
