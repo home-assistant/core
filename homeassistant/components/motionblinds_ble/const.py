@@ -1,6 +1,9 @@
 """Constants for the Motionblinds BLE integration."""
 
+ATTR_BATTERY = "battery"
+ATTR_CALIBRATION = "calibration"
 ATTR_CONNECTION = "connection"
+ATTR_SIGNAL_STRENGTH = "signal_strength"
 
 CONF_LOCAL_NAME = "local_name"
 CONF_MAC_CODE = "mac_code"
@@ -13,6 +16,9 @@ ERROR_INVALID_MAC_CODE = "invalid_mac_code"
 ERROR_NO_BLUETOOTH_ADAPTER = "no_bluetooth_adapter"
 ERROR_NO_DEVICES_FOUND = "no_devices_found"
 
+ICON_CALIBRATION = "mdi:tune"
+ICON_CONNECTION = "mdi:bluetooth-connect"
+ICON_SPEED = "mdi:run-fast"
 ICON_VERTICAL_BLIND = "mdi:blinds-vertical-closed"
 
 MANUFACTURER = "Motionblinds"
