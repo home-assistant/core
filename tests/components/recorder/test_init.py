@@ -142,7 +142,7 @@ async def test_shutdown_before_startup_finishes(
     hass.set_state(CoreState.not_running)
 
     recorder_helper.async_initialize_recorder(hass)
-    hass.create_task(async_setup_recorder_instance(hass, config))
+    hass.async_create_task(async_setup_recorder_instance(hass, config))
     await recorder_helper.async_wait_recorder(hass)
     instance = get_instance(hass)
 
@@ -172,7 +172,7 @@ async def test_canceled_before_startup_finishes(
     """Test recorder shuts down when its startup future is canceled out from under it."""
     hass.set_state(CoreState.not_running)
     recorder_helper.async_initialize_recorder(hass)
-    hass.create_task(async_setup_recorder_instance(hass))
+    hass.async_create_task(async_setup_recorder_instance(hass))
     await recorder_helper.async_wait_recorder(hass)
 
     instance = get_instance(hass)
@@ -224,7 +224,7 @@ async def test_state_gets_saved_when_set_before_start_event(
     hass.set_state(CoreState.not_running)
 
     recorder_helper.async_initialize_recorder(hass)
-    hass.create_task(async_setup_recorder_instance(hass))
+    hass.async_create_task(async_setup_recorder_instance(hass))
     await recorder_helper.async_wait_recorder(hass)
 
     entity_id = "test.recorder"
@@ -543,7 +543,7 @@ def test_saving_state_with_commit_interval_zero(
 ) -> None:
     """Test saving a state with a commit interval of zero."""
     hass = hass_recorder({"commit_interval": 0})
-    get_instance(hass).commit_interval == 0
+    assert get_instance(hass).commit_interval == 0
 
     entity_id = "test.recorder"
     state = "restoring_from_db"
@@ -2509,7 +2509,7 @@ async def test_commit_before_commits_pending_writes(
     }
 
     recorder_helper.async_initialize_recorder(hass)
-    hass.create_task(async_setup_recorder_instance(hass, config))
+    hass.async_create_task(async_setup_recorder_instance(hass, config))
     await recorder_helper.async_wait_recorder(hass)
     instance = get_instance(hass)
     assert instance.commit_interval == 60

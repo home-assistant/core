@@ -1719,9 +1719,12 @@ async def test_multi_pan_addon_using_device_not_running(
         "state": "not_running",
     }
 
-    await silabs_multiprotocol_addon.multi_pan_addon_using_device(
-        hass, "/dev/ttyAMA1"
-    ) is False
+    assert (
+        await silabs_multiprotocol_addon.multi_pan_addon_using_device(
+            hass, "/dev/ttyAMA1"
+        )
+        is False
+    )
 
 
 @pytest.mark.parametrize(
@@ -1750,6 +1753,9 @@ async def test_multi_pan_addon_using_device(
         "state": "running",
     }
 
-    await silabs_multiprotocol_addon.multi_pan_addon_using_device(
-        hass, "/dev/ttyAMA1"
-    ) is expected_result
+    assert (
+        await silabs_multiprotocol_addon.multi_pan_addon_using_device(
+            hass, "/dev/ttyAMA1"
+        )
+        is expected_result
+    )

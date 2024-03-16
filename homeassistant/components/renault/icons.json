@@ -28,7 +28,8 @@
       "charge_mode": {
         "default": "mdi:calendar-remove",
         "state": {
-          "schedule_mode": "mdi:calendar-clock"
+          "schedule_mode": "mdi:calendar-clock",
+          "scheduled": "mdi:calendar-clock"
         }
       }
     },

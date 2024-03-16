@@ -225,4 +225,4 @@ def async_dispatcher_send(
         if job is None:
             job = _generate_job(signal, target)
             target_list[target] = job
-        hass.async_run_hass_job(job, *args, eager_start=True)
+        hass.async_run_hass_job(job, *args)

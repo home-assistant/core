@@ -15,6 +15,7 @@ import voluptuous as vol
 from homeassistant import util
 from homeassistant.backports.functools import cached_property
 from homeassistant.components import zone
+from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config import (
     async_log_schema_error,
     config_per_platform,
@@ -481,7 +482,7 @@ def async_setup_scanner_platform(
                 },
             }
 
-            zone_home = hass.states.get(hass.components.zone.ENTITY_ID_HOME)
+            zone_home = hass.states.get(ENTITY_ID_HOME)
             if zone_home is not None:
                 kwargs["gps"] = [
                     zone_home.attributes[ATTR_LATITUDE],

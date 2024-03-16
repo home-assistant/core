@@ -396,7 +396,10 @@ def gen_ha_hardware_schema(config: Config, integration: Integration):
 
 
 ONBOARDING_SCHEMA = vol.Schema(
-    {vol.Required("area"): {str: translation_value_validator}}
+    {
+        vol.Required("area"): {str: translation_value_validator},
+        vol.Required("dashboard"): {str: {"title": translation_value_validator}},
+    }
 )
 
 

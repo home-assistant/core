@@ -1,0 +1,7 @@
+{
+  "services": {
+    "restart": "mdi:restart",
+    "start": "mdi:start",
+    "stop": "mdi:stop"
+  }
+}
