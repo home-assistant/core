@@ -726,8 +726,9 @@ async def _async_resolve_domains_to_setup(
     # so this will be less of a problem in the future.
     domains_to_setup.update(platform_integrations)
 
-    # Load manifests base platforms right away since we do not require the
-    # manifest to list them as dependencies and we want to avoid the lock
+    # Load manifests for base platforms and platform based integrations
+    # that are defined under base platforms right away since we do not require
+    # the manifest to list them as dependencies and we want to avoid the lock
     # contention when multiple integrations try to load them at once
     additional = {*BASE_PLATFORMS, *chain.from_iterable(platform_integrations.values())}
 
