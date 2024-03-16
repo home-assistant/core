@@ -1193,3 +1193,60 @@ async def test_cancellation_does_not_leak_upward_from_async_setup_entry(
 
     assert "test_package" in hass.config.components
     assert "test_package_raises_cancelled_error_config_entry" in hass.config.components
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_setup_does_base_platforms_first(hass: HomeAssistant) -> None:
+    """Test setup does base platforms first.
+
+    Its important that base platforms are setup before other integrations
+    in stage1/2 since they are the foundation for other integrations and
+    almost every integration has to wait for them to be setup.
+    """
+    order = []
+
+    def gen_domain_setup(domain):
+        async def async_setup(hass, config):
+            order.append(domain)
+            return True
+
+        return async_setup
+
+    mock_integration(
+        hass, MockModule(domain="sensor", async_setup=gen_domain_setup("sensor"))
+    )
+    mock_integration(
+        hass, MockModule(domain="root", async_setup=gen_domain_setup("root"))
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="first_dep",
+            async_setup=gen_domain_setup("first_dep"),
+            partial_manifest={"after_dependencies": ["root"]},
+        ),
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="second_dep",
+            async_setup=gen_domain_setup("second_dep"),
+            partial_manifest={"after_dependencies": ["first_dep"]},
+        ),
+    )
+
+    with patch(
+        "homeassistant.components.logger.async_setup", gen_domain_setup("logger")
+    ):
+        await bootstrap._async_set_up_integrations(
+            hass,
+            {"root": {}, "first_dep": {}, "second_dep": {}, "sensor": {}, "logger": {}},
+        )
+
+    assert "sensor" in hass.config.components
+    assert "root" in hass.config.components
+    assert "first_dep" in hass.config.components
+    assert "second_dep" in hass.config.components
+    # base platforms (sensor) should be setup before other integrations
+    # but after logger integrations
+    assert order == ["logger", "sensor", "root", "first_dep", "second_dep"]
