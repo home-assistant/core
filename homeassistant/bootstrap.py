@@ -738,6 +738,8 @@ async def _async_resolve_domains_to_setup(
         *chain.from_iterable(platform_integrations.values()),
     }
 
+    translations_to_load = {*domains_to_setup, *additional_manifests_to_load}
+
     # Resolve all dependencies so we know all integrations
     # that will have to be loaded and start right-away
     integration_cache: dict[str, loader.Integration] = {}
@@ -831,14 +833,7 @@ async def _async_resolve_domains_to_setup(
     # wait for the translation load lock, loading will be done by the
     # time it gets to it.
     hass.async_create_background_task(
-        translation.async_load_integrations(
-            hass,
-            {
-                *BASE_PLATFORMS,
-                *chain.from_iterable(platform_integrations.values()),
-                *domains_to_setup,
-            },
-        ),
+        translation.async_load_integrations(hass, translations_to_load),
         "load translations",
         eager_start=True,
     )
