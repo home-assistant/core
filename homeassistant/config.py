@@ -1595,6 +1595,22 @@ async def async_process_component_config(  # noqa: C901
 
         platforms_to_load.append((p_name, p_integration, p_config))
 
+    #
+    # Since bootstrap will order base platform (ie sensor) integrations
+    # first, we eagerly gathering importing the platforms that need to be
+    # validated for the base platform since everything that uses the
+    # base platform has to wait for it to finish.
+    #
+    # For example if `hue`` where to load first and than called
+    # `async_forward_entry_setup` for the `sensor`` platform it would have to
+    # wait for the sensor platform to finish loading before it could continue.
+    # Since the base `sensor`` platform must also import all of its platform
+    # integrations to do validation before it can finish setup, its important
+    # that the platform integrations are imported first so we do not waste
+    # time importing `hue`` first when we could have been importing the platforms
+    # that the base `sensor`` platform need to load to do validation and allow
+    # all integrations that need the base `sensor` platform to proceed with setup.
+    #
     if platforms_to_load:
 
         async def _async_load_and_validate_platform(
