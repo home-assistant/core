@@ -126,7 +126,7 @@ async def test_form_gen1_custom_port(
         "homeassistant.components.shelly.config_flow.get_info",
         return_value={"mac": "test-mac", "type": MODEL_1, "gen": 1},
     ), patch(
-        "homeassistant.components.shelly.config_flow.validate_input",
+        "aioshelly.block_device.BlockDevice.create",
         side_effect=CustomPortNotSupported,
     ):
         result2 = await hass.config_entries.flow.async_configure(

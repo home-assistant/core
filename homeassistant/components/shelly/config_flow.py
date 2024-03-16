@@ -51,7 +51,7 @@ from .utils import (
     mac_address_from_name,
 )
 
-HOST_SCHEMA: Final = vol.Schema(
+CONFIG_SCHEMA: Final = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PORT, default=DEFAULT_HTTP_PORT): vol.Coerce(int),
@@ -77,7 +77,7 @@ async def validate_input(
 ) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
-    Data has the keys from HOST_SCHEMA with values provided by the user.
+    Data has the keys from CONFIG_SCHEMA with values provided by the user.
     """
     options = ConnectionOptions(
         ip_address=host,
@@ -161,7 +161,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 try:
                     device_info = await validate_input(
-                        self.hass, self.host, self.port, self.info, {}
+                        self.hass, host, port, self.info, {}
                     )
                 except DeviceConnectionError:
                     errors["base"] = "cannot_connect"
@@ -185,7 +185,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "firmware_not_fully_provisioned"
 
         return self.async_show_form(
-            step_id="user", data_schema=HOST_SCHEMA, errors=errors
+            step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
         )
 
     async def async_step_credentials(

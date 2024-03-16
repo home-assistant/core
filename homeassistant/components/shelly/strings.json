@@ -33,7 +33,7 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "firmware_not_fully_provisioned": "Device not fully provisioned. Please contact Shelly support",
-      "custom_port_not_supported": "Gen1 devices cannot be configured via range extender."
+      "custom_port_not_supported": "Gen1 device does not support custom port."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
