@@ -163,7 +163,9 @@ async def _async_get_instance(hass: HomeAssistant, **zcargs: Any) -> HaAsyncZero
         """Stop Zeroconf."""
         await aio_zc.ha_async_close()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_zeroconf)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, _async_stop_zeroconf, run_immediately=True
+    )
     hass.data[DOMAIN] = aio_zc
 
     return aio_zc
@@ -240,7 +242,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def _async_zeroconf_hass_stop(_event: Event) -> None:
         await discovery.async_stop()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_zeroconf_hass_stop)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, _async_zeroconf_hass_stop, run_immediately=True
+    )
     async_when_setup_or_start(hass, "frontend", _async_zeroconf_hass_start)
 
     return True
