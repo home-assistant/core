@@ -461,8 +461,6 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
     async def _update_name_and_beolink(self) -> None:
         """Update the device friendly name."""
-        await self._update_beolink(should_update=False)
-
         beolink_self = await self._client.get_beolink_self()
 
         # Update device name
@@ -472,6 +470,8 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             name=beolink_self.friendly_name,
         )
 
+        await self._update_beolink(should_update=False)
+
         self.async_write_ha_state()
 
     async def _update_beolink(self, should_update: bool = True) -> None:
@@ -480,7 +480,11 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         self._beolink_attribute = {}
 
         # Add Beolink self
-        self._beolink_attribute = {"beolink": {"self": {self.name: self._beolink_jid}}}
+        assert self.device_entry
+
+        self._beolink_attribute = {
+            "beolink": {"self": {self.device_entry.name: self._beolink_jid}}
+        }
 
         # Add Beolink peers
         peers = await self._client.get_beolink_peers()
