@@ -14,7 +14,7 @@ class HomeAssistantError(Exception):
     """General Home Assistant exception occurred."""
 
     _message: str | None = None
-    _translate: bool = False
+    generate_message: bool = False
 
     def __init__(
         self,
@@ -25,7 +25,7 @@ class HomeAssistantError(Exception):
     ) -> None:
         """Initialize exception."""
         if not args and translation_key and translation_domain:
-            self._translate = True
+            self.generate_message = True
             args = (translation_key,)
 
         super().__init__(*args)
@@ -34,11 +34,17 @@ class HomeAssistantError(Exception):
         self.translation_placeholders = translation_placeholders
 
     def __str__(self) -> str:
-        """Return exception message string from translation cache."""
+        """Return exception message.
+
+        If no message was passed to `__init__`, the exception message is generated from
+        the translation_key. The message will be in English, regardless of the configured
+        language.
+        """
+
         if self._message:
             return self._message
 
-        if not self._translate:
+        if not self.generate_message:
             self._message = super().__str__()
             return self._message
 

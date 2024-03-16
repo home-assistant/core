@@ -70,22 +70,22 @@ def test_template_message(arg: str | Exception, expected: str) -> None:
 
 
 @pytest.mark.parametrize(
-    ("exception_args", "exception_kwargs", "translation_key", "message"),
+    ("exception_args", "exception_kwargs", "args_base_class", "message"),
     [
-        ((), {}, "", ""),
-        (("bla",), {}, "bla", "bla"),
-        ((None,), {}, "None", "None"),
-        ((TypeError("bla"),), {}, "bla", "bla"),
+        ((), {}, (), ""),
+        (("bla",), {}, ("bla",), "bla"),
+        ((None,), {}, (None,), "None"),
+        ((type_error_bla := TypeError("bla"),), {}, (type_error_bla,), "bla"),
         (
             (),
             {"translation_domain": "test", "translation_key": "test"},
-            "test",
+            ("test",),
             "test",
         ),
         (
             (),
             {"translation_domain": "test", "translation_key": "bla"},
-            "bla",
+            ("bla",),
             "{bla} from cache",
         ),
         (
@@ -95,7 +95,7 @@ def test_template_message(arg: str | Exception, expected: str) -> None:
                 "translation_key": "bla",
                 "translation_placeholders": {"bla": "Bla"},
             },
-            "bla",
+            ("bla",),
             "Bla from cache",
         ),
     ],
@@ -104,14 +104,18 @@ async def test_home_assistant_error(
     hass: HomeAssistant,
     exception_args: tuple[Any,],
     exception_kwargs: dict[str, Any],
-    translation_key: str,
+    args_base_class: tuple[Any],
     message: str,
 ) -> None:
     """Test edge cases with HomeAssistantError."""
 
-    with pytest.raises(HomeAssistantError, match=translation_key) as exc, patch(
+    with patch(
         "homeassistant.helpers.translation.async_get_cached_translations",
         return_value={"component.test.exceptions.bla.message": "{bla} from cache"},
     ):
-        raise HomeAssistantError(*exception_args, **exception_kwargs)
+        with pytest.raises(HomeAssistantError) as exc:
+            raise HomeAssistantError(*exception_args, **exception_kwargs)
+        assert exc.value.args == args_base_class
+        assert str(exc.value) == message
+        # Get string of exception again from the cache
         assert str(exc.value) == message
