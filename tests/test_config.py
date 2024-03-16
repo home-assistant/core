@@ -2348,6 +2348,7 @@ def test_extract_platform_integrations() -> None:
         [
             (b"zone", {"platform": "not str"}),
             ("zone", {"platform": "hello"}),
+            ("switch", {"platform": ["un", "hash", "able"]}),
             ("zonex", []),
             ("zoney", ""),
             ("notzone", {"platform": "nothello"}),
@@ -2363,6 +2364,7 @@ def test_extract_platform_integrations() -> None:
     assert config_util.extract_platform_integrations(config, {"zone"}) == {
         "zone": {"hello", "hello 2"}
     }
+    assert config_util.extract_platform_integrations(config, {"switch"}) == {}
     assert config_util.extract_platform_integrations(config, {"zonex"}) == {}
     assert config_util.extract_platform_integrations(config, {"zoney"}) == {}
     assert config_util.extract_platform_integrations(
