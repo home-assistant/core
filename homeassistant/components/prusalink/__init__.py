@@ -88,6 +88,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             )
             try:
                 await api.get_info()
+            except aiohttp.client_exceptions.ClientConnectionError as ex:
+                raise ConfigEntryNotReady(f"Error connecting to device: {str(ex)}" from ex
             except InvalidAuth:
                 # We are unable to reach the new API which usually means
                 # that the user is running an outdated firmware version
