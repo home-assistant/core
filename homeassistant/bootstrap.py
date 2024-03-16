@@ -752,11 +752,10 @@ async def _async_resolve_domains_to_setup(
             integration_cache[domain] = itg
             needed_requirements.update(itg.requirements)
 
-            # Make sure dependencies in manifests are
-            # loaded in the next loop to try to group
-            # as many as possible in a single call and
-            # after the manifest being loaded later in
-            # a single job.
+            # Make sure manifests for dependencies are loaded in the next
+            # loop to try to group as many as manifest loads in a single
+            # call to avoid the creating one-off executor jobs later in
+            # the setup process
             additional.update(
                 dep
                 for dep in chain(itg.dependencies, itg.after_dependencies)
