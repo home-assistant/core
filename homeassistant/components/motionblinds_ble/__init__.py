@@ -29,6 +29,7 @@ from .const import CONF_BLIND_TYPE, CONF_MAC_CODE, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
+    Platform.BUTTON,
     Platform.COVER,
 ]
 

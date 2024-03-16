@@ -33,5 +33,18 @@
         "vertical": "Vertical blind"
       }
     }
+  },
+  "entity": {
+    "button": {
+      "connect": {
+        "name": "Connect"
+      },
+      "disconnect": {
+        "name": "Disconnect"
+      },
+      "favorite": {
+        "name": "Favorite"
+      }
+    }
   }
 }
