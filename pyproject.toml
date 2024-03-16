@@ -276,6 +276,7 @@ disable = [
     "unidiomatic-typecheck", # E721
     "unnecessary-direct-lambda-call", # PLC3002
     "unnecessary-lambda-assignment", # PLC3001
+    "unnecessary-pass", # PIE790
     "unneeded-not", # SIM208
     "useless-import-alias", # PLC0414
     "wrong-import-order", # I001
@@ -604,6 +605,10 @@ select = [
     "N815", # Variable {name} in class scope should not be mixedCase
     "PERF", # Perflint
     "PGH004", # Use specific rule codes when using noqa
+    "PIE790", # Unnecessary pass statement
+    "PIE794", # Class field is defined multiple times
+    "PIE807", # Prefer list/dict over useless lambda
+    "PIE810", # Call startswith/endswith once with a tuple
     "PLC0414", # Useless import alias. Import alias does not rename original package.
     "PLC", # pylint
     "PLE", # pylint
