@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from lru import LRU
 import pytest
 
@@ -99,7 +100,9 @@ async def test_memory_usage(hass: HomeAssistant, tmp_path: Path) -> None:
 
 
 async def test_object_growth_logging(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test we can setup and the service and we can dump objects to the log."""
 
