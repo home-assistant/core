@@ -456,7 +456,7 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
         except ValueError:
             _LOGGER.error("Could not parse %s from %s", template_name, payload)
 
-    def prepare_subscribe_topics(  # noqa: C901
+    def prepare_subscribe_topics(
         self,
         topics: dict[str, dict[str, Any]],
     ) -> None:
@@ -714,7 +714,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
 
         self._attr_supported_features = support
 
-    def _prepare_subscribe_topics(self) -> None:  # noqa: C901
+    def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         topics: dict[str, dict[str, Any]] = {}
 

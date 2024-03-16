@@ -46,7 +46,7 @@ from .const import (  # noqa: F401
     ATTR_ORDER,
     ATTR_REMOVE_ENTITIES,
     CONF_HIDE_MEMBERS,
-    DOMAIN,  # noqa: F401
+    DOMAIN,
     GROUP_ORDER,
     REG_KEY,
 )
