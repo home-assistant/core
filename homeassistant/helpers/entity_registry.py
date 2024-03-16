@@ -638,7 +638,9 @@ class EntityRegistry(BaseRegistry):
             minor_version=STORAGE_VERSION_MINOR,
         )
         self.hass.bus.async_listen(
-            EVENT_DEVICE_REGISTRY_UPDATED, self.async_device_modified
+            EVENT_DEVICE_REGISTRY_UPDATED,
+            self.async_device_modified,
+            run_immediately=True,
         )
 
     @callback
