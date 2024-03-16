@@ -10,11 +10,22 @@ DOMAIN = "teslemetry"
 LOGGER = logging.getLogger(__package__)
 
 MODELS = {
-    "model3": "Model 3",
-    "modelx": "Model X",
-    "modely": "Model Y",
-    "models": "Model S",
+    "S": "Model S",
+    "3": "Model 3",
+    "X": "Model X",
+    "Y": "Model Y",
 }
+
+
+class TeslemetryTimestamp(StrEnum):
+    """Teslemetry Timestamps."""
+
+    VEHICLE_STATE = "vehicle_state_timestamp"
+    DRIVE_STATE = "drive_state_timestamp"
+    CHARGE_STATE = "charge_state_timestamp"
+    CLIMATE_STATE = "climate_state_timestamp"
+    GUI_SETTINGS = "gui_settings_timestamp"
+    VEHICLE_CONFIG = "vehicle_config_timestamp"
 
 
 class TeslemetryState(StrEnum):
