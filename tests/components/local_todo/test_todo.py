@@ -671,6 +671,28 @@ async def test_move_item_previous_unknown(
             ),
             "1",
         ),
+        (
+            textwrap.dedent(
+                """\
+                    BEGIN:VCALENDAR
+                    PRODID:-//homeassistant.io//local_todo 2.0//EN
+                    VERSION:2.0
+                    BEGIN:VTODO
+                    DTSTAMP:20231024T014011
+                    UID:077cb7f2-6c89-11ee-b2a9-0242ac110002
+                    CREATED:20231017T010348
+                    LAST-MODIFIED:20231024T014011
+                    SEQUENCE:1
+                    STATUS:NEEDS-ACTION
+                    SUMMARY:Task
+                    DUE:20231024T113000
+                    DTSTART;TZID=CST:20231024T113000
+                    END:VTODO
+                    END:VCALENDAR
+                """
+            ),
+            "1",
+        ),
     ],
     ids=(
         "empty",
@@ -679,6 +701,7 @@ async def test_move_item_previous_unknown(
         "needs_action",
         "migrate_legacy_due",
         "due",
+        "invalid_dtstart_tzname",
     ),
 )
 async def test_parse_existing_ics(
