@@ -135,8 +135,7 @@ class NSDepartureSensor(SensorEntity):
 
         if self._trips[0].trip_parts:
             route = [self._trips[0].departure]
-            for k in self._trips[0].trip_parts:
-                route.append(k.destination)
+            route.extend(k.destination for k in self._trips[0].trip_parts)
 
         # Static attributes
         attributes = {

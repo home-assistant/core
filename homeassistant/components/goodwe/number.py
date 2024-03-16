@@ -24,20 +24,13 @@ from .const import DOMAIN, KEY_DEVICE_INFO, KEY_INVERTER
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class GoodweNumberEntityDescriptionBase:
-    """Required values when describing Goodwe number entities."""
+@dataclass(frozen=True, kw_only=True)
+class GoodweNumberEntityDescription(NumberEntityDescription):
+    """Class describing Goodwe number entities."""
 
     getter: Callable[[Inverter], Awaitable[int]]
     setter: Callable[[Inverter, int], Awaitable[None]]
     filter: Callable[[Inverter], bool]
-
-
-@dataclass(frozen=True)
-class GoodweNumberEntityDescription(
-    NumberEntityDescription, GoodweNumberEntityDescriptionBase
-):
-    """Class describing Goodwe number entities."""
 
 
 def _get_setting_unit(inverter: Inverter, setting: str) -> str:

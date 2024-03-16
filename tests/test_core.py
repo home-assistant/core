@@ -123,9 +123,7 @@ async def test_async_run_hass_job_eager_start_coro_suspends(
     async def job_that_suspends():
         await asyncio.sleep(0)
 
-    task = hass.async_run_hass_job(
-        ha.HassJob(ha.callback(job_that_suspends)), eager_start=True
-    )
+    task = hass.async_run_hass_job(ha.HassJob(ha.callback(job_that_suspends)))
     assert not task.done()
     assert task in hass._tasks
     await task
@@ -169,7 +167,7 @@ async def test_async_add_hass_job_eager_background(hass: HomeAssistant) -> None:
         await asyncio.sleep(0)
 
     task = hass.async_add_hass_job(
-        ha.HassJob(ha.callback(job_that_suspends)), eager_start=True, background=True
+        ha.HassJob(ha.callback(job_that_suspends)), background=True
     )
     assert not task.done()
     assert task in hass._background_tasks
@@ -184,7 +182,7 @@ async def test_async_run_hass_job_eager_background(hass: HomeAssistant) -> None:
         await asyncio.sleep(0)
 
     task = hass.async_run_hass_job(
-        ha.HassJob(ha.callback(job_that_suspends)), eager_start=True, background=True
+        ha.HassJob(ha.callback(job_that_suspends)), background=True
     )
     assert not task.done()
     assert task in hass._background_tasks
@@ -200,7 +198,6 @@ async def test_async_run_hass_job_background_synchronous(hass: HomeAssistant) ->
 
     task = hass.async_run_hass_job(
         ha.HassJob(ha.callback(job_that_does_not_suspends)),
-        eager_start=True,
         background=True,
     )
     assert task.done()
@@ -217,7 +214,6 @@ async def test_async_run_hass_job_synchronous(hass: HomeAssistant) -> None:
 
     task = hass.async_run_hass_job(
         ha.HassJob(ha.callback(job_that_does_not_suspends)),
-        eager_start=True,
         background=False,
     )
     assert task.done()
@@ -393,9 +389,7 @@ async def test_async_run_eager_hass_job_calls_callback() -> None:
         asyncio.get_running_loop()  # ensure we are in the event loop
         calls.append(1)
 
-    ha.HomeAssistant.async_run_hass_job(
-        hass, ha.HassJob(ha.callback(job)), eager_start=True
-    )
+    ha.HomeAssistant.async_run_hass_job(hass, ha.HassJob(ha.callback(job)))
     assert len(calls) == 1
 
 
@@ -406,7 +400,7 @@ async def test_async_run_eager_hass_job_calls_coro_function() -> None:
     async def job():
         pass
 
-    ha.HomeAssistant.async_run_hass_job(hass, ha.HassJob(job), eager_start=True)
+    ha.HomeAssistant.async_run_hass_job(hass, ha.HassJob(job))
     assert len(hass.async_add_hass_job.mock_calls) == 1
 
 
@@ -736,6 +730,20 @@ async def test_pending_scheduler(hass: HomeAssistant) -> None:
     assert len(call_count) == 3
 
 
+def test_add_job_pending_tasks_coro(hass: HomeAssistant) -> None:
+    """Add a coro to pending tasks."""
+
+    async def test_coro():
+        """Test Coro."""
+        pass
+
+    for _ in range(2):
+        hass.add_job(test_coro())
+
+    # Ensure add_job does not run immediately
+    assert len(hass._tasks) == 0
+
+
 async def test_async_add_job_pending_tasks_coro(hass: HomeAssistant) -> None:
     """Add a coro to pending tasks."""
     call_count = []
@@ -745,18 +753,12 @@ async def test_async_add_job_pending_tasks_coro(hass: HomeAssistant) -> None:
         call_count.append("call")
 
     for _ in range(2):
-        hass.add_job(test_coro())
-
-    async def wait_finish_callback():
-        """Wait until all stuff is scheduled."""
-        await asyncio.sleep(0)
-        await asyncio.sleep(0)
-
-    await wait_finish_callback()
+        hass.async_add_job(test_coro())
 
     assert len(hass._tasks) == 2
     await hass.async_block_till_done()
     assert len(call_count) == 2
+    assert len(hass._tasks) == 0
 
 
 async def test_async_create_task_pending_tasks_coro(hass: HomeAssistant) -> None:
@@ -768,18 +770,12 @@ async def test_async_create_task_pending_tasks_coro(hass: HomeAssistant) -> None
         call_count.append("call")
 
     for _ in range(2):
-        hass.create_task(test_coro())
-
-    async def wait_finish_callback():
-        """Wait until all stuff is scheduled."""
-        await asyncio.sleep(0)
-        await asyncio.sleep(0)
-
-    await wait_finish_callback()
+        hass.async_create_task(test_coro())
 
     assert len(hass._tasks) == 2
     await hass.async_block_till_done()
     assert len(call_count) == 2
+    assert len(hass._tasks) == 0
 
 
 async def test_async_add_job_pending_tasks_executor(hass: HomeAssistant) -> None:
@@ -1132,8 +1128,8 @@ async def test_eventbus_filtered_listener(hass: HomeAssistant) -> None:
     unsub()
 
 
-async def test_eventbus_run_immediately(hass: HomeAssistant) -> None:
-    """Test we can call events immediately."""
+async def test_eventbus_run_immediately_callback(hass: HomeAssistant) -> None:
+    """Test we can call events immediately with a callback."""
     calls = []
 
     @ha.callback
@@ -1150,14 +1146,36 @@ async def test_eventbus_run_immediately(hass: HomeAssistant) -> None:
     unsub()
 
 
-async def test_eventbus_run_immediately_not_callback(hass: HomeAssistant) -> None:
-    """Test we raise when passing a non-callback with run_immediately."""
+async def test_eventbus_run_immediately_coro(hass: HomeAssistant) -> None:
+    """Test we can call events immediately with a coro."""
+    calls = []
 
-    def listener(event):
+    async def listener(event):
         """Mock listener."""
+        calls.append(event)
 
-    with pytest.raises(HomeAssistantError):
-        hass.bus.async_listen("test", listener, run_immediately=True)
+    unsub = hass.bus.async_listen("test", listener, run_immediately=True)
+
+    hass.bus.async_fire("test", {"event": True})
+    # No async_block_till_done here
+    assert len(calls) == 1
+
+    unsub()
+
+
+async def test_eventbus_listen_once_run_immediately_coro(hass: HomeAssistant) -> None:
+    """Test we can call events immediately with a coro."""
+    calls = []
+
+    async def listener(event):
+        """Mock listener."""
+        calls.append(event)
+
+    hass.bus.async_listen_once("test", listener, run_immediately=True)
+
+    hass.bus.async_fire("test", {"event": True})
+    # No async_block_till_done here
+    assert len(calls) == 1
 
 
 async def test_eventbus_unsubscribe_listener(hass: HomeAssistant) -> None:
@@ -2107,6 +2125,34 @@ async def test_async_functions_with_callback(hass: HomeAssistant) -> None:
     assert len(runs) == 3
 
 
+async def test_async_run_job_starts_tasks_eagerly(hass: HomeAssistant) -> None:
+    """Test async_run_job starts tasks eagerly."""
+    runs = []
+
+    async def _test():
+        runs.append(True)
+
+    task = hass.async_run_job(_test)
+    # No call to hass.async_block_till_done to ensure the task is run eagerly
+    assert len(runs) == 1
+    assert task.done()
+    await task
+
+
+async def test_async_run_job_starts_coro_eagerly(hass: HomeAssistant) -> None:
+    """Test async_run_job starts coros eagerly."""
+    runs = []
+
+    async def _test():
+        runs.append(True)
+
+    task = hass.async_run_job(_test())
+    # No call to hass.async_block_till_done to ensure the task is run eagerly
+    assert len(runs) == 1
+    assert task.done()
+    await task
+
+
 def test_valid_entity_id() -> None:
     """Test valid entity ID."""
     for invalid in [
@@ -3052,7 +3098,7 @@ def test_one_time_listener_repr(hass: HomeAssistant) -> None:
     def _listener(event: ha.Event):
         """Test listener."""
 
-    one_time_listener = ha._OneTimeListener(hass, _listener)
+    one_time_listener = ha._OneTimeListener(hass, HassJob(_listener))
     repr_str = repr(one_time_listener)
     assert "OneTimeListener" in repr_str
     assert "test_core" in repr_str
@@ -3073,3 +3119,37 @@ async def test_async_add_import_executor_job(hass: HomeAssistant) -> None:
     assert await future is evt
 
     assert hass.import_executor._max_workers == 1
+
+
+async def test_async_run_job_deprecated(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test async_run_job warns about its deprecation."""
+
+    async def _test():
+        pass
+
+    hass.async_run_job(_test)
+    assert (
+        "Detected code that calls `async_run_job`, which is deprecated "
+        "and will be removed in Home Assistant 2025.4; Please review "
+        "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
+        " for replacement options"
+    ) in caplog.text
+
+
+async def test_async_add_job_deprecated(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test async_add_job warns about its deprecation."""
+
+    async def _test():
+        pass
+
+    hass.async_add_job(_test)
+    assert (
+        "Detected code that calls `async_add_job`, which is deprecated "
+        "and will be removed in Home Assistant 2025.4; Please review "
+        "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
+        " for replacement options"
+    ) in caplog.text
