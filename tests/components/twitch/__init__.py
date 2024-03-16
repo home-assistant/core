@@ -123,7 +123,6 @@ class TwitchMock:
 
     async def _noop(self):
         """Fake function to create task."""
-        pass
 
     async def get_users(
         self, user_ids: list[str] | None = None, logins: list[str] | None = None
@@ -157,7 +156,6 @@ class TwitchMock:
         validate: bool = True,
     ) -> None:
         """Set user authentication."""
-        pass
 
     async def get_followed_channels(
         self, user_id: str, broadcaster_id: str | None = None
