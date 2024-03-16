@@ -103,7 +103,7 @@ async def test_get_image_from_camera(
 
 
 @patch(
-    "homeassistant.components.camera.async_get_image",
+    "homeassistant.components.image_processing.async_get_image",
     side_effect=HomeAssistantError(),
 )
 async def test_get_image_without_exists_camera(
