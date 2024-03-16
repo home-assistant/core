@@ -1256,17 +1256,15 @@ async def test_setup_does_base_platforms_first(hass: HomeAssistant) -> None:
             },
         )
 
+    assert "binary_sensor" in hass.config.components
     assert "sensor" in hass.config.components
     assert "root" in hass.config.components
     assert "first_dep" in hass.config.components
     assert "second_dep" in hass.config.components
-    # base platforms (sensor) should be setup before other integrations
-    # but after logger integrations
-    assert order == [
-        "logger",
-        "sensor",
-        "binary_sensor",
-        "root",
-        "first_dep",
-        "second_dep",
-    ]
+
+    assert order[0] == "logger"
+    # base platforms (sensor/binary_sensor) should be setup before other integrations
+    # but after logger integrations. The order of base platforms is not guaranteed,
+    # only that they are setup before other integrations.
+    assert set(order[1:3]) == {"sensor", "binary_sensor"}
+    assert order[3:] == ["root", "first_dep", "second_dep"]
