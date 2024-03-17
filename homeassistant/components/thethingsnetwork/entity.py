@@ -42,9 +42,6 @@ class TTN_Entity(CoordinatorEntity, Entity):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator, context=self.unique_id)
 
-        self.to_be_added = True
-        self.to_be_removed = False
-
         # Values from options
         self._unit_of_measurement = None
         self.__icon = None
@@ -54,7 +51,11 @@ class TTN_Entity(CoordinatorEntity, Entity):
         self.__refresh_names()
 
     # -----------------------------------------------------------#
-    # Methods to keep list of entities, device_ids and field_ids #
+    # Methods to keep list of entities
+    #
+    # NOTE: the entity_registry helper cannot be used here as it
+    # returns instances created in the past, even if they are
+    # not longer available in TTN
     # -----------------------------------------------------------#
 
     async def async_added_to_hass(self):
@@ -159,12 +160,12 @@ class TTN_Entity(CoordinatorEntity, Entity):
     @property
     def device_id(self):
         """Return device_id."""
-        return self.__ttn_value.device_id
+        return self._ttn_value.device_id
 
     @property
     def field_id(self):
         """Return field_id."""
-        return self.__ttn_value.field_id
+        return self._ttn_value.field_id
 
     @property
     def device_name(self):
