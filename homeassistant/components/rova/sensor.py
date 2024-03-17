@@ -152,8 +152,8 @@ class RovaSensor(SensorEntity):
         self.entity_description = description
         self.data_service = data_service
 
-        self._attr_name = f"{platform_name}_{description.name}"
-        self._attr_unique_id = f"{platform_name}_{description.name}"
+        self._attr_name = f"{platform_name}_{description.key}"
+        self._attr_unique_id = f"{platform_name}_{description.key}"
         self._attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def update(self) -> None:
