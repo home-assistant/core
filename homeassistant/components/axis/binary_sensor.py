@@ -28,7 +28,6 @@ from .hub import AxisHub
 
 DEVICE_CLASS = {
     EventGroup.MOTION: BinarySensorDeviceClass.MOTION,
-    EventGroup.SOUND: BinarySensorDeviceClass.SOUND,
 }
 
 EVENT_TOPICS = (
@@ -40,7 +39,6 @@ EVENT_TOPICS = (
     EventTopic.MOTION_GUARD,
     EventTopic.OBJECT_ANALYTICS,
     EventTopic.PIR,
-    EventTopic.SOUND_TRIGGER_LEVEL,
 )
 
 
@@ -77,6 +75,13 @@ ENTITY_DESCRIPTIONS = (
         key="Day/Night vision state",
         device_class=BinarySensorDeviceClass.LIGHT,
         event_topic=EventTopic.DAY_NIGHT_VISION,
+        name_fn=lambda hub, event: "",
+        supported_fn=lambda hub, event: True,
+    ),
+    AxisBinarySensorDescription(
+        key="Sound trigger state",
+        device_class=BinarySensorDeviceClass.SOUND,
+        event_topic=EventTopic.SOUND_TRIGGER_LEVEL,
         name_fn=lambda hub, event: "",
         supported_fn=lambda hub, event: True,
     ),

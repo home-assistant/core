@@ -69,6 +69,21 @@ async def test_unsupported_binary_sensors(
         ),
         (
             {
+                "topic": "tns1:AudioSource/tnsaxis:TriggerLevel",
+                "source_name": "channel",
+                "source_idx": "1",
+                "data_type": "Sound",
+                "data_value": "0",
+            },
+            {
+                "id": f"{BINARY_SENSOR_DOMAIN}.{NAME}_sound_1",
+                "state": STATE_OFF,
+                "name": f"{NAME} Sound 1",
+                "device_class": BinarySensorDeviceClass.SOUND,
+            },
+        ),
+        (
+            {
                 "topic": "tns1:Device/tnsaxis:IO/Port",
                 "data_type": "state",
                 "data_value": "0",
