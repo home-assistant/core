@@ -1383,7 +1383,7 @@ def mock_cipher():
 
         (mkey, plaintext) = pickle.loads(base64.b64decode(ciphertext))
         if key != mkey:
-            raise ValueError()
+            raise ValueError
         return plaintext
 
     return len(TEST_SECRET_KEY), mock_decrypt

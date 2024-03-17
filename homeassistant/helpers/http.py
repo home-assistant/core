@@ -58,7 +58,7 @@ def request_handler_factory(
         authenticated = request.get(KEY_AUTHENTICATED, False)
 
         if view.requires_auth and not authenticated:
-            raise HTTPUnauthorized()
+            raise HTTPUnauthorized
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug(
@@ -74,11 +74,11 @@ def request_handler_factory(
             else:
                 result = handler(request, **request.match_info)
         except vol.Invalid as err:
-            raise HTTPBadRequest() from err
+            raise HTTPBadRequest from err
         except exceptions.ServiceNotFound as err:
-            raise HTTPInternalServerError() from err
+            raise HTTPInternalServerError from err
         except exceptions.Unauthorized as err:
-            raise HTTPUnauthorized() from err
+            raise HTTPUnauthorized from err
 
         if isinstance(result, web.StreamResponse):
             # The method handler returned a ready-made Response, how nice of it
