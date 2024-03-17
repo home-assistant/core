@@ -52,14 +52,16 @@ async def test_abort_if_not_rova_area(
     hass: HomeAssistant, mock_rova: MagicMock
 ) -> None:
     """Test we abort if rova does not collect at the given address."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
     # test with area where rova does not collect
     mock_rova.return_value.is_rova_area.return_value = False
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
             CONF_ZIP_CODE: ZIP_CODE,
             CONF_HOUSE_NUMBER: HOUSE_NUMBER,
             CONF_HOUSE_NUMBER_SUFFIX: HOUSE_NUMBER_SUFFIX,
@@ -68,6 +70,26 @@ async def test_abort_if_not_rova_area(
 
     assert result.get("type") == data_entry_flow.FlowResultType.FORM
     assert result.get("errors") == {"base": "invalid_rova_area"}
+
+    # now reset the return value and test if we can recover
+    mock_rova.return_value.is_rova_area.return_value = True
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_ZIP_CODE: ZIP_CODE,
+            CONF_HOUSE_NUMBER: HOUSE_NUMBER,
+            CONF_HOUSE_NUMBER_SUFFIX: HOUSE_NUMBER_SUFFIX,
+        },
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"{ZIP_CODE} {HOUSE_NUMBER} {HOUSE_NUMBER_SUFFIX}".strip()
+    assert result["data"] == {
+        CONF_ZIP_CODE: ZIP_CODE,
+        CONF_HOUSE_NUMBER: HOUSE_NUMBER,
+        CONF_HOUSE_NUMBER_SUFFIX: HOUSE_NUMBER_SUFFIX,
+    }
 
 
 async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
@@ -105,15 +127,18 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
 async def test_asserts(
     hass: HomeAssistant, exception: Exception, error: str, mock_rova: MagicMock
 ) -> None:
-    """Test the _site_in_configuration_exists method."""
+    """Test different exceptions for the Rova entity."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
 
     # test with exception
     mock_rova.return_value.is_rova_area.side_effect = exception
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
             CONF_ZIP_CODE: ZIP_CODE,
             CONF_HOUSE_NUMBER: HOUSE_NUMBER,
             CONF_HOUSE_NUMBER_SUFFIX: HOUSE_NUMBER_SUFFIX,
@@ -121,6 +146,26 @@ async def test_asserts(
     )
     assert result.get("type") == data_entry_flow.FlowResultType.FORM
     assert result.get("errors") == {"base": error}
+
+    # now reset the side effect to see if we can recover
+    mock_rova.return_value.is_rova_area.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_ZIP_CODE: ZIP_CODE,
+            CONF_HOUSE_NUMBER: HOUSE_NUMBER,
+            CONF_HOUSE_NUMBER_SUFFIX: HOUSE_NUMBER_SUFFIX,
+        },
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"{ZIP_CODE} {HOUSE_NUMBER} {HOUSE_NUMBER_SUFFIX}".strip()
+    assert result["data"] == {
+        CONF_ZIP_CODE: ZIP_CODE,
+        CONF_HOUSE_NUMBER: HOUSE_NUMBER,
+        CONF_HOUSE_NUMBER_SUFFIX: HOUSE_NUMBER_SUFFIX,
+    }
 
 
 async def test_import(hass: HomeAssistant, mock_rova: MagicMock) -> None:
