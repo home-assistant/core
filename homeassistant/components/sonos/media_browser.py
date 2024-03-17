@@ -11,6 +11,7 @@ from typing import cast
 from soco.data_structures import DidlObject
 from soco.ms_data_structures import MusicServiceItem
 from soco.music_library import MusicLibrary
+import urllib.parse
 
 from homeassistant.components import media_source, plex, spotify
 from homeassistant.components.media_player import (
@@ -201,7 +202,7 @@ def build_item_response(
 
     if not title:
         try:
-            title = payload["idstring"].split("/")[1]
+            title = urllib.parse.unquote(payload["idstring"].split("/")[1])
         except IndexError:
             title = LIBRARY_TITLES_MAPPING[payload["idstring"]]
 
