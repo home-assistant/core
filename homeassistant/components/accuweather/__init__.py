@@ -135,4 +135,4 @@ class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):  
         ) as error:
             raise UpdateFailed(error) from error
         _LOGGER.debug("Requests remaining: %d", self.accuweather.requests_remaining)
-        return {**current, **{ATTR_FORECAST: forecast}}
+        return {**current, ATTR_FORECAST: forecast}
