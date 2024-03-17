@@ -455,23 +455,23 @@ async def test_form_still_and_stream_not_provided(
         (httpx.TimeoutException, {"still_image_url": "unable_still_load"}),
         (
             httpx.HTTPStatusError("", request=None, response=httpx.Response(401)),
-            {"still_image_url": "unable_still_load_401"},
+            {"still_image_url": "unable_still_load_auth"},
         ),
         (
             httpx.HTTPStatusError("", request=None, response=httpx.Response(403)),
-            {"still_image_url": "unable_still_load_403"},
+            {"still_image_url": "unable_still_load_auth"},
         ),
         (
             httpx.HTTPStatusError("", request=None, response=httpx.Response(404)),
-            {"still_image_url": "unable_still_load_404"},
+            {"still_image_url": "unable_still_load_not_found"},
         ),
         (
             httpx.HTTPStatusError("", request=None, response=httpx.Response(500)),
-            {"still_image_url": "unable_still_load_500"},
+            {"still_image_url": "unable_still_load_server_error"},
         ),
         (
             httpx.HTTPStatusError("", request=None, response=httpx.Response(503)),
-            {"still_image_url": "unable_still_load_503"},
+            {"still_image_url": "unable_still_load_server_error"},
         ),
         (  # Errors without specific handler should show the general message.
             httpx.HTTPStatusError("", request=None, response=httpx.Response(507)),
