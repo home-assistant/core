@@ -1476,7 +1476,9 @@ def _async_setup_cleanup(hass: HomeAssistant, registry: EntityRegistry) -> None:
         """Cancel cleanup."""
         cancel()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_homeassistant_stop)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, _on_homeassistant_stop, run_immediately=True
+    )
 
 
 @callback
