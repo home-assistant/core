@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Generator, Iterable
+from collections.abc import Awaitable, Callable, Generator
 import contextlib
+import contextvars
+from enum import StrEnum
 import logging.handlers
 import time
 from timeit import default_timer as timer
@@ -29,8 +31,12 @@ from .exceptions import DependencyError, HomeAssistantError
 from .helpers import translation
 from .helpers.issue_registry import IssueSeverity, async_create_issue
 from .helpers.typing import ConfigType
-from .util import ensure_unique_string
 from .util.async_ import create_eager_task
+
+current_setup_unique: contextvars.ContextVar[str | None] = contextvars.ContextVar(
+    "current_setup_unique", default=None
+)
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -358,7 +364,7 @@ async def _async_setup_component(  # noqa: C901
             translation.async_load_integrations(hass, integration_set)
         )
 
-    with async_start_setup(hass, integration_set):
+    with async_start_setup(hass, domain, domain, SetupPhases.SETUP):
         if hasattr(component, "PLATFORM_SCHEMA"):
             # Entity components have their own warning
             warn_task = None
@@ -430,18 +436,18 @@ async def _async_setup_component(  # noqa: C901
         # call to avoid a deadlock when forwarding platforms
         hass.config.components.add(domain)
 
-        if entries := hass.config_entries.async_entries(
-            domain, include_ignore=False, include_disabled=False
-        ):
-            await asyncio.gather(
-                *(
-                    create_eager_task(
-                        entry.async_setup(hass, integration=integration),
-                        name=f"config entry setup {entry.title} {entry.domain} {entry.entry_id}",
-                    )
-                    for entry in entries
+    if entries := hass.config_entries.async_entries(
+        domain, include_ignore=False, include_disabled=False
+    ):
+        await asyncio.gather(
+            *(
+                create_eager_task(
+                    entry.async_setup(hass, integration=integration),
+                    name=f"config entry setup {entry.title} {entry.domain} {entry.entry_id}",
                 )
+                for entry in entries
             )
+        )
 
     # Cleanup
     if domain in hass.data[DATA_SETUP]:
@@ -626,27 +632,111 @@ def async_get_loaded_integrations(hass: core.HomeAssistant) -> set[str]:
     return integrations
 
 
+class SetupPhases(StrEnum):
+    """Constants for setup time measurements."""
+
+    SETUP = "setup"
+    """
+    Time spent in setup of a component in __init__.py
+    """
+    CONFIG_ENTRY_SETUP = "config_entry_setup"
+    """
+    Time spent in setup of a config entry in __init__.py
+    """
+    PLATFORM_SETUP = "platform_setup"
+    """
+    Time spent in setup of a platform integration
+    ex async_setup_platform or setup_platform or
+    a legacy platform like device_tracker.legacy
+    """
+    PLATFORMS = "platforms"
+    """
+    Time setting up platforms under the integration
+    ex hue.light
+    """
+    WAIT_TIME = "wait_time"
+    """
+    Time spent waiting for other operations to finish.
+    ex: import executor, setup of base components
+    """
+
+
+@contextlib.contextmanager
+def async_freeze_setup(hass: core.HomeAssistant) -> Generator[None, None, None]:
+    """Keep track of time we are blocked waiting for other operations.
+
+    We want to count the time we wait for importing and
+    setting up the base components so we can subtract it
+    from the total setup time.
+    """
+    if not (running := current_setup_unique.get()):
+        # This means we are likely in a late platform setup
+        # that is running in a task so we do not want
+        # to subtract out the time later as nothing is waiting
+        # for the code inside the context manager to finish.
+        yield
+        return
+
+    integration, _, _ = running.partition(".")
+    started = time.monotonic()
+    try:
+        yield
+    finally:
+        time_taken = time.monotonic() - started
+        setup_time: dict[str, dict[SetupPhases, float]]
+        setup_time = hass.data.setdefault(DATA_SETUP_TIME, {})
+        timings = setup_time.setdefault(integration, {})
+        timings[SetupPhases.WAIT_TIME] = (
+            timings.get(SetupPhases.WAIT_TIME, 0) + time_taken
+        )
+
+
 @contextlib.contextmanager
 def async_start_setup(
-    hass: core.HomeAssistant, components: Iterable[str]
+    hass: core.HomeAssistant,
+    integration: str,
+    unique_key: str,
+    phase: SetupPhases,
 ) -> Generator[None, None, None]:
     """Keep track of when setup starts and finishes."""
-    setup_started = hass.data.setdefault(DATA_SETUP_STARTED, {})
+    setup_started: dict[str, float] = hass.data.setdefault(DATA_SETUP_STARTED, {})
+    current = f"{integration}.{unique_key}"
+
+    if current in setup_started:
+        # We are already inside another async_start_setup, this like means we
+        # are setting up a platform inside async_setup_entry so we should not
+        # record this as a new setup
+        yield
+        return
+
     started = time.monotonic()
-    unique_components: dict[str, str] = {}
-    for domain in components:
-        unique = ensure_unique_string(domain, setup_started)
-        unique_components[unique] = domain
-        setup_started[unique] = started
+    current_setup_unique.set(current)
+    setup_started[current] = started
 
-    yield
+    try:
+        yield
+    finally:
+        time_taken = time.monotonic() - started
+        del setup_started[current]
+        setup_time: dict[str, dict[SetupPhases, float]]
+        setup_time = hass.data.setdefault(DATA_SETUP_TIME, {})
+        timings = setup_time.setdefault(integration, {})
+        timings[phase] = timings.get(phase, 0) + time_taken
 
-    setup_time: dict[str, float] = hass.data.setdefault(DATA_SETUP_TIME, {})
-    time_taken = time.monotonic() - started
-    for unique, domain in unique_components.items():
-        del setup_started[unique]
-        integration = domain.partition(".")[0]
-        if integration in setup_time:
-            setup_time[integration] += time_taken
-        else:
-            setup_time[integration] = time_taken
+
+@callback
+def async_get_setup_timings(hass: core.HomeAssistant) -> dict[str, float]:
+    """Return timing data for each integration."""
+    setup_time: dict[str, dict[SetupPhases, float]] = hass.data.setdefault(
+        DATA_SETUP_TIME, {}
+    )
+    return {
+        domain: (
+            timings.get(SetupPhases.SETUP, 0)
+            + timings.get(SetupPhases.PLATFORMS, 0)
+            + timings.get(SetupPhases.CONFIG_ENTRY_SETUP, 0)
+            + timings.get(SetupPhases.PLATFORM_SETUP, 0)
+            - timings.get(SetupPhases.WAIT_TIME, 0)
+        )
+        for domain, timings in setup_time.items()
+    }

@@ -50,6 +50,7 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, GPSType, StateType
 from homeassistant.setup import (
+    SetupPhases,
     async_notify_setup_error,
     async_prepare_setup_platform,
     async_start_setup,
@@ -291,7 +292,9 @@ class DeviceTrackerPlatform:
         assert self.type == PLATFORM_TYPE_LEGACY
         full_name = f"{self.name}.{DOMAIN}"
         LOGGER.info("Setting up %s", full_name)
-        with async_start_setup(hass, [full_name]):
+        with async_start_setup(
+            hass, self.name, str(id(self.config)), SetupPhases.PLATFORM_SETUP
+        ):
             try:
                 scanner = None
                 setup: bool | None = None

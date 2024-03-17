@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-from datetime import timedelta
 from functools import partial
 from itertools import chain
 import logging
@@ -82,7 +81,7 @@ from .helpers.typing import ConfigType
 from .setup import (
     BASE_PLATFORMS,
     DATA_SETUP_STARTED,
-    DATA_SETUP_TIME,
+    async_get_setup_timings,
     async_notify_setup_error,
     async_set_domains_to_be_loaded,
     async_setup_component,
@@ -612,10 +611,13 @@ class _WatchPendingSetups:
         now = monotonic()
         self._duration_count += SLOW_STARTUP_CHECK_INTERVAL
 
-        remaining_with_setup_started = {
-            domain: (now - start_time)
-            for domain, start_time in self._setup_started.items()
-        }
+        remaining_with_setup_started: dict[str, float] = {}
+        for unique, start_time in self._setup_started.items():
+            domain, _, _ = unique.partition(".")
+            remaining_with_setup_started[domain] = remaining_with_setup_started.get(
+                domain, 0
+            ) + (now - start_time)
+
         if remaining_with_setup_started:
             _LOGGER.debug("Integration remaining: %s", remaining_with_setup_started)
         elif waiting_tasks := self._hass._active_tasks:  # pylint: disable=protected-access
@@ -840,8 +842,6 @@ async def _async_set_up_integrations(
     """Set up all the integrations."""
     setup_started: dict[str, float] = {}
     hass.data[DATA_SETUP_STARTED] = setup_started
-    setup_time: dict[str, timedelta] = hass.data.setdefault(DATA_SETUP_TIME, {})
-
     watcher = _WatchPendingSetups(hass, setup_started)
     watcher.async_start()
 
@@ -934,7 +934,14 @@ async def _async_set_up_integrations(
 
     watcher.async_stop()
 
-    _LOGGER.debug(
-        "Integration setup times: %s",
-        dict(sorted(setup_time.items(), key=itemgetter(1))),
-    )
+    if _LOGGER.isEnabledFor(logging.DEBUG):
+        _LOGGER.debug(
+            "Integration setup times: %s",
+            dict(
+                sorted(
+                    async_get_setup_timings(hass).items(),
+                    key=itemgetter(1),
+                    reverse=True,
+                )
+            ),
+        )

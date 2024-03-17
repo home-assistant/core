@@ -57,7 +57,14 @@ from .helpers.frame import report
 from .helpers.json import json_bytes, json_fragment
 from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
 from .loader import async_suggest_report_issue
-from .setup import DATA_SETUP_DONE, async_process_deps_reqs, async_setup_component
+from .setup import (
+    DATA_SETUP_DONE,
+    SetupPhases,
+    async_freeze_setup,
+    async_process_deps_reqs,
+    async_setup_component,
+    async_start_setup,
+)
 from .util import uuid as uuid_util
 from .util.async_ import create_eager_task
 from .util.decorator import Registry
@@ -531,8 +538,16 @@ class ConfigEntry:
 
         error_reason = None
 
+        if domain_is_integration:
+            setup_phase = SetupPhases.CONFIG_ENTRY_SETUP
+            unique_key = self.entry_id
+        else:
+            setup_phase = SetupPhases.PLATFORMS
+            unique_key = f"{self.entry_id}.{integration.domain}"
+
         try:
-            result = await component.async_setup_entry(hass, self)
+            with async_start_setup(hass, self.domain, unique_key, setup_phase):
+                result = await component.async_setup_entry(hass, self)
 
             if not isinstance(result, bool):
                 _LOGGER.error(  # type: ignore[unreachable]
@@ -1838,7 +1853,9 @@ class ConfigEntries:
     ) -> None:
         """Forward the setup of an entry to platforms."""
         integration = await loader.async_get_integration(self.hass, entry.domain)
-        await integration.async_get_platforms(platforms)
+        if not integration.platforms_are_loaded(platforms):
+            with async_freeze_setup(self.hass):
+                await integration.async_get_platforms(platforms)
         await asyncio.gather(
             *(
                 create_eager_task(
@@ -1860,7 +1877,10 @@ class ConfigEntries:
         """
         # Setup Component if not set up yet
         if domain not in self.hass.config.components:
-            result = await async_setup_component(self.hass, domain, self._hass_config)
+            with async_freeze_setup(self.hass):
+                result = await async_setup_component(
+                    self.hass, domain, self._hass_config
+                )
 
             if not result:
                 return False

@@ -2,7 +2,7 @@
 
 import asyncio
 import threading
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -727,26 +727,86 @@ async def test_integration_only_setup_entry(hass: HomeAssistant) -> None:
     assert await setup.async_setup_component(hass, "test_integration_only_entry", {})
 
 
-async def test_async_start_setup(hass: HomeAssistant) -> None:
-    """Test setup started context manager keeps track of setup times."""
-    with setup.async_start_setup(hass, ["august"]):
-        assert isinstance(hass.data[setup.DATA_SETUP_STARTED]["august"], float)
-        with setup.async_start_setup(hass, ["august"]):
-            assert isinstance(hass.data[setup.DATA_SETUP_STARTED]["august_2"], float)
+async def test_async_start_setup_config_entry(hass: HomeAssistant) -> None:
+    """Test setup started context manager keeps track of setup times with a config entry."""
+    setup_started_data = hass.data.setdefault(setup.DATA_SETUP_STARTED, {})
+    setup_time = hass.data.setdefault(setup.DATA_SETUP_TIME, {})
 
-    assert "august" not in hass.data[setup.DATA_SETUP_STARTED]
-    assert isinstance(hass.data[setup.DATA_SETUP_TIME]["august"], float)
-    assert "august_2" not in hass.data[setup.DATA_SETUP_TIME]
+    with setup.async_start_setup(hass, "august", "august", setup.SetupPhases.SETUP):
+        assert isinstance(setup_started_data["august.august"], float)
+
+    with setup.async_start_setup(
+        hass, "august", "uuid", setup.SetupPhases.CONFIG_ENTRY_SETUP
+    ):
+        assert isinstance(setup_started_data["august.uuid"], float)
+        with setup.async_start_setup(
+            hass, "august", "uuid", setup.SetupPhases.PLATFORMS
+        ):
+            assert isinstance(setup_started_data["august.uuid"], float)
+
+    # Platforms inside of CONFIG_ENTRY_SETUP should not be tracked
+    assert setup_time["august"] == {
+        setup.SetupPhases.SETUP: ANY,
+        setup.SetupPhases.CONFIG_ENTRY_SETUP: ANY,
+    }
+    with setup.async_start_setup(hass, "august", "uuid", setup.SetupPhases.PLATFORMS):
+        assert isinstance(setup_started_data["august.uuid"], float)
+    # Platforms outside of CONFIG_ENTRY_SETUP should be tracked
+    # This is simulates a late platform forward
+    assert setup_time["august"] == {
+        setup.SetupPhases.SETUP: ANY,
+        setup.SetupPhases.CONFIG_ENTRY_SETUP: ANY,
+        setup.SetupPhases.PLATFORMS: ANY,
+    }
+
+    with setup.async_start_setup(
+        hass, "august", "uuid2", setup.SetupPhases.CONFIG_ENTRY_SETUP
+    ):
+        assert isinstance(setup_started_data["august.uuid2"], float)
+        # We wrap places were we wait for other components
+        # or the import of a module with async_freeze_setup
+        # so we can subtract the time waited from the total setup time
+        with setup.async_freeze_setup(hass):
+            await asyncio.sleep(0)
+
+    # Wait time should be added if freeze_setup is used
+    assert setup_time["august"] == {
+        setup.SetupPhases.SETUP: ANY,
+        setup.SetupPhases.CONFIG_ENTRY_SETUP: ANY,
+        setup.SetupPhases.PLATFORMS: ANY,
+        setup.SetupPhases.WAIT_TIME: ANY,
+    }
 
 
-async def test_async_start_setup_platforms(hass: HomeAssistant) -> None:
-    """Test setup started context manager keeps track of setup times for platforms."""
-    with setup.async_start_setup(hass, ["august.sensor"]):
-        assert isinstance(hass.data[setup.DATA_SETUP_STARTED]["august.sensor"], float)
+async def test_async_start_setup_top_level_yaml(hass: HomeAssistant) -> None:
+    """Test setup started context manager keeps track of setup times with modern yaml."""
+    setup_started_data = hass.data.setdefault(setup.DATA_SETUP_STARTED, {})
+    setup_time = hass.data.setdefault(setup.DATA_SETUP_TIME, {})
 
-    assert "august" not in hass.data[setup.DATA_SETUP_STARTED]
-    assert isinstance(hass.data[setup.DATA_SETUP_TIME]["august"], float)
-    assert "sensor" not in hass.data[setup.DATA_SETUP_TIME]
+    with setup.async_start_setup(
+        hass, "command_line", "command_line", setup.SetupPhases.SETUP
+    ):
+        assert isinstance(setup_started_data["command_line.command_line"], float)
+
+        with setup.async_start_setup(
+            hass, "command_line", "command_line", setup.SetupPhases.PLATFORMS
+        ):
+            assert isinstance(setup_started_data["command_line.command_line"], float)
+
+    # Platforms inside of SETUP should not be tracked
+    assert setup_time["command_line"] == {
+        setup.SetupPhases.SETUP: ANY,
+    }
+    with setup.async_start_setup(
+        hass, "command_line", "command_line", setup.SetupPhases.PLATFORMS
+    ):
+        assert isinstance(setup_started_data["command_line.command_line"], float)
+    # Platforms outside of SETUP should be tracked
+    # This is simulates a late platform forward
+    assert setup_time["command_line"] == {
+        setup.SetupPhases.SETUP: ANY,
+        setup.SetupPhases.PLATFORMS: ANY,
+    }
 
 
 async def test_setup_config_entry_from_yaml(
