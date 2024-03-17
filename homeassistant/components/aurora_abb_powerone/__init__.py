@@ -19,7 +19,7 @@ from serial import SerialException
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, SCAN_INTERVAL
 
@@ -88,7 +88,9 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
             except (SerialException, AuroraError) as error:
                 self.available = False
                 retries -= 1
-                _LOGGER.warning(
+                if retries <= 0:
+                    raise UpdateFailed(error) from error
+                _LOGGER.debug(
                     "Exception: %s occurred, %d retries remaining",
                     repr(error),
                     retries,
