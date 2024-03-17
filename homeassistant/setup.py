@@ -735,6 +735,8 @@ def async_start_setup(
     """
     if hass.is_stopping or hass.state is core.CoreState.running:
         # Don't track setup times when we are shutting down or already running
+        # as we present the timings are "Integration startup time", and we
+        # don't want to add all the setup retry times to that.
         yield
         return
 
