@@ -82,9 +82,9 @@ class RovaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         api = rova.Rova(zip_code, number, suffix)
 
         try:
-            is_rova_area = await self.hass.async_add_executor_job(api.is_rova_area)
+            result = await self.hass.async_add_executor_job(api.is_rova_area)
 
-            if is_rova_area:
+            if result:
                 return self.async_create_entry(
                     title=f"{zip_code} {number} {suffix}".strip(),
                     data={
@@ -96,4 +96,4 @@ class RovaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="invalid_rova_area")
 
         except (ConnectTimeout, HTTPError):
-            return self.async_abort(reason="cannot_connect")
+            return self.async_abort(reason="could_not_connect")
