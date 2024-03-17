@@ -257,7 +257,7 @@ async def test_temperature_no_unit(
     )
 
 
-@pytest.mark.parametrize("native_unit", (UnitOfPressure.INHG, UnitOfPressure.INHG))
+@pytest.mark.parametrize("native_unit", (UnitOfPressure.INHG))
 @pytest.mark.parametrize(
     ("state_unit", "unit_system"),
     ((UnitOfPressure.HPA, METRIC_SYSTEM), (UnitOfPressure.INHG, US_CUSTOMARY_SYSTEM)),

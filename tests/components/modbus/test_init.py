@@ -332,11 +332,6 @@ async def test_ok_struct_validator(do_config) -> None:
         {
             CONF_NAME: TEST_ENTITY_NAME,
             CONF_DATA_TYPE: DataType.INT16,
-            CONF_SWAP: CONF_SWAP_WORD,
-        },
-        {
-            CONF_NAME: TEST_ENTITY_NAME,
-            CONF_DATA_TYPE: DataType.INT16,
             CONF_SWAP: CONF_SWAP_WORD_BYTE,
         },
     ],
@@ -974,28 +969,6 @@ async def test_no_duplicate_names(hass: HomeAssistant, do_config) -> None:
             CONF_HOST: TEST_MODBUS_HOST,
             CONF_PORT: TEST_PORT_TCP,
             CONF_RETRIES: 3,
-            CONF_SENSORS: [
-                {
-                    CONF_NAME: "dummy",
-                    CONF_ADDRESS: 9999,
-                }
-            ],
-        },
-        {
-            CONF_TYPE: TCP,
-            CONF_HOST: TEST_MODBUS_HOST,
-            CONF_PORT: TEST_PORT_TCP,
-            CONF_SENSORS: [
-                {
-                    CONF_NAME: "dummy",
-                    CONF_ADDRESS: 9999,
-                }
-            ],
-        },
-        {
-            CONF_TYPE: TCP,
-            CONF_HOST: TEST_MODBUS_HOST,
-            CONF_PORT: TEST_PORT_TCP,
             CONF_SENSORS: [
                 {
                     CONF_NAME: "dummy",
