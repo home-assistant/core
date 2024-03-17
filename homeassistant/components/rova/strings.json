@@ -11,11 +11,11 @@
       }
     },
     "error": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "invalid_rova_area": "Rova does not collect at this address"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   }
 }

@@ -34,7 +34,7 @@ class RovaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 is_rova_area = await self.hass.async_add_executor_job(api.is_rova_area)
             except (ConnectTimeout, HTTPError):
-                errors = {"base": "could_not_connect"}
+                errors = {"base": "cannot_connect"}
 
             if not is_rova_area:
                 errors = {"base": "invalid_rova_area"}
@@ -96,4 +96,4 @@ class RovaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="invalid_rova_area")
 
         except (ConnectTimeout, HTTPError):
-            return self.async_abort(reason="could_not_connect")
+            return self.async_abort(reason="cannot_connect")
