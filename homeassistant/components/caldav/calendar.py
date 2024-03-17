@@ -31,7 +31,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .api import async_get_calendars
-from .const import DOMAIN
+from .const import CONF_DAYS, DOMAIN
 from .coordinator import CalDavUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,10 +40,6 @@ CONF_CALENDARS = "calendars"
 CONF_CUSTOM_CALENDARS = "custom_calendars"
 CONF_CALENDAR = "calendar"
 CONF_SEARCH = "search"
-CONF_DAYS = "days"
-
-# Number of days to look ahead for next event when configured by ConfigEntry
-CONFIG_ENTRY_DEFAULT_DAYS = 7
 
 # Only allow VCALENDARs that support this component type
 SUPPORTED_COMPONENT = "VEVENT"
@@ -155,7 +151,7 @@ async def async_setup_entry(
                 CalDavUpdateCoordinator(
                     hass,
                     calendar=calendar,
-                    days=CONFIG_ENTRY_DEFAULT_DAYS,
+                    days=entry.options[CONF_DAYS],
                     include_all_day=True,
                     search=None,
                 ),
