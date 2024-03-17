@@ -221,11 +221,13 @@ async def async_setup_entry(
         for sensor in SENSORS
     ]
 
-    sensor_list.extend([
-        ChargePointTimestampSensor(connector, sensor, evse_id)
-        for evse_id in connector.charge_points
-        for sensor in TIMESTAMP_SENSORS
-    ])
+    sensor_list.extend(
+        [
+            ChargePointTimestampSensor(connector, sensor, evse_id)
+            for evse_id in connector.charge_points
+            for sensor in TIMESTAMP_SENSORS
+        ]
+    )
 
     sensor_list.extend(GridSensor(connector, sensor) for sensor in GRID_SENSORS)
 
