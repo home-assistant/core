@@ -690,7 +690,7 @@ def async_freeze_setup(hass: core.HomeAssistant) -> Generator[None, None, None]:
         time_taken = time.monotonic() - started
         integration, group = running
         # Add negative time for the time we waited
-        _set_timing(hass, integration, group, SetupPhases.WAIT_TIME, -time_taken)
+        _get_timing(hass, integration, group)[SetupPhases.WAIT_TIME] = -time_taken
 
 
 def _get_timing(
@@ -701,18 +701,6 @@ def _get_timing(
     setup_time = hass.data.setdefault(DATA_SETUP_TIME, {})
     integration_timings = setup_time.setdefault(integration, {})
     return integration_timings.setdefault(group, {})
-
-
-def _set_timing(
-    hass: core.HomeAssistant,
-    integration: str,
-    group: str | None,
-    phase: SetupPhases,
-    time_taken: float,
-) -> None:
-    """Set the setup timings for a group."""
-    group_timings = _get_timing(hass, integration, group)
-    group_timings[phase] = time_taken
 
 
 @contextlib.contextmanager
@@ -758,7 +746,7 @@ def async_start_setup(
     finally:
         time_taken = time.monotonic() - started
         del setup_started[current]
-        _set_timing(hass, integration, group, phase, time_taken)
+        _get_timing(hass, integration, group)[phase] = time_taken
 
 
 @callback
