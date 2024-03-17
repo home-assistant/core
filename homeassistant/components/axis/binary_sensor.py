@@ -33,12 +33,9 @@ DEVICE_CLASS = {
 EVENT_TOPICS = (
     EventTopic.FENCE_GUARD,
     EventTopic.LOITERING_GUARD,
-    EventTopic.MOTION_DETECTION,
-    EventTopic.MOTION_DETECTION_3,
     EventTopic.MOTION_DETECTION_4,
     EventTopic.MOTION_GUARD,
     EventTopic.OBJECT_ANALYTICS,
-    EventTopic.PIR,
 )
 
 
@@ -82,6 +79,17 @@ ENTITY_DESCRIPTIONS = (
         key="Sound trigger state",
         device_class=BinarySensorDeviceClass.SOUND,
         event_topic=EventTopic.SOUND_TRIGGER_LEVEL,
+        name_fn=lambda hub, event: "",
+        supported_fn=lambda hub, event: True,
+    ),
+    AxisBinarySensorDescription(
+        key="Motion sensors state",
+        device_class=BinarySensorDeviceClass.MOTION,
+        event_topic=(
+            EventTopic.PIR,
+            EventTopic.MOTION_DETECTION,
+            EventTopic.MOTION_DETECTION_3,
+        ),
         name_fn=lambda hub, event: "",
         supported_fn=lambda hub, event: True,
     ),
