@@ -691,7 +691,15 @@ class Template:
     ) -> RenderInfo:
         """Render the template and collect an entity filter."""
         self._renders += 1
-        assert self.hass and _render_info.get() is None
+        assert self.hass, "Home Assistant is not set"
+        if _render_info.get() is not None:
+            raise RuntimeError("Another template is already rendering")
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError as ex:
+            raise RuntimeError(
+                "async_render_to_info can only be called from an async context"
+            ) from ex
 
         render_info = RenderInfo(self)
 
