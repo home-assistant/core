@@ -54,6 +54,22 @@ async def test_unsupported_binary_sensors(
     [
         (
             {
+                "topic": "tns1:Device/tnsaxis:IO/Port",
+                "data_type": "state",
+                "data_value": "0",
+                "operation": "Initialized",
+                "source_name": "port",
+                "source_idx": "0",
+            },
+            {
+                "id": f"{BINARY_SENSOR_DOMAIN}.{NAME}_pir_sensor",
+                "state": STATE_OFF,
+                "name": f"{NAME} PIR sensor",
+                "device_class": BinarySensorDeviceClass.CONNECTIVITY,
+            },
+        ),
+        (
+            {
                 "topic": "tns1:Device/tnsaxis:Sensor/PIR",
                 "data_type": "state",
                 "data_value": "0",
@@ -147,3 +163,20 @@ async def test_binary_sensors(
     assert state.state == entity["state"]
     assert state.name == entity["name"]
     assert state.attributes["device_class"] == entity["device_class"]
+
+
+async def test_unsupported_events(
+    hass: HomeAssistant, setup_config_entry, mock_rtsp_event
+) -> None:
+    """Validate nothing breaks with unsupported events."""
+    mock_rtsp_event(
+        topic="tns1:Device/tnsaxis:IO/Port",
+        data_type="state",
+        data_value="0",
+        operation="Initialized",
+        source_name="port",
+        source_idx="-1",
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 0
