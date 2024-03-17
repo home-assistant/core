@@ -27,7 +27,6 @@ from .const import (
     CONF_HOUSE_NUMBER,
     CONF_HOUSE_NUMBER_SUFFIX,
     CONF_ZIP_CODE,
-    DEFAULT_NAME,
     DOMAIN,
     LOGGER,
 )
@@ -86,10 +85,12 @@ async def async_setup_entry(
     # Create rova data service which will retrieve and update the data.
     data_service = RovaData(api)
 
+    # generate unique name for rova integration
+    name = f"{entry.data[CONF_ZIP_CODE]}{entry.data[CONF_HOUSE_NUMBER]}{entry.data[CONF_HOUSE_NUMBER_SUFFIX]}".strip()
+
     # Create a new sensor for each garbage type.
     entities = [
-        RovaSensor(DEFAULT_NAME, description, data_service)
-        for description in SENSOR_TYPES
+        RovaSensor(name, description, data_service) for description in SENSOR_TYPES
     ]
     async_add_entities(entities, True)
 
