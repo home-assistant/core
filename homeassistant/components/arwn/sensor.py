@@ -6,7 +6,11 @@ import logging
 from typing import Any
 
 from homeassistant.components import mqtt
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.const import DEGREE, UnitOfPrecipitationDepth, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -27,6 +31,7 @@ def discover_sensors(topic: str, payload: dict[str, Any]) -> list[ArwnSensor] | 
 
     Async friendly.
     """
+    default_state_class = SensorStateClass.MEASUREMENT
     parts = topic.split("/")
     unit = payload.get("units", "")
     domain = parts[1]
@@ -38,7 +43,12 @@ def discover_sensors(topic: str, payload: dict[str, Any]) -> list[ArwnSensor] | 
             unit = UnitOfTemperature.CELSIUS
         return [
             ArwnSensor(
-                topic, name, "temp", unit, device_class=SensorDeviceClass.TEMPERATURE
+                topic,
+                name,
+                "temp",
+                unit,
+                device_class=SensorDeviceClass.TEMPERATURE,
+                state_class=default_state_class,
             )
         ]
     if domain == "moisture":
@@ -53,6 +63,7 @@ def discover_sensors(topic: str, payload: dict[str, Any]) -> list[ArwnSensor] | 
                     "since_midnight",
                     UnitOfPrecipitationDepth.INCHES,
                     device_class=SensorDeviceClass.PRECIPITATION,
+                    state_class=SensorStateClass.TOTAL_INCREASING,
                 )
             ]
         return [
@@ -62,6 +73,7 @@ def discover_sensors(topic: str, payload: dict[str, Any]) -> list[ArwnSensor] | 
                 "total",
                 unit,
                 device_class=SensorDeviceClass.PRECIPITATION,
+                state_class=default_state_class,
             ),
             ArwnSensor(
                 topic + "/rate",
@@ -69,11 +81,20 @@ def discover_sensors(topic: str, payload: dict[str, Any]) -> list[ArwnSensor] | 
                 "rate",
                 unit,
                 device_class=SensorDeviceClass.PRECIPITATION,
+                state_class=default_state_class,
             ),
         ]
     if domain == "barometer":
         return [
-            ArwnSensor(topic, "Barometer", "pressure", unit, "mdi:thermometer-lines")
+            ArwnSensor(
+                topic,
+                "Barometer",
+                "pressure",
+                unit,
+                "mdi:thermometer-lines",
+                device_class=SensorDeviceClass.PRESSURE,
+                state_class=default_state_class,
+            )
         ]
     if domain == "wind":
         return [
@@ -83,6 +104,7 @@ def discover_sensors(topic: str, payload: dict[str, Any]) -> list[ArwnSensor] | 
                 "speed",
                 unit,
                 device_class=SensorDeviceClass.WIND_SPEED,
+                state_class=default_state_class,
             ),
             ArwnSensor(
                 topic + "/gust",
@@ -90,9 +112,15 @@ def discover_sensors(topic: str, payload: dict[str, Any]) -> list[ArwnSensor] | 
                 "gust",
                 unit,
                 device_class=SensorDeviceClass.WIND_SPEED,
+                state_class=default_state_class,
             ),
             ArwnSensor(
-                topic + "/dir", "Wind Direction", "direction", DEGREE, "mdi:compass"
+                topic + "/dir",
+                "Wind Direction",
+                "direction",
+                DEGREE,
+                "mdi:compass",
+                state_class=default_state_class,
             ),
         ]
     return None
@@ -173,6 +201,7 @@ class ArwnSensor(SensorEntity):
         units: str,
         icon: str | None = None,
         device_class: SensorDeviceClass | None = None,
+        state_class: SensorStateClass | None = None,
     ) -> None:
         """Initialize the sensor."""
         self.entity_id = _slug(name)
@@ -183,6 +212,7 @@ class ArwnSensor(SensorEntity):
         self._attr_native_unit_of_measurement = units
         self._attr_icon = icon
         self._attr_device_class = device_class
+        self._attr_state_class = state_class or SensorStateClass.MEASUREMENT
 
     def set_event(self, event: dict[str, Any]) -> None:
         """Update the sensor with the most recent event."""
