@@ -124,7 +124,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
         (HTTPError(), "cannot_connect"),
     ],
 )
-async def test_asserts(
+async def test_abort_if_api_throws_exception(
     hass: HomeAssistant, exception: Exception, error: str, mock_rova: MagicMock
 ) -> None:
     """Test different exceptions for the Rova entity."""
