@@ -7,11 +7,11 @@ from contextlib import suppress
 from functools import partial
 import logging
 from typing import cast
+import urllib.parse
 
 from soco.data_structures import DidlObject
 from soco.ms_data_structures import MusicServiceItem
 from soco.music_library import MusicLibrary
-import urllib.parse
 
 from homeassistant.components import media_source, plex, spotify
 from homeassistant.components.media_player import (
