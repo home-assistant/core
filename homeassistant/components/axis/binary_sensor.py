@@ -27,13 +27,11 @@ from .entity import AxisEventEntity
 from .hub import AxisHub
 
 DEVICE_CLASS = {
-    EventGroup.LIGHT: BinarySensorDeviceClass.LIGHT,
     EventGroup.MOTION: BinarySensorDeviceClass.MOTION,
     EventGroup.SOUND: BinarySensorDeviceClass.SOUND,
 }
 
 EVENT_TOPICS = (
-    EventTopic.DAY_NIGHT_VISION,
     EventTopic.FENCE_GUARD,
     EventTopic.LOITERING_GUARD,
     EventTopic.MOTION_DETECTION,
@@ -74,6 +72,13 @@ ENTITY_DESCRIPTIONS = (
         event_topic=(EventTopic.PORT_INPUT, EventTopic.PORT_SUPERVISED_INPUT),
         name_fn=lambda hub, event: hub.api.vapix.ports[event.id].name,
         supported_fn=port_input_supported_fn,
+    ),
+    AxisBinarySensorDescription(
+        key="Day/Night vision state",
+        device_class=BinarySensorDeviceClass.LIGHT,
+        event_topic=EventTopic.DAY_NIGHT_VISION,
+        name_fn=lambda hub, event: "",
+        supported_fn=lambda hub, event: True,
     ),
 )
 

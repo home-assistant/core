@@ -54,6 +54,21 @@ async def test_unsupported_binary_sensors(
     [
         (
             {
+                "topic": "tns1:VideoSource/tnsaxis:DayNightVision",
+                "source_name": "VideoSourceConfigurationToken",
+                "source_idx": "1",
+                "data_type": "DayNight",
+                "data_value": "1",
+            },
+            {
+                "id": f"{BINARY_SENSOR_DOMAIN}.{NAME}_daynight_1",
+                "state": STATE_ON,
+                "name": f"{NAME} DayNight 1",
+                "device_class": BinarySensorDeviceClass.LIGHT,
+            },
+        ),
+        (
+            {
                 "topic": "tns1:Device/tnsaxis:IO/Port",
                 "data_type": "state",
                 "data_value": "0",
