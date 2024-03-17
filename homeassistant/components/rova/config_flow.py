@@ -8,13 +8,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 
-from .const import (
-    CONF_HOUSE_NUMBER,
-    CONF_HOUSE_NUMBER_SUFFIX,
-    CONF_ZIP_CODE,
-    DEFAULT_NAME,
-    DOMAIN,
-)
+from .const import CONF_HOUSE_NUMBER, CONF_HOUSE_NUMBER_SUFFIX, CONF_ZIP_CODE, DOMAIN
 
 
 class RovaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -28,10 +22,9 @@ class RovaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Step when user initializes a integration."""
         errors: dict[str, str] = {}
 
-        if self._async_current_entries():
-            return self.async_abort(reason="already_configured")
-
         if user_input is not None:
+            self._async_abort_entries_match(user_input)
+
             zip_code = user_input[CONF_ZIP_CODE]
             number = user_input[CONF_HOUSE_NUMBER]
             suffix = user_input[CONF_HOUSE_NUMBER_SUFFIX]
@@ -45,7 +38,7 @@ class RovaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if is_rova_area:
                 return self.async_create_entry(
-                    title=DEFAULT_NAME,
+                    title=f"{zip_code} {number} {suffix}".strip(),
                     data={
                         CONF_ZIP_CODE: zip_code,
                         CONF_HOUSE_NUMBER: number,
