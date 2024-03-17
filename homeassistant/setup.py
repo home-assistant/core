@@ -770,7 +770,7 @@ def async_get_setup_timings(hass: core.HomeAssistant) -> dict[str, float]:
     for domain, timings in setup_time.items():
         top_level_timings = timings.get(None, {})
         total_top_level = sum(top_level_timings.values())
-        # Groups (config entries/platform setups) are setup in parallel so we
+        # Groups (config entries/platform instance) are setup in parallel so we
         # take the max of the group timings and add it to the top level
         group_totals = {
             group: sum(group_timings.values())
