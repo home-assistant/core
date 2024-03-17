@@ -81,6 +81,30 @@ def guard_suite_name_fn(
 
 
 @callback
+def fence_guard_name_fn(hub: AxisHub, event: Event) -> str:
+    """Fence guard name."""
+    return guard_suite_name_fn(hub.api.vapix.fence_guard, event)
+
+
+@callback
+def loitering_guard_name_fn(hub: AxisHub, event: Event) -> str:
+    """Loitering guard name."""
+    return guard_suite_name_fn(hub.api.vapix.loitering_guard, event)
+
+
+@callback
+def motion_guard_name_fn(hub: AxisHub, event: Event) -> str:
+    """Motion guard name."""
+    return guard_suite_name_fn(hub.api.vapix.motion_guard, event)
+
+
+@callback
+def motion_detection_4_name_fn(hub: AxisHub, event: Event) -> str:
+    """Motion detection 4 name."""
+    return guard_suite_name_fn(hub.api.vapix.vmd4, event)
+
+
+@callback
 def object_analytics_name_fn(hub: AxisHub, event: Event) -> str:
     """Get object analytics name."""
     if hub.api.vapix.object_analytics.initialized and (
@@ -124,34 +148,28 @@ ENTITY_DESCRIPTIONS = (
         key="Motion detection 4 state",
         device_class=BinarySensorDeviceClass.MOTION,
         event_topic=EventTopic.MOTION_DETECTION_4,
-        name_fn=lambda hub, event: guard_suite_name_fn(hub.api.vapix.vmd4, event),
+        name_fn=motion_detection_4_name_fn,
         supported_fn=guard_suite_supported_fn,
     ),
     AxisBinarySensorDescription(
         key="Fence guard state",
         device_class=BinarySensorDeviceClass.MOTION,
         event_topic=EventTopic.FENCE_GUARD,
-        name_fn=lambda hub, event: guard_suite_name_fn(
-            hub.api.vapix.fence_guard, event
-        ),
+        name_fn=fence_guard_name_fn,
         supported_fn=guard_suite_supported_fn,
     ),
     AxisBinarySensorDescription(
         key="Loitering guard state",
         device_class=BinarySensorDeviceClass.MOTION,
         event_topic=EventTopic.LOITERING_GUARD,
-        name_fn=lambda hub, event: guard_suite_name_fn(
-            hub.api.vapix.loitering_guard, event
-        ),
+        name_fn=loitering_guard_name_fn,
         supported_fn=guard_suite_supported_fn,
     ),
     AxisBinarySensorDescription(
         key="Motion guard state",
         device_class=BinarySensorDeviceClass.MOTION,
         event_topic=EventTopic.MOTION_GUARD,
-        name_fn=lambda hub, event: guard_suite_name_fn(
-            hub.api.vapix.motion_guard, event
-        ),
+        name_fn=motion_guard_name_fn,
         supported_fn=guard_suite_supported_fn,
     ),
     AxisBinarySensorDescription(
