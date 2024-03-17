@@ -9,6 +9,7 @@ import logging
 from time import monotonic
 from typing import TypeVar
 
+import aiohttp.client_exceptions
 from pyprusalink import JobInfo, LegacyPrinterStatus, PrinterStatus, PrusaLink
 from pyprusalink.types import InvalidAuth, PrusaLinkError
 
@@ -21,7 +22,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -89,7 +90,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             try:
                 await api.get_info()
             except aiohttp.client_exceptions.ClientConnectionError as ex:
-                raise ConfigEntryNotReady(f"Error connecting to device: {str(ex)}" from ex
+                raise ConfigEntryNotReady(
+                    f"Error connecting to device: {str(ex)}"
+                ) from ex
             except InvalidAuth:
                 # We are unable to reach the new API which usually means
                 # that the user is running an outdated firmware version
