@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+import re
 import socket
 from unittest.mock import patch
 
@@ -106,7 +107,8 @@ async def test_send_code_no_protocol(hass: HomeAssistant) -> None:
 
         # Call without protocol info, should raise an error
         with pytest.raises(
-            MultipleInvalid, match="required key not provided @ data['protocol']"
+            MultipleInvalid,
+            match=re.escape("required key not provided @ data['protocol']"),
         ):
             await hass.services.async_call(
                 pilight.DOMAIN,
