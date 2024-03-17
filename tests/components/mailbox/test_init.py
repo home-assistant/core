@@ -49,7 +49,7 @@ class TestMailbox(mailbox.Mailbox):
         """Initialize Test mailbox."""
         super().__init__(hass, name)
         self._messages: dict[str, dict[str, Any]] = {}
-        for idx in range(0, 10):
+        for idx in range(10):
             msg = _create_message(idx)
             msgsha = msg["sha"]
             self._messages[msgsha] = msg

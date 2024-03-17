@@ -92,7 +92,7 @@ MOTION_ENERGY_GATES = [
         entity_registry_enabled_default=False,
         native_unit_of_measurement="Target Energy",
     )
-    for i in range(0, 9)
+    for i in range(9)
 ]
 
 STATIC_ENERGY_GATES = [
@@ -103,7 +103,7 @@ STATIC_ENERGY_GATES = [
         entity_registry_enabled_default=False,
         native_unit_of_measurement="Target Energy",
     )
-    for i in range(0, 9)
+    for i in range(9)
 ]
 
 SENSOR_DESCRIPTIONS = [
