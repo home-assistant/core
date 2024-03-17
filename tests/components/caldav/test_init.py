@@ -36,6 +36,22 @@ async def test_load_unload(
     assert config_entry.state == ConfigEntryState.NOT_LOADED
 
 
+async def test_config_entry_update_listener(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test updating and reloading of the config entry."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload"
+    ) as mock_async_reload:
+        hass.config_entries.async_update_entry(config_entry, options={CONF_DAYS: 14})
+        await hass.async_block_till_done()
+        assert mock_async_reload.call_count == 1
+
+
 @pytest.mark.parametrize(
     ("side_effect", "expected_state", "expected_flows"),
     [
