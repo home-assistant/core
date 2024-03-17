@@ -4334,10 +4334,10 @@ async def test_task_tracking(hass: HomeAssistant) -> None:
     hass.loop.call_soon(event.set)
     await entry._async_process_on_unload(hass)
     assert results == [
-        "on_unload",
         "background",
         "background",
         "normal",
+        "on_unload",
     ]
 
 
