@@ -727,10 +727,9 @@ def async_start_setup(
     :param hass: Home Assistant instance
     :param integration: The integration that is being setup
     :param phase: The phase of setup
-    :param group: The group (config entry) that is being setup
+    :param group: The group (config entry/platform instance) that is being setup
 
-      A group is a group of setups that run in parallel. Currently
-      this is only used for config entries.
+      A group is a group of setups that run in parallel.
 
     """
     if hass.is_stopping or hass.state is core.CoreState.running:
@@ -740,9 +739,8 @@ def async_start_setup(
         yield
         return
 
-    setup_started: dict[tuple[str, str | None], float] = hass.data.setdefault(
-        DATA_SETUP_STARTED, {}
-    )
+    setup_started: dict[tuple[str, str | None], float]
+    setup_started = hass.data.setdefault(DATA_SETUP_STARTED, {})
     current = (integration, group)
     if current in setup_started:
         # We are already inside another async_start_setup, this like means we
@@ -766,14 +764,13 @@ def async_start_setup(
 @callback
 def async_get_setup_timings(hass: core.HomeAssistant) -> dict[str, float]:
     """Return timing data for each integration."""
-    setup_time: dict[
-        str, dict[str | None, dict[SetupPhases, float]]
-    ] = hass.data.setdefault(DATA_SETUP_TIME, {})
+    setup_time: dict[str, dict[str | None, dict[SetupPhases, float]]]
+    setup_time = hass.data.setdefault(DATA_SETUP_TIME, {})
     domain_timings: dict[str, float] = {}
     for domain, timings in setup_time.items():
         top_level_timings = timings.get(None, {})
         total_top_level = sum(top_level_timings.values())
-        # Groups (config entries) are setup in parallel so we
+        # Groups (config entries/platform setups) are setup in parallel so we
         # take the max of the group timings and add it to the top level
         group_totals = {
             group: sum(group_timings.values())

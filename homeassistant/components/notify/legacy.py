@@ -89,7 +89,10 @@ def async_setup_legacy(
         full_name = f"{DOMAIN}.{integration_name}"
         LOGGER.info("Setting up %s", full_name)
         with async_start_setup(
-            hass, integration=integration_name, phase=SetupPhases.PLATFORM_SETUP
+            hass,
+            integration=integration_name,
+            group=str(id(p_config)),
+            phase=SetupPhases.PLATFORM_SETUP,
         ):
             notify_service: BaseNotificationService | None = None
             try:
