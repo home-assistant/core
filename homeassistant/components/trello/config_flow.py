@@ -5,8 +5,8 @@ from trello import TrelloClient, Unauthorized
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_BOARD_IDS, CONF_USER_EMAIL, CONF_USER_ID, DOMAIN, LOGGER
@@ -32,7 +32,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Prompt user for Trello API credentials."""
         errors = {}
         if user_input:
@@ -74,7 +74,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=USER_FORM_SCHEMA, errors=errors, last_step=False
         )
 
-    async def async_step_boards(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_boards(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Select desired boards to have card counts of per list.
 
         :param user_input: User's selected boards
