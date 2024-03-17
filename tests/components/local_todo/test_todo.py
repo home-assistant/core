@@ -185,7 +185,7 @@ async def test_bulk_remove(
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
 ) -> None:
     """Test removing multiple todo items."""
-    for i in range(0, 5):
+    for i in range(5):
         await hass.services.async_call(
             TODO_DOMAIN,
             "add_item",
