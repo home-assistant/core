@@ -1,9 +1,10 @@
 """Data update coordinator for trigger based template entities."""
+
 from collections.abc import Callable
 import logging
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START
-from homeassistant.core import CoreState, callback
+from homeassistant.core import Context, CoreState, callback
 from homeassistant.helpers import discovery, trigger as trigger_helper
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType
@@ -46,7 +47,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
             await self._attach_triggers()
         else:
             self._unsub_start = self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_START, self._attach_triggers
+                EVENT_HOMEASSISTANT_START, self._attach_triggers, run_immediately=True
             )
 
         for platform_domain in PLATFORMS:
@@ -90,7 +91,10 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         )
 
     async def _handle_triggered_with_script(self, run_variables, context=None):
-        if script_result := await self._script.async_run(run_variables, context):
+        # Create a context referring to the trigger context.
+        trigger_context_id = None if context is None else context.id
+        script_context = Context(parent_id=trigger_context_id)
+        if script_result := await self._script.async_run(run_variables, script_context):
             run_variables = script_result.variables
         self._handle_triggered(run_variables, context)
 

@@ -1,4 +1,5 @@
 """Config flow for Nina integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -224,7 +225,7 @@ class OptionsFlowHandler(OptionsFlow):
                 removed_entities_slots = [
                     f"{region}-{slot_id}"
                     for region in self.data[CONF_REGIONS]
-                    for slot_id in range(0, self.data[CONF_MESSAGE_SLOTS] + 1)
+                    for slot_id in range(self.data[CONF_MESSAGE_SLOTS] + 1)
                     if slot_id > user_input[CONF_MESSAGE_SLOTS]
                 ]
 

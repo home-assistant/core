@@ -1,6 +1,5 @@
 """Test intents for the default agent."""
 
-
 import pytest
 
 from homeassistant.components import conversation, cover, media_player, vacuum, valve

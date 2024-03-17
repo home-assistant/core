@@ -1,4 +1,5 @@
 """Component to interface with an alarm control panel."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -32,6 +33,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
+from . import group as group_pre_import  # noqa: F401
 from .const import (  # noqa: F401
     _DEPRECATED_FORMAT_NUMBER,
     _DEPRECATED_FORMAT_TEXT,

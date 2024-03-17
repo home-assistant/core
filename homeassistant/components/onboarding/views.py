@@ -1,4 +1,5 @@
 """Onboarding views."""
+
 from __future__ import annotations
 
 import asyncio
@@ -25,7 +26,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.async_ import create_eager_task
 
 if TYPE_CHECKING:
-    from . import OnboadingStorage
+    from . import OnboardingData, OnboardingStorage, OnboardingStoreData
 
 from .const import (
     DEFAULT_AREAS,
@@ -39,7 +40,7 @@ from .const import (
 
 
 async def async_setup(
-    hass: HomeAssistant, data: dict[str, list[str]], store: OnboadingStorage
+    hass: HomeAssistant, data: OnboardingStoreData, store: OnboardingStorage
 ) -> None:
     """Set up the onboarding view."""
     hass.http.register_view(OnboardingView(data, store))
@@ -57,7 +58,7 @@ class OnboardingView(HomeAssistantView):
     url = "/api/onboarding"
     name = "api:onboarding"
 
-    def __init__(self, data: dict[str, list[str]], store: OnboadingStorage) -> None:
+    def __init__(self, data: OnboardingStoreData, store: OnboardingStorage) -> None:
         """Initialize the onboarding view."""
         self._store = store
         self._data = data
@@ -76,7 +77,7 @@ class InstallationTypeOnboardingView(HomeAssistantView):
     url = "/api/onboarding/installation_type"
     name = "api:onboarding:installation_type"
 
-    def __init__(self, data: dict[str, list[str]]) -> None:
+    def __init__(self, data: OnboardingStoreData) -> None:
         """Initialize the onboarding installation type view."""
         self._data = data
 
@@ -95,7 +96,7 @@ class _BaseOnboardingView(HomeAssistantView):
 
     step: str
 
-    def __init__(self, data: dict[str, list[str]], store: OnboadingStorage) -> None:
+    def __init__(self, data: OnboardingStoreData, store: OnboardingStorage) -> None:
         """Initialize the onboarding view."""
         self._store = store
         self._data = data
@@ -112,7 +113,10 @@ class _BaseOnboardingView(HomeAssistantView):
         await self._store.async_save(self._data)
 
         if set(self._data["done"]) == set(STEPS):
-            hass.data[DOMAIN] = True
+            data: OnboardingData = hass.data[DOMAIN]
+            data.onboarded = True
+            for listener in data.listeners:
+                listener()
 
 
 class UserOnboardingView(_BaseOnboardingView):

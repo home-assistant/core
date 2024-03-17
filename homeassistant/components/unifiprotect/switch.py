@@ -1,4 +1,5 @@
 """Component providing Switches for UniFi Protect."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -73,6 +74,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         name="HDR Mode",
         icon="mdi:brightness-7",
         entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
         ufp_required_field="feature_flags.has_hdr",
         ufp_value="hdr_mode",
         ufp_set_method="set_hdr",

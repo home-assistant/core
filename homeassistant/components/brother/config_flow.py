@@ -1,4 +1,5 @@
 """Adds config flow for Brother Printer."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -58,7 +59,7 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=title, data=user_input)
             except InvalidHost:
                 errors[CONF_HOST] = "wrong_host"
-            except ConnectionError:
+            except (ConnectionError, TimeoutError):
                 errors["base"] = "cannot_connect"
             except SnmpError:
                 errors["base"] = "snmp_error"
@@ -88,7 +89,7 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.brother.async_update()
         except UnsupportedModelError:
             return self.async_abort(reason="unsupported_model")
-        except (ConnectionError, SnmpError):
+        except (ConnectionError, SnmpError, TimeoutError):
             return self.async_abort(reason="cannot_connect")
 
         # Check if already configured

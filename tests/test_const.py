@@ -1,6 +1,5 @@
 """Test const module."""
 
-
 from enum import Enum
 
 import pytest
@@ -18,10 +17,7 @@ from tests.common import (
 def _create_tuples(
     value: Enum | list[Enum], constant_prefix: str
 ) -> list[tuple[Enum, str]]:
-    result = []
-    for enum in value:
-        result.append((enum, constant_prefix))
-    return result
+    return [(enum, constant_prefix) for enum in value]
 
 
 def test_all() -> None:

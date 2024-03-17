@@ -23,7 +23,7 @@ async def test_coordinator_update(
     mock_integration: MockConfigEntry,
 ) -> None:
     """Test coordinator update runs."""
-    mock_device.get_state.return_value = {"power": "standby"}
+    mock_device.get_state.return_value = {"power": "standby", "input": "hdmi1"}
     async_fire_time_changed(
         hass, utcnow() + timedelta(seconds=INTERVAL_SLOW.seconds + 1)
     )
@@ -65,7 +65,7 @@ async def test_coordinator_device_on(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test coordinator changes update interval when device is on."""
-    mock_device.get_state.return_value = {"power": "on"}
+    mock_device.get_state.return_value = {"power": "on", "input": "hdmi1"}
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

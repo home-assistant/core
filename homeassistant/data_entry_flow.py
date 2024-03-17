@@ -1,4 +1,5 @@
 """Classes to help gather user submissions."""
+
 from __future__ import annotations
 
 import abc

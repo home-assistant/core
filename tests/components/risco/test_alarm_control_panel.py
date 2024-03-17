@@ -1,4 +1,5 @@
 """Tests for the Risco alarm control panel device."""
+
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest

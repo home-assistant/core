@@ -1,4 +1,5 @@
 """Support for sending data to an Influx database."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -550,7 +551,7 @@ class InfluxThread(threading.Thread):
 
                 if item is None:
                     self.shutdown = True
-                elif type(item) is tuple:  # noqa: E721
+                elif type(item) is tuple:
                     timestamp, event = item
                     age = time.monotonic() - timestamp
 

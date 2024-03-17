@@ -1,4 +1,5 @@
 """Test ESPHome binary sensors."""
+
 from collections.abc import Awaitable, Callable
 
 from aioesphomeapi import (

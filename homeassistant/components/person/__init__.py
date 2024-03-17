@@ -1,4 +1,5 @@
 """Support for tracking people."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -53,8 +54,10 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType, EventType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+
+from . import group as group_pre_import  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -131,7 +134,7 @@ async def async_add_user_device_tracker(
 
         await coll.async_update_item(
             person[CONF_ID],
-            {CONF_DEVICE_TRACKERS: device_trackers + [device_tracker_entity_id]},
+            {CONF_DEVICE_TRACKERS: [*device_trackers, device_tracker_entity_id]},
         )
         break
 
@@ -241,6 +244,7 @@ class PersonStorageCollection(collection.DictStorageCollection):
             er.EVENT_ENTITY_REGISTRY_UPDATED,
             self._entity_registry_updated,
             event_filter=self._entity_registry_filter,
+            run_immediately=True,
         )
 
     @callback
@@ -517,9 +521,7 @@ class Person(collection.CollectionEntity, RestoreEntity):
         self._update_state()
 
     @callback
-    def _async_handle_tracker_update(
-        self, event: EventType[EventStateChangedData]
-    ) -> None:
+    def _async_handle_tracker_update(self, event: Event[EventStateChangedData]) -> None:
         """Handle the device tracker state changes."""
         self._update_state()
 

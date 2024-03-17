@@ -1,4 +1,5 @@
 """Test weather intents."""
+
 from unittest.mock import patch
 
 import pytest
