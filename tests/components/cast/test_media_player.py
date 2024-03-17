@@ -116,7 +116,7 @@ async def async_setup_cast(hass, config=None):
     """Set up the cast platform."""
     if config is None:
         config = {}
-    data = {**{"ignore_cec": [], "known_hosts": [], "uuid": []}, **config}
+    data = {"ignore_cec": [], "known_hosts": [], "uuid": [], **config}
     with patch(
         "homeassistant.helpers.entity_platform.EntityPlatform._async_schedule_add_entities_for_entry"
     ) as add_entities:

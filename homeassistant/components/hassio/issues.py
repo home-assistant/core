@@ -300,13 +300,13 @@ class SupervisorIssues:
 
     async def setup(self) -> None:
         """Create supervisor events listener."""
-        await self.update()
+        await self._update()
 
         async_dispatcher_connect(
             self._hass, EVENT_SUPERVISOR_EVENT, self._supervisor_events_to_issues
         )
 
-    async def update(self, _: datetime | None = None) -> None:
+    async def _update(self, _: datetime | None = None) -> None:
         """Update issues from Supervisor resolution center."""
         try:
             data = await self._client.get_resolution_info()
@@ -315,7 +315,7 @@ class SupervisorIssues:
             async_call_later(
                 self._hass,
                 REQUEST_REFRESH_DELAY,
-                HassJob(self.update, cancel_on_shutdown=True),
+                HassJob(self._update, cancel_on_shutdown=True),
             )
             return
         self.unhealthy_reasons = set(data[ATTR_UNHEALTHY])
@@ -342,7 +342,7 @@ class SupervisorIssues:
             event[ATTR_WS_EVENT] == EVENT_SUPERVISOR_UPDATE
             and event.get(ATTR_UPDATE_KEY) == UPDATE_KEY_SUPERVISOR
         ):
-            self._hass.async_create_task(self.update())
+            self._hass.async_create_task(self._update())
 
         elif event[ATTR_WS_EVENT] == EVENT_HEALTH_CHANGED:
             self.unhealthy_reasons = (

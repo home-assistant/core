@@ -349,7 +349,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, homekit.async_stop)
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, homekit.async_stop, run_immediately=True
+        )
     )
 
     entry_data = HomeKitEntryData(
@@ -382,7 +384,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await homekit.async_stop()
 
     logged_shutdown_wait = False
-    for _ in range(0, SHUTDOWN_TIMEOUT):
+    for _ in range(SHUTDOWN_TIMEOUT):
         if async_port_is_available(entry.data[CONF_PORT]):
             break
 
