@@ -42,6 +42,7 @@ from .const import (
     HA_TERMINATION_DURATION,
     HA_TERMINATION_TYPE,
     HA_TO_TADO_FAN_MODE_MAP,
+    HA_TO_TADO_FAN_MODE_MAP_LEGACY,
     HA_TO_TADO_HVAC_MODE_MAP,
     HA_TO_TADO_SWING_MODE_MAP,
     ORDERED_KNOWN_TADO_MODES,
@@ -51,11 +52,14 @@ from .const import (
     SUPPORT_PRESET_MANUAL,
     TADO_DEFAULT_MAX_TEMP,
     TADO_DEFAULT_MIN_TEMP,
+    TADO_FAN_LEVELS,
+    TADO_FAN_SPEEDS,
     TADO_HVAC_ACTION_TO_HA_HVAC_ACTION,
     TADO_MODES_WITH_NO_TEMP_SETTING,
     TADO_SWING_OFF,
     TADO_SWING_ON,
     TADO_TO_HA_FAN_MODE_MAP,
+    TADO_TO_HA_FAN_MODE_MAP_LEGACY,
     TADO_TO_HA_HVAC_MODE_MAP,
     TADO_TO_HA_OFFSET_MAP,
     TADO_TO_HA_SWING_MODE_MAP,
@@ -160,7 +164,9 @@ def create_climate_entity(
             if capabilities[mode].get("swings"):
                 support_flags |= ClimateEntityFeature.SWING_MODE
 
-            if not capabilities[mode].get("fanSpeeds"):
+            if not capabilities[mode].get("fanSpeeds") and not capabilities[mode].get(
+                "fanLevel"
+            ):
                 continue
 
             support_flags |= ClimateEntityFeature.FAN_MODE
@@ -168,10 +174,16 @@ def create_climate_entity(
             if supported_fan_modes:
                 continue
 
-            supported_fan_modes = [
-                TADO_TO_HA_FAN_MODE_MAP[speed]
-                for speed in capabilities[mode]["fanSpeeds"]
-            ]
+            if capabilities[mode].get("fanSpeeds"):
+                supported_fan_modes = [
+                    TADO_TO_HA_FAN_MODE_MAP_LEGACY[speed]
+                    for speed in capabilities[mode]["fanSpeeds"]
+                ]
+            else:
+                supported_fan_modes = [
+                    TADO_TO_HA_FAN_MODE_MAP[level]
+                    for level in capabilities[mode]["fanLevel"]
+                ]
 
         cool_temperatures = capabilities[CONST_MODE_COOL]["temperatures"]
     else:
@@ -348,12 +360,20 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
         if self._ac_device:
-            return TADO_TO_HA_FAN_MODE_MAP.get(self._current_tado_fan_speed, FAN_AUTO)
+            return TADO_TO_HA_FAN_MODE_MAP.get(
+                self._current_tado_fan_speed,
+                TADO_TO_HA_FAN_MODE_MAP_LEGACY.get(
+                    self._current_tado_fan_speed, FAN_AUTO
+                ),
+            )
         return None
 
     def set_fan_mode(self, fan_mode: str) -> None:
         """Turn fan on/off."""
-        self._control_hvac(fan_mode=HA_TO_TADO_FAN_MODE_MAP[fan_mode])
+        if self._current_tado_fan_speed in TADO_FAN_LEVELS:
+            self._control_hvac(fan_mode=HA_TO_TADO_FAN_MODE_MAP[fan_mode])
+        else:
+            self._control_hvac(fan_mode=HA_TO_TADO_FAN_MODE_MAP_LEGACY[fan_mode])
 
     @property
     def preset_mode(self) -> str:
@@ -509,7 +529,9 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
                 self._tado_zone_temp_offset[attr] = self._tado.data["device"][
                     self._device_id
                 ][TEMP_OFFSET][offset_key]
-        self._current_tado_fan_speed = self._tado_zone_data.current_fan_speed
+        self._current_tado_fan_speed = (
+            self._tado_zone_data.current_fan_speed
+        )  # To update after library update
         self._current_tado_hvac_mode = self._tado_zone_data.current_hvac_mode
         self._current_tado_hvac_action = self._tado_zone_data.current_hvac_action
         self._current_tado_swing_mode = self._tado_zone_data.current_swing_mode
@@ -627,8 +649,12 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             temperature_to_send = None
 
         fan_speed = None
+        fan_level = None
         if self.supported_features & ClimateEntityFeature.FAN_MODE:
-            fan_speed = self._current_tado_fan_speed
+            if self._current_tado_fan_speed in TADO_FAN_LEVELS:
+                fan_level = self._current_tado_fan_speed
+            elif self._current_tado_fan_speed in TADO_FAN_SPEEDS:
+                fan_speed = self._current_tado_fan_speed
         swing = None
         if self.supported_features & ClimateEntityFeature.SWING_MODE:
             swing = self._current_tado_swing_mode
@@ -642,4 +668,5 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             mode=self._current_tado_hvac_mode,
             fan_speed=fan_speed,  # api defaults to not sending fanSpeed if None specified
             swing=swing,  # api defaults to not sending swing if None specified
+            fan_level=fan_level,  # api defaults to not sending fanLevel if None specified
         )
