@@ -33,19 +33,33 @@ class AxisBinarySensorDescription(BinarySensorEntityDescription):
 
     event_topic: tuple[EventTopic, ...] | EventTopic
     """Event topic that provides state updates."""
-    name_fn: Callable[[AxisHub, Event], str]
+    name_fn: Callable[[AxisHub, Event], str] = lambda hub, event: ""
     """Function providing the corresponding name to the event ID."""
-    supported_fn: Callable[[AxisHub, Event], bool]
+    supported_fn: Callable[[AxisHub, Event], bool] = lambda hub, event: True
     """Function validating if event is supported."""
 
 
 @callback
-def port_input_supported_fn(hub: AxisHub, event: Event) -> bool:
-    """Validate port input event is supported."""
+def event_id_is_int(event_id: str) -> bool:
+    """Make sure event ID is int."""
     try:
-        return isinstance(int(event.id), int)
+        return isinstance(int(event_id), int)
     except ValueError:
         return False
+
+
+@callback
+def guard_suite_supported_fn(hub: AxisHub, event: Event) -> bool:
+    """Validate event ID is int."""
+    _, _, profile_id = event.id.partition("Profile")
+    return event_id_is_int(profile_id)
+
+
+@callback
+def object_analytics_supported_fn(hub: AxisHub, event: Event) -> bool:
+    """Validate event ID is int."""
+    _, _, profile_id = event.id.partition("Scenario")
+    return event_id_is_int(profile_id)
 
 
 @callback
@@ -85,21 +99,17 @@ ENTITY_DESCRIPTIONS = (
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         event_topic=(EventTopic.PORT_INPUT, EventTopic.PORT_SUPERVISED_INPUT),
         name_fn=lambda hub, event: hub.api.vapix.ports[event.id].name,
-        supported_fn=port_input_supported_fn,
+        supported_fn=lambda hub, event: event_id_is_int(event.id),
     ),
     AxisBinarySensorDescription(
         key="Day/Night vision state",
         device_class=BinarySensorDeviceClass.LIGHT,
         event_topic=EventTopic.DAY_NIGHT_VISION,
-        name_fn=lambda hub, event: "",
-        supported_fn=lambda hub, event: True,
     ),
     AxisBinarySensorDescription(
         key="Sound trigger state",
         device_class=BinarySensorDeviceClass.SOUND,
         event_topic=EventTopic.SOUND_TRIGGER_LEVEL,
-        name_fn=lambda hub, event: "",
-        supported_fn=lambda hub, event: True,
     ),
     AxisBinarySensorDescription(
         key="Motion sensors state",
@@ -109,15 +119,13 @@ ENTITY_DESCRIPTIONS = (
             EventTopic.MOTION_DETECTION,
             EventTopic.MOTION_DETECTION_3,
         ),
-        name_fn=lambda hub, event: "",
-        supported_fn=lambda hub, event: True,
     ),
     AxisBinarySensorDescription(
         key="Motion detection 4 state",
         device_class=BinarySensorDeviceClass.MOTION,
         event_topic=EventTopic.MOTION_DETECTION_4,
         name_fn=lambda hub, event: guard_suite_name_fn(hub.api.vapix.vmd4, event),
-        supported_fn=lambda hub, event: True,
+        supported_fn=guard_suite_supported_fn,
     ),
     AxisBinarySensorDescription(
         key="Fence guard state",
@@ -126,7 +134,7 @@ ENTITY_DESCRIPTIONS = (
         name_fn=lambda hub, event: guard_suite_name_fn(
             hub.api.vapix.fence_guard, event
         ),
-        supported_fn=lambda hub, event: True,
+        supported_fn=guard_suite_supported_fn,
     ),
     AxisBinarySensorDescription(
         key="Loitering guard state",
@@ -135,7 +143,7 @@ ENTITY_DESCRIPTIONS = (
         name_fn=lambda hub, event: guard_suite_name_fn(
             hub.api.vapix.loitering_guard, event
         ),
-        supported_fn=lambda hub, event: True,
+        supported_fn=guard_suite_supported_fn,
     ),
     AxisBinarySensorDescription(
         key="Motion guard state",
@@ -144,14 +152,14 @@ ENTITY_DESCRIPTIONS = (
         name_fn=lambda hub, event: guard_suite_name_fn(
             hub.api.vapix.motion_guard, event
         ),
-        supported_fn=lambda hub, event: True,
+        supported_fn=guard_suite_supported_fn,
     ),
     AxisBinarySensorDescription(
         key="Object analytics state",
         device_class=BinarySensorDeviceClass.MOTION,
         event_topic=EventTopic.OBJECT_ANALYTICS,
         name_fn=object_analytics_name_fn,
-        supported_fn=lambda hub, event: True,
+        supported_fn=object_analytics_supported_fn,
     ),
 )
 
