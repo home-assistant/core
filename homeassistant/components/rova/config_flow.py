@@ -45,26 +45,17 @@ class RovaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data=user_input,
                 )
 
-        else:
-            user_input = {
-                CONF_ZIP_CODE: "",
-                CONF_HOUSE_NUMBER: "",
-                CONF_HOUSE_NUMBER_SUFFIX: "",
-            }
-
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_ZIP_CODE, default=user_input[CONF_ZIP_CODE]): str,
-                    vol.Required(
-                        CONF_HOUSE_NUMBER, default=user_input[CONF_HOUSE_NUMBER]
-                    ): str,
-                    vol.Optional(
-                        CONF_HOUSE_NUMBER_SUFFIX,
-                        default=user_input[CONF_HOUSE_NUMBER_SUFFIX],
-                    ): str,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_ZIP_CODE): str,
+                        vol.Required(CONF_HOUSE_NUMBER): str,
+                        vol.Optional(CONF_HOUSE_NUMBER_SUFFIX, default=""): str,
+                    }
+                ),
+                user_input,
             ),
             errors=errors,
         )
