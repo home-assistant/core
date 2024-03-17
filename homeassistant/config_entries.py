@@ -60,7 +60,7 @@ from .loader import async_suggest_report_issue
 from .setup import (
     DATA_SETUP_DONE,
     SetupPhases,
-    async_freeze_setup,
+    async_pause_setup,
     async_process_deps_reqs,
     async_setup_component,
     async_start_setup,
@@ -1853,7 +1853,7 @@ class ConfigEntries:
         """Forward the setup of an entry to platforms."""
         integration = await loader.async_get_integration(self.hass, entry.domain)
         if not integration.platforms_are_loaded(platforms):
-            with async_freeze_setup(self.hass):
+            with async_pause_setup(self.hass, SetupPhases.IMPORT_PLATFORMS):
                 await integration.async_get_platforms(platforms)
         await asyncio.gather(
             *(
@@ -1876,7 +1876,7 @@ class ConfigEntries:
         """
         # Setup Component if not set up yet
         if domain not in self.hass.config.components:
-            with async_freeze_setup(self.hass):
+            with async_pause_setup(self.hass, SetupPhases.BASE_PLATFORM_SETUP):
                 result = await async_setup_component(
                     self.hass, domain, self._hass_config
                 )

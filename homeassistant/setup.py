@@ -660,15 +660,20 @@ class SetupPhases(StrEnum):
     after the config entry is setup. This is only for platforms
     that are not awaited in async_setup_entry.
     """
-    WAIT_TIME = "wait_time"
+    BASE_PLATFORM_SETUP = "wait_base_component"
     """
-    Time spent waiting for other operations to finish.
-    ex: import executor, setup of base components
+    Time spent waiting for the base component to be setup
+    """
+    IMPORT_PLATFORMS = "wait_import_platforms"
+    """
+    Time spent waiting for the platforms to import
     """
 
 
 @contextlib.contextmanager
-def async_freeze_setup(hass: core.HomeAssistant) -> Generator[None, None, None]:
+def async_pause_setup(
+    hass: core.HomeAssistant, phase: SetupPhases
+) -> Generator[None, None, None]:
     """Keep track of time we are blocked waiting for other operations.
 
     We want to count the time we wait for importing and
@@ -690,7 +695,7 @@ def async_freeze_setup(hass: core.HomeAssistant) -> Generator[None, None, None]:
         time_taken = time.monotonic() - started
         integration, group = running
         # Add negative time for the time we waited
-        _get_timing(hass, integration, group)[SetupPhases.WAIT_TIME] = -time_taken
+        _get_timing(hass, integration, group)[phase] = -time_taken
 
 
 def _get_timing(
