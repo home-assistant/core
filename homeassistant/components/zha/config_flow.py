@@ -125,15 +125,10 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         assert self._radio_mgr.device_path is not None
         assert self._radio_mgr.device_settings is not None
 
-        device_settings = self._radio_mgr.device_settings.copy()
-        device_settings[CONF_DEVICE_PATH] = await self.hass.async_add_executor_job(
-            usb.get_serial_by_id, self._radio_mgr.device_path
-        )
-
         return self.async_create_entry(
             title=self._title,
             data={
-                CONF_DEVICE: DEVICE_SCHEMA(device_settings),
+                CONF_DEVICE: DEVICE_SCHEMA(self._radio_mgr.device_settings),
                 CONF_RADIO_TYPE: self._radio_mgr.radio_type.name,
             },
         )
@@ -537,8 +532,9 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         self, discovery_info: usb.UsbServiceInfo
     ) -> ConfigFlowResult:
         """Handle usb discovery."""
-        port = await async_serial_port_from_path(self.hass, discovery_info.device)
-        port = cast(UsbSerialPort, port)
+        port: UsbSerialPort = await async_serial_port_from_path(
+            self.hass, discovery_info.device
+        )
 
         await self._set_unique_id_or_update_path(port.unique_id, port.path)
 

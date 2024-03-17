@@ -116,8 +116,10 @@ class NetworkSerialPort:
 
 async def async_list_serial_ports(
     hass: HomeAssistant,
-) -> list[SystemSerialPort | UsbSerialPort | NetworkSerialPort]:
-    """List all serial ports, including the Yellow radio and the multi-PAN addon."""
+) -> list[SystemSerialPort]:
+    """List all serial ports, including the Yellow radio."""
+    comports = await hass.async_add_executor_job(serial.tools.list_ports.comports)
+
     try:
         yellow_hardware.async_info(hass)
     except HomeAssistantError:
@@ -159,6 +161,16 @@ async def async_list_serial_ports(
         else:
             ports.append(SystemSerialPort(device=port.device))
 
+    return ports
+
+
+async def async_list_zha_serial_ports(
+    hass: HomeAssistant,
+) -> list[SystemSerialPort | UsbSerialPort | NetworkSerialPort]:
+    """List all serial ports, including the Yellow radio and the multi-PAN addon."""
+
+    ports = await async_list_serial_ports(hass)
+
     # Present the multi-PAN addon as a setup option, if it's available
     multipan_manager = await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(
         hass
@@ -188,6 +200,30 @@ async def async_list_serial_ports(
     return ports
 
 
+async def async_find_unique_port(
+    hass: HomeAssistant, path: str
+) -> SystemSerialPort | UsbSerialPort:
+    """Find a unique serial port based on a path."""
+    ports = await async_list_serial_ports(hass)
+    resolved_path = await hass.async_add_executor_job(pathlib.Path(path).resolve)
+
+    candidates: list[SystemSerialPort | UsbSerialPort] = []
+
+    for port in ports:
+        if port.path == path or (
+            isinstance(port, UsbSerialPort) and port.resolved_device == resolved_path
+        ):
+            candidates.append(port)
+
+    if len(candidates) > 1:
+        raise ValueError(f"Serial port {path} is not unique: {candidates}")
+
+    if not candidates:
+        raise SerialPortMissing(f"Serial port {path} does not exist")
+
+    return candidates[0]
+
+
 async def async_serial_port_from_path(
     hass: HomeAssistant, path: str
 ) -> SystemSerialPort | UsbSerialPort | NetworkSerialPort:
@@ -203,20 +239,4 @@ async def async_serial_port_from_path(
 
         return NetworkSerialPort(host=ip, port=int(network_port))
 
-    candidates: list[SystemSerialPort | UsbSerialPort | NetworkSerialPort] = []
-    ports = await async_list_serial_ports(hass)
-    resolved_path = await hass.async_add_executor_job(pathlib.Path(path).resolve)
-
-    for port in ports:
-        if port.path == path or (
-            isinstance(port, UsbSerialPort) and port.resolved_device == resolved_path
-        ):
-            candidates.append(port)
-
-    if len(candidates) > 1:
-        raise ValueError(f"Serial port {path} is not unique: {candidates}")
-
-    if not candidates:
-        raise SerialPortMissing(f"Serial port {path} does not exist")
-
-    return candidates[0]
+    return await async_find_unique_port(hass, path)
