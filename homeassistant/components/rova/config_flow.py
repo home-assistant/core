@@ -39,7 +39,7 @@ class RovaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 return self.async_create_entry(
-                    title=f"{zip_code} {number} {suffix}",
+                    title=f"{zip_code} {number} {suffix}".strip(),
                     data=user_input,
                 )
 
