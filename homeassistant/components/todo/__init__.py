@@ -107,7 +107,6 @@ def _validate_supported_features(
             continue
         if not supported_features or not supported_features & desc.required_feature:
             raise ServiceValidationError(
-                f"Entity does not support setting field '{desc.service_field}'",
                 translation_domain=DOMAIN,
                 translation_key="update_field_not_supported",
                 translation_placeholders={"service_field": desc.service_field},
@@ -485,7 +484,6 @@ async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> 
     found = _find_by_uid_or_summary(item, entity.todo_items)
     if not found:
         raise ServiceValidationError(
-            f"Unable to find To-do item '{item}'",
             translation_domain=DOMAIN,
             translation_key="item_not_found",
             translation_placeholders={"item": item},
@@ -518,7 +516,6 @@ async def _async_remove_todo_items(entity: TodoListEntity, call: ServiceCall) ->
         found = _find_by_uid_or_summary(item, entity.todo_items)
         if not found or not found.uid:
             raise ServiceValidationError(
-                f"Unable to find To-do item '{item}'",
                 translation_domain=DOMAIN,
                 translation_key="item_not_found",
                 translation_placeholders={"item": item},

@@ -321,7 +321,6 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
 
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             raise ServiceValidationError(
-                "No target temperature provided",
                 translation_domain=DOMAIN,
                 translation_key="no_target_temperature",
             )
