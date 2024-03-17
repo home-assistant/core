@@ -64,8 +64,8 @@ DATA_SETUP_DONE = "setup_done"
 # to setup a component started.
 DATA_SETUP_STARTED = "setup_started"
 
-# DATA_SETUP_TIME is a dict [str, timedelta], indicating how time was spent
-# setting up a component.
+# DATA_SETUP_TIME is a dict dict[str, dict[str | None, dict[SetupPhases, float]]], indicating how time was spent
+# setting up a component and each group (config entry).
 DATA_SETUP_TIME = "setup_time"
 
 DATA_DEPS_REQS = "deps_reqs_processed"
@@ -722,7 +722,17 @@ def async_start_setup(
     phase: SetupPhases,
     group: str | None = None,
 ) -> Generator[None, None, None]:
-    """Keep track of when setup starts and finishes."""
+    """Keep track of when setup starts and finishes.
+
+    :param hass: Home Assistant instance
+    :param integration: The integration that is being setup
+    :param phase: The phase of setup
+    :param group: The group (config entry) that is being setup
+
+      A group is a group of setups that run in parallel. Currently
+      this is only used for config entries.
+
+    """
     setup_started: dict[tuple[str, str | None], float] = hass.data.setdefault(
         DATA_SETUP_STARTED, {}
     )
