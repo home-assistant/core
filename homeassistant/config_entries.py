@@ -536,17 +536,16 @@ class ConfigEntry:
                 self._async_set_state(hass, ConfigEntryState.MIGRATION_ERROR, None)
                 return
 
+            setup_phase = SetupPhases.CONFIG_ENTRY_SETUP
+        else:
+            setup_phase = SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP
+
         error_reason = None
 
-        if domain_is_integration:
-            setup_phase = SetupPhases.CONFIG_ENTRY_SETUP
-            unique_key = self.entry_id
-        else:
-            setup_phase = SetupPhases.PLATFORMS
-            unique_key = f"{self.entry_id}.{integration.domain}"
-
         try:
-            with async_start_setup(hass, self.domain, unique_key, setup_phase):
+            with async_start_setup(
+                hass, integration=self.domain, group=self.entry_id, phase=setup_phase
+            ):
                 result = await component.async_setup_entry(hass, self)
 
             if not isinstance(result, bool):

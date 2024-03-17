@@ -285,10 +285,7 @@ class EntityPlatform:
             )
 
         with async_start_setup(
-            hass,
-            self.platform_name,
-            str(id(platform_config)),
-            SetupPhases.PLATFORM_SETUP,
+            hass, integration=self.platform_name, phase=SetupPhases.PLATFORM_SETUP
         ):
             await self._async_setup_platform(async_create_setup_awaitable)
 

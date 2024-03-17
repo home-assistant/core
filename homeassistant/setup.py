@@ -33,9 +33,9 @@ from .helpers.issue_registry import IssueSeverity, async_create_issue
 from .helpers.typing import ConfigType
 from .util.async_ import create_eager_task
 
-current_setup_unique: contextvars.ContextVar[str | None] = contextvars.ContextVar(
-    "current_setup_unique", default=None
-)
+current_setup_group: contextvars.ContextVar[
+    tuple[str, str | None] | None
+] = contextvars.ContextVar("current_setup_group", default=None)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,7 +60,7 @@ DATA_SETUP = "setup_tasks"
 #   is finished, regardless of if the setup was successful or not.
 DATA_SETUP_DONE = "setup_done"
 
-# DATA_SETUP_STARTED is a dict [str, float], indicating when an attempt
+# DATA_SETUP_STARTED is a dict [tuple[str, str | None], float], indicating when an attempt
 # to setup a component started.
 DATA_SETUP_STARTED = "setup_started"
 
@@ -364,7 +364,7 @@ async def _async_setup_component(  # noqa: C901
             translation.async_load_integrations(hass, integration_set)
         )
 
-    with async_start_setup(hass, domain, domain, SetupPhases.SETUP):
+    with async_start_setup(hass, integration=domain, phase=SetupPhases.SETUP):
         if hasattr(component, "PLATFORM_SCHEMA"):
             # Entity components have their own warning
             warn_task = None
@@ -654,6 +654,12 @@ class SetupPhases(StrEnum):
     Time setting up platforms under the integration
     ex hue.light
     """
+    CONFIG_ENTRY_PLATFORM_SETUP = "config_entry_platform_setup"
+    """
+    Time spent in setup of a platform in a config entry
+    after the config entry is setup. This is only for platforms
+    that are not awaited in async_setup_entry.
+    """
     WAIT_TIME = "wait_time"
     """
     Time spent waiting for other operations to finish.
@@ -669,7 +675,7 @@ def async_freeze_setup(hass: core.HomeAssistant) -> Generator[None, None, None]:
     setting up the base components so we can subtract it
     from the total setup time.
     """
-    if not (running := current_setup_unique.get()):
+    if not (running := current_setup_group.get()):
         # This means we are likely in a late platform setup
         # that is running in a task so we do not want
         # to subtract out the time later as nothing is waiting
@@ -677,31 +683,50 @@ def async_freeze_setup(hass: core.HomeAssistant) -> Generator[None, None, None]:
         yield
         return
 
-    integration, _, _ = running.partition(".")
     started = time.monotonic()
     try:
         yield
     finally:
         time_taken = time.monotonic() - started
-        setup_time: dict[str, dict[SetupPhases, float]]
-        setup_time = hass.data.setdefault(DATA_SETUP_TIME, {})
-        timings = setup_time.setdefault(integration, {})
-        timings[SetupPhases.WAIT_TIME] = (
-            timings.get(SetupPhases.WAIT_TIME, 0) + time_taken
-        )
+        integration, group = running
+        # Add negative time for the time we waited
+        _set_timing(hass, integration, group, SetupPhases.WAIT_TIME, -time_taken)
+
+
+def _get_timing(
+    hass: core.HomeAssistant, integration: str, group: str | None
+) -> dict[SetupPhases, float]:
+    """Return the setup timings for a group."""
+    setup_time: dict[str, dict[str | None, dict[SetupPhases, float]]]
+    setup_time = hass.data.setdefault(DATA_SETUP_TIME, {})
+    integration_timings = setup_time.setdefault(integration, {})
+    return integration_timings.setdefault(group, {})
+
+
+def _set_timing(
+    hass: core.HomeAssistant,
+    integration: str,
+    group: str | None,
+    phase: SetupPhases,
+    time_taken: float,
+) -> None:
+    """Set the setup timings for a group."""
+    group_timings = _get_timing(hass, integration, group)
+    group_timings[phase] = time_taken
 
 
 @contextlib.contextmanager
 def async_start_setup(
     hass: core.HomeAssistant,
     integration: str,
-    unique_key: str,
     phase: SetupPhases,
+    group: str | None = None,
 ) -> Generator[None, None, None]:
     """Keep track of when setup starts and finishes."""
-    setup_started: dict[str, float] = hass.data.setdefault(DATA_SETUP_STARTED, {})
-    current = f"{integration}.{unique_key}"
-
+    setup_started: dict[tuple[str, str | None], float] = hass.data.setdefault(
+        DATA_SETUP_STARTED, {}
+    )
+    current = (integration, group)
     if current in setup_started:
         # We are already inside another async_start_setup, this like means we
         # are setting up a platform inside async_setup_entry so we should not
@@ -710,7 +735,7 @@ def async_start_setup(
         return
 
     started = time.monotonic()
-    current_setup_unique.set(current)
+    current_setup_group.set(current)
     setup_started[current] = started
 
     try:
@@ -718,25 +743,27 @@ def async_start_setup(
     finally:
         time_taken = time.monotonic() - started
         del setup_started[current]
-        setup_time: dict[str, dict[SetupPhases, float]]
-        setup_time = hass.data.setdefault(DATA_SETUP_TIME, {})
-        timings = setup_time.setdefault(integration, {})
-        timings[phase] = timings.get(phase, 0) + time_taken
+        _set_timing(hass, integration, group, phase, time_taken)
 
 
 @callback
 def async_get_setup_timings(hass: core.HomeAssistant) -> dict[str, float]:
     """Return timing data for each integration."""
-    setup_time: dict[str, dict[SetupPhases, float]] = hass.data.setdefault(
-        DATA_SETUP_TIME, {}
-    )
-    return {
-        domain: (
-            timings.get(SetupPhases.SETUP, 0)
-            + timings.get(SetupPhases.PLATFORMS, 0)
-            + timings.get(SetupPhases.CONFIG_ENTRY_SETUP, 0)
-            + timings.get(SetupPhases.PLATFORM_SETUP, 0)
-            - timings.get(SetupPhases.WAIT_TIME, 0)
-        )
-        for domain, timings in setup_time.items()
-    }
+    setup_time: dict[
+        str, dict[str | None, dict[SetupPhases, float]]
+    ] = hass.data.setdefault(DATA_SETUP_TIME, {})
+    domain_timings: dict[str, float] = {}
+    for domain, timings in setup_time.items():
+        top_level_timings = timings.get(None, {})
+        total_top_level = sum(top_level_timings.values())
+        # Groups (config entries) are setup in parallel so we
+        # take the max of the group timings and add it to the top level
+        group_totals = {
+            group: sum(group_timings.values())
+            for group, group_timings in timings.items()
+            if group is not None
+        }
+        group_max = max(group_totals.values(), default=0)
+        domain_timings[domain] = total_top_level + group_max
+
+    return domain_timings

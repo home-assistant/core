@@ -222,7 +222,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def start_server(*_: Any) -> None:
         """Start the server."""
-        with async_start_setup(hass, "http", "http", SetupPhases.SETUP):
+        with async_start_setup(hass, integration="http", phase=SetupPhases.SETUP):
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_server)
             # We already checked it's not None.
             assert conf is not None

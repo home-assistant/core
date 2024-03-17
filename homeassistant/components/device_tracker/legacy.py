@@ -293,7 +293,7 @@ class DeviceTrackerPlatform:
         full_name = f"{self.name}.{DOMAIN}"
         LOGGER.info("Setting up %s", full_name)
         with async_start_setup(
-            hass, self.name, str(id(self.config)), SetupPhases.PLATFORM_SETUP
+            hass, integration=self.name, phase=SetupPhases.PLATFORM_SETUP
         ):
             try:
                 scanner = None
