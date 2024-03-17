@@ -42,6 +42,8 @@ from .const import (
     CONF_SWAP_BYTE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
+    CONF_SWING_MODE_REGISTER,
+    CONF_SWING_MODE_VALUES,
     CONF_TARGET_TEMP,
     CONF_VIRTUAL_COUNT,
     CONF_WRITE_TYPE,
@@ -256,8 +258,25 @@ def duplicate_fan_mode_validator(config: dict[str, Any]) -> dict:
     return config
 
 
+def duplicate_swing_mode_validator(config: dict[str, Any]) -> dict:
+    """Control modbus climate swing mode values for duplicates."""
+    swing_modes: set[int] = set()
+    errors = []
+    for key, value in config[CONF_SWING_MODE_VALUES].items():
+        if value in swing_modes:
+            warn = f"Modbus swing mode {key} has a duplicate value {value}, not loaded, values must be unique!"
+            _LOGGER.warning(warn)
+            errors.append(key)
+        else:
+            swing_modes.add(value)
+
+    for key in reversed(errors):
+        del config[CONF_SWING_MODE_VALUES][key]
+    return config
+
+
 def check_hvac_target_temp_registers(config: dict) -> dict:
-    """Check conflicts among HVAC target temperature registers and HVAC ON/OFF, HVAC register, Fan Modes."""
+    """Check conflicts among HVAC target temperature registers and HVAC ON/OFF, HVAC register, Fan Modes, Swing Modes."""
 
     if (
         CONF_HVAC_MODE_REGISTER in config
@@ -280,6 +299,13 @@ def check_hvac_target_temp_registers(config: dict) -> dict:
         wrn = f"{CONF_FAN_MODE_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_FAN_MODE_REGISTER} is not loaded!"
         _LOGGER.warning(wrn)
         del config[CONF_FAN_MODE_REGISTER]
+    if (
+        CONF_SWING_MODE_REGISTER in config
+        and config[CONF_SWING_MODE_REGISTER][CONF_ADDRESS] in config[CONF_TARGET_TEMP]
+    ):
+        wrn = f"{CONF_SWING_MODE_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_SWING_MODE_REGISTER} is not loaded!"
+        _LOGGER.warning(wrn)
+        del config[CONF_SWING_MODE_REGISTER]
 
     return config
 
@@ -294,7 +320,7 @@ def register_int_list_validator(value: Any) -> Any:
             return value
 
     raise vol.Invalid(
-        f"Invalid {CONF_ADDRESS} register for fan mode. Required type: positive integer, allowed 1 or list of 1 register."
+        f"Invalid {CONF_ADDRESS} register for fan/swing mode. Required type: positive integer, allowed 1 or list of 1 register."
     )
 
 
@@ -421,6 +447,10 @@ def validate_entity(
         loc_addr.add(f"{hub_name}{entity[CONF_HVAC_MODE_REGISTER][CONF_ADDRESS]}_{inx}")
     if CONF_FAN_MODE_REGISTER in entity:
         loc_addr.add(f"{hub_name}{entity[CONF_FAN_MODE_REGISTER][CONF_ADDRESS]}_{inx}")
+    if CONF_SWING_MODE_REGISTER in entity:
+        loc_addr.add(
+            f"{hub_name}{entity[CONF_SWING_MODE_REGISTER][CONF_ADDRESS]}_{inx}"
+        )
 
     dup_addrs = ent_addr.intersection(loc_addr)
     if len(dup_addrs) > 0:
