@@ -27,7 +27,6 @@ from .entity import AxisEventEntity
 from .hub import AxisHub
 
 DEVICE_CLASS = {
-    EventGroup.INPUT: BinarySensorDeviceClass.CONNECTIVITY,
     EventGroup.LIGHT: BinarySensorDeviceClass.LIGHT,
     EventGroup.MOTION: BinarySensorDeviceClass.MOTION,
     EventGroup.SOUND: BinarySensorDeviceClass.SOUND,
@@ -43,7 +42,6 @@ EVENT_TOPICS = (
     EventTopic.MOTION_GUARD,
     EventTopic.OBJECT_ANALYTICS,
     EventTopic.PIR,
-    EventTopic.PORT_SUPERVISED_INPUT,
     EventTopic.SOUND_TRIGGER_LEVEL,
 )
 
@@ -52,7 +50,7 @@ EVENT_TOPICS = (
 class AxisBinarySensorDescription(BinarySensorEntityDescription):
     """Axis binary sensor entity description."""
 
-    event_topic: EventTopic
+    event_topic: tuple[EventTopic, ...] | EventTopic
     """Event topic that provides state updates."""
     name_fn: Callable[[AxisHub, Event], str]
     """Function providing the corresponding name to the event ID."""
@@ -73,7 +71,7 @@ ENTITY_DESCRIPTIONS = (
     AxisBinarySensorDescription(
         key="Input port state",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        event_topic=EventTopic.PORT_INPUT,
+        event_topic=(EventTopic.PORT_INPUT, EventTopic.PORT_SUPERVISED_INPUT),
         name_fn=lambda hub, event: hub.api.vapix.ports[event.id].name,
         supported_fn=port_input_supported_fn,
     ),
