@@ -32,6 +32,8 @@ async def test_ea_warning_ignore(
 ) -> None:
     """Test EA warning is created if using prerelease version of Protect."""
 
+    ufp.api.bootstrap.nvr.release_channel = "beta"
+    ufp.api.bootstrap.nvr.version = Version("1.21.0-beta.2")
     version = ufp.api.bootstrap.nvr.version
     assert version.is_prerelease
     await init_entry(hass, ufp, [])
@@ -92,6 +94,8 @@ async def test_ea_warning_fix(
 ) -> None:
     """Test EA warning is created if using prerelease version of Protect."""
 
+    ufp.api.bootstrap.nvr.release_channel = "beta"
+    ufp.api.bootstrap.nvr.version = Version("1.21.0-beta.2")
     version = ufp.api.bootstrap.nvr.version
     assert version.is_prerelease
     await init_entry(hass, ufp, [])
@@ -125,8 +129,8 @@ async def test_ea_warning_fix(
     assert data["step_id"] == "start"
 
     new_nvr = copy(ufp.api.bootstrap.nvr)
-    new_nvr.version = Version("2.2.6")
     new_nvr.release_channel = "release"
+    new_nvr.version = Version("2.2.6")
     mock_msg = Mock()
     mock_msg.changed_data = {"version": "2.2.6", "releaseChannel": "release"}
     mock_msg.new_obj = new_nvr

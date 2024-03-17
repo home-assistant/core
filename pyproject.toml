@@ -605,6 +605,7 @@ select = [
     "N815", # Variable {name} in class scope should not be mixedCase
     "PERF", # Perflint
     "PGH004", # Use specific rule codes when using noqa
+    "PIE800", # Unnecessary dictionary unpacking operators
     "PL", # pylint
     "PIE804", # Unnecessary dict kwargs
     "PIE790", # Unnecessary pass statement
