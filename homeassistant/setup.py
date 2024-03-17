@@ -733,6 +733,11 @@ def async_start_setup(
       this is only used for config entries.
 
     """
+    if hass.is_stopping or hass.state is core.CoreState.running:
+        # Don't track setup times when we are shutting down or already running
+        yield
+        return
+
     setup_started: dict[tuple[str, str | None], float] = hass.data.setdefault(
         DATA_SETUP_STARTED, {}
     )
