@@ -197,4 +197,4 @@ async def test_update_missing_camera(
         common.async_scan(hass, entity_id="image_processing.test")
         await hass.async_block_till_done()
 
-    assert "No camera entity id was provided" in caplog.text
+    assert "No camera entity id was set by the image processing entity" in caplog.text
