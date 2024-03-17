@@ -1,11 +1,11 @@
-"""Platform for Control4 Rooms."""
+"""Platform for Control4 Rooms Media Players."""
 from __future__ import annotations
 
 from datetime import timedelta
 import enum
 import logging
+from typing import Any
 
-import attr
 from pyControl4.error_handling import C4Exception
 from pyControl4.room import C4Room
 
@@ -56,13 +56,14 @@ class _SourceType(enum.Enum):
     VIDEO = 2
 
 
-@attr.s
-class RoomSource:
+class _RoomSource:
     """Room Source Data."""
 
-    source_type: set[_SourceType] = attr.ib()
-    id: int = attr.ib()
-    name: str = attr.ib()
+    def __init__(self, source_type: set[_SourceType], idx: int, name: str) -> None:
+        """Initialize Room Source Data."""
+        self.source_type = source_type
+        self.idx = idx
+        self.name = name
 
 
 async def get_rooms(hass: HomeAssistant, entry: ConfigEntry):
@@ -85,12 +86,9 @@ async def async_setup_entry(
 
     entry_data = hass.data[DOMAIN][entry.entry_id]
     scan_interval = entry_data[CONF_SCAN_INTERVAL]
-    _LOGGER.debug(
-        "Scan interval = %s",
-        scan_interval,
-    )
+    _LOGGER.debug("Scan interval = %s", scan_interval)
 
-    async def async_update_data():
+    async def async_update_data() -> dict[int, dict[str, Any]]:
         """Fetch data from Control4 director."""
         try:
             return await update_variables_for_config_entry(
@@ -99,7 +97,7 @@ async def async_setup_entry(
         except C4Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
-    coordinator = DataUpdateCoordinator(
+    coordinator = DataUpdateCoordinator[dict[int, dict[str, Any]]](
         hass,
         _LOGGER,
         name="room",
@@ -126,7 +124,7 @@ async def async_setup_entry(
     for room in all_rooms:
         room_id = room["id"]
 
-        sources: dict[int, RoomSource] = {}
+        sources: dict[int, _RoomSource] = {}
         for exp in ui_config["experiences"]:
             if room_id == exp["room_id"]:
                 exp_type = exp["type"]
@@ -144,8 +142,8 @@ async def async_setup_entry(
                     if dev_id in sources:
                         sources[dev_id].source_type.add(dev_type)
                     else:
-                        sources[dev_id] = RoomSource(
-                            source_type={dev_type}, id=dev_id, name=name
+                        sources[dev_id] = _RoomSource(
+                            source_type={dev_type}, idx=dev_id, name=name
                         )
 
         try:
@@ -174,14 +172,17 @@ async def async_setup_entry(
 class Control4Room(Control4Entity, MediaPlayerEntity):
     """Control4 Room entity."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(
         self,
         entry_data: dict,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[dict[int, dict[str, Any]]],
         name: str,
         idx: int,
         id_to_parent: dict[int, int],
-        sources: dict[int, RoomSource],
+        sources: dict[int, _RoomSource],
         room_hidden: bool,
     ) -> None:
         """Initialize Control4 room entity."""
@@ -190,7 +191,7 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
             coordinator,
             name,
             idx,
-            device_name=None,
+            device_name=name,
             device_manufacturer=None,
             device_model=None,
             device_id=idx,
@@ -343,10 +344,10 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
             if avail_source.name == source:
                 audio_only = _SourceType.VIDEO not in avail_source.source_type
                 if audio_only:
-                    await self._create_api_object().setAudioSource(avail_source.id)
+                    await self._create_api_object().setAudioSource(avail_source.idx)
                 else:
                     await self._create_api_object().setVideoAndAudioSource(
-                        avail_source.id
+                        avail_source.idx
                     )
                 break
 

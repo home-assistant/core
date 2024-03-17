@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+from typing import Any
 
 from aiohttp import client_exceptions
 from pyControl4.account import C4Account
@@ -148,13 +149,13 @@ async def get_items_of_category(hass: HomeAssistant, entry: ConfigEntry, categor
     ]
 
 
-class Control4Entity(CoordinatorEntity):
+class Control4Entity(CoordinatorEntity[Any]):
     """Base entity for Control4."""
 
     def __init__(
         self,
         entry_data: dict,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[Any],
         name: str,
         idx: int,
         device_name: str | None,
