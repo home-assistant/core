@@ -95,7 +95,7 @@ async def async_setup_platform(
             hass,
             HOMEASSISTANT_DOMAIN,
             f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2024.7.0",
+            breaks_in_ha_version="2024.10.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
@@ -110,7 +110,7 @@ async def async_setup_platform(
             hass,
             DOMAIN,
             f"deprecated_yaml_import_issue_${result['reason']}",
-            breaks_in_ha_version="2024.7.0",
+            breaks_in_ha_version="2024.10.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
@@ -132,7 +132,7 @@ async def async_setup_entry(
     data_service = RovaData(api)
 
     # generate unique name for rova integration
-    name = f"{entry.data[CONF_ZIP_CODE]}{entry.data[CONF_HOUSE_NUMBER]}{entry.data[CONF_HOUSE_NUMBER_SUFFIX]}".strip()
+    name = f"{entry.data[CONF_ZIP_CODE]}{entry.data[CONF_HOUSE_NUMBER]}{entry.data[CONF_HOUSE_NUMBER_SUFFIX]}"
 
     # Create a new sensor for each garbage type.
     entities = [

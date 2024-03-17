@@ -8,15 +8,9 @@ from rova.rova import Rova
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
-from .const import (
-    CONF_HOUSE_NUMBER,
-    CONF_HOUSE_NUMBER_SUFFIX,
-    CONF_ZIP_CODE,
-    DOMAIN,
-    LOGGER,
-)
+from .const import CONF_HOUSE_NUMBER, CONF_HOUSE_NUMBER_SUFFIX, CONF_ZIP_CODE, DOMAIN
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -33,15 +27,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         rova_area = await hass.async_add_executor_job(api.is_rova_area)
     except (ConnectTimeout, HTTPError) as ex:
-        LOGGER.error("Could not retrieve details from ROVA API")
         raise ConfigEntryNotReady from ex
 
     if not rova_area:
-        LOGGER.error("Rova does not collect garbage in this area")
-        return False
+        raise ConfigEntryError("Rova does not collect garbage in this area")
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = api
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = api
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
