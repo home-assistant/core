@@ -105,8 +105,6 @@ async def test_update_exception_logging(
         (TankerkoenigError, "Error when adding station"),
     ],
 )
-@pytest.mark.usefixtures("tankerkoenig")
-@pytest.mark.usefixtures("config_entry")
 async def test_setup_exception_logging(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
