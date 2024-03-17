@@ -2,8 +2,9 @@
 
 import json
 import typing as t
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
+import digitalocean
 import pytest
 
 from homeassistant.components.digital_ocean import DOMAIN
@@ -14,6 +15,12 @@ from tests.common import load_fixture
 
 TOKEN = "my-fake-access-token"
 DOMAIN_NAME = "example.com"
+
+
+@pytest.fixture
+def domain_name():
+    """Return the domain name used in other fixtures. Default to example.com."""
+    return DOMAIN_NAME
 
 
 @pytest.fixture
@@ -40,7 +47,7 @@ def account_fixture():
 
 
 @pytest.fixture(scope="module")
-def domain_records_fixture():
+def example_com_records_fixture():
     """Fixture to load a JSON file for mocking the external API."""
     return json.loads(load_fixture("domain_records.json", integration="digital_ocean"))
 
@@ -61,16 +68,18 @@ async def digital_ocean_account(account_fixture):
 
 
 @pytest.fixture(autouse=True)
-async def example_com_records(domain_records_fixture):
+async def patched_domain(example_com_records_fixture, domain_name):
     """Fixture to patch the Digital Ocean API call to get domain records."""
-    with patch("digitalocean.Domain.Domain.get_records") as records_patch:
-        from digitalocean import Record
-
-        records = []
-        for record_data in domain_records_fixture:
-            record = Record(domain_name=DOMAIN_NAME, **record_data)
+    # Build Record objects from the fixtures
+    records = []
+    if domain_name == DOMAIN_NAME:
+        for record_data in example_com_records_fixture:
+            record = digitalocean.Record(domain_name=domain_name, **record_data)
             record.token = TOKEN
             records.append(record)
 
-        records_patch.return_value = records
-        yield records_patch
+    with patch("digitalocean.Domain", autospec=True) as domain_factory:
+        domain_factory.return_value.attach_mock(
+            MagicMock(return_value=records), "get_records"
+        )
+        yield domain_factory
