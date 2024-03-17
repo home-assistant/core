@@ -231,7 +231,7 @@ disable = [
     "duplicate-value", # F
     "eval-used", # S307
     "exec-used", # S102
-    # "expression-not-assigned", # B018, ruff catches new occurrences, needs more work
+    "expression-not-assigned", # B018
     "f-string-without-interpolation", # F541
     "forgotten-debug-statement", # T100
     "format-string-without-interpolation", # F
@@ -248,7 +248,7 @@ disable = [
     "misplaced-future", # F404
     "named-expr-without-context", # PLW0131
     "nested-min-max", # PLW3301
-    # "pointless-statement", # B018, ruff catches new occurrences, needs more work
+    "pointless-statement", # B018
     "raise-missing-from", # B904
     # "redefined-builtin", # A001, ruff is way more stricter, needs work
     "try-except-raise", # TRY302
@@ -585,6 +585,7 @@ select = [
     "B007", # Loop control variable {name} not used within loop body
     "B014", # Exception handler with duplicate exception
     "B015", # Pointless comparison. Did you mean to assign a value? Otherwise, prepend assert or remove it.
+    "B018", # Found useless attribute access. Either assign it to a variable or remove it.
     "B023", # Function definition does not bind loop variable {name}
     "B026", # Star-arg unpacking after a keyword argument is strongly discouraged
     "B032", # Possible unintentional type annotation (using :). Did you mean to assign (using =)?
