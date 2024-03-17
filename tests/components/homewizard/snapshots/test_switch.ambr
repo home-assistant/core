@@ -28,6 +28,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -64,6 +66,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH1',
     'name': 'Device',
@@ -103,6 +107,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -139,6 +145,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH3',
     'name': 'Device',
@@ -179,6 +187,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -215,6 +225,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-SKT',
     'name': 'Device',
@@ -254,6 +266,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -290,6 +304,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-SKT',
     'name': 'Device',
@@ -329,6 +345,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -365,6 +383,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-SKT',
     'name': 'Device',
@@ -404,6 +424,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -440,6 +462,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM230-wifi',
     'name': 'Device',
@@ -479,6 +503,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -515,6 +541,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM630-wifi',
     'name': 'Device',

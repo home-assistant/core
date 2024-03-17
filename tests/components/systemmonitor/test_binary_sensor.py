@@ -1,4 +1,5 @@
 """Test System Monitor binary sensor."""
+
 from datetime import timedelta
 from unittest.mock import Mock, patch
 
@@ -24,7 +25,6 @@ async def test_binary_sensor(
     entity_registry_enabled_by_default: None,
     mock_psutil: Mock,
     mock_os: Mock,
-    mock_util: Mock,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -65,7 +65,6 @@ async def test_binary_sensor(
 async def test_binary_sensor_icon(
     hass: HomeAssistant,
     entity_registry_enabled_by_default: None,
-    mock_util: Mock,
     mock_psutil: Mock,
     mock_os: Mock,
     mock_config_entry: MockConfigEntry,

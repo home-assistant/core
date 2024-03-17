@@ -1,4 +1,5 @@
 """The USB Discovery integration."""
+
 from __future__ import annotations
 
 from collections.abc import Coroutine
@@ -34,7 +35,7 @@ from .models import USBDevice
 from .utils import usb_device_from_port
 
 if TYPE_CHECKING:
-    from pyudev import Device
+    from pyudev import Device, MonitorObserver
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -206,17 +207,22 @@ class USBDiscovery:
     async def async_setup(self) -> None:
         """Set up USB Discovery."""
         await self._async_start_monitor()
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, self.async_start)
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STARTED, self.async_start, run_immediately=True
+        )
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, self.async_stop, run_immediately=True
+        )
 
     async def async_start(self, event: Event) -> None:
         """Start USB Discovery and run a manual scan."""
         await self._async_scan_serial()
 
-    async def async_stop(self, event: Event) -> None:
+    @hass_callback
+    def async_stop(self, event: Event) -> None:
         """Stop USB Discovery."""
         if self._request_debouncer:
-            await self._request_debouncer.async_shutdown()
+            self._request_debouncer.async_shutdown()
 
     async def _async_start_monitor(self) -> None:
         """Start monitoring hardware with pyudev."""
@@ -226,6 +232,27 @@ class USBDiscovery:
         if info.get("docker"):
             return
 
+        if not (
+            observer := await self.hass.async_add_executor_job(
+                self._get_monitor_observer
+            )
+        ):
+            return
+
+        def _stop_observer(event: Event) -> None:
+            observer.stop()
+
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, _stop_observer, run_immediately=True
+        )
+        self.observer_active = True
+
+    def _get_monitor_observer(self) -> MonitorObserver | None:
+        """Get the monitor observer.
+
+        This runs in the executor because the import
+        does blocking I/O.
+        """
         from pyudev import (  # pylint: disable=import-outside-toplevel
             Context,
             Monitor,
@@ -235,7 +262,7 @@ class USBDiscovery:
         try:
             context = Context()
         except (ImportError, OSError):
-            return
+            return None
 
         monitor = Monitor.from_netlink(context)
         try:
@@ -244,17 +271,14 @@ class USBDiscovery:
             _LOGGER.debug(
                 "Unable to setup pyudev filtering; This is expected on WSL: %s", ex
             )
-            return
+            return None
+
         observer = MonitorObserver(
             monitor, callback=self._device_discovered, name="usb-observer"
         )
+
         observer.start()
-
-        def _stop_observer(event: Event) -> None:
-            observer.stop()
-
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_observer)
-        self.observer_active = True
+        return observer
 
     def _device_discovered(self, device: Device) -> None:
         """Call when the observer discovers a new usb tty device."""

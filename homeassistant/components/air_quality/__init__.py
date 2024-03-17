@@ -1,4 +1,5 @@
 """Component for handling Air Quality data for your location."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -15,6 +16,8 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, StateType
+
+from . import group as group_pre_import  # noqa: F401
 
 _LOGGER: Final = logging.getLogger(__name__)
 

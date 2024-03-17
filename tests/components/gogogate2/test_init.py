@@ -1,4 +1,5 @@
 """Tests for the GogoGate2 component."""
+
 from unittest.mock import MagicMock, patch
 
 from ismartgate import GogoGate2Api

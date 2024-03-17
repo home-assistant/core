@@ -1,4 +1,5 @@
 """Test the init file of Mailgun."""
+
 import hashlib
 import hmac
 

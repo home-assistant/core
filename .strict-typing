@@ -80,6 +80,7 @@ homeassistant.components.anthemav.*
 homeassistant.components.apache_kafka.*
 homeassistant.components.apcupsd.*
 homeassistant.components.api.*
+homeassistant.components.apple_tv.*
 homeassistant.components.apprise.*
 homeassistant.components.aprs.*
 homeassistant.components.aqualogic.*
@@ -227,6 +228,7 @@ homeassistant.components.homekit_controller.select
 homeassistant.components.homekit_controller.storage
 homeassistant.components.homekit_controller.utils
 homeassistant.components.homewizard.*
+homeassistant.components.homeworks.*
 homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
 homeassistant.components.humidifier.*

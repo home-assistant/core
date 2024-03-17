@@ -1,4 +1,5 @@
 """Support for Volvo heater."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -27,21 +28,17 @@ async def async_setup_entry(
     @callback
     def async_discover_device(instruments: list[Instrument]) -> None:
         """Discover and add a discovered Volvo On Call switch."""
-        entities: list[VolvoSwitch] = []
-
-        for instrument in instruments:
-            if instrument.component == "switch":
-                entities.append(
-                    VolvoSwitch(
-                        coordinator,
-                        instrument.vehicle.vin,
-                        instrument.component,
-                        instrument.attr,
-                        instrument.slug_attr,
-                    )
-                )
-
-        async_add_entities(entities)
+        async_add_entities(
+            VolvoSwitch(
+                coordinator,
+                instrument.vehicle.vin,
+                instrument.component,
+                instrument.attr,
+                instrument.slug_attr,
+            )
+            for instrument in instruments
+            if instrument.component == "switch"
+        )
 
     async_discover_device([*volvo_data.instruments])
 

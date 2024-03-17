@@ -1,4 +1,5 @@
 """The tests for the Light component."""
+
 from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
@@ -21,7 +22,7 @@ from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.setup import async_setup_component
 import homeassistant.util.color as color_util
 
-from tests.common import MockUser, async_mock_service
+from tests.common import MockEntityPlatform, MockUser, async_mock_service
 
 orig_Profiles = light.Profiles
 
@@ -1612,7 +1613,7 @@ async def test_light_service_call_color_conversion(
     _, data = entity5.last_call("turn_on")
     assert data == {"brightness": 255, "rgbw_color": (0, 0, 0, 255)}
     _, data = entity6.last_call("turn_on")
-    # The midpoint of the the white channels is warm, compensated by adding green + blue
+    # The midpoint of the white channels is warm, compensated by adding green + blue
     assert data == {"brightness": 255, "rgbww_color": (0, 76, 141, 255, 255)}
     _, data = entity7.last_call("turn_on")
     assert data == {"brightness": 255, "color_temp_kelvin": 5962, "color_temp": 167}
@@ -1685,7 +1686,7 @@ async def test_light_service_call_color_conversion(
     _, data = entity5.last_call("turn_on")
     assert data == {"brightness": 128, "rgbw_color": (0, 0, 0, 255)}
     _, data = entity6.last_call("turn_on")
-    # The midpoint the the white channels is warm, compensated by adding green + blue
+    # The midpoint the white channels is warm, compensated by adding green + blue
     assert data == {"brightness": 128, "rgbww_color": (0, 76, 141, 255, 255)}
     _, data = entity7.last_call("turn_on")
     assert data == {"brightness": 128, "color_temp_kelvin": 5962, "color_temp": 167}
@@ -1758,7 +1759,7 @@ async def test_light_service_call_color_conversion(
     _, data = entity5.last_call("turn_on")
     assert data == {"brightness": 128, "rgbw_color": (1, 0, 0, 255)}
     _, data = entity6.last_call("turn_on")
-    # The midpoint the the white channels is warm, compensated by adding green + blue
+    # The midpoint the white channels is warm, compensated by adding green + blue
     assert data == {"brightness": 128, "rgbww_color": (0, 75, 140, 255, 255)}
     _, data = entity7.last_call("turn_on")
     assert data == {"brightness": 128, "color_temp_kelvin": 5962, "color_temp": 167}
@@ -1795,7 +1796,7 @@ async def test_light_service_call_color_conversion(
     _, data = entity5.last_call("turn_on")
     assert data == {"brightness": 128, "rgbw_color": (128, 0, 0, 64)}
     _, data = entity6.last_call("turn_on")
-    # The midpoint the the white channels is warm, compensated by adding green + blue
+    # The midpoint the white channels is warm, compensated by adding green + blue
     assert data == {"brightness": 128, "rgbww_color": (128, 0, 30, 117, 117)}
     _, data = entity7.last_call("turn_on")
     assert data == {"brightness": 128, "color_temp_kelvin": 3011, "color_temp": 332}
@@ -1832,7 +1833,7 @@ async def test_light_service_call_color_conversion(
     _, data = entity5.last_call("turn_on")
     assert data == {"brightness": 128, "rgbw_color": (255, 255, 255, 255)}
     _, data = entity6.last_call("turn_on")
-    # The midpoint the the white channels is warm, compensated by adding green + blue
+    # The midpoint the white channels is warm, compensated by adding green + blue
     assert data == {"brightness": 128, "rgbww_color": (0, 76, 141, 255, 255)}
     _, data = entity7.last_call("turn_on")
     assert data == {"brightness": 128, "color_temp_kelvin": 5962, "color_temp": 167}
@@ -1903,7 +1904,7 @@ async def test_light_service_call_color_conversion(
     _, data = entity4.last_call("turn_on")
     assert data == {"brightness": 128, "hs_color": (27.429, 27.451)}
     _, data = entity5.last_call("turn_on")
-    # The midpoint the the white channels is warm, compensated by decreasing green + blue
+    # The midpoint the white channels is warm, compensated by decreasing green + blue
     assert data == {"brightness": 128, "rgbw_color": (96, 44, 0, 255)}
     _, data = entity6.last_call("turn_on")
     assert data == {"brightness": 128, "rgbww_color": (255, 255, 255, 255, 255)}
@@ -2658,6 +2659,62 @@ def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) ->
 
 
 @pytest.mark.parametrize(
+    ("color_mode", "supported_color_modes", "warning_expected"),
+    [
+        (None, {light.ColorMode.ONOFF}, True),
+        (light.ColorMode.ONOFF, {light.ColorMode.ONOFF}, False),
+    ],
+)
+def test_report_no_color_mode(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    color_mode: str,
+    supported_color_modes: set[str],
+    warning_expected: bool,
+) -> None:
+    """Test a light setting no color mode."""
+
+    class MockLightEntityEntity(light.LightEntity):
+        _attr_color_mode = color_mode
+        _attr_is_on = True
+        _attr_supported_features = light.LightEntityFeature.EFFECT
+        _attr_supported_color_modes = supported_color_modes
+
+    entity = MockLightEntityEntity()
+    entity._async_calculate_state()
+    expected_warning = "does not report a color mode"
+    assert (expected_warning in caplog.text) is warning_expected
+
+
+@pytest.mark.parametrize(
+    ("color_mode", "supported_color_modes", "warning_expected"),
+    [
+        (light.ColorMode.ONOFF, None, True),
+        (light.ColorMode.ONOFF, {light.ColorMode.ONOFF}, False),
+    ],
+)
+def test_report_no_color_modes(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    color_mode: str,
+    supported_color_modes: set[str],
+    warning_expected: bool,
+) -> None:
+    """Test a light setting no color mode."""
+
+    class MockLightEntityEntity(light.LightEntity):
+        _attr_color_mode = color_mode
+        _attr_is_on = True
+        _attr_supported_features = light.LightEntityFeature.EFFECT
+        _attr_supported_color_modes = supported_color_modes
+
+    entity = MockLightEntityEntity()
+    entity._async_calculate_state()
+    expected_warning = "does not set supported color modes"
+    assert (expected_warning in caplog.text) is warning_expected
+
+
+@pytest.mark.parametrize(
     ("color_mode", "supported_color_modes", "effect", "warning_expected"),
     [
         (light.ColorMode.ONOFF, {light.ColorMode.ONOFF}, None, False),
@@ -2701,5 +2758,63 @@ def test_report_invalid_color_mode(
 
     entity = MockLightEntityEntity()
     entity._async_calculate_state()
-    expected_warning = f"set to unsupported color_mode: {color_mode}"
+    expected_warning = f"set to unsupported color mode {color_mode}"
+    assert (expected_warning in caplog.text) is warning_expected
+
+
+@pytest.mark.parametrize(
+    ("color_mode", "supported_color_modes", "platform_name", "warning_expected"),
+    [
+        (
+            light.ColorMode.ONOFF,
+            {light.ColorMode.ONOFF},
+            "test",
+            False,
+        ),
+        (
+            light.ColorMode.ONOFF,
+            {light.ColorMode.ONOFF, light.ColorMode.BRIGHTNESS},
+            "test",
+            True,
+        ),
+        (
+            light.ColorMode.HS,
+            {light.ColorMode.HS, light.ColorMode.BRIGHTNESS},
+            "test",
+            True,
+        ),
+        (
+            light.ColorMode.HS,
+            {light.ColorMode.COLOR_TEMP, light.ColorMode.HS},
+            "test",
+            False,
+        ),
+        (
+            light.ColorMode.ONOFF,
+            {light.ColorMode.ONOFF, light.ColorMode.BRIGHTNESS},
+            "philips_js",  # We don't log issues for philips_js
+            False,
+        ),
+    ],
+)
+def test_report_invalid_color_modes(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    color_mode: str,
+    supported_color_modes: set[str],
+    platform_name: str,
+    warning_expected: bool,
+) -> None:
+    """Test a light setting an invalid color mode."""
+
+    class MockLightEntityEntity(light.LightEntity):
+        _attr_color_mode = color_mode
+        _attr_is_on = True
+        _attr_supported_features = light.LightEntityFeature.EFFECT
+        _attr_supported_color_modes = supported_color_modes
+        platform = MockEntityPlatform(hass, platform_name=platform_name)
+
+    entity = MockLightEntityEntity()
+    entity._async_calculate_state()
+    expected_warning = "sets invalid supported color modes"
     assert (expected_warning in caplog.text) is warning_expected

@@ -1,4 +1,5 @@
 """Legacy device tracker classes."""
+
 from __future__ import annotations
 
 import asyncio
@@ -14,6 +15,7 @@ import voluptuous as vol
 from homeassistant import util
 from homeassistant.backports.functools import cached_property
 from homeassistant.components import zone
+from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config import (
     async_log_schema_error,
     config_per_platform,
@@ -480,7 +482,7 @@ def async_setup_scanner_platform(
                 },
             }
 
-            zone_home = hass.states.get(hass.components.zone.ENTITY_ID_HOME)
+            zone_home = hass.states.get(ENTITY_ID_HOME)
             if zone_home is not None:
                 kwargs["gps"] = [
                     zone_home.attributes[ATTR_LATITUDE],
@@ -714,21 +716,17 @@ class DeviceTracker:
 
         This method is a coroutine.
         """
-
-        async def async_init_single_device(dev: Device) -> None:
-            """Init a single device_tracker entity."""
-            await dev.async_added_to_hass()
-            dev.async_write_ha_state()
-
-        tasks: list[asyncio.Task] = []
         for device in self.devices.values():
             if device.track and not device.last_seen:
-                tasks.append(
-                    self.hass.async_create_task(async_init_single_device(device))
-                )
-
-        if tasks:
-            await asyncio.wait(tasks)
+                # async_added_to_hass is unlikely to suspend so
+                # do not gather here to avoid unnecessary overhead
+                # of creating a task per device.
+                #
+                # We used to have the overhead of potentially loading
+                # restore state for each device here, but RestoreState
+                # is always loaded ahead of time now.
+                await device.async_added_to_hass()
+                device.async_write_ha_state()
 
 
 class Device(RestoreEntity):

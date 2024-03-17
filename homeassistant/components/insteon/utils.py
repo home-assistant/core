@@ -1,4 +1,5 @@
 """Utilities used by insteon component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -145,7 +146,7 @@ def add_insteon_events(hass: HomeAssistant, device: Device) -> None:
 
     for name_or_group, event in device.events.items():
         if isinstance(name_or_group, int):
-            for _, event in device.events[name_or_group].items():
+            for event in device.events[name_or_group].values():
                 _register_event(event, async_fire_insteon_event)
         else:
             _register_event(event, async_fire_insteon_event)

@@ -1,4 +1,5 @@
 """Helpers to resolve client ID/secret."""
+
 from __future__ import annotations
 
 from html.parser import HTMLParser
@@ -182,7 +183,7 @@ def _parse_client_id(client_id: str) -> ParseResult:
     # MAY contain a port
     try:
         # parts raises ValueError when port cannot be parsed as int
-        parts.port
+        _ = parts.port
     except ValueError as ex:
         raise ValueError("Client ID contains invalid port") from ex
 

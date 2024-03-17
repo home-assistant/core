@@ -1,4 +1,5 @@
 """Support for Blink system camera sensors."""
+
 from __future__ import annotations
 
 import logging
@@ -32,7 +33,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=TYPE_WIFI_STRENGTH,
         translation_key="wifi_strength",
-        icon="mdi:wifi",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
     ),

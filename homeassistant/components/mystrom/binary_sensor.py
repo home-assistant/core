@@ -1,11 +1,12 @@
 """Support for the myStrom buttons."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
 import logging
 
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorEntity
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -37,7 +38,7 @@ class MyStromView(HomeAssistantView):
 
     async def get(self, request):
         """Handle the GET request received from a myStrom button."""
-        res = await self._handle(request.app["hass"], request.query)
+        res = await self._handle(request.app[KEY_HASS], request.query)
         return res
 
     async def _handle(self, hass, data):

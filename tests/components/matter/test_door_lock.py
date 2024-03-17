@@ -1,4 +1,5 @@
 """Test Matter locks."""
+
 from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters

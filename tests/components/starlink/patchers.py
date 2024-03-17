@@ -1,4 +1,5 @@
 """General Starlink patchers."""
+
 import json
 from unittest.mock import patch
 

@@ -1,4 +1,5 @@
 """Test the MicroBot config flow."""
+
 from unittest.mock import ANY, AsyncMock, patch
 
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER

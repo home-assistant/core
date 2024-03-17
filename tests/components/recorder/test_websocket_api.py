@@ -1,4 +1,5 @@
 """The tests for sensor recorder platform."""
+
 import datetime
 from datetime import timedelta
 from statistics import fmean
@@ -241,7 +242,7 @@ async def test_statistic_during_period(
             "min": -76 + i * 2,
             "sum": i,
         }
-        for i in range(0, 39)
+        for i in range(39)
     ]
     imported_stats = []
     slice_end = 12 - offset
@@ -254,7 +255,7 @@ async def test_statistic_during_period(
             "sum": imported_stats_5min[slice_end - 1]["sum"],
         }
     )
-    for i in range(0, 2):
+    for i in range(2):
         slice_start = i * 12 + (12 - offset)
         slice_end = (i + 1) * 12 + (12 - offset)
         assert imported_stats_5min[slice_start]["start"].minute == 0
@@ -663,7 +664,7 @@ async def test_statistic_during_period_hole(
             "min": -76 + i * 2,
             "sum": i,
         }
-        for i in range(0, 6)
+        for i in range(6)
     ]
 
     imported_metadata = {
@@ -2132,6 +2133,23 @@ async def test_recorder_info_bad_recorder_config(
     assert response["result"]["thread_running"] is False
 
 
+async def test_recorder_info_no_instance(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test getting recorder when there is no instance."""
+    client = await hass_ws_client()
+
+    with patch(
+        "homeassistant.components.recorder.websocket_api.get_instance",
+        return_value=None,
+    ):
+        await client.send_json_auto_id({"type": "recorder/info"})
+        response = await client.receive_json()
+        assert response["success"]
+        assert response["result"]["recording"] is False
+        assert response["result"]["thread_running"] is False
+
+
 async def test_recorder_info_migration_queue_exhausted(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
@@ -2208,77 +2226,6 @@ async def test_backup_start_no_recorder(
     response = await client.receive_json()
     assert not response["success"]
     assert response["error"]["code"] == "unknown_command"
-
-
-async def test_backup_start_timeout(
-    recorder_mock: Recorder,
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    hass_supervisor_access_token: str,
-    recorder_db_url: str,
-) -> None:
-    """Test getting backup start when recorder is not present."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test is specific for SQLite: Locking is not implemented for other engines
-        return
-
-    client = await hass_ws_client(hass, hass_supervisor_access_token)
-
-    # Ensure there are no queued events
-    await async_wait_recording_done(hass)
-
-    with patch.object(recorder.core, "DB_LOCK_TIMEOUT", 0):
-        try:
-            await client.send_json_auto_id({"type": "backup/start"})
-            response = await client.receive_json()
-            assert not response["success"]
-            assert response["error"]["code"] == "timeout_error"
-        finally:
-            await client.send_json_auto_id({"type": "backup/end"})
-
-
-async def test_backup_end(
-    recorder_mock: Recorder,
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    hass_supervisor_access_token: str,
-) -> None:
-    """Test backup start."""
-    client = await hass_ws_client(hass, hass_supervisor_access_token)
-
-    # Ensure there are no queued events
-    await async_wait_recording_done(hass)
-
-    await client.send_json_auto_id({"type": "backup/start"})
-    response = await client.receive_json()
-    assert response["success"]
-
-    await client.send_json_auto_id({"type": "backup/end"})
-    response = await client.receive_json()
-    assert response["success"]
-
-
-async def test_backup_end_without_start(
-    recorder_mock: Recorder,
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    hass_supervisor_access_token: str,
-    recorder_db_url: str,
-) -> None:
-    """Test backup start."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test is specific for SQLite: Locking is not implemented for other engines
-        return
-
-    client = await hass_ws_client(hass, hass_supervisor_access_token)
-
-    # Ensure there are no queued events
-    await async_wait_recording_done(hass)
-
-    await client.send_json_auto_id({"type": "backup/end"})
-    response = await client.receive_json()
-    assert not response["success"]
-    assert response["error"]["code"] == "database_unlock_failed"
 
 
 @pytest.mark.parametrize(
