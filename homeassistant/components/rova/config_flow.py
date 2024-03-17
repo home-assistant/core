@@ -3,7 +3,7 @@
 from typing import Any
 
 from requests.exceptions import ConnectTimeout, HTTPError
-from rova import rova
+from rova.rova import Rova
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -23,13 +23,15 @@ class RovaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            self._async_abort_entries_match(user_input)
-
+            # generate unique name for rova integration
             zip_code = user_input[CONF_ZIP_CODE]
             number = user_input[CONF_HOUSE_NUMBER]
             suffix = user_input[CONF_HOUSE_NUMBER_SUFFIX]
 
-            api = rova.Rova(zip_code, number, suffix)
+            await self.async_set_unique_id(f"{zip_code}{number}{suffix}".strip())
+            self._abort_if_unique_id_configured()
+
+            api = Rova(zip_code, number, suffix)
 
             try:
                 if not await self.hass.async_add_executor_job(api.is_rova_area):
@@ -62,13 +64,14 @@ class RovaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any]
     ) -> config_entries.ConfigFlowResult:
         """Import the yaml config."""
-        self._async_abort_entries_match(user_input)
-
         zip_code = user_input[CONF_ZIP_CODE]
         number = user_input[CONF_HOUSE_NUMBER]
         suffix = user_input[CONF_HOUSE_NUMBER_SUFFIX]
 
-        api = rova.Rova(zip_code, number, suffix)
+        await self.async_set_unique_id(f"{zip_code}{number}{suffix}".strip())
+        self._abort_if_unique_id_configured()
+
+        api = Rova(zip_code, number, suffix)
 
         try:
             result = await self.hass.async_add_executor_job(api.is_rova_area)
