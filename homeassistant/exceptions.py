@@ -2,12 +2,48 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator, Sequence
+from collections.abc import Callable, Generator, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .core import Context
+
+
+class _FunctionCache:
+    """Exception lookup function cache."""
+
+    async_get_exception_message: Callable[
+        [str, str, dict[str, str] | None], str
+    ] | None = None
+
+
+_function_cache = _FunctionCache()
+
+
+def async_get_exception_message(
+    translation_domain: str,
+    translation_key: str,
+    translation_placeholders: dict[str, str] | None = None,
+) -> str:
+    """Return a translated exception message.
+
+    Defaults to English, requires translations to already be cached.
+    """
+
+    if _function_cache.async_get_exception_message is None:
+        # pylint: disable-next=import-outside-toplevel
+        from .helpers.translation import (
+            async_get_exception_message as async_get_exception_message_import,
+        )
+
+        _function_cache.async_get_exception_message = async_get_exception_message_import
+        # mark as hass event loop save callback function
+        setattr(_function_cache.async_get_exception_message, "_hass_callback", True)
+
+    return _function_cache.async_get_exception_message(
+        translation_domain, translation_key, translation_placeholders
+    )
 
 
 class HomeAssistantError(Exception):
@@ -51,9 +87,6 @@ class HomeAssistantError(Exception):
         if TYPE_CHECKING:
             assert self.translation_key is not None
             assert self.translation_domain is not None
-
-        # pylint: disable-next=import-outside-toplevel
-        from .helpers.translation import async_get_exception_message
 
         self._message = async_get_exception_message(
             self.translation_domain, self.translation_key, self.translation_placeholders
