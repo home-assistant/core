@@ -173,10 +173,25 @@ async def test_sensor_dark(hass: HomeAssistant, freezer: FrozenDateTimeFactory) 
 
 
 async def test_sensor_unknown_error(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test other comms error is handled correctly."""
     mock_entry = _mock_config_entry()
+
+    # sun is up
+    with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
+        "aurorapy.client.AuroraSerialClient.measure", side_effect=_simulated_returns
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.alarms", return_value=["No alarm"]
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.cumulated_energy",
+        side_effect=_simulated_returns,
+    ):
+        mock_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
 
     with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
         "aurorapy.client.AuroraSerialClient.measure",
@@ -184,12 +199,12 @@ async def test_sensor_unknown_error(
     ), patch(
         "aurorapy.client.AuroraSerialClient.alarms", return_value=["No alarm"]
     ), patch("serial.Serial.isOpen", return_value=True):
-        mock_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(mock_entry.entry_id)
+        freezer.tick(SCAN_INTERVAL * 2)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert (
             "Exception: AuroraError('another error') occurred, 2 retries remaining"
             in caplog.text
         )
         power = hass.states.get("sensor.mydevicename_power_output")
-        assert power.state == "unknown"
+        assert power.state == "unavailable"
