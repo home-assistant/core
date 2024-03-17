@@ -64,8 +64,8 @@ DATA_SETUP_DONE = "setup_done"
 # to setup a component started.
 DATA_SETUP_STARTED = "setup_started"
 
-# DATA_SETUP_TIME is a dict dict[str, dict[str | None, dict[SetupPhases, float]]], indicating how time was spent
-# setting up a component and each group (config entry).
+# DATA_SETUP_TIME is a dict[str, dict[str | None, dict[SetupPhases, float]]], indicating how
+# time was spent setting up a component and each group (config entry).
 DATA_SETUP_TIME = "setup_time"
 
 DATA_DEPS_REQS = "deps_reqs_processed"
