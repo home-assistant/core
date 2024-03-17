@@ -16,7 +16,11 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.cloud import CloudNotAvailable
+from homeassistant.components.cloud import (
+    CloudNotAvailable,
+    async_active_subscription,
+    async_is_connected,
+)
 from homeassistant.components.webhook import async_generate_url
 from homeassistant.components.withings import CONFIG_SCHEMA, async_setup
 from homeassistant.components.withings.const import CONF_USE_WEBHOOK, DOMAIN
@@ -311,7 +315,7 @@ async def test_setup_with_cloudhook(
         "homeassistant.components.withings.webhook_generate_url"
     ):
         await setup_integration(hass, cloudhook_config_entry)
-        assert hass.components.cloud.async_active_subscription() is True
+        assert async_active_subscription(hass) is True
 
         assert (
             hass.config_entries.async_entries(DOMAIN)[0].data["cloudhook_url"]
@@ -356,7 +360,7 @@ async def test_removing_entry_with_cloud_unavailable(
         "homeassistant.components.withings.webhook_generate_url",
     ):
         await setup_integration(hass, cloudhook_config_entry)
-        assert hass.components.cloud.async_active_subscription() is True
+        assert async_active_subscription(hass) is True
 
         await hass.async_block_till_done()
         assert hass.config_entries.async_entries(DOMAIN)
@@ -397,8 +401,8 @@ async def test_setup_with_cloud(
         await setup_integration(hass, webhook_config_entry)
         await prepare_webhook_setup(hass, freezer)
 
-        assert hass.components.cloud.async_active_subscription() is True
-        assert hass.components.cloud.async_is_connected() is True
+        assert async_active_subscription(hass) is True
+        assert async_is_connected(hass) is True
         fake_create_cloudhook.assert_called_once()
         fake_delete_cloudhook.assert_called_once()
 
@@ -476,8 +480,8 @@ async def test_cloud_disconnect(
     ):
         await setup_integration(hass, webhook_config_entry)
         await prepare_webhook_setup(hass, freezer)
-        assert hass.components.cloud.async_active_subscription() is True
-        assert hass.components.cloud.async_is_connected() is True
+        assert async_active_subscription(hass) is True
+        assert async_is_connected(hass) is True
 
         await hass.async_block_till_done()
 
