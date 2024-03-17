@@ -901,7 +901,7 @@ async def test_virtual_sensor(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_do_cycle, expected
 ) -> None:
     """Run test for sensor."""
-    for i in range(0, len(expected)):
+    for i in range(len(expected)):
         entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
         unique_id = f"{SLAVE_UNIQUE_ID}"
         if i:
@@ -1071,7 +1071,7 @@ async def test_virtual_swap_sensor(
     hass: HomeAssistant, mock_do_cycle, expected
 ) -> None:
     """Run test for sensor."""
-    for i in range(0, len(expected)):
+    for i in range(len(expected)):
         entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
         if i:
             entity_id = f"{entity_id}_{i}"

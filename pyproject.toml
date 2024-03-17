@@ -605,13 +605,8 @@ select = [
     "N815", # Variable {name} in class scope should not be mixedCase
     "PERF", # Perflint
     "PGH004", # Use specific rule codes when using noqa
-    "PIE800", # Unnecessary dictionary unpacking operators
+    "PIE", # flake8-pie
     "PL", # pylint
-    "PIE804", # Unnecessary dict kwargs
-    "PIE790", # Unnecessary pass statement
-    "PIE794", # Class field is defined multiple times
-    "PIE807", # Prefer list/dict over useless lambda
-    "PIE810", # Call startswith/endswith once with a tuple
     "PT", # flake8-pytest-style
     "RUF005", # Consider iterable unpacking instead of concatenation
     "RUF006", # Store a reference to the return value of asyncio.create_task
