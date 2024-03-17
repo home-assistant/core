@@ -1191,6 +1191,7 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
             entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
             _async_entity_registry_changed,
             event_filter=entity_registry_changed_filter,
+            run_immediately=True,
         )
         return
 
@@ -1200,10 +1201,13 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
             entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
             _async_entity_registry_changed,
             event_filter=entity_registry_changed_filter,
+            run_immediately=True,
         )
         await debounced_cleanup.async_call()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, startup_clean)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STARTED, startup_clean, run_immediately=True
+    )
 
     @callback
     def _on_homeassistant_stop(event: Event) -> None:
