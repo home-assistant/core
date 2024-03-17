@@ -34,31 +34,28 @@ from .const import (
 UPDATE_DELAY = timedelta(hours=12)
 SCAN_INTERVAL = timedelta(hours=12)
 
-SENSOR_TYPES = (
-    SensorEntityDescription(
+SENSOR_TYPES = {
+    "bio": SensorEntityDescription(
         key="gft",
         name="bio",
         icon="mdi:recycle",
     ),
-    SensorEntityDescription(
+    "paper": SensorEntityDescription(
         key="papier",
         name="paper",
         icon="mdi:recycle",
-        entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    "plastic": SensorEntityDescription(
         key="pmd",
         name="plastic",
         icon="mdi:recycle",
-        entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    "residual": SensorEntityDescription(
         key="restafval",
         name="residual",
         icon="mdi:recycle",
-        entity_registry_enabled_default=False,
     ),
-)
+}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -90,7 +87,8 @@ async def async_setup_entry(
 
     # Create a new sensor for each garbage type.
     entities = [
-        RovaSensor(name, description, data_service) for description in SENSOR_TYPES
+        RovaSensor(name, description, data_service)
+        for key, description in SENSOR_TYPES.items()
     ]
     async_add_entities(entities, True)
 
