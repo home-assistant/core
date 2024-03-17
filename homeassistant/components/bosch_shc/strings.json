@@ -6,6 +6,9 @@
         "title": "SHC authentication parameters",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Bosch Smart Home Controller."
         }
       },
       "credentials": {

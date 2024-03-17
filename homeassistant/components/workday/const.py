@@ -1,4 +1,5 @@
 """Add constants for Workday integration."""
+
 from __future__ import annotations
 
 import logging
@@ -7,12 +8,11 @@ from homeassistant.const import WEEKDAYS, Platform
 
 LOGGER = logging.getLogger(__package__)
 
-ALLOWED_DAYS = WEEKDAYS + ["holiday"]
+ALLOWED_DAYS = [*WEEKDAYS, "holiday"]
 
 DOMAIN = "workday"
 PLATFORMS = [Platform.BINARY_SENSOR]
 
-CONF_COUNTRY = "country"
 CONF_PROVINCE = "province"
 CONF_WORKDAYS = "workdays"
 CONF_EXCLUDES = "excludes"

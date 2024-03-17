@@ -1,7 +1,11 @@
 """Platform for the Daikin AC."""
+
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Any
 
 from aiohttp import ClientConnectionError
 from pydaikin.daikin_base import Appliance
@@ -68,7 +72,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def daikin_api_setup(hass: HomeAssistant, host, key, uuid, password):
+async def daikin_api_setup(
+    hass: HomeAssistant,
+    host: str,
+    key: str | None,
+    uuid: str | None,
+    password: str | None,
+) -> DaikinApi | None:
     """Create a Daikin instance only once."""
 
     session = async_get_clientsession(hass)
@@ -77,7 +87,7 @@ async def daikin_api_setup(hass: HomeAssistant, host, key, uuid, password):
             device = await Appliance.factory(
                 host, session, key=key, uuid=uuid, password=password
             )
-    except asyncio.TimeoutError as err:
+    except TimeoutError as err:
         _LOGGER.debug("Connection to %s timed out", host)
         raise ConfigEntryNotReady from err
     except ClientConnectionError as err:
@@ -103,7 +113,7 @@ class DaikinApi:
         self._available = True
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self, **kwargs):
+    async def async_update(self, **kwargs: Any) -> None:
         """Pull the latest data from Daikin."""
         try:
             await self.device.update_status()
@@ -135,9 +145,11 @@ async def async_migrate_unique_id(
 ) -> None:
     """Migrate old entry."""
     dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
     old_unique_id = config_entry.unique_id
     new_unique_id = api.device.mac
-    new_name = api.device.values.get("name")
+    new_mac = dr.format_mac(new_unique_id)
+    new_name = api.name
 
     @callback
     def _update_unique_id(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
@@ -147,15 +159,39 @@ async def async_migrate_unique_id(
     if new_unique_id == old_unique_id:
         return
 
+    duplicate = dev_reg.async_get_device(
+        connections={(CONNECTION_NETWORK_MAC, new_mac)}, identifiers=None
+    )
+
+    # Remove duplicated device
+    if duplicate is not None:
+        if config_entry.entry_id in duplicate.config_entries:
+            _LOGGER.debug(
+                "Removing duplicated device %s",
+                duplicate.name,
+            )
+
+            # The automatic cleanup in entity registry is scheduled as a task, remove
+            # the entities manually to avoid unique_id collision when the entities
+            # are migrated.
+            duplicate_entities = er.async_entries_for_device(
+                ent_reg, duplicate.id, True
+            )
+            for entity in duplicate_entities:
+                if entity.config_entry_id == config_entry.entry_id:
+                    ent_reg.async_remove(entity.entity_id)
+
+            dev_reg.async_update_device(
+                duplicate.id, remove_config_entry_id=config_entry.entry_id
+            )
+
     # Migrate devices
     for device_entry in dr.async_entries_for_config_entry(
         dev_reg, config_entry.entry_id
     ):
         for connection in device_entry.connections:
             if connection[1] == old_unique_id:
-                new_connections = {
-                    (CONNECTION_NETWORK_MAC, dr.format_mac(new_unique_id))
-                }
+                new_connections = {(CONNECTION_NETWORK_MAC, new_mac)}
 
                 _LOGGER.debug(
                     "Migrating device %s connections to %s",

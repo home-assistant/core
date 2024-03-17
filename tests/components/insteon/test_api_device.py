@@ -1,4 +1,5 @@
 """Test the device level APIs."""
+
 import asyncio
 from unittest.mock import patch
 
@@ -87,7 +88,9 @@ async def test_no_ha_device(
 
 
 async def test_no_insteon_device(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test response when no Insteon device exists."""
     config_entry = MockConfigEntry(
@@ -103,15 +106,14 @@ async def test_no_insteon_device(
     devices = MockDevices()
     await devices.async_load()
 
-    dev_reg = dr.async_get(hass)
     # Create device registry entry for a Insteon device not in the Insteon devices list
-    ha_device_1 = dev_reg.async_get_or_create(
+    ha_device_1 = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "AA.BB.CC")},
         name="HA Device Only",
     )
     # Create device registry entry for a non-Insteon device
-    ha_device_2 = dev_reg.async_get_or_create(
+    ha_device_2 = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={("other_domain", "no address")},
         name="HA Device Only",

@@ -1,7 +1,9 @@
 """Tests for the Roku Media Player platform."""
+
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from rokuecp import RokuConnectionError, RokuConnectionTimeoutError, RokuError
 
@@ -153,6 +155,7 @@ async def test_availability(
     hass: HomeAssistant,
     mock_roku: MagicMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
     error: RokuError,
 ) -> None:
     """Test entity availability."""
@@ -160,23 +163,22 @@ async def test_availability(
     future = now + timedelta(minutes=1)
 
     mock_config_entry.add_to_hass(hass)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    freezer.move_to(now)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    with patch("homeassistant.util.dt.utcnow", return_value=future):
-        mock_roku.update.side_effect = error
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
-        assert hass.states.get(MAIN_ENTITY_ID).state == STATE_UNAVAILABLE
+    freezer.move_to(future)
+    mock_roku.update.side_effect = error
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+    assert hass.states.get(MAIN_ENTITY_ID).state == STATE_UNAVAILABLE
 
     future += timedelta(minutes=1)
-
-    with patch("homeassistant.util.dt.utcnow", return_value=future):
-        mock_roku.update.side_effect = None
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
-        assert hass.states.get(MAIN_ENTITY_ID).state == STATE_IDLE
+    freezer.move_to(future)
+    mock_roku.update.side_effect = None
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+    assert hass.states.get(MAIN_ENTITY_ID).state == STATE_IDLE
 
 
 async def test_supported_features(
@@ -188,7 +190,8 @@ async def test_supported_features(
     # Features supported for Rokus
     state = hass.states.get(MAIN_ENTITY_ID)
     assert (
-        MediaPlayerEntityFeature.PREVIOUS_TRACK
+        state.attributes.get("supported_features")
+        == MediaPlayerEntityFeature.PREVIOUS_TRACK
         | MediaPlayerEntityFeature.NEXT_TRACK
         | MediaPlayerEntityFeature.VOLUME_STEP
         | MediaPlayerEntityFeature.VOLUME_MUTE
@@ -199,7 +202,6 @@ async def test_supported_features(
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.BROWSE_MEDIA
-        == state.attributes.get("supported_features")
     )
 
 
@@ -213,7 +215,8 @@ async def test_tv_supported_features(
     state = hass.states.get(TV_ENTITY_ID)
     assert state
     assert (
-        MediaPlayerEntityFeature.PREVIOUS_TRACK
+        state.attributes.get("supported_features")
+        == MediaPlayerEntityFeature.PREVIOUS_TRACK
         | MediaPlayerEntityFeature.NEXT_TRACK
         | MediaPlayerEntityFeature.VOLUME_STEP
         | MediaPlayerEntityFeature.VOLUME_MUTE
@@ -224,7 +227,6 @@ async def test_tv_supported_features(
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.BROWSE_MEDIA
-        == state.attributes.get("supported_features")
     )
 
 

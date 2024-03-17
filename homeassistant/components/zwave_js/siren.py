@@ -1,4 +1,5 @@
 """Support for Z-Wave controls using the siren platform."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -71,6 +72,8 @@ class ZwaveSirenEntity(ZWaveBaseEntity, SirenEntity):
         )
         if self._attr_available_tones:
             self._attr_supported_features |= SirenEntityFeature.TONES
+
+        self._attr_name = self.generate_name(include_value_name=True)
 
     @property
     def is_on(self) -> bool | None:

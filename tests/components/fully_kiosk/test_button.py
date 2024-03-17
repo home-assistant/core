@@ -1,4 +1,5 @@
 """Test the Fully Kiosk Browser buttons."""
+
 from unittest.mock import MagicMock
 
 import homeassistant.components.button as button
@@ -12,13 +13,12 @@ from tests.common import MockConfigEntry
 
 async def test_buttons(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     mock_fully_kiosk: MagicMock,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test standard Fully Kiosk buttons."""
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
     entry = entity_registry.async_get("button.amazon_fire_restart_browser")
     assert entry
     assert entry.unique_id == "abcdef-123456-restartApp"

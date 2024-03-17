@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["pyweatherflowudp"],
-  "requirements": ["pyweatherflowudp==1.4.3"]
+  "requirements": ["pyweatherflowudp==1.4.5"]
 }

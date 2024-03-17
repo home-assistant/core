@@ -1,4 +1,5 @@
 """Define test fixtures for AirVisual Pro."""
+
 from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, Mock, patch
@@ -78,9 +79,7 @@ async def setup_airvisual_pro_fixture(hass, config, pro):
         "homeassistant.components.airvisual_pro.config_flow.NodeSamba", return_value=pro
     ), patch(
         "homeassistant.components.airvisual_pro.NodeSamba", return_value=pro
-    ), patch(
-        "homeassistant.components.airvisual.PLATFORMS", []
-    ):
+    ), patch("homeassistant.components.airvisual.PLATFORMS", []):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
         yield

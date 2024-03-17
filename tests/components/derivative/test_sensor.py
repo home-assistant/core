@@ -1,4 +1,5 @@
 """The tests for the derivative sensor platform."""
+
 from datetime import timedelta
 from math import sin
 import random
@@ -237,11 +238,7 @@ async def test_double_signal_after_delay(hass: HomeAssistant) -> None:
     # The old algorithm would produce extreme values if, after a delay longer than the time window
     # there would be two signals, a large spike would be produced. Check explicitly for this situation
     time_window = 60
-    times = [*range(time_window * 10)]
-    times = times + [
-        time_window * 20,
-        time_window * 20 + 0.01,
-    ]
+    times = [*range(time_window * 10), time_window * 20, time_window * 20 + 0.01]
 
     # just apply sine as some sort of temperature change and make sure the change after the delay is very small
     temperature_values = [sin(x) for x in times]
@@ -348,11 +345,12 @@ async def test_suffix(hass: HomeAssistant) -> None:
     assert round(float(state.state), config["sensor"]["round"]) == 0.0
 
 
-async def test_device_id(hass: HomeAssistant) -> None:
+async def test_device_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test for source entity device for Derivative."""
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
-
     source_config_entry = MockConfigEntry()
     source_config_entry.add_to_hass(hass)
     source_device_entry = device_registry.async_get_or_create(

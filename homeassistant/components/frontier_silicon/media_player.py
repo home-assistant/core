@@ -1,4 +1,5 @@
 """Support for Frontier Silicon Devices (Medion, Hama, Auna,...)."""
+
 from __future__ import annotations
 
 import logging
@@ -126,7 +127,8 @@ class AFSAPIDevice(MediaPlayerEntity):
 
         if not self._attr_source_list:
             self.__modes_by_label = {
-                mode.label: mode.key for mode in await afsapi.get_modes()
+                (mode.label if mode.label else mode.id): mode.key
+                for mode in await afsapi.get_modes()
             }
             self._attr_source_list = list(self.__modes_by_label)
 

@@ -1,6 +1,8 @@
 """Diagnostics support for CO2Signal."""
+
 from __future__ import annotations
 
+from dataclasses import asdict
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -22,5 +24,5 @@ async def async_get_config_entry_diagnostics(
 
     return {
         "config_entry": async_redact_data(config_entry.as_dict(), TO_REDACT),
-        "data": coordinator.data,
+        "data": asdict(coordinator.data),
     }

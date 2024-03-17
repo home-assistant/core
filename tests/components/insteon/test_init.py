@@ -1,4 +1,5 @@
 """Test the init file for the Insteon component."""
+
 import asyncio
 from unittest.mock import patch
 
@@ -76,7 +77,8 @@ async def test_import_frontend_dev_url(hass: HomeAssistant) -> None:
     ), patch.object(insteon, "close_insteon_connection"), patch.object(
         insteon, "devices", new=MockDevices()
     ), patch(
-        PATCH_CONNECTION, new=mock_successful_connection
+        PATCH_CONNECTION,
+        new=mock_successful_connection,
     ):
         assert await async_setup_component(
             hass,

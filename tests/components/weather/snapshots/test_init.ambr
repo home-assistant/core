@@ -1,0 +1,87 @@
+# serializer version: 1
+# name: test_get_forecast[daily-1-get_forecast]
+  dict({
+    'forecast': list([
+      dict({
+        'cloud_coverage': None,
+        'temperature': 38.0,
+        'templow': 38.0,
+        'uv_index': None,
+        'wind_bearing': None,
+      }),
+    ]),
+  })
+# ---
+# name: test_get_forecast[daily-1-get_forecasts]
+  dict({
+    'weather.testing': dict({
+      'forecast': list([
+        dict({
+          'cloud_coverage': None,
+          'temperature': 38.0,
+          'templow': 38.0,
+          'uv_index': None,
+          'wind_bearing': None,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_get_forecast[hourly-2-get_forecast]
+  dict({
+    'forecast': list([
+      dict({
+        'cloud_coverage': None,
+        'temperature': 38.0,
+        'templow': 38.0,
+        'uv_index': None,
+        'wind_bearing': None,
+      }),
+    ]),
+  })
+# ---
+# name: test_get_forecast[hourly-2-get_forecasts]
+  dict({
+    'weather.testing': dict({
+      'forecast': list([
+        dict({
+          'cloud_coverage': None,
+          'temperature': 38.0,
+          'templow': 38.0,
+          'uv_index': None,
+          'wind_bearing': None,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_get_forecast[twice_daily-4-get_forecast]
+  dict({
+    'forecast': list([
+      dict({
+        'cloud_coverage': None,
+        'is_daytime': True,
+        'temperature': 38.0,
+        'templow': 38.0,
+        'uv_index': None,
+        'wind_bearing': None,
+      }),
+    ]),
+  })
+# ---
+# name: test_get_forecast[twice_daily-4-get_forecasts]
+  dict({
+    'weather.testing': dict({
+      'forecast': list([
+        dict({
+          'cloud_coverage': None,
+          'is_daytime': True,
+          'temperature': 38.0,
+          'templow': 38.0,
+          'uv_index': None,
+          'wind_bearing': None,
+        }),
+      ]),
+    }),
+  })
+# ---

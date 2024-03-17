@@ -13,11 +13,11 @@
       "connectable": false
     }
   ],
-  "codeowners": ["@aschmitz"],
+  "codeowners": ["@aschmitz", "@thecode"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/aranet",
   "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": ["aranet4==2.1.3"]
+  "requirements": ["aranet4==2.2.2"]
 }

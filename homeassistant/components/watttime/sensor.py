@@ -1,4 +1,5 @@
 """Support for WattTime sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -10,7 +11,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, PERCENTAGE, UnitOfMass
+from homeassistant.const import (
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    CONF_SHOW_ON_MAP,
+    PERCENTAGE,
+    UnitOfMass,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -20,12 +27,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import (
-    CONF_BALANCING_AUTHORITY,
-    CONF_BALANCING_AUTHORITY_ABBREV,
-    CONF_SHOW_ON_MAP,
-    DOMAIN,
-)
+from .const import CONF_BALANCING_AUTHORITY, CONF_BALANCING_AUTHORITY_ABBREV, DOMAIN
 
 ATTR_BALANCING_AUTHORITY = "balancing_authority"
 
@@ -37,14 +39,12 @@ REALTIME_EMISSIONS_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=SENSOR_TYPE_REALTIME_EMISSIONS_MOER,
         translation_key="marginal_operating_emissions_rate",
-        icon="mdi:blur",
         native_unit_of_measurement=f"{UnitOfMass.POUNDS} CO2/MWh",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_REALTIME_EMISSIONS_PERCENT,
         translation_key="relative_marginal_emissions_intensity",
-        icon="mdi:blur",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),

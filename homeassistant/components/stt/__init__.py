@@ -1,4 +1,5 @@
 """Provide functionality to STT."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -18,7 +19,7 @@ from aiohttp.web_exceptions import (
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
@@ -26,6 +27,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util import dt as dt_util, language as language_util
 
 from .const import (
@@ -249,7 +251,7 @@ class SpeechToTextView(HomeAssistantView):
 
     async def post(self, request: web.Request, provider: str) -> web.Response:
         """Convert Speech (audio) to text."""
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
         provider_entity: SpeechToTextEntity | None = None
         if (
             not (provider_entity := async_get_speech_to_text_entity(hass, provider))
@@ -264,7 +266,7 @@ class SpeechToTextView(HomeAssistantView):
             raise HTTPBadRequest(text=str(err)) from err
 
         if not provider_entity:
-            stt_provider = self._get_provider(provider)
+            stt_provider = self._get_provider(hass, provider)
 
             # Check format
             if not stt_provider.check_metadata(metadata):
@@ -289,7 +291,7 @@ class SpeechToTextView(HomeAssistantView):
 
     async def get(self, request: web.Request, provider: str) -> web.Response:
         """Return provider specific audio information."""
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
         if (
             not (provider_entity := async_get_speech_to_text_entity(hass, provider))
             and provider not in self.providers
@@ -297,7 +299,7 @@ class SpeechToTextView(HomeAssistantView):
             raise HTTPNotFound()
 
         if not provider_entity:
-            stt_provider = self._get_provider(provider)
+            stt_provider = self._get_provider(hass, provider)
 
             return self.json(
                 {
@@ -321,7 +323,7 @@ class SpeechToTextView(HomeAssistantView):
             }
         )
 
-    def _get_provider(self, provider: str) -> Provider:
+    def _get_provider(self, hass: HomeAssistant, provider: str) -> Provider:
         """Get provider.
 
         Method for legacy providers.
@@ -331,7 +333,7 @@ class SpeechToTextView(HomeAssistantView):
 
         if not self._legacy_provider_reported:
             self._legacy_provider_reported = True
-            report_issue = self._suggest_report_issue(provider, stt_provider)
+            report_issue = self._suggest_report_issue(hass, provider, stt_provider)
             # This should raise in Home Assistant Core 2023.9
             _LOGGER.warning(
                 "Provider %s (%s) is using a legacy implementation, "
@@ -344,19 +346,13 @@ class SpeechToTextView(HomeAssistantView):
 
         return stt_provider
 
-    def _suggest_report_issue(self, provider: str, provider_instance: object) -> str:
+    def _suggest_report_issue(
+        self, hass: HomeAssistant, provider: str, provider_instance: object
+    ) -> str:
         """Suggest to report an issue."""
-        report_issue = ""
-        if "custom_components" in type(provider_instance).__module__:
-            report_issue = "report it to the custom integration author."
-        else:
-            report_issue = (
-                "create a bug report at "
-                "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
-            )
-            report_issue += f"+label%3A%22integration%3A+{provider}%22"
-
-        return report_issue
+        return async_suggest_report_issue(
+            hass, integration_domain=provider, module=type(provider_instance).__module__
+        )
 
 
 def _metadata_from_header(request: web.Request) -> SpeechMetadata:

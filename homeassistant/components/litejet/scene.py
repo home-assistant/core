@@ -1,4 +1,5 @@
 """Support for LiteJet scenes."""
+
 import logging
 from typing import Any
 
@@ -51,7 +52,7 @@ class LiteJetScene(Scene):
             identifiers={(DOMAIN, f"{entry_id}_mcp")},
             name="LiteJet",
             manufacturer="Centralite",
-            model="CL24",
+            model=system.model_name,
         )
 
     async def async_added_to_hass(self) -> None:

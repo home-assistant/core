@@ -1,14 +1,16 @@
 """Support for esphome domain data."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Self, cast
 
+from bleak_esphome.backend.cache import ESPHomeBluetoothCache
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
 
-from .bluetooth.cache import ESPHomeBluetoothCache
 from .const import DOMAIN
 from .entry_data import ESPHomeStorage, RuntimeEntryData
 

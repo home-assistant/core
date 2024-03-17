@@ -1,4 +1,5 @@
 """Test Matter locks."""
+
 from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
@@ -10,9 +11,12 @@ from homeassistant.components.lock import (
     STATE_LOCKING,
     STATE_UNLOCKED,
     STATE_UNLOCKING,
+    LockEntityFeature,
 )
 from homeassistant.const import ATTR_CODE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
+import homeassistant.helpers.entity_registry as er
 
 from .common import set_node_attribute, trigger_subscription_callback
 
@@ -100,6 +104,7 @@ async def test_lock_requires_pin(
     hass: HomeAssistant,
     matter_client: MagicMock,
     door_lock: MatterNode,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test door lock with PINCode."""
 
@@ -110,7 +115,7 @@ async def test_lock_requires_pin(
     # set door state to unlocked
     set_node_attribute(door_lock, 1, 257, 0, 2)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         # Lock door using invalid code format
         await trigger_subscription_callback(hass, matter_client)
         await hass.services.async_call(
@@ -133,5 +138,73 @@ async def test_lock_requires_pin(
         node_id=door_lock.node_id,
         endpoint_id=1,
         command=clusters.DoorLock.Commands.LockDoor(code.encode()),
+        timed_request_timeout_ms=1000,
+    )
+
+    # Lock door using default code
+    default_code = "7654321"
+    entity_registry.async_update_entity_options(
+        "lock.mock_door_lock", "lock", {"default_code": default_code}
+    )
+    await trigger_subscription_callback(hass, matter_client)
+    await hass.services.async_call(
+        "lock",
+        "lock",
+        {"entity_id": "lock.mock_door_lock"},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_count == 2
+    assert matter_client.send_device_command.call_args == call(
+        node_id=door_lock.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.LockDoor(default_code.encode()),
+        timed_request_timeout_ms=1000,
+    )
+
+
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_lock_with_unbolt(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    door_lock_with_unbolt: MatterNode,
+) -> None:
+    """Test door lock."""
+    state = hass.states.get("lock.mock_door_lock")
+    assert state
+    assert state.state == STATE_LOCKED
+    assert state.attributes["supported_features"] & LockEntityFeature.OPEN
+    # test unlock/unbolt
+    await hass.services.async_call(
+        "lock",
+        "unlock",
+        {
+            "entity_id": "lock.mock_door_lock",
+        },
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_count == 1
+    # unlock should unbolt on a lock with unbolt feature
+    assert matter_client.send_device_command.call_args == call(
+        node_id=door_lock_with_unbolt.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.UnboltDoor(),
+        timed_request_timeout_ms=1000,
+    )
+    matter_client.send_device_command.reset_mock()
+    # test open / unlatch
+    await hass.services.async_call(
+        "lock",
+        "open",
+        {
+            "entity_id": "lock.mock_door_lock",
+        },
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=door_lock_with_unbolt.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.UnlockDoor(),
         timed_request_timeout_ms=1000,
     )

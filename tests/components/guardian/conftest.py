@@ -1,4 +1,5 @@
 """Define fixtures for Elexa Guardian tests."""
+
 from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, patch
@@ -131,9 +132,10 @@ async def setup_guardian_fixture(
         "aioguardian.commands.wifi.WiFiCommands.status",
         return_value=data_wifi_status,
     ), patch(
-        "aioguardian.client.Client.disconnect"
+        "aioguardian.client.Client.disconnect",
     ), patch(
-        "homeassistant.components.guardian.PLATFORMS", []
+        "homeassistant.components.guardian.PLATFORMS",
+        [],
     ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()

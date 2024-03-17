@@ -1,4 +1,5 @@
 """Support for HomematicIP Cloud lights."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -55,8 +56,10 @@ async def async_setup_entry(
                 )
             )
         elif isinstance(device, (AsyncWiredDimmer3, AsyncDinRailDimmer3)):
-            for channel in range(1, 4):
-                entities.append(HomematicipMultiDimmer(hap, device, channel=channel))
+            entities.extend(
+                HomematicipMultiDimmer(hap, device, channel=channel)
+                for channel in range(1, 4)
+            )
         elif isinstance(
             device,
             (AsyncDimmer, AsyncPluggableDimmer, AsyncBrandDimmer, AsyncFullFlushDimmer),

@@ -1,4 +1,5 @@
 """Support for Litter-Robot time."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -20,7 +21,7 @@ from .entity import LitterRobotEntity, _RobotT
 from .hub import LitterRobotHub
 
 
-@dataclass
+@dataclass(frozen=True)
 class RequiredKeysMixin(Generic[_RobotT]):
     """A class that describes robot time entity required keys."""
 
@@ -28,7 +29,7 @@ class RequiredKeysMixin(Generic[_RobotT]):
     set_fn: Callable[[_RobotT, time], Coroutine[Any, Any, bool]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RobotTimeEntityDescription(TimeEntityDescription, RequiredKeysMixin[_RobotT]):
     """A class that describes robot time entities."""
 

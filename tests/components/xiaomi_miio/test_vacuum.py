@@ -1,4 +1,5 @@
 """The tests for the Xiaomi vacuum platform."""
+
 from datetime import datetime, time, timedelta
 from unittest import mock
 from unittest.mock import MagicMock, patch
@@ -23,15 +24,14 @@ from homeassistant.components.vacuum import (
     STATE_ERROR,
 )
 from homeassistant.components.xiaomi_miio.const import (
-    CONF_DEVICE,
     CONF_FLOW_TYPE,
-    CONF_MAC,
     DOMAIN as XIAOMI_DOMAIN,
     MODELS_VACUUM,
 )
 from homeassistant.components.xiaomi_miio.vacuum import (
     ATTR_ERROR,
     ATTR_TIMERS,
+    CONF_DEVICE,
     SERVICE_CLEAN_SEGMENT,
     SERVICE_CLEAN_ZONE,
     SERVICE_GOTO,
@@ -44,6 +44,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     CONF_HOST,
+    CONF_MAC,
     CONF_MODEL,
     CONF_TOKEN,
     STATE_UNAVAILABLE,
@@ -371,13 +372,7 @@ async def test_xiaomi_vacuum_services(
                 "velocity": -0.1,
             },
             "manual_control",
-            mock.call(
-                **{
-                    "duration": 1000,
-                    "rotation": -40,
-                    "velocity": -0.1,
-                }
-            ),
+            mock.call(duration=1000, rotation=-40, velocity=-0.1),
         ),
         (
             SERVICE_STOP_REMOTE_CONTROL,
@@ -396,13 +391,7 @@ async def test_xiaomi_vacuum_services(
                 "velocity": 0.1,
             },
             "manual_control_once",
-            mock.call(
-                **{
-                    "duration": 2000,
-                    "rotation": 120,
-                    "velocity": 0.1,
-                }
-            ),
+            mock.call(duration=2000, rotation=120, velocity=0.1),
         ),
         (
             SERVICE_CLEAN_ZONE,

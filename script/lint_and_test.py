@@ -3,6 +3,7 @@
 
 This is NOT a full CI/linting replacement, only a quick check during development.
 """
+
 import asyncio
 from collections import namedtuple
 from contextlib import suppress
@@ -173,8 +174,7 @@ async def main():
         )
         return
 
-    pyfile = re.compile(r".+\.py$")
-    pyfiles = [file for file in files if pyfile.match(file)]
+    pyfiles = [file for file in files if file.endswith(".py")]
 
     print("=============================")
     printc("bold", "CHANGED FILES:\n", "\n ".join(pyfiles))
@@ -224,7 +224,15 @@ async def main():
         return
 
     code, _ = await async_exec(
-        "pytest", "-vv", "--force-sugar", "--", *test_files, display=True
+        "python3",
+        "-b",
+        "-m",
+        "pytest",
+        "-vv",
+        "--force-sugar",
+        "--",
+        *test_files,
+        display=True,
     )
     print("=============================")
 

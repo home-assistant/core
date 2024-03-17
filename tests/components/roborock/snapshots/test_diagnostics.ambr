@@ -32,6 +32,8 @@
     'coordinators': dict({
       '**REDACTED-0**': dict({
         'api': dict({
+          'misc_info': dict({
+          }),
         }),
         'roborock_device_info': dict({
           'device': dict({
@@ -208,7 +210,9 @@
               'squareMeterCleanArea': 1159.2,
             }),
             'consumable': dict({
+              'cleaningBrushTimeLeft': 1079935,
               'cleaningBrushWorkTimes': 65,
+              'dustCollectionTimeLeft': 80975,
               'dustCollectionWorkTimes': 25,
               'filterElementWorkTime': 0,
               'filterTimeLeft': 465618,
@@ -219,6 +223,7 @@
               'sensorTimeLeft': 33618,
               'sideBrushTimeLeft': 645618,
               'sideBrushWorkTime': 74382,
+              'strainerTimeLeft': 539935,
               'strainerWorkTimes': 65,
             }),
             'lastCleanRecord': dict({
@@ -260,7 +265,17 @@
               'dockType': 3,
               'dustCollectionStatus': 0,
               'errorCode': 0,
+              'errorCodeName': 'none',
               'fanPower': 102,
+              'fanPowerName': 'balanced',
+              'fanPowerOptions': list([
+                'off',
+                'quiet',
+                'balanced',
+                'turbo',
+                'max',
+                'custom',
+              ]),
               'homeSecEnablePassword': 0,
               'homeSecStatus': 0,
               'inCleaning': 0,
@@ -274,10 +289,12 @@
               'mapStatus': 3,
               'mopForbiddenEnable': 1,
               'mopMode': 300,
+              'mopModeName': 'standard',
               'msgSeq': 458,
               'msgVer': 2,
               'squareMeterCleanArea': 21.0,
               'state': 8,
+              'stateName': 'charging',
               'switchMapMode': 0,
               'unsaveMapFlag': 0,
               'unsaveMapReason': 0,
@@ -285,6 +302,7 @@
               'washReady': 0,
               'waterBoxCarriageStatus': 1,
               'waterBoxMode': 203,
+              'waterBoxModeName': 'intense',
               'waterBoxStatus': 1,
               'waterShortageStatus': 0,
             }),
@@ -293,6 +311,8 @@
       }),
       '**REDACTED-1**': dict({
         'api': dict({
+          'misc_info': dict({
+          }),
         }),
         'roborock_device_info': dict({
           'device': dict({
@@ -469,7 +489,9 @@
               'squareMeterCleanArea': 1159.2,
             }),
             'consumable': dict({
+              'cleaningBrushTimeLeft': 1079935,
               'cleaningBrushWorkTimes': 65,
+              'dustCollectionTimeLeft': 80975,
               'dustCollectionWorkTimes': 25,
               'filterElementWorkTime': 0,
               'filterTimeLeft': 465618,
@@ -480,6 +502,7 @@
               'sensorTimeLeft': 33618,
               'sideBrushTimeLeft': 645618,
               'sideBrushWorkTime': 74382,
+              'strainerTimeLeft': 539935,
               'strainerWorkTimes': 65,
             }),
             'lastCleanRecord': dict({
@@ -521,7 +544,17 @@
               'dockType': 3,
               'dustCollectionStatus': 0,
               'errorCode': 0,
+              'errorCodeName': 'none',
               'fanPower': 102,
+              'fanPowerName': 'balanced',
+              'fanPowerOptions': list([
+                'off',
+                'quiet',
+                'balanced',
+                'turbo',
+                'max',
+                'custom',
+              ]),
               'homeSecEnablePassword': 0,
               'homeSecStatus': 0,
               'inCleaning': 0,
@@ -535,10 +568,12 @@
               'mapStatus': 3,
               'mopForbiddenEnable': 1,
               'mopMode': 300,
+              'mopModeName': 'standard',
               'msgSeq': 458,
               'msgVer': 2,
               'squareMeterCleanArea': 21.0,
               'state': 8,
+              'stateName': 'charging',
               'switchMapMode': 0,
               'unsaveMapFlag': 0,
               'unsaveMapReason': 0,
@@ -546,6 +581,7 @@
               'washReady': 0,
               'waterBoxCarriageStatus': 1,
               'waterBoxMode': 203,
+              'waterBoxModeName': 'intense',
               'waterBoxStatus': 1,
               'waterShortageStatus': 0,
             }),

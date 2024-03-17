@@ -1,4 +1,5 @@
 """Common functions needed to setup tests for Subaru component."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -8,7 +9,6 @@ from subarulink.const import COUNTRY_USA
 from homeassistant import config_entries
 from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
 from homeassistant.components.subaru.const import (
-    CONF_COUNTRY,
     CONF_UPDATE_ENABLED,
     DOMAIN,
     FETCH_INTERVAL,
@@ -22,7 +22,13 @@ from homeassistant.components.subaru.const import (
     VEHICLE_NAME,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_DEVICE_ID, CONF_PASSWORD, CONF_PIN, CONF_USERNAME
+from homeassistant.const import (
+    CONF_COUNTRY,
+    CONF_DEVICE_ID,
+    CONF_PASSWORD,
+    CONF_PIN,
+    CONF_USERNAME,
+)
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -145,9 +151,7 @@ async def setup_subaru_config_entry(
         return_value=vehicle_status,
     ), patch(
         MOCK_API_UPDATE,
-    ), patch(
-        MOCK_API_FETCH, side_effect=fetch_effect
-    ):
+    ), patch(MOCK_API_FETCH, side_effect=fetch_effect):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 

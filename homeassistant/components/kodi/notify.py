@@ -1,4 +1,5 @@
 """Kodi notification service."""
+
 from __future__ import annotations
 
 import logging
@@ -59,12 +60,12 @@ async def async_get_service(
     port: int = config[CONF_PORT]
     encryption = config.get(CONF_PROXY_SSL)
 
-    if host.startswith("http://") or host.startswith("https://"):
+    if host.startswith(("http://", "https://")):
         host = host[host.index("://") + 3 :]
         _LOGGER.warning(
             "Kodi host name should no longer contain http:// See updated "
             "definitions here: "
-            "https://www.home-assistant.io/integrations/media_player.kodi/"
+            "https://www.home-assistant.io/integrations/kodi/"
         )
 
     http_protocol = "https" if encryption else "http"

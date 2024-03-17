@@ -1,4 +1,5 @@
 """The tests for the generic_hygrostat."""
+
 import datetime
 
 from freezegun import freeze_time
@@ -31,6 +32,7 @@ from homeassistant.core import (
     State,
     callback,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -167,6 +169,33 @@ async def test_humidifier_switch(
 
     assert hass.states.get(humidifier_switch).state == STATE_ON
     assert hass.states.get(ENTITY).attributes.get("action") == "humidifying"
+
+
+async def test_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, setup_comp_1
+) -> None:
+    """Test setting a unique ID."""
+    unique_id = "some_unique_id"
+    _setup_sensor(hass, 18)
+    await _setup_switch(hass, True)
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "humidifier": {
+                "platform": "generic_hygrostat",
+                "name": "test",
+                "humidifier": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "unique_id": unique_id,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get(ENTITY)
+    assert entry
+    assert entry.unique_id == unique_id
 
 
 def _setup_sensor(hass, humidity):
@@ -438,6 +467,35 @@ async def test_sensor_bad_value(hass: HomeAssistant, setup_comp_2) -> None:
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY).state == STATE_UNAVAILABLE
+
+
+async def test_sensor_bad_value_twice(
+    hass: HomeAssistant, setup_comp_2, caplog
+) -> None:
+    """Test sensor that the second bad value is not logged as warning."""
+    assert hass.states.get(ENTITY).state == STATE_ON
+
+    _setup_sensor(hass, "forty")
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY).state == STATE_UNAVAILABLE
+    assert [
+        rec.levelname
+        for rec in caplog.records
+        if "Unable to update from sensor" in rec.message
+    ] == ["WARNING"]
+
+    caplog.clear()
+
+    _setup_sensor(hass, "fifty")
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY).state == STATE_UNAVAILABLE
+    assert [
+        rec.levelname
+        for rec in caplog.records
+        if "Unable to update from sensor" in rec.message
+    ] == ["DEBUG"]
 
 
 async def test_set_target_humidity_humidifier_on(
@@ -1348,7 +1406,7 @@ async def test_restore_state(hass: HomeAssistant) -> None:
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass,
@@ -1386,7 +1444,7 @@ async def test_restore_state_target_humidity(hass: HomeAssistant) -> None:
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass,
@@ -1429,7 +1487,7 @@ async def test_restore_state_and_return_to_normal(hass: HomeAssistant) -> None:
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass,
@@ -1484,7 +1542,7 @@ async def test_no_restore_state(hass: HomeAssistant) -> None:
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass,

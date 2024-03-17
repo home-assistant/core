@@ -1,4 +1,5 @@
 """Config flow for Derivative integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -6,6 +7,8 @@ from typing import Any, cast
 
 import voluptuous as vol
 
+from homeassistant.components.counter import DOMAIN as COUNTER_DOMAIN
+from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_NAME, CONF_SOURCE, UnitOfTime
 from homeassistant.helpers import selector
@@ -23,7 +26,6 @@ from .const import (
 )
 
 UNIT_PREFIXES = [
-    selector.SelectOptionDict(value="none", label="none"),
     selector.SelectOptionDict(value="n", label="n (nano)"),
     selector.SelectOptionDict(value="µ", label="µ (micro)"),
     selector.SelectOptionDict(value="m", label="m (milli)"),
@@ -51,7 +53,7 @@ OPTIONS_SCHEMA = vol.Schema(
             ),
         ),
         vol.Required(CONF_TIME_WINDOW): selector.DurationSelector(),
-        vol.Required(CONF_UNIT_PREFIX, default="none"): selector.SelectSelector(
+        vol.Optional(CONF_UNIT_PREFIX): selector.SelectSelector(
             selector.SelectSelectorConfig(options=UNIT_PREFIXES),
         ),
         vol.Required(CONF_UNIT_TIME, default=UnitOfTime.HOURS): selector.SelectSelector(
@@ -66,7 +68,9 @@ CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): selector.TextSelector(),
         vol.Required(CONF_SOURCE): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
+            selector.EntitySelectorConfig(
+                domain=[COUNTER_DOMAIN, INPUT_NUMBER_DOMAIN, SENSOR_DOMAIN]
+            ),
         ),
     }
 ).extend(OPTIONS_SCHEMA.schema)

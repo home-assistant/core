@@ -1,8 +1,8 @@
 """Support for MQTT sirens."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
-import functools
 import logging
 from typing import Any, cast
 
@@ -32,7 +32,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, TemplateVarsType
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads_object
 
 from . import subscription
@@ -52,7 +52,7 @@ from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
-    async_setup_entry_helper,
+    async_setup_entity_entry_helper,
     write_state_on_attr_change,
 )
 from .models import (
@@ -122,21 +122,15 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT siren through YAML and through MQTT discovery."""
-    setup = functools.partial(
-        _async_setup_entity, hass, async_add_entities, config_entry=config_entry
+    await async_setup_entity_entry_helper(
+        hass,
+        config_entry,
+        MqttSiren,
+        siren.DOMAIN,
+        async_add_entities,
+        DISCOVERY_SCHEMA,
+        PLATFORM_SCHEMA_MODERN,
     )
-    await async_setup_entry_helper(hass, siren.DOMAIN, setup, DISCOVERY_SCHEMA)
-
-
-async def _async_setup_entity(
-    hass: HomeAssistant,
-    async_add_entities: AddEntitiesCallback,
-    config: ConfigType,
-    config_entry: ConfigEntry,
-    discovery_data: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the MQTT siren."""
-    async_add_entities([MqttSiren(hass, config, config_entry, discovery_data)])
 
 
 class MqttSiren(MqttEntity, SirenEntity):
@@ -307,10 +301,7 @@ class MqttSiren(MqttEntity, SirenEntity):
             else {}
         )
         if extra_attributes:
-            return (
-                dict({*self._extra_attributes.items(), *extra_attributes.items()})
-                or None
-            )
+            return dict({*self._extra_attributes.items(), *extra_attributes.items()})
         return self._extra_attributes or None
 
     async def _async_publish(
@@ -373,9 +364,13 @@ class MqttSiren(MqttEntity, SirenEntity):
 
     def _update(self, data: SirenTurnOnServiceParameters) -> None:
         """Update the extra siren state attributes."""
-        for attribute, support in SUPPORTED_ATTRIBUTES.items():
-            if self._attr_supported_features & support and attribute in data:
-                data_attr = data[attribute]  # type: ignore[literal-required]
-                if self._extra_attributes.get(attribute) == data_attr:
-                    continue
-                self._extra_attributes[attribute] = data_attr
+        self._extra_attributes.update(
+            {
+                attribute: data_attr
+                for attribute, support in SUPPORTED_ATTRIBUTES.items()
+                if self._attr_supported_features & support
+                and attribute in data
+                and (data_attr := data[attribute])  # type: ignore[literal-required]
+                != self._extra_attributes.get(attribute)
+            }
+        )

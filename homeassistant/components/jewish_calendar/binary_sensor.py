@@ -1,4 +1,5 @@
 """Support for Jewish Calendar binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -22,14 +23,14 @@ import homeassistant.util.dt as dt_util
 from . import DOMAIN
 
 
-@dataclass
+@dataclass(frozen=True)
 class JewishCalendarBinarySensorMixIns(BinarySensorEntityDescription):
     """Binary Sensor description mixin class for Jewish Calendar."""
 
     is_on: Callable[..., bool] = lambda _: False
 
 
-@dataclass
+@dataclass(frozen=True)
 class JewishCalendarBinarySensorEntityDescription(
     JewishCalendarBinarySensorMixIns, BinarySensorEntityDescription
 ):

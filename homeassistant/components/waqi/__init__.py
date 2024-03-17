@@ -1,4 +1,5 @@
 """The World Air Quality Index (WAQI) integration."""
+
 from __future__ import annotations
 
 from aiowaqi import WAQIClient

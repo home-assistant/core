@@ -1,4 +1,5 @@
 """Helpers for creating schema based data entry flows."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -10,9 +11,15 @@ from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+    OptionsFlowWithConfigEntry,
+)
 from homeassistant.core import HomeAssistant, callback, split_entity_id
-from homeassistant.data_entry_flow import FlowResult, UnknownHandler
+from homeassistant.data_entry_flow import UnknownHandler
 
 from . import entity_registry as er, selector
 from .typing import UNDEFINED, UndefinedType
@@ -126,7 +133,7 @@ class SchemaCommonFlowHandler:
 
     async def async_step(
         self, step_id: str, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a step."""
         if isinstance(self._flow[step_id], SchemaFlowFormStep):
             return await self._async_form_step(step_id, user_input)
@@ -141,7 +148,7 @@ class SchemaCommonFlowHandler:
 
     async def _async_form_step(
         self, step_id: str, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a form step."""
         form_step: SchemaFlowFormStep = cast(SchemaFlowFormStep, self._flow[step_id])
 
@@ -171,16 +178,40 @@ class SchemaCommonFlowHandler:
 
         if user_input is not None:
             # User input was validated successfully, update options
-            self._options.update(user_input)
+            self._update_and_remove_omitted_optional_keys(
+                self._options, user_input, data_schema
+            )
 
         if user_input is not None or form_step.schema is None:
             return await self._show_next_step_or_create_entry(form_step)
 
         return await self._show_next_step(step_id)
 
+    def _update_and_remove_omitted_optional_keys(
+        self,
+        values: dict[str, Any],
+        user_input: dict[str, Any],
+        data_schema: vol.Schema | None,
+    ) -> None:
+        values.update(user_input)
+        if data_schema and data_schema.schema:
+            for key in data_schema.schema:
+                if (
+                    isinstance(key, vol.Optional)
+                    and key not in user_input
+                    and not (
+                        # don't remove advanced keys, if they are hidden
+                        key.description
+                        and key.description.get("advanced")
+                        and not self._handler.show_advanced_options
+                    )
+                ):
+                    # Key not present, delete keys old value (if present) too
+                    values.pop(key, None)
+
     async def _show_next_step_or_create_entry(
         self, form_step: SchemaFlowFormStep
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         next_step_id_or_end_flow: str | None
 
         if callable(form_step.next_step):
@@ -198,7 +229,7 @@ class SchemaCommonFlowHandler:
         next_step_id: str,
         error: SchemaFlowError | None = None,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Show form for next step."""
         if isinstance(self._flow[next_step_id], SchemaFlowMenuStep):
             menu_step = cast(SchemaFlowMenuStep, self._flow[next_step_id])
@@ -221,7 +252,9 @@ class SchemaCommonFlowHandler:
         if user_input:
             # We don't want to mutate the existing options
             suggested_values = copy.deepcopy(suggested_values)
-            suggested_values.update(user_input)
+            self._update_and_remove_omitted_optional_keys(
+                suggested_values, user_input, await self._get_schema(form_step)
+            )
 
         if data_schema.schema:
             # Make a copy of the schema with suggested values set to saved options
@@ -245,7 +278,7 @@ class SchemaCommonFlowHandler:
 
     async def _async_menu_step(
         self, step_id: str, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a menu step."""
         menu_step: SchemaFlowMenuStep = cast(SchemaFlowMenuStep, self._flow[step_id])
         return self._handler.async_show_menu(
@@ -254,7 +287,7 @@ class SchemaCommonFlowHandler:
         )
 
 
-class SchemaConfigFlowHandler(config_entries.ConfigFlow, ABC):
+class SchemaConfigFlowHandler(ConfigFlow, ABC):
     """Handle a schema based config flow."""
 
     config_flow: Mapping[str, SchemaFlowStep]
@@ -268,8 +301,8 @@ class SchemaConfigFlowHandler(config_entries.ConfigFlow, ABC):
 
         @callback
         def _async_get_options_flow(
-            config_entry: config_entries.ConfigEntry,
-        ) -> config_entries.OptionsFlow:
+            config_entry: ConfigEntry,
+        ) -> OptionsFlow:
             """Get the options flow for this handler."""
             if cls.options_flow is None:
                 raise UnknownHandler
@@ -298,19 +331,22 @@ class SchemaConfigFlowHandler(config_entries.ConfigFlow, ABC):
 
     @classmethod
     @callback
-    def async_supports_options_flow(
-        cls, config_entry: config_entries.ConfigEntry
-    ) -> bool:
+    def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
         """Return options flow support for this handler."""
         return cls.options_flow is not None
 
     @staticmethod
-    def _async_step(step_id: str) -> Callable:
+    def _async_step(
+        step_id: str,
+    ) -> Callable[
+        [SchemaConfigFlowHandler, dict[str, Any] | None],
+        Coroutine[Any, Any, ConfigFlowResult],
+    ]:
         """Generate a step handler."""
 
         async def _async_step(
             self: SchemaConfigFlowHandler, user_input: dict[str, Any] | None = None
-        ) -> FlowResult:
+        ) -> ConfigFlowResult:
             """Handle a config flow step."""
             # pylint: disable-next=protected-access
             result = await self._common_handler.async_step(step_id, user_input)
@@ -351,7 +387,7 @@ class SchemaConfigFlowHandler(config_entries.ConfigFlow, ABC):
         self,
         data: Mapping[str, Any],
         **kwargs: Any,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Finish config flow and create a config entry."""
         self.async_config_flow_finished(data)
         return super().async_create_entry(
@@ -359,12 +395,12 @@ class SchemaConfigFlowHandler(config_entries.ConfigFlow, ABC):
         )
 
 
-class SchemaOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
+class SchemaOptionsFlowHandler(OptionsFlowWithConfigEntry):
     """Handle a schema based options flow."""
 
     def __init__(
         self,
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
         options_flow: Mapping[str, SchemaFlowStep],
         async_options_flow_finished: Callable[[HomeAssistant, Mapping[str, Any]], None]
         | None = None,
@@ -395,12 +431,17 @@ class SchemaOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
             setattr(self, "async_setup_preview", async_setup_preview)
 
     @staticmethod
-    def _async_step(step_id: str) -> Callable:
+    def _async_step(
+        step_id: str,
+    ) -> Callable[
+        [SchemaConfigFlowHandler, dict[str, Any] | None],
+        Coroutine[Any, Any, ConfigFlowResult],
+    ]:
         """Generate a step handler."""
 
         async def _async_step(
             self: SchemaConfigFlowHandler, user_input: dict[str, Any] | None = None
-        ) -> FlowResult:
+        ) -> ConfigFlowResult:
             """Handle an options flow step."""
             # pylint: disable-next=protected-access
             result = await self._common_handler.async_step(step_id, user_input)
@@ -413,7 +454,7 @@ class SchemaOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
         self,
         data: Mapping[str, Any],
         **kwargs: Any,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Finish config flow and create a config entry."""
         if self._async_options_flow_finished:
             self._async_options_flow_finished(self.hass, data)

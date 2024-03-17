@@ -1,4 +1,5 @@
 """Test the Derivative config flow."""
+
 from unittest.mock import patch
 
 import pytest
@@ -33,7 +34,6 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
                 "round": 1,
                 "source": input_sensor_entity_id,
                 "time_window": {"seconds": 0},
-                "unit_prefix": "none",
                 "unit_time": "min",
             },
         )
@@ -47,7 +47,6 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
         "round": 1.0,
         "source": "sensor.input",
         "time_window": {"seconds": 0.0},
-        "unit_prefix": "none",
         "unit_time": "min",
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -59,7 +58,6 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
         "round": 1.0,
         "source": "sensor.input",
         "time_window": {"seconds": 0.0},
-        "unit_prefix": "none",
         "unit_time": "min",
     }
     assert config_entry.title == "My derivative"
@@ -111,7 +109,6 @@ async def test_options(hass: HomeAssistant, platform) -> None:
         user_input={
             "round": 2.0,
             "time_window": {"seconds": 10.0},
-            "unit_prefix": "none",
             "unit_time": "h",
         },
     )
@@ -121,7 +118,6 @@ async def test_options(hass: HomeAssistant, platform) -> None:
         "round": 2.0,
         "source": "sensor.input",
         "time_window": {"seconds": 10.0},
-        "unit_prefix": "none",
         "unit_time": "h",
     }
     assert config_entry.data == {}
@@ -130,7 +126,6 @@ async def test_options(hass: HomeAssistant, platform) -> None:
         "round": 2.0,
         "source": "sensor.input",
         "time_window": {"seconds": 10.0},
-        "unit_prefix": "none",
         "unit_time": "h",
     }
     assert config_entry.title == "My derivative"

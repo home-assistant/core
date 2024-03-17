@@ -1,9 +1,10 @@
 """deCONZ binary sensor platform tests."""
+
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDeviceClass
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.deconz.const import (
     CONF_ALLOW_CLIP_SENSOR,
     CONF_ALLOW_NEW_DEVICES,
@@ -68,7 +69,6 @@ TEST_DATA = [
             "device_count": 3,
             "entity_id": "binary_sensor.alarm_10",
             "unique_id": "00:15:8d:00:02:b5:d1:80-01-0500-alarm",
-            "old_unique_id": "00:15:8d:00:02:b5:d1:80-01-0500",
             "state": STATE_OFF,
             "entity_category": None,
             "device_class": BinarySensorDeviceClass.SAFETY,
@@ -110,7 +110,6 @@ TEST_DATA = [
             "device_count": 3,
             "entity_id": "binary_sensor.cave_co",
             "unique_id": "00:15:8d:00:02:a5:21:24-01-0101-carbon_monoxide",
-            "old_unique_id": "00:15:8d:00:02:a5:21:24-01-0101",
             "state": STATE_OFF,
             "entity_category": None,
             "device_class": BinarySensorDeviceClass.CO,
@@ -146,7 +145,6 @@ TEST_DATA = [
             "device_count": 3,
             "entity_id": "binary_sensor.sensor_kitchen_smoke",
             "unique_id": "00:15:8d:00:01:d9:3e:7c-01-0500-fire",
-            "old_unique_id": "00:15:8d:00:01:d9:3e:7c-01-0500",
             "state": STATE_OFF,
             "entity_category": None,
             "device_class": BinarySensorDeviceClass.SMOKE,
@@ -183,7 +181,6 @@ TEST_DATA = [
             "device_count": 3,
             "entity_id": "binary_sensor.sensor_kitchen_smoke_test_mode",
             "unique_id": "00:15:8d:00:01:d9:3e:7c-01-0500-in_test_mode",
-            "old_unique_id": "00:15:8d:00:01:d9:3e:7c-test mode",
             "state": STATE_OFF,
             "entity_category": EntityCategory.DIAGNOSTIC,
             "device_class": BinarySensorDeviceClass.SMOKE,
@@ -216,7 +213,6 @@ TEST_DATA = [
             "device_count": 2,
             "entity_id": "binary_sensor.kitchen_switch",
             "unique_id": "kitchen-switch-flag",
-            "old_unique_id": "kitchen-switch",
             "state": STATE_ON,
             "entity_category": None,
             "device_class": None,
@@ -254,7 +250,6 @@ TEST_DATA = [
             "device_count": 3,
             "entity_id": "binary_sensor.back_door",
             "unique_id": "00:15:8d:00:02:2b:96:b4-01-0006-open",
-            "old_unique_id": "00:15:8d:00:02:2b:96:b4-01-0006",
             "state": STATE_OFF,
             "entity_category": None,
             "device_class": BinarySensorDeviceClass.OPENING,
@@ -301,7 +296,6 @@ TEST_DATA = [
             "device_count": 3,
             "entity_id": "binary_sensor.motion_sensor_4",
             "unique_id": "00:17:88:01:03:28:8c:9b-02-0406-presence",
-            "old_unique_id": "00:17:88:01:03:28:8c:9b-02-0406",
             "state": STATE_OFF,
             "entity_category": None,
             "device_class": BinarySensorDeviceClass.MOTION,
@@ -343,7 +337,6 @@ TEST_DATA = [
             "device_count": 3,
             "entity_id": "binary_sensor.water2",
             "unique_id": "00:15:8d:00:02:2f:07:db-01-0500-water",
-            "old_unique_id": "00:15:8d:00:02:2f:07:db-01-0500",
             "state": STATE_OFF,
             "entity_category": None,
             "device_class": BinarySensorDeviceClass.MOISTURE,
@@ -389,7 +382,6 @@ TEST_DATA = [
             "device_count": 3,
             "entity_id": "binary_sensor.vibration_1",
             "unique_id": "00:15:8d:00:02:a5:21:24-01-0101-vibration",
-            "old_unique_id": "00:15:8d:00:02:a5:21:24-01-0101",
             "state": STATE_ON,
             "entity_category": None,
             "device_class": BinarySensorDeviceClass.VIBRATION,
@@ -428,7 +420,6 @@ TEST_DATA = [
             "device_count": 3,
             "entity_id": "binary_sensor.presence_sensor_tampered",
             "unique_id": "00:00:00:00:00:00:00:00-00-tampered",
-            "old_unique_id": "00:00:00:00:00:00:00:00-tampered",
             "state": STATE_OFF,
             "entity_category": EntityCategory.DIAGNOSTIC,
             "device_class": BinarySensorDeviceClass.TAMPER,
@@ -462,7 +453,6 @@ TEST_DATA = [
             "device_count": 3,
             "entity_id": "binary_sensor.presence_sensor_low_battery",
             "unique_id": "00:00:00:00:00:00:00:00-00-low_battery",
-            "old_unique_id": "00:00:00:00:00:00:00:00-low battery",
             "state": STATE_OFF,
             "entity_category": EntityCategory.DIAGNOSTIC,
             "device_class": BinarySensorDeviceClass.BATTERY,
@@ -480,23 +470,14 @@ TEST_DATA = [
 @pytest.mark.parametrize(("sensor_data", "expected"), TEST_DATA)
 async def test_binary_sensors(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     aioclient_mock: AiohttpClientMocker,
     mock_deconz_websocket,
     sensor_data,
     expected,
 ) -> None:
     """Test successful creation of binary sensor entities."""
-    ent_reg = er.async_get(hass)
-    dev_reg = dr.async_get(hass)
-
-    # Create entity entry to migrate to new unique ID
-    ent_reg.async_get_or_create(
-        DOMAIN,
-        DECONZ_DOMAIN,
-        expected["old_unique_id"],
-        suggested_object_id=expected["entity_id"].replace(DOMAIN, ""),
-    )
-
     with patch.dict(DECONZ_WEB_REQUEST, {"sensors": {"1": sensor_data}}):
         config_entry = await setup_deconz_integration(
             hass, aioclient_mock, options={CONF_ALLOW_CLIP_SENSOR: True}
@@ -513,14 +494,14 @@ async def test_binary_sensors(
 
     # Verify entity registry data
 
-    ent_reg_entry = ent_reg.async_get(expected["entity_id"])
+    ent_reg_entry = entity_registry.async_get(expected["entity_id"])
     assert ent_reg_entry.entity_category is expected["entity_category"]
     assert ent_reg_entry.unique_id == expected["unique_id"]
 
     # Verify device registry data
 
     assert (
-        len(dr.async_entries_for_config_entry(dev_reg, config_entry.entry_id))
+        len(dr.async_entries_for_config_entry(device_registry, config_entry.entry_id))
         == expected["device_count"]
     )
 
@@ -670,7 +651,10 @@ async def test_add_new_binary_sensor(
 
 
 async def test_add_new_binary_sensor_ignored_load_entities_on_service_call(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    mock_deconz_websocket,
 ) -> None:
     """Test that adding a new binary sensor is not allowed."""
     sensor = {
@@ -702,7 +686,6 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_service_call(
     assert len(hass.states.async_all()) == 0
     assert not hass.states.get("binary_sensor.presence_sensor")
 
-    entity_registry = er.async_get(hass)
     assert (
         len(async_entries_for_config_entry(entity_registry, config_entry.entry_id)) == 0
     )
@@ -719,7 +702,10 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_service_call(
 
 
 async def test_add_new_binary_sensor_ignored_load_entities_on_options_change(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    mock_deconz_websocket,
 ) -> None:
     """Test that adding a new binary sensor is not allowed."""
     sensor = {
@@ -751,7 +737,6 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_options_change(
     assert len(hass.states.async_all()) == 0
     assert not hass.states.get("binary_sensor.presence_sensor")
 
-    entity_registry = er.async_get(hass)
     assert (
         len(async_entries_for_config_entry(entity_registry, config_entry.entry_id)) == 0
     )

@@ -1,4 +1,5 @@
 """Helper class to implement include/exclude of entities and domains."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -93,7 +94,7 @@ FILTER_SCHEMA = vol.All(BASE_FILTER_SCHEMA, convert_filter)
 
 
 def convert_include_exclude_filter(
-    config: dict[str, dict[str, list[str]]]
+    config: dict[str, dict[str, list[str]]],
 ) -> EntityFilter:
     """Convert the include exclude filter schema into a filter."""
     include = config[CONF_INCLUDE]
@@ -141,10 +142,9 @@ def _convert_globs_to_pattern(globs: list[str] | None) -> re.Pattern[str] | None
     if globs is None:
         return None
 
-    translated_patterns: list[str] = []
-    for glob in set(globs):
-        if pattern := fnmatch.translate(glob):
-            translated_patterns.append(pattern)
+    translated_patterns: list[str] = [
+        pattern for glob in set(globs) if (pattern := fnmatch.translate(glob))
+    ]
 
     if not translated_patterns:
         return None

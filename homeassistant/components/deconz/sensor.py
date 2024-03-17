@@ -17,6 +17,7 @@ from pydeconz.models.sensor.generic_status import GenericStatus
 from pydeconz.models.sensor.humidity import Humidity
 from pydeconz.models.sensor.light_level import LightLevel
 from pydeconz.models.sensor.moisture import Moisture
+from pydeconz.models.sensor.particulate_matter import ParticulateMatter
 from pydeconz.models.sensor.power import Power
 from pydeconz.models.sensor.pressure import Pressure
 from pydeconz.models.sensor.switch import Switch
@@ -47,14 +48,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.typing import StateType
 import homeassistant.util.dt as dt_util
 
-from .const import ATTR_DARK, ATTR_ON, DOMAIN as DECONZ_DOMAIN
+from .const import ATTR_DARK, ATTR_ON
 from .deconz_device import DeconzDevice
-from .gateway import DeconzGateway, get_gateway_from_config_entry
-from .util import serial_from_unique_id
+from .hub import DeconzHub, get_gateway_from_config_entry
 
 PROVIDES_EXTRA_ATTRIBUTES = (
     "battery",
@@ -83,6 +82,7 @@ T = TypeVar(
     Humidity,
     LightLevel,
     Moisture,
+    ParticulateMatter,
     Power,
     Pressure,
     Temperature,
@@ -91,22 +91,16 @@ T = TypeVar(
 )
 
 
-@dataclass
-class DeconzSensorDescriptionMixin(Generic[T]):
-    """Required values when describing secondary sensor attributes."""
-
-    supported_fn: Callable[[T], bool]
-    update_key: str
-    value_fn: Callable[[T], datetime | StateType]
-
-
-@dataclass
-class DeconzSensorDescription(SensorEntityDescription, DeconzSensorDescriptionMixin[T]):
+@dataclass(frozen=True, kw_only=True)
+class DeconzSensorDescription(Generic[T], SensorEntityDescription):
     """Class describing deCONZ binary sensor entities."""
 
     instance_check: type[T] | None = None
     name_suffix: str = ""
     old_unique_id_suffix: str = ""
+    supported_fn: Callable[[T], bool]
+    update_key: str
+    value_fn: Callable[[T], datetime | StateType]
 
 
 ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
@@ -219,6 +213,17 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=1,
     ),
+    DeconzSensorDescription[ParticulateMatter](
+        key="particulate_matter_pm2_5",
+        supported_fn=lambda device: device.measured_value is not None,
+        update_key="measured_value",
+        value_fn=lambda device: device.measured_value,
+        instance_check=ParticulateMatter,
+        name_suffix="PM25",
+        device_class=SensorDeviceClass.PM25,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    ),
     DeconzSensorDescription[Power](
         key="power",
         supported_fn=lambda device: device.power is not None,
@@ -284,29 +289,6 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
 )
 
 
-@callback
-def async_update_unique_id(
-    hass: HomeAssistant, unique_id: str, description: DeconzSensorDescription
-) -> None:
-    """Update unique ID to always have a suffix.
-
-    Introduced with release 2022.9.
-    """
-    ent_reg = er.async_get(hass)
-
-    new_unique_id = f"{unique_id}-{description.key}"
-    if ent_reg.async_get_entity_id(DOMAIN, DECONZ_DOMAIN, new_unique_id):
-        return
-
-    if description.old_unique_id_suffix:
-        unique_id = (
-            f"{serial_from_unique_id(unique_id)}-{description.old_unique_id_suffix}"
-        )
-
-    if entity_id := ent_reg.async_get_entity_id(DOMAIN, DECONZ_DOMAIN, unique_id):
-        ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -350,7 +332,6 @@ async def async_setup_entry(
                     continue
                 known_device_entities[description.key].add(unique_id)
                 if no_sensor_data and description.key == "battery":
-                    async_update_unique_id(hass, sensor.unique_id, description)
                     DeconzBatteryTracker(
                         sensor_id, gateway, description, async_add_entities
                     )
@@ -359,7 +340,6 @@ async def async_setup_entry(
             if no_sensor_data:
                 continue
 
-            async_update_unique_id(hass, sensor.unique_id, description)
             entities.append(DeconzSensor(sensor, gateway, description))
 
         async_add_entities(entities)
@@ -379,7 +359,7 @@ class DeconzSensor(DeconzDevice[SensorResources], SensorEntity):
     def __init__(
         self,
         device: SensorResources,
-        gateway: DeconzGateway,
+        gateway: DeconzHub,
         description: DeconzSensorDescription,
     ) -> None:
         """Initialize deCONZ sensor."""
@@ -446,7 +426,7 @@ class DeconzBatteryTracker:
     def __init__(
         self,
         sensor_id: str,
-        gateway: DeconzGateway,
+        gateway: DeconzHub,
         description: DeconzSensorDescription,
         async_add_entities: AddEntitiesCallback,
     ) -> None:

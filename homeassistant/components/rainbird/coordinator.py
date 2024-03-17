@@ -9,6 +9,7 @@ from functools import cached_property
 import logging
 from typing import TypeVar
 
+import aiohttp
 from pyrainbird.async_client import (
     AsyncRainbirdController,
     RainbirdApiException,
@@ -18,15 +19,23 @@ from pyrainbird.data import ModelAndVersion, Schedule
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_SERIAL_NUMBER, DOMAIN, MANUFACTURER, TIMEOUT_SECONDS
+from .const import DOMAIN, MANUFACTURER, TIMEOUT_SECONDS
 
 UPDATE_INTERVAL = datetime.timedelta(minutes=1)
 # The calendar data requires RPCs for each program/zone, and the data rarely
 # changes, so we refresh it less often.
 CALENDAR_UPDATE_INTERVAL = datetime.timedelta(minutes=15)
+
+# The valves state are not immediately reflected after issuing a command. We add
+# small delay to give additional time to reflect the new state.
+DEBOUNCER_COOLDOWN = 5
+
+# Rainbird devices can only accept a single request at a time
+CONECTION_LIMIT = 1
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,6 +52,13 @@ class RainbirdDeviceState:
     rain_delay: int
 
 
+def async_create_clientsession() -> aiohttp.ClientSession:
+    """Create a rainbird async_create_clientsession with a connection limit."""
+    return aiohttp.ClientSession(
+        connector=aiohttp.TCPConnector(limit=CONECTION_LIMIT),
+    )
+
+
 class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
     """Coordinator for rainbird API calls."""
 
@@ -51,7 +67,7 @@ class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
         hass: HomeAssistant,
         name: str,
         controller: AsyncRainbirdController,
-        serial_number: str,
+        unique_id: str | None,
         model_info: ModelAndVersion,
     ) -> None:
         """Initialize RainbirdUpdateCoordinator."""
@@ -60,9 +76,12 @@ class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
             _LOGGER,
             name=name,
             update_interval=UPDATE_INTERVAL,
+            request_refresh_debouncer=Debouncer(
+                hass, _LOGGER, cooldown=DEBOUNCER_COOLDOWN, immediate=False
+            ),
         )
         self._controller = controller
-        self._serial_number = serial_number
+        self._unique_id = unique_id
         self._zones: set[int] | None = None
         self._model_info = model_info
 
@@ -72,16 +91,23 @@ class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
         return self._controller
 
     @property
-    def serial_number(self) -> str:
-        """Return the device serial number."""
-        return self._serial_number
+    def unique_id(self) -> str | None:
+        """Return the config entry unique id."""
+        return self._unique_id
 
     @property
-    def device_info(self) -> DeviceInfo:
+    def device_name(self) -> str:
+        """Device name for the rainbird controller."""
+        return f"{MANUFACTURER} Controller"
+
+    @property
+    def device_info(self) -> DeviceInfo | None:
         """Return information about the device."""
+        if self._unique_id is None:
+            return None
         return DeviceInfo(
-            name=f"{MANUFACTURER} Controller",
-            identifiers={(DOMAIN, self._serial_number)},
+            name=self.device_name,
+            identifiers={(DOMAIN, self._unique_id)},
             manufacturer=MANUFACTURER,
             model=self._model_info.model_name,
             sw_version=f"{self._model_info.major}.{self._model_info.minor}",
@@ -164,7 +190,7 @@ class RainbirdData:
             self.hass,
             name=self.entry.title,
             controller=self.controller,
-            serial_number=self.entry.data[CONF_SERIAL_NUMBER],
+            unique_id=self.entry.unique_id,
             model_info=self.model_info,
         )
 

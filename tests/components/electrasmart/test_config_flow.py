@@ -1,4 +1,5 @@
 """Test the Electra Smart config flow."""
+
 from json import loads
 from unittest.mock import patch
 
@@ -55,7 +56,8 @@ async def test_one_time_password(hass: HomeAssistant):
         "electrasmart.api.ElectraAPI.validate_one_time_password",
         return_value=mock_otp_response,
     ), patch(
-        "electrasmart.api.ElectraAPI.fetch_devices", return_value=[]
+        "electrasmart.api.ElectraAPI.fetch_devices",
+        return_value=[],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

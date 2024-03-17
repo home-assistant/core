@@ -1,4 +1,5 @@
 """Test report state."""
+
 import json
 from unittest.mock import AsyncMock, patch
 
@@ -409,7 +410,7 @@ async def test_report_state_number(
     }
 
     if unit:
-        state["unit_of_measurement"]: unit
+        state["unit_of_measurement"] = unit
 
     hass.states.async_set(
         f"{domain}.test_{domain}",
@@ -735,9 +736,12 @@ async def test_proactive_mode_filter_states(
         "off",
         {"friendly_name": "Test Contact Sensor", "device_class": "door"},
     )
-    with patch.object(hass, "state", core.CoreState.stopping):
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
+
+    current_state = hass.state
+    hass.set_state(core.CoreState.stopping)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    hass.set_state(current_state)
     assert len(aioclient_mock.mock_calls) == 0
 
     # unsupported entity should not report

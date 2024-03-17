@@ -1,4 +1,5 @@
 """Support for Open Hardware Monitor Sensor Platform."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -79,6 +80,8 @@ class OpenHardwareMonitorDevice(SensorEntity):
     @property
     def native_value(self):
         """Return the state of the device."""
+        if self.value == "-":
+            return None
         return self.value
 
     @property

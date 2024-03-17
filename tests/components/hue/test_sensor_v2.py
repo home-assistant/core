@@ -1,4 +1,5 @@
 """Philips Hue sensor platform tests for V2 bridge/api."""
+
 from homeassistant.components import hue
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -9,7 +10,10 @@ from .const import FAKE_DEVICE, FAKE_SENSOR, FAKE_ZIGBEE_CONNECTIVITY
 
 
 async def test_sensors(
-    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_bridge_v2,
+    v2_resources_test_data,
 ) -> None:
     """Test if all v2 sensors get created with correct features."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
@@ -51,8 +55,7 @@ async def test_sensors(
 
     # test disabled zigbee_connectivity sensor
     entity_id = "sensor.wall_switch_with_2_controls_zigbee_connectivity"
-    ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get(entity_id)
+    entity_entry = entity_registry.async_get(entity_id)
 
     assert entity_entry
     assert entity_entry.disabled
@@ -60,7 +63,11 @@ async def test_sensors(
 
 
 async def test_enable_sensor(
-    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data, mock_config_entry_v2
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_bridge_v2,
+    v2_resources_test_data,
+    mock_config_entry_v2,
 ) -> None:
     """Test enabling of the by default disabled zigbee_connectivity sensor."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
@@ -71,16 +78,15 @@ async def test_enable_sensor(
     await hass.config_entries.async_forward_entry_setup(mock_config_entry_v2, "sensor")
 
     entity_id = "sensor.wall_switch_with_2_controls_zigbee_connectivity"
-    ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get(entity_id)
+    entity_entry = entity_registry.async_get(entity_id)
 
     assert entity_entry
     assert entity_entry.disabled
     assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     # enable the entity
-    updated_entry = ent_reg.async_update_entity(
-        entity_entry.entity_id, **{"disabled_by": None}
+    updated_entry = entity_registry.async_update_entity(
+        entity_entry.entity_id, disabled_by=None
     )
     assert updated_entry != entity_entry
     assert updated_entry.disabled is False

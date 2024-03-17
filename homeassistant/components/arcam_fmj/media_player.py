@@ -1,9 +1,11 @@
 """Arcam media player."""
+
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine
 import functools
 import logging
-from typing import Any
+from typing import Any, ParamSpec, TypeVar
 
 from arcam.fmj import ConnectionFailed, SourceCodes
 from arcam.fmj.state import State
@@ -34,6 +36,9 @@ from .const import (
     SIGNAL_CLIENT_STOPPED,
 )
 
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -59,11 +64,13 @@ async def async_setup_entry(
     )
 
 
-def convert_exception(func):
+def convert_exception(
+    func: Callable[_P, Coroutine[Any, Any, _R]],
+) -> Callable[_P, Coroutine[Any, Any, _R]]:
     """Return decorator to convert a connection error into a home assistant error."""
 
     @functools.wraps(func)
-    async def _convert_exception(*args, **kwargs):
+    async def _convert_exception(*args: _P.args, **kwargs: _P.kwargs) -> _R:
         try:
             return await func(*args, **kwargs)
         except ConnectionFailed as exception:
@@ -319,9 +326,7 @@ class ArcamFmj(MediaPlayerEntity):
     def media_content_type(self) -> MediaType | None:
         """Content type of current playing media."""
         source = self._state.get_source()
-        if source == SourceCodes.DAB:
-            value = MediaType.MUSIC
-        elif source == SourceCodes.FM:
+        if source in (SourceCodes.DAB, SourceCodes.FM):
             value = MediaType.MUSIC
         else:
             value = None

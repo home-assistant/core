@@ -1,7 +1,7 @@
 """Support for Nightscout sensors."""
+
 from __future__ import annotations
 
-from asyncio import TimeoutError as AsyncIOTimeoutError
 from datetime import timedelta
 import logging
 from typing import Any
@@ -40,7 +40,7 @@ class NightscoutSensor(SensorEntity):
     _attr_native_unit_of_measurement = "mg/dL"
     _attr_icon = "mdi:cloud-question"
 
-    def __init__(self, api: NightscoutAPI, name, unique_id) -> None:
+    def __init__(self, api: NightscoutAPI, name: str, unique_id: str | None) -> None:
         """Initialize the Nightscout sensor."""
         self.api = api
         self._attr_unique_id = unique_id
@@ -51,7 +51,7 @@ class NightscoutSensor(SensorEntity):
         """Fetch the latest data from Nightscout REST API and update the state."""
         try:
             values = await self.api.get_sgvs()
-        except (ClientError, AsyncIOTimeoutError, OSError) as error:
+        except (ClientError, TimeoutError, OSError) as error:
             _LOGGER.error("Error fetching data. Failed with %s", error)
             self._attr_available = False
             return

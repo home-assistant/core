@@ -1,4 +1,5 @@
 """The tests for the Universal Media player platform."""
+
 from copy import copy
 from unittest.mock import Mock, patch
 
@@ -159,7 +160,7 @@ class MockMediaPlayer(media_player.MediaPlayerEntity):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        return self._supported_features
+        return MediaPlayerEntityFeature(self._supported_features)
 
     @property
     def media_image_url(self):
@@ -364,8 +365,7 @@ async def test_platform_setup(hass: HomeAssistant) -> None:
 
     def add_entities(new_entities):
         """Add devices to list."""
-        for dev in new_entities:
-            entities.append(dev)
+        entities.extend(new_entities)
 
     setup_ok = True
     try:

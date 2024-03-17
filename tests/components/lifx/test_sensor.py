@@ -1,4 +1,5 @@
 """Test the LIFX sensor platform."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -31,7 +32,9 @@ from . import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_rssi_sensor(hass: HomeAssistant) -> None:
+async def test_rssi_sensor(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test LIFX RSSI sensor entity."""
 
     config_entry = MockConfigEntry(
@@ -49,7 +52,6 @@ async def test_rssi_sensor(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     entity_id = "sensor.my_bulb_rssi"
-    entity_registry = er.async_get(hass)
 
     entry = entity_registry.entities.get(entity_id)
     assert entry
@@ -58,7 +60,7 @@ async def test_rssi_sensor(hass: HomeAssistant) -> None:
 
     # Test enabling entity
     updated_entry = entity_registry.async_update_entity(
-        entry.entity_id, **{"disabled_by": None}
+        entry.entity_id, disabled_by=None
     )
 
     with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
@@ -82,7 +84,9 @@ async def test_rssi_sensor(hass: HomeAssistant) -> None:
     assert rssi.attributes["state_class"] == SensorStateClass.MEASUREMENT
 
 
-async def test_rssi_sensor_old_firmware(hass: HomeAssistant) -> None:
+async def test_rssi_sensor_old_firmware(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test LIFX RSSI sensor entity."""
 
     config_entry = MockConfigEntry(
@@ -100,7 +104,6 @@ async def test_rssi_sensor_old_firmware(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     entity_id = "sensor.my_bulb_rssi"
-    entity_registry = er.async_get(hass)
 
     entry = entity_registry.entities.get(entity_id)
     assert entry
@@ -109,7 +112,7 @@ async def test_rssi_sensor_old_firmware(hass: HomeAssistant) -> None:
 
     # Test enabling entity
     updated_entry = entity_registry.async_update_entity(
-        entry.entity_id, **{"disabled_by": None}
+        entry.entity_id, disabled_by=None
     )
 
     with _patch_discovery(device=bulb), _patch_config_flow_try_connect(

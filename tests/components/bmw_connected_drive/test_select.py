@@ -1,4 +1,5 @@
 """Test BMW selects."""
+
 from unittest.mock import AsyncMock
 
 from bimmer_connected.models import MyBMWAPIError, MyBMWRemoteServiceError
@@ -8,7 +9,7 @@ import respx
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import check_remote_service_call, setup_mocked_integration
 
@@ -92,7 +93,7 @@ async def test_service_call_invalid_input(
     old_value = hass.states.get(entity_id).state
 
     # Test
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             "select",
             "select_option",
@@ -108,7 +109,7 @@ async def test_service_call_invalid_input(
     [
         (MyBMWRemoteServiceError, HomeAssistantError),
         (MyBMWAPIError, HomeAssistantError),
-        (ValueError, ValueError),
+        (ServiceValidationError, ServiceValidationError),
     ],
 )
 async def test_service_call_fail(

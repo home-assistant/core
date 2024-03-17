@@ -1,4 +1,5 @@
 """Get WHOIS information for a given host."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -27,18 +28,11 @@ from homeassistant.util import dt as dt_util
 from .const import ATTR_EXPIRES, ATTR_NAME_SERVERS, ATTR_REGISTRAR, ATTR_UPDATED, DOMAIN
 
 
-@dataclass
-class WhoisSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class WhoisSensorEntityDescription(SensorEntityDescription):
+    """Describes a Whois sensor entity."""
 
     value_fn: Callable[[Domain], datetime | int | str | None]
-
-
-@dataclass
-class WhoisSensorEntityDescription(
-    SensorEntityDescription, WhoisSensorEntityDescriptionMixin
-):
-    """Describes a Whois sensor entity."""
 
 
 def _days_until_expiration(domain: Domain) -> int | None:
@@ -68,7 +62,6 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
     WhoisSensorEntityDescription(
         key="admin",
         translation_key="admin",
-        icon="mdi:account-star",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda domain: getattr(domain, "admin", None),
@@ -83,7 +76,6 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
     WhoisSensorEntityDescription(
         key="days_until_expiration",
         translation_key="days_until_expiration",
-        icon="mdi:calendar-clock",
         native_unit_of_measurement=UnitOfTime.DAYS,
         value_fn=_days_until_expiration,
     ),
@@ -104,7 +96,6 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
     WhoisSensorEntityDescription(
         key="owner",
         translation_key="owner",
-        icon="mdi:account",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda domain: getattr(domain, "owner", None),
@@ -112,7 +103,6 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
     WhoisSensorEntityDescription(
         key="registrant",
         translation_key="registrant",
-        icon="mdi:account-edit",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda domain: getattr(domain, "registrant", None),
@@ -120,7 +110,6 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
     WhoisSensorEntityDescription(
         key="registrar",
         translation_key="registrar",
-        icon="mdi:store",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda domain: domain.registrar if domain.registrar else None,
@@ -128,7 +117,6 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
     WhoisSensorEntityDescription(
         key="reseller",
         translation_key="reseller",
-        icon="mdi:store",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda domain: getattr(domain, "reseller", None),

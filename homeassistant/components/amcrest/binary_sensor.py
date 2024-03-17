@@ -1,4 +1,5 @@
 """Support for Amcrest IP camera binary sensors."""
+
 from __future__ import annotations
 
 from contextlib import suppress
@@ -35,7 +36,7 @@ if TYPE_CHECKING:
     from . import AmcrestDevice
 
 
-@dataclass
+@dataclass(frozen=True)
 class AmcrestSensorEntityDescription(BinarySensorEntityDescription):
     """Describe Amcrest sensor entity."""
 

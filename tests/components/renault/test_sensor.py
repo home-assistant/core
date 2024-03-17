@@ -1,4 +1,5 @@
 """Tests for Renault sensors."""
+
 from collections.abc import Generator
 from unittest.mock import patch
 
@@ -49,7 +50,7 @@ async def test_sensors(
 
     # Some entities are disabled, enable them and reload before checking states
     for ent in entity_entries:
-        entity_registry.async_update_entity(ent.entity_id, **{"disabled_by": None})
+        entity_registry.async_update_entity(ent.entity_id, disabled_by=None)
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 

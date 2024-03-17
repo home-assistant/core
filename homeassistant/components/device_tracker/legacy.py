@@ -1,4 +1,5 @@
 """Legacy device tracker classes."""
+
 from __future__ import annotations
 
 import asyncio
@@ -12,8 +13,14 @@ import attr
 import voluptuous as vol
 
 from homeassistant import util
+from homeassistant.backports.functools import cached_property
 from homeassistant.components import zone
-from homeassistant.config import async_log_exception, load_yaml_config_file
+from homeassistant.components.zone import ENTITY_ID_HOME
+from homeassistant.config import (
+    async_log_schema_error,
+    config_per_platform,
+    load_yaml_config_file,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_GPS_ACCURACY,
@@ -32,7 +39,6 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
-    config_per_platform,
     config_validation as cv,
     discovery,
     entity_registry as er,
@@ -43,7 +49,11 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, GPSType, StateType
-from homeassistant.setup import async_prepare_setup_platform, async_start_setup
+from homeassistant.setup import (
+    async_notify_setup_error,
+    async_prepare_setup_platform,
+    async_start_setup,
+)
 from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import dump
 
@@ -262,7 +272,7 @@ class DeviceTrackerPlatform:
     platform: ModuleType = attr.ib()
     config: dict = attr.ib()
 
-    @property
+    @cached_property
     def type(self) -> str | None:
         """Return platform type."""
         methods, platform_type = self.LEGACY_SETUP, PLATFORM_TYPE_LEGACY
@@ -279,7 +289,7 @@ class DeviceTrackerPlatform:
     ) -> None:
         """Set up a legacy platform."""
         assert self.type == PLATFORM_TYPE_LEGACY
-        full_name = f"{DOMAIN}.{self.name}"
+        full_name = f"{self.name}.{DOMAIN}"
         LOGGER.info("Setting up %s", full_name)
         with async_start_setup(hass, [full_name]):
             try:
@@ -472,7 +482,7 @@ def async_setup_scanner_platform(
                 },
             }
 
-            zone_home = hass.states.get(hass.components.zone.ENTITY_ID_HOME)
+            zone_home = hass.states.get(ENTITY_ID_HOME)
             if zone_home is not None:
                 kwargs["gps"] = [
                     zone_home.attributes[ATTR_LATITUDE],
@@ -706,21 +716,17 @@ class DeviceTracker:
 
         This method is a coroutine.
         """
-
-        async def async_init_single_device(dev: Device) -> None:
-            """Init a single device_tracker entity."""
-            await dev.async_added_to_hass()
-            dev.async_write_ha_state()
-
-        tasks: list[asyncio.Task] = []
         for device in self.devices.values():
             if device.track and not device.last_seen:
-                tasks.append(
-                    self.hass.async_create_task(async_init_single_device(device))
-                )
-
-        if tasks:
-            await asyncio.wait(tasks)
+                # async_added_to_hass is unlikely to suspend so
+                # do not gather here to avoid unnecessary overhead
+                # of creating a task per device.
+                #
+                # We used to have the overhead of potentially loading
+                # restore state for each device here, but RestoreState
+                # is always loaded ahead of time now.
+                await device.async_added_to_hass()
+                device.async_write_ha_state()
 
 
 class Device(RestoreEntity):
@@ -1005,7 +1011,8 @@ async def async_load_config(
             device = dev_schema(device)
             device["dev_id"] = cv.slugify(dev_id)
         except vol.Invalid as exp:
-            async_log_exception(exp, dev_id, devices, hass)
+            async_log_schema_error(exp, dev_id, devices, hass)
+            async_notify_setup_error(hass, DOMAIN)
         else:
             result.append(Device(hass, **device))
     return result
@@ -1025,6 +1032,19 @@ def update_config(path: str, dev_id: str, device: Device) -> None:
         }
         out.write("\n")
         out.write(dump(device_config))
+
+
+def remove_device_from_config(hass: HomeAssistant, device_id: str) -> None:
+    """Remove device from YAML configuration file."""
+    path = hass.config.path(YAML_DEVICES)
+    devices = load_yaml_config_file(path)
+    devices.pop(device_id)
+    dumped = dump(devices)
+
+    with open(path, "r+", encoding="utf8") as out:
+        out.seek(0)
+        out.truncate()
+        out.write(dumped)
 
 
 def get_gravatar_for_email(email: str) -> str:

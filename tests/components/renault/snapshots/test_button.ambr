@@ -18,10 +18,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Captur ii',
       'name': 'REG-NUMBER',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': 'XJB1SU',
       'via_device_id': None,
@@ -46,13 +49,16 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:air-conditioner',
+      'original_icon': None,
       'original_name': 'Start air conditioner',
       'platform': 'renault',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'start_air_conditioner',
       'unique_id': 'vf1aaaaa555777123_start_air_conditioner',
@@ -65,7 +71,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Start air conditioner',
-        'icon': 'mdi:air-conditioner',
       }),
       'context': <ANY>,
       'entity_id': 'button.reg_number_start_air_conditioner',
@@ -94,10 +99,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Captur ii',
       'name': 'REG-NUMBER',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': 'XJB1SU',
       'via_device_id': None,
@@ -122,13 +130,16 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:air-conditioner',
+      'original_icon': None,
       'original_name': 'Start air conditioner',
       'platform': 'renault',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'start_air_conditioner',
       'unique_id': 'vf1aaaaa555777123_start_air_conditioner',
@@ -150,13 +161,16 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:ev-station',
+      'original_icon': None,
       'original_name': 'Start charge',
       'platform': 'renault',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'start_charge',
       'unique_id': 'vf1aaaaa555777123_start_charge',
@@ -178,13 +192,16 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:ev-station',
+      'original_icon': None,
       'original_name': 'Stop charge',
       'platform': 'renault',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'stop_charge',
       'unique_id': 'vf1aaaaa555777123_stop_charge',
@@ -197,7 +214,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Start air conditioner',
-        'icon': 'mdi:air-conditioner',
       }),
       'context': <ANY>,
       'entity_id': 'button.reg_number_start_air_conditioner',
@@ -208,7 +224,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Start charge',
-        'icon': 'mdi:ev-station',
       }),
       'context': <ANY>,
       'entity_id': 'button.reg_number_start_charge',
@@ -219,7 +234,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Stop charge',
-        'icon': 'mdi:ev-station',
       }),
       'context': <ANY>,
       'entity_id': 'button.reg_number_stop_charge',
@@ -248,10 +262,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Zoe',
       'name': 'REG-NUMBER',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': 'X101VE',
       'via_device_id': None,
@@ -276,13 +293,16 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:air-conditioner',
+      'original_icon': None,
       'original_name': 'Start air conditioner',
       'platform': 'renault',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'start_air_conditioner',
       'unique_id': 'vf1aaaaa555777999_start_air_conditioner',
@@ -304,13 +324,16 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:ev-station',
+      'original_icon': None,
       'original_name': 'Start charge',
       'platform': 'renault',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'start_charge',
       'unique_id': 'vf1aaaaa555777999_start_charge',
@@ -332,13 +355,16 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:ev-station',
+      'original_icon': None,
       'original_name': 'Stop charge',
       'platform': 'renault',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'stop_charge',
       'unique_id': 'vf1aaaaa555777999_stop_charge',
@@ -351,7 +377,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Start air conditioner',
-        'icon': 'mdi:air-conditioner',
       }),
       'context': <ANY>,
       'entity_id': 'button.reg_number_start_air_conditioner',
@@ -362,7 +387,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Start charge',
-        'icon': 'mdi:ev-station',
       }),
       'context': <ANY>,
       'entity_id': 'button.reg_number_start_charge',
@@ -373,7 +397,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Stop charge',
-        'icon': 'mdi:ev-station',
       }),
       'context': <ANY>,
       'entity_id': 'button.reg_number_stop_charge',
@@ -402,10 +425,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Zoe',
       'name': 'REG-NUMBER',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': 'X102VE',
       'via_device_id': None,
@@ -430,13 +456,16 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:air-conditioner',
+      'original_icon': None,
       'original_name': 'Start air conditioner',
       'platform': 'renault',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'start_air_conditioner',
       'unique_id': 'vf1aaaaa555777999_start_air_conditioner',
@@ -458,13 +487,16 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:ev-station',
+      'original_icon': None,
       'original_name': 'Start charge',
       'platform': 'renault',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'start_charge',
       'unique_id': 'vf1aaaaa555777999_start_charge',
@@ -486,13 +518,16 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:ev-station',
+      'original_icon': None,
       'original_name': 'Stop charge',
       'platform': 'renault',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'stop_charge',
       'unique_id': 'vf1aaaaa555777999_stop_charge',
@@ -505,7 +540,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Start air conditioner',
-        'icon': 'mdi:air-conditioner',
       }),
       'context': <ANY>,
       'entity_id': 'button.reg_number_start_air_conditioner',
@@ -516,7 +550,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Start charge',
-        'icon': 'mdi:ev-station',
       }),
       'context': <ANY>,
       'entity_id': 'button.reg_number_start_charge',
@@ -527,7 +560,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Stop charge',
-        'icon': 'mdi:ev-station',
       }),
       'context': <ANY>,
       'entity_id': 'button.reg_number_stop_charge',
@@ -556,10 +588,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Captur ii',
       'name': 'REG-NUMBER',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': 'XJB1SU',
       'via_device_id': None,
@@ -584,13 +619,16 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:air-conditioner',
+      'original_icon': None,
       'original_name': 'Start air conditioner',
       'platform': 'renault',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'start_air_conditioner',
       'unique_id': 'vf1aaaaa555777123_start_air_conditioner',
@@ -603,7 +641,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Start air conditioner',
-        'icon': 'mdi:air-conditioner',
       }),
       'context': <ANY>,
       'entity_id': 'button.reg_number_start_air_conditioner',
@@ -632,10 +669,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Captur ii',
       'name': 'REG-NUMBER',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': 'XJB1SU',
       'via_device_id': None,
@@ -660,13 +700,16 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:air-conditioner',
+      'original_icon': None,
       'original_name': 'Start air conditioner',
       'platform': 'renault',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'start_air_conditioner',
       'unique_id': 'vf1aaaaa555777123_start_air_conditioner',
@@ -688,13 +731,16 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:ev-station',
+      'original_icon': None,
       'original_name': 'Start charge',
       'platform': 'renault',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'start_charge',
       'unique_id': 'vf1aaaaa555777123_start_charge',
@@ -716,13 +762,16 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:ev-station',
+      'original_icon': None,
       'original_name': 'Stop charge',
       'platform': 'renault',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'stop_charge',
       'unique_id': 'vf1aaaaa555777123_stop_charge',
@@ -735,7 +784,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Start air conditioner',
-        'icon': 'mdi:air-conditioner',
       }),
       'context': <ANY>,
       'entity_id': 'button.reg_number_start_air_conditioner',
@@ -746,7 +794,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Start charge',
-        'icon': 'mdi:ev-station',
       }),
       'context': <ANY>,
       'entity_id': 'button.reg_number_start_charge',
@@ -757,7 +804,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Stop charge',
-        'icon': 'mdi:ev-station',
       }),
       'context': <ANY>,
       'entity_id': 'button.reg_number_stop_charge',
@@ -786,10 +832,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Zoe',
       'name': 'REG-NUMBER',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': 'X101VE',
       'via_device_id': None,
@@ -814,13 +863,16 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:air-conditioner',
+      'original_icon': None,
       'original_name': 'Start air conditioner',
       'platform': 'renault',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'start_air_conditioner',
       'unique_id': 'vf1aaaaa555777999_start_air_conditioner',
@@ -842,13 +894,16 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:ev-station',
+      'original_icon': None,
       'original_name': 'Start charge',
       'platform': 'renault',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'start_charge',
       'unique_id': 'vf1aaaaa555777999_start_charge',
@@ -870,13 +925,16 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:ev-station',
+      'original_icon': None,
       'original_name': 'Stop charge',
       'platform': 'renault',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'stop_charge',
       'unique_id': 'vf1aaaaa555777999_stop_charge',
@@ -889,7 +947,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Start air conditioner',
-        'icon': 'mdi:air-conditioner',
       }),
       'context': <ANY>,
       'entity_id': 'button.reg_number_start_air_conditioner',
@@ -900,7 +957,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Start charge',
-        'icon': 'mdi:ev-station',
       }),
       'context': <ANY>,
       'entity_id': 'button.reg_number_start_charge',
@@ -911,7 +967,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Stop charge',
-        'icon': 'mdi:ev-station',
       }),
       'context': <ANY>,
       'entity_id': 'button.reg_number_stop_charge',
@@ -940,10 +995,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Zoe',
       'name': 'REG-NUMBER',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': 'X102VE',
       'via_device_id': None,
@@ -968,13 +1026,16 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:air-conditioner',
+      'original_icon': None,
       'original_name': 'Start air conditioner',
       'platform': 'renault',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'start_air_conditioner',
       'unique_id': 'vf1aaaaa555777999_start_air_conditioner',
@@ -996,13 +1057,16 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:ev-station',
+      'original_icon': None,
       'original_name': 'Start charge',
       'platform': 'renault',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'start_charge',
       'unique_id': 'vf1aaaaa555777999_start_charge',
@@ -1024,13 +1088,16 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:ev-station',
+      'original_icon': None,
       'original_name': 'Stop charge',
       'platform': 'renault',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'stop_charge',
       'unique_id': 'vf1aaaaa555777999_stop_charge',
@@ -1043,7 +1110,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Start air conditioner',
-        'icon': 'mdi:air-conditioner',
       }),
       'context': <ANY>,
       'entity_id': 'button.reg_number_start_air_conditioner',
@@ -1054,7 +1120,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Start charge',
-        'icon': 'mdi:ev-station',
       }),
       'context': <ANY>,
       'entity_id': 'button.reg_number_start_charge',
@@ -1065,7 +1130,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Stop charge',
-        'icon': 'mdi:ev-station',
       }),
       'context': <ANY>,
       'entity_id': 'button.reg_number_stop_charge',

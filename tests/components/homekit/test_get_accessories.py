@@ -1,4 +1,5 @@
 """Package to test the get_accessory method."""
+
 from unittest.mock import Mock, patch
 
 import pytest
@@ -22,6 +23,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
 )
 from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.components.vacuum import VacuumEntityFeature
 from homeassistant.const import (
     ATTR_CODE,
@@ -315,6 +317,13 @@ def test_type_sensors(type_name, entity_id, state, attrs) -> None:
     ("type_name", "entity_id", "state", "attrs", "config"),
     [
         ("Outlet", "switch.test", "on", {}, {CONF_TYPE: TYPE_OUTLET}),
+        (
+            "Outlet",
+            "switch.test",
+            "on",
+            {ATTR_DEVICE_CLASS: SwitchDeviceClass.OUTLET},
+            {},
+        ),
         ("Switch", "automation.test", "on", {}, {}),
         ("Switch", "button.test", STATE_UNKNOWN, {}, {}),
         ("Switch", "input_boolean.test", "on", {}, {}),

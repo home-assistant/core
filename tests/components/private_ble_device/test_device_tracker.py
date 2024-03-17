@@ -1,11 +1,9 @@
 """Tests for polling measures."""
 
-
 import time
 
-from homeassistant.components.bluetooth.advertisement_tracker import (
-    ADVERTISING_TIMES_NEEDED,
-)
+from habluetooth.advertisement_tracker import ADVERTISING_TIMES_NEEDED
+
 from homeassistant.components.bluetooth.api import (
     async_get_fallback_availability_interval,
 )

@@ -1,4 +1,5 @@
 """Test the WattTime config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from aiowatttime.errors import CoordinatesNotFoundError, InvalidCredentialsError
@@ -12,13 +13,13 @@ from homeassistant.components.watttime.config_flow import (
 from homeassistant.components.watttime.const import (
     CONF_BALANCING_AUTHORITY,
     CONF_BALANCING_AUTHORITY_ABBREV,
-    CONF_SHOW_ON_MAP,
     DOMAIN,
 )
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_PASSWORD,
+    CONF_SHOW_ON_MAP,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant

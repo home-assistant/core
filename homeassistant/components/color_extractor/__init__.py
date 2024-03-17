@@ -1,4 +1,5 @@
 """Module for color_extractor (RGB extraction from images) component."""
+
 import asyncio
 import io
 import logging
@@ -24,7 +25,10 @@ from .const import ATTR_PATH, ATTR_URL, DOMAIN, SERVICE_TURN_ON
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+CONFIG_SCHEMA = vol.Schema(
+    {vol.Optional(DOMAIN): {}},
+    extra=vol.ALLOW_EXTRA,
+)
 
 # Extend the existing light.turn_on service schema
 SERVICE_SCHEMA = vol.All(
@@ -62,11 +66,12 @@ def _get_color(file_handler) -> tuple:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Color extractor component."""
 
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data={}
+    if DOMAIN in config:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data={}
+            )
         )
-    )
 
     return True
 
@@ -135,7 +140,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             async with asyncio.timeout(10):
                 response = await session.get(url)
 
-        except (asyncio.TimeoutError, aiohttp.ClientError) as err:
+        except (TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.error("Failed to get ColorThief image due to HTTPError: %s", err)
             return None
 

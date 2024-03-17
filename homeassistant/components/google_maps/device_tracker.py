@@ -1,4 +1,5 @@
 """Support for Google Maps location sharing."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -118,9 +119,7 @@ class GoogleMapsScanner:
                 )
                 _LOGGER.debug("%s < %s", last_seen, self._prev_seen[dev_id])
                 continue
-            if last_seen == self._prev_seen.get(dev_id, last_seen) and hasattr(
-                self, "success_init"
-            ):
+            if last_seen == self._prev_seen.get(dev_id):
                 _LOGGER.debug(
                     "Ignoring %s update because timestamp "
                     "is the same as the last timestamp %s",

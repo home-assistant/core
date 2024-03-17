@@ -1,13 +1,11 @@
 """deCONZ sensor platform tests."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.deconz.const import (
-    CONF_ALLOW_CLIP_SENSOR,
-    DOMAIN as DECONZ_DOMAIN,
-)
+from homeassistant.components.deconz.const import CONF_ALLOW_CLIP_SENSOR
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
@@ -67,7 +65,6 @@ TEST_DATA = [
             "device_count": 3,
             "entity_id": "sensor.bosch_air_quality_sensor",
             "unique_id": "00:12:4b:00:14:4d:00:07-02-fdef-air_quality",
-            "old_unique_id": "00:12:4b:00:14:4d:00:07-02-fdef",
             "state": "poor",
             "entity_category": None,
             "device_class": None,
@@ -105,7 +102,6 @@ TEST_DATA = [
             "device_count": 3,
             "entity_id": "sensor.bosch_air_quality_sensor_ppb",
             "unique_id": "00:12:4b:00:14:4d:00:07-02-fdef-air_quality_ppb",
-            "old_unique_id": "00:12:4b:00:14:4d:00:07-ppb",
             "state": "809",
             "entity_category": None,
             "device_class": None,
@@ -264,7 +260,6 @@ TEST_DATA = [
             "device_count": 3,
             "entity_id": "sensor.fyrtur_block_out_roller_blind_battery",
             "unique_id": "00:0d:6f:ff:fe:01:23:45-01-0001-battery",
-            "old_unique_id": "00:0d:6f:ff:fe:01:23:45-battery",
             "state": "100",
             "entity_category": EntityCategory.DIAGNOSTIC,
             "device_class": SensorDeviceClass.BATTERY,
@@ -301,7 +296,6 @@ TEST_DATA = [
             "device_count": 3,
             "entity_id": "sensor.consumption_15",
             "unique_id": "00:0d:6f:00:0b:7a:64:29-01-0702-consumption",
-            "old_unique_id": "00:0d:6f:00:0b:7a:64:29-01-0702",
             "state": "11.342",
             "entity_category": None,
             "device_class": SensorDeviceClass.ENERGY,
@@ -383,7 +377,6 @@ TEST_DATA = [
             "device_count": 2,
             "entity_id": "sensor.fsm_state_motion_stair",
             "unique_id": "fsm-state-1520195376277-status",
-            "old_unique_id": "fsm-state-1520195376277",
             "state": "0",
             "entity_category": None,
             "device_class": None,
@@ -422,7 +415,6 @@ TEST_DATA = [
             "device_count": 3,
             "entity_id": "sensor.mi_temperature_1",
             "unique_id": "00:15:8d:00:02:45:dc:53-01-0405-humidity",
-            "old_unique_id": "00:15:8d:00:02:45:dc:53-01-0405",
             "state": "35.55",
             "entity_category": None,
             "device_class": SensorDeviceClass.HUMIDITY,
@@ -512,7 +504,6 @@ TEST_DATA = [
             "device_count": 3,
             "entity_id": "sensor.motion_sensor_4",
             "unique_id": "00:17:88:01:03:28:8c:9b-02-0400-light_level",
-            "old_unique_id": "00:17:88:01:03:28:8c:9b-02-0400",
             "state": "5.0",
             "entity_category": None,
             "device_class": SensorDeviceClass.ILLUMINANCE,
@@ -528,6 +519,55 @@ TEST_DATA = [
             },
             "websocket_event": {"state": {"lightlevel": 1000}},
             "next_state": "1.3",
+        },
+    ),
+    (  # Particulate matter -> pm2_5
+        {
+            "capabilities": {
+                "measured_value": {
+                    "max": 999,
+                    "min": 0,
+                    "quantity": "density",
+                    "substance": "PM2.5",
+                    "unit": "ug/m^3",
+                }
+            },
+            "config": {"on": True, "reachable": True},
+            "ep": 1,
+            "etag": "2a67a4b5cbcc20532c0ee75e2abac0c3",
+            "lastannounced": None,
+            "lastseen": "2023-10-29T12:59Z",
+            "manufacturername": "IKEA of Sweden",
+            "modelid": "STARKVIND Air purifier table",
+            "name": "STARKVIND AirPurifier",
+            "productid": "E2006",
+            "state": {
+                "airquality": "excellent",
+                "lastupdated": "2023-10-29T12:59:27.976",
+                "measured_value": 1,
+                "pm2_5": 1,
+            },
+            "swversion": "1.1.001",
+            "type": "ZHAParticulateMatter",
+            "uniqueid": "xx:xx:xx:xx:xx:xx:xx:xx-01-042a",
+        },
+        {
+            "entity_count": 1,
+            "device_count": 3,
+            "entity_id": "sensor.starkvind_airpurifier_pm25",
+            "unique_id": "xx:xx:xx:xx:xx:xx:xx:xx-01-042a-particulate_matter_pm2_5",
+            "state": "1",
+            "entity_category": None,
+            "device_class": SensorDeviceClass.PM25,
+            "state_class": SensorStateClass.MEASUREMENT,
+            "attributes": {
+                "friendly_name": "STARKVIND AirPurifier PM25",
+                "device_class": SensorDeviceClass.PM25,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "unit_of_measurement": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            },
+            "websocket_event": {"state": {"measured_value": 2}},
+            "next_state": "2",
         },
     ),
     (  # Power sensor
@@ -555,7 +595,6 @@ TEST_DATA = [
             "device_count": 3,
             "entity_id": "sensor.power_16",
             "unique_id": "00:0d:6f:00:0b:7a:64:29-01-0b04-power",
-            "old_unique_id": "00:0d:6f:00:0b:7a:64:29-01-0b04",
             "state": "64",
             "entity_category": None,
             "device_class": SensorDeviceClass.POWER,
@@ -598,7 +637,6 @@ TEST_DATA = [
             "device_count": 3,
             "entity_id": "sensor.mi_temperature_1",
             "unique_id": "00:15:8d:00:02:45:dc:53-01-0403-pressure",
-            "old_unique_id": "00:15:8d:00:02:45:dc:53-01-0403",
             "state": "1010",
             "entity_category": None,
             "device_class": SensorDeviceClass.PRESSURE,
@@ -640,7 +678,6 @@ TEST_DATA = [
             "device_count": 3,
             "entity_id": "sensor.mi_temperature_1",
             "unique_id": "00:15:8d:00:02:45:dc:53-01-0402-temperature",
-            "old_unique_id": "00:15:8d:00:02:45:dc:53-01-0402",
             "state": "21.82",
             "entity_category": None,
             "device_class": SensorDeviceClass.TEMPERATURE,
@@ -687,7 +724,6 @@ TEST_DATA = [
             "device_count": 3,
             "entity_id": "sensor.etrv_sejour",
             "unique_id": "cc:cc:cc:ff:fe:38:4d:b3-01-000a-last_set",
-            "old_unique_id": "cc:cc:cc:ff:fe:38:4d:b3-01-000a",
             "state": "2020-11-19T08:07:08+00:00",
             "entity_category": None,
             "device_class": SensorDeviceClass.TIMESTAMP,
@@ -727,7 +763,6 @@ TEST_DATA = [
             "device_count": 3,
             "entity_id": "sensor.alarm_10_temperature",
             "unique_id": "00:15:8d:00:02:b5:d1:80-01-0500-internal_temperature",
-            "old_unique_id": "00:15:8d:00:02:b5:d1:80-temperature",
             "state": "26.0",
             "entity_category": None,
             "device_class": SensorDeviceClass.TEMPERATURE,
@@ -769,7 +804,6 @@ TEST_DATA = [
             "device_count": 3,
             "entity_id": "sensor.dimmer_switch_3_battery",
             "unique_id": "00:17:88:01:02:0e:32:a3-02-fc00-battery",
-            "old_unique_id": "00:17:88:01:02:0e:32:a3-battery",
             "state": "90",
             "entity_category": EntityCategory.DIAGNOSTIC,
             "device_class": SensorDeviceClass.BATTERY,
@@ -792,23 +826,14 @@ TEST_DATA = [
 @pytest.mark.parametrize(("sensor_data", "expected"), TEST_DATA)
 async def test_sensors(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     aioclient_mock: AiohttpClientMocker,
     mock_deconz_websocket,
     sensor_data,
     expected,
 ) -> None:
     """Test successful creation of sensor entities."""
-    ent_reg = er.async_get(hass)
-    dev_reg = dr.async_get(hass)
-
-    # Create entity entry to migrate to new unique ID
-    if "old_unique_id" in expected:
-        ent_reg.async_get_or_create(
-            SENSOR_DOMAIN,
-            DECONZ_DOMAIN,
-            expected["old_unique_id"],
-            suggested_object_id=expected["entity_id"].replace("sensor.", ""),
-        )
 
     with patch.dict(DECONZ_WEB_REQUEST, {"sensors": {"1": sensor_data}}):
         config_entry = await setup_deconz_integration(
@@ -817,7 +842,9 @@ async def test_sensors(
 
     # Enable in entity registry
     if expected.get("enable_entity"):
-        ent_reg.async_update_entity(entity_id=expected["entity_id"], disabled_by=None)
+        entity_registry.async_update_entity(
+            entity_id=expected["entity_id"], disabled_by=None
+        )
         await hass.async_block_till_done()
 
         async_fire_time_changed(
@@ -836,16 +863,16 @@ async def test_sensors(
 
     # Verify entity registry
     assert (
-        ent_reg.async_get(expected["entity_id"]).entity_category
+        entity_registry.async_get(expected["entity_id"]).entity_category
         is expected["entity_category"]
     )
-    ent_reg_entry = ent_reg.async_get(expected["entity_id"])
+    ent_reg_entry = entity_registry.async_get(expected["entity_id"])
     assert ent_reg_entry.entity_category is expected["entity_category"]
     assert ent_reg_entry.unique_id == expected["unique_id"]
 
     # Verify device registry
     assert (
-        len(dr.async_entries_for_config_entry(dev_reg, config_entry.entry_id))
+        len(dr.async_entries_for_config_entry(device_registry, config_entry.entry_id))
         == expected["device_count"]
     )
 

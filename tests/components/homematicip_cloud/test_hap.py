@@ -1,4 +1,5 @@
 """Test HomematicIP Cloud accesspoint."""
+
 from unittest.mock import Mock, patch
 
 from homematicip.aio.auth import AsyncAuth
@@ -53,7 +54,8 @@ async def test_auth_auth_check_and_register(hass: HomeAssistant) -> None:
     ), patch.object(
         hmip_auth.auth, "requestAuthToken", return_value="ABC"
     ), patch.object(
-        hmip_auth.auth, "confirmAuthToken"
+        hmip_auth.auth,
+        "confirmAuthToken",
     ):
         assert await hmip_auth.async_checkbutton()
         assert await hmip_auth.async_register() == "ABC"
@@ -99,7 +101,7 @@ async def test_hap_setup_connection_error() -> None:
     ):
         assert not await hap.async_setup()
 
-    assert not hass.async_add_job.mock_calls
+    assert not hass.async_add_hass_job.mock_calls
     assert not hass.config_entries.flow.async_init.mock_calls
 
 

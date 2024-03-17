@@ -1,4 +1,5 @@
 """Tests for the ONVIF integration."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from onvif.exceptions import ONVIFError
@@ -26,7 +27,7 @@ HOST = "1.2.3.4"
 PORT = 80
 USERNAME = "admin"
 PASSWORD = "12345"
-MAC = "aa:bb:cc:dd:ee"
+MAC = "aa:bb:cc:dd:ee:ff"
 SERIAL_NUMBER = "ABCDEFGHIJK"
 MANUFACTURER = "TestManufacturer"
 MODEL = "TestModel"

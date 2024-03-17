@@ -1,4 +1,5 @@
 """Support for recording details."""
+
 from __future__ import annotations
 
 import logging
@@ -6,8 +7,13 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_EXCLUDE, EVENT_STATE_CHANGED
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    CONF_EXCLUDE,
+    EVENT_RECORDER_5MIN_STATISTICS_GENERATED,  # noqa: F401
+    EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,  # noqa: F401
+    EVENT_STATE_CHANGED,
+)
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
@@ -25,8 +31,6 @@ from .const import (  # noqa: F401
     CONF_DB_INTEGRITY_CHECK,
     DATA_INSTANCE,
     DOMAIN,
-    EVENT_RECORDER_5MIN_STATISTICS_GENERATED,
-    EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,
     INTEGRATION_PLATFORM_COMPILE_STATISTICS,
     INTEGRATION_PLATFORMS_LOAD_IN_RECORDER_THREAD,
     SQLITE_URL_PREFIX,
@@ -175,7 +179,8 @@ async def _async_setup_integration_platform(
 ) -> None:
     """Set up a recorder integration platform."""
 
-    async def _process_recorder_platform(
+    @callback
+    def _process_recorder_platform(
         hass: HomeAssistant, domain: str, platform: Any
     ) -> None:
         """Process a recorder platform."""

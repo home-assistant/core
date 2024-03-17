@@ -1,9 +1,10 @@
 """The tests for the utility_meter component."""
+
 from __future__ import annotations
 
 from datetime import timedelta
-from unittest.mock import patch
 
+from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.select import (
@@ -95,7 +96,7 @@ async def test_services(hass: HomeAssistant, meter) -> None:
     await hass.async_block_till_done()
 
     now = dt_util.utcnow() + timedelta(seconds=10)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         hass.states.async_set(
             entity_id,
             3,
@@ -116,7 +117,7 @@ async def test_services(hass: HomeAssistant, meter) -> None:
     await hass.async_block_till_done()
 
     now += timedelta(seconds=10)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         hass.states.async_set(
             entity_id,
             4,
@@ -144,7 +145,7 @@ async def test_services(hass: HomeAssistant, meter) -> None:
     await hass.async_block_till_done()
 
     now += timedelta(seconds=10)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         hass.states.async_set(
             entity_id,
             5,
@@ -221,7 +222,7 @@ async def test_services_config_entry(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     now = dt_util.utcnow() + timedelta(seconds=10)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         hass.states.async_set(
             entity_id,
             3,
@@ -242,7 +243,7 @@ async def test_services_config_entry(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     now += timedelta(seconds=10)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         hass.states.async_set(
             entity_id,
             4,
@@ -270,7 +271,7 @@ async def test_services_config_entry(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     now += timedelta(seconds=10)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         hass.states.async_set(
             entity_id,
             5,
@@ -347,6 +348,7 @@ async def test_both_cron_and_meter(hass: HomeAssistant) -> None:
     }
 
     assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
 
 
 async def test_cron_and_offset(hass: HomeAssistant) -> None:

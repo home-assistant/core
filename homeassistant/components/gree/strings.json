@@ -9,5 +9,24 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
+  },
+  "entity": {
+    "switch": {
+      "light": {
+        "name": "Panel light"
+      },
+      "quiet": {
+        "name": "Quiet"
+      },
+      "fresh_air": {
+        "name": "Fresh air"
+      },
+      "xfan": {
+        "name": "XFan"
+      },
+      "health_mode": {
+        "name": "Health mode"
+      }
+    }
   }
 }

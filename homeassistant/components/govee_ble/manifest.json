@@ -15,6 +15,11 @@
       "connectable": false
     },
     {
+      "manufacturer_id": 1,
+      "service_uuid": "0000ec88-0000-1000-8000-00805f9b34fb",
+      "connectable": false
+    },
+    {
       "manufacturer_id": 6966,
       "service_uuid": "00008451-0000-1000-8000-00805f9b34fb",
       "connectable": false
@@ -85,5 +90,5 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/govee_ble",
   "iot_class": "local_push",
-  "requirements": ["govee-ble==0.23.0"]
+  "requirements": ["govee-ble==0.31.0"]
 }

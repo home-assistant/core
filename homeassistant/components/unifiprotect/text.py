@@ -1,7 +1,9 @@
 """Text entities for UniFi Protect."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from pyunifiprotect.data import (
     Camera,
@@ -24,7 +26,7 @@ from .models import PermRequired, ProtectSetableKeysMixin, T
 from .utils import async_dispatch_id as _ufpd
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class ProtectTextEntityDescription(ProtectSetableKeysMixin[T], TextEntityDescription):
     """Describes UniFi Protect Text entity."""
 
@@ -60,7 +62,8 @@ async def async_setup_entry(
     """Set up sensors for UniFi Protect integration."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
-    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+    @callback
+    def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
         entities = async_all_device_entities(
             data,
             ProtectDeviceText,
@@ -100,6 +103,16 @@ class ProtectDeviceText(ProtectDeviceEntity, TextEntity):
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
         self._attr_native_value = self.entity_description.get_ufp_value(self.device)
+
+    @callback
+    def _async_get_state_attrs(self) -> tuple[Any, ...]:
+        """Retrieve data that goes into the current state of the entity.
+
+        Called before and after updating entity and state is only written if there
+        is a change.
+        """
+
+        return (self._attr_available, self._attr_native_value)
 
     async def async_set_value(self, value: str) -> None:
         """Change the value."""

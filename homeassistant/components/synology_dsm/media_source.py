@@ -1,4 +1,5 @@
 """Expose Synology DSM as a media source."""
+
 from __future__ import annotations
 
 import mimetypes
@@ -90,20 +91,18 @@ class SynologyPhotosMediaSource(MediaSource):
     ) -> list[BrowseMediaSource]:
         """Handle browsing different diskstations."""
         if not item.identifier:
-            ret = []
-            for entry in self.entries:
-                ret.append(
-                    BrowseMediaSource(
-                        domain=DOMAIN,
-                        identifier=entry.unique_id,
-                        media_class=MediaClass.DIRECTORY,
-                        media_content_type=MediaClass.IMAGE,
-                        title=f"{entry.title} - {entry.unique_id}",
-                        can_play=False,
-                        can_expand=True,
-                    )
+            return [
+                BrowseMediaSource(
+                    domain=DOMAIN,
+                    identifier=entry.unique_id,
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_type=MediaClass.IMAGE,
+                    title=f"{entry.title} - {entry.unique_id}",
+                    can_play=False,
+                    can_expand=True,
                 )
-            return ret
+                for entry in self.entries
+            ]
         identifier = SynologyPhotosMediaSourceIdentifier(item.identifier)
         diskstation: SynologyDSMData = self.hass.data[DOMAIN][identifier.unique_id]
 
@@ -125,18 +124,18 @@ class SynologyPhotosMediaSource(MediaSource):
                     can_expand=True,
                 )
             ]
-            for album in albums:
-                ret.append(
-                    BrowseMediaSource(
-                        domain=DOMAIN,
-                        identifier=f"{item.identifier}/{album.album_id}",
-                        media_class=MediaClass.DIRECTORY,
-                        media_content_type=MediaClass.IMAGE,
-                        title=album.name,
-                        can_play=False,
-                        can_expand=True,
-                    )
+            ret.extend(
+                BrowseMediaSource(
+                    domain=DOMAIN,
+                    identifier=f"{item.identifier}/{album.album_id}",
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_type=MediaClass.IMAGE,
+                    title=album.name,
+                    can_play=False,
+                    can_expand=True,
                 )
+                for album in albums
+            )
 
             return ret
 
@@ -153,8 +152,7 @@ class SynologyPhotosMediaSource(MediaSource):
         ret = []
         for album_item in album_items:
             mime_type, _ = mimetypes.guess_type(album_item.file_name)
-            assert isinstance(mime_type, str)
-            if mime_type.startswith("image/"):
+            if isinstance(mime_type, str) and mime_type.startswith("image/"):
                 # Force small small thumbnails
                 album_item.thumbnail_size = "sm"
                 ret.append(

@@ -1,4 +1,5 @@
 """The tests for the Rfxtrx sensor platform."""
+
 import pytest
 
 from homeassistant.components.rfxtrx import DOMAIN

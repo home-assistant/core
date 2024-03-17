@@ -4,10 +4,10 @@
     'attributes': dict({
       'brightness': 26,
       'color_mode': 'brightness',
+      'effect': None,
       'effect_list': list([
       ]),
       'friendly_name': 'twinkly_test_device_name',
-      'icon': 'mdi:string-lights',
       'supported_color_modes': list([
         'brightness',
       ]),
@@ -29,6 +29,7 @@
       'disabled_by': None,
       'domain': 'twinkly',
       'entry_id': '4c8fccf5-e08a-4173-92d5-49bf479252a2',
+      'minor_version': 1,
       'options': dict({
       }),
       'pref_disable_new_entities': False,

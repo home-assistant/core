@@ -1,4 +1,5 @@
 """Helper functions for Z-Wave JS integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -14,6 +15,7 @@ from zwave_js_server.const import (
     ConfigurationValueType,
     LogLevel,
 )
+from zwave_js_server.model.controller import Controller
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.log_config import LogConfig
 from zwave_js_server.model.node import Node as ZwaveNode
@@ -24,7 +26,6 @@ from zwave_js_server.model.value import (
     get_value_id_str,
 )
 
-from homeassistant.components.group import expand_entity_ids
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
@@ -38,6 +39,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.group import expand_entity_ids
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -455,7 +457,9 @@ def remove_keys_with_empty_values(config: ConfigType) -> ConfigType:
     return {key: value for key, value in config.items() if value not in ("", None)}
 
 
-def check_type_schema_map(schema_map: dict[str, vol.Schema]) -> Callable:
+def check_type_schema_map(
+    schema_map: dict[str, vol.Schema],
+) -> Callable[[ConfigType], ConfigType]:
     """Check type specific schema against config."""
 
     def _check_type_schema(config: ConfigType) -> ConfigType:
@@ -512,3 +516,15 @@ def get_device_info(driver: Driver, node: ZwaveNode) -> DeviceInfo:
         manufacturer=node.device_config.manufacturer,
         suggested_area=node.location if node.location else None,
     )
+
+
+def get_network_identifier_for_notification(
+    hass: HomeAssistant, config_entry: ConfigEntry, controller: Controller
+) -> str:
+    """Return the network identifier string for persistent notifications."""
+    home_id = str(controller.home_id)
+    if len(hass.config_entries.async_entries(DOMAIN)) > 1:
+        if str(home_id) != config_entry.title:
+            return f"`{config_entry.title}`, with the home ID `{home_id}`,"
+        return f"with the home ID `{home_id}`"
+    return ""

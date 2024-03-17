@@ -1,4 +1,5 @@
 """Diagnostic utilities."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
@@ -12,7 +13,7 @@ _T = TypeVar("_T")
 
 
 @overload
-def async_redact_data(data: Mapping, to_redact: Iterable[Any]) -> dict:  # type: ignore[misc]
+def async_redact_data(data: Mapping, to_redact: Iterable[Any]) -> dict:  # type: ignore[overload-overlap]
     ...
 
 

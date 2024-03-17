@@ -66,5 +66,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "add_default_code": {
+      "message": "The code for {entity_id} doesn't match pattern {code_format}."
+    }
   }
 }

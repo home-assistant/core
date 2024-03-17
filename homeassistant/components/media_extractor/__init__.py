@@ -1,6 +1,8 @@
 """Decorator service for the media_player.play_media service."""
+
 from collections.abc import Callable
 import logging
+from pathlib import Path
 from typing import Any, cast
 
 import voluptuous as vol
@@ -87,7 +89,7 @@ class MediaExtractor:
 
     def get_entities(self) -> list[str]:
         """Return list of entities."""
-        return self.call_data.get(ATTR_ENTITY_ID, [])
+        return self.call_data.get(ATTR_ENTITY_ID, [])  # type: ignore[no-any-return]
 
     def extract_and_send(self) -> None:
         """Extract exact stream format for each entity_id and play it."""
@@ -106,7 +108,20 @@ class MediaExtractor:
 
     def get_stream_selector(self) -> Callable[[str], str]:
         """Return format selector for the media URL."""
-        ydl = YoutubeDL({"quiet": True, "logger": _LOGGER})
+        cookies_file = Path(
+            self.hass.config.config_dir, "media_extractor", "cookies.txt"
+        )
+        ydl_params = {"quiet": True, "logger": _LOGGER}
+        if cookies_file.exists():
+            ydl_params["cookiefile"] = str(cookies_file)
+            _LOGGER.debug(
+                "Media extractor loaded cookies file from: %s", str(cookies_file)
+            )
+        else:
+            _LOGGER.debug(
+                "Media extractor didn't find cookies file at: %s", str(cookies_file)
+            )
+        ydl = YoutubeDL(ydl_params)
 
         try:
             all_media = ydl.extract_info(self.get_media_url(), process=False)
@@ -153,7 +168,7 @@ class MediaExtractor:
         except MEQueryException:
             _LOGGER.error("Wrong query format: %s", stream_query)
             return
-
+        _LOGGER.debug("Selected the following stream: %s", stream_url)
         data = {k: v for k, v in self.call_data.items() if k != ATTR_ENTITY_ID}
         data[ATTR_MEDIA_CONTENT_ID] = stream_url
 
@@ -193,9 +208,16 @@ def get_best_stream(formats: list[dict[str, Any]]) -> str:
 
 
 def get_best_stream_youtube(formats: list[dict[str, Any]]) -> str:
-    """YouTube requests also include manifest files.
+    """YouTube responses also include files with only video or audio.
 
-    They don't have a filesize so we skip all formats without filesize.
+    So we filter on files with both audio and video codec.
     """
 
-    return get_best_stream([format for format in formats if "filesize" in format])
+    return get_best_stream(
+        [
+            format
+            for format in formats
+            if format.get("acodec", "none") != "none"
+            and format.get("vcodec", "none") != "none"
+        ]
+    )

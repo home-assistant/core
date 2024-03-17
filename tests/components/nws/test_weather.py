@@ -1,4 +1,5 @@
 """Tests for the NWS weather component."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -13,7 +14,8 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     ATTR_FORECAST,
     DOMAIN as WEATHER_DOMAIN,
-    SERVICE_GET_FORECAST,
+    LEGACY_SERVICE_GET_FORECAST,
+    SERVICE_GET_FORECASTS,
 )
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -400,12 +402,20 @@ async def test_legacy_config_entry(hass: HomeAssistant, no_sensor) -> None:
     assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 2
 
 
+@pytest.mark.parametrize(
+    ("service"),
+    [
+        SERVICE_GET_FORECASTS,
+        LEGACY_SERVICE_GET_FORECAST,
+    ],
+)
 async def test_forecast_service(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
     mock_simple_nws,
     no_sensor,
+    service: str,
 ) -> None:
     """Test multiple forecast."""
     instance = mock_simple_nws.return_value
@@ -425,7 +435,7 @@ async def test_forecast_service(
     for forecast_type in ("twice_daily", "hourly"):
         response = await hass.services.async_call(
             WEATHER_DOMAIN,
-            SERVICE_GET_FORECAST,
+            service,
             {
                 "entity_id": "weather.abc_daynight",
                 "type": forecast_type,
@@ -433,7 +443,6 @@ async def test_forecast_service(
             blocking=True,
             return_response=True,
         )
-        assert response["forecast"] != []
         assert response == snapshot
 
     # Calling the services should use cached data
@@ -453,7 +462,7 @@ async def test_forecast_service(
     for forecast_type in ("twice_daily", "hourly"):
         response = await hass.services.async_call(
             WEATHER_DOMAIN,
-            SERVICE_GET_FORECAST,
+            service,
             {
                 "entity_id": "weather.abc_daynight",
                 "type": forecast_type,
@@ -461,7 +470,6 @@ async def test_forecast_service(
             blocking=True,
             return_response=True,
         )
-        assert response["forecast"] != []
         assert response == snapshot
 
     # Calling the services should update the hourly forecast
@@ -477,7 +485,7 @@ async def test_forecast_service(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECAST,
+        service,
         {
             "entity_id": "weather.abc_daynight",
             "type": "hourly",
@@ -485,7 +493,6 @@ async def test_forecast_service(
         blocking=True,
         return_response=True,
     )
-    assert response["forecast"] != []
     assert response == snapshot
 
     # after additional 35 minutes data caching expires, data is no longer shown
@@ -495,7 +502,7 @@ async def test_forecast_service(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECAST,
+        service,
         {
             "entity_id": "weather.abc_daynight",
             "type": "hourly",
@@ -503,7 +510,7 @@ async def test_forecast_service(
         blocking=True,
         return_response=True,
     )
-    assert response["forecast"] == []
+    assert response == snapshot
 
 
 @pytest.mark.parametrize(
