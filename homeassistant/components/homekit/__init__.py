@@ -1163,7 +1163,7 @@ class HomeKitPairingQRView(HomeAssistantView):
     async def get(self, request: web.Request) -> web.Response:
         """Retrieve the pairing QRCode image."""
         if not request.query_string:
-            raise Unauthorized()
+            raise Unauthorized
         entry_id, secret = request.query_string.split("-")
         hass = request.app[KEY_HASS]
         domain_data: dict[str, HomeKitEntryData] = hass.data[DOMAIN]
@@ -1173,7 +1173,7 @@ class HomeKitPairingQRView(HomeAssistantView):
             or not entry_data.pairing_qr_secret
             or secret != entry_data.pairing_qr_secret
         ):
-            raise Unauthorized()
+            raise Unauthorized
         return web.Response(
             body=entry_data.pairing_qr,
             content_type="image/svg+xml",

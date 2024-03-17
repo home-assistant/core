@@ -147,7 +147,7 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
             and self.entity_description.event_types is not None
         ):
             return self.entity_description.event_types
-        raise AttributeError()
+        raise AttributeError
 
     @final
     def _trigger_event(
