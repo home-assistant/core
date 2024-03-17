@@ -97,7 +97,7 @@
     },
     "deprecate_package_sensor": {
       "title": "Package Event Sensor Deprecated",
-      "description": "The package event sensor never actually tripped because how events are reported in UniFi Protect. As a result, the sensor is deprecated and will be removed.\n\nBelow are the detected automations or scripts that use one or more of the deprecated entities:\n{items}\nThe above list may be incomplete and it does not include any template usages inside of dashboards. Please update any templates, automations or scripts accordingly."
+      "description": "The package event sensor never tripped because of the way events are reported in UniFi Protect. As a result, the sensor is deprecated and will be removed.\n\nBelow are the detected automations or scripts that use one or more of the deprecated entities:\n{items}\nThe above list may be incomplete and it does not include any template usages inside of dashboards. Please update any templates, automations or scripts accordingly."
     }
   },
   "entity": {
