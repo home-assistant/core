@@ -340,10 +340,8 @@ async def async_create_miio_device_and_coordinator(
         device = AirFreshA1(host, token, lazy_discover=lazy_discover)
     elif model == MODEL_AIRFRESH_T2017:
         device = AirFreshT2017(host, token, lazy_discover=lazy_discover)
-    elif (
-        model in MODELS_VACUUM
-        or model.startswith(ROBOROCK_GENERIC)
-        or model.startswith(ROCKROBO_GENERIC)
+    elif model in MODELS_VACUUM or model.startswith(
+        (ROBOROCK_GENERIC, ROCKROBO_GENERIC)
     ):
         # TODO: add lazy_discover as argument when python-miio add support # pylint: disable=fixme
         device = RoborockVacuum(host, token)

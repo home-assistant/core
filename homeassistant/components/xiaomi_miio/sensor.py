@@ -831,10 +831,8 @@ async def async_setup_entry(
                 sensors = PURIFIER_MIIO_SENSORS
             elif model in MODELS_PURIFIER_MIOT:
                 sensors = PURIFIER_MIOT_SENSORS
-            elif (
-                model in MODELS_VACUUM
-                or model.startswith(ROBOROCK_GENERIC)
-                or model.startswith(ROCKROBO_GENERIC)
+            elif model in MODELS_VACUUM or model.startswith(
+                (ROBOROCK_GENERIC, ROCKROBO_GENERIC)
             ):
                 return _setup_vacuum_sensors(hass, config_entry, async_add_entities)
 

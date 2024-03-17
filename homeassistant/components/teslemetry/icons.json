@@ -18,6 +18,15 @@
       "battery_power": {
         "default": "mdi:home-battery"
       },
+      "charge_state_charging_state": {
+        "default": "mdi:ev-station",
+        "state": {
+          "disconnected": "mdi:connection",
+          "no_power": "mdi:power-plug-off-outline",
+          "starting": "mdi:play-circle",
+          "stopped": "mdi:stop-circle"
+        }
+      },
       "drive_state_active_route_destination": {
         "default": "mdi:routes"
       },

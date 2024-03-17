@@ -35,6 +35,8 @@ from .const import (
     CONF_HVAC_MODE_REGISTER,
     CONF_HVAC_ONOFF_REGISTER,
     CONF_INPUT_TYPE,
+    CONF_LAZY_ERROR,
+    CONF_RETRIES,
     CONF_SLAVE_COUNT,
     CONF_SWAP,
     CONF_SWAP_BYTE,
@@ -304,6 +306,27 @@ def validate_modbus(
     hub_name_inx: int,
 ) -> bool:
     """Validate modbus entries."""
+    if CONF_RETRIES in hub:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_retries",
+            breaks_in_ha_version="2024.7.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_retries",
+            translation_placeholders={
+                "config_key": "retries",
+                "integration": DOMAIN,
+                "url": "https://www.home-assistant.io/integrations/modbus",
+            },
+        )
+        _LOGGER.warning(
+            "`retries`: is deprecated and will be removed in version 2024.7"
+        )
+    else:
+        hub[CONF_RETRIES] = 3
+
     host: str = (
         hub[CONF_PORT]
         if hub[CONF_TYPE] == SERIAL
@@ -352,6 +375,24 @@ def validate_entity(
     ent_addr: set[str],
 ) -> bool:
     """Validate entity."""
+    if CONF_LAZY_ERROR in entity:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "removed_lazy_error_count",
+            breaks_in_ha_version="2024.7.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="removed_lazy_error_count",
+            translation_placeholders={
+                "config_key": "lazy_error_count",
+                "integration": DOMAIN,
+                "url": "https://www.home-assistant.io/integrations/modbus",
+            },
+        )
+        _LOGGER.warning(
+            "`lazy_error_count`: is deprecated and will be removed in version 2024.7"
+        )
     name = f"{component}.{entity[CONF_NAME]}"
     addr = f"{hub_name}{entity[CONF_ADDRESS]}"
     scan_interval = entity.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
@@ -449,10 +490,18 @@ def check_config(hass: HomeAssistant, config: dict) -> dict:
                 else:
                     entity_inx += 1
         if no_entities:
-            err = f"Modbus {hub[CONF_NAME]} contain no entities, this will cause instability,  please add at least one entity!"
-            _LOGGER.warning(err)
-            # Ensure timeout is not started/handled.
-            hub[CONF_TIMEOUT] = -1
+            modbus_create_issue(
+                hass,
+                "no_entities",
+                [
+                    hub[CONF_NAME],
+                    "",
+                    "",
+                ],
+                f"Modbus {hub[CONF_NAME]} contain no entities, causing instability, entry not loaded",
+            )
+            del config[hub_inx]
+            continue
         if hub[CONF_TIMEOUT] >= minimum_scan_interval:
             hub[CONF_TIMEOUT] = minimum_scan_interval - 1
             _LOGGER.warning(

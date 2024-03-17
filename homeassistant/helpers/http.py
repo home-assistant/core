@@ -166,7 +166,7 @@ class HomeAssistantView:
     ) -> None:
         """Register the view with a router."""
         assert self.url is not None, "No url set for view"
-        urls = [self.url] + self.extra_urls
+        urls = [self.url, *self.extra_urls]
         routes: list[AbstractRoute] = []
 
         for method in ("get", "post", "delete", "put", "patch", "head", "options"):

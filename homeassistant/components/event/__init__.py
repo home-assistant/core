@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any, Self, final
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_validation import (  # noqa: F401
+from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )

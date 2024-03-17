@@ -276,6 +276,7 @@ disable = [
     "unidiomatic-typecheck", # E721
     "unnecessary-direct-lambda-call", # PLC3002
     "unnecessary-lambda-assignment", # PLC3001
+    "unnecessary-pass", # PIE790
     "unneeded-not", # SIM208
     "useless-import-alias", # PLC0414
     "wrong-import-order", # I001
@@ -580,10 +581,13 @@ filterwarnings = [
 [tool.ruff.lint]
 select = [
     "B002", # Python does not support the unary prefix increment
+    "B005", # Using .strip() with multi-character strings is misleading
     "B007", # Loop control variable {name} not used within loop body
     "B014", # Exception handler with duplicate exception
+    "B015", # Pointless comparison. Did you mean to assign a value? Otherwise, prepend assert or remove it.
     "B023", # Function definition does not bind loop variable {name}
     "B026", # Star-arg unpacking after a keyword argument is strongly discouraged
+    "B032", # Possible unintentional type annotation (using :). Did you mean to assign (using =)?
     "B904", # Use raise from to specify exception cause
     "C", # complexity
     "COM818", # Trailing comma on bare tuple prohibited
@@ -601,13 +605,16 @@ select = [
     "N815", # Variable {name} in class scope should not be mixedCase
     "PERF", # Perflint
     "PGH004", # Use specific rule codes when using noqa
-    "PLC0414", # Useless import alias. Import alias does not rename original package.
-    "PLC", # pylint
-    "PLE", # pylint
-    "PLR", # pylint
-    "PLW", # pylint
-    "Q000", # Double quotes found but single quotes preferred
+    "PIE800", # Unnecessary dictionary unpacking operators
+    "PL", # pylint
+    "PIE804", # Unnecessary dict kwargs
+    "PIE790", # Unnecessary pass statement
+    "PIE794", # Class field is defined multiple times
+    "PIE807", # Prefer list/dict over useless lambda
+    "PIE810", # Call startswith/endswith once with a tuple
+    "RUF005", # Consider iterable unpacking instead of concatenation
     "RUF006", # Store a reference to the return value of asyncio.create_task
+    # "RUF100", # Unused `noqa` directive; temporarily every now and then to clean them up
     "S102", # Use of exec detected
     "S103", # bad-file-permissions
     "S108", # hardcoded-temp-file
@@ -650,8 +657,6 @@ ignore = [
     # https://github.com/astral-sh/ruff/issues/7491
     # "PLC1901", # Lots of false positives
 
-    # False positives https://github.com/astral-sh/ruff/issues/5386
-    "PLC0208", # Use a sequence type instead of a `set` when iterating over values
     "PLR0911", # Too many return statements ({returns} > {max_returns})
     "PLR0912", # Too many branches ({branches} > {max_branches})
     "PLR0913", # Too many arguments to function call ({c_args} > {max_args})
@@ -673,10 +678,7 @@ ignore = [
     "E117",
     "D206",
     "D300",
-    "Q000",
-    "Q001",
-    "Q002",
-    "Q003",
+    "Q",
     "COM812",
     "COM819",
     "ISC001",

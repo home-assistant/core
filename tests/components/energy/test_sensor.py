@@ -425,7 +425,7 @@ async def test_cost_sensor_price_entity_total(
         hass.states.async_set(
             usage_sensor_entity_id,
             initial_energy,
-            {**energy_attributes, **{"last_reset": last_reset}},
+            {**energy_attributes, "last_reset": last_reset},
         )
     hass.states.async_set("sensor.energy_price", "1")
 
@@ -444,7 +444,7 @@ async def test_cost_sensor_price_entity_total(
         hass.states.async_set(
             usage_sensor_entity_id,
             "0",
-            {**energy_attributes, **{"last_reset": last_reset}},
+            {**energy_attributes, "last_reset": last_reset},
         )
         await hass.async_block_till_done()
 
@@ -466,7 +466,7 @@ async def test_cost_sensor_price_entity_total(
     hass.states.async_set(
         usage_sensor_entity_id,
         "10",
-        {**energy_attributes, **{"last_reset": last_reset}},
+        {**energy_attributes, "last_reset": last_reset},
     )
     await hass.async_block_till_done()
     state = hass.states.get(cost_sensor_entity_id)
@@ -493,7 +493,7 @@ async def test_cost_sensor_price_entity_total(
     hass.states.async_set(
         usage_sensor_entity_id,
         "14.5",
-        {**energy_attributes, **{"last_reset": last_reset}},
+        {**energy_attributes, "last_reset": last_reset},
     )
     await hass.async_block_till_done()
     state = hass.states.get(cost_sensor_entity_id)
@@ -511,7 +511,7 @@ async def test_cost_sensor_price_entity_total(
     hass.states.async_set(
         usage_sensor_entity_id,
         "14",
-        {**energy_attributes, **{"last_reset": last_reset}},
+        {**energy_attributes, "last_reset": last_reset},
     )
     await hass.async_block_till_done()
     state = hass.states.get(cost_sensor_entity_id)
@@ -524,7 +524,7 @@ async def test_cost_sensor_price_entity_total(
     hass.states.async_set(
         usage_sensor_entity_id,
         "4",
-        {**energy_attributes, **{"last_reset": last_reset}},
+        {**energy_attributes, "last_reset": last_reset},
     )
     await hass.async_block_till_done()
     state = hass.states.get(cost_sensor_entity_id)
@@ -537,7 +537,7 @@ async def test_cost_sensor_price_entity_total(
     hass.states.async_set(
         usage_sensor_entity_id,
         "10",
-        {**energy_attributes, **{"last_reset": last_reset}},
+        {**energy_attributes, "last_reset": last_reset},
     )
     await hass.async_block_till_done()
     state = hass.states.get(cost_sensor_entity_id)
