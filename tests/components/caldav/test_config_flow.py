@@ -8,7 +8,7 @@ import pytest
 import requests
 
 from homeassistant import config_entries
-from homeassistant.components.caldav.const import DOMAIN
+from homeassistant.components.caldav.const import CONF_DAYS, DEFAULT_DAYS, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -282,3 +282,25 @@ async def test_duplicate_config_entries(
 
     assert result2.get("type") == FlowResultType.ABORT
     assert result2.get("reason") == "already_configured"
+
+
+async def test_options_flow(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, config_entry: MockConfigEntry
+) -> None:
+    """Test options flow."""
+    config_entry.add_to_hass(hass)
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+
+    assert config_entry.options[CONF_DAYS] == DEFAULT_DAYS
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_DAYS: 14},
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert config_entry.options[CONF_DAYS] == 14

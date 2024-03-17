@@ -6,7 +6,9 @@ from caldav.lib.error import AuthorizationError, DAVError
 import pytest
 import requests
 
+from homeassistant.components.caldav.const import CONF_DAYS, DEFAULT_DAYS, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -70,3 +72,30 @@ async def test_client_failure(
 
     flows = hass.config_entries.flow.async_progress()
     assert [flow.get("step_id") for flow in flows] == expected_flows
+
+
+async def test_update_entry_options(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test updating of missing config entry options."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_URL: "test-url",
+            CONF_USERNAME: "test-user",
+            CONF_PASSWORD: "test-password",
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.options.get(CONF_DAYS) is None
+
+    with patch("homeassistant.components.caldav.config_flow.caldav.DAVClient"):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.options[CONF_DAYS] == DEFAULT_DAYS
