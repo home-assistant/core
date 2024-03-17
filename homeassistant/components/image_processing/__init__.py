@@ -178,7 +178,7 @@ class ImageProcessingEntity(Entity):
         """
         if self.camera_entity is None:
             _LOGGER.error(
-                "Camera entity (%s) not available to process image", self.camera_entity
+                "No camera entity id was set by the image processing entity",
             )
             return
 
