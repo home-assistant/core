@@ -1,4 +1,6 @@
 """Holds validation schemas used across the integration."""
+import ipaddress
+
 import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
@@ -12,7 +14,7 @@ UPDATE_DOMAIN_RECORD_SCHEMA = vol.Schema(
         ),
         vol.Required(const.ATTR_RECORD_NAME): str,
         vol.Required(const.ATTR_RECORD_VALUE): vol.Any(
-            cv.matches_regex(const.IPV4_REGEX),
+            ipaddress.ip_address,
             cv.matches_regex(const.DOMAIN_NAME_REGEX),
             msg="value must be either an IPV4 address or another domain name",
         ),

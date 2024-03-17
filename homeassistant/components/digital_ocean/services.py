@@ -31,7 +31,7 @@ def handle_update_domain_record(call: ServiceCall, hass: HomeAssistant) -> None:
         updated = do_wrapper.update_domain_record(
             domain_name=domain_name,
             record_name=record_name,
-            record_value=record_value,
+            record_value=str(record_value),
             record_type=record_type,
         )
         if updated is None:  # pragma: no cover
