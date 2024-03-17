@@ -31,23 +31,25 @@ async def test_failing_setups_no_entities(
         assert entity_id not in hass.states.async_entity_ids()
 
 
-async def test_setup_callbacks(
-    hass: HomeAssistant, numato_fixture, monkeypatch
-) -> None:
+async def test_setup_callbacks(hass: HomeAssistant, numato_fixture) -> None:
     """During setup a callback shall be registered."""
 
-    numato_fixture.discover()
+    with patch.object(
+        NumatoModuleMock.NumatoDeviceMock, "add_event_detect"
+    ) as mock_add_event_detect:
+        numato_fixture.discover()
+        assert await async_setup_component(hass, "numato", NUMATO_CFG)
+        await hass.async_block_till_done()  # wait until services are registered
 
-    def mock_add_event_detect(self, port, callback, direction):
-        assert self == numato_fixture.devices[0]
-        assert port == 1
-        assert callback is callable
-        assert direction == numato_fixture.BOTH
-
-    monkeypatch.setattr(
-        numato_fixture.devices[0], "add_event_detect", mock_add_event_detect
+    mock_add_event_detect.assert_called()
+    assert {call.args[0] for call in mock_add_event_detect.mock_calls} == {
+        int(port)
+        for port in NUMATO_CFG["numato"]["devices"][0]["binary_sensors"]["ports"]
+    }
+    assert all(callable(call.args[1]) for call in mock_add_event_detect.mock_calls)
+    assert all(
+        call.args[2] == numato_fixture.BOTH for call in mock_add_event_detect.mock_calls
     )
-    assert await async_setup_component(hass, "numato", NUMATO_CFG)
 
 
 async def test_hass_binary_sensor_notification(
