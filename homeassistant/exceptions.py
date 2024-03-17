@@ -18,7 +18,7 @@ def import_async_get_exception_message() -> (
 ):
     """Return a method that can fetch a translated exception message.
 
-    Defaults to English, requires translations to already be cached./
+    Defaults to English, requires translations to already be cached.
     """
 
     # pylint: disable-next=import-outside-toplevel
