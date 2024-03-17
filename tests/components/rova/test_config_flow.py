@@ -84,7 +84,7 @@ async def test_abort_if_not_rova_area(
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"{ZIP_CODE} {HOUSE_NUMBER} {HOUSE_NUMBER_SUFFIX}".strip()
+    assert result["title"] == f"{ZIP_CODE} {HOUSE_NUMBER} {HOUSE_NUMBER_SUFFIX}"
     assert result["data"] == {
         CONF_ZIP_CODE: ZIP_CODE,
         CONF_HOUSE_NUMBER: HOUSE_NUMBER,
@@ -96,7 +96,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     """Test we abort if rova is already setup."""
     MockConfigEntry(
         domain=DOMAIN,
-        unique_id=f"{ZIP_CODE}{HOUSE_NUMBER}{HOUSE_NUMBER_SUFFIX}".strip(),
+        unique_id=f"{ZIP_CODE}{HOUSE_NUMBER}{HOUSE_NUMBER_SUFFIX}",
         data={
             CONF_ZIP_CODE: ZIP_CODE,
             CONF_HOUSE_NUMBER: HOUSE_NUMBER,
@@ -160,7 +160,7 @@ async def test_abort_if_api_throws_exception(
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"{ZIP_CODE} {HOUSE_NUMBER} {HOUSE_NUMBER_SUFFIX}".strip()
+    assert result["title"] == f"{ZIP_CODE} {HOUSE_NUMBER} {HOUSE_NUMBER_SUFFIX}"
     assert result["data"] == {
         CONF_ZIP_CODE: ZIP_CODE,
         CONF_HOUSE_NUMBER: HOUSE_NUMBER,
@@ -181,7 +181,7 @@ async def test_import(hass: HomeAssistant, mock_rova: MagicMock) -> None:
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"{ZIP_CODE} {HOUSE_NUMBER} {HOUSE_NUMBER_SUFFIX}".strip()
+    assert result["title"] == f"{ZIP_CODE} {HOUSE_NUMBER} {HOUSE_NUMBER_SUFFIX}"
     assert result["data"] == {
         CONF_ZIP_CODE: ZIP_CODE,
         CONF_HOUSE_NUMBER: HOUSE_NUMBER,
@@ -195,7 +195,7 @@ async def test_import_already_configured(
     """Test we abort import flow when entry is already configured."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=f"{ZIP_CODE}{HOUSE_NUMBER}{HOUSE_NUMBER_SUFFIX}".strip(),
+        unique_id=f"{ZIP_CODE}{HOUSE_NUMBER}{HOUSE_NUMBER_SUFFIX}",
         data={
             CONF_ZIP_CODE: ZIP_CODE,
             CONF_HOUSE_NUMBER: HOUSE_NUMBER,
