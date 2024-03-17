@@ -32,12 +32,10 @@ class RovaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             api = rova.Rova(zip_code, number, suffix)
 
             try:
-                is_rova_area = await self.hass.async_add_executor_job(api.is_rova_area)
+                if not await self.hass.async_add_executor_job(api.is_rova_area):
+                    errors = {"base": "invalid_rova_area"}
             except (ConnectTimeout, HTTPError):
                 errors = {"base": "cannot_connect"}
-
-            if not is_rova_area:
-                errors = {"base": "invalid_rova_area"}
 
             if not errors:
                 return self.async_create_entry(

@@ -117,7 +117,7 @@ async def test_asserts(hass: HomeAssistant, test_api: Mock) -> None:
         },
     )
     assert result.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result.get("errors") == {"base": "could_not_connect"}
+    assert result.get("errors") == {"base": "cannot_connect"}
 
     # test with HTTPError
     test_api.is_rova_area.side_effect = HTTPError()
@@ -132,7 +132,7 @@ async def test_asserts(hass: HomeAssistant, test_api: Mock) -> None:
         },
     )
     assert result.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result.get("errors") == {"base": "could_not_connect"}
+    assert result.get("errors") == {"base": "cannot_connect"}
 
 
 async def test_import(hass: HomeAssistant, test_api: Mock) -> None:
@@ -193,7 +193,7 @@ async def test_import_connection_errors(hass: HomeAssistant, test_api: Mock) -> 
     )
 
     assert result.get("type") == data_entry_flow.FlowResultType.ABORT
-    assert result.get("reason") == "could_not_connect"
+    assert result.get("reason") == "cannot_connect"
 
     # test with ConnectTimeout
     test_api.is_rova_area.side_effect = ConnectTimeout()
@@ -209,4 +209,4 @@ async def test_import_connection_errors(hass: HomeAssistant, test_api: Mock) -> 
     )
 
     assert result.get("type") == data_entry_flow.FlowResultType.ABORT
-    assert result.get("reason") == "could_not_connect"
+    assert result.get("reason") == "cannot_connect"
