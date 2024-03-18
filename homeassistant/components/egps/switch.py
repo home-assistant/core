@@ -10,10 +10,11 @@ from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 
 
 async def async_setup_entry(
@@ -64,18 +65,18 @@ class EGPowerStripSocket(SwitchEntity):
         try:
             self._dev.switch_on(self._socket)
         except EgpsException as err:
-            LOGGER.error("Couldn't access USB device: %s", err)
+            raise HomeAssistantError(f"Couldn't access USB device: {err}") from err
 
     def turn_off(self, **kwargs: Any) -> None:
         """Switch the socket off."""
         try:
             self._dev.switch_off(self._socket)
         except EgpsException as err:
-            LOGGER.error("Couldn't access USB device: %s", err)
+            raise HomeAssistantError(f"Couldn't access USB device: {err}") from err
 
     def update(self) -> None:
         """Read the current state from the device."""
         try:
             self._state = STATE_ON if self._dev.get_status(self._socket) else STATE_OFF
         except EgpsException as err:
-            LOGGER.error("Unable to fetch data: %s", err)
+            raise HomeAssistantError(f"Couldn't access USB device: {err}") from err
