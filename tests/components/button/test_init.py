@@ -1,5 +1,4 @@
 """The tests for the Button component."""
-
 from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import MagicMock
@@ -26,6 +25,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
+from .const import TEST_DOMAIN
+
 from tests.common import (
     MockConfigEntry,
     MockModule,
@@ -35,8 +36,6 @@ from tests.common import (
     mock_platform,
     mock_restore_cache,
 )
-
-TEST_DOMAIN = "test"
 
 
 async def test_button(hass: HomeAssistant) -> None:
@@ -60,11 +59,9 @@ async def test_custom_integration(
     caplog: pytest.LogCaptureFixture,
     enable_custom_integrations: None,
     freezer: FrozenDateTimeFactory,
+    setup_platform: None,
 ) -> None:
     """Test we integration."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -98,13 +95,10 @@ async def test_custom_integration(
 
 
 async def test_restore_state(
-    hass: HomeAssistant, enable_custom_integrations: None
+    hass: HomeAssistant, enable_custom_integrations: None, setup_platform: None
 ) -> None:
     """Test we restore state integration."""
     mock_restore_cache(hass, (State("button.button_1", "2021-01-01T23:59:59+00:00"),))
-
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
@@ -113,13 +107,10 @@ async def test_restore_state(
 
 
 async def test_restore_state_does_not_restore_unavailable(
-    hass: HomeAssistant, enable_custom_integrations: None
+    hass: HomeAssistant, enable_custom_integrations: None, setup_platform: None
 ) -> None:
     """Test we restore state integration except for unavailable."""
     mock_restore_cache(hass, (State("button.button_1", STATE_UNAVAILABLE),))
-
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()

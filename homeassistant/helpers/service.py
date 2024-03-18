@@ -656,7 +656,7 @@ async def async_get_all_descriptions(
         ints_or_excs = await async_get_integrations(hass, domains_with_missing_services)
         integrations: list[Integration] = []
         for domain, int_or_exc in ints_or_excs.items():
-            if type(int_or_exc) is Integration and int_or_exc.has_services:  # noqa: E721
+            if type(int_or_exc) is Integration and int_or_exc.has_services:
                 integrations.append(int_or_exc)
                 continue
             if TYPE_CHECKING:

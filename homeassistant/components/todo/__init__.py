@@ -261,15 +261,15 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update an item in the To-do list."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete an item in the To-do list."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_move_todo_item(
         self, uid: str, previous_uid: str | None = None
@@ -280,7 +280,7 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         in the list after the specified by `previous_uid` or `None` for the first
         position in the To-do list.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @final
     @callback

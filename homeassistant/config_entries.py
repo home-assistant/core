@@ -349,9 +349,6 @@ class ConfigEntry:
         # Supports remove device
         self.supports_remove_device: bool | None = None
 
-        # Supports migrate
-        self.supports_migrate: bool | None = None
-
         # Supports options
         self._supports_options: bool | None = None
 
@@ -494,7 +491,6 @@ class ConfigEntry:
             self.supports_remove_device = await support_remove_from_device(
                 hass, self.domain
             )
-
         try:
             component = await integration.async_get_component()
         except ImportError as err:
@@ -510,12 +506,7 @@ class ConfigEntry:
                 )
             return
 
-        if self.supports_migrate is None:
-            self.supports_migrate = hasattr(component, "async_migrate_entry")
-
-        if domain_is_integration and self.supports_migrate:
-            # Avoid loading the config_flow module unless we need to check
-            # the version to see if we need to migrate
+        if domain_is_integration:
             try:
                 await integration.async_get_platforms(("config_flow",))
             except ImportError as err:
@@ -796,7 +787,11 @@ class ConfigEntry:
         if same_major_version and self.minor_version == handler.MINOR_VERSION:
             return True
 
-        if not self.supports_migrate:
+        if not (integration := self._integration_for_domain):
+            integration = await loader.async_get_integration(hass, self.domain)
+        component = await integration.async_get_component()
+        supports_migrate = hasattr(component, "async_migrate_entry")
+        if not supports_migrate:
             if same_major_version:
                 return True
             _LOGGER.error(
@@ -805,11 +800,6 @@ class ConfigEntry:
                 self.domain,
             )
             return False
-
-        if not (integration := self._integration_for_domain):
-            integration = await loader.async_get_integration(hass, self.domain)
-
-        component = await integration.async_get_component()
 
         try:
             result = await component.async_migrate_entry(hass, self)
@@ -867,7 +857,7 @@ class ConfigEntry:
         if self._on_unload is not None:
             while self._on_unload:
                 if job := self._on_unload.pop()():
-                    self.async_create_task(hass, job)
+                    self.async_create_task(hass, job, eager_start=True)
 
         if not self._tasks and not self._background_tasks:
             return
@@ -1601,7 +1591,9 @@ class ConfigEntries:
             old_conf_migrate_func=_old_conf_migrator,
         )
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, self._async_shutdown, run_immediately=True
+        )
 
         if config is None:
             self._entries = ConfigEntryItems(self.hass)
