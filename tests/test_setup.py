@@ -879,16 +879,13 @@ async def test_async_start_setup_legacy_platform_integration(
     ):
         assert isinstance(setup_started[("notify", None)], float)
 
-        # Platform integration setup is awaited inside SETUP for legacy platforms
-        with setup.async_start_setup(
-            hass,
-            integration="legacy_notify_integration",
-            group="123456",
-            phase=setup.SetupPhases.PLATFORM_SETUP,
-        ):
-            assert isinstance(
-                setup_started[("legacy_notify_integration", "123456")], float
-            )
+    with setup.async_start_setup(
+        hass,
+        integration="legacy_notify_integration",
+        group="123456",
+        phase=setup.SetupPhases.PLATFORM_SETUP,
+    ):
+        assert isinstance(setup_started[("legacy_notify_integration", "123456")], float)
 
     assert setup_time["notify"] == {
         None: {
