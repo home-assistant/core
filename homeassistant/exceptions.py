@@ -2,12 +2,31 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator, Sequence
+from collections.abc import Callable, Generator, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .core import Context
+
+
+_function_cache: dict[str, Callable[[str, str, dict[str, str] | None], str]] = {}
+
+
+def import_async_get_exception_message() -> (
+    Callable[[str, str, dict[str, str] | None], str]
+):
+    """Return a method that can fetch a translated exception message.
+
+    Defaults to English, requires translations to already be cached.
+    """
+
+    # pylint: disable-next=import-outside-toplevel
+    from .helpers.translation import (
+        async_get_exception_message as async_get_exception_message_import,
+    )
+
+    return async_get_exception_message_import
 
 
 class HomeAssistantError(Exception):
@@ -52,10 +71,12 @@ class HomeAssistantError(Exception):
             assert self.translation_key is not None
             assert self.translation_domain is not None
 
-        # pylint: disable-next=import-outside-toplevel
-        from .helpers.translation import async_get_exception_message
+        if "async_get_exception_message" not in _function_cache:
+            _function_cache[
+                "async_get_exception_message"
+            ] = import_async_get_exception_message()
 
-        self._message = async_get_exception_message(
+        self._message = _function_cache["async_get_exception_message"](
             self.translation_domain, self.translation_key, self.translation_placeholders
         )
         return self._message
@@ -118,7 +139,7 @@ class ConditionError(HomeAssistantError):
 
     def output(self, indent: int) -> Generator[str, None, None]:
         """Yield an indented representation."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def __str__(self) -> str:
         """Return string representation."""

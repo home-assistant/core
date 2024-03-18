@@ -206,6 +206,33 @@ async def async_setup_integration(hass: HomeAssistant, config: ConfigType) -> No
     """Set up the legacy integration."""
     tracker = await get_tracker(hass, config)
 
+    async def async_see_service(call: ServiceCall) -> None:
+        """Service to see a device."""
+        # Temp workaround for iOS, introduced in 0.65
+        data = dict(call.data)
+        data.pop("hostname", None)
+        data.pop("battery_status", None)
+        await tracker.async_see(**data)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_SEE, async_see_service, SERVICE_SEE_PAYLOAD_SCHEMA
+    )
+
+    #
+    # The platforms load in a non-awaited tracked task
+    # to ensure device tracker setup can continue and config
+    # entry integrations are not waiting for legacy device
+    # tracker platforms to be set up.
+    #
+    hass.async_create_task(
+        _async_setup_legacy_integration(hass, config, tracker), eager_start=True
+    )
+
+
+async def _async_setup_legacy_integration(
+    hass: HomeAssistant, config: ConfigType, tracker: DeviceTracker
+) -> None:
+    """Set up the legacy integration."""
     legacy_platforms = await async_extract_config(hass, config)
 
     setup_tasks = [
@@ -233,18 +260,6 @@ async def async_setup_integration(hass: HomeAssistant, config: ConfigType) -> No
     # Clean up stale devices
     cancel_update_stale = async_track_utc_time_change(
         hass, tracker.async_update_stale, second=range(0, 60, 5)
-    )
-
-    async def async_see_service(call: ServiceCall) -> None:
-        """Service to see a device."""
-        # Temp workaround for iOS, introduced in 0.65
-        data = dict(call.data)
-        data.pop("hostname", None)
-        data.pop("battery_status", None)
-        await tracker.async_see(**data)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_SEE, async_see_service, SERVICE_SEE_PAYLOAD_SCHEMA
     )
 
     # restore
@@ -951,7 +966,7 @@ class DeviceScanner:
 
     def scan_devices(self) -> list[str]:
         """Scan for devices."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_scan_devices(self) -> list[str]:
         """Scan for devices."""
@@ -962,7 +977,7 @@ class DeviceScanner:
 
     def get_device_name(self, device: str) -> str | None:
         """Get the name of a device."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_get_device_name(self, device: str) -> str | None:
         """Get the name of a device."""
@@ -973,7 +988,7 @@ class DeviceScanner:
 
     def get_extra_attributes(self, device: str) -> dict:
         """Get the extra attributes of a device."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_get_extra_attributes(self, device: str) -> dict:
         """Get the extra attributes of a device."""

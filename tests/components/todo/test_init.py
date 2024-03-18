@@ -348,12 +348,12 @@ async def test_add_item_service_raises(
         (
             {"item": "Submit forms", "description": "Submit tax forms"},
             ServiceValidationError,
-            "does not support setting field 'description'",
+            "does not support setting field: description",
         ),
         (
             {"item": "Submit forms", "due_date": "2023-11-17"},
             ServiceValidationError,
-            "does not support setting field 'due_date'",
+            "does not support setting field: due_date",
         ),
         (
             {
@@ -361,7 +361,7 @@ async def test_add_item_service_raises(
                 "due_datetime": f"2023-11-17T17:00:00{TEST_OFFSET}",
             },
             ServiceValidationError,
-            "does not support setting field 'due_datetime'",
+            "does not support setting field: due_datetime",
         ),
     ],
 )
@@ -376,7 +376,7 @@ async def test_add_item_service_invalid_input(
 
     await create_mock_platform(hass, [test_entity])
 
-    with pytest.raises(expected_exception, match=expected_error):
+    with pytest.raises(expected_exception) as exc:
         await hass.services.async_call(
             DOMAIN,
             "add_item",
@@ -384,6 +384,8 @@ async def test_add_item_service_invalid_input(
             target={"entity_id": "todo.entity1"},
             blocking=True,
         )
+
+    assert expected_error in str(exc.value)
 
 
 @pytest.mark.parametrize(

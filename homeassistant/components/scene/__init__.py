@@ -129,7 +129,7 @@ class Scene(RestoreEntity):
 
     def activate(self, **kwargs: Any) -> None:
         """Activate scene. Try to get entities into requested state."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate scene. Try to get entities into requested state."""

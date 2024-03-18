@@ -48,9 +48,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import UNDEFINED, ConfigType
-from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util import dt as dt_util, language as language_util
-from homeassistant.util.async_ import create_eager_task
 
 from .const import (
     ATTR_CACHE,
@@ -319,6 +317,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_view(TextToSpeechView(tts))
     hass.http.register_view(TextToSpeechUrlView(tts))
 
+    platform_setups = await async_setup_legacy(hass, config)
+
     component.async_register_entity_service(
         "speak",
         {
@@ -342,18 +342,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         schema=SCHEMA_SERVICE_CLEAR_CACHE,
     )
 
-    platform_setups = await async_setup_legacy(hass, config)
-
-    # We need to add the component here break the deadlock
-    # when setting up integrations from config entries as
-    # they would otherwise wait for the tts to be
-    # setup and thus the config entries would not be able to
-    # setup their platforms.
-    hass.config.components.add(DOMAIN)
-
-    if platform_setups:
-        with async_pause_setup(hass, SetupPhases.WAIT_PLATFORM_INTEGRATION):
-            await asyncio.wait([create_eager_task(setup) for setup in platform_setups])
+    for setup in platform_setups:
+        # Tasks are created as tracked tasks to ensure startup
+        # waits for them to finish, but we explicitly do not
+        # want to wait for them to finish here because we want
+        # any config entries that use tts as a base platform
+        # to be able to start with out having to wait for the
+        # legacy platforms to finish setting up.
+        hass.async_create_task(setup, eager_start=True)
 
     return True
 
@@ -467,7 +463,7 @@ class TextToSpeechEntity(RestoreEntity):
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load tts audio file from the engine."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]

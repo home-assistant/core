@@ -112,7 +112,7 @@ class ScreenLogicNumber(ScreenLogicEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class ScreenLogicSCGNumber(ScreenLogicNumber):
