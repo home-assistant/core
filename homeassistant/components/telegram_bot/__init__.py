@@ -479,6 +479,11 @@ def initialize_bot(hass: HomeAssistant, p_config: dict) -> Bot:
                 is_persistent=False,
                 is_fixable=False,
                 severity=ir.IssueSeverity.WARNING,
+                translation_placeholders={
+                    "proxy_params": CONF_PROXY_PARAMS,
+                    "proxy_url": CONF_PROXY_URL,
+                    "telegram_bot": DOMAIN,
+                },
                 translation_key="proxy_params_auth_deprecation",
                 learn_more_url="https://github.com/home-assistant/core/pull/112778",
             )
@@ -491,6 +496,12 @@ def initialize_bot(hass: HomeAssistant, p_config: dict) -> Bot:
                 is_persistent=False,
                 is_fixable=False,
                 severity=ir.IssueSeverity.WARNING,
+                translation_placeholders={
+                    "proxy_params": CONF_PROXY_PARAMS,
+                    "proxy_url": CONF_PROXY_URL,
+                    "httpx": "httpx",
+                    "telegram_bot": DOMAIN,
+                },
                 translation_key="proxy_params_deprecation",
                 learn_more_url="https://github.com/home-assistant/core/pull/112778",
             )
