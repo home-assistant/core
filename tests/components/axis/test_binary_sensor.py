@@ -195,18 +195,64 @@ async def test_binary_sensors(
     assert state.attributes["device_class"] == entity["device_class"]
 
 
+@pytest.mark.parametrize(
+    ("event"),
+    [
+        {
+            "topic": "tns1:Device/tnsaxis:IO/Port",
+            "data_type": "state",
+            "data_value": "0",
+            "operation": "Initialized",
+            "source_name": "port",
+            "source_idx": "-1",
+        },
+        {
+            "topic": "tnsaxis:CameraApplicationPlatform/VMD/Camera1ProfileANY",
+            "data_type": "active",
+            "data_value": "1",
+        },
+        {
+            "topic": "tnsaxis:CameraApplicationPlatform/ObjectAnalytics/Device1ScenarioANY",
+            "data_type": "active",
+            "data_value": "1",
+        },
+    ],
+)
 async def test_unsupported_events(
-    hass: HomeAssistant, setup_config_entry, mock_rtsp_event
+    hass: HomeAssistant, setup_config_entry, mock_rtsp_event, event
 ) -> None:
     """Validate nothing breaks with unsupported events."""
-    mock_rtsp_event(
-        topic="tns1:Device/tnsaxis:IO/Port",
-        data_type="state",
-        data_value="0",
-        operation="Initialized",
-        source_name="port",
-        source_idx="-1",
-    )
+    mock_rtsp_event(**event)
     await hass.async_block_till_done()
-
     assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 0
+
+
+@pytest.mark.parametrize(
+    ("event", "entity_id"),
+    [
+        (
+            {
+                "topic": "tnsaxis:CameraApplicationPlatform/VMD/Camera1Profile9",
+                "data_type": "active",
+                "data_value": "1",
+            },
+            "binary_sensor.name_vmd4_camera1profile9",
+        ),
+        (
+            {
+                "topic": "tnsaxis:CameraApplicationPlatform/ObjectAnalytics/Device1Scenario8",
+                "data_type": "active",
+                "data_value": "1",
+            },
+            "binary_sensor.name_object_analytics_device1scenario8",
+        ),
+    ],
+)
+async def test_no_primary_name_for_event(
+    hass: HomeAssistant, setup_config_entry, mock_rtsp_event, event, entity_id
+) -> None:
+    """Validate fallback method for getting name works."""
+    mock_rtsp_event(**event)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 1
+    assert hass.states.get(entity_id)
