@@ -740,7 +740,7 @@ async def test_async_start_setup_running(hass: HomeAssistant) -> None:
 
 
 async def test_async_start_setup_config_entry(hass: HomeAssistant) -> None:
-    """Test setup started context manager keeps track of setup times with a config entry."""
+    """Test setup started keeps track of setup times with a config entry."""
     hass.set_state(CoreState.not_running)
     setup_started: dict[tuple[str, str | None], float]
     setup_started = hass.data.setdefault(setup.DATA_SETUP_STARTED, {})
@@ -833,7 +833,7 @@ async def test_async_start_setup_top_level_yaml(hass: HomeAssistant) -> None:
 
 
 async def test_async_start_setup_platform_integration(hass: HomeAssistant) -> None:
-    """Test setup started context manager keeps track of setup times a platform integration."""
+    """Test setup started keeps track of setup times a platform integration."""
     hass.set_state(CoreState.not_running)
     setup_started: dict[tuple[str, str | None], float]
     setup_started = hass.data.setdefault(setup.DATA_SETUP_STARTED, {})
@@ -843,13 +843,6 @@ async def test_async_start_setup_platform_integration(hass: HomeAssistant) -> No
         hass, integration="sensor", phase=setup.SetupPhases.SETUP
     ):
         assert isinstance(setup_started[("sensor", None)], float)
-        with setup.async_pause_setup(
-            hass, setup.SetupPhases.WAIT_PLATFORM_INTEGRATION
-        ), setup.async_start_setup(
-            hass, integration="filter", phase=setup.SetupPhases.SETUP
-        ):
-            assert isinstance(setup_started[("sensor", None)], float)
-            assert isinstance(setup_started[("filter", None)], float)
 
     # Platform integration setups happen in another task
     with setup.async_start_setup(
@@ -860,18 +853,104 @@ async def test_async_start_setup_platform_integration(hass: HomeAssistant) -> No
     ):
         assert isinstance(setup_started[("filter", "123456")], float)
 
-    # Platforms outside of SETUP should be tracked
     assert setup_time["sensor"] == {
+        None: {
+            setup.SetupPhases.SETUP: ANY,
+        },
+    }
+    assert setup_time["filter"] == {
+        "123456": {
+            setup.SetupPhases.PLATFORM_SETUP: ANY,
+        },
+    }
+
+
+async def test_async_start_setup_legacy_platform_integration(
+    hass: HomeAssistant,
+) -> None:
+    """Test setup started keeps track of setup times for a legacy platform integration."""
+    hass.set_state(CoreState.not_running)
+    setup_started: dict[tuple[str, str | None], float]
+    setup_started = hass.data.setdefault(setup.DATA_SETUP_STARTED, {})
+    setup_time = setup._setup_times(hass)
+
+    with setup.async_start_setup(
+        hass, integration="notify", phase=setup.SetupPhases.SETUP
+    ):
+        assert isinstance(setup_started[("notify", None)], float)
+
+        # Platform integration setup is awaited inside SETUP for legacy platforms
+        with setup.async_pause_setup(
+            hass, setup.SetupPhases.WAIT_PLATFORM_INTEGRATION
+        ), setup.async_start_setup(
+            hass,
+            integration="legacy_notify_integration",
+            group="123456",
+            phase=setup.SetupPhases.PLATFORM_SETUP,
+        ):
+            assert isinstance(
+                setup_started[("legacy_notify_integration", "123456")], float
+            )
+
+    assert setup_time["notify"] == {
         None: {
             setup.SetupPhases.SETUP: ANY,
             setup.SetupPhases.WAIT_PLATFORM_INTEGRATION: ANY,
         },
     }
-    assert setup_time["filter"] == {
-        None: {setup.SetupPhases.SETUP: ANY},
+    assert setup_time["legacy_notify_integration"] == {
         "123456": {
             setup.SetupPhases.PLATFORM_SETUP: ANY,
         },
+    }
+
+
+async def test_async_get_setup_timings(hass) -> None:
+    """Test we can get the setup timings from the setup time data."""
+    setup_time = setup._setup_times(hass)
+    # Mock setup time data
+    setup_time.update(
+        {
+            "august": {
+                None: {setup.SetupPhases.SETUP: 1},
+                "entry_id": {
+                    setup.SetupPhases.CONFIG_ENTRY_SETUP: 1,
+                    setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP: 4,
+                },
+                "entry_id2": {
+                    setup.SetupPhases.CONFIG_ENTRY_SETUP: 7,
+                    setup.SetupPhases.WAIT_BASE_PLATFORM_SETUP: -5,
+                },
+            },
+            "notify": {
+                None: {
+                    setup.SetupPhases.SETUP: 2,
+                    setup.SetupPhases.WAIT_PLATFORM_INTEGRATION: -1,
+                },
+            },
+            "legacy_notify_integration": {
+                "123456": {
+                    setup.SetupPhases.PLATFORM_SETUP: 3,
+                },
+            },
+            "sensor": {
+                None: {
+                    setup.SetupPhases.SETUP: 1,
+                },
+            },
+            "filter": {
+                "123456": {
+                    setup.SetupPhases.PLATFORM_SETUP: 2,
+                },
+            },
+        }
+    )
+    assert setup.async_get_setup_timings(hass) == {
+        "august": 6,
+        "filter": 2,
+        "legacy_notify_integration": 3,
+        "notify": 1,
+        "sensor": 1,
     }
 
 
