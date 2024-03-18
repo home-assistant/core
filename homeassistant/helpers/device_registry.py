@@ -276,6 +276,7 @@ class DeviceEntry:
             "hw_version": self.hw_version,
             "id": self.id,
             "identifiers": list(self.identifiers),
+            "labels": list(self.labels),
             "manufacturer": self.manufacturer,
             "model": self.model,
             "name_by_user": self.name_by_user,
