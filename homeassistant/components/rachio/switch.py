@@ -37,7 +37,6 @@ from .const import (
     KEY_CUSTOM_CROP,
     KEY_CUSTOM_SHADE,
     KEY_CUSTOM_SLOPE,
-    KEY_DETECT_FLOW,
     KEY_DEVICE_ID,
     KEY_DURATION,
     KEY_DURATION_MINUTES,
@@ -60,7 +59,7 @@ from .const import (
     SCHEDULE_TYPE_FLEX,
     SERVICE_SET_ZONE_MOISTURE,
     SERVICE_START_MULTIPLE_ZONES,
-    SERVICE_START_SINGLE,
+    SERVICE_START_WATERING,
     SIGNAL_RACHIO_CONTROLLER_UPDATE,
     SIGNAL_RACHIO_RAIN_DELAY_UPDATE,
     SIGNAL_RACHIO_SCHEDULE_UPDATE,
@@ -160,9 +159,9 @@ async def async_setup_entry(
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
-        SERVICE_START_SINGLE,
+        SERVICE_START_WATERING,
         {
-            vol.Required(ATTR_DURATION): cv.positive_int,
+            vol.Optional(ATTR_DURATION): cv.positive_int,
         },
         "turn_on",
     )
@@ -565,7 +564,6 @@ class RachioValve(CoordinatorEntity[RachioUpdateCoordinator], SwitchEntity):
         self._attr_unique_id = f"{self.id}-valve"
         self._static_attrs = data[KEY_STATE][KEY_REPORTED_STATE]
         self._attr_is_on = bool(KEY_CURRENT_STATUS in self._static_attrs)
-        self._detect_flow = data[KEY_DETECT_FLOW]
         self._attr_device_info = DeviceInfo(
             identifiers={
                 (

@@ -91,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "%d Rachio device(s) found; The url %s must be accessible from the internet"
             " in order to receive updates"
         ),
-        len(person.controllers + person.base_stations),
+        len(person.controllers) + len(person.base_stations),
         webhook_url,
     )
 

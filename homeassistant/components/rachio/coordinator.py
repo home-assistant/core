@@ -1,5 +1,6 @@
 """Coordinator object for the Rachio integration."""
 
+from collections import namedtuple
 from datetime import timedelta
 import logging
 
@@ -15,6 +16,8 @@ from .const import DOMAIN, KEY_ID, KEY_VALVES
 _LOGGER = logging.getLogger(__name__)
 
 UPDATE_DELAY_TIME = 8
+
+BaseData = namedtuple("BaseData", ["header", "valves"])
 
 
 class RachioUpdateCoordinator(DataUpdateCoordinator):
@@ -47,10 +50,11 @@ class RachioUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict:
         """Update smart hose timer data."""
         try:
-            data = await self.hass.async_add_executor_job(
-                self.rachio.valve.list_valves, self.base_station[KEY_ID]
+            base_info = BaseData._make(
+                await self.hass.async_add_executor_job(
+                    self.rachio.valve.list_valves, self.base_station[KEY_ID]
+                )
             )
         except Timeout as err:
             raise UpdateFailed(f"Could not connect to the Rachio API: {err}") from err
-        valves = data[1][KEY_VALVES]
-        return {valve[KEY_ID]: valve for valve in valves}
+        return {valve[KEY_ID]: valve for valve in base_info.valves[KEY_VALVES]}
