@@ -108,7 +108,7 @@ def websocket_delete_area(
         vol.Required("area_id"): str,
         vol.Optional("floor_id"): vol.Any(str, None),
         vol.Optional("icon"): vol.Any(str, None),
-        vol.Optional("labels"): [str]],
+        vol.Optional("labels"): [str],
         vol.Optional("name"): str,
         vol.Optional("picture"): vol.Any(str, None),
     }
