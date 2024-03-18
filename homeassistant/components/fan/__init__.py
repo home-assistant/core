@@ -297,8 +297,6 @@ class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if not preset_modes or preset_mode not in preset_modes:
             preset_modes_str: str = ", ".join(preset_modes or [])
             raise NotValidPresetModeError(
-                f"The preset_mode {preset_mode} is not a valid preset_mode:"
-                f" {preset_modes}",
                 translation_placeholders={
                     "preset_mode": preset_mode,
                     "preset_modes": preset_modes_str,
