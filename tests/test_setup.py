@@ -880,9 +880,7 @@ async def test_async_start_setup_legacy_platform_integration(
         assert isinstance(setup_started[("notify", None)], float)
 
         # Platform integration setup is awaited inside SETUP for legacy platforms
-        with setup.async_pause_setup(
-            hass, setup.SetupPhases.WAIT_PLATFORM_INTEGRATION
-        ), setup.async_start_setup(
+        with setup.async_start_setup(
             hass,
             integration="legacy_notify_integration",
             group="123456",
@@ -895,7 +893,6 @@ async def test_async_start_setup_legacy_platform_integration(
     assert setup_time["notify"] == {
         None: {
             setup.SetupPhases.SETUP: ANY,
-            setup.SetupPhases.WAIT_PLATFORM_INTEGRATION: ANY,
         },
     }
     assert setup_time["legacy_notify_integration"] == {
@@ -945,7 +942,6 @@ async def test_async_get_setup_timings(hass) -> None:
             "notify": {
                 None: {
                     setup.SetupPhases.SETUP: 2,
-                    setup.SetupPhases.WAIT_PLATFORM_INTEGRATION: -1,
                 },
             },
             "legacy_notify_integration": {
