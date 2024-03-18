@@ -226,6 +226,12 @@ class EntityPlatform:
         if not hasattr(platform, "async_setup_platform") and not hasattr(
             platform, "setup_platform"
         ):
+            # Bail out the setup for legacy notify services that implement
+            # The legacy setup methods.
+            if hasattr(platform, "async_get_service") or hasattr(
+                platform, "get_service"
+            ):
+                return
             self.logger.error(
                 (
                     "The %s platform for the %s integration does not support platform"

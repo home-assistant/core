@@ -20,6 +20,39 @@ notify:
       selector:
         object:
 
+send_message:
+  target:
+    entity:
+      domain: notify
+  fields:
+    message:
+      selector:
+        text:
+      filter:
+        supported_features:
+          - notify.NotifyEntityFeature.MESSAGE
+    title:
+      selector:
+        text:
+      filter:
+        supported_features:
+          - notify.NotifyEntityFeature.TITLE
+    recipients:
+      selector:
+        select:
+          options: []
+          custom_value: true
+          multiple: true
+      filter:
+        supported_features:
+          - notify.NotifyEntityFeature.RECIPIENTS
+    data:
+      selector:
+        object:
+      filter:
+        supported_features:
+          - notify.NotifyEntityFeature.DATA
+
 persistent_notification:
   fields:
     message:
