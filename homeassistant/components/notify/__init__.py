@@ -12,6 +12,8 @@ from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.setup import SetupPhases, async_pause_setup
+from homeassistant.util.async_ import create_eager_task
 
 from .const import (  # noqa: F401
     ATTR_DATA,
@@ -55,7 +57,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.config.components.add(DOMAIN)
 
     if platform_setups:
-        await asyncio.wait([asyncio.create_task(setup) for setup in platform_setups])
+        with async_pause_setup(hass, SetupPhases.WAIT_PLATFORM_INTEGRATION):
+            await asyncio.wait([create_eager_task(setup) for setup in platform_setups])
 
     async def persistent_notification(service: ServiceCall) -> None:
         """Send notification via the built-in persistent_notify integration."""

@@ -57,6 +57,7 @@ from homeassistant.setup import (
     async_start_setup,
 )
 from homeassistant.util import dt as dt_util
+from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.yaml import dump
 
 from .const import (
@@ -208,12 +209,13 @@ async def async_setup_integration(hass: HomeAssistant, config: ConfigType) -> No
     legacy_platforms = await async_extract_config(hass, config)
 
     setup_tasks = [
-        asyncio.create_task(legacy_platform.async_setup_legacy(hass, tracker))
+        create_eager_task(legacy_platform.async_setup_legacy(hass, tracker))
         for legacy_platform in legacy_platforms
     ]
 
     if setup_tasks:
-        await asyncio.wait(setup_tasks)
+        with async_pause_setup(hass, SetupPhases.WAIT_PLATFORM_INTEGRATION):
+            await asyncio.wait(setup_tasks)
 
     async def async_platform_discovered(
         p_type: str, info: dict[str, Any] | None
