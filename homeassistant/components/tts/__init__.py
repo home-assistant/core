@@ -319,12 +319,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_view(TextToSpeechView(tts))
     hass.http.register_view(TextToSpeechUrlView(tts))
 
-    platform_setups = await async_setup_legacy(hass, config)
-
-    if platform_setups:
-        with async_pause_setup(hass, SetupPhases.WAIT_PLATFORM_INTEGRATION):
-            await asyncio.wait([create_eager_task(setup) for setup in platform_setups])
-
     component.async_register_entity_service(
         "speak",
         {
@@ -347,6 +341,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         async_clear_cache_handle,
         schema=SCHEMA_SERVICE_CLEAR_CACHE,
     )
+
+    platform_setups = await async_setup_legacy(hass, config)
+
+    # We need to add the component here break the deadlock
+    # when setting up integrations from config entries as
+    # they would otherwise wait for the tts to be
+    # setup and thus the config entries would not be able to
+    # setup their platforms.
+    hass.config.components.add(DOMAIN)
+
+    if platform_setups:
+        with async_pause_setup(hass, SetupPhases.WAIT_PLATFORM_INTEGRATION):
+            await asyncio.wait([create_eager_task(setup) for setup in platform_setups])
 
     return True
 

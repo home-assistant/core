@@ -127,13 +127,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     component.register_shutdown()
+
+    hass.http.register_view(SpeechToTextView(hass.data[DATA_PROVIDERS]))
+
+    # We need to add the component here break the deadlock
+    # when setting up integrations from config entries as
+    # they would otherwise wait for the stt to be
+    # setup and thus the config entries would not be able to
+    # setup their platforms.
+    hass.config.components.add(DOMAIN)
+
     platform_setups = async_setup_legacy(hass, config)
 
     if platform_setups:
         with async_pause_setup(hass, SetupPhases.WAIT_PLATFORM_INTEGRATION):
             await asyncio.wait([create_eager_task(setup) for setup in platform_setups])
 
-    hass.http.register_view(SpeechToTextView(hass.data[DATA_PROVIDERS]))
     return True
 
 
