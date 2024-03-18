@@ -85,22 +85,7 @@ class HomeAssistantError(Exception):
 class ConfigValidationError(HomeAssistantError, ExceptionGroup[Exception]):
     """A validation exception occurred when validating the configuration."""
 
-    def __init__(
-        self,
-        message: str,
-        exceptions: list[Exception],
-        translation_domain: str | None = None,
-        translation_key: str | None = None,
-        translation_placeholders: dict[str, str] | None = None,
-    ) -> None:
-        """Initialize exception."""
-        super().__init__(
-            *(message, exceptions),
-            translation_domain=translation_domain,
-            translation_key=translation_key,
-            translation_placeholders=translation_placeholders,
-        )
-        self._message = message
+    generate_message: bool = True
 
 
 class ServiceValidationError(HomeAssistantError):

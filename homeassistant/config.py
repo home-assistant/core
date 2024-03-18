@@ -1183,7 +1183,11 @@ def _get_log_message_and_stack_print_pref(
     platform_config = platform_exception.config
     link = platform_exception.integration_link
 
-    placeholders: dict[str, str] = {"domain": domain, "error": str(exception)}
+    placeholders: dict[str, str] = {
+        "domain": domain,
+        "error": str(exception),
+        "p_name": platform_path,
+    }
 
     log_message_mapping: dict[ConfigErrorTranslationKey, tuple[str, bool]] = {
         ConfigErrorTranslationKey.COMPONENT_IMPORT_ERR: (
@@ -1350,16 +1354,12 @@ def async_handle_component_errors(
     else:
         translation_key = ConfigErrorTranslationKey.INTEGRATION_CONFIG_ERROR
         errors = str(len(config_exception_info))
-        log_message = (
-            f"Failed to process component config for integration {domain} "
-            f"due to multiple errors ({errors}), check the logs for more information."
-        )
         placeholders = {
             "domain": domain,
             "errors": errors,
         }
     raise ConfigValidationError(
-        str(log_message),
+        translation_key,
         [platform_exception.exception for platform_exception in config_exception_info],
         translation_domain="homeassistant",
         translation_key=translation_key,
