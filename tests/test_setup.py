@@ -779,7 +779,7 @@ async def test_async_start_setup_config_entry(hass: HomeAssistant) -> None:
     ):
         assert isinstance(setup_started[("august", "entry_id")], float)
     # Platforms outside of CONFIG_ENTRY_SETUP should be tracked
-    # This is simulates a late platform forward
+    # This simulates a late platform forward
     assert setup_time["august"] == {
         None: {setup.SetupPhases.SETUP: ANY},
         "entry_id": {
