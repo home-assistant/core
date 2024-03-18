@@ -23,24 +23,6 @@ class TTN_EntrySettings:
 
         self.__entry = entry
 
-    def get_device_ids(self):
-        """Get device IDs."""
-
-        device_ids = list(
-            {entity.device_id for entity in self.__entry.entities.values()}
-        )
-        device_ids.sort()
-        return device_ids
-
-    def get_field_ids(self):
-        """Get field IDs."""
-
-        get_field_ids = list(
-            {entity.field_id for entity in self.__entry.entities.values()}
-        )
-        get_field_ids.sort()
-        return get_field_ids
-
     def get_entities(self) -> dict:
         """Get created TTN entities."""
 
