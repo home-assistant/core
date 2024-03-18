@@ -1,4 +1,5 @@
 """Event parser and human readable log generator."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Generator, Sequence
@@ -427,7 +428,7 @@ class EventCache:
 
     def get(self, row: EventAsRow | Row) -> LazyEventPartialState:
         """Get the event from the row."""
-        if type(row) is EventAsRow:  # noqa: E721 - this is never subclassed
+        if type(row) is EventAsRow:  # - this is never subclassed
             return LazyEventPartialState(row, self._event_data_cache)
         if event := self.event_cache.get(row):
             return event

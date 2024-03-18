@@ -1,4 +1,5 @@
 """Support for Harmony Hub select activities."""
+
 from __future__ import annotations
 
 import logging
@@ -6,7 +7,7 @@ import logging
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HassJob, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ACTIVITY_POWER_OFF, DOMAIN, HARMONY_DATA
@@ -44,16 +45,9 @@ class HarmonyActivitySelect(HarmonyEntity, SelectEntity):
         self._attr_name = name
 
     @property
-    def icon(self) -> str:
-        """Return a representative icon."""
-        if not self.available or self.current_option == TRANSLATABLE_POWER_OFF:
-            return "mdi:remote-tv-off"
-        return "mdi:remote-tv"
-
-    @property
     def options(self) -> list[str]:
         """Return a set of selectable options."""
-        return [TRANSLATABLE_POWER_OFF] + sorted(self._data.activity_names)
+        return [TRANSLATABLE_POWER_OFF, *sorted(self._data.activity_names)]
 
     @property
     def current_option(self) -> str | None:
@@ -72,13 +66,14 @@ class HarmonyActivitySelect(HarmonyEntity, SelectEntity):
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
+        activity_update_job = HassJob(self._async_activity_update)
         self.async_on_remove(
             self._data.async_subscribe(
                 HarmonyCallback(
-                    connected=self.async_got_connected,
-                    disconnected=self.async_got_disconnected,
-                    activity_starting=self._async_activity_update,
-                    activity_started=self._async_activity_update,
+                    connected=HassJob(self.async_got_connected),
+                    disconnected=HassJob(self.async_got_disconnected),
+                    activity_starting=activity_update_job,
+                    activity_started=activity_update_job,
                     config_updated=None,
                 )
             )

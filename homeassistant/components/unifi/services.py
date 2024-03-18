@@ -1,4 +1,5 @@
 """UniFi Network services."""
+
 from collections.abc import Mapping
 from typing import Any
 

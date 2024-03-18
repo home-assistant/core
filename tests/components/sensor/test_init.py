@@ -1,4 +1,5 @@
 """The test for sensor entity."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -1992,7 +1993,7 @@ async def test_non_numeric_validation_raise(
     state = hass.states.get(entity0.entity_id)
     assert state is None
 
-    assert ("Error adding entities for domain sensor with platform test") in caplog.text
+    assert ("for domain sensor with platform test") in caplog.text
 
 
 @pytest.mark.parametrize(

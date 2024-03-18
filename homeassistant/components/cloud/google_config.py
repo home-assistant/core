@@ -1,4 +1,5 @@
 """Google config for Cloud."""
+
 from __future__ import annotations
 
 import asyncio
@@ -330,8 +331,18 @@ class CloudGoogleConfig(AbstractConfig):
         """Return if we have a Agent User Id registered."""
         return len(self.async_get_agent_users()) > 0
 
-    def get_agent_user_id(self, context: Any) -> str:
+    def get_agent_user_id_from_context(self, context: Any) -> str:
         """Get agent user ID making request."""
+        return self.agent_user_id
+
+    def get_agent_user_id_from_webhook(self, webhook_id: str) -> str | None:
+        """Map webhook ID to a Google agent user ID.
+
+        Return None if no agent user id is found for the webhook_id.
+        """
+        if webhook_id != self._prefs.google_local_webhook_id:
+            return None
+
         return self.agent_user_id
 
     def _2fa_disabled_legacy(self, entity_id: str) -> bool | None:

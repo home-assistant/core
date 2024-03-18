@@ -1,4 +1,5 @@
 """The test for weather entity."""
+
 from datetime import datetime
 
 import pytest
@@ -256,10 +257,12 @@ async def test_temperature_no_unit(
     )
 
 
-@pytest.mark.parametrize("native_unit", (UnitOfPressure.INHG, UnitOfPressure.INHG))
 @pytest.mark.parametrize(
-    ("state_unit", "unit_system"),
-    ((UnitOfPressure.HPA, METRIC_SYSTEM), (UnitOfPressure.INHG, US_CUSTOMARY_SYSTEM)),
+    ("state_unit", "unit_system", "native_unit"),
+    (
+        (UnitOfPressure.HPA, METRIC_SYSTEM, UnitOfPressure.INHG),
+        (UnitOfPressure.INHG, US_CUSTOMARY_SYSTEM, UnitOfPressure.INHG),
+    ),
 )
 async def test_pressure(
     hass: HomeAssistant,

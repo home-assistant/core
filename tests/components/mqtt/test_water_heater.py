@@ -1,4 +1,5 @@
 """The tests for the mqtt water heater component."""
+
 import copy
 import json
 from typing import Any
@@ -24,7 +25,7 @@ from homeassistant.components.water_heater import (
     STATE_PERFORMANCE,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, Platform, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.util.unit_conversion import TemperatureConverter
 
@@ -93,13 +94,6 @@ DEFAULT_CONFIG = {
         }
     }
 }
-
-
-@pytest.fixture(autouse=True)
-def water_heater_platform_only():
-    """Only setup the water heater platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.WATER_HEATER]):
-        yield
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])

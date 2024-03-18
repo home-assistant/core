@@ -1,4 +1,5 @@
 """Test the Advantage Air Cover Platform."""
+
 from unittest.mock import AsyncMock
 
 from homeassistant.components.cover import (

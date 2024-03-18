@@ -11,6 +11,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.systemmonitor.const import DOMAIN
+from homeassistant.components.systemmonitor.coordinator import VirtualMemory
 from homeassistant.components.systemmonitor.sensor import get_cpu_icon
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -18,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import MockProcess, svmem
+from .conftest import MockProcess
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -28,7 +29,6 @@ async def test_sensor(
     entity_registry_enabled_by_default: None,
     mock_psutil: Mock,
     mock_os: Mock,
-    mock_util: Mock,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -60,7 +60,6 @@ async def test_sensor(
         "state_class": "measurement",
         "unit_of_measurement": "MiB",
         "device_class": "data_size",
-        "icon": "mdi:memory",
         "friendly_name": "System Monitor Memory free",
     }
 
@@ -82,7 +81,6 @@ async def test_process_sensor_not_loaded(
     entity_registry_enabled_by_default: None,
     mock_psutil: Mock,
     mock_os: Mock,
-    mock_util: Mock,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -128,7 +126,6 @@ async def test_sensor_not_loading_veth_networks(
 async def test_sensor_icon(
     hass: HomeAssistant,
     entity_registry_enabled_by_default: None,
-    mock_util: Mock,
     mock_psutil: Mock,
     mock_os: Mock,
     mock_config_entry: MockConfigEntry,
@@ -150,7 +147,6 @@ async def test_sensor_yaml(
     entity_registry_enabled_by_default: None,
     mock_psutil: Mock,
     mock_os: Mock,
-    mock_util: Mock,
 ) -> None:
     """Test the sensor imported from YAML."""
     config = {
@@ -182,7 +178,6 @@ async def test_sensor_yaml_fails_missing_argument(
     entity_registry_enabled_by_default: None,
     mock_psutil: Mock,
     mock_os: Mock,
-    mock_util: Mock,
 ) -> None:
     """Test the sensor imported from YAML fails on missing mandatory argument."""
     config = {
@@ -203,7 +198,6 @@ async def test_sensor_updating(
     hass: HomeAssistant,
     mock_psutil: Mock,
     mock_os: Mock,
-    mock_util: Mock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the sensor."""
@@ -245,18 +239,12 @@ async def test_sensor_updating(
     assert memory_sensor.state == STATE_UNAVAILABLE
 
     mock_psutil.virtual_memory.side_effect = None
-    mock_psutil.virtual_memory.return_value = svmem(
+    mock_psutil.virtual_memory.return_value = VirtualMemory(
         100 * 1024**2,
         25 * 1024**2,
         25.0,
         60 * 1024**2,
         30 * 1024**2,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
     )
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
@@ -271,7 +259,6 @@ async def test_sensor_process_fails(
     hass: HomeAssistant,
     mock_psutil: Mock,
     mock_os: Mock,
-    mock_util: Mock,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -394,7 +381,6 @@ async def test_sensor_network_sensors(
 async def test_missing_cpu_temperature(
     hass: HomeAssistant,
     entity_registry_enabled_by_default: None,
-    mock_util: Mock,
     mock_psutil: Mock,
     mock_os: Mock,
     mock_config_entry: MockConfigEntry,
@@ -404,7 +390,7 @@ async def test_missing_cpu_temperature(
     mock_psutil.sensors_temperatures.return_value = {
         "not_exist": [shwtemp("not_exist", 50.0, 60.0, 70.0)]
     }
-    mock_util.sensors_temperatures.return_value = {
+    mock_psutil.sensors_temperatures.return_value = {
         "not_exist": [shwtemp("not_exist", 50.0, 60.0, 70.0)]
     }
     mock_config_entry.add_to_hass(hass)
@@ -419,7 +405,6 @@ async def test_missing_cpu_temperature(
 async def test_processor_temperature(
     hass: HomeAssistant,
     entity_registry_enabled_by_default: None,
-    mock_util: Mock,
     mock_psutil: Mock,
     mock_os: Mock,
     mock_config_entry: MockConfigEntry,
@@ -487,10 +472,7 @@ async def test_exception_handling_disk_sensor(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (
-        "Error fetching System Monitor Disk / coordinator data: OS error for /"
-        in caplog.text
-    )
+    assert "OS error for /" in caplog.text
 
     disk_sensor = hass.states.get("sensor.system_monitor_disk_free")
     assert disk_sensor is not None
@@ -503,10 +485,7 @@ async def test_exception_handling_disk_sensor(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (
-        "Error fetching System Monitor Disk / coordinator data: OS error for /"
-        in caplog.text
-    )
+    assert "OS error for /" in caplog.text
 
     disk_sensor = hass.states.get("sensor.system_monitor_disk_free")
     assert disk_sensor is not None
@@ -564,3 +543,76 @@ async def test_cpu_percentage_is_zero_returns_unknown(
     cpu_sensor = hass.states.get("sensor.system_monitor_processor_use")
     assert cpu_sensor is not None
     assert cpu_sensor.state == "15"
+
+
+async def test_remove_obsolete_entities(
+    hass: HomeAssistant,
+    mock_psutil: Mock,
+    mock_added_config_entry: ConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test we remove sensors that are not actual and disabled."""
+    cpu_sensor = hass.states.get("sensor.system_monitor_processor_use")
+    assert cpu_sensor is None
+    cpu_sensor_entity = entity_registry.async_get("sensor.system_monitor_processor_use")
+    assert cpu_sensor_entity.disabled is True
+
+    assert (
+        len(
+            entity_registry.entities.get_entries_for_config_entry_id(
+                mock_added_config_entry.entry_id
+            )
+        )
+        == 37
+    )
+
+    entity_registry.async_update_entity(
+        "sensor.system_monitor_processor_use", disabled_by=None
+    )
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Fake an entity which should be removed as not supported and disabled
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "network_out_veth12345",
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+        config_entry=mock_added_config_entry,
+        has_entity_name=True,
+        device_id=cpu_sensor_entity.device_id,
+        translation_key="network_out",
+    )
+    # Fake an entity which should not be removed as not supported but not disabled
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "network_out_veth54321",
+        disabled_by=None,
+        config_entry=mock_added_config_entry,
+        has_entity_name=True,
+        device_id=cpu_sensor_entity.device_id,
+        translation_key="network_out",
+    )
+    await hass.config_entries.async_reload(mock_added_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        len(
+            entity_registry.entities.get_entries_for_config_entry_id(
+                mock_added_config_entry.entry_id
+            )
+        )
+        == 38
+    )
+
+    assert (
+        entity_registry.async_get("sensor.systemmonitor_network_out_veth12345") is None
+    )
+    assert (
+        entity_registry.async_get("sensor.systemmonitor_network_out_veth54321")
+        is not None
+    )

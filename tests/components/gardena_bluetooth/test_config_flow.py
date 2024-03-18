@@ -1,4 +1,5 @@
 """Test the Gardena Bluetooth config flow."""
+
 from unittest.mock import Mock
 
 from gardena_bluetooth.exceptions import CharacteristicNotFound

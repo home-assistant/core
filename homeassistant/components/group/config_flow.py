@@ -1,4 +1,5 @@
 """Config flow for Group integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine, Mapping
@@ -21,10 +22,10 @@ from homeassistant.helpers.schema_config_entry_flow import (
     entity_selector_without_own_entities,
 )
 
-from . import DOMAIN, GroupEntity
 from .binary_sensor import CONF_ALL, async_create_preview_binary_sensor
-from .const import CONF_HIDE_MEMBERS, CONF_IGNORE_NON_NUMERIC
+from .const import CONF_HIDE_MEMBERS, CONF_IGNORE_NON_NUMERIC, DOMAIN
 from .cover import async_create_preview_cover
+from .entity import GroupEntity
 from .event import async_create_preview_event
 from .fan import async_create_preview_fan
 from .light import async_create_preview_light

@@ -1,4 +1,5 @@
 """Tests for the numato binary_sensor platform."""
+
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery

@@ -1,4 +1,5 @@
 """Support for Velbus Binary Sensors."""
+
 from velbusaio.channels import Button as VelbusButton
 
 from homeassistant.components.binary_sensor import BinarySensorEntity

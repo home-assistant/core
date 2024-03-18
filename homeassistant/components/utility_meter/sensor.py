@@ -1,4 +1,5 @@
 """Utility meter from sensors providing raw data."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -27,7 +28,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfEnergy,
 )
-from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers import (
     device_registry as dr,
     entity_platform,
@@ -43,7 +44,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.template import is_number
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
@@ -465,7 +466,7 @@ class UtilityMeterSensor(RestoreSensor):
         return None
 
     @callback
-    def async_reading(self, event: EventType[EventStateChangedData]) -> None:
+    def async_reading(self, event: Event[EventStateChangedData]) -> None:
         """Handle the sensor state changes."""
         if (
             source_state := self.hass.states.get(self._sensor_source_id)
@@ -516,7 +517,7 @@ class UtilityMeterSensor(RestoreSensor):
         self.async_write_ha_state()
 
     @callback
-    def async_tariff_change(self, event: EventType[EventStateChangedData]) -> None:
+    def async_tariff_change(self, event: Event[EventStateChangedData]) -> None:
         """Handle tariff changes."""
         if (new_state := event.data["new_state"]) is None:
             return
@@ -570,7 +571,7 @@ class UtilityMeterSensor(RestoreSensor):
 
     async def async_reset_meter(self, entity_id):
         """Reset meter."""
-        if self._tariff_entity != entity_id:
+        if self._tariff is not None and self._tariff_entity != entity_id:
             return
         _LOGGER.debug("Reset utility meter <%s>", self.entity_id)
         self._last_reset = dt_util.utcnow()

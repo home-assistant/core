@@ -1,4 +1,5 @@
 """Test Roborock Time platform."""
+
 from datetime import time
 from unittest.mock import patch
 

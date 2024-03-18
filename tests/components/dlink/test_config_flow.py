@@ -1,4 +1,5 @@
 """Test D-Link Smart Plug config flow."""
+
 from unittest.mock import MagicMock, patch
 
 from homeassistant import data_entry_flow

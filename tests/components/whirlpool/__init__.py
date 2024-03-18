@@ -1,4 +1,5 @@
 """Tests for the Whirlpool Sixth Sense integration."""
+
 from homeassistant.components.whirlpool.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant

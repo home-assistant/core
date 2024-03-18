@@ -1,4 +1,5 @@
 """The Bond integration."""
+
 from http import HTTPStatus
 import logging
 from typing import Any
@@ -67,7 +68,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(_async_stop_event)
     entry.async_on_unload(
-        hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, _async_stop_event)
+        hass.bus.async_listen(
+            EVENT_HOMEASSISTANT_STOP, _async_stop_event, run_immediately=True
+        )
     )
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = BondData(hub, bpup_subs)
 

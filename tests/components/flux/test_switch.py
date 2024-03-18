@@ -1,4 +1,5 @@
 """The tests for the Flux switch platform."""
+
 from unittest.mock import patch
 
 from freezegun import freeze_time

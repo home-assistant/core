@@ -1,4 +1,5 @@
 """Test the Risco config flow."""
+
 from unittest.mock import PropertyMock, patch
 
 import pytest
@@ -248,7 +249,8 @@ async def test_local_form(hass: HomeAssistant) -> None:
 
     expected_data = {
         **TEST_LOCAL_DATA,
-        **{"type": "local", CONF_COMMUNICATION_DELAY: 0},
+        "type": "local",
+        CONF_COMMUNICATION_DELAY: 0,
     }
     assert result3["type"] == FlowResultType.CREATE_ENTRY
     assert result3["title"] == TEST_SITE_NAME

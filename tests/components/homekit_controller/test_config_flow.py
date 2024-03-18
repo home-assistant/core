@@ -1,4 +1,5 @@
 """Tests for homekit_controller config flow."""
+
 import asyncio
 from ipaddress import ip_address
 import unittest.mock

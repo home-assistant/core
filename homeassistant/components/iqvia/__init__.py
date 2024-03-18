@@ -1,4 +1,5 @@
 """Support for IQVIA."""
+
 from __future__ import annotations
 
 import asyncio
@@ -46,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not entry.unique_id:
         # If the config entry doesn't already have a unique ID, set one:
         hass.config_entries.async_update_entry(
-            entry, **{"unique_id": entry.data[CONF_ZIP_CODE]}
+            entry, unique_id=entry.data[CONF_ZIP_CODE]
         )
 
     websession = aiohttp_client.async_get_clientsession(hass)
@@ -91,7 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # The IQVIA API can be selectively flaky, meaning that any number of the setup
         # API calls could fail. We only retry integration setup if *all* of the initial
         # API calls fail:
-        raise ConfigEntryNotReady()
+        raise ConfigEntryNotReady
 
     # Once we've successfully authenticated, we re-enable client request retries:
     client.enable_request_retries()

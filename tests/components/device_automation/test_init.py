@@ -1,4 +1,5 @@
 """The test for light device automation."""
+
 from unittest.mock import AsyncMock, Mock, patch
 
 import attr
@@ -1275,11 +1276,9 @@ BAD_AUTOMATIONS = [
     ),
 ]
 
-BAD_TRIGGERS = BAD_CONDITIONS = BAD_AUTOMATIONS + [
-    (
-        {"domain": "light"},
-        "required key not provided @ data{path}['device_id']",
-    )
+BAD_TRIGGERS = BAD_CONDITIONS = [
+    *BAD_AUTOMATIONS,
+    ({"domain": "light"}, "required key not provided @ data{path}['device_id']"),
 ]
 
 
