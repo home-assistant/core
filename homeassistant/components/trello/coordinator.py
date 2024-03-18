@@ -9,7 +9,8 @@ from trello.batch.board import Board as BatchBoard
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import LOGGER, Board, List
+from .const import LOGGER
+from .models import Board, List
 
 
 class TrelloDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Board]]):

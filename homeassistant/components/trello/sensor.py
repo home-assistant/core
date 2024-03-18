@@ -8,8 +8,9 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, Board, List
+from .const import DOMAIN
 from .coordinator import TrelloDataUpdateCoordinator
+from .models import Board, List
 
 
 class TrelloSensor(CoordinatorEntity[TrelloDataUpdateCoordinator], SensorEntity):
