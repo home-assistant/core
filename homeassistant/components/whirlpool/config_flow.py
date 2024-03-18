@@ -100,10 +100,7 @@ class WhirlpoolConfigFlow(ConfigFlow, domain=DOMAIN):
             except (CannotConnect, TimeoutError):
                 errors["base"] = "cannot_connect"
             else:
-                self.hass.config_entries.async_update_entry(
-                    self.entry,
-                    data=data,
-                )
+                self.hass.config_entries.async_update_entry(self.entry, data=data)
                 await self.hass.config_entries.async_reload(self.entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
 
