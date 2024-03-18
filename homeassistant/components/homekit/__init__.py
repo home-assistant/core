@@ -384,7 +384,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await homekit.async_stop()
 
     logged_shutdown_wait = False
-    for _ in range(0, SHUTDOWN_TIMEOUT):
+    for _ in range(SHUTDOWN_TIMEOUT):
         if async_port_is_available(entry.data[CONF_PORT]):
             break
 
@@ -1163,7 +1163,7 @@ class HomeKitPairingQRView(HomeAssistantView):
     async def get(self, request: web.Request) -> web.Response:
         """Retrieve the pairing QRCode image."""
         if not request.query_string:
-            raise Unauthorized()
+            raise Unauthorized
         entry_id, secret = request.query_string.split("-")
         hass = request.app[KEY_HASS]
         domain_data: dict[str, HomeKitEntryData] = hass.data[DOMAIN]
@@ -1173,7 +1173,7 @@ class HomeKitPairingQRView(HomeAssistantView):
             or not entry_data.pairing_qr_secret
             or secret != entry_data.pairing_qr_secret
         ):
-            raise Unauthorized()
+            raise Unauthorized
         return web.Response(
             body=entry_data.pairing_qr,
             content_type="image/svg+xml",

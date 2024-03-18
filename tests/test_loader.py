@@ -72,7 +72,7 @@ def test_component_loader_non_existing(hass: HomeAssistant) -> None:
     """Test loading components."""
     components = loader.Components(hass)
     with pytest.raises(ImportError):
-        components.non_existing
+        _ = components.non_existing
 
 
 async def test_component_wrapper(hass: HomeAssistant) -> None:

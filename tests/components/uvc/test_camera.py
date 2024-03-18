@@ -472,7 +472,7 @@ async def test_login_tries_both_addrs_and_caches(
         """Mock get snapshots."""
         try:
             snapshots.pop(0)
-            raise camera.CameraAuthError()
+            raise camera.CameraAuthError
         except IndexError:
             pass
         return "test_image"
