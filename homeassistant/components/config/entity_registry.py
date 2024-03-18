@@ -165,7 +165,7 @@ def websocket_get_entities(
         vol.Optional("categories"): cv.schema_with_slug_keys(vol.Any(str, None)),
         vol.Optional("device_class"): vol.Any(str, None),
         vol.Optional("icon"): vol.Any(str, None),
-        vol.Optional("labels"): list,
+        vol.Optional("labels"): [str],
         vol.Optional("name"): vol.Any(str, None),
         vol.Optional("new_entity_id"): str,
         # We only allow setting disabled_by user via API.
