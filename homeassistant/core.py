@@ -1432,7 +1432,7 @@ class EventBus:
         event_type: str,
         listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
         event_filter: Callable[[Event[_DataT]], bool] | None = None,
-        run_immediately: bool = False,
+        run_immediately: bool = True,
     ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
 
@@ -1496,7 +1496,7 @@ class EventBus:
         self,
         event_type: str,
         listener: Callable[[Event[Any]], Coroutine[Any, Any, None] | None],
-        run_immediately: bool = False,
+        run_immediately: bool = True,
     ) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 
