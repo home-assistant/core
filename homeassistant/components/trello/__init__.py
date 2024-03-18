@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from .const import CONF_BOARD_IDS, DOMAIN
 from .coordinator import TrelloDataUpdateCoordinator
 
-PLATFORMS: list[str] = [Platform.SENSOR]
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
