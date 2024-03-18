@@ -937,13 +937,8 @@ async def _async_set_up_integrations(
     watcher.async_stop()
 
     if _LOGGER.isEnabledFor(logging.DEBUG):
+        setup_time = async_get_setup_timings(hass)
         _LOGGER.debug(
             "Integration setup times: %s",
-            dict(
-                sorted(
-                    async_get_setup_timings(hass).items(),
-                    key=itemgetter(1),
-                    reverse=True,
-                )
-            ),
+            dict(sorted(setup_time.items(), key=itemgetter(1), reverse=True)),
         )
