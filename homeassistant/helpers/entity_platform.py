@@ -32,7 +32,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.generated import languages
-from homeassistant.setup import SetupPhases, async_start_setup
+from homeassistant.setup import SetupPhases, async_pause_setup, async_start_setup
 from homeassistant.util.async_ import create_eager_task
 
 from . import (
@@ -284,7 +284,9 @@ class EntityPlatform:
                 discovery_info,
             )
 
-        with async_start_setup(
+        with async_pause_setup(
+            hass, SetupPhases.PLATFORM_INTEGRATION
+        ), async_start_setup(
             hass,
             integration=self.platform_name,
             group=str(id(platform_config)),

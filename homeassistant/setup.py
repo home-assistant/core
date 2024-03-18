@@ -669,6 +669,12 @@ class SetupPhases(StrEnum):
     """
     Time spent waiting for the platforms to import
     """
+    PLATFORM_INTEGRATION = "wait_platform_integration"
+    """
+    Time spent waiting for a platform integration
+    to setup inside of a base platform. ex
+    a `- platform: XXX` under `sensor:` in configuration.yaml
+    """
 
 
 @contextlib.contextmanager
