@@ -836,18 +836,23 @@ def test_event_eq() -> None:
     data = {"some": "attr"}
     context = ha.Context()
     event1, event2 = (
-        ha.Event("some_type", data, time_fired=now, context=context) for _ in range(2)
+        ha.Event(
+            "some_type", data, time_fired_timestamp=now.timestamp(), context=context
+        )
+        for _ in range(2)
     )
 
     assert event1.as_dict() == event2.as_dict()
 
 
-def test_event_time_fired_timestamp() -> None:
-    """Test time_fired_timestamp."""
+def test_event_time() -> None:
+    """Test time_fired and time_fired_timestamp."""
     now = dt_util.utcnow()
-    event = ha.Event("some_type", {"some": "attr"}, time_fired=now)
+    event = ha.Event(
+        "some_type", {"some": "attr"}, time_fired_timestamp=now.timestamp()
+    )
     assert event.time_fired_timestamp == now.timestamp()
-    assert event.time_fired_timestamp == now.timestamp()
+    assert event.time_fired == now
 
 
 def test_event_json_fragment() -> None:
@@ -856,7 +861,10 @@ def test_event_json_fragment() -> None:
     data = {"some": "attr"}
     context = ha.Context()
     event1, event2 = (
-        ha.Event("some_type", data, time_fired=now, context=context) for _ in range(2)
+        ha.Event(
+            "some_type", data, time_fired_timestamp=now.timestamp(), context=context
+        )
+        for _ in range(2)
     )
 
     # We are testing that the JSON fragments are the same when as_dict is called
@@ -898,7 +906,7 @@ def test_event_as_dict() -> None:
     now = dt_util.utcnow()
     data = {"some": "attr"}
 
-    event = ha.Event(event_type, data, ha.EventOrigin.local, now)
+    event = ha.Event(event_type, data, ha.EventOrigin.local, now.timestamp())
     expected = {
         "event_type": event_type,
         "data": data,
@@ -1108,9 +1116,9 @@ async def test_eventbus_filtered_listener(hass: HomeAssistant) -> None:
         calls.append(event)
 
     @ha.callback
-    def filter(event):
+    def filter(event_filter):
         """Mock filter."""
-        return not event.data["filtered"]
+        return not event_filter["filtered"]
 
     unsub = hass.bus.async_listen("test", listener, event_filter=filter)
 
