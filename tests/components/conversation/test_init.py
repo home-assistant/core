@@ -535,9 +535,12 @@ async def test_turn_on_intent(
 
 async def test_service_fails(hass: HomeAssistant, init_components) -> None:
     """Test calling the turn on intent."""
-    with pytest.raises(HomeAssistantError), patch(
-        "homeassistant.components.conversation.async_converse",
-        side_effect=intent.IntentHandleError,
+    with (
+        pytest.raises(HomeAssistantError),
+        patch(
+            "homeassistant.components.conversation.async_converse",
+            side_effect=intent.IntentHandleError,
+        ),
     ):
         await hass.services.async_call(
             "conversation",
@@ -598,7 +601,7 @@ async def test_http_api_handle_failure(
 
     # Raise an error during intent handling
     def async_handle_error(*args, **kwargs):
-        raise intent.IntentHandleError()
+        raise intent.IntentHandleError
 
     with patch("homeassistant.helpers.intent.async_handle", new=async_handle_error):
         resp = await client.post(
@@ -626,7 +629,7 @@ async def test_http_api_unexpected_failure(
 
     # Raise an "unexpected" error during intent handling
     def async_handle_error(*args, **kwargs):
-        raise intent.IntentUnexpectedError()
+        raise intent.IntentUnexpectedError
 
     with patch("homeassistant.helpers.intent.async_handle", new=async_handle_error):
         resp = await client.post(

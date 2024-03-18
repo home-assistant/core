@@ -887,7 +887,7 @@ class Recorder(threading.Thread):
         for task_or_event in startup_task_or_events:
             # Event is never subclassed so we can
             # use a fast type check
-            if type(task_or_event) is Event:  # noqa: E721
+            if type(task_or_event) is Event:
                 event_ = task_or_event
                 if event_.event_type == EVENT_STATE_CHANGED:
                     state_change_events.append(event_)
@@ -918,7 +918,7 @@ class Recorder(threading.Thread):
             # is an Event so we can process it directly
             # and since its never subclassed, we can
             # use a fast type check
-            if type(task) is Event:  # noqa: E721
+            if type(task) is Event:
                 self._process_one_event(task)
                 return
             # If its not an event, commit everything

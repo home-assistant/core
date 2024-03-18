@@ -16,8 +16,7 @@ def generate_and_validate(integrations: dict[str, Integration]) -> str:
         if not match_types:
             continue
 
-        for entry in match_types:
-            match_list.append({"domain": domain, **entry})
+        match_list.extend({"domain": domain, **entry} for entry in match_types)
 
     return format_python_namespace(
         {"DHCP": match_list},

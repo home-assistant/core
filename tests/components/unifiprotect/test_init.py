@@ -70,7 +70,6 @@ async def test_setup_multiple(
     nvr = bootstrap.nvr
     nvr._api = ufp.api
     nvr.mac = "A1E00C826983"
-    nvr.id
     ufp.api.get_nvr = AsyncMock(return_value=nvr)
 
     with patch(

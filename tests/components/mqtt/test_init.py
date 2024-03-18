@@ -550,8 +550,8 @@ async def test_service_call_with_template_topic_renders_invalid_topic(
             blocking=True,
         )
     assert str(exc.value) == (
-        "Unable to publish: topic template 'test/{{ '+' if True else 'topic' }}/topic' "
-        "produced an invalid topic 'test/+/topic' after rendering "
+        "Unable to publish: topic template `test/{{ '+' if True else 'topic' }}/topic` "
+        "produced an invalid topic `test/+/topic` after rendering "
         "(Wildcards cannot be used in topic names)"
     )
     assert not mqtt_mock.async_publish.called
@@ -4130,7 +4130,7 @@ async def test_multi_platform_discovery(
         },
     }
     for platform, config in entity_configs.items():
-        for set_number in range(0, 2):
+        for set_number in range(2):
             set_config = deepcopy(config)
             set_config["name"] = f"test_{set_number}"
             topic = f"homeassistant/{platform}/bla_{set_number}/config"
@@ -4139,7 +4139,7 @@ async def test_multi_platform_discovery(
         topic = f"homeassistant/{platform}/bla/config"
         async_fire_mqtt_message(hass, topic, json.dumps(config))
     await hass.async_block_till_done()
-    for set_number in range(0, 2):
+    for set_number in range(2):
         for platform in entity_configs:
             entity_id = f"{platform}.test_{set_number}"
             state = hass.states.get(entity_id)

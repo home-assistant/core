@@ -2,21 +2,13 @@
 
 from __future__ import annotations
 
-from typing import cast
-
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP,
-)
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-import homeassistant.helpers.entity_registry as er
 
 from .config_flow import get_master_gateway
-from .const import CONF_GROUP_ID_BASE, CONF_MASTER_GATEWAY, DOMAIN, PLATFORMS
+from .const import CONF_MASTER_GATEWAY, DOMAIN, PLATFORMS
 from .deconz_event import async_setup_events, async_unload_events
 from .errors import AuthenticationRequired, CannotConnect
 from .hub import DeconzHub, get_deconz_api
@@ -31,13 +23,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     """
     hass.data.setdefault(DOMAIN, {})
 
-    await async_update_group_unique_id(hass, config_entry)
-
     if not config_entry.options:
         await async_update_master_gateway(hass, config_entry)
 
     try:
-        api = await get_deconz_api(hass, config_entry.data)
+        api = await get_deconz_api(hass, config_entry)
     except CannotConnect as err:
         raise ConfigEntryNotReady from err
     except AuthenticationRequired as err:
@@ -98,33 +88,3 @@ async def async_update_master_gateway(
     options = {**config_entry.options, CONF_MASTER_GATEWAY: master}
 
     hass.config_entries.async_update_entry(config_entry, options=options)
-
-
-async def async_update_group_unique_id(
-    hass: HomeAssistant, config_entry: ConfigEntry
-) -> None:
-    """Update unique ID entities based on deCONZ groups."""
-    if not (group_id_base := config_entry.data.get(CONF_GROUP_ID_BASE)):
-        return
-
-    old_unique_id = cast(str, group_id_base)
-    new_unique_id = cast(str, config_entry.unique_id)
-
-    @callback
-    def update_unique_id(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
-        """Update unique ID of entity entry."""
-        if f"{old_unique_id}-" not in entity_entry.unique_id:
-            return None
-        return {
-            "new_unique_id": entity_entry.unique_id.replace(
-                old_unique_id, new_unique_id
-            )
-        }
-
-    await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
-    data = {
-        CONF_API_KEY: config_entry.data[CONF_API_KEY],
-        CONF_HOST: config_entry.data[CONF_HOST],
-        CONF_PORT: config_entry.data[CONF_PORT],
-    }
-    hass.config_entries.async_update_entry(config_entry, data=data)

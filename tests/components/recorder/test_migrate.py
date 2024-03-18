@@ -72,7 +72,7 @@ async def test_schema_update_calls(recorder_db_url: str, hass: HomeAssistant) ->
     update.assert_has_calls(
         [
             call(instance, hass, engine, session_maker, version + 1, 0)
-            for version in range(0, db_schema.SCHEMA_VERSION)
+            for version in range(db_schema.SCHEMA_VERSION)
         ]
     )
 

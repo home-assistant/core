@@ -286,17 +286,19 @@ async def async_setup_entry(
             await home.update_info()
         except TimeoutError as err:
             _LOGGER.error("Timeout connecting to Tibber home: %s ", err)
-            raise PlatformNotReady() from err
+            raise PlatformNotReady from err
         except aiohttp.ClientError as err:
             _LOGGER.error("Error connecting to Tibber home: %s ", err)
-            raise PlatformNotReady() from err
+            raise PlatformNotReady from err
 
         if home.has_active_subscription:
             entities.append(TibberSensorElPrice(home))
             if coordinator is None:
                 coordinator = TibberDataCoordinator(hass, tibber_connection)
-            for entity_description in SENSORS:
-                entities.append(TibberDataSensor(home, coordinator, entity_description))
+            entities.extend(
+                TibberDataSensor(home, coordinator, entity_description)
+                for entity_description in SENSORS
+            )
 
         if home.has_real_time_consumption:
             await home.rt_subscribe(
