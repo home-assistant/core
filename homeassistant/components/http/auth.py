@@ -4,14 +4,16 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
+from http import HTTPStatus
 from ipaddress import ip_address
 import logging
+import os
 import secrets
 import time
 from typing import Any, Final
 
 from aiohttp import hdrs
-from aiohttp.web import Application, Request, StreamResponse, middleware
+from aiohttp.web import Application, Request, Response, StreamResponse, middleware
 from aiohttp.web_exceptions import HTTPBadRequest
 from aiohttp_session import session_middleware
 import jwt
@@ -29,7 +31,12 @@ from homeassistant.helpers.network import is_cloud_connection
 from homeassistant.helpers.storage import Store
 from homeassistant.util.network import is_local
 
-from .const import KEY_AUTHENTICATED, KEY_HASS_REFRESH_TOKEN_ID, KEY_HASS_USER
+from .const import (
+    KEY_AUTHENTICATED,
+    KEY_HASS_REFRESH_TOKEN_ID,
+    KEY_HASS_USER,
+    StrictConnectionMode,
+)
 from .session import HomeAssistantCookieStorage
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,6 +50,9 @@ STORAGE_VERSION = 1
 STORAGE_KEY = "http.auth"
 CONTENT_USER_NAME = "Home Assistant Content"
 STRICT_CONNECTION_EXCLUDED_PATH = "/api/webhook/"
+STRICT_CONNECTION_STATIC_PAGE = os.path.join(
+    os.path.dirname(__file__), "strict_connection_static_page.html"
+)
 
 
 @callback
@@ -122,7 +132,9 @@ def async_user_not_allowed_do_auth(
 
 
 async def async_setup_auth(
-    hass: HomeAssistant, app: Application, strict_connection_enabled_non_cloud: bool
+    hass: HomeAssistant,
+    app: Application,
+    strict_connection_mode_non_cloud: StrictConnectionMode,
 ) -> None:
     """Create auth middleware for the app."""
     store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
@@ -144,6 +156,16 @@ async def async_setup_auth(
         await store.async_save(data)
 
     hass.data[STORAGE_KEY] = refresh_token.id
+    strict_connection_static_file = None
+    if strict_connection_mode_non_cloud == StrictConnectionMode.STATIC_PAGE:
+
+        def read_static_page() -> str:
+            with open(STRICT_CONNECTION_STATIC_PAGE, encoding="utf-8") as file:
+                return file.read()
+
+        strict_connection_static_file = await hass.async_add_executor_job(
+            read_static_page
+        )
 
     @callback
     def async_validate_auth_header(request: Request) -> bool:
@@ -236,13 +258,19 @@ async def async_setup_auth(
 
         if (
             not authenticated
-            and strict_connection_enabled_non_cloud
+            and strict_connection_mode_non_cloud != StrictConnectionMode.DISABLED
             and not request.path.startswith(STRICT_CONNECTION_EXCLUDED_PATH)
             and not await hass.auth.session.async_validate_strict_connection_session(
                 request
             )
+            and (
+                resp := _async_perform_action_on_non_local(
+                    request, strict_connection_static_file
+                )
+            )
+            is not None
         ):
-            _async_close_connection_on_non_local(hass, request)
+            return resp
 
         if authenticated and _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug(
@@ -260,18 +288,31 @@ async def async_setup_auth(
 
 
 @callback
-def _async_close_connection_on_non_local(hass: HomeAssistant, request: Request) -> None:
-    """Close the connection if the request is not local."""
+def _async_perform_action_on_non_local(
+    request: Request,
+    strict_connection_static_file: str | None,
+) -> StreamResponse | None:
+    """Perform strict connection mode action if the request is not local."""
     try:
         ip_address_ = ip_address(request.remote)  # type: ignore[arg-type]
     except ValueError:
         _LOGGER.debug("Invalid IP address: %s", request.remote)
         ip_address_ = None
 
-    if is_cloud_connection(hass) or ip_address_ is None or not is_local(ip_address_):
-        if transport := request.transport:
-            # it should never happen that we don't have a transport
-            transport.close()
+    if ip_address_ and is_local(ip_address_):
+        return None
 
-        # Anyway we need to raise an exception to stop processing the request
-        raise HTTPBadRequest()
+    _LOGGER.debug("Perform strict connection action for %s", ip_address_)
+    if strict_connection_static_file:
+        return Response(
+            text=strict_connection_static_file,
+            content_type="text/html",
+            status=HTTPStatus.IM_A_TEAPOT,
+        )
+
+    if transport := request.transport:
+        # it should never happen that we don't have a transport
+        transport.close()
+
+    # Anyway we need to raise an exception to stop processing the request
+    raise HTTPBadRequest()

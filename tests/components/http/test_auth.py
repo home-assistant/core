@@ -24,11 +24,12 @@ from homeassistant.components.http.auth import (
     DATA_SIGN_SECRET,
     SIGN_QUERY_PARAM,
     STORAGE_KEY,
+    STRICT_CONNECTION_STATIC_PAGE,
     async_setup_auth,
     async_sign_path,
     async_user_not_allowed_do_auth,
 )
-from homeassistant.components.http.const import KEY_AUTHENTICATED
+from homeassistant.components.http.const import KEY_AUTHENTICATED, StrictConnectionMode
 from homeassistant.components.http.forwarded import async_setup_forwarded
 from homeassistant.components.http.request_context import (
     current_request,
@@ -128,7 +129,7 @@ async def test_cant_access_with_password_in_header(
     hass: HomeAssistant,
 ) -> None:
     """Test access with password in header."""
-    await async_setup_auth(hass, app, False)
+    await async_setup_auth(hass, app, StrictConnectionMode.DISABLED)
     client = await aiohttp_client(app)
 
     req = await client.get("/", headers={HTTP_HEADER_HA_AUTH: API_PASSWORD})
@@ -145,7 +146,7 @@ async def test_cant_access_with_password_in_query(
     hass: HomeAssistant,
 ) -> None:
     """Test access with password in URL."""
-    await async_setup_auth(hass, app, False)
+    await async_setup_auth(hass, app, StrictConnectionMode.DISABLED)
     client = await aiohttp_client(app)
 
     resp = await client.get("/", params={"api_password": API_PASSWORD})
@@ -165,7 +166,7 @@ async def test_basic_auth_does_not_work(
     legacy_auth: LegacyApiPasswordAuthProvider,
 ) -> None:
     """Test access with basic authentication."""
-    await async_setup_auth(hass, app, False)
+    await async_setup_auth(hass, app, StrictConnectionMode.DISABLED)
     client = await aiohttp_client(app)
 
     req = await client.get("/", auth=BasicAuth("homeassistant", API_PASSWORD))
@@ -189,7 +190,7 @@ async def test_cannot_access_with_trusted_ip(
     hass_owner_user: MockUser,
 ) -> None:
     """Test access with an untrusted ip address."""
-    await async_setup_auth(hass, app2, False)
+    await async_setup_auth(hass, app2, StrictConnectionMode.DISABLED)
 
     set_mock_ip = mock_real_ip(app2)
     client = await aiohttp_client(app2)
@@ -217,7 +218,7 @@ async def test_auth_active_access_with_access_token_in_header(
 ) -> None:
     """Test access with access token in header."""
     token = hass_access_token
-    await async_setup_auth(hass, app, False)
+    await async_setup_auth(hass, app, StrictConnectionMode.DISABLED)
     client = await aiohttp_client(app)
     refresh_token = hass.auth.async_validate_access_token(hass_access_token)
 
@@ -253,7 +254,7 @@ async def test_auth_active_access_with_trusted_ip(
     hass_owner_user: MockUser,
 ) -> None:
     """Test access with an untrusted ip address."""
-    await async_setup_auth(hass, app2, False)
+    await async_setup_auth(hass, app2, StrictConnectionMode.DISABLED)
 
     set_mock_ip = mock_real_ip(app2)
     client = await aiohttp_client(app2)
@@ -280,7 +281,7 @@ async def test_auth_legacy_support_api_password_cannot_access(
     hass: HomeAssistant,
 ) -> None:
     """Test access using api_password if auth.support_legacy."""
-    await async_setup_auth(hass, app, False)
+    await async_setup_auth(hass, app, StrictConnectionMode.DISABLED)
     client = await aiohttp_client(app)
 
     req = await client.get("/", headers={HTTP_HEADER_HA_AUTH: API_PASSWORD})
@@ -302,7 +303,7 @@ async def test_auth_access_signed_path_with_refresh_token(
     """Test access with signed url."""
     app.router.add_post("/", mock_handler)
     app.router.add_get("/another_path", mock_handler)
-    await async_setup_auth(hass, app, False)
+    await async_setup_auth(hass, app, StrictConnectionMode.DISABLED)
     client = await aiohttp_client(app)
 
     refresh_token = hass.auth.async_validate_access_token(hass_access_token)
@@ -347,7 +348,7 @@ async def test_auth_access_signed_path_with_query_param(
     """Test access with signed url and query params."""
     app.router.add_post("/", mock_handler)
     app.router.add_get("/another_path", mock_handler)
-    await async_setup_auth(hass, app, False)
+    await async_setup_auth(hass, app, StrictConnectionMode.DISABLED)
     client = await aiohttp_client(app)
 
     refresh_token = hass.auth.async_validate_access_token(hass_access_token)
@@ -377,7 +378,7 @@ async def test_auth_access_signed_path_with_query_param_order(
     """Test access with signed url and query params different order."""
     app.router.add_post("/", mock_handler)
     app.router.add_get("/another_path", mock_handler)
-    await async_setup_auth(hass, app, False)
+    await async_setup_auth(hass, app, StrictConnectionMode.DISABLED)
     client = await aiohttp_client(app)
 
     refresh_token = hass.auth.async_validate_access_token(hass_access_token)
@@ -418,7 +419,7 @@ async def test_auth_access_signed_path_with_query_param_safe_param(
     """Test access with signed url and changing a safe param."""
     app.router.add_post("/", mock_handler)
     app.router.add_get("/another_path", mock_handler)
-    await async_setup_auth(hass, app, False)
+    await async_setup_auth(hass, app, StrictConnectionMode.DISABLED)
     client = await aiohttp_client(app)
 
     refresh_token = hass.auth.async_validate_access_token(hass_access_token)
@@ -457,7 +458,7 @@ async def test_auth_access_signed_path_with_query_param_tamper(
     """Test access with signed url and query params that have been tampered with."""
     app.router.add_post("/", mock_handler)
     app.router.add_get("/another_path", mock_handler)
-    await async_setup_auth(hass, app, False)
+    await async_setup_auth(hass, app, StrictConnectionMode.DISABLED)
     client = await aiohttp_client(app)
 
     refresh_token = hass.auth.async_validate_access_token(hass_access_token)
@@ -526,7 +527,7 @@ async def test_auth_access_signed_path_with_http(
         )
 
     app.router.add_get("/hello", mock_handler)
-    await async_setup_auth(hass, app, False)
+    await async_setup_auth(hass, app, StrictConnectionMode.DISABLED)
     client = await aiohttp_client(app)
 
     refresh_token = hass.auth.async_validate_access_token(hass_access_token)
@@ -550,7 +551,7 @@ async def test_auth_access_signed_path_with_content_user(
     hass: HomeAssistant, app, aiohttp_client: ClientSessionGenerator
 ) -> None:
     """Test access signed url uses content user."""
-    await async_setup_auth(hass, app, False)
+    await async_setup_auth(hass, app, StrictConnectionMode.DISABLED)
     signed_path = async_sign_path(hass, "/", timedelta(seconds=5))
     signature = yarl.URL(signed_path).query["authSig"]
     claims = jwt.decode(
@@ -570,7 +571,7 @@ async def test_local_only_user_rejected(
 ) -> None:
     """Test access with access token in header."""
     token = hass_access_token
-    await async_setup_auth(hass, app, False)
+    await async_setup_auth(hass, app, StrictConnectionMode.DISABLED)
     set_mock_ip = mock_real_ip(app)
     client = await aiohttp_client(app)
     refresh_token = hass.auth.async_validate_access_token(hass_access_token)
@@ -636,7 +637,7 @@ async def test_create_user_once(hass: HomeAssistant) -> None:
     """Test that we reuse the user."""
     cur_users = len(await hass.auth.async_get_users())
     app = web.Application()
-    await async_setup_auth(hass, app, False)
+    await async_setup_auth(hass, app, StrictConnectionMode.DISABLED)
     users = await hass.auth.async_get_users()
     assert len(users) == cur_users + 1
 
@@ -648,23 +649,25 @@ async def test_create_user_once(hass: HomeAssistant) -> None:
     assert len(user.refresh_tokens) == 1
     assert user.system_generated
 
-    await async_setup_auth(hass, app, False)
+    await async_setup_auth(hass, app, StrictConnectionMode.DISABLED)
 
     # test it did not create a user
     assert len(await hass.auth.async_get_users()) == cur_users + 1
 
 
-@pytest.mark.parametrize("strict_connection_enabled", [True, False])
+@pytest.mark.parametrize(
+    "strict_connection_mode", [e.value for e in StrictConnectionMode]
+)
 async def test_strict_connection_non_cloud_authenticated_requestes(
     hass: HomeAssistant,
     app,
     aiohttp_client: ClientSessionGenerator,
     hass_access_token: str,
-    strict_connection_enabled: bool,
+    strict_connection_mode: StrictConnectionMode,
 ) -> None:
     """Test authenticated requests with strict connection."""
     token = hass_access_token
-    await async_setup_auth(hass, app, strict_connection_enabled)
+    await async_setup_auth(hass, app, strict_connection_mode)
     set_mock_ip = mock_real_ip(app)
     client = await aiohttp_client(app)
     refresh_token = hass.auth.async_validate_access_token(hass_access_token)
@@ -684,15 +687,17 @@ async def test_strict_connection_non_cloud_authenticated_requestes(
         assert req.status == HTTPStatus.OK
 
 
-@pytest.mark.parametrize("strict_connection_enabled", [True, False])
+@pytest.mark.parametrize(
+    "strict_connection_mode", [e.value for e in StrictConnectionMode]
+)
 async def test_strict_connection_non_cloud_local_unauthenticated_requests(
     hass: HomeAssistant,
     app,
     aiohttp_client: ClientSessionGenerator,
-    strict_connection_enabled: bool,
+    strict_connection_mode: StrictConnectionMode,
 ) -> None:
     """Test local unauthenticated requests with strict connection."""
-    await async_setup_auth(hass, app, strict_connection_enabled)
+    await async_setup_auth(hass, app, strict_connection_mode)
     set_mock_ip = mock_real_ip(app)
     client = await aiohttp_client(app)
 
@@ -703,13 +708,13 @@ async def test_strict_connection_non_cloud_local_unauthenticated_requests(
         assert req.status == HTTPStatus.UNAUTHORIZED
 
 
-async def test_strict_connection_non_cloud_enabled_external_unauthenticated_requests(
+async def test_strict_connection_non_cloud_drop_connection_external_unauthenticated_requests(
     hass: HomeAssistant,
     app,
     aiohttp_client: ClientSessionGenerator,
 ) -> None:
-    """Test external unauthenticated requests with strict connection non cloud enabled."""
-    await async_setup_auth(hass, app, True)
+    """Test external unauthenticated requests with strict connection non cloud set to drop_connection."""
+    await async_setup_auth(hass, app, StrictConnectionMode.DROP_CONNECTION)
     set_mock_ip = mock_real_ip(app)
     client = await aiohttp_client(app)
 
@@ -718,3 +723,25 @@ async def test_strict_connection_non_cloud_enabled_external_unauthenticated_requ
         with pytest.raises(ServerDisconnectedError):
             # unauthorized requests should raise ServerDisconnectedError
             await client.get("/")
+
+
+async def test_strict_connection_non_cloud_static_page_external_unauthenticated_requests(
+    hass: HomeAssistant,
+    app,
+    aiohttp_client: ClientSessionGenerator,
+) -> None:
+    """Test external unauthenticated requests with strict connection non cloud set to static_page."""
+    await async_setup_auth(hass, app, StrictConnectionMode.STATIC_PAGE)
+    set_mock_ip = mock_real_ip(app)
+    client = await aiohttp_client(app)
+
+    for remote_addr in EXTERNAL_ADDRESSES:
+        set_mock_ip(remote_addr)
+        req = await client.get("/")
+        assert req.status == HTTPStatus.IM_A_TEAPOT
+
+        def read_static_page() -> str:
+            with open(STRICT_CONNECTION_STATIC_PAGE, encoding="utf-8") as file:
+                return file.read()
+
+        assert await req.text() == await hass.async_add_executor_job(read_static_page)

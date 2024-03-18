@@ -50,7 +50,11 @@ from homeassistant.util.json import json_loads
 
 from .auth import async_setup_auth
 from .ban import setup_bans
-from .const import KEY_HASS_REFRESH_TOKEN_ID, KEY_HASS_USER  # noqa: F401
+from .const import (  # noqa: F401
+    KEY_HASS_REFRESH_TOKEN_ID,
+    KEY_HASS_USER,
+    StrictConnectionMode,
+)
 from .cors import setup_cors
 from .decorators import require_admin  # noqa: F401
 from .forwarded import async_setup_forwarded
@@ -122,7 +126,9 @@ HTTP_SCHEMA: Final = vol.All(
                 [SSL_INTERMEDIATE, SSL_MODERN]
             ),
             vol.Optional(CONF_USE_X_FRAME_OPTIONS, default=True): cv.boolean,
-            vol.Optional(CONF_STRICT_CONNECTION, default=False): cv.boolean,
+            vol.Optional(
+                CONF_STRICT_CONNECTION, default=StrictConnectionMode.DISABLED
+            ): vol.In([e.value for e in StrictConnectionMode]),
         }
     ),
 )
@@ -146,7 +152,7 @@ class ConfData(TypedDict, total=False):
     login_attempts_threshold: int
     ip_ban_enabled: bool
     ssl_profile: str
-    strict_connection: bool
+    strict_connection: StrictConnectionMode
 
 
 @bind_hass
@@ -206,7 +212,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ssl_key=ssl_key,
         trusted_proxies=trusted_proxies,
         ssl_profile=ssl_profile,
-        strict_connection_enabled_non_cloud=conf[CONF_STRICT_CONNECTION],
+        strict_connection_non_cloud=conf[CONF_STRICT_CONNECTION],
     )
     await server.async_initialize(
         cors_origins=cors_origins,
@@ -293,7 +299,7 @@ class HomeAssistantHTTP:
         server_port: int,
         trusted_proxies: list[IPv4Network | IPv6Network],
         ssl_profile: str,
-        strict_connection_enabled_non_cloud: bool = False,
+        strict_connection_non_cloud: StrictConnectionMode,
     ) -> None:
         """Initialize the HTTP Home Assistant server."""
         self.app = HomeAssistantApplication(
@@ -319,9 +325,7 @@ class HomeAssistantHTTP:
         self.runner: web.AppRunner | None = None
         self.site: HomeAssistantTCPSite | None = None
         self.context: ssl.SSLContext | None = None
-        self.strict_connection_enabled_non_cloud: Final = (
-            strict_connection_enabled_non_cloud
-        )
+        self.strict_connection_non_cloud: Final = strict_connection_non_cloud
 
     async def async_initialize(
         self,
@@ -347,9 +351,7 @@ class HomeAssistantHTTP:
         if is_ban_enabled:
             setup_bans(self.hass, self.app, login_threshold)
 
-        await async_setup_auth(
-            self.hass, self.app, self.strict_connection_enabled_non_cloud
-        )
+        await async_setup_auth(self.hass, self.app, self.strict_connection_non_cloud)
 
         setup_headers(self.app, use_x_frame_options)
         setup_cors(self.app, cors_origins)

@@ -52,7 +52,7 @@ class SessionManager:
         self._auth = auth
         self._hass = hass
         self._temp_sessions: dict[str, StrictConnectionTempSessionData] = {}
-        self._unauthorized_sessions: dict[str, str] = {}
+        self._strict_connection_sessions: dict[str, str] = {}
         self._store = Store[StoreData](
             hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
@@ -87,11 +87,11 @@ class SessionManager:
         if not (session_id := session.get(SESSION_ID)):
             return False
 
-        if token_id := self._unauthorized_sessions.get(session_id):
+        if token_id := self._strict_connection_sessions.get(session_id):
             if self._auth.async_get_refresh_token(token_id):
                 return True
             # refresh token is invalid, delete entry
-            self._unauthorized_sessions.pop(session_id)
+            self._strict_connection_sessions.pop(session_id)
             self._async_schedule_save()
 
         if data := self._temp_sessions.get(session_id):
@@ -111,9 +111,9 @@ class SessionManager:
         @callback
         def async_invalidate_auth_sessions() -> None:
             """Invalidate all sessions for a refresh token."""
-            self._unauthorized_sessions = {
+            self._strict_connection_sessions = {
                 session_id: token_id
-                for session_id, token_id in self._unauthorized_sessions.items()
+                for session_id, token_id in self._strict_connection_sessions.items()
                 if token_id != refresh_token_id
             }
             self._async_schedule_save()
@@ -133,15 +133,15 @@ class SessionManager:
         if not self._auth.async_get_refresh_token(refresh_token.id):
             return
 
-        self._unauthorized_sessions = {
+        self._strict_connection_sessions = {
             session_id: token_id
-            for session_id, token_id in self._unauthorized_sessions.items()
+            for session_id, token_id in self._strict_connection_sessions.items()
             if token_id != refresh_token.id
         }
 
         self._async_register_revoke_token_callback(refresh_token.id)
         session_id = await self._async_create_new_session(request)
-        self._unauthorized_sessions[session_id] = refresh_token.id
+        self._strict_connection_sessions[session_id] = refresh_token.id
         self._async_schedule_save()
 
     async def async_create_temp_unauthorized_session(self, request: Request) -> None:
@@ -180,7 +180,7 @@ class SessionManager:
     def _data_to_save(self) -> StoreData:
         """Return the data to store."""
         return StoreData(
-            unauthorized_sessions=self._unauthorized_sessions,
+            unauthorized_sessions=self._strict_connection_sessions,
             key=self.key,
         )
 
@@ -191,6 +191,6 @@ class SessionManager:
             return
 
         self._key = data["key"]
-        self._unauthorized_sessions = data["unauthorized_sessions"]
-        for token_id in self._unauthorized_sessions.values():
+        self._strict_connection_sessions = data["unauthorized_sessions"]
+        for token_id in self._strict_connection_sessions.values():
             self._async_register_revoke_token_callback(token_id)
