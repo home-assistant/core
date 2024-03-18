@@ -1,39 +1,30 @@
 {
   "config": {
-    "flow_title": "{serial} ({host})",
+    "flow_title": "{serial}",
     "step": {
-      "manual_device_entry": {
-        "description": "Local Configuration",
-        "data": {
-          "host": "Host (IP Address)"
-        }
+      "pick_cloud_device": {
+        "title": "Configure fireplace",
+        "description": "Select Fireplace by Serial Number:"
       },
-      "api_config": {
+      "cloud_api": {
+        "description": "Authenticate against IntelliFire Cloud",
+        "data_description": {
+          "username": "IntelliFire Username",
+          "password": "IntelliFire Password"
+        },
         "data": {
           "username": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
-      },
-      "dhcp_confirm": {
-        "description": "Do you want to set up {host}\nSerial: {serial}?"
-      },
-      "pick_device": {
-        "title": "Device Selection",
-        "description": "The following IntelliFire devices were discovered. Please select which you wish to configure.",
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]"
-        }
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "api_error": "Login failed",
-      "iftapi_connect": "Error conecting to iftapi.net"
+      "api_error": "Login failed"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "not_intellifire_device": "Not an IntelliFire Device."
+      "not_intellifire_device": "Not an IntelliFire Device.",
+      "all_devices_already_configured": "All available devices have already been configured."
     }
   },
   "entity": {
@@ -102,6 +93,12 @@
     "sensor": {
       "flame_height": {
         "name": "Flame height"
+      },
+      "local_connectivity": {
+        "name": "Local connectivity"
+      },
+      "cloud_connectivity": {
+        "name": "Cloud connectivity"
       },
       "target_temp": {
         "name": "Target temperature"
