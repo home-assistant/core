@@ -453,6 +453,8 @@ build.json @home-assistant/supervisor
 /tests/components/frontier_silicon/ @wlcrs
 /homeassistant/components/fully_kiosk/ @cgarwood
 /tests/components/fully_kiosk/ @cgarwood
+/homeassistant/components/fyta/ @dontinelli
+/tests/components/fyta/ @dontinelli
 /homeassistant/components/garages_amsterdam/ @klaasnicolaas
 /tests/components/garages_amsterdam/ @klaasnicolaas
 /homeassistant/components/gardena_bluetooth/ @elupus
@@ -568,8 +570,8 @@ build.json @home-assistant/supervisor
 /tests/components/homekit/ @bdraco
 /homeassistant/components/homekit_controller/ @Jc2k @bdraco
 /tests/components/homekit_controller/ @Jc2k @bdraco
-/homeassistant/components/homematic/ @pvizeli @danielperna84
-/tests/components/homematic/ @pvizeli @danielperna84
+/homeassistant/components/homematic/ @pvizeli
+/tests/components/homematic/ @pvizeli
 /homeassistant/components/homewizard/ @DCSBL
 /tests/components/homewizard/ @DCSBL
 /homeassistant/components/honeywell/ @rdfurman @mkmer

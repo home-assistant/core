@@ -38,12 +38,12 @@ async def get_repositories(hass: HomeAssistant, access_token: str) -> list[str]:
     repositories = set()
 
     async def _get_starred_repositories() -> None:
-        response = await client.user.starred(**{"params": {"per_page": 100}})
+        response = await client.user.starred(params={"per_page": 100})
         if not response.is_last_page:
             results = await asyncio.gather(
                 *(
                     client.user.starred(
-                        **{"params": {"per_page": 100, "page": page_number}},
+                        params={"per_page": 100, "page": page_number},
                     )
                     for page_number in range(
                         response.next_page_number, response.last_page_number + 1
@@ -56,12 +56,12 @@ async def get_repositories(hass: HomeAssistant, access_token: str) -> list[str]:
         repositories.update(response.data)
 
     async def _get_personal_repositories() -> None:
-        response = await client.user.repos(**{"params": {"per_page": 100}})
+        response = await client.user.repos(params={"per_page": 100})
         if not response.is_last_page:
             results = await asyncio.gather(
                 *(
                     client.user.repos(
-                        **{"params": {"per_page": 100, "page": page_number}},
+                        params={"per_page": 100, "page": page_number},
                     )
                     for page_number in range(
                         response.next_page_number, response.last_page_number + 1
@@ -137,7 +137,7 @@ class GitHubConfigFlow(ConfigFlow, domain=DOMAIN):
             self._device = GitHubDeviceAPI(
                 client_id=CLIENT_ID,
                 session=async_get_clientsession(self.hass),
-                **{"client_name": SERVER_SOFTWARE},
+                client_name=SERVER_SOFTWARE,
             )
 
             try:
