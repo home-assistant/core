@@ -1,4 +1,5 @@
 """The Trello integration."""
+
 from __future__ import annotations
 
 from trello import TrelloClient

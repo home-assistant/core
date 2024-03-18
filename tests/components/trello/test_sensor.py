@@ -1,4 +1,5 @@
-"""Test the trello config flow."""
+"""Test the trello sensor."""
+
 from datetime import timedelta
 from unittest.mock import patch
 

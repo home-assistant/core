@@ -1,4 +1,5 @@
 """Config flow for Trello integration."""
+
 from typing import Any
 
 from trello import TrelloClient, Unauthorized

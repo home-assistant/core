@@ -1,4 +1,5 @@
 """Configure tests for the Trello integration."""
+
 from collections.abc import Awaitable, Callable, Coroutine
 import json
 from typing import Any

@@ -1,4 +1,5 @@
-"""Platform for sensor integration."""
+"""Sensor platform for Trello integration."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass

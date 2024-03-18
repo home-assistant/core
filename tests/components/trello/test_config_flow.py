@@ -1,4 +1,5 @@
 """Test the trello config flow."""
+
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 

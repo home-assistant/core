@@ -1,4 +1,5 @@
 """Test the trello config flow."""
+
 from homeassistant.core import HomeAssistant
 
 from .conftest import ComponentSetup
@@ -11,7 +12,7 @@ async def test_remove_entry(
     setup_integration: ComponentSetup,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test sensors are set up and updated as expected."""
+    """Test config entry is successfully removed."""
     await setup_integration()
 
     assert hass.config_entries.async_get_entry(config_entry.entry_id) is not None
