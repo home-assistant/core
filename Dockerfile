@@ -17,7 +17,7 @@ ARG QEMU_CPU
 # Set shell
 SHELL ["/bin/ash", "-o", "pipefail", "-c"]
 # Install uv
-RUN curl --proto '=https' --tlsv1.2 -LsSf https://github.com/astral-sh/uv/releases/download/0.1.21/uv-installer.sh | sh
+RUN curl --proto '=https' --tlsv1.2 -LsSf https://github.com/astral-sh/uv/releases/download/0.1.22/uv-installer.sh | sh
 
 WORKDIR /usr/src
 
