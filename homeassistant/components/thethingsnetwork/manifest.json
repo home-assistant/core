@@ -3,9 +3,8 @@
   "name": "The Things Network",
   "codeowners": ["@angelnu"],
   "config_flow": true,
-  "documentation": "https://github.com/angelnu/home_assistant_thethingsnetwork",
+  "documentation": "https://www.home-assistant.io/integrations/thethingsnetwork",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/angelnu/home_assistant_thethingsnetwork/issues",
   "requirements": ["ttn_client==0.0.3"]
 }

@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    DOMAIN,
+    CONF_APP_ID,
     OPTIONS_DEVICE_NAME,
     OPTIONS_FIELD_CONTEXT_RECENT_TIME_S,
     OPTIONS_FIELD_ICON,
@@ -127,7 +127,7 @@ class TTN_Entity(CoordinatorEntity, Entity):
             {
                 "identifiers": {
                     # Serial numbers are unique identifiers within a specific domain
-                    (DOMAIN, self.device_id)
+                    (self.__entry.data[CONF_APP_ID], self.device_id)
                 },
                 "name": self.device_name,
                 # TBD - add more info in the TTN upstream message such as signal strength, transmission time, etc

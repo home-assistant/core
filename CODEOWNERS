@@ -1403,6 +1403,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/thermopro/ @bdraco @h3ss
 /tests/components/thermopro/ @bdraco @h3ss
 /homeassistant/components/thethingsnetwork/ @angelnu
+/tests/components/thethingsnetwork/ @angelnu
 /homeassistant/components/thread/ @home-assistant/core
 /tests/components/thread/ @home-assistant/core
 /homeassistant/components/tibber/ @danielhiversen
