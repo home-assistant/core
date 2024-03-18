@@ -91,8 +91,7 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        [ArveDevice(coordinator, description) for description in SENSORS],
-        True,
+        ArveDevice(coordinator, description) for description in SENSORS
     )
 
 
