@@ -102,11 +102,7 @@ class WhirlpoolConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 self.hass.config_entries.async_update_entry(
                     self.entry,
-                    data={
-                        **self.entry.data,
-                        CONF_PASSWORD: password,
-                        CONF_BRAND: brand,
-                    },
+                    data=data,
                 )
                 await self.hass.config_entries.async_reload(self.entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
