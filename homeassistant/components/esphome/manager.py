@@ -21,6 +21,7 @@ from aioesphomeapi import (
     UserService,
     UserServiceArgType,
     VoiceAssistantAudioSettings,
+    VoiceAssistantAudioChunk,
 )
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
@@ -346,6 +347,7 @@ class ESPHomeManager:
             self.entry_data,
             self.cli.send_voice_assistant_event,
             self._handle_pipeline_finished,
+            self.cli,
         )
         port = await self.voice_assistant_udp_server.start_server()
 
@@ -367,6 +369,12 @@ class ESPHomeManager:
         """Stop a voice assistant pipeline."""
         if self.voice_assistant_udp_server is not None:
             self.voice_assistant_udp_server.stop()
+
+    async def _handle_audio(self, chunk: VoiceAssistantAudioChunk) -> None:
+        if self.voice_assistant_udp_server is None:
+            return
+
+        self.voice_assistant_udp_server.queue.put_nowait(chunk.data)
 
     async def on_connect(self) -> None:
         """Subscribe to states and list entities on successful API login."""
@@ -473,6 +481,11 @@ class ESPHomeManager:
                 cli.subscribe_voice_assistant(
                     self._handle_pipeline_start,
                     self._handle_pipeline_stop,
+                )
+            )
+            entry_data.disconnect_callbacks.add(
+                cli.subscribe_voice_assistant_audio(
+                    self._handle_audio,
                 )
             )
 
