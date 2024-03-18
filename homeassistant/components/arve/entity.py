@@ -2,41 +2,21 @@
 
 from __future__ import annotations
 
-from asyncarve import Arve, ArveError
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.entity import Entity
-
-from .const import LOGGER
+from .coordinator import ArveCoordinator
 
 
-class ArveDeviceEntity(Entity):
+class ArveDeviceEntity(CoordinatorEntity[ArveCoordinator]):
     """Defines a base Arve device entity."""
 
     _attr_has_entity_name = True
     _attr_available = True
 
-    def __init__(self, arve: Arve, entry: ConfigEntry) -> None:
+    def __init__(self, coordinator: ArveCoordinator) -> None:
         """Initialize the Arve device entity."""
+        super().__init__(coordinator)
 
-        self._entry = entry
-        self.arve = arve
-
-    async def async_update(self) -> None:
-        """Update Arve device entity."""
-        if not self.enabled:
-            return
-
-        try:
-            await self._arve_update()
-            self._attr_available = True
-        except ArveError:
-            if self._attr_available:
-                LOGGER.warning(
-                    "An error occurred while updating Arve device", exc_info=True
-                )
-            self._attr_available = False
-
-    async def _arve_update(self) -> None:
-        """Update Arve device entity."""
-        raise NotImplementedError()
+        self._entry = coordinator.config_entry
+        self.arve = coordinator.arve
+        self.coordinator = coordinator

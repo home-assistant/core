@@ -46,14 +46,10 @@ class ArveConfigFlowHadler(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
 
-        access_token = user_input[CONF_ACCESS_TOKEN]
-        customer_token = user_input[CONF_CLIENT_SECRET]
-        name = user_input[CONF_NAME]
-
         arve = Arve(
-            access_token,
-            customer_token,
-            name,
+            user_input[CONF_ACCESS_TOKEN],
+            user_input[CONF_CLIENT_SECRET],
+            user_input[CONF_NAME],
         )
 
         try:

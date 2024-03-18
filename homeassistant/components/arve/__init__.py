@@ -14,7 +14,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 
-from .const import DATA_ARVE_CLIENT, DOMAIN
+from .const import DOMAIN
+from .coordinator import ArveCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -28,7 +29,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_NAME],
     )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {DATA_ARVE_CLIENT: arve}
+    coordinator = ArveCoordinator(hass, arve)
+
+    await coordinator.async_config_entry_first_refresh()
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     try:
         await arve.get_sensor_info()
