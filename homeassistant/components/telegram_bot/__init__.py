@@ -458,9 +458,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 def initialize_bot(p_config: dict, hass: HomeAssistant) -> Bot:
     """Initialize telegram bot with proxy support."""
-    api_key = p_config.get(CONF_API_KEY)
-    proxy_url = p_config.get(CONF_PROXY_URL)
-    proxy_params = p_config.get(CONF_PROXY_PARAMS)
+    api_key: str = p_config[CONF_API_KEY]
+    proxy_url: str | None = p_config.get(CONF_PROXY_URL)
+    proxy_params: dict | None = p_config.get(CONF_PROXY_PARAMS)
 
     if proxy_url is not None:
         auth = None
@@ -498,7 +498,7 @@ def initialize_bot(p_config: dict, hass: HomeAssistant) -> Bot:
         request = HTTPXRequest(connection_pool_size=8, proxy=proxy)
     else:
         request = HTTPXRequest(connection_pool_size=8)
-    return Bot(token=str(api_key), request=request)
+    return Bot(token=api_key, request=request)
 
 
 class TelegramNotificationService:
