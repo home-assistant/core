@@ -81,7 +81,7 @@ async def async_setup_entry(
 
 
 class AxisLight(AxisEventEntity, LightEntity):
-    """Representation of a Axis light."""
+    """Representation of an Axis light."""
 
     _attr_should_poll = True
     _attr_color_mode = ColorMode.BRIGHTNESS
