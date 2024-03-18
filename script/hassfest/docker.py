@@ -22,7 +22,7 @@ ENV \
 ARG QEMU_CPU
 
 # Install uv
-RUN pip3 install "$(cat requirements_test.txt | grep '^uv')"
+RUN pip3 install "$(< requirements_test.txt | grep '^uv')"
 
 WORKDIR /usr/src
 
