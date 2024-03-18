@@ -937,21 +937,8 @@ async def _async_set_up_integrations(
     watcher.async_stop()
 
     if _LOGGER.isEnabledFor(logging.DEBUG):
-        # import orjson
-
-        # from .setup import _setup_times
-
-        # print(
-        #    orjson.dumps(
-        #        _setup_times(hass),
-        #        option=orjson.OPT_INDENT_2
-        #        | orjson.OPT_SORT_KEYS
-        #        | orjson.OPT_NON_STR_KEYS,
-        #    ).decode()
-        # )
-
         _LOGGER.debug(
-            "Calculated setup times: %s",
+            "Integration setup times: %s",
             dict(
                 sorted(
                     async_get_setup_timings(hass).items(),
