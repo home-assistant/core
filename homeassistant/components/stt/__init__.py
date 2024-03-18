@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-import asyncio
 from collections.abc import AsyncIterable
 from dataclasses import asdict
 import logging
@@ -127,8 +126,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.register_shutdown()
     platform_setups = async_setup_legacy(hass, config)
 
-    if platform_setups:
-        await asyncio.wait([asyncio.create_task(setup) for setup in platform_setups])
+    for setup in platform_setups:
+        hass.async_create_task(setup, eager_start=True)
 
     hass.http.register_view(SpeechToTextView(hass.data[DATA_PROVIDERS]))
     return True
