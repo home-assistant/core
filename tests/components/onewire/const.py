@@ -155,7 +155,9 @@ MOCK_OWPROXY_DEVICES = {
             {ATTR_INJECT_READS: b"    1"},
             {ATTR_INJECT_READS: b"    0"},
             {ATTR_INJECT_READS: b"    0"},
-            {ATTR_INJECT_READS: b"    0"},
+            {
+                ATTR_INJECT_READS: ProtocolError,
+            },
             {ATTR_INJECT_READS: b"    0"},
             {ATTR_INJECT_READS: b"    0"},
             {ATTR_INJECT_READS: b"    0"},
@@ -165,7 +167,9 @@ MOCK_OWPROXY_DEVICES = {
             {ATTR_INJECT_READS: b"    1"},
             {ATTR_INJECT_READS: b"    0"},
             {ATTR_INJECT_READS: b"    1"},
-            {ATTR_INJECT_READS: b"    0"},
+            {
+                ATTR_INJECT_READS: ProtocolError,
+            },
             {ATTR_INJECT_READS: b"    1"},
             {ATTR_INJECT_READS: b"    0"},
             {ATTR_INJECT_READS: b"    1"},
