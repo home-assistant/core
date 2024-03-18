@@ -817,32 +817,61 @@ async def test_async_start_setup_config_entry(hass: HomeAssistant) -> None:
 
 async def test_async_start_setup_top_level_yaml(hass: HomeAssistant) -> None:
     """Test setup started context manager keeps track of setup times with modern yaml."""
-    setup_started_data = hass.data.setdefault(setup.DATA_SETUP_STARTED, {})
-    setup_time = hass.data.setdefault(setup.DATA_SETUP_TIME, {})
+    hass.set_state(CoreState.not_running)
+    setup_started: dict[tuple[str, str | None], float]
+    setup_started = hass.data.setdefault(setup.DATA_SETUP_STARTED, {})
+    setup_time = setup._setup_times(hass)
 
     with setup.async_start_setup(
-        hass, "command_line", "command_line", setup.SetupPhases.SETUP
+        hass, integration="command_line", phase=setup.SetupPhases.SETUP
     ):
-        assert isinstance(setup_started_data["command_line.command_line"], float)
+        assert isinstance(setup_started[("command_line", None)], float)
 
-        with setup.async_start_setup(
-            hass, "command_line", "command_line", setup.SetupPhases.PLATFORMS
-        ):
-            assert isinstance(setup_started_data["command_line.command_line"], float)
-
-    # Platforms inside of SETUP should not be tracked
     assert setup_time["command_line"] == {
-        setup.SetupPhases.SETUP: ANY,
+        None: {setup.SetupPhases.SETUP: ANY},
     }
+
+
+async def test_async_start_setup_platform_integration(hass: HomeAssistant) -> None:
+    """Test setup started context manager keeps track of setup times a platform integration."""
+    hass.set_state(CoreState.not_running)
+    setup_started: dict[tuple[str, str | None], float]
+    setup_started = hass.data.setdefault(setup.DATA_SETUP_STARTED, {})
+    setup_time = setup._setup_times(hass)
+
     with setup.async_start_setup(
-        hass, "command_line", "command_line", setup.SetupPhases.PLATFORMS
+        hass, integration="sensor", phase=setup.SetupPhases.SETUP
     ):
-        assert isinstance(setup_started_data["command_line.command_line"], float)
+        assert isinstance(setup_started[("sensor", None)], float)
+        with setup.async_pause_setup(
+            hass, setup.SetupPhases.WAIT_PLATFORM_INTEGRATION
+        ), setup.async_start_setup(
+            hass, integration="filter", phase=setup.SetupPhases.SETUP
+        ):
+            assert isinstance(setup_started[("sensor", None)], float)
+            assert isinstance(setup_started[("filter", None)], float)
+
+    # Platform integration setups happen in another task
+    with setup.async_start_setup(
+        hass,
+        integration="filter",
+        group="123456",
+        phase=setup.SetupPhases.PLATFORM_SETUP,
+    ):
+        assert isinstance(setup_started[("filter", "123456")], float)
+
     # Platforms outside of SETUP should be tracked
-    # This is simulates a late platform forward
-    assert setup_time["command_line"] == {
-        setup.SetupPhases.SETUP: ANY,
-        setup.SetupPhases.PLATFORMS: ANY,
+    assert setup_time["sensor"] == {
+        None: {
+            setup.SetupPhases.SETUP: ANY,
+            setup.SetupPhases.WAIT_PLATFORM_INTEGRATION: ANY,
+        },
+    }
+    assert setup_time["filter"] == {
+        None: {setup.SetupPhases.SETUP: ANY},
+        "123456": {
+            setup.SetupPhases.PLATFORM_SETUP: ANY,
+        },
     }
 
 
