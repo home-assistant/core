@@ -175,16 +175,14 @@ async def test_intent_set_mode_tests_feature(hass: HomeAssistant) -> None:
     mode_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_MODE)
     await intent.async_setup_intents(hass)
 
-    with pytest.raises(
-        IntentHandleError, match="Entity bedroom humidifier does not support modes"
-    ):
+    with pytest.raises(IntentHandleError) as excinfo:
         await async_handle(
             hass,
             "test",
             intent.INTENT_MODE,
             {"name": {"value": "Bedroom humidifier"}, "mode": {"value": "away"}},
         )
-
+    assert str(excinfo.value) == "Entity bedroom humidifier does not support modes"
     assert len(mode_calls) == 0
 
 
@@ -206,14 +204,12 @@ async def test_intent_set_unknown_mode(
     mode_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_MODE)
     await intent.async_setup_intents(hass)
 
-    with pytest.raises(
-        IntentHandleError, match="Entity bedroom humidifier does not support eco mode"
-    ):
+    with pytest.raises(IntentHandleError) as excinfo:
         await async_handle(
             hass,
             "test",
             intent.INTENT_MODE,
             {"name": {"value": "Bedroom humidifier"}, "mode": {"value": "eco"}},
         )
-
+    assert str(excinfo.value) == "Entity bedroom humidifier does not support eco mode"
     assert len(mode_calls) == 0
