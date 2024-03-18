@@ -269,14 +269,46 @@ def floor_area_mock(hass: HomeAssistant) -> None:
 @pytest.fixture
 def label_mock(hass: HomeAssistant) -> None:
     """Mock including label info."""
-    hass.states.async_set("light.Bowl", STATE_ON)
-    hass.states.async_set("light.Ceiling", STATE_OFF)
-    hass.states.async_set("light.Kitchen", STATE_OFF)
+    hass.states.async_set("light.bowl", STATE_ON)
+    hass.states.async_set("light.ceiling", STATE_OFF)
+    hass.states.async_set("light.kitchen", STATE_OFF)
+
+    area_with_labels = ar.AreaEntry(
+        id="area-with-labels",
+        name="Area with labels",
+        aliases={},
+        normalized_name="with_labels",
+        floor_id=None,
+        icon=None,
+        labels={"label_area"},
+        picture=None,
+    )
+    area_without_labels = ar.AreaEntry(
+        id="area-no-labels",
+        name="Area without labels",
+        aliases={},
+        normalized_name="without_labels",
+        floor_id=None,
+        icon=None,
+        labels=set(),
+        picture=None,
+    )
+    mock_area_registry(
+        hass,
+        {
+            area_with_labels.id: area_with_labels,
+            area_without_labels.id: area_without_labels,
+        },
+    )
 
     device_has_label1 = dr.DeviceEntry(labels={"label1"})
     device_has_label2 = dr.DeviceEntry(labels={"label2"})
-    device_has_labels = dr.DeviceEntry(labels={"label1", "label2"})
-    device_no_labels = dr.DeviceEntry(id="device-no-labels")
+    device_has_labels = dr.DeviceEntry(
+        labels={"label1", "label2"}, area_id=area_with_labels.id
+    )
+    device_no_labels = dr.DeviceEntry(
+        id="device-no-labels", area_id=area_without_labels.id
+    )
 
     mock_device_registry(
         hass,
@@ -733,6 +765,12 @@ async def test_extract_entity_ids_from_labels(hass: HomeAssistant) -> None:
     assert {
         "light.with_labels_from_device",
         "light.with_label1_and_label2_from_device",
+    } == await service.async_extract_entity_ids(hass, call)
+
+    call = ServiceCall("light", "turn_on", {"label_id": ["label_area"]})
+
+    assert {
+        "light.with_labels_from_device",
     } == await service.async_extract_entity_ids(hass, call)
 
     assert (
@@ -1702,6 +1740,11 @@ async def test_extract_from_service_label_id(hass: HomeAssistant) -> None:
             name="with_labels_from_device", entity_id="light.with_labels_from_device"
         ),
     ]
+
+    call = ServiceCall("light", "turn_on", {"label_id": "label_area"})
+    extracted = await service.async_extract_entities(hass, entities, call)
+    assert len(extracted) == 1
+    assert extracted[0].entity_id == "light.with_labels_from_device"
 
     call = ServiceCall("light", "turn_on", {"label_id": "my-label"})
     extracted = await service.async_extract_entities(hass, entities, call)
