@@ -479,7 +479,7 @@ class StrictConnectionTempTokenView(HomeAssistantView):
 
     async def get(self, request: web.Request) -> web.Response:
         """Get a temporary token and redirect to main page."""
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
         await hass.auth.session.async_create_temp_unauthorized_session(request)
         raise web.HTTPSeeOther(location="/")
 
