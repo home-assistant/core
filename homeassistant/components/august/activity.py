@@ -79,6 +79,7 @@ class ActivityStream(AugustSubscriberMixin):
                 cooldown=ACTIVITY_DEBOUNCE_COOLDOWN,
                 immediate=True,
                 function=partial(self._async_update_house_id, house_id),
+                background=True,
             )
             update_debounce[house_id] = debouncer
             update_debounce_jobs[house_id] = HassJob(

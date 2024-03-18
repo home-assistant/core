@@ -649,16 +649,14 @@ async def google_assistant_list(
     gconf = await cloud.client.get_google_config()
     entities = google_helpers.async_get_entities(hass, gconf)
 
-    result = []
-
-    for entity in entities:
-        result.append(
-            {
-                "entity_id": entity.entity_id,
-                "traits": [trait.name for trait in entity.traits()],
-                "might_2fa": entity.might_2fa_traits(),
-            }
-        )
+    result = [
+        {
+            "entity_id": entity.entity_id,
+            "traits": [trait.name for trait in entity.traits()],
+            "might_2fa": entity.might_2fa_traits(),
+        }
+        for entity in entities
+    ]
 
     connection.send_result(msg["id"], result)
 
@@ -743,16 +741,14 @@ async def alexa_list(
     alexa_config = await cloud.client.get_alexa_config()
     entities = alexa_entities.async_get_entities(hass, alexa_config)
 
-    result = []
-
-    for entity in entities:
-        result.append(
-            {
-                "entity_id": entity.entity_id,
-                "display_categories": entity.default_display_categories(),
-                "interfaces": [ifc.name() for ifc in entity.interfaces()],
-            }
-        )
+    result = [
+        {
+            "entity_id": entity.entity_id,
+            "display_categories": entity.default_display_categories(),
+            "interfaces": [ifc.name() for ifc in entity.interfaces()],
+        }
+        for entity in entities
+    ]
 
     connection.send_result(msg["id"], result)
 

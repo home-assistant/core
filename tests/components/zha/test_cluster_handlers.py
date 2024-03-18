@@ -148,7 +148,6 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
         (zigpy.zcl.clusters.general.AnalogInput.cluster_id, 1, {"present_value"}),
         (zigpy.zcl.clusters.general.AnalogOutput.cluster_id, 1, {"present_value"}),
         (zigpy.zcl.clusters.general.AnalogValue.cluster_id, 1, {"present_value"}),
-        (zigpy.zcl.clusters.general.AnalogOutput.cluster_id, 1, {"present_value"}),
         (zigpy.zcl.clusters.general.BinaryOutput.cluster_id, 1, {"present_value"}),
         (zigpy.zcl.clusters.general.BinaryValue.cluster_id, 1, {"present_value"}),
         (zigpy.zcl.clusters.general.MultistateInput.cluster_id, 1, {"present_value"}),
@@ -380,7 +379,7 @@ def test_cluster_handler_registry() -> None:
         assert cluster_id in all_quirk_ids
         assert isinstance(cluster_handler_classes, dict)
         for quirk_id, cluster_handler in cluster_handler_classes.items():
-            assert isinstance(quirk_id, NoneType) or isinstance(quirk_id, str)
+            assert isinstance(quirk_id, (NoneType, str))
             assert issubclass(cluster_handler, cluster_handlers.ClusterHandler)
             assert quirk_id in all_quirk_ids[cluster_id]
 

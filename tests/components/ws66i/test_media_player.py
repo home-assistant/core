@@ -86,7 +86,7 @@ class MockWs66i:
     def open(self):
         """Open socket. Do nothing."""
         if self.fail_open is True:
-            raise ConnectionError()
+            raise ConnectionError
 
     def close(self):
         """Close socket. Do nothing."""

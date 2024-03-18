@@ -467,19 +467,17 @@ async def test_register_view_with_location(
     with patch(
         "homeassistant.components.cloud.http_api.async_detect_location_info",
         return_value=LocationInfo(
-            **{
-                "country_code": "XX",
-                "zip_code": "12345",
-                "region_code": "GH",
-                "ip": "1.2.3.4",
-                "city": "Gotham",
-                "region_name": "Gotham",
-                "time_zone": "Earth/Gotham",
-                "currency": "XXX",
-                "latitude": "12.34567",
-                "longitude": "12.34567",
-                "use_metric": True,
-            }
+            country_code="XX",
+            zip_code="12345",
+            region_code="GH",
+            ip="1.2.3.4",
+            city="Gotham",
+            region_name="Gotham",
+            time_zone="Earth/Gotham",
+            currency="XXX",
+            latitude="12.34567",
+            longitude="12.34567",
+            use_metric=True,
         ),
     ):
         req = await cloud_client.post(
