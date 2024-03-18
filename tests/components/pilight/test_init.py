@@ -106,10 +106,7 @@ async def test_send_code_no_protocol(hass: HomeAssistant) -> None:
         assert await async_setup_component(hass, pilight.DOMAIN, {pilight.DOMAIN: {}})
 
         # Call without protocol info, should raise an error
-        with pytest.raises(
-            MultipleInvalid,
-            match=re.escape("required key not provided @ data['protocol']"),
-        ):
+        with pytest.raises(MultipleInvalid) as excinfo:
             await hass.services.async_call(
                 pilight.DOMAIN,
                 pilight.SERVICE_NAME,
@@ -117,7 +114,7 @@ async def test_send_code_no_protocol(hass: HomeAssistant) -> None:
                 blocking=True,
             )
             await hass.async_block_till_done()
-
+        assert "required key not provided @ data['protocol']" in str(excinfo.value)
 
 @patch("homeassistant.components.pilight._LOGGER.error")
 @patch("homeassistant.components.pilight._LOGGER", _LOGGER)
