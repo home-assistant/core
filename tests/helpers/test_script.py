@@ -5020,10 +5020,10 @@ async def test_stop_action(
 
 @pytest.mark.parametrize(
     ("error", "error_dict", "logmsg", "script_execution"),
-    (
+    [
         (True, {"error": "In the name of love"}, "Error", "aborted"),
         (False, {}, "Stop", "finished"),
-    ),
+    ],
 )
 async def test_stop_action_subscript(
     hass: HomeAssistant,
