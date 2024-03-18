@@ -144,7 +144,7 @@ from homeassistant.auth.models import (
     User,
 )
 from homeassistant.components import websocket_api
-from homeassistant.components.http import KEY_HASS
+from homeassistant.components.http import KEY_HASS, StrictConnectionMode
 from homeassistant.components.http.auth import (
     async_sign_path,
     async_user_not_allowed_do_auth,
@@ -211,7 +211,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _: ServiceCall,
     ) -> ServiceResponse:
         """Create a strict connection url and return it."""
-        if not hass.http.strict_connection_enabled_non_cloud:
+        if not hass.http.strict_connection_non_cloud == StrictConnectionMode.DISABLED:
             raise ServiceValidationError(
                 "Strict connection is not enabled for non-cloud requests"
             )
