@@ -2,22 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import dataclass
-
-from asyncarve import ArveSensProData
-
-from homeassistant.components.sensor import SensorEntityDescription
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import DOMAIN
 from .coordinator import ArveCoordinator
-
-
-@dataclass(frozen=True, kw_only=True)
-class ArveDeviceEntityDescription(SensorEntityDescription):
-    """Describes Arve device entity."""
-
-    value_fn: Callable[[ArveSensProData], float | int]
 
 
 class ArveDeviceEntity(CoordinatorEntity[ArveCoordinator]):
@@ -26,9 +15,7 @@ class ArveDeviceEntity(CoordinatorEntity[ArveCoordinator]):
     _attr_has_entity_name = True
     _attr_available = True
 
-    def __init__(
-        self, coordinator: ArveCoordinator, description: ArveDeviceEntityDescription
-    ) -> None:
+    def __init__(self, coordinator: ArveCoordinator, description) -> None:
         """Initialize the Arve device entity."""
         super().__init__(coordinator)
 
@@ -47,3 +34,10 @@ class ArveDeviceEntity(CoordinatorEntity[ArveCoordinator]):
         )
 
         self.name = description.key
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.sn)},
+            manufacturer="Calanda Air AG",
+            model="Arve Sens Pro",
+            sw_version="1.0.0",
+        )
