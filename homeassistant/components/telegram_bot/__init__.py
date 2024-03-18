@@ -366,7 +366,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     for p_config in domain_config:
         # Each platform config gets its own bot
-        bot = initialize_bot(p_config, hass)
+        bot = initialize_bot(hass, p_config)
         p_type: str = p_config[CONF_PLATFORM]
 
         platform = platforms[p_type]
@@ -456,7 +456,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-def initialize_bot(p_config: dict, hass: HomeAssistant) -> Bot:
+def initialize_bot(hass: HomeAssistant, p_config: dict) -> Bot:
     """Initialize telegram bot with proxy support."""
     api_key: str = p_config[CONF_API_KEY]
     proxy_url: str | None = p_config.get(CONF_PROXY_URL)
