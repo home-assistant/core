@@ -2,17 +2,9 @@
 
 from __future__ import annotations
 
-from asyncarve import Arve, ArveConnectionError
-
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
-    CONF_CLIENT_SECRET,
-    CONF_NAME,
-    Platform,
-)
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
 
 from .const import DOMAIN
 from .coordinator import ArveCoordinator
@@ -23,22 +15,11 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Arve from a config entry."""
 
-    arve = Arve(
-        entry.data[CONF_ACCESS_TOKEN],
-        entry.data[CONF_CLIENT_SECRET],
-        entry.data[CONF_NAME],
-    )
-
-    coordinator = ArveCoordinator(hass, arve)
+    coordinator = ArveCoordinator(hass)
 
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-
-    try:
-        await arve.get_sensor_info()
-    except ArveConnectionError as exception:
-        raise ConfigEntryError from exception
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

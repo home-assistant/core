@@ -1,15 +1,6 @@
 """Support for Arve devices."""
 
-from collections.abc import Callable
-from dataclasses import dataclass
-
-from asyncarve import ArveSensProData
-
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorEntity,
-    SensorEntityDescription,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -21,17 +12,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 from .coordinator import ArveCoordinator
-from .entity import ArveDeviceEntity
-
-
-@dataclass(frozen=True, kw_only=True)
-class ArveDeviceEntityDescription(SensorEntityDescription):
-    """Describes Arve device entity."""
-
-    value_fn: Callable[[ArveSensProData], float | int]
-
+from .entity import ArveDeviceEntity, ArveDeviceEntityDescription
 
 SENSORS: tuple[ArveDeviceEntityDescription, ...] = (
     ArveDeviceEntityDescription(
@@ -108,22 +91,8 @@ class ArveDevice(ArveDeviceEntity, SensorEntity):
         description: ArveDeviceEntityDescription,
     ) -> None:
         """Initialize Arve device."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, description)
         self.coordinator = coordinator
-        self.sn = coordinator.arve.device_sn
-        self.formated_sn = "_".join(self.sn.lower().split("-"))
-        self.entity_description = description
-        self.trans_key = str(self.entity_description.translation_key)
-        self._attr_unique_id = "_".join(
-            [
-                self.sn,
-                self.trans_key,
-            ]
-        )
-
-        LOGGER.debug(self._attr_unique_id)
-
-        self.name = description.key
 
     @property
     def native_value(self) -> int | float:
