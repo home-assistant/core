@@ -16,6 +16,7 @@ from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util import dt as dt_util
 
 DOMAIN: Final = "scene"
@@ -66,7 +67,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await component.async_setup(config)
     # Ensure Home Assistant platform always loaded.
-    await component.async_setup_platform(HA_DOMAIN, {"platform": HA_DOMAIN, STATES: []})
+    with async_pause_setup(hass, SetupPhases.WAIT_PLATFORM_INTEGRATION):
+        await component.async_setup_platform(
+            HA_DOMAIN, {"platform": HA_DOMAIN, STATES: []}
+        )
     component.async_register_entity_service(
         SERVICE_TURN_ON,
         {ATTR_TRANSITION: vol.All(vol.Coerce(float), vol.Clamp(min=0, max=6553))},
