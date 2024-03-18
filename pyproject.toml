@@ -704,9 +704,6 @@ voluptuous = "vol"
 
 [tool.ruff.lint.flake8-pytest-style]
 fixture-parentheses = false
-parametrize-names-type = "tuple"
-parametrize-values-row-type = "tuple"
-parametrize-values-type = "list"
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 "async_timeout".msg = "use asyncio.timeout instead"
