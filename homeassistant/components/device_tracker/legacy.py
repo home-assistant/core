@@ -241,8 +241,7 @@ async def _async_setup_legacy_integration(
     ]
 
     if setup_tasks:
-        with async_pause_setup(hass, SetupPhases.WAIT_PLATFORM_INTEGRATION):
-            await asyncio.wait(setup_tasks)
+        await asyncio.wait(setup_tasks)
 
     async def async_platform_discovered(
         p_type: str, info: dict[str, Any] | None
