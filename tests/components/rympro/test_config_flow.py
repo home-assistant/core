@@ -25,7 +25,8 @@ TEST_DATA = {
 
 
 @pytest.fixture
-def _config_entry(hass):
+def config_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Create a mock config entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=TEST_DATA,
@@ -122,7 +123,7 @@ async def test_login_error(hass: HomeAssistant, exception, error) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_already_exists(hass: HomeAssistant, _config_entry) -> None:
+async def test_form_already_exists(hass: HomeAssistant, config_entry) -> None:
     """Test that a flow with an existing account aborts."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -148,16 +149,16 @@ async def test_form_already_exists(hass: HomeAssistant, _config_entry) -> None:
     assert result2["reason"] == "already_configured"
 
 
-async def test_form_reauth(hass: HomeAssistant, _config_entry) -> None:
+async def test_form_reauth(hass: HomeAssistant, config_entry) -> None:
     """Test reauthentication."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
             "source": config_entries.SOURCE_REAUTH,
-            "entry_id": _config_entry.entry_id,
+            "entry_id": config_entry.entry_id,
         },
-        data=_config_entry.data,
+        data=config_entry.data,
     )
     assert result["type"] == "form"
     assert result["errors"] is None
@@ -183,20 +184,20 @@ async def test_form_reauth(hass: HomeAssistant, _config_entry) -> None:
 
     assert result2["type"] == "abort"
     assert result2["reason"] == "reauth_successful"
-    assert _config_entry.data[CONF_PASSWORD] == "new_password"
+    assert config_entry.data[CONF_PASSWORD] == "new_password"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_reauth_with_new_account(hass: HomeAssistant, _config_entry) -> None:
+async def test_form_reauth_with_new_account(hass: HomeAssistant, config_entry) -> None:
     """Test reauthentication with new account."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
             "source": config_entries.SOURCE_REAUTH,
-            "entry_id": _config_entry.entry_id,
+            "entry_id": config_entry.entry_id,
         },
-        data=_config_entry.data,
+        data=config_entry.data,
     )
     assert result["type"] == "form"
     assert result["errors"] is None
@@ -222,6 +223,6 @@ async def test_form_reauth_with_new_account(hass: HomeAssistant, _config_entry) 
 
     assert result2["type"] == "abort"
     assert result2["reason"] == "reauth_successful"
-    assert _config_entry.data[CONF_UNIQUE_ID] == "new-account-number"
-    assert _config_entry.unique_id == "new-account-number"
+    assert config_entry.data[CONF_UNIQUE_ID] == "new-account-number"
+    assert config_entry.unique_id == "new-account-number"
     assert len(mock_setup_entry.mock_calls) == 1
