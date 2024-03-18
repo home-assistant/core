@@ -98,7 +98,7 @@ async def test_client_exceptions(
     """Test TTN Exceptions."""
 
     async def raise_TTNError():
-        raise exceptionClass()
+        raise exceptionClass
 
     mock_TTNClient.return_value.fetch_data = raise_TTNError
     CONFIG_ENTRY.add_to_hass(hass)
