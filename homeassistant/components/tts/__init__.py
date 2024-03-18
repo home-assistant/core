@@ -343,6 +343,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     for setup in platform_setups:
+        # Tasks are created as tracked tasks to ensure startup
+        # waits for them to finish, but we explicitly do not
+        # want to wait for them to finish here because we want
+        # any config entries that use tts as a base platform
+        # to be able to start with out having to wait for the
+        # legacy platforms to finish setting up.
         hass.async_create_task(setup, eager_start=True)
 
     return True
