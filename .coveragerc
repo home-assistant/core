@@ -1317,6 +1317,11 @@ omit =
     homeassistant/components/surepetcare/binary_sensor.py
     homeassistant/components/surepetcare/entity.py
     homeassistant/components/surepetcare/sensor.py
+    homeassistant/components/swidget/__init__.py
+    homeassistant/components/swidget/const.py
+    homeassistant/components/swidget/coordinator.py
+    homeassistant/components/swidget/entity.py
+    homeassistant/components/swidget/light.py
     homeassistant/components/swiss_hydrological_data/sensor.py
     homeassistant/components/swiss_public_transport/__init__.py
     homeassistant/components/swiss_public_transport/coordinator.py

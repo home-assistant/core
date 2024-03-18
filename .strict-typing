@@ -404,6 +404,7 @@ homeassistant.components.stt.*
 homeassistant.components.suez_water.*
 homeassistant.components.sun.*
 homeassistant.components.surepetcare.*
+homeassistant.components.swidget.*
 homeassistant.components.switch.*
 homeassistant.components.switchbee.*
 homeassistant.components.switchbot_cloud.*
