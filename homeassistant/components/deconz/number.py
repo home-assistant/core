@@ -21,12 +21,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.helpers.entity_registry as er
 
-from .const import DOMAIN as DECONZ_DOMAIN
 from .deconz_device import DeconzDevice
 from .hub import DeconzHub, get_gateway_from_config_entry
-from .util import serial_from_unique_id
 
 T = TypeVar("T", Presence, PydeconzSensorBase)
 
@@ -70,25 +67,6 @@ ENTITY_DESCRIPTIONS: tuple[DeconzNumberDescription, ...] = (
 )
 
 
-@callback
-def async_update_unique_id(
-    hass: HomeAssistant, unique_id: str, description: DeconzNumberDescription
-) -> None:
-    """Update unique ID base to be on full unique ID rather than device serial.
-
-    Introduced with release 2022.11.
-    """
-    ent_reg = er.async_get(hass)
-
-    new_unique_id = f"{unique_id}-{description.key}"
-    if ent_reg.async_get_entity_id(DOMAIN, DECONZ_DOMAIN, new_unique_id):
-        return
-
-    unique_id = f"{serial_from_unique_id(unique_id)}-{description.key}"
-    if entity_id := ent_reg.async_get_entity_id(DOMAIN, DECONZ_DOMAIN, unique_id):
-        ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -109,8 +87,6 @@ async def async_setup_entry(
                 or description.value_fn(sensor) is None
             ):
                 continue
-            if description.key == "delay":
-                async_update_unique_id(hass, sensor.unique_id, description)
             async_add_entities([DeconzNumber(sensor, gateway, description)])
 
     gateway.register_platform_add_device_callback(

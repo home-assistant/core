@@ -452,9 +452,9 @@ class ZHAGateway:
         self, device: ZHADevice, entity_refs: list[EntityReference] | None
     ) -> None:
         if entity_refs is not None:
-            remove_tasks: list[asyncio.Future[Any]] = []
-            for entity_ref in entity_refs:
-                remove_tasks.append(entity_ref.remove_future)
+            remove_tasks: list[asyncio.Future[Any]] = [
+                entity_ref.remove_future for entity_ref in entity_refs
+            ]
             if remove_tasks:
                 await asyncio.wait(remove_tasks)
 
@@ -783,9 +783,7 @@ class ZHAGateway:
             _LOGGER.debug("Group: 0x%04x could not be found", group_id)
             return
         if group.members:
-            tasks = []
-            for member in group.members:
-                tasks.append(member.async_remove_from_group())
+            tasks = [member.async_remove_from_group() for member in group.members]
             if tasks:
                 await asyncio.gather(*tasks)
         self.application_controller.groups.pop(group_id)
@@ -872,7 +870,7 @@ class LogRelayHandler(logging.Handler):
     def emit(self, record: LogRecord) -> None:
         """Relay log message via dispatcher."""
         entry = LogEntry(
-            record, self.paths_re, figure_out_source=record.levelno >= logging.WARN
+            record, self.paths_re, figure_out_source=record.levelno >= logging.WARNING
         )
         async_dispatcher_send(
             self.hass,

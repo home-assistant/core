@@ -1271,13 +1271,13 @@
       'attributes': ReadOnlyDict({
         'device_file': '/29.111111111111/PIO.3',
         'friendly_name': '29.111111111111 Programmed input-output 3',
-        'raw_value': 0.0,
+        'raw_value': None,
       }),
       'context': <ANY>,
       'entity_id': 'switch.29_111111111111_programmed_input_output_3',
       'last_changed': <ANY>,
       'last_updated': <ANY>,
-      'state': 'off',
+      'state': 'unknown',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({

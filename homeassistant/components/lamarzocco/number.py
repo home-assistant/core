@@ -208,20 +208,19 @@ async def async_setup_entry(
     """Set up number entities."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    async_add_entities(
+    entities: list[NumberEntity] = [
         LaMarzoccoNumberEntity(coordinator, description)
         for description in ENTITIES
         if description.supported_fn(coordinator)
-    )
+    ]
 
-    entities: list[LaMarzoccoKeyNumberEntity] = []
     for description in KEY_ENTITIES:
         if description.supported_fn(coordinator):
             num_keys = KEYS_PER_MODEL[coordinator.lm.model_name]
-            for key in range(min(num_keys, 1), num_keys + 1):
-                entities.append(
-                    LaMarzoccoKeyNumberEntity(coordinator, description, key)
-                )
+            entities.extend(
+                LaMarzoccoKeyNumberEntity(coordinator, description, key)
+                for key in range(min(num_keys, 1), num_keys + 1)
+            )
 
     async_add_entities(entities)
 

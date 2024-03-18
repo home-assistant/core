@@ -43,12 +43,6 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 ORIG_WRITE_TAGS = tts.SpeechManager.write_tags
 
 
-@pytest.fixture
-async def setup_tts(hass: HomeAssistant, mock_tts: None) -> None:
-    """Mock TTS."""
-    assert await async_setup_component(hass, tts.DOMAIN, {"tts": {"platform": "test"}})
-
-
 class DefaultEntity(tts.TextToSpeechEntity):
     """Test entity."""
 
@@ -1308,7 +1302,7 @@ async def test_tags_with_wave() -> None:
     # below data represents an empty wav file
     tts_data = bytes.fromhex(
         "52 49 46 46 24 00 00 00 57 41 56 45 66 6d 74 20 10 00 00 00 01 00 02 00"
-        + "22 56 00 00 88 58 01 00 04 00 10 00 64 61 74 61 00 00 00 00"
+        "22 56 00 00 88 58 01 00 04 00 10 00 64 61 74 61 00 00 00 00"
     )
 
     tagged_data = ORIG_WRITE_TAGS(

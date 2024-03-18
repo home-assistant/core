@@ -254,7 +254,7 @@ class States(Base):  # type: ignore
         TIMESTAMP_TYPE, default=time.time
     )  # *** Not originally in v23, only added for recorder to startup ok
     last_updated = Column(DATETIME_TYPE, default=dt_util.utcnow, index=True)
-    last_updated_ts = Column(
+    last_updated_ts = Column(  # noqa: PIE794
         TIMESTAMP_TYPE, default=time.time, index=True
     )  # *** Not originally in v23, only added for recorder to startup ok
     created = Column(DATETIME_TYPE, default=dt_util.utcnow)

@@ -31,7 +31,18 @@ import re
 import threading
 import time
 from time import monotonic
-from typing import TYPE_CHECKING, Any, Generic, Literal, ParamSpec, Self, cast, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Generic,
+    Literal,
+    NotRequired,
+    ParamSpec,
+    Self,
+    TypedDict,
+    cast,
+    overload,
+)
 from urllib.parse import urlparse
 
 from typing_extensions import TypeVar
@@ -525,13 +536,15 @@ class HomeAssistant:
             raise ValueError("Don't call add_job with None")
         if asyncio.iscoroutine(target):
             self.loop.call_soon_threadsafe(
-                functools.partial(self.async_add_job, target, eager_start=True)
+                functools.partial(self.async_create_task, target, eager_start=True)
             )
             return
         if TYPE_CHECKING:
             target = cast(Callable[..., Any], target)
         self.loop.call_soon_threadsafe(
-            functools.partial(self.async_add_job, target, *args, eager_start=True)
+            functools.partial(
+                self.async_add_hass_job, HassJob(target), *args, eager_start=True
+            )
         )
 
     @overload
@@ -581,6 +594,17 @@ class HomeAssistant:
         target: target to call.
         args: parameters for method to call.
         """
+        # late import to avoid circular imports
+        from .helpers import frame  # pylint: disable=import-outside-toplevel
+
+        frame.report(
+            "calls `async_add_job`, which is deprecated and will be removed in Home "
+            "Assistant 2025.4; Please review "
+            "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
+            " for replacement options",
+            error_if_core=False,
+        )
+
         if target is None:
             raise ValueError("Don't call async_add_job with None")
 
@@ -842,6 +866,17 @@ class HomeAssistant:
         target: target to call.
         args: parameters for method to call.
         """
+        # late import to avoid circular imports
+        from .helpers import frame  # pylint: disable=import-outside-toplevel
+
+        frame.report(
+            "calls `async_run_job`, which is deprecated and will be removed in Home "
+            "Assistant 2025.4; Please review "
+            "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
+            " for replacement options",
+            error_if_core=False,
+        )
+
         if asyncio.iscoroutine(target):
             return self.async_create_task(target, eager_start=True)
 
@@ -1101,7 +1136,7 @@ class HomeAssistant:
             if (
                 not handle.cancelled()
                 and (args := handle._args)  # pylint: disable=protected-access
-                and type(job := args[0]) is HassJob  # noqa: E721
+                and type(job := args[0]) is HassJob
                 and job.cancel_on_shutdown
             ):
                 handle.cancel()
@@ -1510,14 +1545,24 @@ class EventBus:
             )
 
 
+class CompressedState(TypedDict):
+    """Compressed dict of a state."""
+
+    s: str  # COMPRESSED_STATE_STATE
+    a: ReadOnlyDict[str, Any]  # COMPRESSED_STATE_ATTRIBUTES
+    c: str | dict[str, Any]  # COMPRESSED_STATE_CONTEXT
+    lc: float  # COMPRESSED_STATE_LAST_CHANGED
+    lu: NotRequired[float]  # COMPRESSED_STATE_LAST_UPDATED
+
+
 class State:
     """Object to represent a state within the state machine.
 
     entity_id: the entity that is represented.
     state: the state of the entity
     attributes: extra information on entity and state
-    last_changed: last time the state was changed, not the attributes.
-    last_updated: last time this object was updated.
+    last_changed: last time the state was changed.
+    last_updated: last time the state or attributes were changed.
     context: Context in which it was created
     domain: Domain of this state.
     object_id: Object id of this state.
@@ -1550,7 +1595,7 @@ class State:
         # State only creates and expects a ReadOnlyDict so
         # there is no need to check for subclassing with
         # isinstance here so we can use the faster type check.
-        if type(attributes) is not ReadOnlyDict:  # noqa: E721
+        if type(attributes) is not ReadOnlyDict:
             self.attributes = ReadOnlyDict(attributes or {})
         else:
             self.attributes = attributes
@@ -1639,7 +1684,7 @@ class State:
         return json_fragment(self.as_dict_json)
 
     @cached_property
-    def as_compressed_state(self) -> dict[str, Any]:
+    def as_compressed_state(self) -> CompressedState:
         """Build a compressed dict of a state for adds.
 
         Omits the lu (last_updated) if it matches (lc) last_changed.
@@ -1654,7 +1699,7 @@ class State:
             # to avoid callers outside of this module
             # from misusing it by mistake.
             context = state_context._as_dict  # pylint: disable=protected-access
-        compressed_state = {
+        compressed_state: CompressedState = {
             COMPRESSED_STATE_STATE: self.state,
             COMPRESSED_STATE_ATTRIBUTES: self.attributes,
             COMPRESSED_STATE_CONTEXT: context,
