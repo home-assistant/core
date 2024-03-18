@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
-from .entity import TOPIC_TO_EVENT_TYPE, AxisEventEntity
+from .entity import AxisEventEntity
 from .hub import AxisHub
 
 
@@ -69,9 +69,9 @@ def guard_suite_name_fn(
     | MotionGuardHandler
     | Vmd4Handler,
     event: Event,
+    event_type: str,
 ) -> str:
     """Get guard suite item name."""
-    event_type = TOPIC_TO_EVENT_TYPE[event.topic_base]
     if handler.initialized and (profiles := handler["0"].profiles):
         for profile_id, profile in profiles.items():
             camera_id = profile.camera
@@ -83,25 +83,25 @@ def guard_suite_name_fn(
 @callback
 def fence_guard_name_fn(hub: AxisHub, event: Event) -> str:
     """Fence guard name."""
-    return guard_suite_name_fn(hub.api.vapix.fence_guard, event)
+    return guard_suite_name_fn(hub.api.vapix.fence_guard, event, "Fence Guard")
 
 
 @callback
 def loitering_guard_name_fn(hub: AxisHub, event: Event) -> str:
     """Loitering guard name."""
-    return guard_suite_name_fn(hub.api.vapix.loitering_guard, event)
+    return guard_suite_name_fn(hub.api.vapix.loitering_guard, event, "Loitering Guard")
 
 
 @callback
 def motion_guard_name_fn(hub: AxisHub, event: Event) -> str:
     """Motion guard name."""
-    return guard_suite_name_fn(hub.api.vapix.motion_guard, event)
+    return guard_suite_name_fn(hub.api.vapix.motion_guard, event, "Motion Guard")
 
 
 @callback
 def motion_detection_4_name_fn(hub: AxisHub, event: Event) -> str:
     """Motion detection 4 name."""
-    return guard_suite_name_fn(hub.api.vapix.vmd4, event)
+    return guard_suite_name_fn(hub.api.vapix.vmd4, event, "VMD4")
 
 
 @callback
