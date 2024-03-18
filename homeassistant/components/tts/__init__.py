@@ -319,9 +319,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     platform_setups = await async_setup_legacy(hass, config)
 
-    if platform_setups:
-        await asyncio.wait([asyncio.create_task(setup) for setup in platform_setups])
-
     component.async_register_entity_service(
         "speak",
         {
@@ -344,6 +341,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         async_clear_cache_handle,
         schema=SCHEMA_SERVICE_CLEAR_CACHE,
     )
+
+    for setup in platform_setups:
+        hass.async_create_task(setup, eager_start=True)
 
     return True
 

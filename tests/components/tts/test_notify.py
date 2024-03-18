@@ -107,6 +107,8 @@ async def test_setup_legacy_service(hass: HomeAssistant) -> None:
     with assert_setup_component(1, notify.DOMAIN):
         assert await async_setup_component(hass, notify.DOMAIN, config)
 
+    await hass.async_block_till_done()
+
     await hass.services.async_call(
         notify.DOMAIN,
         "tts_test",
