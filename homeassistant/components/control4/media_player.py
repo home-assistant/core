@@ -1,6 +1,7 @@
 """Platform for Control4 Rooms Media Players."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import enum
 import logging
@@ -56,14 +57,13 @@ class _SourceType(enum.Enum):
     VIDEO = 2
 
 
+@dataclass
 class _RoomSource:
-    """Room Source Data."""
+    """Class for Room Source."""
 
-    def __init__(self, source_type: set[_SourceType], idx: int, name: str) -> None:
-        """Initialize Room Source Data."""
-        self.source_type = source_type
-        self.idx = idx
-        self.name = name
+    source_type: set[_SourceType]
+    idx: int
+    name: str
 
 
 async def get_rooms(hass: HomeAssistant, entry: ConfigEntry):
@@ -173,14 +173,13 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
     """Control4 Room entity."""
 
     _attr_has_entity_name = True
-    _attr_name = None
 
     def __init__(
         self,
         entry_data: dict,
         coordinator: DataUpdateCoordinator[dict[int, dict[str, Any]]],
         name: str,
-        idx: int,
+        room_id: int,
         id_to_parent: dict[int, int],
         sources: dict[int, _RoomSource],
         room_hidden: bool,
@@ -189,17 +188,16 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
         super().__init__(
             entry_data,
             coordinator,
-            name,
-            idx,
+            None,
+            room_id,
             device_name=name,
             device_manufacturer=None,
             device_model=None,
-            device_id=idx,
+            device_id=room_id,
         )
         self._attr_entity_registry_enabled_default = not room_hidden
         self._id_to_parent = id_to_parent
         self._sources = sources
-        self._is_soft_on = False
         self._attr_supported_features = (
             MediaPlayerEntityFeature.PLAY
             | MediaPlayerEntityFeature.PAUSE
@@ -208,7 +206,6 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
             | MediaPlayerEntityFeature.VOLUME_SET
             | MediaPlayerEntityFeature.VOLUME_STEP
             | MediaPlayerEntityFeature.TURN_OFF
-            | MediaPlayerEntityFeature.TURN_ON
             | MediaPlayerEntityFeature.SELECT_SOURCE
         )
 
@@ -269,7 +266,7 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
 
     @property
     def state(self):
-        """Return whether this room is on or off."""
+        """Return whether this room is on or idle."""
 
         if source_state := self._get_current_source_state():
             return source_state
@@ -277,10 +274,7 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
         if self.coordinator.data[self._idx][CONTROL4_POWER_STATE]:
             return MediaPlayerState.ON
 
-        if self._is_soft_on:
-            return MediaPlayerState.IDLE
-
-        return MediaPlayerState.OFF
+        return MediaPlayerState.IDLE
 
     @property
     def source(self):
@@ -353,18 +347,8 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
 
         await self.coordinator.async_request_refresh()
 
-    def turn_on(self):
-        """Fake turn-on the room.  Actual power on occurs during source select.
-
-        We dont have any information about the previously selected source so we cannot "turn on" the room
-        However, we need to trick HA into thinking the room is on in order to display the source list.
-        Selecting a source will _actually_ turn on the system.
-        """
-        self._is_soft_on = True
-
     async def async_turn_off(self):
         """Turn off the room."""
-        self._is_soft_on = False
         await self._create_api_object().setRoomOff()
         await self.coordinator.async_request_refresh()
 

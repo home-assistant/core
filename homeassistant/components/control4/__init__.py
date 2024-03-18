@@ -156,7 +156,7 @@ class Control4Entity(CoordinatorEntity[Any]):
         self,
         entry_data: dict,
         coordinator: DataUpdateCoordinator[Any],
-        name: str,
+        name: str | None,
         idx: int,
         device_name: str | None,
         device_manufacturer: str | None,
