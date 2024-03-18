@@ -101,6 +101,7 @@ async def test_prefs_default_voice(
     """Test cloud provider uses the preferences."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, TTS_DOMAIN, {TTS_DOMAIN: platform_config})
+    await hass.async_block_till_done()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
 
