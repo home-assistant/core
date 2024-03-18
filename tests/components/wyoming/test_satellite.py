@@ -169,7 +169,7 @@ class SatelliteAsyncTcpClient(MockAsyncTcpClient):
 
     def inject_event(self, event: Event) -> None:
         """Put an event in as the next response."""
-        self.responses = [event] + self.responses
+        self.responses = [event, *self.responses]
 
 
 async def test_satellite_pipeline(hass: HomeAssistant) -> None:

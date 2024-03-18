@@ -1297,7 +1297,7 @@ async def test_homekit_reset_accessories_not_bridged(
         acc_mock = MagicMock()
         acc_mock.entity_id = entity_id
         acc_mock.stop = AsyncMock()
-        acc_mock.to_HAP = lambda: {}
+        acc_mock.to_HAP = dict
 
         aid = homekit.aid_storage.get_or_allocate_aid_for_entity_id(entity_id)
         homekit.bridge.accessories = {aid: acc_mock}

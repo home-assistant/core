@@ -480,12 +480,12 @@ class CameraImagePreview(HomeAssistantView):
                 flow = self.hass.config_entries.options.async_get(flow_id)
             except UnknownFlow as exc:
                 _LOGGER.warning("Unknown flow while getting image preview")
-                raise web.HTTPNotFound() from exc
+                raise web.HTTPNotFound from exc
         user_input = flow["context"]["preview_cam"]
         camera = GenericCamera(self.hass, user_input, flow_id, "preview")
         if not camera.is_on:
             _LOGGER.debug("Camera is off")
-            raise web.HTTPServiceUnavailable()
+            raise web.HTTPServiceUnavailable
         image = await _async_get_image(
             camera,
             CAMERA_IMAGE_TIMEOUT,

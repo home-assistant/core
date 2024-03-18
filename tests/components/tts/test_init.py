@@ -43,12 +43,6 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 ORIG_WRITE_TAGS = tts.SpeechManager.write_tags
 
 
-@pytest.fixture
-async def setup_tts(hass: HomeAssistant, mock_tts: None) -> None:
-    """Mock TTS."""
-    assert await async_setup_component(hass, tts.DOMAIN, {"tts": {"platform": "test"}})
-
-
 class DefaultEntity(tts.TextToSpeechEntity):
     """Test entity."""
 
