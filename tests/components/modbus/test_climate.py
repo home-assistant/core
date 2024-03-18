@@ -72,6 +72,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
@@ -721,6 +722,31 @@ async def test_service_climate_fan_update(
             },
             SWING_OFF,
             [0x00],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_DATA_TYPE: DataType.INT32,
+                        CONF_SWING_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_SWING_MODE_VALUES: {
+                                CONF_SWING_MODE_SWING_OFF: 0,
+                                CONF_SWING_MODE_SWING_ON: 1,
+                                CONF_SWING_MODE_SWING_VERT: 2,
+                                CONF_SWING_MODE_SWING_BOTH: 3,
+                            },
+                        },
+                    },
+                ]
+            },
+            STATE_UNKNOWN,
+            [0x05],
         ),
     ],
 )

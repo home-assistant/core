@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+import logging
 import struct
 from typing import Any, cast
 
@@ -33,6 +34,7 @@ from homeassistant.const import (
     CONF_TEMPERATURE_UNIT,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
+    STATE_UNKNOWN,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -85,6 +87,8 @@ from .const import (
     DataType,
 )
 from .modbus import ModbusHub
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -248,8 +252,8 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         else:
             # No SWING modes defined
             self._swing_mode_register = None
-            self._attr_swing_mode = FAN_AUTO
-            self._attr_swing_modes = [FAN_AUTO]
+            self._attr_swing_mode = SWING_OFF
+            self._attr_swing_modes = [SWING_OFF]
 
         if CONF_HVAC_ONOFF_REGISTER in config:
             self._hvac_onoff_register = config[CONF_HVAC_ONOFF_REGISTER]
@@ -461,11 +465,14 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                 raw=True,
             )
 
-            # Translate the value received
-            if swing_mode is not None:
+            if swing_mode in self._swing_mode_mapping_from_modbus:
                 self._attr_swing_mode = self._swing_mode_mapping_from_modbus.get(
-                    int(swing_mode), self._attr_swing_mode
+                    int(swing_mode)
                 )
+            else:
+                self._attr_swing_mode = STATE_UNKNOWN
+                _err = f"{self.name}: No answer received from Swing mode register. State is Unknown"
+                _LOGGER.error(_err)
 
         # Read the on/off register if defined. If the value in this
         # register is "OFF", it will take precedence over the value
