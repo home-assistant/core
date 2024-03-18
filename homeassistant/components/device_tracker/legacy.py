@@ -55,6 +55,7 @@ from homeassistant.setup import (
     async_start_setup,
 )
 from homeassistant.util import dt as dt_util
+from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.yaml import dump
 
 from .const import (
@@ -215,10 +216,12 @@ async def async_setup_integration(hass: HomeAssistant, config: ConfigType) -> No
         DOMAIN, SERVICE_SEE, async_see_service, SERVICE_SEE_PAYLOAD_SCHEMA
     )
 
-    # The platforms load in a tracked task to ensure
-    # device tracker setup can continue and config
-    # entry integrations are not waiting for
-    # legacy device tracker platforms to be set up.
+    #
+    # The platforms load in a non-awaited tracked task
+    # to ensure device tracker setup can continue and config
+    # entry integrations are not waiting for legacy device
+    # tracker platforms to be set up.
+    #
     hass.async_create_task(
         _async_setup_legacy_integration(hass, config, tracker), eager_start=True
     )
@@ -231,7 +234,7 @@ async def _async_setup_legacy_integration(
     legacy_platforms = await async_extract_config(hass, config)
 
     setup_tasks = [
-        asyncio.create_task(legacy_platform.async_setup_legacy(hass, tracker))
+        create_eager_task(legacy_platform.async_setup_legacy(hass, tracker))
         for legacy_platform in legacy_platforms
     ]
 
