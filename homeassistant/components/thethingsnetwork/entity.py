@@ -1,15 +1,21 @@
 """Support for The Things Network entities."""
 
+from abc import ABC, abstractmethod
 from datetime import timedelta
 import logging
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
-from ttn_client import TTNSensorValue
+from ttn_client import TTNBaseValue, TTNSensorValue
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+
+    from .coordinator import TTNCoordinator
 
 from .const import (
     CONF_APP_ID,
@@ -25,15 +31,20 @@ from .entry_settings import TTN_EntrySettings
 _LOGGER = logging.getLogger(__name__)
 
 
-class TTN_Entity(CoordinatorEntity, Entity):
+class TTN_Entity(CoordinatorEntity, Entity, ABC):
     """Representation of a The Things Network Data Storage sensor."""
 
     @staticmethod
-    def get_unique_id(device_id, field_id):
+    def get_unique_id(device_id: str, field_id: str) -> str:
         """Get unique_id which is derived from device_id and field_id."""
         return f"{device_id}_{field_id}"
 
-    def __init__(self, entry, coordinator, ttn_value: TTNSensorValue) -> None:
+    def __init__(
+        self,
+        entry: "ConfigEntry",
+        coordinator: "TTNCoordinator",
+        ttn_value: TTNSensorValue,
+    ) -> None:
         """Initialize a The Things Network Data Storage sensor."""
 
         self.__entry = entry
@@ -58,20 +69,20 @@ class TTN_Entity(CoordinatorEntity, Entity):
     # not longer available in TTN
     # -----------------------------------------------------------#
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Remember added entity - see exits method below."""
 
         await super().async_added_to_hass()
         TTN_EntrySettings(self.__entry).get_entities()[self.unique_id] = self
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Remove entity from hass."""
 
         await super().async_will_remove_from_hass()
         TTN_EntrySettings(self.__entry).get_entities().pop(self.unique_id)
 
     @staticmethod
-    def exits(entry, device_id, field_id):
+    def exits(entry: "ConfigEntry", device_id: str, field_id: str) -> bool:
         """Check if an entry for this device/field already exists in HASS.
 
         It is used to avoid creating duplicates while still allowing adding new devices/fields without restarting the adapter.
@@ -107,7 +118,7 @@ class TTN_Entity(CoordinatorEntity, Entity):
     # ---------------
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str:
         """Return a unique ID."""
         return self.get_unique_id(self.device_id, self.field_id)
 
@@ -158,21 +169,28 @@ class TTN_Entity(CoordinatorEntity, Entity):
     # TTN integration additional methods
     # ---------------
     @property
-    def device_id(self):
+    def device_id(self) -> str:
         """Return device_id."""
-        return self._ttn_value.device_id
+        return str(self._ttn_value.device_id)
 
     @property
-    def field_id(self):
+    def field_id(self) -> str:
         """Return field_id."""
-        return self._ttn_value.field_id
+        return str(self._ttn_value.field_id)
 
     @property
-    def device_name(self):
+    def device_name(self) -> str:
         """Return device_name."""
         return self.__device_name
 
-    def __refresh_names(self):
+    @staticmethod
+    @abstractmethod
+    def manages_uplink(
+        entrySettings: TTN_EntrySettings, ttn_value: TTNBaseValue
+    ) -> bool:
+        """Check if this class maps to this ttn_value."""
+
+    def __refresh_names(self) -> None:
         device_name = self.device_id
         field_name = self.field_id
 

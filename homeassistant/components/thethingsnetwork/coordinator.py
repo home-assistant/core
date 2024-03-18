@@ -1,8 +1,10 @@
 """The Things Network's integration DataUpdateCoordinator."""
 
+from collections.abc import Callable
 from datetime import timedelta
 import logging
 import traceback
+from typing import TYPE_CHECKING
 
 from ttn_client import TTNAuthError, TTNClient
 
@@ -21,8 +23,10 @@ from .const import (
     OPTIONS_MENU_INTEGRATION_FIRST_FETCH_TIME_H,
     OPTIONS_MENU_INTEGRATION_REFRESH_TIME_S,
 )
-from .entity import TTN_Entity
 from .entry_settings import TTN_EntrySettings
+
+if TYPE_CHECKING:
+    from .entity import TTN_Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,7 +62,7 @@ class TTNCoordinator(DataUpdateCoordinator):
             push_callback=self.__push_callback,
         )
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> TTNClient.DATA_TYPE:
         """Fetch data from API endpoint.
 
         This is the place to pre-process the data to lookup tables
@@ -85,7 +89,7 @@ class TTNCoordinator(DataUpdateCoordinator):
             _LOGGER.error(traceback.format_exc())
             raise
 
-    async def __push_callback(self, data):
+    async def __push_callback(self, data: TTNClient.DATA_TYPE) -> None:
         _LOGGER.debug("pushed data: %s", data)
 
         # Register newly found entities - nop if no new entities
@@ -95,8 +99,10 @@ class TTNCoordinator(DataUpdateCoordinator):
         self.async_set_updated_data(data)
 
     def register_platform_entity_class(
-        self, entity_class: TTN_Entity, async_add_entities
-    ):
+        self,
+        entity_class: type[TTN_Entity],
+        async_add_entities: Callable[[TTNClient.DATA_TYPE], None],
+    ) -> None:
         """Register a TTN_Entity handling for a platform.
 
         New entries discovered by this coordinator will be checked with each registered platform.
@@ -109,29 +115,34 @@ class TTNCoordinator(DataUpdateCoordinator):
             )
         )
 
-    def async_add_entities(self, data=None):
+    def async_add_entities(self, data: TTNClient.DATA_TYPE | None = None) -> None:
         """Create new entities out of received TTN data if they are seen for the first time."""
 
         for entity_class in self.__entity_class_register:
             entity_class.async_add_entities(data if data else self.data)
 
     class __RegisteredEntityClass:
-        def __init__(self, entry, entity_class, async_add_entities) -> None:
+        def __init__(
+            self,
+            entry: ConfigEntry,
+            entity_class: type[TTN_Entity],
+            async_add_entities: Callable[[TTNClient.DATA_TYPE], None],
+        ) -> None:
             self.__entry = entry
             self.__entity_class = entity_class
             self.__async_add_entities = async_add_entities
 
-        def async_add_entities(self, data):
+        def async_add_entities(self, data: TTNClient.DATA_TYPE) -> None:
             """Add newly discovered entities to platform claiming ownership."""
 
             entrySettings = TTN_EntrySettings(self.__entry)
             self.__async_add_entities(
                 self.__entity_class(
                     self.__entry,
-                    self.__entry.coordinator,
+                    entrySettings.get_coordinator(),
                     ttn_value,
                 )
-                for device_id, device_uplinks in self.__entry.coordinator.data.items()
+                for device_id, device_uplinks in entrySettings.get_coordinator().data.items()
                 for field_id, ttn_value in device_uplinks.items()
                 if not self.__entity_class.exits(self.__entry, device_id, field_id)
                 and self.__entity_class.manages_uplink(entrySettings, ttn_value)
