@@ -637,47 +637,32 @@ class SetupPhases(StrEnum):
     """Constants for setup time measurements."""
 
     SETUP = "setup"
-    """
-    Time spent in setup of a component in __init__.py
-    """
+    """Set up of a component in __init__.py."""
     CONFIG_ENTRY_SETUP = "config_entry_setup"
-    """
-    Time spent in setup of a config entry in __init__.py
-    """
+    """Set up of a config entry in __init__.py."""
     PLATFORM_SETUP = "platform_setup"
-    """
-    Time spent in setup of a platform integration
+    """Set up of a platform integration.
+
     ex async_setup_platform or setup_platform or
     a legacy platform like device_tracker.legacy
     """
     PLATFORMS = "platforms"
-    """
-    Time setting up platforms under the integration
-    ex hue.light
-    """
+    """Set up of platforms under the integration."""
     CONFIG_ENTRY_PLATFORM_SETUP = "config_entry_platform_setup"
-    """
-    Time spent in setup of a platform in a config entry
-    after the config entry is setup. This is only for platforms
-    that are not awaited in async_setup_entry.
+    """Set up of a platform in a config entry after the config entry is setup.
+
+    This is only for platforms that are not awaited in async_setup_entry.
     """
     WAIT_BASE_PLATFORM_SETUP = "wait_base_component"
-    """
-    Time spent waiting for the base component to be setup
-    """
+    """Wait time for the base component to be setup."""
     WAIT_IMPORT_PLATFORMS = "wait_import_platforms"
-    """
-    Time spent waiting for the platforms to import
-    """
+    """Wait time for the platforms to import."""
     WAIT_IMPORT_PACKAGES = "wait_import_packages"
-    """
-    Time spent waiting for the packages to import
-    """
+    """Wait time for the packages to import."""
     WAIT_PLATFORM_INTEGRATION = "wait_platform_integration"
-    """
-    Time spent waiting for a platform integration
-    to setup inside of a base platform. ex
-    a `- platform: XXX` under `sensor:` in configuration.yaml
+    """Wait time for a platform integration to setup inside of a base platform.
+
+    ex a `- platform: XXX` under `sensor:` in configuration.yaml
     """
 
 
