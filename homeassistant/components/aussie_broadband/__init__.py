@@ -39,9 +39,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await client.login()
         services = await client.get_services(drop_types=ignore_types)
     except AuthenticationException as exc:
-        raise ConfigEntryAuthFailed() from exc
+        raise ConfigEntryAuthFailed from exc
     except ClientError as exc:
-        raise ConfigEntryNotReady() from exc
+        raise ConfigEntryNotReady from exc
 
     # Create an appropriate refresh function
     def update_data_factory(service_id):

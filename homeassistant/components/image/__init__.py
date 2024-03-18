@@ -190,7 +190,7 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def image(self) -> bytes | None:
         """Return bytes of image."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def _fetch_url(self, url: str) -> httpx.Response | None:
         """Fetch a URL."""
@@ -278,7 +278,7 @@ class ImageView(HomeAssistantView):
     async def get(self, request: web.Request, entity_id: str) -> web.StreamResponse:
         """Start a GET request."""
         if (image_entity := self.component.get_entity(entity_id)) is None:
-            raise web.HTTPNotFound()
+            raise web.HTTPNotFound
 
         authenticated = (
             request[KEY_AUTHENTICATED]
@@ -289,9 +289,9 @@ class ImageView(HomeAssistantView):
             # Attempt with invalid bearer token, raise unauthorized
             # so ban middleware can handle it.
             if hdrs.AUTHORIZATION in request.headers:
-                raise web.HTTPUnauthorized()
+                raise web.HTTPUnauthorized
             # Invalid sigAuth or image entity access token
-            raise web.HTTPForbidden()
+            raise web.HTTPForbidden
 
         return await self.handle(request, image_entity)
 
@@ -302,7 +302,7 @@ class ImageView(HomeAssistantView):
         try:
             image = await _async_get_image(image_entity, IMAGE_TIMEOUT)
         except (HomeAssistantError, ValueError) as ex:
-            raise web.HTTPInternalServerError() from ex
+            raise web.HTTPInternalServerError from ex
 
         return web.Response(body=image.content, content_type=image.content_type)
 

@@ -231,7 +231,7 @@ disable = [
     "duplicate-value", # F
     "eval-used", # S307
     "exec-used", # S102
-    # "expression-not-assigned", # B018, ruff catches new occurrences, needs more work
+    "expression-not-assigned", # B018
     "f-string-without-interpolation", # F541
     "forgotten-debug-statement", # T100
     "format-string-without-interpolation", # F
@@ -248,7 +248,7 @@ disable = [
     "misplaced-future", # F404
     "named-expr-without-context", # PLW0131
     "nested-min-max", # PLW3301
-    # "pointless-statement", # B018, ruff catches new occurrences, needs more work
+    "pointless-statement", # B018
     "raise-missing-from", # B904
     # "redefined-builtin", # A001, ruff is way more stricter, needs work
     "try-except-raise", # TRY302
@@ -585,6 +585,7 @@ select = [
     "B007", # Loop control variable {name} not used within loop body
     "B014", # Exception handler with duplicate exception
     "B015", # Pointless comparison. Did you mean to assign a value? Otherwise, prepend assert or remove it.
+    "B018", # Found useless attribute access. Either assign it to a variable or remove it.
     "B023", # Function definition does not bind loop variable {name}
     "B026", # Star-arg unpacking after a keyword argument is strongly discouraged
     "B032", # Possible unintentional type annotation (using :). Did you mean to assign (using =)?
@@ -600,6 +601,7 @@ select = [
     "I", # isort
     "ISC", # flake8-implicit-str-concat
     "ICN001", # import concentions; {name} should be imported as {asname}
+    "LOG", # flake8-logging
     "N804", # First argument of a class method should be named cls
     "N805", # First argument of a method should be named self
     "N815", # Variable {name} in class scope should not be mixedCase
@@ -608,6 +610,7 @@ select = [
     "PIE", # flake8-pie
     "PL", # pylint
     "PT", # flake8-pytest-style
+    "RSE", # flake8-raise
     "RUF005", # Consider iterable unpacking instead of concatenation
     "RUF006", # Store a reference to the return value of asyncio.create_task
     # "RUF100", # Unused `noqa` directive; temporarily every now and then to clean them up
@@ -648,11 +651,7 @@ ignore = [
     "E501", # line too long
     "E731", # do not assign a lambda expression, use a def
 
-    # Ignore ignored, as the rule is now back in preview/nursery, which cannot
-    # be ignored anymore without warnings.
-    # https://github.com/astral-sh/ruff/issues/7491
-    # "PLC1901", # Lots of false positives
-
+    "PLC1901", # {existing} can be simplified to {replacement} as an empty string is falsey; too many false positives
     "PLR0911", # Too many return statements ({returns} > {max_returns})
     "PLR0912", # Too many branches ({branches} > {max_branches})
     "PLR0913", # Too many arguments to function call ({c_args} > {max_args})

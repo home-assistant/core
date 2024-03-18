@@ -457,7 +457,7 @@ class TextToSpeechEntity(RestoreEntity):
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load tts audio file from the engine."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
