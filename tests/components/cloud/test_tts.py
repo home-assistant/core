@@ -103,6 +103,7 @@ async def test_prefs_default_voice(
     assert await async_setup_component(hass, TTS_DOMAIN, {TTS_DOMAIN: platform_config})
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert cloud.client.prefs.tts_default_voice == ("en-US", "female")
 
