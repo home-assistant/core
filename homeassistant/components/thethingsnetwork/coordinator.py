@@ -59,7 +59,7 @@ class TTNCoordinator(DataUpdateCoordinator):
             self.__entry.options.get(OPTIONS_MENU_EDIT_INTEGRATION, {}).get(
                 OPTIONS_MENU_INTEGRATION_FIRST_FETCH_TIME_H, DEFAULT_FIRST_FETCH_LAST_H
             ),
-            push_callback=self.__push_callback,
+            push_callback=self._push_callback,
         )
 
     async def _async_update_data(self) -> TTNClient.DATA_TYPE:
@@ -89,7 +89,7 @@ class TTNCoordinator(DataUpdateCoordinator):
             _LOGGER.error(traceback.format_exc())
             raise
 
-    async def __push_callback(self, data: TTNClient.DATA_TYPE) -> None:
+    async def _push_callback(self, data: TTNClient.DATA_TYPE) -> None:
         _LOGGER.debug("pushed data: %s", data)
 
         # Register newly found entities - nop if no new entities
@@ -100,7 +100,7 @@ class TTNCoordinator(DataUpdateCoordinator):
 
     def register_platform_entity_class(
         self,
-        entity_class: type[TTN_Entity],
+        entity_class: type["TTN_Entity"],
         async_add_entities: Callable[[TTNClient.DATA_TYPE], None],
     ) -> None:
         """Register a TTN_Entity handling for a platform.
@@ -125,7 +125,7 @@ class TTNCoordinator(DataUpdateCoordinator):
         def __init__(
             self,
             entry: ConfigEntry,
-            entity_class: type[TTN_Entity],
+            entity_class: type["TTN_Entity"],
             async_add_entities: Callable[[TTNClient.DATA_TYPE], None],
         ) -> None:
             self.__entry = entry
