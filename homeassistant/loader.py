@@ -1174,7 +1174,10 @@ class Integration:
 
     def platforms_are_loaded(self, platform_names: Iterable[str]) -> bool:
         """Check if a platforms are loaded for an integration."""
-        return all(platform_name in self._cache for platform_name in platform_names)
+        return all(
+            f"{self.domain}.{platform_name}" in self._cache
+            for platform_name in platform_names
+        )
 
     def get_platform_cached(self, platform_name: str) -> ModuleType | None:
         """Return a platform for an integration from cache."""
