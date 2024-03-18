@@ -28,7 +28,9 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_suggest_report_issue
+from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util import dt as dt_util, language as language_util
+from homeassistant.util.async_ import create_eager_task
 
 from .const import (
     DATA_PROVIDERS,
@@ -128,7 +130,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     platform_setups = async_setup_legacy(hass, config)
 
     if platform_setups:
-        await asyncio.wait([asyncio.create_task(setup) for setup in platform_setups])
+        with async_pause_setup(hass, SetupPhases.WAIT_PLATFORM_INTEGRATION):
+            await asyncio.wait([create_eager_task(setup) for setup in platform_setups])
 
     hass.http.register_view(SpeechToTextView(hass.data[DATA_PROVIDERS]))
     return True
