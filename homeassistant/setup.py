@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Generator
+from collections import defaultdict
+from collections.abc import Awaitable, Callable, Generator, Mapping
 import contextlib
 import contextvars
 from enum import StrEnum
@@ -64,8 +65,8 @@ DATA_SETUP_DONE = "setup_done"
 # to setup a component started.
 DATA_SETUP_STARTED = "setup_started"
 
-# DATA_SETUP_TIME is a dict[str, dict[str | None, dict[SetupPhases, float]]], indicating how
-# time was spent setting up a component and each group (config entry).
+# DATA_SETUP_TIME is a defaultdict[str, defaultdict[str | None, defaultdict[SetupPhases, float]]]
+# indicating how time was spent setting up a component and each group (config entry).
 DATA_SETUP_TIME = "setup_time"
 
 DATA_DEPS_REQS = "deps_reqs_processed"
@@ -695,17 +696,18 @@ def async_pause_setup(
         time_taken = time.monotonic() - started
         integration, group = running
         # Add negative time for the time we waited
-        _get_timing(hass, integration, group)[phase] = -time_taken
+        _setup_times(hass)[integration][group][phase] = -time_taken
 
 
-def _get_timing(
-    hass: core.HomeAssistant, integration: str, group: str | None
-) -> dict[SetupPhases, float]:
-    """Return the setup timings for a group."""
-    setup_time: dict[str, dict[str | None, dict[SetupPhases, float]]]
-    setup_time = hass.data.setdefault(DATA_SETUP_TIME, {})
-    integration_timings = setup_time.setdefault(integration, {})
-    return integration_timings.setdefault(group, {})
+def _setup_times(
+    hass: core.HomeAssistant,
+) -> defaultdict[str, defaultdict[str | None, defaultdict[SetupPhases, float]]]:
+    """Return the setup timings default dict."""
+    if DATA_SETUP_TIME not in hass.data:
+        hass.data[DATA_SETUP_TIME] = defaultdict(
+            lambda: defaultdict(lambda: defaultdict(float))
+        )
+    return hass.data[DATA_SETUP_TIME]  # type: ignore[no-any-return]
 
 
 @contextlib.contextmanager
@@ -751,17 +753,16 @@ def async_start_setup(
     finally:
         time_taken = time.monotonic() - started
         del setup_started[current]
-        _get_timing(hass, integration, group)[phase] = time_taken
+        _setup_times(hass)[integration][group][phase] = time_taken
 
 
 @callback
 def async_get_setup_timings(hass: core.HomeAssistant) -> dict[str, float]:
     """Return timing data for each integration."""
-    setup_time: dict[str, dict[str | None, dict[SetupPhases, float]]]
-    setup_time = hass.data.setdefault(DATA_SETUP_TIME, {})
+    setup_time = _setup_times(hass)
     domain_timings: dict[str, float] = {}
     for domain, timings in setup_time.items():
-        top_level_timings = timings.get(None, {})
+        top_level_timings: Mapping[SetupPhases, float] = timings.get(None, {})
         total_top_level = sum(top_level_timings.values())
         # Groups (config entries/platform instance) are setup in parallel so we
         # take the max of the group timings and add it to the top level
