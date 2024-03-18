@@ -1781,6 +1781,9 @@ python-smarttub==0.0.36
 # homeassistant.components.songpal
 python-songpal==0.16.2
 
+# homeassistant.components.swidget
+python-swidget==1.0.3
+
 # homeassistant.components.tado
 python-tado==0.17.4
 
