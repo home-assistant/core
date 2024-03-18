@@ -83,14 +83,14 @@ from .const import (
 from .data import (
     HassioDataUpdateCoordinator,
     get_addons_changelogs,  # noqa: F401
-    get_addons_info,  # noqa: F401
+    get_addons_info,
     get_addons_stats,  # noqa: F401
     get_core_info,  # noqa: F401
     get_core_stats,  # noqa: F401
     get_host_info,  # noqa: F401
     get_info,  # noqa: F401
     get_issues_info,  # noqa: F401
-    get_os_info,  # noqa: F401
+    get_os_info,
     get_store,  # noqa: F401
     get_supervisor_info,  # noqa: F401
     get_supervisor_stats,  # noqa: F401
@@ -384,7 +384,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         last_timezone = new_timezone
         await hassio.update_hass_timezone(new_timezone)
 
-    hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, push_config)
+    hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, push_config, run_immediately=True)
 
     push_config_task = hass.async_create_task(push_config(None), eager_start=True)
     # Start listening for problems with supervisor and making issues

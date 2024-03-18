@@ -49,6 +49,7 @@ async def test_setup_legacy_platform(hass: HomeAssistant) -> None:
     }
     with assert_setup_component(1, notify.DOMAIN):
         assert await async_setup_component(hass, notify.DOMAIN, config)
+        await hass.async_block_till_done()
 
     assert hass.services.has_service(notify.DOMAIN, "tts_test")
 
@@ -65,6 +66,7 @@ async def test_setup_platform(hass: HomeAssistant) -> None:
     }
     with assert_setup_component(1, notify.DOMAIN):
         assert await async_setup_component(hass, notify.DOMAIN, config)
+        await hass.async_block_till_done()
 
     assert hass.services.has_service(notify.DOMAIN, "tts_test")
 
@@ -80,6 +82,7 @@ async def test_setup_platform_missing_key(hass: HomeAssistant) -> None:
     }
     with assert_setup_component(0, notify.DOMAIN):
         assert await async_setup_component(hass, notify.DOMAIN, config)
+        await hass.async_block_till_done()
 
     assert not hass.services.has_service(notify.DOMAIN, "tts_test")
 
@@ -106,6 +109,8 @@ async def test_setup_legacy_service(hass: HomeAssistant) -> None:
 
     with assert_setup_component(1, notify.DOMAIN):
         assert await async_setup_component(hass, notify.DOMAIN, config)
+
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         notify.DOMAIN,
@@ -141,6 +146,8 @@ async def test_setup_service(
 
     with assert_setup_component(1, notify.DOMAIN):
         assert await async_setup_component(hass, notify.DOMAIN, config)
+
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         notify.DOMAIN,

@@ -140,7 +140,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
     def log(self, level: int, msg: str, *args, **kwargs):
         """Log a message."""
         msg = f"%s: {msg}"
-        args = (self.entity_id,) + args
+        args = (self.entity_id, *args)
         _LOGGER.log(level, msg, *args, **kwargs)
 
 

@@ -35,6 +35,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.async_ import create_eager_task
 
 from .const import (
     ATTR_ENDPOINTS,
@@ -212,7 +213,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Only pass through PyAV log messages if stream logging is above DEBUG
     cancel_logging_listener = hass.bus.async_listen(
-        EVENT_LOGGING_CHANGED, update_pyav_logging
+        EVENT_LOGGING_CHANGED, update_pyav_logging, run_immediately=True
     )
     # libav.mp4 and libav.swscaler have a few unimportant messages that are logged
     # at logging.WARNING. Set those Logger levels to logging.ERROR
@@ -220,7 +221,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         logging.getLogger(logging_namespace).setLevel(logging.ERROR)
 
     # This will load av so we run it in the executor
-    await hass.async_add_import_executor_job(set_pyav_logging, debug_enabled)
+    await hass.async_add_executor_job(set_pyav_logging, debug_enabled)
 
     # Keep import here so that we can import stream integration without installing reqs
     # pylint: disable-next=import-outside-toplevel
@@ -256,14 +257,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         for stream in hass.data[DOMAIN][ATTR_STREAMS]:
             stream.dynamic_stream_settings.preload_stream = False
         if awaitables := [
-            asyncio.create_task(stream.stop())
+            create_eager_task(stream.stop())
             for stream in hass.data[DOMAIN][ATTR_STREAMS]
         ]:
             await asyncio.wait(awaitables)
         _LOGGER.debug("Stopped stream workers")
         cancel_logging_listener()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown, run_immediately=True)
 
     return True
 
