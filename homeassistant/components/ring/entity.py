@@ -2,7 +2,7 @@
 from collections.abc import Callable
 from typing import Any, Concatenate, ParamSpec, TypeVar
 
-import ring_doorbell
+from ring_doorbell import AuthenticationError, RingError, RingGeneric, RingTimeout
 
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -32,16 +32,16 @@ def exception_wrap(
     def _wrap(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
         try:
             return func(self, *args, **kwargs)
-        except ring_doorbell.AuthenticationError as err:
+        except AuthenticationError as err:
             self.hass.loop.call_soon_threadsafe(
                 self.coordinator.config_entry.async_start_reauth, self.hass
             )
             raise HomeAssistantError(err) from err
-        except ring_doorbell.RingTimeout as err:
+        except RingTimeout as err:
             raise HomeAssistantError(
                 f"Timeout communicating with API {func}: {err}"
             ) from err
-        except ring_doorbell.RingError as err:
+        except RingError as err:
             raise HomeAssistantError(
                 f"Error communicating with API{func}: {err}"
             ) from err
@@ -58,7 +58,7 @@ class RingEntity(CoordinatorEntity[_RingCoordinatorT]):
 
     def __init__(
         self,
-        device: ring_doorbell.RingGeneric,
+        device: RingGeneric,
         coordinator: _RingCoordinatorT,
     ) -> None:
         """Initialize a sensor for Ring device."""
@@ -79,7 +79,7 @@ class RingEntity(CoordinatorEntity[_RingCoordinatorT]):
             return device_data
         return None
 
-    def _get_coordinator_device(self) -> ring_doorbell.RingGeneric | None:
+    def _get_coordinator_device(self) -> RingGeneric | None:
         if (device_data := self._get_coordinator_device_data()) and (
             device := device_data.device
         ):
