@@ -124,7 +124,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     component.register_shutdown()
-
     platform_setups = async_setup_legacy(hass, config)
 
     for setup in platform_setups:
@@ -137,7 +136,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.async_create_task(setup, eager_start=True)
 
     hass.http.register_view(SpeechToTextView(hass.data[DATA_PROVIDERS]))
-
     return True
 
 
