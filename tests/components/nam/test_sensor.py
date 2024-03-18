@@ -1,4 +1,5 @@
 """Test sensor of Nettigo Air Monitor integration."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -487,7 +488,7 @@ async def test_sensor_disabled(
 
     # Test enabling entity
     updated_entry = entity_registry.async_update_entity(
-        entry.entity_id, **{"disabled_by": None}
+        entry.entity_id, disabled_by=None
     )
 
     assert updated_entry != entry

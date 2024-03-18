@@ -1,4 +1,5 @@
 """Support for UV data from openuv.io."""
+
 from __future__ import annotations
 
 import asyncio

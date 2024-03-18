@@ -1,4 +1,5 @@
 """Shark IQ Wrapper."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -98,7 +99,7 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
 
     def clean_spot(self, **kwargs: Any) -> None:
         """Clean a spot. Not yet implemented."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def send_command(
         self,
@@ -107,7 +108,7 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         **kwargs: Any,
     ) -> None:
         """Send a command to the vacuum. Not yet implemented."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     def is_online(self) -> bool:

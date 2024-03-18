@@ -1,4 +1,5 @@
 """Support for Magic home button."""
+
 from __future__ import annotations
 
 from flux_led.aio import AIOWifiLedBulb

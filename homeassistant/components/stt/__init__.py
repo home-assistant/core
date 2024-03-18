@@ -1,4 +1,5 @@
 """Provide functionality to STT."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -18,7 +19,7 @@ from aiohttp.web_exceptions import (
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
@@ -250,13 +251,13 @@ class SpeechToTextView(HomeAssistantView):
 
     async def post(self, request: web.Request, provider: str) -> web.Response:
         """Convert Speech (audio) to text."""
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
         provider_entity: SpeechToTextEntity | None = None
         if (
             not (provider_entity := async_get_speech_to_text_entity(hass, provider))
             and provider not in self.providers
         ):
-            raise HTTPNotFound()
+            raise HTTPNotFound
 
         # Get metadata
         try:
@@ -269,7 +270,7 @@ class SpeechToTextView(HomeAssistantView):
 
             # Check format
             if not stt_provider.check_metadata(metadata):
-                raise HTTPUnsupportedMediaType()
+                raise HTTPUnsupportedMediaType
 
             # Process audio stream
             result = await stt_provider.async_process_audio_stream(
@@ -278,7 +279,7 @@ class SpeechToTextView(HomeAssistantView):
         else:
             # Check format
             if not provider_entity.check_metadata(metadata):
-                raise HTTPUnsupportedMediaType()
+                raise HTTPUnsupportedMediaType
 
             # Process audio stream
             result = await provider_entity.internal_async_process_audio_stream(
@@ -290,12 +291,12 @@ class SpeechToTextView(HomeAssistantView):
 
     async def get(self, request: web.Request, provider: str) -> web.Response:
         """Return provider specific audio information."""
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
         if (
             not (provider_entity := async_get_speech_to_text_entity(hass, provider))
             and provider not in self.providers
         ):
-            raise HTTPNotFound()
+            raise HTTPNotFound
 
         if not provider_entity:
             stt_provider = self._get_provider(hass, provider)

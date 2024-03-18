@@ -1,4 +1,5 @@
 """Test the Z-Wave JS climate platform."""
+
 import copy
 
 import pytest

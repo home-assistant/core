@@ -1,4 +1,5 @@
 """Tests for the Synology DSM component."""
+
 from unittest.mock import MagicMock, patch
 
 from synology_dsm.exceptions import SynologyDSMLoginInvalidException

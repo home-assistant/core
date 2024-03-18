@@ -1,4 +1,5 @@
 """Constants used by Home Assistant components."""
+
 from __future__ import annotations
 
 from enum import StrEnum
@@ -508,6 +509,9 @@ ATTR_AREA_ID: Final = "area_id"
 
 # Contains one string, the device ID
 ATTR_DEVICE_ID: Final = "device_id"
+
+# Contains one string or a list of strings, each being an floor id
+ATTR_FLOOR_ID: Final = "floor_id"
 
 # String with a friendly name for the entity
 ATTR_FRIENDLY_NAME: Final = "friendly_name"
@@ -1452,11 +1456,11 @@ _DEPRECATED_DATA_RATE_GIBIBYTES_PER_SECOND: Final = DeprecatedConstantEnum(
 
 
 # States
-COMPRESSED_STATE_STATE = "s"
-COMPRESSED_STATE_ATTRIBUTES = "a"
-COMPRESSED_STATE_CONTEXT = "c"
-COMPRESSED_STATE_LAST_CHANGED = "lc"
-COMPRESSED_STATE_LAST_UPDATED = "lu"
+COMPRESSED_STATE_STATE: Final = "s"
+COMPRESSED_STATE_ATTRIBUTES: Final = "a"
+COMPRESSED_STATE_CONTEXT: Final = "c"
+COMPRESSED_STATE_LAST_CHANGED: Final = "lc"
+COMPRESSED_STATE_LAST_UPDATED: Final = "lu"
 
 # #### SERVICES ####
 SERVICE_TURN_ON: Final = "turn_on"

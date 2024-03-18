@@ -1,4 +1,5 @@
 """Manage config entries in Home Assistant."""
+
 from __future__ import annotations
 
 import asyncio
@@ -639,7 +640,11 @@ class ConfigEntry:
         # Check again when we fire in case shutdown
         # has started so we do not block shutdown
         if not hass.is_stopping:
-            hass.async_create_task(self.async_setup(hass), eager_start=True)
+            hass.async_create_task(
+                self.async_setup(hass),
+                f"config entry retry {self.domain} {self.title}",
+                eager_start=True,
+            )
 
     @callback
     def async_shutdown(self) -> None:
@@ -852,7 +857,7 @@ class ConfigEntry:
         if self._on_unload is not None:
             while self._on_unload:
                 if job := self._on_unload.pop()():
-                    self.async_create_task(hass, job)
+                    self.async_create_task(hass, job, eager_start=True)
 
         if not self._tasks and not self._background_tasks:
             return
@@ -1026,7 +1031,13 @@ class ConfigEntry:
 
         Background tasks are automatically canceled when config entry is unloaded.
 
-        target: target to call.
+        A background task is different from a normal task:
+
+          - Will not block startup
+          - Will be automatically cancelled on shutdown
+          - Calls to async_block_till_done will not wait for completion
+
+        This method must be run in the event loop.
         """
         task = hass.async_create_background_task(target, name, eager_start)
         if task.done():
@@ -1580,7 +1591,9 @@ class ConfigEntries:
             old_conf_migrate_func=_old_conf_migrator,
         )
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, self._async_shutdown, run_immediately=True
+        )
 
         if config is None:
             self._entries = ConfigEntryItems(self.hass)

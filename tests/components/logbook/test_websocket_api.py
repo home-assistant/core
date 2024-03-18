@@ -1,4 +1,5 @@
 """The tests for the logbook component."""
+
 import asyncio
 from collections.abc import Callable
 from datetime import timedelta

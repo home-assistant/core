@@ -1,4 +1,5 @@
 """Viessmann ViCare sensor device."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -618,6 +619,45 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=["charge", "discharge", "standby"],
         value_getter=lambda api: api.getElectricalEnergySystemOperationState(),
+    ),
+    ViCareSensorEntityDescription(
+        key="ess_discharge_today",
+        translation_key="ess_discharge_today",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_getter=lambda api: api.getElectricalEnergySystemTransferDischargeCumulatedCurrentDay(),
+        unit_getter=lambda api: api.getElectricalEnergySystemTransferDischargeCumulatedUnit(),
+    ),
+    ViCareSensorEntityDescription(
+        key="ess_discharge_this_week",
+        translation_key="ess_discharge_this_week",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_getter=lambda api: api.getElectricalEnergySystemTransferDischargeCumulatedCurrentWeek(),
+        unit_getter=lambda api: api.getElectricalEnergySystemTransferDischargeCumulatedUnit(),
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="ess_discharge_this_month",
+        translation_key="ess_discharge_this_month",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_getter=lambda api: api.getElectricalEnergySystemTransferDischargeCumulatedCurrentMonth(),
+        unit_getter=lambda api: api.getElectricalEnergySystemTransferDischargeCumulatedUnit(),
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="ess_discharge_this_year",
+        translation_key="ess_discharge_this_year",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_getter=lambda api: api.getElectricalEnergySystemTransferDischargeCumulatedCurrentYear(),
+        unit_getter=lambda api: api.getElectricalEnergySystemTransferDischargeCumulatedUnit(),
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="ess_discharge_total",
+        translation_key="ess_discharge_total",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_getter=lambda api: api.getElectricalEnergySystemTransferDischargeCumulatedLifeCycle(),
+        unit_getter=lambda api: api.getElectricalEnergySystemTransferDischargeCumulatedUnit(),
+        entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
         key="pcc_transfer_power_exchange",

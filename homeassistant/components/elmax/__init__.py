@@ -1,4 +1,5 @@
 """The elmax-cloud integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -94,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         client, panel = await _load_elmax_panel_client(entry)
     except ElmaxBadLoginError as err:
-        raise ConfigEntryAuthFailed() from err
+        raise ConfigEntryAuthFailed from err
 
     # Create the API client object and attempt a login, so that we immediately know
     # if there is something wrong with user credentials

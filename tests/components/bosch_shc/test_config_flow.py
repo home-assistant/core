@@ -1,4 +1,5 @@
 """Test the Bosch SHC config flow."""
+
 from ipaddress import ip_address
 from unittest.mock import PropertyMock, mock_open, patch
 

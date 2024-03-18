@@ -1,4 +1,5 @@
 """Test selectors."""
+
 from enum import Enum
 
 import pytest

@@ -1,4 +1,5 @@
 """Tests for config/script."""
+
 from http import HTTPStatus
 import json
 from typing import Any
@@ -23,7 +24,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture(autouse=True)
-async def setup_script(hass, script_config, stub_blueprint_populate):  # noqa: F811
+async def setup_script(hass, script_config, stub_blueprint_populate):
     """Set up script integration."""
     assert await async_setup_component(hass, "script", {"script": script_config})
 

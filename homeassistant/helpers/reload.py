@@ -1,4 +1,5 @@
 """Class to reload platforms."""
+
 from __future__ import annotations
 
 import asyncio
@@ -74,7 +75,7 @@ async def _resetup_platform(
 
         root_config[platform_domain].append(p_config)
 
-    component = integration.get_component()
+    component = await integration.async_get_component()
 
     if hasattr(component, "async_reset_platform"):
         # If the integration has its own way to reset

@@ -1,6 +1,5 @@
 """Constants for tests imap integration."""
 
-
 DATE_HEADER1 = b"Date: Fri, 24 Mar 2023 13:52:00 +0100\r\n"
 DATE_HEADER2 = b"Date: Fri, 24 Mar 2023 13:52:00 +0100 (CET)\r\n"
 DATE_HEADER3 = b"Date: 24 Mar 2023 13:52:00 +0100\r\n"
@@ -102,7 +101,7 @@ TEST_CONTENT_HTML_BASE64 = (
 
 TEST_CONTENT_MULTIPART = (
     b"\r\nThis is a multi-part message in MIME format.\r\n"
-    + b"\r\n--Mark=_100584970350292485166\r\n"
+    b"\r\n--Mark=_100584970350292485166\r\n"
     + TEST_CONTENT_TEXT_PLAIN
     + b"\r\n--Mark=_100584970350292485166\r\n"
     + TEST_CONTENT_HTML
@@ -111,7 +110,7 @@ TEST_CONTENT_MULTIPART = (
 
 TEST_CONTENT_MULTIPART_BASE64 = (
     b"\r\nThis is a multi-part message in MIME format.\r\n"
-    + b"\r\n--Mark=_100584970350292485166\r\n"
+    b"\r\n--Mark=_100584970350292485166\r\n"
     + TEST_CONTENT_TEXT_BASE64
     + b"\r\n--Mark=_100584970350292485166\r\n"
     + TEST_CONTENT_HTML_BASE64
@@ -120,7 +119,7 @@ TEST_CONTENT_MULTIPART_BASE64 = (
 
 TEST_CONTENT_MULTIPART_BASE64_INVALID = (
     b"\r\nThis is a multi-part message in MIME format.\r\n"
-    + b"\r\n--Mark=_100584970350292485166\r\n"
+    b"\r\n--Mark=_100584970350292485166\r\n"
     + TEST_CONTENT_TEXT_BASE64_INVALID
     + b"\r\n--Mark=_100584970350292485166\r\n"
     + TEST_CONTENT_HTML_BASE64

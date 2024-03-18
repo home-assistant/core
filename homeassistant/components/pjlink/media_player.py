@@ -1,4 +1,5 @@
 """Support for controlling projector via the PJLink protocol."""
+
 from __future__ import annotations
 
 from pypjlink import MUTE_AUDIO, Projector

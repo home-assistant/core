@@ -1,4 +1,5 @@
 """Support for ZHA controls using the select platform."""
+
 from __future__ import annotations
 
 from enum import Enum
@@ -630,7 +631,6 @@ class AqaraPetFeederMode(ZCLEnumSelectEntity):
     _attribute_name = "feeding_mode"
     _enum = AqaraFeedingMode
     _attr_translation_key: str = "feeding_mode"
-    _attr_icon: str = "mdi:wrench-clock"
 
 
 class AqaraThermostatPresetMode(types.enum8):
@@ -695,7 +695,6 @@ class KeypadLockout(ZCLEnumSelectEntity):
     _attribute_name: str = "keypad_lockout"
     _enum = KeypadLockoutEnum
     _attr_translation_key: str = "keypad_lockout"
-    _attr_icon: str = "mdi:lock"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(

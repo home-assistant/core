@@ -1,4 +1,5 @@
 """Test ESPHome dashboard features."""
+
 from unittest.mock import patch
 
 from aioesphomeapi import DeviceInfo, InvalidAuthAPIError

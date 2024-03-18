@@ -1,4 +1,5 @@
 """Sensors on Zigbee Home Automation networks."""
+
 from __future__ import annotations
 
 import asyncio
@@ -1281,7 +1282,6 @@ class TimeLeft(Sensor):
     _attribute_name = "timer_time_left"
     _unique_id_suffix = "time_left"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.DURATION
-    _attr_icon = "mdi:timer"
     _attr_translation_key: str = "timer_time_left"
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
@@ -1294,7 +1294,6 @@ class IkeaDeviceRunTime(Sensor):
     _attribute_name = "device_run_time"
     _unique_id_suffix = "device_run_time"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.DURATION
-    _attr_icon = "mdi:timer"
     _attr_translation_key: str = "device_run_time"
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
     _attr_entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
@@ -1308,7 +1307,6 @@ class IkeaFilterRunTime(Sensor):
     _attribute_name = "filter_run_time"
     _unique_id_suffix = "filter_run_time"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.DURATION
-    _attr_icon = "mdi:timer"
     _attr_translation_key: str = "filter_run_time"
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
     _attr_entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
@@ -1329,7 +1327,6 @@ class AqaraPetFeederLastFeedingSource(EnumSensor):
     _attribute_name = "last_feeding_source"
     _unique_id_suffix = "last_feeding_source"
     _attr_translation_key: str = "last_feeding_source"
-    _attr_icon = "mdi:devices"
     _enum = AqaraFeedingSource
 
 
@@ -1341,7 +1338,6 @@ class AqaraPetFeederLastFeedingSize(Sensor):
     _attribute_name = "last_feeding_size"
     _unique_id_suffix = "last_feeding_size"
     _attr_translation_key: str = "last_feeding_size"
-    _attr_icon: str = "mdi:counter"
 
 
 @MULTI_MATCH(cluster_handler_names="opple_cluster", models={"aqara.feeder.acn001"})
@@ -1353,7 +1349,6 @@ class AqaraPetFeederPortionsDispensed(Sensor):
     _unique_id_suffix = "portions_dispensed"
     _attr_translation_key: str = "portions_dispensed_today"
     _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
-    _attr_icon: str = "mdi:counter"
 
 
 @MULTI_MATCH(cluster_handler_names="opple_cluster", models={"aqara.feeder.acn001"})
@@ -1366,7 +1361,6 @@ class AqaraPetFeederWeightDispensed(Sensor):
     _attr_translation_key: str = "weight_dispensed_today"
     _attr_native_unit_of_measurement = UnitOfMass.GRAMS
     _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
-    _attr_icon: str = "mdi:weight-gram"
 
 
 @MULTI_MATCH(cluster_handler_names="opple_cluster", models={"lumi.sensor_smoke.acn03"})
@@ -1379,7 +1373,6 @@ class AqaraSmokeDensityDbm(Sensor):
     _attr_translation_key: str = "smoke_density"
     _attr_native_unit_of_measurement = "dB/m"
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_icon: str = "mdi:google-circles-communities"
     _attr_suggested_display_precision: int = 3
 
 
@@ -1398,7 +1391,6 @@ class SonoffPresenceSenorIlluminationStatus(EnumSensor):
     _attribute_name = "last_illumination_state"
     _unique_id_suffix = "last_illumination"
     _attr_translation_key: str = "last_illumination_state"
-    _attr_icon: str = "mdi:theme-light-dark"
     _enum = SonoffIlluminationStates
 
 
@@ -1413,7 +1405,6 @@ class PiHeatingDemand(Sensor):
     _unique_id_suffix = "pi_heating_demand"
     _attribute_name = "pi_heating_demand"
     _attr_translation_key: str = "pi_heating_demand"
-    _attr_icon: str = "mdi:radiator"
     _attr_native_unit_of_measurement = PERCENTAGE
     _decimals = 0
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
@@ -1439,7 +1430,6 @@ class SetpointChangeSource(EnumSensor):
     _unique_id_suffix = "setpoint_change_source"
     _attribute_name = "setpoint_change_source"
     _attr_translation_key: str = "setpoint_change_source"
-    _attr_icon: str = "mdi:thermostat"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _enum = SetpointChangeSourceEnum
 

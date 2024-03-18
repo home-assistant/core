@@ -1,4 +1,5 @@
 """Support for Meteoclimatic weather data."""
+
 import logging
 
 from meteoclimatic import MeteoclimaticClient

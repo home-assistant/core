@@ -1,4 +1,5 @@
 """Tests for fan platforms."""
+
 import pytest
 
 from homeassistant.components import fan

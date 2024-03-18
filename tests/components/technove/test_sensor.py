@@ -1,4 +1,5 @@
 """Tests for the TechnoVE sensor platform."""
+
 from datetime import timedelta
 from unittest.mock import MagicMock
 

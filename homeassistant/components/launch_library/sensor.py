@@ -1,4 +1,5 @@
 """Support for Launch Library sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -31,19 +32,12 @@ from .const import DOMAIN
 DEFAULT_NEXT_LAUNCH_NAME = "Next launch"
 
 
-@dataclass(frozen=True)
-class LaunchLibrarySensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class LaunchLibrarySensorEntityDescription(SensorEntityDescription):
+    """Describes a Next Launch sensor entity."""
 
     value_fn: Callable[[Launch | Event], datetime | int | str | None]
     attributes_fn: Callable[[Launch | Event], dict[str, Any] | None]
-
-
-@dataclass(frozen=True)
-class LaunchLibrarySensorEntityDescription(
-    SensorEntityDescription, LaunchLibrarySensorEntityDescriptionMixin
-):
-    """Describes a Next Launch sensor entity."""
 
 
 SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] = (

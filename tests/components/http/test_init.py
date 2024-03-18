@@ -1,4 +1,5 @@
 """The tests for the Home Assistant HTTP component."""
+
 import asyncio
 from datetime import timedelta
 from http import HTTPStatus

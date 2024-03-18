@@ -1,4 +1,5 @@
 """Provides functionality to interact with humidifier devices."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -247,7 +248,7 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
 
     def set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
@@ -255,7 +256,7 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
 
     def set_mode(self, mode: str) -> None:
         """Set new mode."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_mode(self, mode: str) -> None:
         """Set new mode."""

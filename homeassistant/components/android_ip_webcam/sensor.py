@@ -1,4 +1,5 @@
 """Support for Android IP Webcam sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -131,7 +132,7 @@ async def async_setup_entry(
         sensor
         for sensor in SENSOR_TYPES
         if sensor.key
-        in coordinator.cam.enabled_sensors + ["audio_connections", "video_connections"]
+        in [*coordinator.cam.enabled_sensors, "audio_connections", "video_connections"]
     ]
     async_add_entities(
         IPWebcamSensor(coordinator, description) for description in sensor_types

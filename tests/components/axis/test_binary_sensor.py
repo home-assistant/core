@@ -1,4 +1,5 @@
 """Axis binary sensor platform tests."""
+
 import pytest
 
 from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN

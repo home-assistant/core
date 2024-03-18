@@ -1,4 +1,5 @@
 """Tests for the EZVIZ integration."""
+
 from unittest.mock import patch
 
 from homeassistant.components.ezviz.const import (

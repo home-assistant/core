@@ -1,4 +1,5 @@
 """Support for water heater devices."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -40,6 +41,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.unit_conversion import TemperatureConverter
+
+from . import group as group_pre_import  # noqa: F401
 
 if TYPE_CHECKING:
     from functools import cached_property
@@ -328,7 +331,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -338,7 +341,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the water heater on."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the water heater on."""
@@ -346,7 +349,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the water heater off."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the water heater off."""
@@ -354,7 +357,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""
@@ -392,7 +395,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def turn_away_mode_on(self) -> None:
         """Turn away mode on."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_turn_away_mode_on(self) -> None:
         """Turn away mode on."""
@@ -400,7 +403,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def turn_away_mode_off(self) -> None:
         """Turn away mode off."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_turn_away_mode_off(self) -> None:
         """Turn away mode off."""

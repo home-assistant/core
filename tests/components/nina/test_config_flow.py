@@ -1,4 +1,5 @@
 """Test the Nina config flow."""
+
 from __future__ import annotations
 
 from copy import deepcopy

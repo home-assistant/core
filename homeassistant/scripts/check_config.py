@@ -1,4 +1,5 @@
 """Script to check the configuration file."""
+
 from __future__ import annotations
 
 import argparse
@@ -175,7 +176,7 @@ def check(config_dir, secrets=False):
         "secrets": OrderedDict(),  # secret cache and secrets loaded
         "except": OrderedDict(),  # critical exceptions raised (with config)
         "warn": OrderedDict(),  # non critical exceptions raised (with config)
-        #'components' is a HomeAssistantConfig  # noqa: E265
+        #'components' is a HomeAssistantConfig
         "secret_cache": {},
     }
 
