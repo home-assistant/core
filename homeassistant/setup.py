@@ -657,11 +657,6 @@ class SetupPhases(StrEnum):
     """Wait time for the platforms to import."""
     WAIT_IMPORT_PACKAGES = "wait_import_packages"
     """Wait time for the packages to import."""
-    WAIT_PLATFORM_INTEGRATION = "wait_platform_integration"
-    """Wait time for a platform integration to setup inside of a base platform.
-
-    ex a `- platform: XXX` under `sensor:` in configuration.yaml
-    """
 
 
 @contextlib.contextmanager
