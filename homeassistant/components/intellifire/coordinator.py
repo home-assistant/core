@@ -51,12 +51,11 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntelliFirePollData
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
 
-        data = self.fireplace._fireplace_data  # pylint: disable=protected-access
-
+        data = self.read_api.data
         return DeviceInfo(
             manufacturer="Hearth and Home",
             model="IFT-WFM",
             name="IntelliFire",
             identifiers={("IntelliFire", f"{data.serial}]")},
-            configuration_url=f"http://{data.ip_address}/poll",
+            configuration_url=f"http://{self.fireplace.ip_address}/poll",
         )
