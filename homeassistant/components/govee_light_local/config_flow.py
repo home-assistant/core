@@ -20,6 +20,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+DISCOVERY_TIMEOUT = 5
+
 
 async def _async_has_devices(hass: HomeAssistant) -> bool:
     """Return if there are devices that can be discovered."""
@@ -41,7 +43,7 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
     await controller.start()
 
     try:
-        async with asyncio.timeout(delay=5):
+        async with asyncio.timeout(delay=DISCOVERY_TIMEOUT):
             while not controller.devices:
                 await asyncio.sleep(delay=1)
     except TimeoutError:
