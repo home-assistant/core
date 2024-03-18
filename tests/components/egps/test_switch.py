@@ -1,6 +1,6 @@
 """Test the switch functionality."""
 
-from collections.abc import Callable, Generator
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 from pyegps.exceptions import EgpsException
@@ -18,7 +18,7 @@ from homeassistant.components.switch import (
     SERVICE_TURN_ON,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_OFF, STATE_ON, Platform
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -33,39 +33,6 @@ def patch_get_device(pyegps_device_mock: MagicMock) -> Generator[MagicMock, None
         "homeassistant.components.egps.get_device", return_value=pyegps_device_mock
     ) as mock:
         yield mock
-
-
-async def test_switch_setup(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    valid_config_entry: MockConfigEntry,
-    mock_get_device: MagicMock,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test a successful setup of device switches."""
-
-    entry = valid_config_entry
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert entry.state == ConfigEntryState.LOADED
-    assert entry.entry_id in hass.data[DOMAIN]
-
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, entry.unique_id)}
-    )
-    entries = er.async_entries_for_device(entity_registry, device_entry.id)
-    switches = [entry for entry in entries if entry.domain == Platform.SWITCH]
-    assert len(switches) == 4
-
-    switch = switches[0]
-    assert switch == snapshot
-
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
 
 
 async def _test_switch_on_off(
@@ -102,7 +69,6 @@ async def _test_switch_on_exeception(
             {"entity_id": entity_id},
             blocking=True,
         )
-
     dev.switch_on.side_effect = None
 
 
@@ -137,23 +103,24 @@ async def _test_switch_update_exception(
 
 
 @pytest.mark.parametrize(
-    "test_function",
+    "entity_name",
     [
-        _test_switch_on_off,
-        _test_switch_on_exeception,
-        _test_switch_off_exeception,
-        _test_switch_update_exception,
+        "mockedusbdevice_socket_0",
+        "mockedusbdevice_socket_1",
+        "mockedusbdevice_socket_2",
+        "mockedusbdevice_socket_3",
     ],
 )
-async def test_switch_services(
+async def test_switch_setup(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     valid_config_entry: MockConfigEntry,
     mock_get_device: MagicMock,
-    test_function: Callable,
+    entity_name: str,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test a successful setup of device switches."""
+    """Test setup and functionality of device switches."""
 
     entry = valid_config_entry
     entry.add_to_hass(hass)
@@ -164,15 +131,15 @@ async def test_switch_services(
     assert entry.state == ConfigEntryState.LOADED
     assert entry.entry_id in hass.data[DOMAIN]
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, entry.unique_id)}
-    )
-    entries = er.async_entries_for_device(entity_registry, device_entry.id)
-    switches = [entry for entry in entries if entry.domain == Platform.SWITCH]
+    state = hass.states.get(f"switch.{entity_name}")
+    assert state == snapshot
+    assert entity_registry.async_get(state.entity_id) == snapshot
 
-    switch = switches[0]
     device_mock = mock_get_device.return_value
-    await test_function(hass, switch.entity_id, device_mock)
+    await _test_switch_on_off(hass, state.entity_id, device_mock)
+    await _test_switch_on_exeception(hass, state.entity_id, device_mock)
+    await _test_switch_off_exeception(hass, state.entity_id, device_mock)
+    await _test_switch_update_exception(hass, state.entity_id, device_mock)
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
