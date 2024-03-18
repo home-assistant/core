@@ -1,11 +1,9 @@
 """Support for Axis switches."""
 
-from collections.abc import Iterable
 from dataclasses import dataclass
-from functools import partial
 from typing import Any
 
-from axis.models.event import Event, EventOperation, EventTopic
+from axis.models.event import Event, EventTopic
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -44,26 +42,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Axis switch platform."""
-    hub = AxisHub.get_hub(hass, config_entry)
-
-    @callback
-    def register_platform(descriptions: Iterable[AxisSwitchDescription]) -> None:
-        """Register entity platform to create entities on event initialized signal."""
-
-        @callback
-        def create_entity(description: AxisSwitchDescription, event: Event) -> None:
-            """Create Axis entity."""
-            if description.supported_fn(hub, event):
-                async_add_entities([AxisSwitch(hub, description, event)])
-
-        for description in descriptions:
-            hub.api.event.subscribe(
-                partial(create_entity, description),
-                topic_filter=description.event_topic,
-                operation_filter=EventOperation.INITIALIZED,
-            )
-
-    register_platform(ENTITY_DESCRIPTIONS)
+    AxisHub.get_hub(hass, config_entry).entity_loader.register_platform(
+        async_add_entities, AxisSwitch, ENTITY_DESCRIPTIONS
+    )
 
 
 class AxisSwitch(AxisEventEntity, SwitchEntity):
