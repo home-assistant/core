@@ -94,3 +94,19 @@ async def test_api_failure(
         )
         await hass.async_block_till_done()
         mock_myuplink_client.async_set_device_points.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "load_device_points_file",
+    ["device_points_nibe_smo20.json"],
+)
+async def test_entity_registry_smo20(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_myuplink_client: MagicMock,
+    setup_platform: None,
+) -> None:
+    """Test that the entities are registered in the entity registry."""
+
+    entry = entity_registry.async_get(ENTITY_ID)
+    assert entry.unique_id == ENTITY_UID

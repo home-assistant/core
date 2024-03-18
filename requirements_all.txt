@@ -455,7 +455,7 @@ anthemav==1.4.1
 apple_weatherkit==1.1.2
 
 # homeassistant.components.apprise
-apprise==1.7.2
+apprise==1.7.4
 
 # homeassistant.components.aprs
 aprslib==0.7.0
@@ -511,7 +511,7 @@ aurorapy==0.2.7
 # avion==0.10
 
 # homeassistant.components.axis
-axis==55
+axis==56
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
@@ -895,6 +895,9 @@ freesms==0.2.0
 # homeassistant.components.fritzbox_callmonitor
 fritzconnection[qr]==1.13.2
 
+# homeassistant.components.fyta
+fyta_cli==0.3.3
+
 # homeassistant.components.google_translate
 gTTS==2.2.4
 
@@ -1112,7 +1115,7 @@ ibmiotf==0.3.4
 # homeassistant.components.google
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
-ical==7.0.1
+ical==7.0.3
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -1470,7 +1473,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.4.0
+opower==0.4.1
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -2080,7 +2083,7 @@ pyrecswitch==1.0.2
 pyrepetierng==0.1.0
 
 # homeassistant.components.risco
-pyrisco==0.5.8
+pyrisco==0.5.10
 
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.6
@@ -2330,7 +2333,7 @@ pytrydan==0.4.0
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.23.3
+pyunifiprotect==5.0.2
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -2553,7 +2556,7 @@ smart-meter-texas==0.4.7
 smhi-pkg==1.0.16
 
 # homeassistant.components.snapcast
-snapcast==2.3.3
+snapcast==2.3.6
 
 # homeassistant.components.sonos
 soco==0.30.2
@@ -2862,7 +2865,7 @@ wyoming==1.5.3
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.27.0
+xiaomi-ble==0.27.1
 
 # homeassistant.components.knx
 xknx==2.12.2

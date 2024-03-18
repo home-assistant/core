@@ -332,11 +332,6 @@ async def test_ok_struct_validator(do_config) -> None:
         {
             CONF_NAME: TEST_ENTITY_NAME,
             CONF_DATA_TYPE: DataType.INT16,
-            CONF_SWAP: CONF_SWAP_WORD,
-        },
-        {
-            CONF_NAME: TEST_ENTITY_NAME,
-            CONF_DATA_TYPE: DataType.INT16,
             CONF_SWAP: CONF_SWAP_WORD_BYTE,
         },
     ],
@@ -962,22 +957,24 @@ async def test_no_duplicate_names(hass: HomeAssistant, do_config) -> None:
             CONF_TYPE: TCP,
             CONF_HOST: TEST_MODBUS_HOST,
             CONF_PORT: TEST_PORT_TCP,
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: "dummy",
+                    CONF_ADDRESS: 9999,
+                }
+            ],
         },
         {
             CONF_TYPE: TCP,
             CONF_HOST: TEST_MODBUS_HOST,
             CONF_PORT: TEST_PORT_TCP,
             CONF_RETRIES: 3,
-        },
-        {
-            CONF_TYPE: TCP,
-            CONF_HOST: TEST_MODBUS_HOST,
-            CONF_PORT: TEST_PORT_TCP,
-        },
-        {
-            CONF_TYPE: TCP,
-            CONF_HOST: TEST_MODBUS_HOST,
-            CONF_PORT: TEST_PORT_TCP,
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: "dummy",
+                    CONF_ADDRESS: 9999,
+                }
+            ],
         },
         {
             CONF_TYPE: TCP,
@@ -986,11 +983,23 @@ async def test_no_duplicate_names(hass: HomeAssistant, do_config) -> None:
             CONF_NAME: TEST_MODBUS_NAME,
             CONF_TIMEOUT: 30,
             CONF_DELAY: 10,
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: "dummy",
+                    CONF_ADDRESS: 9999,
+                }
+            ],
         },
         {
             CONF_TYPE: UDP,
             CONF_HOST: TEST_MODBUS_HOST,
             CONF_PORT: TEST_PORT_TCP,
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: "dummy",
+                    CONF_ADDRESS: 9999,
+                }
+            ],
         },
         {
             CONF_TYPE: UDP,
@@ -999,11 +1008,23 @@ async def test_no_duplicate_names(hass: HomeAssistant, do_config) -> None:
             CONF_NAME: TEST_MODBUS_NAME,
             CONF_TIMEOUT: 30,
             CONF_DELAY: 10,
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: "dummy",
+                    CONF_ADDRESS: 9999,
+                }
+            ],
         },
         {
             CONF_TYPE: RTUOVERTCP,
             CONF_HOST: TEST_MODBUS_HOST,
             CONF_PORT: TEST_PORT_TCP,
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: "dummy",
+                    CONF_ADDRESS: 9999,
+                }
+            ],
         },
         {
             CONF_TYPE: RTUOVERTCP,
@@ -1012,6 +1033,12 @@ async def test_no_duplicate_names(hass: HomeAssistant, do_config) -> None:
             CONF_NAME: TEST_MODBUS_NAME,
             CONF_TIMEOUT: 30,
             CONF_DELAY: 10,
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: "dummy",
+                    CONF_ADDRESS: 9999,
+                }
+            ],
         },
         {
             CONF_TYPE: SERIAL,
@@ -1022,6 +1049,12 @@ async def test_no_duplicate_names(hass: HomeAssistant, do_config) -> None:
             CONF_PARITY: "E",
             CONF_STOPBITS: 1,
             CONF_MSG_WAIT: 100,
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: "dummy",
+                    CONF_ADDRESS: 9999,
+                }
+            ],
         },
         {
             CONF_TYPE: SERIAL,
@@ -1034,12 +1067,24 @@ async def test_no_duplicate_names(hass: HomeAssistant, do_config) -> None:
             CONF_NAME: TEST_MODBUS_NAME,
             CONF_TIMEOUT: 30,
             CONF_DELAY: 10,
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: "dummy",
+                    CONF_ADDRESS: 9999,
+                }
+            ],
         },
         {
             CONF_TYPE: TCP,
             CONF_HOST: TEST_MODBUS_HOST,
             CONF_PORT: TEST_PORT_TCP,
             CONF_DELAY: 5,
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: "dummy",
+                    CONF_ADDRESS: 9999,
+                }
+            ],
         },
         [
             {
@@ -1047,12 +1092,24 @@ async def test_no_duplicate_names(hass: HomeAssistant, do_config) -> None:
                 CONF_HOST: TEST_MODBUS_HOST,
                 CONF_PORT: TEST_PORT_TCP,
                 CONF_NAME: TEST_MODBUS_NAME,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: "dummy",
+                        CONF_ADDRESS: 9999,
+                    }
+                ],
             },
             {
                 CONF_TYPE: TCP,
                 CONF_HOST: TEST_MODBUS_HOST,
                 CONF_PORT: TEST_PORT_TCP,
                 CONF_NAME: f"{TEST_MODBUS_NAME} 2",
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: "dummy",
+                        CONF_ADDRESS: 9999,
+                    }
+                ],
             },
             {
                 CONF_TYPE: SERIAL,
@@ -1063,6 +1120,12 @@ async def test_no_duplicate_names(hass: HomeAssistant, do_config) -> None:
                 CONF_PARITY: "E",
                 CONF_STOPBITS: 1,
                 CONF_NAME: f"{TEST_MODBUS_NAME} 3",
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: "dummy",
+                        CONF_ADDRESS: 9999,
+                    }
+                ],
             },
         ],
         {
@@ -1351,6 +1414,12 @@ async def test_pymodbus_close_fail(
                 CONF_TYPE: TCP,
                 CONF_HOST: TEST_MODBUS_HOST,
                 CONF_PORT: TEST_PORT_TCP,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: "dummy",
+                        CONF_ADDRESS: 9999,
+                    }
+                ],
             }
         ]
     }
@@ -1373,6 +1442,12 @@ async def test_pymodbus_connect_fail(
                 CONF_TYPE: TCP,
                 CONF_HOST: TEST_MODBUS_HOST,
                 CONF_PORT: TEST_PORT_TCP,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: "dummy",
+                        CONF_ADDRESS: 9999,
+                    }
+                ],
             }
         ]
     }
@@ -1603,3 +1678,18 @@ async def test_integration_setup_failed(
         )
         await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
         await hass.async_block_till_done()
+
+
+async def test_no_entities(hass: HomeAssistant) -> None:
+    """Run test for failing pymodbus constructor."""
+    config = {
+        DOMAIN: [
+            {
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+            }
+        ]
+    }
+    assert await async_setup_component(hass, DOMAIN, config) is False

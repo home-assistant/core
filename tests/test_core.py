@@ -735,7 +735,6 @@ def test_add_job_pending_tasks_coro(hass: HomeAssistant) -> None:
 
     async def test_coro():
         """Test Coro."""
-        pass
 
     for _ in range(2):
         hass.add_job(test_coro())
@@ -2423,7 +2422,7 @@ async def test_hassjob_forbid_coroutine() -> None:
     coro = bla()
 
     with pytest.raises(ValueError):
-        ha.HassJob(coro).job_type
+        _ = ha.HassJob(coro).job_type
 
     # To avoid warning about unawaited coro
     await coro
