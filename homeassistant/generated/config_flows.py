@@ -118,6 +118,7 @@ FLOWS = {
         "dnsip",
         "doorbird",
         "dormakaba_dkey",
+        "downloader",
         "dremel_3d_printer",
         "drop_connect",
         "dsmr",
