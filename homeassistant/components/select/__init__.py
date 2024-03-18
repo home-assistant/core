@@ -179,7 +179,6 @@ class SelectEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if not options or option not in options:
             friendly_options: str = ", ".join(options or [])
             raise ServiceValidationError(
-                f"Option {option} is not valid for {self.entity_id}",
                 translation_domain=DOMAIN,
                 translation_key="not_valid_option",
                 translation_placeholders={
