@@ -825,10 +825,10 @@ class ZONNSMARTThermostat(Thermostat):
 
 
 @MULTI_MATCH(
-    cluster_handler_names={"cable_outlet_cluster"},
+    cluster_handler_names={"legrand_wire_pilot_cluster"},
 )
-class LegrandCableOutletThermostat(ZhaEntity, ClimateEntity):
-    """Legrand Cable outlet Thermostat implementation."""
+class LegrandWirePilotThermostat(ZhaEntity, ClimateEntity):
+    """Legrand wire pilot Thermostat implementation."""
 
     PRESET_COMFORT_MINUS_1 = "comfort_minus_1"
     PRESET_COMFORT_MINUS_2 = "comfort_minus_2"
@@ -860,14 +860,16 @@ class LegrandCableOutletThermostat(ZhaEntity, ClimateEntity):
     def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs):
         """Initialize ZHA Thermostat instance."""
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
-        self._cable_outlet = self.cluster_handlers.get("cable_outlet_cluster")
-        self._heat_mode = self._cable_outlet.cluster.get("heat_mode", 5)
+        self._wire_pilot_cluster = self.cluster_handlers.get(
+            "legrand_wire_pilot_cluster"
+        )
+        self._heat_mode = self._wire_pilot_cluster.cluster.get("heat_mode", 5)
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         self.async_accept_signal(
-            self._cable_outlet, SIGNAL_ATTR_UPDATED, self.async_attribute_updated
+            self._wire_pilot_cluster, SIGNAL_ATTR_UPDATED, self.async_attribute_updated
         )
 
     async def async_attribute_updated(self, attr_id, attr_name, value):
@@ -938,7 +940,7 @@ class LegrandCableOutletThermostat(ZhaEntity, ClimateEntity):
 
         heat_mode = 5 if hvac_mode == HVACMode.OFF else 0
         mfg_code = self._zha_device.manufacturer_code
-        await self._cable_outlet.write_attributes_safe(
+        await self._wire_pilot_cluster.write_attributes_safe(
             {"heat_mode": heat_mode}, manufacturer=mfg_code
         )
         self.async_write_ha_state()
@@ -951,7 +953,7 @@ class LegrandCableOutletThermostat(ZhaEntity, ClimateEntity):
 
         heat_mode = self.PRESET_2_HEAT_MODE.get(preset_mode)
         mfg_code = self._zha_device.manufacturer_code
-        await self._cable_outlet.write_attributes_safe(
+        await self._wire_pilot_cluster.write_attributes_safe(
             {"heat_mode": heat_mode}, manufacturer=mfg_code
         )
         self.async_write_ha_state()

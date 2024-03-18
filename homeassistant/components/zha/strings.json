@@ -823,9 +823,6 @@
       },
       "keypad_lockout": {
         "name": "Keypad lockout"
-      },
-      "device_mode": {
-        "name": "Device mode"
       }
     },
     "sensor": {
@@ -1007,6 +1004,9 @@
       },
       "buzzer_manual_alarm": {
         "name": "Buzzer manual alarm"
+      },
+      "wire_pilot_mode": {
+        "name": "Wire pilot mode"
       }
     }
   }
