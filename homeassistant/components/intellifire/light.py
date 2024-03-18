@@ -6,7 +6,8 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
-from intellifire4py import IntellifireControlAsync, IntellifirePollData
+from intellifire4py.control import IntelliFireController
+from intellifire4py.model import IntelliFirePollData
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -27,8 +28,8 @@ from .entity import IntellifireEntity
 class IntellifireLightRequiredKeysMixin:
     """Required keys for fan entity."""
 
-    set_fn: Callable[[IntellifireControlAsync, int], Awaitable]
-    value_fn: Callable[[IntellifirePollData], bool]
+    set_fn: Callable[[IntelliFireController, int], Awaitable]
+    value_fn: Callable[[IntelliFirePollData], int]
 
 
 @dataclass(frozen=True)
@@ -56,12 +57,12 @@ class IntellifireLight(IntellifireEntity, LightEntity):
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the current brightness 0-255."""
         return 85 * self.entity_description.value_fn(self.coordinator.read_api.data)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if light is on."""
         return self.entity_description.value_fn(self.coordinator.read_api.data) >= 1
 
