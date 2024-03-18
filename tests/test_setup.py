@@ -963,10 +963,10 @@ async def test_async_get_setup_timings(hass) -> None:
     )
     assert setup.async_get_setup_timings(hass) == {
         "august": 6,
-        "filter": 2,
+        "notify": 2,
         "legacy_notify_integration": 3,
-        "notify": 1,
         "sensor": 1,
+        "filter": 2,
     }
 
 
