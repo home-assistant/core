@@ -19,6 +19,7 @@ from tests.typing import ClientSessionGenerator
 async def setup_scene(hass, scene_config):
     """Set up scene integration."""
     assert await async_setup_component(hass, "scene", {"scene": scene_config})
+    await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize("scene_config", ({},))
