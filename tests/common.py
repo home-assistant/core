@@ -184,7 +184,6 @@ def get_test_home_assistant() -> Generator[HomeAssistant, None, None]:
     def stop_hass() -> None:
         """Stop hass."""
         orig_stop()
-        asyncio.run_coroutine_threadsafe(asyncio.sleep(0), loop).result()
         loop_stop_event.wait()
 
     hass.start = start_hass
@@ -347,16 +346,13 @@ async def async_test_home_assistant(
 
     hass.set_state(CoreState.running)
 
-    async def clear_instance(event):
+    @callback
+    def clear_instance(event):
         """Clear global instance."""
-        # Give time for the aiohttp, and anything else that is
-        # not scheduling tasks eagerly to run one iteration
-        # to shutdown.
-        await asyncio.sleep(0)
         INSTANCES.remove(hass)
 
     hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_CLOSE, clear_instance, run_immediately=True
+        EVENT_HOMEASSISTANT_CLOSE, clear_instance, run_immediately=False
     )
 
     yield hass
