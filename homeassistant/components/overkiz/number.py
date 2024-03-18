@@ -183,15 +183,15 @@ async def async_setup_entry(
         ):
             continue
 
-        for state in device.definition.states:
-            if description := SUPPORTED_STATES.get(state.qualified_name):
-                entities.append(
-                    OverkizNumber(
-                        device.device_url,
-                        data.coordinator,
-                        description,
-                    )
-                )
+        entities.extend(
+            OverkizNumber(
+                device.device_url,
+                data.coordinator,
+                description,
+            )
+            for state in device.definition.states
+            if (description := SUPPORTED_STATES.get(state.qualified_name))
+        )
 
     async_add_entities(entities)
 

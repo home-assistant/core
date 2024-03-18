@@ -44,6 +44,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
+from . import group as group_pre_import  # noqa: F401
+
 if TYPE_CHECKING:
     from functools import cached_property
 else:
@@ -379,7 +381,7 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
@@ -387,7 +389,7 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""

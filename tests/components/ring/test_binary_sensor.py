@@ -33,6 +33,10 @@ async def test_binary_sensor(
     assert motion_state.state == "on"
     assert motion_state.attributes["device_class"] == "motion"
 
-    ding_state = hass.states.get("binary_sensor.front_door_ding")
-    assert ding_state is not None
-    assert ding_state.state == "off"
+    front_ding_state = hass.states.get("binary_sensor.front_door_ding")
+    assert front_ding_state is not None
+    assert front_ding_state.state == "off"
+
+    ingress_ding_state = hass.states.get("binary_sensor.ingress_ding")
+    assert ingress_ding_state is not None
+    assert ingress_ding_state.state == "off"
