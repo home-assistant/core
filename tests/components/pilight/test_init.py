@@ -2,7 +2,6 @@
 
 from datetime import timedelta
 import logging
-import re
 import socket
 from unittest.mock import patch
 
@@ -115,6 +114,7 @@ async def test_send_code_no_protocol(hass: HomeAssistant) -> None:
             )
             await hass.async_block_till_done()
         assert "required key not provided @ data['protocol']" in str(excinfo.value)
+
 
 @patch("homeassistant.components.pilight._LOGGER.error")
 @patch("homeassistant.components.pilight._LOGGER", _LOGGER)
