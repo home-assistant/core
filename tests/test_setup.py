@@ -795,7 +795,7 @@ async def test_async_start_setup_config_entry(hass: HomeAssistant) -> None:
         phase=setup.SetupPhases.CONFIG_ENTRY_SETUP,
     ):
         assert isinstance(setup_started[("august", "entry_id2")], float)
-        # We wrap places were we wait for other components
+        # We wrap places where we wait for other components
         # or the import of a module with async_freeze_setup
         # so we can subtract the time waited from the total setup time
         with setup.async_pause_setup(hass, setup.SetupPhases.WAIT_BASE_PLATFORM_SETUP):
