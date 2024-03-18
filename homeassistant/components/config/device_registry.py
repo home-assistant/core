@@ -69,7 +69,7 @@ def websocket_list_devices(
         # We only allow setting disabled_by user via API.
         # No Enum support like this in voluptuous, use .value
         vol.Optional("disabled_by"): vol.Any(DeviceEntryDisabler.USER.value, None),
-        vol.Optional("labels"): list,
+        vol.Optional("labels"): [str],
         vol.Optional("name_by_user"): vol.Any(str, None),
     }
 )
