@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -15,7 +16,9 @@ class ArveDeviceEntity(CoordinatorEntity[ArveCoordinator]):
     _attr_has_entity_name = True
     _attr_available = True
 
-    def __init__(self, coordinator: ArveCoordinator, description) -> None:
+    def __init__(
+        self, coordinator: ArveCoordinator, description: EntityDescription
+    ) -> None:
         """Initialize the Arve device entity."""
         super().__init__(coordinator)
 

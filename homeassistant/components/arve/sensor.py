@@ -29,7 +29,9 @@ from .entity import ArveDeviceEntity
 class ArveDeviceEntityDescription(SensorEntityDescription):
     """Describes Arve device entity."""
 
-    value_fn: Callable[[ArveSensProData, str], float | int]
+    value_fn: Callable[[ArveSensProData, str], float | int] = (
+        lambda arve_data, key: getattr(arve_data, key.lower())
+    )
 
 
 SENSORS: tuple[ArveDeviceEntityDescription, ...] = (
@@ -38,48 +40,41 @@ SENSORS: tuple[ArveDeviceEntityDescription, ...] = (
         translation_key="co2",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         device_class=SensorDeviceClass.CO2,
-        value_fn=lambda arve_data, key: getattr(arve_data, key.lower()),
     ),
     ArveDeviceEntityDescription(
         key="AQI",
         translation_key="aqi",
         native_unit_of_measurement=None,
         device_class=SensorDeviceClass.AQI,
-        value_fn=lambda arve_data, key: getattr(arve_data, key.lower()),
     ),
     ArveDeviceEntityDescription(
         key="Humidity",
         translation_key="humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
-        value_fn=lambda arve_data, key: getattr(arve_data, key.lower()),
     ),
     ArveDeviceEntityDescription(
         key="PM10",
         translation_key="pm10",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM10,
-        value_fn=lambda arve_data, key: getattr(arve_data, key.lower()),
     ),
     ArveDeviceEntityDescription(
         key="PM25",
         translation_key="pm25",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
-        value_fn=lambda arve_data, key: getattr(arve_data, key.lower()),
     ),
     ArveDeviceEntityDescription(
         key="Temperature",
         translation_key="temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
-        value_fn=lambda arve_data, key: getattr(arve_data, key.lower()),
     ),
     ArveDeviceEntityDescription(
         key="TVOC",
         translation_key="tvoc",
         native_unit_of_measurement=None,
-        value_fn=lambda arve_data, key: getattr(arve_data, key.lower()),
     ),
 )
 
@@ -88,26 +83,15 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Arve device based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: ArveCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities(
-        ArveDevice(coordinator, description) for description in SENSORS
-    )
+    async_add_entities(ArveDevice(coordinator, description) for description in SENSORS)
 
 
 class ArveDevice(ArveDeviceEntity, SensorEntity):
     """Define an Arve device."""
 
     entity_description: ArveDeviceEntityDescription
-
-    def __init__(
-        self,
-        coordinator: ArveCoordinator,
-        description: ArveDeviceEntityDescription,
-    ) -> None:
-        """Initialize Arve device."""
-        super().__init__(coordinator, description)
-        self.coordinator = coordinator
 
     @property
     def native_value(self) -> int | float:
