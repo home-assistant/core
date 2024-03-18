@@ -21,7 +21,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -113,7 +113,6 @@ async def _test_switch_update_exception(
 )
 async def test_switch_setup(
     hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     valid_config_entry: MockConfigEntry,
     mock_get_device: MagicMock,
