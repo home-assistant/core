@@ -33,7 +33,7 @@ class TTNFlowHandler(ConfigFlow):
         self.__reauth_entry: ConfigEntry | None = None
 
     @property
-    def schema(self):
+    def schema(self) -> vol.Schema:
         """Return current schema."""
 
         return vol.Schema(
@@ -44,7 +44,9 @@ class TTNFlowHandler(ConfigFlow):
             }
         )
 
-    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """User initiated config flow."""
         errors = {}
         if user_input is not None:
@@ -75,7 +77,9 @@ class TTNFlowHandler(ConfigFlow):
         self.__access_key = entry.data[CONF_ACCESS_KEY]
         return await self.async_step_reauth_confirm()
 
-    async def async_step_reauth_confirm(self, user_input=None) -> ConfigFlowResult:
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         if user_input is None:
             return self.async_show_form(
@@ -85,7 +89,9 @@ class TTNFlowHandler(ConfigFlow):
             )
         return await self.async_step_user()
 
-    async def __create_or_update_entry(self, data):
+    async def __create_or_update_entry(
+        self, data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Create or update TTN entry."""
 
         if self.__reauth_entry:
@@ -99,7 +105,7 @@ class TTNFlowHandler(ConfigFlow):
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
-            title=self.__app_id,
+            title=str(self.__app_id),
             data=data,
         )
 
@@ -121,5 +127,3 @@ class TTNFlowHandler(ConfigFlow):
             # and start a config flow with SOURCE_REAUTH (async_step_reauth)
             _LOGGER.error("TTNAuthError")
             return "invalid_auth"
-
-        return "connection_error"

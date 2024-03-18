@@ -1,5 +1,6 @@
 """The Things Network's integration sensors."""
 
+from collections.abc import Callable
 
 from ttn_client import TTNBaseValue, TTNSensorValue
 
@@ -23,7 +24,9 @@ async def async_setup_entry(
     coordinator.async_add_entities()
 
 
-async def async_unload_entry(hass: HomeAssistant, entry, async_remove_entity) -> None:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_remove_entity: Callable[[str], None]
+) -> None:
     """Handle removal of an entry."""
 
 
@@ -31,7 +34,9 @@ class TtnDataSensor(TTN_Entity, SensorEntity):
     """Represents a TTN Home Assistant Sensor."""
 
     @staticmethod
-    def manages_uplink(entrySettings: TTN_EntrySettings, ttn_value: TTNBaseValue):
+    def manages_uplink(
+        entrySettings: TTN_EntrySettings, ttn_value: TTNBaseValue
+    ) -> bool:
         """Check if this class maps to this ttn_value."""
 
         entity_type = entrySettings.get_entity_type(
@@ -45,7 +50,8 @@ class TtnDataSensor(TTN_Entity, SensorEntity):
     @property
     def native_value(self) -> float | int | str:
         """Return the state of the entity."""
-        return self._ttn_value.value
+        value: float | int | str = self._ttn_value.value
+        return value
 
     @property
     def native_unit_of_measurement(self) -> str | None:
