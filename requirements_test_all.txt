@@ -419,7 +419,7 @@ anthemav==1.4.1
 apple_weatherkit==1.1.2
 
 # homeassistant.components.apprise
-apprise==1.7.2
+apprise==1.7.4
 
 # homeassistant.components.aprs
 aprslib==0.7.0
@@ -1894,6 +1894,9 @@ roombapy==1.6.13
 
 # homeassistant.components.roon
 roonapi==0.1.6
+
+# homeassistant.components.rova
+rova==0.4.1
 
 # homeassistant.components.rpi_power
 rpi-bad-power==0.1.0
