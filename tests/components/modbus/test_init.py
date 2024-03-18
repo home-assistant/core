@@ -662,11 +662,11 @@ async def test_check_config_sensor(hass: HomeAssistant, do_config) -> None:
                     },
                     {
                         CONF_NAME: TEST_ENTITY_NAME + " 2",
-                        CONF_ADDRESS: 117,
+                        CONF_ADDRESS: 119,
                         CONF_SLAVE: 0,
-                        CONF_TARGET_TEMP: [117],
+                        CONF_TARGET_TEMP: 118,
                         CONF_SWING_MODE_REGISTER: {
-                            CONF_ADDRESS: [121],
+                            CONF_ADDRESS: [120],
                             CONF_SWING_MODE_VALUES: {
                                 CONF_SWING_MODE_SWING_ON: 0,
                                 CONF_SWING_MODE_SWING_BOTH: 1,

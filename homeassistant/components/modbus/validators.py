@@ -449,7 +449,9 @@ def validate_entity(
         loc_addr.add(f"{hub_name}{entity[CONF_FAN_MODE_REGISTER][CONF_ADDRESS]}_{inx}")
     if CONF_SWING_MODE_REGISTER in entity:
         loc_addr.add(
-            f"{hub_name}{entity[CONF_SWING_MODE_REGISTER][CONF_ADDRESS]}_{inx}"
+            f"{hub_name}{entity[CONF_SWING_MODE_REGISTER][CONF_ADDRESS]
+                         if isinstance(entity[CONF_SWING_MODE_REGISTER][CONF_ADDRESS],int)
+                         else entity[CONF_SWING_MODE_REGISTER][CONF_ADDRESS][0]}_{inx}"
         )
 
     dup_addrs = ent_addr.intersection(loc_addr)
