@@ -23,7 +23,7 @@ BINARY_SENSORS: list[BinarySensorEntityDescription] = [
     BinarySensorEntityDescription(
         key="dock",
         translation_key="docked",
-        device_class=BinarySensorDeviceClass.PRESENCE,
+        device_class=BinarySensorDeviceClass.PLUG,
     ),
     BinarySensorEntityDescription(
         key="water_tank",
