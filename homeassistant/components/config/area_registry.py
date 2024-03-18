@@ -42,7 +42,7 @@ def websocket_list_areas(
         vol.Optional("aliases"): list,
         vol.Optional("floor_id"): str,
         vol.Optional("icon"): str,
-        vol.Optional("labels"): list,
+        vol.Optional("labels"): [str],
         vol.Required("name"): str,
         vol.Optional("picture"): vol.Any(str, None),
     }
@@ -108,7 +108,7 @@ def websocket_delete_area(
         vol.Required("area_id"): str,
         vol.Optional("floor_id"): vol.Any(str, None),
         vol.Optional("icon"): vol.Any(str, None),
-        vol.Optional("labels"): list,
+        vol.Optional("labels"): [str]],
         vol.Optional("name"): str,
         vol.Optional("picture"): vol.Any(str, None),
     }
