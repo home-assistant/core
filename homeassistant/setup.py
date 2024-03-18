@@ -669,6 +669,10 @@ class SetupPhases(StrEnum):
     """
     Time spent waiting for the platforms to import
     """
+    WAIT_IMPORT_PACKAGES = "wait_import_packages"
+    """
+    Time spent waiting for the packages to import
+    """
     WAIT_PLATFORM_INTEGRATION = "wait_platform_integration"
     """
     Time spent waiting for a platform integration
