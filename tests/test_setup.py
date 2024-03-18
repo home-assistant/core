@@ -905,6 +905,26 @@ async def test_async_start_setup_legacy_platform_integration(
     }
 
 
+async def test_async_start_setup_simple_integration_end_to_end(
+    hass: HomeAssistant,
+) -> None:
+    """Test end to end timings for a simple integration with no platforms."""
+    hass.set_state(CoreState.not_running)
+    mock_integration(
+        hass,
+        MockModule(
+            "test_integration_no_platforms",
+            setup=False,
+            async_setup_entry=AsyncMock(return_value=True),
+        ),
+    )
+    assert await setup.async_setup_component(hass, "test_integration_no_platforms", {})
+    await hass.async_block_till_done()
+    assert setup.async_get_setup_timings(hass) == {
+        "test_integration_no_platforms": ANY,
+    }
+
+
 async def test_async_get_setup_timings(hass) -> None:
     """Test we can get the setup timings from the setup time data."""
     setup_time = setup._setup_times(hass)
