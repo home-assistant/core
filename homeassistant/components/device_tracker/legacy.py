@@ -52,6 +52,7 @@ from homeassistant.helpers.typing import ConfigType, GPSType, StateType
 from homeassistant.setup import (
     SetupPhases,
     async_notify_setup_error,
+    async_pause_setup,
     async_prepare_setup_platform,
     async_start_setup,
 )
@@ -292,7 +293,9 @@ class DeviceTrackerPlatform:
         assert self.type == PLATFORM_TYPE_LEGACY
         full_name = f"{self.name}.{DOMAIN}"
         LOGGER.info("Setting up %s", full_name)
-        with async_start_setup(
+        with async_pause_setup(
+            hass, SetupPhases.WAIT_PLATFORM_INTEGRATION
+        ), async_start_setup(
             hass,
             integration=self.name,
             group=str(id(self.config)),

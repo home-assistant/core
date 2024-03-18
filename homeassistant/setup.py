@@ -661,15 +661,15 @@ class SetupPhases(StrEnum):
     after the config entry is setup. This is only for platforms
     that are not awaited in async_setup_entry.
     """
-    BASE_PLATFORM_SETUP = "wait_base_component"
+    WAIT_BASE_PLATFORM_SETUP = "wait_base_component"
     """
     Time spent waiting for the base component to be setup
     """
-    IMPORT_PLATFORMS = "wait_import_platforms"
+    WAIT_IMPORT_PLATFORMS = "wait_import_platforms"
     """
     Time spent waiting for the platforms to import
     """
-    PLATFORM_INTEGRATION = "wait_platform_integration"
+    WAIT_PLATFORM_INTEGRATION = "wait_platform_integration"
     """
     Time spent waiting for a platform integration
     to setup inside of a base platform. ex

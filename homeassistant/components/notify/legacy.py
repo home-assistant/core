@@ -18,6 +18,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.setup import (
     SetupPhases,
+    async_pause_setup,
     async_prepare_setup_platform,
     async_start_setup,
 )
@@ -88,7 +89,9 @@ def async_setup_legacy(
 
         full_name = f"{DOMAIN}.{integration_name}"
         LOGGER.info("Setting up %s", full_name)
-        with async_start_setup(
+        with async_pause_setup(
+            hass, SetupPhases.WAIT_PLATFORM_INTEGRATION
+        ), async_start_setup(
             hass,
             integration=integration_name,
             group=str(id(p_config)),

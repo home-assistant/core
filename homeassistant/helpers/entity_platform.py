@@ -285,7 +285,7 @@ class EntityPlatform:
             )
 
         with async_pause_setup(
-            hass, SetupPhases.PLATFORM_INTEGRATION
+            hass, SetupPhases.WAIT_PLATFORM_INTEGRATION
         ), async_start_setup(
             hass,
             integration=self.platform_name,

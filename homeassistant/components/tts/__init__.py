@@ -48,7 +48,9 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import UNDEFINED, ConfigType
+from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util import dt as dt_util, language as language_util
+from homeassistant.util.async_ import create_eager_task
 
 from .const import (
     ATTR_CACHE,
@@ -320,7 +322,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     platform_setups = await async_setup_legacy(hass, config)
 
     if platform_setups:
-        await asyncio.wait([asyncio.create_task(setup) for setup in platform_setups])
+        with async_pause_setup(hass, SetupPhases.WAIT_PLATFORM_INTEGRATION):
+            await asyncio.wait([create_eager_task(setup) for setup in platform_setups])
 
     component.async_register_entity_service(
         "speak",
