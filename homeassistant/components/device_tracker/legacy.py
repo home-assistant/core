@@ -940,7 +940,7 @@ class DeviceScanner:
 
     def scan_devices(self) -> list[str]:
         """Scan for devices."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_scan_devices(self) -> list[str]:
         """Scan for devices."""
@@ -951,7 +951,7 @@ class DeviceScanner:
 
     def get_device_name(self, device: str) -> str | None:
         """Get the name of a device."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_get_device_name(self, device: str) -> str | None:
         """Get the name of a device."""
@@ -962,7 +962,7 @@ class DeviceScanner:
 
     def get_extra_attributes(self, device: str) -> dict:
         """Get the extra attributes of a device."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_get_extra_attributes(self, device: str) -> dict:
         """Get the extra attributes of a device."""

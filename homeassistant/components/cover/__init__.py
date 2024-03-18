@@ -381,7 +381,7 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
@@ -389,7 +389,7 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""

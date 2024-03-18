@@ -139,7 +139,7 @@ class ConditionError(HomeAssistantError):
 
     def output(self, indent: int) -> Generator[str, None, None]:
         """Yield an indented representation."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def __str__(self) -> str:
         """Return string representation."""

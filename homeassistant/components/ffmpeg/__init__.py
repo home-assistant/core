@@ -229,7 +229,7 @@ class FFmpegBase(Entity, Generic[_HAFFmpegT]):
 
         This method is a coroutine.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def _async_stop_ffmpeg(self, entity_ids: list[str] | None) -> None:
         """Stop a FFmpeg process.

@@ -219,7 +219,7 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
@@ -232,7 +232,7 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
@@ -245,7 +245,7 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def open(self, **kwargs: Any) -> None:
         """Open the door latch."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
