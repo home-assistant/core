@@ -57,6 +57,8 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
+from . import group as group_pre_import  # noqa: F401
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_SOURCE = "source"
@@ -132,7 +134,7 @@ async def async_add_user_device_tracker(
 
         await coll.async_update_item(
             person[CONF_ID],
-            {CONF_DEVICE_TRACKERS: device_trackers + [device_tracker_entity_id]},
+            {CONF_DEVICE_TRACKERS: [*device_trackers, device_tracker_entity_id]},
         )
         break
 

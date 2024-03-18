@@ -43,7 +43,7 @@ class DiscovergySensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[Reading, str, int], datetime | float | None] = field(
         default=_get_and_scale
     )
-    alternative_keys: list[str] = field(default_factory=lambda: [])
+    alternative_keys: list[str] = field(default_factory=list)
     scale: int = field(default_factory=lambda: 1000)
 
 

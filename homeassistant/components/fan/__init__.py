@@ -238,7 +238,7 @@ class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
@@ -277,7 +277,7 @@ class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @final
     async def async_handle_set_preset_mode_service(self, preset_mode: str) -> None:
@@ -307,7 +307,7 @@ class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
@@ -320,7 +320,7 @@ class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @final
     async def async_handle_turn_on_service(
@@ -352,7 +352,7 @@ class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""

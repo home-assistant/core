@@ -735,7 +735,6 @@ def test_add_job_pending_tasks_coro(hass: HomeAssistant) -> None:
 
     async def test_coro():
         """Test Coro."""
-        pass
 
     for _ in range(2):
         hass.add_job(test_coro())
@@ -2423,7 +2422,7 @@ async def test_hassjob_forbid_coroutine() -> None:
     coro = bla()
 
     with pytest.raises(ValueError):
-        ha.HassJob(coro).job_type
+        _ = ha.HassJob(coro).job_type
 
     # To avoid warning about unawaited coro
     await coro
@@ -3119,3 +3118,37 @@ async def test_async_add_import_executor_job(hass: HomeAssistant) -> None:
     assert await future is evt
 
     assert hass.import_executor._max_workers == 1
+
+
+async def test_async_run_job_deprecated(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test async_run_job warns about its deprecation."""
+
+    async def _test():
+        pass
+
+    hass.async_run_job(_test)
+    assert (
+        "Detected code that calls `async_run_job`, which is deprecated "
+        "and will be removed in Home Assistant 2025.4; Please review "
+        "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
+        " for replacement options"
+    ) in caplog.text
+
+
+async def test_async_add_job_deprecated(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test async_add_job warns about its deprecation."""
+
+    async def _test():
+        pass
+
+    hass.async_add_job(_test)
+    assert (
+        "Detected code that calls `async_add_job`, which is deprecated "
+        "and will be removed in Home Assistant 2025.4; Please review "
+        "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
+        " for replacement options"
+    ) in caplog.text

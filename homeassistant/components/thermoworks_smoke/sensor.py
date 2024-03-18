@@ -86,22 +86,21 @@ def setup_platform(
 
     try:
         mgr = thermoworks_smoke.initialize_app(email, password, True, excluded)
-
-        # list of sensor devices
-        dev = []
-
-        # get list of registered devices
-        for serial in mgr.serials():
-            for variable in monitored_variables:
-                dev.append(ThermoworksSmokeSensor(variable, serial, mgr))
-
-        add_entities(dev, True)
     except HTTPError as error:
         msg = f"{error.strerror}"
         if "EMAIL_NOT_FOUND" in msg or "INVALID_PASSWORD" in msg:
             _LOGGER.error("Invalid email and password combination")
         else:
             _LOGGER.error(msg)
+    else:
+        add_entities(
+            (
+                ThermoworksSmokeSensor(variable, serial, mgr)
+                for serial in mgr.serials()
+                for variable in monitored_variables
+            ),
+            True,
+        )
 
 
 class ThermoworksSmokeSensor(SensorEntity):

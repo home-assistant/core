@@ -54,6 +54,25 @@ SIGNAL_DISCONNECTED = "apple_tv_disconnected"
 
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 
+AUTH_EXCEPTIONS = (
+    exceptions.AuthenticationError,
+    exceptions.InvalidCredentialsError,
+    exceptions.NoCredentialsError,
+)
+CONNECTION_TIMEOUT_EXCEPTIONS = (
+    asyncio.CancelledError,
+    TimeoutError,
+    exceptions.ConnectionLostError,
+    exceptions.ConnectionFailedError,
+)
+DEVICE_EXCEPTIONS = (
+    exceptions.ProtocolError,
+    exceptions.NoServiceError,
+    exceptions.PairingError,
+    exceptions.BackOffError,
+    exceptions.DeviceIdMissingError,
+)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry for Apple TV."""
@@ -64,27 +83,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         try:
             await manager.async_first_connect()
-        except (
-            exceptions.AuthenticationError,
-            exceptions.InvalidCredentialsError,
-            exceptions.NoCredentialsError,
-        ) as ex:
+        except AUTH_EXCEPTIONS as ex:
             raise ConfigEntryAuthFailed(
                 f"{address}: Authentication failed, try reconfiguring device: {ex}"
             ) from ex
-        except (
-            asyncio.CancelledError,
-            exceptions.ConnectionLostError,
-            exceptions.ConnectionFailedError,
-        ) as ex:
+        except CONNECTION_TIMEOUT_EXCEPTIONS as ex:
             raise ConfigEntryNotReady(f"{address}: {ex}") from ex
-        except (
-            exceptions.ProtocolError,
-            exceptions.NoServiceError,
-            exceptions.PairingError,
-            exceptions.BackOffError,
-            exceptions.DeviceIdMissingError,
-        ) as ex:
+        except DEVICE_EXCEPTIONS as ex:
             _LOGGER.debug(
                 "Error setting up apple_tv at %s: %s", address, ex, exc_info=ex
             )
@@ -97,7 +102,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await manager.disconnect()
 
     entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, on_hass_stop, run_immediately=True
+        )
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

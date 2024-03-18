@@ -857,7 +857,7 @@ class ConfigEntry:
         if self._on_unload is not None:
             while self._on_unload:
                 if job := self._on_unload.pop()():
-                    self.async_create_task(hass, job)
+                    self.async_create_task(hass, job, eager_start=True)
 
         if not self._tasks and not self._background_tasks:
             return
@@ -1591,7 +1591,9 @@ class ConfigEntries:
             old_conf_migrate_func=_old_conf_migrator,
         )
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, self._async_shutdown, run_immediately=True
+        )
 
         if config is None:
             self._entries = ConfigEntryItems(self.hass)

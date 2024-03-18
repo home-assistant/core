@@ -428,6 +428,7 @@ async def test_set_invalid_direction_from_initial_stage(
     await common.async_turn_on(hass, _TEST_FAN)
 
     await common.async_set_direction(hass, _TEST_FAN, "invalid")
+
     assert hass.states.get(_DIRECTION_INPUT_SELECT).state == ""
     _verify(hass, STATE_ON, 0, None, None, None)
 
