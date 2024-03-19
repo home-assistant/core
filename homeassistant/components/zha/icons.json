@@ -13,7 +13,7 @@
               "comfort_minus_1": "mdi:numeric-1-circle",
               "comfort_minus_2": "mdi:numeric-2-circle",
               "frost_protection": "mdi:snowflake-thermometer",
-              "off": "mdi:power"
+              "none": "mdi:power"
             }
           }
         }

@@ -825,87 +825,150 @@ class ZONNSMARTThermostat(Thermostat):
 
 
 @MULTI_MATCH(
-    cluster_handler_names={CLUSTER_HANDLER_THERMOSTAT, "legrand_wire_pilot_cluster"},
-    stop_on_match_group=CLUSTER_HANDLER_THERMOSTAT,
+    cluster_handler_names={"legrand_wire_pilot_cluster"},
 )
-class LegrandWirePilotThermostat(Thermostat):
-    """Legrand wire pilot thermostat implementation."""
+class LegrandWirePilotThermostat(ZhaEntity, ClimateEntity):
+    """Legrand wire pilot Thermostat implementation."""
 
     PRESET_COMFORT_MINUS_1 = "comfort_minus_1"
     PRESET_COMFORT_MINUS_2 = "comfort_minus_2"
     PRESET_FROST_PROTECTION = "frost_protection"
     PRESET_OFF = "off"
 
-    _attr_translation_key = "legrand_thermostat"
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_translation_key: str = "legrand_thermostat"
+    _enable_turn_on_off_backwards_compatibility = False
+
+    _heat_mode = int | None
 
     def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs):
         """Initialize ZHA Thermostat instance."""
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
-        self._supported_flags = (
-            ClimateEntityFeature.TURN_OFF
-            | ClimateEntityFeature.TURN_ON
-            | ClimateEntityFeature.PRESET_MODE
+        self._wire_pilot_cluster = self.cluster_handlers.get(
+            "legrand_wire_pilot_cluster"
         )
 
+    async def async_added_to_hass(self) -> None:
+        """Run when about to be added to hass."""
+
+        await super().async_added_to_hass()
+
+        self._heat_mode = self._wire_pilot_cluster.cluster.get("heat_mode")
+        self.async_accept_signal(
+            self._wire_pilot_cluster, SIGNAL_ATTR_UPDATED, self.async_attribute_updated
+        )
+
+    async def async_attribute_updated(self, attr_id, attr_name, value):
+        """Handle attribute update from device."""
+
+        if attr_name == "heat_mode":
+            self._heat_mode = value
+        self.async_write_ha_state()
+
     @property
-    def current_temperature(self):
-        """Return current temperature."""
+    def hvac_mode(self) -> HVACMode | None:
+        """Return HVAC operation mode."""
+
+        heat_mode = self._heat_mode
+        if not isinstance(heat_mode, int):
+            return None
+        if heat_mode == 5:
+            return HVACMode.OFF
+        if heat_mode >= 0:
+            return HVACMode.HEAT
         return None
+
+    @property
+    def hvac_modes(self):
+        """Return the list of available HVAC operation modes."""
+        return [HVACMode.HEAT, HVACMode.OFF]
 
     @property
     def preset_mode(self):
         """Return current preset mode."""
 
-        mode = self._thrm.cluster.get("heat_mode", 5)
-        if mode == 0:
+        heat_mode = self._heat_mode
+        if not isinstance(heat_mode, int):
+            return None
+        if heat_mode == 0:
             return PRESET_COMFORT
-        if mode == 1:
+        if heat_mode == 1:
             return self.PRESET_COMFORT_MINUS_1
-        if mode == 2:
+        if heat_mode == 2:
             return self.PRESET_COMFORT_MINUS_2
-        if mode == 3:
+        if heat_mode == 3:
             return PRESET_ECO
-        if mode == 4:
+        if heat_mode == 4:
             return self.PRESET_FROST_PROTECTION
-        if mode == 5:
-            return self.PRESET_OFF
+        return None
 
     @property
     def preset_modes(self) -> list[str] | None:
         """Return supported preset modes."""
+
         return [
             PRESET_COMFORT,
             self.PRESET_COMFORT_MINUS_1,
             self.PRESET_COMFORT_MINUS_2,
             PRESET_ECO,
             self.PRESET_FROST_PROTECTION,
-            self.PRESET_OFF,
+            PRESET_NONE,
         ]
+
+    @property
+    def supported_features(self) -> ClimateEntityFeature:
+        """Return the list of supported features."""
+
+        return (
+            ClimateEntityFeature.PRESET_MODE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
+        )
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set new target operation mode."""
+        if hvac_mode not in self.hvac_modes:
+            self.warning(
+                "can't set '%s' mode. Supported modes are: %s",
+                hvac_mode,
+                self.hvac_modes,
+            )
+            return
+
+        if hvac_mode == self.hvac_mode:
+            return
+
+        heat_mode = 5 if hvac_mode == HVACMode.OFF else 0
+        mfg_code = self._zha_device.manufacturer_code
+        await self._wire_pilot_cluster.write_attributes_safe(
+            {"heat_mode": heat_mode}, manufacturer=mfg_code
+        )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-
-        if not self.preset_modes or preset_mode not in self.preset_modes:
+        if self.preset_modes and (preset_mode not in self.preset_modes):
             self.debug("Preset mode '%s' is not supported", preset_mode)
             return
 
-        mode: int | None
+        heat_mode: int | None = None
 
         if preset_mode == PRESET_COMFORT:
-            mode = 0
+            heat_mode = 0
         elif preset_mode == self.PRESET_COMFORT_MINUS_1:
-            mode = 1
+            heat_mode = 1
         elif preset_mode == self.PRESET_COMFORT_MINUS_2:
-            mode = 2
+            heat_mode = 2
         elif preset_mode == PRESET_ECO:
-            mode = 3
+            heat_mode = 3
         elif preset_mode == self.PRESET_FROST_PROTECTION:
-            mode = 4
-        elif preset_mode == self.PRESET_OFF:
-            mode = 5
+            heat_mode = 4
+        elif preset_mode == PRESET_NONE:
+            heat_mode = 5
 
-        if mode is not None:
-            mfg_code = self._zha_device.manufacturer_code
-            return await self._thrm.write_attributes_safe(
-                {"heat_mode": mode}, manufacturer=mfg_code
-            )
+        if heat_mode is None:
+            return
+
+        mfg_code = self._zha_device.manufacturer_code
+        await self._wire_pilot_cluster.write_attributes_safe(
+            {"heat_mode": heat_mode}, manufacturer=mfg_code
+        )

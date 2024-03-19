@@ -596,8 +596,7 @@
             "state": {
               "comfort_minus_1": "Comfort -1 °C",
               "comfort_minus_2": "Comfort -2 °C",
-              "frost_protection": "Frost protection",
-              "off": "[%key:common::state::off%]"
+              "frost_protection": "Frost protection"
             }
           }
         }
