@@ -7,15 +7,12 @@ FROM ${BUILD_FROM}
 # Synchronize with homeassistant/core.py:async_stop
 ENV \
     S6_SERVICES_GRACETIME=240000 \
-    UV_EXTRA_INDEX_URL="https://wheels.home-assistant.io/musllinux-index/" \
-    UV_NO_CACHE=true \
-    PATH="$PATH:/root/.cargo/bin" \
     UV_SYSTEM_PYTHON=true
 
 ARG QEMU_CPU
 
 # Install uv
-RUN pip3 install "$(grep '^uv' < requirements_test.txt)"
+RUN pip3 install uv==0.1.22
 
 WORKDIR /usr/src
 
