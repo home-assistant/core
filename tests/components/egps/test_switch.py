@@ -90,7 +90,7 @@ async def _test_switch_off_exeception(
 async def _test_switch_update_exception(
     hass: HomeAssistant, entity_id: str, dev: MagicMock
 ) -> None:
-    """Call switch off service with USBError side effect."""
+    """Call switch update with USBError side effect."""
     dev.get_status.side_effect = EgpsException
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(

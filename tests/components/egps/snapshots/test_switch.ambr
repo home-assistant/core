@@ -40,7 +40,7 @@
     'platform': 'egps',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'socket',
     'unique_id': 'DYPS:00:11:22_0',
     'unit_of_measurement': None,
   })
@@ -55,7 +55,7 @@
     'entity_id': 'switch.mockedusbdevice_socket_1',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
 # name: test_switch_setup[mockedusbdevice_socket_1].1
@@ -86,7 +86,7 @@
     'platform': 'egps',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'socket',
     'unique_id': 'DYPS:00:11:22_1',
     'unit_of_measurement': None,
   })
@@ -132,7 +132,7 @@
     'platform': 'egps',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'socket',
     'unique_id': 'DYPS:00:11:22_2',
     'unit_of_measurement': None,
   })
@@ -147,7 +147,7 @@
     'entity_id': 'switch.mockedusbdevice_socket_3',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
 # name: test_switch_setup[mockedusbdevice_socket_3].1
@@ -178,7 +178,7 @@
     'platform': 'egps',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'socket',
     'unique_id': 'DYPS:00:11:22_3',
     'unit_of_measurement': None,
   })

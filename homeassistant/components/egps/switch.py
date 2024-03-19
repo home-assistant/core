@@ -26,8 +26,11 @@ async def async_setup_entry(
     powerstrip: PowerStrip = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
-        EGPowerStripSocket(powerstrip, socket)
-        for socket in range(powerstrip.numberOfSockets)
+        [
+            EGPowerStripSocket(powerstrip, socket)
+            for socket in range(powerstrip.numberOfSockets)
+        ],
+        update_before_add=True,
     )
 
 
@@ -37,14 +40,14 @@ class EGPowerStripSocket(SwitchEntity):
     _attr_device_class = SwitchDeviceClass.OUTLET
     _attr_should_poll = True
     _attr_has_entity_name = True
+    _attr_translation_key = "socket"
 
     def __init__(self, dev: PowerStrip, socket: int) -> None:
         """Initiate a new socket."""
         self._dev = dev
         self._socket = socket
         self._state = STATE_OFF
-
-        self._attr_name = f"Socket {socket}"
+        self._attr_translation_placeholders = {"socket_id": str(socket)}
 
         self._attr_unique_id = f"{dev.device_id}_{socket}"
         self._attr_device_info = DeviceInfo(

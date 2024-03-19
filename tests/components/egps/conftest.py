@@ -51,6 +51,7 @@ def patch_pyegps_get_device() -> MagicMock:
         devId=DEMO_CONFIG_DATA[CONF_DEVICE_API_ID], number_of_sockets=4
     )
     fkObj.release = lambda: True
+    fkObj._status = [0, 1, 0, 1]
 
     usb_device_mock = MagicMock(wraps=fkObj)
     usb_device_mock.get_device_type.return_value = "PowerStrip"
