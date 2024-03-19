@@ -16,11 +16,11 @@ from tests.common import MockConfigEntry
 
 @pytest.mark.parametrize(
     ("button", "function"),
-    (
+    [
         ("cancel", "stop"),
         ("pause", "pause"),
         ("resume", "resume"),
-    ),
+    ],
 )
 async def test_buttons(
     hass: HomeAssistant,
