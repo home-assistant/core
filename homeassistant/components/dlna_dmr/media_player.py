@@ -551,7 +551,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
     @property
     def state(self) -> MediaPlayerState | None:
         """State of the player."""
-        if not self._device or not self._device.profile_device.available:
+        if not self._device:
             return MediaPlayerState.OFF
         return _TRANSPORT_STATE_TO_MEDIA_PLAYER_STATE.get(
             self._device.transport_state, MediaPlayerState.IDLE
