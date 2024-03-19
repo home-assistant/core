@@ -1,4 +1,4 @@
-"""Tests for device tracker platform."""
+"""Tests for the device tracker platform."""
 
 from unittest.mock import AsyncMock, patch
 
@@ -11,20 +11,6 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 
 from tests.common import MockConfigEntry
-
-
-async def test_device_tracker_states(
-    hass: HomeAssistant,
-    mock_automower_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test device_tracker state attributes."""
-    await setup_integration(hass, mock_config_entry)
-    state = hass.states.get("device_tracker.test_mower_1")
-    assert state is not None
-    assert state.attributes["source_type"] == "gps"
-    assert state.attributes["latitude"] == 35.5402913
-    assert state.attributes["longitude"] == -82.5527055
 
 
 async def test_device_tracker_snapshot(
