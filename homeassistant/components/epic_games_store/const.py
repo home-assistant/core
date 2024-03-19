@@ -1,5 +1,7 @@
 """Constants for the Epic Games Store integration."""
 
+from enum import StrEnum
+
 DOMAIN = "epic_games_store"
 
 CONF_SUPPORTED_LANGUAGES = [
@@ -20,3 +22,10 @@ CONF_SUPPORTED_LANGUAGES = [
     "zh-CN",
     "zh-Hant",
 ]
+
+
+class CalendarType(StrEnum):
+    """Calendar types."""
+
+    FREE = "free"
+    DISCOUNT = "discount"

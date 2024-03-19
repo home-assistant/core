@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from enum import StrEnum
 import logging
 from typing import Any
 
@@ -13,19 +12,12 @@ from homeassistant.const import CONF_LANGUAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import DOMAIN, CalendarType
 from .helper import format_game_data, get_country_from_language
 
 SCAN_INTERVAL = timedelta(days=1)
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class CalendarType(StrEnum):
-    """Calendar types."""
-
-    FREE = "free"
-    DISCOUNT = "discount"
 
 
 class EGSCalendarUpdateCoordinator(
