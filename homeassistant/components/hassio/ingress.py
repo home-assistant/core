@@ -197,7 +197,6 @@ class HassIOIngress(HomeAssistantView):
                     content_type or simple_response.content_type
                 ):
                     simple_response.enable_compression()
-                await simple_response.prepare(request)
                 return simple_response
 
             # Stream response
