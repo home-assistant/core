@@ -4,7 +4,8 @@ from unittest.mock import patch
 
 from homeassistant import config_entries
 from homeassistant.components.epic_games_store.config_flow import get_default_language
-from homeassistant.components.epic_games_store.const import CONF_LANGUAGE, DOMAIN
+from homeassistant.components.epic_games_store.const import DOMAIN
+from homeassistant.const import CONF_LANGUAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 

@@ -1,7 +1,8 @@
 """Common methods used across tests for Epic Games Store."""
 from unittest.mock import patch
 
-from homeassistant.components.epic_games_store.const import CONF_LANGUAGE, DOMAIN
+from homeassistant.components.epic_games_store.const import DOMAIN
+from homeassistant.const import CONF_LANGUAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
