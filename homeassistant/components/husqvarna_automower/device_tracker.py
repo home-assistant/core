@@ -25,7 +25,7 @@ async def async_setup_entry(
 class AutomowerDeviceTrackerEntity(AutomowerBaseEntity, TrackerEntity):
     """Defining the AutomowerDeviceTrackerEntity."""
 
-    _attr_name: str | None = None
+    _attr_name = None
 
     def __init__(
         self,
