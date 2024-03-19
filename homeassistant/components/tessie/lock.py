@@ -78,7 +78,7 @@ class TessieSpeedLimitEntity(TessieEntity, LockEntity):
         """Initialize the sensor."""
         super().__init__(coordinator, "vehicle_state_speed_limit_mode_active")
         _LOGGER.warning(
-            "The Tessie speed limit lock entity has been deprecated and will be removed in Home Assistant 2024.5.0"
+            "The Tessie speed limit lock entity has been deprecated and will be removed in Home Assistant 2024.6.0"
         )
 
     @property
@@ -89,7 +89,7 @@ class TessieSpeedLimitEntity(TessieEntity, LockEntity):
     async def async_lock(self, **kwargs: Any) -> None:
         """Enable speed limit with pin."""
         _LOGGER.warning(
-            "The Tessie speed limit lock entity has been deprecated and will be removed in Home Assistant 2024.5.0"
+            "The Tessie speed limit lock entity has been deprecated and will be removed in Home Assistant 2024.6.0"
         )
         code: str | None = kwargs.get(ATTR_CODE)
         if code:
@@ -99,7 +99,7 @@ class TessieSpeedLimitEntity(TessieEntity, LockEntity):
     async def async_unlock(self, **kwargs: Any) -> None:
         """Disable speed limit with pin."""
         _LOGGER.warning(
-            "The Tessie speed limit lock entity has been deprecated and will be removed in Home Assistant 2024.5.0"
+            "The Tessie speed limit lock entity has been deprecated and will be removed in Home Assistant 2024.6.0"
         )
         code: str | None = kwargs.get(ATTR_CODE)
         if code:
