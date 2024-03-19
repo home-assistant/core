@@ -313,7 +313,6 @@ class DlnaDmrEntity(MediaPlayerEntity):
                 )
 
         # Device could have been de/re-connected, state probably changed
-        self._attr_supported_features = self._supported_features()
         self.async_write_ha_state()
 
     async def async_config_update_listener(
@@ -356,8 +355,12 @@ class DlnaDmrEntity(MediaPlayerEntity):
             _LOGGER.warning("Couldn't (re)connect after config change: %r", err)
 
         # Device was de/re-connected, state might have changed
-        self._attr_supported_features = self._supported_features()
         self.async_write_ha_state()
+
+    def async_write_ha_state(self) -> None:
+        """Write the state."""
+        self._attr_supported_features = self._supported_features()
+        super().async_write_ha_state()
 
     async def _device_connect(self, location: str) -> None:
         """Connect to the device now that it's available."""
