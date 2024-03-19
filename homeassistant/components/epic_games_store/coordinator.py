@@ -1,4 +1,4 @@
-"""The EGS integration."""
+"""The Epic Games Store integration data coordinator."""
 from __future__ import annotations
 
 from datetime import timedelta
