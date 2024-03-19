@@ -135,10 +135,14 @@ async def test_migration_changes_prevent_trying_to_migrate_again(
         tasks.append(task)
         original_queue_task(self, task)
 
-    # Finally verify we did not query do the migration again
+    # Finally verify we did not call needs_migrate_query on StatesContextIDMigration
     async with async_test_home_assistant() as hass:
         with patch(
             "homeassistant.components.recorder.core.Recorder.queue_task", _queue_task
+        ), patch.object(
+            migration.StatesContextIDMigration,
+            "needs_migrate_query",
+            side_effect=RuntimeError("Should not be called"),
         ):
             await async_setup_recorder_instance(hass, config)
             await hass.async_block_till_done()
