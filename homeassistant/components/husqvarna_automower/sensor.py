@@ -26,22 +26,22 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
-class AutomowerBinarySensorEntityDescription(SensorEntityDescription):
+class AutomowerSensorEntityDescription(SensorEntityDescription):
     """Describes Automower sensor entity."""
 
     exists_fn: Callable[[MowerAttributes], bool] = lambda _: True
     value_fn: Callable[[MowerAttributes], str]
 
 
-SENSOR_TYPES: tuple[AutomowerBinarySensorEntityDescription, ...] = (
-    AutomowerBinarySensorEntityDescription(
+SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
+    AutomowerSensorEntityDescription(
         key="battery_percent",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda data: data.battery.battery_percent,
     ),
-    AutomowerBinarySensorEntityDescription(
+    AutomowerSensorEntityDescription(
         key="mode",
         translation_key="mode",
         device_class=SensorDeviceClass.ENUM,
@@ -52,7 +52,7 @@ SENSOR_TYPES: tuple[AutomowerBinarySensorEntityDescription, ...] = (
             else None
         ),
     ),
-    AutomowerBinarySensorEntityDescription(
+    AutomowerSensorEntityDescription(
         key="cutting_blade_usage_time",
         translation_key="cutting_blade_usage_time",
         state_class=SensorStateClass.TOTAL,
@@ -62,7 +62,7 @@ SENSOR_TYPES: tuple[AutomowerBinarySensorEntityDescription, ...] = (
         exists_fn=lambda data: data.statistics.cutting_blade_usage_time is not None,
         value_fn=lambda data: data.statistics.cutting_blade_usage_time,
     ),
-    AutomowerBinarySensorEntityDescription(
+    AutomowerSensorEntityDescription(
         key="total_charging_time",
         translation_key="total_charging_time",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -72,7 +72,7 @@ SENSOR_TYPES: tuple[AutomowerBinarySensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfTime.HOURS,
         value_fn=lambda data: data.statistics.total_charging_time,
     ),
-    AutomowerBinarySensorEntityDescription(
+    AutomowerSensorEntityDescription(
         key="total_cutting_time",
         translation_key="total_cutting_time",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -82,7 +82,7 @@ SENSOR_TYPES: tuple[AutomowerBinarySensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfTime.HOURS,
         value_fn=lambda data: data.statistics.total_cutting_time,
     ),
-    AutomowerBinarySensorEntityDescription(
+    AutomowerSensorEntityDescription(
         key="total_running_time",
         translation_key="total_running_time",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -92,7 +92,7 @@ SENSOR_TYPES: tuple[AutomowerBinarySensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfTime.HOURS,
         value_fn=lambda data: data.statistics.total_running_time,
     ),
-    AutomowerBinarySensorEntityDescription(
+    AutomowerSensorEntityDescription(
         key="total_searching_time",
         translation_key="total_searching_time",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -102,21 +102,21 @@ SENSOR_TYPES: tuple[AutomowerBinarySensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfTime.HOURS,
         value_fn=lambda data: data.statistics.total_searching_time,
     ),
-    AutomowerBinarySensorEntityDescription(
+    AutomowerSensorEntityDescription(
         key="number_of_charging_cycles",
         translation_key="number_of_charging_cycles",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda data: data.statistics.number_of_charging_cycles,
     ),
-    AutomowerBinarySensorEntityDescription(
+    AutomowerSensorEntityDescription(
         key="number_of_collisions",
         translation_key="number_of_collisions",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda data: data.statistics.number_of_collisions,
     ),
-    AutomowerBinarySensorEntityDescription(
+    AutomowerSensorEntityDescription(
         key="total_drive_distance",
         translation_key="total_drive_distance",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -126,7 +126,7 @@ SENSOR_TYPES: tuple[AutomowerBinarySensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfLength.KILOMETERS,
         value_fn=lambda data: data.statistics.total_drive_distance,
     ),
-    AutomowerBinarySensorEntityDescription(
+    AutomowerSensorEntityDescription(
         key="next_start_timestamp",
         translation_key="next_start_timestamp",
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -149,15 +149,15 @@ async def async_setup_entry(
 
 
 class AutomowerSensorEntity(AutomowerBaseEntity, SensorEntity):
-    """Defining the Automower Sensors with AutomowerBinarySensorEntityDescription."""
+    """Defining the Automower Sensors with AutomowerSensorEntityDescription."""
 
-    entity_description: AutomowerBinarySensorEntityDescription
+    entity_description: AutomowerSensorEntityDescription
 
     def __init__(
         self,
         mower_id: str,
         coordinator: AutomowerDataUpdateCoordinator,
-        description: AutomowerBinarySensorEntityDescription,
+        description: AutomowerSensorEntityDescription,
     ) -> None:
         """Set up AutomowerSensors."""
         super().__init__(mower_id, coordinator)
