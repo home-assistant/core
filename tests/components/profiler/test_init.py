@@ -118,20 +118,20 @@ async def test_object_growth_logging(
 
     with patch.object(objgraph, "growth"):
         await hass.services.async_call(
-            DOMAIN, SERVICE_START_LOG_OBJECTS, {CONF_SCAN_INTERVAL: 10}, blocking=True
+            DOMAIN, SERVICE_START_LOG_OBJECTS, {CONF_SCAN_INTERVAL: 1}, blocking=True
         )
         with pytest.raises(HomeAssistantError, match="Object logging already started"):
             await hass.services.async_call(
                 DOMAIN,
                 SERVICE_START_LOG_OBJECTS,
-                {CONF_SCAN_INTERVAL: 10},
+                {CONF_SCAN_INTERVAL: 1},
                 blocking=True,
             )
 
         assert "Growth" in caplog.text
         caplog.clear()
 
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=11))
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
         await hass.async_block_till_done()
         assert "Growth" in caplog.text
 
@@ -151,6 +151,7 @@ async def test_object_growth_logging(
         await hass.services.async_call(
             DOMAIN, SERVICE_START_LOG_OBJECTS, {CONF_SCAN_INTERVAL: 10}, blocking=True
         )
+        await hass.async_block_till_done()
         caplog.clear()
 
     assert await hass.config_entries.async_unload(entry.entry_id)
