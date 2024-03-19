@@ -114,6 +114,10 @@ asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 # Disable fixtures overriding our beautiful policy
 asyncio.set_event_loop_policy = lambda policy: None
 
+pytest_plugins = [
+    "tests.fixtures.pytest.light",
+]
+
 
 def pytest_addoption(parser: pytest.Parser) -> None:
     """Register custom pytest options."""
@@ -1664,8 +1668,3 @@ def label_registry(hass: HomeAssistant) -> lr.LabelRegistry:
 def snapshot(snapshot: SnapshotAssertion) -> SnapshotAssertion:
     """Return snapshot assertion fixture with the Home Assistant extension."""
     return snapshot.use_extension(HomeAssistantSnapshotExtension)
-
-
-pytest_plugins = [
-    "tests.fixtures.pytest.light",
-]
