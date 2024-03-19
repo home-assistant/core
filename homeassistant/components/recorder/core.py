@@ -777,7 +777,7 @@ class Recorder(threading.Thread):
 
     def _activate_and_set_db_ready(self) -> None:
         """Activate the table managers or schedule migrations and mark the db as ready."""
-        with session_scope(session=self.get_session(), read_only=True) as session:
+        with session_scope(session=self.get_session()) as session:
             # Prime the statistics meta manager as soon as possible
             # since we want the frontend queries to avoid a thundering
             # herd of queries to find the statistics meta data if
