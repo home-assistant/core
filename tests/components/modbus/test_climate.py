@@ -703,7 +703,7 @@ async def test_service_climate_fan_update(
                 CONF_CLIMATES: [
                     {
                         CONF_NAME: TEST_ENTITY_NAME,
-                        CONF_TARGET_TEMP: 117,
+                        CONF_TARGET_TEMP: 116,
                         CONF_ADDRESS: 117,
                         CONF_SLAVE: 10,
                         CONF_SCAN_INTERVAL: 0,
@@ -728,7 +728,7 @@ async def test_service_climate_fan_update(
                 CONF_CLIMATES: [
                     {
                         CONF_NAME: TEST_ENTITY_NAME,
-                        CONF_TARGET_TEMP: 117,
+                        CONF_TARGET_TEMP: 116,
                         CONF_ADDRESS: 117,
                         CONF_SLAVE: 10,
                         CONF_SCAN_INTERVAL: 0,

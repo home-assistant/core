@@ -299,13 +299,17 @@ def check_hvac_target_temp_registers(config: dict) -> dict:
         wrn = f"{CONF_FAN_MODE_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_FAN_MODE_REGISTER} is not loaded!"
         _LOGGER.warning(wrn)
         del config[CONF_FAN_MODE_REGISTER]
-    if (
-        CONF_SWING_MODE_REGISTER in config
-        and config[CONF_SWING_MODE_REGISTER][CONF_ADDRESS] in config[CONF_TARGET_TEMP]
-    ):
-        wrn = f"{CONF_SWING_MODE_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_SWING_MODE_REGISTER} is not loaded!"
-        _LOGGER.warning(wrn)
-        del config[CONF_SWING_MODE_REGISTER]
+
+    if CONF_SWING_MODE_REGISTER in config:
+        regToTest = (
+            config[CONF_SWING_MODE_REGISTER][CONF_ADDRESS]
+            if isinstance(config[CONF_SWING_MODE_REGISTER][CONF_ADDRESS], int)
+            else config[CONF_SWING_MODE_REGISTER][CONF_ADDRESS][0]
+        )
+        if regToTest in config[CONF_TARGET_TEMP]:
+            wrn = f"{CONF_SWING_MODE_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_SWING_MODE_REGISTER} is not loaded!"
+            _LOGGER.warning(wrn)
+            del config[CONF_SWING_MODE_REGISTER]
 
     return config
 

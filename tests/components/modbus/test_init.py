@@ -780,6 +780,9 @@ async def test_check_config_climate(hass: HomeAssistant, do_config) -> None:
                 CONF_FAN_MODE_REGISTER: {
                     CONF_ADDRESS: 117,
                 },
+                CONF_SWING_MODE_REGISTER: {
+                    CONF_ADDRESS: 117,
+                },
             },
         ],
         [
@@ -798,7 +801,7 @@ async def test_check_config_climate(hass: HomeAssistant, do_config) -> None:
                 },
                 CONF_HVAC_ONOFF_REGISTER: 117,
                 CONF_SWING_MODE_REGISTER: {
-                    CONF_ADDRESS: 117,
+                    CONF_ADDRESS: [117],
                 },
             },
         ],
