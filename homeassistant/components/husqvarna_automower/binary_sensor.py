@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclass(frozen=True, kw_only=True)
 class AutomowerBinarySensorEntityDescription(BinarySensorEntityDescription):
-    """Describes Automower sensor entity."""
+    """Describes Automower binary sensor entity."""
 
     value_fn: Callable[[MowerAttributes], bool]
 
@@ -51,7 +51,7 @@ BINARY_SENSOR_TYPES: tuple[AutomowerBinarySensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up sensor platform."""
+    """Set up binary sensor platform."""
     coordinator: AutomowerDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         AutomowerBinarySensorEntity(mower_id, coordinator, description)
