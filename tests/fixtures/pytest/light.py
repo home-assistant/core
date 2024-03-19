@@ -101,7 +101,7 @@ async def setup_light_platform(
             async_add_entities: AddEntitiesCallback,
             discovery_info: DiscoveryInfoType | None = None,
         ) -> None:
-            """Set up test button platform."""
+            """Set up test light platform."""
             async_add_entities(
                 entities if entities is not None else mock_light_entities
             )
