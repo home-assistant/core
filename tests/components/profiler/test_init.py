@@ -9,6 +9,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from lru import LRU
+import objgraph
 import pytest
 
 from homeassistant.components.profiler import (
@@ -115,7 +116,7 @@ async def test_object_growth_logging(
     assert hass.services.has_service(DOMAIN, SERVICE_START_LOG_OBJECTS)
     assert hass.services.has_service(DOMAIN, SERVICE_STOP_LOG_OBJECTS)
 
-    with patch("objgraph.growth"):
+    with patch.object(objgraph, "growth"):
         await hass.services.async_call(
             DOMAIN, SERVICE_START_LOG_OBJECTS, {CONF_SCAN_INTERVAL: 10}, blocking=True
         )
@@ -146,7 +147,7 @@ async def test_object_growth_logging(
             DOMAIN, SERVICE_STOP_LOG_OBJECTS, {}, blocking=True
         )
 
-    with patch("objgraph.growth"):
+    with patch.object(objgraph, "growth"):
         await hass.services.async_call(
             DOMAIN, SERVICE_START_LOG_OBJECTS, {CONF_SCAN_INTERVAL: 10}, blocking=True
         )
