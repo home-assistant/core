@@ -97,3 +97,30 @@ class HomeAssistantCookieStorage(EncryptedCookieStorage):
                 self._fernet.encrypt(cookie_data).decode("utf-8"),
                 **params,
             )
+            self._add_cache_control_header(response)
+
+    @staticmethod
+    def _add_cache_control_header(response: StreamResponse) -> None:
+        """Add/set cache control header to no-cache="Set-Cookie"."""
+        # Structure of the Cache-Control header defined in
+        # https://datatracker.ietf.org/doc/html/rfc2068#section-14.9
+        if header := response.headers.get("Cache-Control"):
+            directives = []
+            for directive in header.split(","):
+                directive = directive.strip()
+                directive_lowered = directive.lower()
+                if directive_lowered.startswith("no-cache"):
+                    if "set-cookie" in directive_lowered or directive.find("=") == -1:
+                        # Set-Cookie is already in the no-cache directive or
+                        # the whole request should not be cached -> Nothing to do
+                        return
+
+                    # Add Set-Cookie to the no-cache
+                    # [:-1] to remove the " at the end of the directive
+                    directive = f"{directive[:-1]}, Set-Cookie"
+
+                directives.append(directive)
+            header = ", ".join(directives)
+        else:
+            header = 'no-cache="Set-Cookie"'
+        response.headers["Cache-Control"] = header
