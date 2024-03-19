@@ -168,7 +168,7 @@ async def _async_get_ws_stream_events(
     partial: bool,
 ) -> tuple[bytes, dt | None]:
     """Async wrapper around _ws_formatted_get_events."""
-    return await get_instance(hass).async_add_executor_job(
+    result = await get_instance(hass).async_add_executor_job(
         _ws_stream_get_events,
         msg_id,
         start_time,
@@ -177,6 +177,8 @@ async def _async_get_ws_stream_events(
         event_processor,
         partial,
     )
+    _LOGGER.warning("Result: %s", result)
+    return result
 
 
 def _generate_stream_message(
@@ -422,7 +424,10 @@ async def ws_event_stream(
         hass,
         connection,
         msg_id,
-        last_event_time or start_time,
+        # Add one microsecond so we are outside the window of
+        # the last event we got from the database since otherwise
+        # we could fetch the same event twice
+        (last_event_time or start_time) + timedelta(microseconds=1),
         subscriptions_setup_complete_time,
         messages.event_message,
         event_processor,
