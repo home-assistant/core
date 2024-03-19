@@ -814,7 +814,7 @@ def find_states_context_ids_to_migrate(max_bind_vars: int) -> StatementLambdaEle
 
 
 def get_migration_changes() -> StatementLambdaElement:
-    """Find events context_ids to migrate."""
+    """Query the database for previous migration changes."""
     return lambda_stmt(
         lambda: select(MigrationChanges.migration_id, MigrationChanges.version)
     )
