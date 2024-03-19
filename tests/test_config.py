@@ -1519,7 +1519,7 @@ async def test_component_config_exceptions(
     assert (
         str(ex.value)
         == "Invalid config for integration test_domain at configuration.yaml, "
-        "line 140: broken. Check the logs for more information"
+        "line 140: broken"
     )
     # component.CONFIG_SCHEMA
     caplog.clear()

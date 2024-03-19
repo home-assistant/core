@@ -3,16 +3,16 @@
   'Unable to import test_domain: bla'
 # ---
 # name: test_component_config_error_processing[exception_info_list1-bla-messages1-True-config_validation_err]
-  'Invalid config for integration test_domain at configuration.yaml, line 140: bla. Check the logs for more information'
+  'Invalid config for integration test_domain at configuration.yaml, line 140: bla'
 # ---
 # name: test_component_config_error_processing[exception_info_list2-bla @ data['path']-messages2-False-config_validation_err]
-  "Invalid config for integration test_domain at configuration.yaml, line 140: bla @ data['path']. Check the logs for more information"
+  "Invalid config for integration test_domain at configuration.yaml, line 140: bla @ data['path']"
 # ---
 # name: test_component_config_error_processing[exception_info_list3-bla @ data['path']-messages3-False-platform_config_validation_err]
   "Invalid config for test_domain from integration test_domain at file configuration.yaml, line 140: bla @ data['path']. Check the logs for more information"
 # ---
 # name: test_component_config_error_processing[exception_info_list4-bla-messages4-False-platform_component_load_err]
-  'Platform error: test_domain - bla. Check the logs for more information'
+  'Platform error: test_domain - bla'
 # ---
 # name: test_component_config_validation_error[basic]
   list([
@@ -78,7 +78,7 @@
     }),
     dict({
       'has_exc_info': True,
-      'message': 'Unknown error calling custom_validator_bad_2 config validator. Check the logs for more information',
+      'message': 'config_validator_unknown_err',
     }),
   ])
 # ---
@@ -146,7 +146,7 @@
     }),
     dict({
       'has_exc_info': True,
-      'message': 'Unknown error calling custom_validator_bad_2 config validator. Check the logs for more information',
+      'message': 'config_validator_unknown_err',
     }),
   ])
 # ---
@@ -262,7 +262,7 @@
     }),
     dict({
       'has_exc_info': True,
-      'message': 'Unknown error calling custom_validator_bad_2 config validator. Check the logs for more information',
+      'message': 'config_validator_unknown_err',
     }),
   ])
 # ---
@@ -306,7 +306,7 @@
     }),
     dict({
       'has_exc_info': True,
-      'message': 'Unknown error calling custom_validator_bad_2 config validator. Check the logs for more information',
+      'message': 'config_validator_unknown_err',
     }),
     dict({
       'has_exc_info': False,
@@ -357,7 +357,7 @@
     ''',
     "Invalid config for 'custom_validator_ok_2' at configuration.yaml, line 52: required key 'host' not provided, please check the docs at https://www.home-assistant.io/integrations/custom_validator_ok_2",
     "Invalid config for 'custom_validator_bad_1' at configuration.yaml, line 55: broken, please check the docs at https://www.home-assistant.io/integrations/custom_validator_bad_1",
-    'Unknown error calling custom_validator_bad_2 config validator. Check the logs for more information',
+    'config_validator_unknown_err',
   ])
 # ---
 # name: test_individual_packages_schema_validation_errors[packages_dict]
