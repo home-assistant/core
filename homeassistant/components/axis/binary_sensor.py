@@ -43,9 +43,10 @@ class AxisBinarySensorDescription(BinarySensorEntityDescription):
 def event_id_is_int(event_id: str) -> bool:
     """Make sure event ID is int."""
     try:
-        return isinstance(int(event_id), int)
+        _ = int(event_id)
     except ValueError:
         return False
+    return True
 
 
 @callback
