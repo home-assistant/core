@@ -520,6 +520,11 @@ class PowerViewShadeTiltOnly(PowerViewShadeWithTiltBase):
             self._attr_supported_features |= CoverEntityFeature.STOP_TILT
         self._max_tilt = self._shade.shade_limits.tilt_max
 
+    @property
+    def is_closed(self) -> bool:
+        """Return if the cover is closed."""
+        return self.positions.tilt <= CLOSED_POSITION
+
 
 class PowerViewShadeTopDown(PowerViewShadeBase):
     """Representation of a shade that lowers from the roof to the floor.
