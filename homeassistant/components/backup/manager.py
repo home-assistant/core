@@ -1,4 +1,5 @@
 """Backup manager for the Backup integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -15,7 +16,7 @@ from typing import Any, Protocol, cast
 from securetar import SecureTarFile, atomic_contents_add
 
 from homeassistant.const import __version__ as HAVERSION
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import integration_platform
 from homeassistant.helpers.json import json_bytes
@@ -65,7 +66,8 @@ class BackupManager:
         self.loaded_backups = False
         self.loaded_platforms = False
 
-    async def _add_platform(
+    @callback
+    def _add_platform(
         self,
         hass: HomeAssistant,
         integration_domain: str,
@@ -124,7 +126,7 @@ class BackupManager:
     async def load_platforms(self) -> None:
         """Load backup platforms."""
         await integration_platform.async_process_integration_platforms(
-            self.hass, DOMAIN, self._add_platform
+            self.hass, DOMAIN, self._add_platform, wait_for_platforms=True
         )
         LOGGER.debug("Loaded %s platforms", len(self.platforms))
         self.loaded_platforms = True

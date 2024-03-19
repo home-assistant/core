@@ -1,4 +1,5 @@
 """Test the Steamist config flow."""
+
 from unittest.mock import patch
 
 import pytest
@@ -91,6 +92,7 @@ async def test_form_with_discovery(hass: HomeAssistant) -> None:
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == DEVICE_NAME
     assert result2["data"] == DEFAULT_ENTRY_DATA
+    assert result2["context"]["unique_id"] == FORMATTED_MAC_ADDRESS
     assert len(mock_setup_entry.mock_calls) == 1
 
 

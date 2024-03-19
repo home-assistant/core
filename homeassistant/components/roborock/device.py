@@ -1,4 +1,5 @@
 """Support for Roborock device base class."""
+
 from typing import Any
 
 from roborock.api import AttributeCache, RoborockClient
@@ -57,7 +58,6 @@ class RoborockEntity(Entity):
             else:
                 command_name = command
             raise HomeAssistantError(
-                f"Error while calling {command}",
                 translation_domain=DOMAIN,
                 translation_key="command_failed",
                 translation_placeholders={

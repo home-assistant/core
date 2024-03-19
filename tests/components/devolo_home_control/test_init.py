@@ -1,4 +1,5 @@
 """Tests for the devolo Home Control integration."""
+
 from unittest.mock import patch
 
 from devolo_home_control_api.exceptions.gateway import GatewayOfflineError

@@ -1,4 +1,5 @@
 """The Samsung TV integration."""
+
 from __future__ import annotations
 
 from collections.abc import Coroutine, Mapping
@@ -93,9 +94,10 @@ class DebouncedEntryReloader:
         LOGGER.debug("Calling debouncer to get a reload after cooldown")
         await self._debounced_reload.async_call()
 
-    async def async_shutdown(self) -> None:
+    @callback
+    def async_shutdown(self) -> None:
         """Cancel any pending reload."""
-        await self._debounced_reload.async_shutdown()
+        self._debounced_reload.async_shutdown()
 
     async def _async_reload_entry(self) -> None:
         """Reload entry."""

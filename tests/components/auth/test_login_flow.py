@@ -1,4 +1,5 @@
 """Tests for the login flow."""
+
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch

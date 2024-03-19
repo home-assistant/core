@@ -1,4 +1,5 @@
 """Support for System health ."""
+
 from __future__ import annotations
 
 import asyncio
@@ -70,7 +71,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def _register_system_health_platform(
+@callback
+def _register_system_health_platform(
     hass: HomeAssistant, integration_domain: str, platform: SystemHealthProtocol
 ) -> None:
     """Register a system health platform."""

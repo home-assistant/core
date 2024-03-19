@@ -1,4 +1,5 @@
 """Light platform for Advantage Air integration."""
+
 from typing import Any
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity

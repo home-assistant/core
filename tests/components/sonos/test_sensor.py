@@ -1,4 +1,5 @@
 """Tests for the Sonos battery sensor platform."""
+
 from datetime import timedelta
 from unittest.mock import PropertyMock, patch
 

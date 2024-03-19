@@ -1,4 +1,5 @@
 """Shelly entity helper."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -67,7 +68,7 @@ def async_setup_block_attribute_entities(
     sensor_class: Callable,
 ) -> None:
     """Set up entities for block attributes."""
-    blocks = []
+    entities = []
 
     assert coordinator.device.blocks
 
@@ -78,7 +79,7 @@ def async_setup_block_attribute_entities(
                 continue
 
             # Filter out non-existing sensors and sensors without a value
-            if getattr(block, sensor_id, None) in (-1, None):
+            if getattr(block, sensor_id, None) is None:
                 continue
 
             # Filter and remove entities that according to settings
@@ -90,17 +91,14 @@ def async_setup_block_attribute_entities(
                 unique_id = f"{coordinator.mac}-{block.description}-{sensor_id}"
                 async_remove_shelly_entity(hass, domain, unique_id)
             else:
-                blocks.append((block, sensor_id, description))
+                entities.append(
+                    sensor_class(coordinator, block, sensor_id, description)
+                )
 
-    if not blocks:
+    if not entities:
         return
 
-    async_add_entities(
-        [
-            sensor_class(coordinator, block, sensor_id, description)
-            for block, sensor_id, description in blocks
-        ]
-    )
+    async_add_entities(entities)
 
 
 @callback
@@ -281,20 +279,15 @@ class BlockEntityDescription(EntityDescription):
     extra_state_attributes: Callable[[Block], dict | None] | None = None
 
 
-@dataclass(frozen=True)
-class RpcEntityRequiredKeysMixin:
-    """Class for RPC entity required keys."""
-
-    sub_key: str
-
-
-@dataclass(frozen=True)
-class RpcEntityDescription(EntityDescription, RpcEntityRequiredKeysMixin):
+@dataclass(frozen=True, kw_only=True)
+class RpcEntityDescription(EntityDescription):
     """Class to describe a RPC entity."""
 
     # BlockEntity does not support UNDEFINED or None,
     # restrict the type to str.
     name: str = ""
+
+    sub_key: str
 
     value: Callable[[Any, Any], Any] | None = None
     available: Callable[[dict], bool] | None = None

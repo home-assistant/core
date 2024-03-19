@@ -1,15 +1,17 @@
 """Support for Ring Doorbell/Chimes."""
+
 from __future__ import annotations
 
 from functools import partial
 import logging
 
-import ring_doorbell
+from ring_doorbell import Auth, Ring
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import APPLICATION_NAME, CONF_TOKEN, __version__
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import (
     DOMAIN,
@@ -37,10 +39,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
         )
 
-    auth = ring_doorbell.Auth(
+    auth = Auth(
         f"{APPLICATION_NAME}/{__version__}", entry.data[CONF_TOKEN], token_updater
     )
-    ring = ring_doorbell.Ring(auth)
+    ring = Ring(auth)
 
     devices_coordinator = RingDataCoordinator(hass, ring)
     notifications_coordinator = RingNotificationsCoordinator(hass, ring)
@@ -61,6 +63,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_refresh_all(_: ServiceCall) -> None:
         """Refresh all ring data."""
+        _LOGGER.warning(
+            "Detected use of service 'ring.update'. "
+            "This is deprecated and will stop working in Home Assistant 2024.10. "
+            "Use 'homeassistant.update_entity' instead which updates all ring entities",
+        )
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_service_ring_update",
+            breaks_in_ha_version="2024.10.0",
+            is_fixable=True,
+            is_persistent=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_service_ring_update",
+        )
+
         for info in hass.data[DOMAIN].values():
             await info[RING_DEVICES_COORDINATOR].async_refresh()
             await info[RING_NOTIFICATIONS_COORDINATOR].async_refresh()

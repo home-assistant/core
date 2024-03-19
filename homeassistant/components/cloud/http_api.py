@@ -1,4 +1,5 @@
 """The HTTP api to control the cloud integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -25,7 +26,7 @@ from homeassistant.components.alexa import (
 )
 from homeassistant.components.google_assistant import helpers as google_helpers
 from homeassistant.components.homeassistant import exposed_entities
-from homeassistant.components.http import HomeAssistantView, require_admin
+from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import HomeAssistant, callback
@@ -44,6 +45,7 @@ from .const import (
     PREF_ENABLE_GOOGLE,
     PREF_GOOGLE_REPORT_STATE,
     PREF_GOOGLE_SECURE_DEVICES_PIN,
+    PREF_REMOTE_ALLOW_REMOTE_ENABLE,
     PREF_TTS_DEFAULT_VOICE,
     REQUEST_TIMEOUT,
 )
@@ -69,6 +71,7 @@ _CLOUD_ERRORS: dict[type[Exception], tuple[HTTPStatus, str]] = {
 @callback
 def async_setup(hass: HomeAssistant) -> None:
     """Initialize the HTTP API."""
+    websocket_api.async_register_command(hass, websocket_cloud_remove_data)
     websocket_api.async_register_command(hass, websocket_cloud_status)
     websocket_api.async_register_command(hass, websocket_subscription)
     websocket_api.async_register_command(hass, websocket_update_prefs)
@@ -196,7 +199,7 @@ class GoogleActionsSyncView(HomeAssistantView):
     @_handle_cloud_errors
     async def post(self, request: web.Request) -> web.Response:
         """Trigger a Google Actions sync."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
         cloud: Cloud[CloudClient] = hass.data[DOMAIN]
         gconf = await cloud.client.get_google_config()
         status = await gconf.async_sync_entities(gconf.agent_user_id)
@@ -216,7 +219,7 @@ class CloudLoginView(HomeAssistantView):
     )
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle login request."""
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
         cloud: Cloud[CloudClient] = hass.data[DOMAIN]
         await cloud.login(data["email"], data["password"])
 
@@ -234,7 +237,7 @@ class CloudLogoutView(HomeAssistantView):
     @_handle_cloud_errors
     async def post(self, request: web.Request) -> web.Response:
         """Handle logout request."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
         cloud: Cloud[CloudClient] = hass.data[DOMAIN]
 
         async with asyncio.timeout(REQUEST_TIMEOUT):
@@ -261,7 +264,7 @@ class CloudRegisterView(HomeAssistantView):
     )
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle registration request."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
         cloud: Cloud[CloudClient] = hass.data[DOMAIN]
 
         client_metadata = None
@@ -298,7 +301,7 @@ class CloudResendConfirmView(HomeAssistantView):
     @RequestDataValidator(vol.Schema({vol.Required("email"): str}))
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle resending confirm email code request."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
         cloud: Cloud[CloudClient] = hass.data[DOMAIN]
 
         async with asyncio.timeout(REQUEST_TIMEOUT):
@@ -318,13 +321,40 @@ class CloudForgotPasswordView(HomeAssistantView):
     @RequestDataValidator(vol.Schema({vol.Required("email"): str}))
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle forgot password request."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
         cloud: Cloud[CloudClient] = hass.data[DOMAIN]
 
         async with asyncio.timeout(REQUEST_TIMEOUT):
             await cloud.auth.async_forgot_password(data["email"])
 
         return self.json_message("ok")
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required("type"): "cloud/remove_data"})
+@websocket_api.async_response
+async def websocket_cloud_remove_data(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle request for account info.
+
+    Async friendly.
+    """
+    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+    if cloud.is_logged_in:
+        connection.send_message(
+            websocket_api.error_message(
+                msg["id"], "logged_in", "Can't remove data when logged in."
+            )
+        )
+        return
+
+    await cloud.remove_data()
+    await cloud.client.prefs.async_erase_config()
+
+    connection.send_message(websocket_api.result_message(msg["id"]))
 
 
 @websocket_api.websocket_command({vol.Required("type"): "cloud/status"})
@@ -408,6 +438,7 @@ async def websocket_subscription(
         vol.Optional(PREF_TTS_DEFAULT_VOICE): vol.All(
             vol.Coerce(tuple), vol.In(MAP_VOICE)
         ),
+        vol.Optional(PREF_REMOTE_ALLOW_REMOTE_ENABLE): bool,
     }
 )
 @websocket_api.async_response
@@ -646,16 +677,14 @@ async def google_assistant_list(
     gconf = await cloud.client.get_google_config()
     entities = google_helpers.async_get_entities(hass, gconf)
 
-    result = []
-
-    for entity in entities:
-        result.append(
-            {
-                "entity_id": entity.entity_id,
-                "traits": [trait.name for trait in entity.traits()],
-                "might_2fa": entity.might_2fa_traits(),
-            }
-        )
+    result = [
+        {
+            "entity_id": entity.entity_id,
+            "traits": [trait.name for trait in entity.traits()],
+            "might_2fa": entity.might_2fa_traits(),
+        }
+        for entity in entities
+    ]
 
     connection.send_result(msg["id"], result)
 
@@ -740,16 +769,14 @@ async def alexa_list(
     alexa_config = await cloud.client.get_alexa_config()
     entities = alexa_entities.async_get_entities(hass, alexa_config)
 
-    result = []
-
-    for entity in entities:
-        result.append(
-            {
-                "entity_id": entity.entity_id,
-                "display_categories": entity.default_display_categories(),
-                "interfaces": [ifc.name() for ifc in entity.interfaces()],
-            }
-        )
+    result = [
+        {
+            "entity_id": entity.entity_id,
+            "display_categories": entity.default_display_categories(),
+            "interfaces": [ifc.name() for ifc in entity.interfaces()],
+        }
+        for entity in entities
+    ]
 
     connection.send_result(msg["id"], result)
 

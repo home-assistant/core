@@ -1,4 +1,5 @@
 """Aussie Broadband common helpers for tests."""
+
 from unittest.mock import patch
 
 from homeassistant.components.aussie_broadband.const import (

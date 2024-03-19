@@ -1,4 +1,5 @@
 """Test honeywell sensor."""
+
 from aiosomecomfort.device import Device
 from aiosomecomfort.location import Location
 import pytest

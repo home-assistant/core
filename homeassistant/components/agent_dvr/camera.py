@@ -1,4 +1,5 @@
 """Support for Agent camera streaming."""
+
 from datetime import timedelta
 import logging
 

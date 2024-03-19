@@ -1,4 +1,5 @@
 """The tests for the Logger component."""
+
 from collections import defaultdict
 import logging
 from typing import Any

@@ -1,4 +1,5 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
+
 from __future__ import annotations
 
 import datetime
@@ -356,7 +357,7 @@ class HoneywellUSThermostat(ClimateEntity):
             else:
                 if mode == "cool":
                     await self._device.set_setpoint_cool(temperature)
-                if mode == "heat":
+                if mode in ["heat", "emheat"]:
                     await self._device.set_setpoint_heat(temperature)
 
         except UnexpectedResponse as err:

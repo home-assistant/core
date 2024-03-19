@@ -1,4 +1,5 @@
 """The tests for the mqtt climate component."""
+
 import copy
 import json
 from typing import Any
@@ -31,7 +32,7 @@ from homeassistant.components.mqtt.climate import (
     MQTT_CLIMATE_ATTRIBUTES_BLOCKED,
     VALUE_TEMPLATE_KEYS,
 )
-from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
@@ -96,13 +97,6 @@ DEFAULT_CONFIG = {
         }
     }
 }
-
-
-@pytest.fixture(autouse=True)
-def climate_platform_only():
-    """Only setup the climate platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.CLIMATE]):
-        yield
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
@@ -504,10 +498,10 @@ async def test_turn_on_and_off_without_power_command(
     assert state.state == "cool"
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_turn_off(hass, ENTITY_CLIMATE)
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert climate_off is None or state.state == climate_off
     if climate_off:
+        await common.async_turn_off(hass, ENTITY_CLIMATE)
+        state = hass.states.get(ENTITY_CLIMATE)
+        assert climate_off is None or state.state == climate_off
         assert state.state == "off"
         mqtt_mock.async_publish.assert_has_calls([call("mode-topic", "off", 0, False)])
     else:

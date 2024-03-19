@@ -1,4 +1,5 @@
 """Component to pressing a button as platforms."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -147,7 +148,7 @@ class ButtonEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_
 
     def press(self) -> None:
         """Press the button."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_press(self) -> None:
         """Press the button."""

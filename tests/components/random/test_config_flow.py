@@ -1,4 +1,5 @@
 """Test the Random config flow."""
+
 from typing import Any
 from unittest.mock import patch
 
@@ -22,7 +23,7 @@ from tests.common import MockConfigEntry
         "extra_input",
         "extra_options",
     ),
-    (
+    [
         (
             "binary_sensor",
             {},
@@ -46,7 +47,7 @@ from tests.common import MockConfigEntry
             {},
             {"minimum": 0, "maximum": 20},
         ),
-    ),
+    ],
 )
 async def test_config_flow(
     hass: HomeAssistant,
@@ -134,7 +135,7 @@ async def test_wrong_uom(
         "extra_options",
         "options_options",
     ),
-    (
+    [
         (
             "sensor",
             {
@@ -150,7 +151,7 @@ async def test_wrong_uom(
                 "unit_of_measurement": UnitOfPower.WATT,
             },
         ),
-    ),
+    ],
 )
 async def test_options(
     hass: HomeAssistant,

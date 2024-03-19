@@ -1,4 +1,5 @@
 """The tests for the hassio component."""
+
 from datetime import timedelta
 import os
 from typing import Any
@@ -15,7 +16,9 @@ from homeassistant.components.hassio import (
     DOMAIN,
     STORAGE_KEY,
     async_get_addon_store_info,
+    get_core_info,
     hostname_from_addon_slug,
+    is_hassio,
 )
 from homeassistant.components.hassio.const import REQUEST_REFRESH_DELAY
 from homeassistant.components.hassio.handler import HassioAPIError
@@ -246,8 +249,8 @@ async def test_setup_api_ping(
 
     assert result
     assert aioclient_mock.call_count == 19
-    assert hass.components.hassio.get_core_info()["version_latest"] == "1.0.0"
-    assert hass.components.hassio.is_hassio()
+    assert get_core_info(hass)["version_latest"] == "1.0.0"
+    assert is_hassio(hass)
 
 
 async def test_setup_api_panel(
@@ -465,7 +468,7 @@ async def test_warn_when_cannot_connect(
         result = await async_setup_component(hass, "hassio", {})
         assert result
 
-    assert hass.components.hassio.is_hassio()
+    assert is_hassio(hass)
     assert "Not connected with the supervisor / system too busy!" in caplog.text
 
 
@@ -615,6 +618,7 @@ async def test_service_calls(
 
     # check backup with different timezone
     await hass.config.async_update(time_zone="Europe/London")
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         "hassio",
@@ -827,11 +831,11 @@ async def test_device_registry_calls(hass: HomeAssistant) -> None:
         return_value=os_mock_data,
     ):
         async_fire_time_changed(hass, dt_util.now() + timedelta(hours=1))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert len(dev_reg.devices) == 5
 
         async_fire_time_changed(hass, dt_util.now() + timedelta(hours=2))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert len(dev_reg.devices) == 5
 
     supervisor_mock_data = {

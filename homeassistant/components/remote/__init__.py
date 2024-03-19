@@ -1,4 +1,5 @@
 """Support to interface with universal remote control devices."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -234,7 +235,7 @@ class RemoteEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
 
     def send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send commands to a device."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send commands to a device."""
@@ -244,7 +245,7 @@ class RemoteEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
 
     def learn_command(self, **kwargs: Any) -> None:
         """Learn a command from a device."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_learn_command(self, **kwargs: Any) -> None:
         """Learn a command from a device."""
@@ -252,7 +253,7 @@ class RemoteEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
 
     def delete_command(self, **kwargs: Any) -> None:
         """Delete commands from the database."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_delete_command(self, **kwargs: Any) -> None:
         """Delete commands from the database."""

@@ -1,4 +1,5 @@
 """Tests for gree component."""
+
 from datetime import timedelta
 from unittest.mock import DEFAULT as DEFAULT_MOCK, AsyncMock, patch
 
@@ -513,7 +514,7 @@ async def test_update_target_temperature(
 
 
 @pytest.mark.parametrize(
-    "preset", (PRESET_AWAY, PRESET_ECO, PRESET_SLEEP, PRESET_BOOST, PRESET_NONE)
+    "preset", [PRESET_AWAY, PRESET_ECO, PRESET_SLEEP, PRESET_BOOST, PRESET_NONE]
 )
 async def test_send_preset_mode(
     hass: HomeAssistant, discovery, device, mock_now, preset
@@ -553,7 +554,7 @@ async def test_send_invalid_preset_mode(
 
 
 @pytest.mark.parametrize(
-    "preset", (PRESET_AWAY, PRESET_ECO, PRESET_SLEEP, PRESET_BOOST, PRESET_NONE)
+    "preset", [PRESET_AWAY, PRESET_ECO, PRESET_SLEEP, PRESET_BOOST, PRESET_NONE]
 )
 async def test_send_preset_mode_device_timeout(
     hass: HomeAssistant, discovery, device, mock_now, preset
@@ -576,7 +577,7 @@ async def test_send_preset_mode_device_timeout(
 
 
 @pytest.mark.parametrize(
-    "preset", (PRESET_AWAY, PRESET_ECO, PRESET_SLEEP, PRESET_BOOST, PRESET_NONE)
+    "preset", [PRESET_AWAY, PRESET_ECO, PRESET_SLEEP, PRESET_BOOST, PRESET_NONE]
 )
 async def test_update_preset_mode(
     hass: HomeAssistant, discovery, device, mock_now, preset
@@ -596,14 +597,14 @@ async def test_update_preset_mode(
 
 @pytest.mark.parametrize(
     "hvac_mode",
-    (
+    [
         HVACMode.OFF,
         HVACMode.AUTO,
         HVACMode.COOL,
         HVACMode.DRY,
         HVACMode.FAN_ONLY,
         HVACMode.HEAT,
-    ),
+    ],
 )
 async def test_send_hvac_mode(
     hass: HomeAssistant, discovery, device, mock_now, hvac_mode
@@ -625,7 +626,7 @@ async def test_send_hvac_mode(
 
 @pytest.mark.parametrize(
     "hvac_mode",
-    (HVACMode.AUTO, HVACMode.COOL, HVACMode.DRY, HVACMode.FAN_ONLY, HVACMode.HEAT),
+    [HVACMode.AUTO, HVACMode.COOL, HVACMode.DRY, HVACMode.FAN_ONLY, HVACMode.HEAT],
 )
 async def test_send_hvac_mode_device_timeout(
     hass: HomeAssistant, discovery, device, mock_now, hvac_mode
@@ -649,14 +650,14 @@ async def test_send_hvac_mode_device_timeout(
 
 @pytest.mark.parametrize(
     "hvac_mode",
-    (
+    [
         HVACMode.OFF,
         HVACMode.AUTO,
         HVACMode.COOL,
         HVACMode.DRY,
         HVACMode.FAN_ONLY,
         HVACMode.HEAT,
-    ),
+    ],
 )
 async def test_update_hvac_mode(
     hass: HomeAssistant, discovery, device, mock_now, hvac_mode
@@ -674,7 +675,7 @@ async def test_update_hvac_mode(
 
 @pytest.mark.parametrize(
     "fan_mode",
-    (FAN_AUTO, FAN_LOW, FAN_MEDIUM_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_HIGH),
+    [FAN_AUTO, FAN_LOW, FAN_MEDIUM_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_HIGH],
 )
 async def test_send_fan_mode(
     hass: HomeAssistant, discovery, device, mock_now, fan_mode
@@ -715,7 +716,7 @@ async def test_send_invalid_fan_mode(
 
 @pytest.mark.parametrize(
     "fan_mode",
-    (FAN_AUTO, FAN_LOW, FAN_MEDIUM_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_HIGH),
+    [FAN_AUTO, FAN_LOW, FAN_MEDIUM_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_HIGH],
 )
 async def test_send_fan_mode_device_timeout(
     hass: HomeAssistant, discovery, device, mock_now, fan_mode
@@ -739,7 +740,7 @@ async def test_send_fan_mode_device_timeout(
 
 @pytest.mark.parametrize(
     "fan_mode",
-    (FAN_AUTO, FAN_LOW, FAN_MEDIUM_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_HIGH),
+    [FAN_AUTO, FAN_LOW, FAN_MEDIUM_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_HIGH],
 )
 async def test_update_fan_mode(
     hass: HomeAssistant, discovery, device, mock_now, fan_mode
@@ -755,7 +756,7 @@ async def test_update_fan_mode(
 
 
 @pytest.mark.parametrize(
-    "swing_mode", (SWING_OFF, SWING_BOTH, SWING_VERTICAL, SWING_HORIZONTAL)
+    "swing_mode", [SWING_OFF, SWING_BOTH, SWING_VERTICAL, SWING_HORIZONTAL]
 )
 async def test_send_swing_mode(
     hass: HomeAssistant, discovery, device, mock_now, swing_mode
@@ -795,7 +796,7 @@ async def test_send_invalid_swing_mode(
 
 
 @pytest.mark.parametrize(
-    "swing_mode", (SWING_OFF, SWING_BOTH, SWING_VERTICAL, SWING_HORIZONTAL)
+    "swing_mode", [SWING_OFF, SWING_BOTH, SWING_VERTICAL, SWING_HORIZONTAL]
 )
 async def test_send_swing_mode_device_timeout(
     hass: HomeAssistant, discovery, device, mock_now, swing_mode
@@ -818,7 +819,7 @@ async def test_send_swing_mode_device_timeout(
 
 
 @pytest.mark.parametrize(
-    "swing_mode", (SWING_OFF, SWING_BOTH, SWING_VERTICAL, SWING_HORIZONTAL)
+    "swing_mode", [SWING_OFF, SWING_BOTH, SWING_VERTICAL, SWING_HORIZONTAL]
 )
 async def test_update_swing_mode(
     hass: HomeAssistant, discovery, device, mock_now, swing_mode

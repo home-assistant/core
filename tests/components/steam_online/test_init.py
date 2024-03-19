@@ -1,4 +1,5 @@
 """Tests for the Steam component."""
+
 import steam
 
 from homeassistant.components.steam_online.const import DEFAULT_NAME, DOMAIN

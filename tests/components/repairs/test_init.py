@@ -1,4 +1,5 @@
 """Test the repairs websocket API."""
+
 from unittest.mock import AsyncMock, Mock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -124,7 +125,7 @@ async def test_create_update_issue(
     )
 
 
-@pytest.mark.parametrize("ha_version", ("2022.9.cat", "In the future: 2023.1.1"))
+@pytest.mark.parametrize("ha_version", ["2022.9.cat", "In the future: 2023.1.1"])
 async def test_create_issue_invalid_version(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, ha_version
 ) -> None:
@@ -463,6 +464,7 @@ async def test_delete_issue(
     }
 
 
+@pytest.mark.no_fail_on_log_exception
 async def test_non_compliant_platform(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:

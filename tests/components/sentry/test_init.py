@@ -1,4 +1,5 @@
 """Tests for Sentry integration."""
+
 import logging
 from unittest.mock import Mock, patch
 

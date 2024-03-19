@@ -1,4 +1,5 @@
 """Support for HDMI CEC."""
+
 from __future__ import annotations
 
 from functools import reduce
@@ -171,7 +172,7 @@ def parse_mapping(mapping, parents=None):
         if isinstance(addr, (str,)) and isinstance(val, (str,)):
             yield (addr, PhysicalAddress(val))
         else:
-            cur = parents + [addr]
+            cur = [*parents, addr]
             if isinstance(val, dict):
                 yield from parse_mapping(val, cur)
             elif isinstance(val, str):
@@ -252,7 +253,7 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
             hdmi_network.send_command(KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM))
         else:
             att = 1 if att == "" else int(att)
-            for _ in range(0, att):
+            for _ in range(att):
                 hdmi_network.send_command(KeyPressCommand(cmd, dst=ADDR_AUDIOSYSTEM))
                 hdmi_network.send_command(KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM))
 

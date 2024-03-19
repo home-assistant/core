@@ -1,4 +1,5 @@
 """Tests for the diagnostics of the twinkly component."""
+
 from collections.abc import Awaitable, Callable
 
 from syrupy import SnapshotAssertion

@@ -1,4 +1,5 @@
 """Support for Enphase Envoy solar energy monitor."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -22,18 +23,11 @@ from .coordinator import EnphaseUpdateCoordinator
 from .entity import EnvoyBaseEntity
 
 
-@dataclass(frozen=True)
-class EnvoyEnchargeRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EnvoyEnchargeBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes an Envoy Encharge binary sensor entity."""
 
     value_fn: Callable[[EnvoyEncharge], bool]
-
-
-@dataclass(frozen=True)
-class EnvoyEnchargeBinarySensorEntityDescription(
-    BinarySensorEntityDescription, EnvoyEnchargeRequiredKeysMixin
-):
-    """Describes an Envoy Encharge binary sensor entity."""
 
 
 ENCHARGE_SENSORS = (
@@ -53,18 +47,11 @@ ENCHARGE_SENSORS = (
 )
 
 
-@dataclass(frozen=True)
-class EnvoyEnpowerRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EnvoyEnpowerBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes an Envoy Enpower binary sensor entity."""
 
     value_fn: Callable[[EnvoyEnpower], bool]
-
-
-@dataclass(frozen=True)
-class EnvoyEnpowerBinarySensorEntityDescription(
-    BinarySensorEntityDescription, EnvoyEnpowerRequiredKeysMixin
-):
-    """Describes an Envoy Enpower binary sensor entity."""
 
 
 ENPOWER_SENSORS = (
