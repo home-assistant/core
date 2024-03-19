@@ -75,7 +75,6 @@ class EGSCalendar(CoordinatorEntity[EGSCalendarUpdateCoordinator], CalendarEntit
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
-        assert start_date < end_date
         events = filter(
             lambda game: _are_date_range_overlapping(
                 DateRange(start=game["discount_start_at"], end=game["discount_end_at"]),
