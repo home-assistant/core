@@ -539,6 +539,137 @@ async def test_rpc_light(
     assert state.state == STATE_ON
     assert state.attributes[ATTR_BRIGHTNESS] == 33
 
+    # Turn on, transition = 10.1
+    mock_rpc_device.call_rpc.reset_mock()
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TRANSITION: 10.1},
+        blocking=True,
+    )
+
+    mock_rpc_device.mock_update()
+
+    mock_rpc_device.call_rpc.assert_called_once_with(
+        "Light.Set", {"id": 0, "on": True, "transition_duration": 10.1}
+    )
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    # Turn off, transition = 0.4, should be limited to 0.5
+    mock_rpc_device.call_rpc.reset_mock()
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TRANSITION: 0.4},
+        blocking=True,
+    )
+
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "light:0", "output", False)
+    mock_rpc_device.mock_update()
+
+    mock_rpc_device.call_rpc.assert_called_once_with(
+        "Light.Set", {"id": 0, "on": False, "transition_duration": 0.5}
+    )
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+
     entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "123456789ABC-light:0"
+
+
+async def test_rpc_device_rgb_profile(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC device in RGB profile."""
+    monkeypatch.delitem(mock_rpc_device.status, "light:0")
+    monkeypatch.delitem(mock_rpc_device.status, "rgbw:0")
+    entity_id = "light.test_rgb_0"
+    await init_integration(hass, 2)
+
+    # Test initial
+    state = hass.states.get(entity_id)
+    attributes = state.attributes
+    assert state.state == STATE_ON
+    assert attributes[ATTR_RGB_COLOR] == (45, 55, 65)
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.RGB]
+    assert attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.TRANSITION
+
+    # Turn on, RGB = [70, 80, 90]
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id, ATTR_RGB_COLOR: [70, 80, 90]},
+        blocking=True,
+    )
+
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "rgb:0", "rgb", [70, 80, 90])
+    mock_rpc_device.mock_update()
+
+    mock_rpc_device.call_rpc.assert_called_once_with(
+        "RGB.Set", {"id": 0, "on": True, "rgb": [70, 80, 90]}
+    )
+
+    state = hass.states.get(entity_id)
+    attributes = state.attributes
+    assert state.state == STATE_ON
+    assert attributes[ATTR_COLOR_MODE] == ColorMode.RGB
+    assert attributes[ATTR_RGB_COLOR] == (70, 80, 90)
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-rgb:0"
+
+
+async def test_rpc_device_rgbw_profile(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC device in RGBW profile."""
+    monkeypatch.delitem(mock_rpc_device.status, "light:0")
+    monkeypatch.delitem(mock_rpc_device.status, "rgb:0")
+    entity_id = "light.test_rgbw_0"
+    await init_integration(hass, 2)
+
+    # Test initial
+    state = hass.states.get(entity_id)
+    attributes = state.attributes
+    assert state.state == STATE_ON
+    assert attributes[ATTR_RGBW_COLOR] == (21, 22, 23, 120)
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.RGBW]
+    assert attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.TRANSITION
+
+    # Turn on, RGBW = [72, 82, 92, 128]
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id, ATTR_RGBW_COLOR: [72, 82, 92, 128]},
+        blocking=True,
+    )
+
+    mutate_rpc_device_status(
+        monkeypatch, mock_rpc_device, "rgbw:0", "rgb", [72, 82, 92]
+    )
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "rgbw:0", "white", 128)
+    mock_rpc_device.mock_update()
+
+    mock_rpc_device.call_rpc.assert_called_once_with(
+        "RGBW.Set", {"id": 0, "on": True, "rgb": [72, 82, 92], "white": 128}
+    )
+
+    state = hass.states.get(entity_id)
+    attributes = state.attributes
+    assert state.state == STATE_ON
+    assert attributes[ATTR_COLOR_MODE] == ColorMode.RGBW
+    assert attributes[ATTR_RGBW_COLOR] == (72, 82, 92, 128)
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-rgbw:0"
