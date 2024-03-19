@@ -351,34 +351,23 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
 
             _LOGGER.debug("Sending %d bytes of audio", audio_bytes_size)
 
-            for i in range(1):
-                bytes_per_sample = stt.AudioBitRates.BITRATE_16 // 8
-                sample_offset = 0
-                samples_left = audio_bytes_size // bytes_per_sample
-                num_empty_chunks = 0
+            bytes_per_sample = stt.AudioBitRates.BITRATE_16 // 8
+            sample_offset = 0
+            samples_left = audio_bytes_size // bytes_per_sample
 
-                while (samples_left > 0) and self.is_running:
-                    if num_empty_chunks > 0:
-                        samples_in_chunk = 512
-                        chunk = bytes(samples_in_chunk * 2)
-                        num_empty_chunks -= 1
-                        is_empty_chunk = True
-                    else:
-                        bytes_offset = sample_offset * bytes_per_sample
-                        chunk = audio_bytes[bytes_offset : bytes_offset + 1024]
-                        samples_in_chunk = len(chunk) // bytes_per_sample
-                        samples_left -= samples_in_chunk
-                        is_empty_chunk = False
+            while (samples_left > 0) and self.is_running:
+                bytes_offset = sample_offset * bytes_per_sample
+                chunk: bytes = audio_bytes[bytes_offset : bytes_offset + 1024]
+                samples_in_chunk = len(chunk) // bytes_per_sample
+                samples_left -= samples_in_chunk
 
-                    self.cli.send_voice_assistant_audio(chunk)
-                    # self.transport.sendto(chunk, self.remote_addr)
-                    await asyncio.sleep(
-                        samples_in_chunk / stt.AudioSampleRates.SAMPLERATE_16000 * 0.9
-                    )
+                # self.transport.sendto(chunk, self.remote_addr)
+                self.cli.send_voice_assistant_audio(chunk)
+                await asyncio.sleep(
+                    samples_in_chunk / stt.AudioSampleRates.SAMPLERATE_16000 * 0.9
+                )
 
-                    if not is_empty_chunk:
-                        sample_offset += samples_in_chunk
-
+                sample_offset += samples_in_chunk
         finally:
             self.handle_event(
                 VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_END, {}
