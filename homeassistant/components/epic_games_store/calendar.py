@@ -13,8 +13,8 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-from .coordinator import CalendarType, EGSCalendarUpdateCoordinator
+from .const import DOMAIN, CalendarType
+from .coordinator import EGSCalendarUpdateCoordinator
 
 DateRange = namedtuple("DateRange", ["start", "end"])
 
