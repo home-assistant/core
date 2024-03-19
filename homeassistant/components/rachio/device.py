@@ -185,9 +185,12 @@ class RachioPerson:
             self._controllers.append(rachio_iro)
 
         base_count = len(base_stations)
-        for base in base_stations:
-            coordinator = RachioUpdateCoordinator(hass, rachio, base, base_count)
-            self._base_stations.append(RachioBaseStation(rachio, base, coordinator))
+        self._base_stations.extend(
+            RachioBaseStation(
+                rachio, base, RachioUpdateCoordinator(hass, rachio, base, base_count)
+            )
+            for base in base_stations
+        )
 
         _LOGGER.info('Using Rachio API as user "%s"', self.username)
 

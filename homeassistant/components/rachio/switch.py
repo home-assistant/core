@@ -5,7 +5,7 @@ from collections.abc import Callable
 from contextlib import suppress
 from datetime import timedelta
 import logging
-from typing import Any, Union
+from typing import Any
 
 import voluptuous as vol
 
@@ -283,7 +283,7 @@ class RachioRainDelay(RachioSwitch):
 
     def __init__(self, controller) -> None:
         """Set up a Rachio rain delay switch."""
-        self._cancel_update: Union[Callable, None] = None
+        self._cancel_update: Callable | None = None
         super().__init__(controller)
 
     @property
@@ -563,7 +563,7 @@ class RachioValve(CoordinatorEntity[RachioUpdateCoordinator], SwitchEntity):
         self._attr_name = data[KEY_NAME]
         self._attr_unique_id = f"{self.id}-valve"
         self._static_attrs = data[KEY_STATE][KEY_REPORTED_STATE]
-        self._attr_is_on = bool(KEY_CURRENT_STATUS in self._static_attrs)
+        self._attr_is_on = KEY_CURRENT_STATUS in self._static_attrs
         self._attr_device_info = DeviceInfo(
             identifiers={
                 (
@@ -612,5 +612,5 @@ class RachioValve(CoordinatorEntity[RachioUpdateCoordinator], SwitchEntity):
         data = self.coordinator.data[self.id]
 
         self._static_attrs = data[KEY_STATE][KEY_REPORTED_STATE]
-        self._attr_is_on = bool(KEY_CURRENT_STATUS in self._static_attrs)
+        self._attr_is_on = KEY_CURRENT_STATUS in self._static_attrs
         super()._handle_coordinator_update()
