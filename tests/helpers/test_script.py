@@ -3695,6 +3695,110 @@ async def test_propagate_error_service_exception(hass: HomeAssistant) -> None:
     assert_action_trace(expected_trace, expected_script_execution="error")
 
 
+async def test_referenced_labels(hass: HomeAssistant) -> None:
+    """Test referenced labels."""
+    script_obj = script.Script(
+        hass,
+        cv.SCRIPT_SCHEMA(
+            [
+                {
+                    "service": "test.script",
+                    "data": {"label_id": "label_service_not_list"},
+                },
+                {
+                    "service": "test.script",
+                    "data": {
+                        "label_id": ["label_service_list_1", "label_service_list_2"]
+                    },
+                },
+                {
+                    "service": "test.script",
+                    "data": {"label_id": "{{ 'label_service_template' }}"},
+                },
+                {
+                    "service": "test.script",
+                    "target": {"label_id": "label_in_target"},
+                },
+                {
+                    "service": "test.script",
+                    "data_template": {"label_id": "label_in_data_template"},
+                },
+                {"service": "test.script", "data": {"without": "label_id"}},
+                {
+                    "choose": [
+                        {
+                            "conditions": "{{ true == false }}",
+                            "sequence": [
+                                {
+                                    "service": "test.script",
+                                    "data": {"label_id": "label_choice_1_seq"},
+                                }
+                            ],
+                        },
+                        {
+                            "conditions": "{{ true == false }}",
+                            "sequence": [
+                                {
+                                    "service": "test.script",
+                                    "data": {"label_id": "label_choice_2_seq"},
+                                }
+                            ],
+                        },
+                    ],
+                    "default": [
+                        {
+                            "service": "test.script",
+                            "data": {"label_id": "label_default_seq"},
+                        }
+                    ],
+                },
+                {"event": "test_event"},
+                {"delay": "{{ delay_period }}"},
+                {
+                    "if": [],
+                    "then": [
+                        {
+                            "service": "test.script",
+                            "data": {"label_id": "label_if_then"},
+                        }
+                    ],
+                    "else": [
+                        {
+                            "service": "test.script",
+                            "data": {"label_id": "label_if_else"},
+                        }
+                    ],
+                },
+                {
+                    "parallel": [
+                        {
+                            "service": "test.script",
+                            "data": {"label_id": "label_parallel"},
+                        }
+                    ],
+                },
+            ]
+        ),
+        "Test Name",
+        "test_domain",
+    )
+    assert script_obj.referenced_labels == {
+        "label_choice_1_seq",
+        "label_choice_2_seq",
+        "label_default_seq",
+        "label_in_data_template",
+        "label_in_target",
+        "label_service_list_1",
+        "label_service_list_2",
+        "label_service_not_list",
+        "label_if_then",
+        "label_if_else",
+        "label_parallel",
+    }
+    # Test we cache results.
+    assert script_obj.referenced_labels is script_obj.referenced_labels
+
+
 async def test_referenced_floors(hass: HomeAssistant) -> None:
     """Test referenced floors."""
     script_obj = script.Script(

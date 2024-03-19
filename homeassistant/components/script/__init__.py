@@ -171,6 +171,18 @@ def floors_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
 
 
 @callback
+def scripts_with_label(hass: HomeAssistant, label_id: str) -> list[str]:
+    """Return all scripts that reference the label."""
+    return _scripts_with_x(hass, label_id, "referenced_labels")
+
+
+@callback
+def labels_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return all labels in a script."""
+    return _x_in_script(hass, entity_id, "referenced_labels")
+
+
+@callback
 def scripts_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list[str]:
     """Return all scripts that reference the blueprint."""
     if DOMAIN not in hass.data:
@@ -403,6 +415,11 @@ class BaseScriptEntity(ToggleEntity, ABC):
 
     @cached_property
     @abstractmethod
+    def referenced_labels(self) -> set[str]:
+        """Return a set of referenced labels."""
+
+    @cached_property
+    @abstractmethod
     def referenced_floors(self) -> set[str]:
         """Return a set of referenced floors."""
 
@@ -450,6 +467,11 @@ class UnavailableScriptEntity(BaseScriptEntity):
     def name(self) -> str:
         """Return the name of the entity."""
         return self._name
+
+    @cached_property
+    def referenced_labels(self) -> set[str]:
+        """Return a set of referenced labels."""
+        return set()
 
     @cached_property
     def referenced_floors(self) -> set[str]:
@@ -538,6 +560,11 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
     def is_on(self):
         """Return true if script is on."""
         return self.script.is_running
+
+    @cached_property
+    def referenced_labels(self) -> set[str]:
+        """Return a set of referenced labels."""
+        return self.script.referenced_labels
 
     @cached_property
     def referenced_floors(self) -> set[str]:
