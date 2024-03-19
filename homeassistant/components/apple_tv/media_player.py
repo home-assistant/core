@@ -153,7 +153,7 @@ class AppleTvMediaPlayer(
         atv.audio.listener = self
 
         if atv.features.in_state(FeatureState.Available, FeatureName.AppList):
-            self.hass.create_task(self._update_app_list())
+            self.hass.async_create_task(self._update_app_list(), eager_start=True)
 
     async def _update_app_list(self) -> None:
         _LOGGER.debug("Updating app list")
