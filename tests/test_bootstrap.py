@@ -1121,6 +1121,7 @@ async def test_bootstrap_dependencies(
     # We patch the _import platform method to avoid loading the platform module
     # to avoid depending on non core components in the tests.
     mqtt_integration._import_platform = Mock()
+    mqtt_integration.platforms_exists = Mock(return_value=True)
 
     integrations = {
         "mqtt": {
