@@ -1819,9 +1819,7 @@ class BaseRunTimeMigration(ABC):
         # We do not know if the migration is done from the
         # migration changes table so we must check the data
         # This is the slow path
-        if not bool(
-            execute_stmt_lambda_element(self.session, self.needs_migrate_query())
-        ):
+        if not execute_stmt_lambda_element(self.session, self.needs_migrate_query()):
             _mark_migration_done(self.session, self.__class__)
             return False
         return True
