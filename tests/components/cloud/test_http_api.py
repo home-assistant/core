@@ -926,6 +926,8 @@ async def test_websocket_update_preferences_alexa_report_state(
     client = await hass_ws_client(hass)
 
     with patch(
+        "homeassistant.components.cloud.alexa_config.CloudAlexaConfig.async_sync_entities"
+    ), patch(
         (
             "homeassistant.components.cloud.alexa_config.CloudAlexaConfig"
             ".async_get_access_token"
@@ -941,6 +943,7 @@ async def test_websocket_update_preferences_alexa_report_state(
         response = await client.receive_json()
 
         set_authorized_mock.assert_called_once_with(True)
+        await hass.async_block_till_done()
 
     assert response["success"]
 
