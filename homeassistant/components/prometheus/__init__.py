@@ -287,6 +287,15 @@ class PrometheusMetrics:
             except (ValueError, TypeError):
                 pass
 
+    def _get_labels(
+            self,
+            extra_labels: list[str] | None = None,
+    ) -> list[str]:
+        labels = ["entity", "friendly_name", "domain"]
+        if extra_labels is not None:
+            labels.extend(extra_labels)
+        return list(labels)
+
     def _metric(
         self,
         metric: str,
@@ -294,9 +303,7 @@ class PrometheusMetrics:
         documentation: str,
         extra_labels: list[str] | None = None,
     ) -> _MetricBaseT:
-        labels = ["entity", "friendly_name", "domain"]
-        if extra_labels is not None:
-            labels.extend(extra_labels)
+        labels = self._get_labels(extra_labels=extra_labels)
 
         try:
             return cast(_MetricBaseT, self._metrics[metric])
