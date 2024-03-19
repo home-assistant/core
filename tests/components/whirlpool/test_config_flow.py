@@ -6,7 +6,7 @@ import aiohttp
 from aiohttp.client_exceptions import ClientConnectionError
 
 from homeassistant import config_entries
-from homeassistant.components.whirlpool.const import DOMAIN
+from homeassistant.components.whirlpool.const import CONF_BRAND, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -245,7 +245,7 @@ async def test_reauth_flow(hass: HomeAssistant, region, brand) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_PASSWORD: "new-password"},
+            {CONF_PASSWORD: "new-password", CONF_BRAND: brand[0]},
         )
         await hass.async_block_till_done()
 
@@ -296,7 +296,7 @@ async def test_reauth_flow_auth_error(hass: HomeAssistant, region, brand) -> Non
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_PASSWORD: "new-password"},
+            {CONF_PASSWORD: "new-password", CONF_BRAND: brand[0]},
         )
         await hass.async_block_till_done()
 
@@ -342,7 +342,7 @@ async def test_reauth_flow_connnection_error(
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_PASSWORD: "new-password"},
+            {CONF_PASSWORD: "new-password", CONF_BRAND: brand[0]},
         )
         await hass.async_block_till_done()
 
