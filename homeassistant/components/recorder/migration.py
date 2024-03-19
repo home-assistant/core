@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable
 import contextlib
 from dataclasses import dataclass, replace as dataclass_replace
@@ -89,6 +90,7 @@ from .queries import (
     find_unmigrated_statistics_rows,
     has_entity_ids_to_migrate,
     has_event_type_to_migrate,
+    has_events_context_ids_to_migrate,
     has_states_context_ids_to_migrate,
     has_used_states_event_ids,
     migrate_single_short_term_statistics_row_to_timestamp,
@@ -1779,14 +1781,13 @@ def initialize_database(session_maker: Callable[[], Session]) -> bool:
         return False
 
 
-class BaseMigration:
+class BaseMigration(ABC):
     """Base class for migrations."""
 
     required_schema_version = 0
     migration_version = 1
     migration_id: str
     task: Callable[[], RecorderTask]
-    query: Callable[[], StatementLambdaElement]
 
     def __init__(
         self, recorder: Recorder, session: Session, migration_changes: dict[str, int]
@@ -1796,28 +1797,28 @@ class BaseMigration:
         self.session = session
         self.migration_changes = migration_changes
 
+    @abstractmethod
+    def needs_migrate_query(self) -> StatementLambdaElement:
+        """Return the query to check if the migration needs to run."""
+
     def run(self) -> None:
         """Run the migration."""
         self.recorder.queue_task(self.task())
 
-    def check_if_data_is_migrated(self) -> bool:
-        """Check if the data is migrated.
-
-        This check is only called if the migration version is greater than the
-        version in the database or the migration version does not exist.
-        """
-        return bool(execute_stmt_lambda_element(self.session, self.query()))
-
     def needs_migrate(self) -> bool:
         """Return if the migration needs to run."""
-        # Schema is too old, we must have to migrate
         if self.recorder.schema_version < self.required_schema_version:
+            # Schema is too old, we must have to migrate
             return True
-        # Migration is not in the database
-        if self.migration_changes.get(self.migration_id, -1) < self.migration_version:
-            return True
-        # Migration is not done so we must do a (slow) manual check
-        return self.check_if_data_is_migrated()
+        if self.migration_changes.get(self.migration_id, -1) >= self.migration_version:
+            # The migration changes table indicates that the migration has been done
+            return False
+        # We do not know if the migration is done from the
+        # migration changes table so we must check the data
+        # This is the slow path
+        return bool(
+            execute_stmt_lambda_element(self.session, self.needs_migrate_query())
+        )
 
 
 class StatesContextIDMigration(BaseMigration):
@@ -1826,7 +1827,10 @@ class StatesContextIDMigration(BaseMigration):
     required_schema_version = CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
     migration_id = "state_context_id_as_binary"
     task = StatesContextIDMigrationTask
-    query = has_states_context_ids_to_migrate
+
+    def needs_migrate_query(self) -> StatementLambdaElement:
+        """Return the query to check if the migration needs to run."""
+        return has_states_context_ids_to_migrate()
 
 
 class EventsContextIDMigration(BaseMigration):
@@ -1835,7 +1839,10 @@ class EventsContextIDMigration(BaseMigration):
     required_schema_version = CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
     migration_id = "event_context_id_as_binary"
     task = EventsContextIDMigrationTask
-    query = has_states_context_ids_to_migrate
+
+    def needs_migrate_query(self) -> StatementLambdaElement:
+        """Return the query to check if the migration needs to run."""
+        return has_events_context_ids_to_migrate()
 
 
 class EventTypeIDMigration(BaseMigration):
@@ -1844,7 +1851,10 @@ class EventTypeIDMigration(BaseMigration):
     required_schema_version = EVENT_TYPE_IDS_SCHEMA_VERSION
     migration_id = "event_type_id_migration"
     task = EventTypeIDMigrationTask
-    query = has_event_type_to_migrate
+
+    def needs_migrate_query(self) -> StatementLambdaElement:
+        """Check if the data is migrated."""
+        return has_event_type_to_migrate()
 
 
 class EntityIDMigration(BaseMigration):
@@ -1853,7 +1863,10 @@ class EntityIDMigration(BaseMigration):
     required_schema_version = STATES_META_SCHEMA_VERSION
     migration_id = "entity_id_migration"
     task = EntityIDMigrationTask
-    query = has_entity_ids_to_migrate
+
+    def needs_migrate_query(self) -> StatementLambdaElement:
+        """Check if the data is migrated."""
+        return has_entity_ids_to_migrate()
 
 
 def _mark_migration_done(session: Session, migration: type[BaseMigration]) -> None:

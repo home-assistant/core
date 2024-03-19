@@ -89,7 +89,7 @@ def db_schema_32():
         core, "States", old_db_schema.States
     ), patch.object(core, "Events", old_db_schema.Events), patch.object(
         core, "StateAttributes", old_db_schema.StateAttributes
-    ), patch.object(core, "EntityIDMigrationTask", core.RecorderTask), patch(
+    ), patch.object(migration.EntityIDMigration, "task", core.RecorderTask), patch(
         CREATE_ENGINE_TARGET, new=_create_engine_test
     ):
         yield
