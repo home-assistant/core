@@ -197,7 +197,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         self._updated_registry: bool = False
         self._config_entry = config_entry
         self._attr_device_info = dr.DeviceInfo(connections={(dr.CONNECTION_UPNP, udn)})
-        self._set_supported_features()
+        self._attr_supported_features = self._supported_features()
 
     async def async_added_to_hass(self) -> None:
         """Handle addition."""
@@ -313,7 +313,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
                 )
 
         # Device could have been de/re-connected, state probably changed
-        self._set_supported_features()
+        self._attr_supported_features = self._supported_features()
         self.async_write_ha_state()
 
     async def async_config_update_listener(
@@ -356,7 +356,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
             _LOGGER.warning("Couldn't (re)connect after config change: %r", err)
 
         # Device was de/re-connected, state might have changed
-        self._set_supported_features()
+        self._attr_supported_features = self._supported_features()
         self.async_write_ha_state()
 
     async def _device_connect(self, location: str) -> None:
@@ -506,10 +506,6 @@ class DlnaDmrEntity(MediaPlayerEntity):
             self.check_available = False
 
         # Supported features may have changed
-        self._set_supported_features()
-
-    def _set_supported_features(self) -> None:
-        """Set supported features based on the current state of the device."""
         self._attr_supported_features = self._supported_features()
 
     def _on_event(
