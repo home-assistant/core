@@ -14,7 +14,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import LanguageSelector, LanguageSelectorConfig
 
-from .const import CONF_SUPPORTED_LANGUAGES, DOMAIN
+from .const import DOMAIN, SUPPORTED_LANGUAGES
 from .helper import get_country_from_language
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_LANGUAGE): LanguageSelector(
-            LanguageSelectorConfig(languages=CONF_SUPPORTED_LANGUAGES)
+            LanguageSelectorConfig(languages=SUPPORTED_LANGUAGES)
         ),
     }
 )
@@ -31,9 +31,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 def get_default_language(hass: HomeAssistant) -> str:
     """Get default language code based on Home Assistant config."""
     language_code = f"{hass.config.language}-{hass.config.country}"
-    if language_code in CONF_SUPPORTED_LANGUAGES:
+    if language_code in SUPPORTED_LANGUAGES:
         return language_code
-    if hass.config.language in CONF_SUPPORTED_LANGUAGES:
+    if hass.config.language in SUPPORTED_LANGUAGES:
         return hass.config.language
     return "en-US"
 
