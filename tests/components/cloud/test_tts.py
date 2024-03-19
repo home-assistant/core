@@ -564,7 +564,7 @@ async def test_deprecated_gender(
     data: dict[str, Any],
     expected_url_suffix: str,
 ) -> None:
-    """Test we create an issue when a deprecated voice is used for text-to-speech."""
+    """Test we create an issue when a deprecated gender is used for text-to-speech."""
     language = "zh-CN"
     gender_option = "male"
     mock_process_tts = AsyncMock(

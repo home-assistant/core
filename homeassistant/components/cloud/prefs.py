@@ -85,9 +85,9 @@ class CloudPreferencesStore(Store):
                 # assistant store if it's not been migrated by manual Google assistant
                 old_data.setdefault(PREF_GOOGLE_CONNECTED, await google_connected())
             if old_minor_version < 4:
-                # Update the default TTS voice to the new default
+                # Update the default TTS voice to the new default.
                 # The default tts voice is a tuple.
-                # The first item is the language, the second the used to be gender.
+                # The first item is the language, the second item used to be gender.
                 # The new second item is the voice name.
                 default_tts_voice = old_data.get(PREF_TTS_DEFAULT_VOICE)
                 if default_tts_voice and (voice_item_two := default_tts_voice[1]) in (
