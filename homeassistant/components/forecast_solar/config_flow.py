@@ -22,6 +22,7 @@ from .const import (
     CONF_DAMPING_EVENING,
     CONF_DAMPING_MORNING,
     CONF_DECLINATION,
+    CONF_HORIZON,
     CONF_INVERTER_SIZE,
     CONF_MODULES_POWER,
     DOMAIN,
@@ -154,6 +155,14 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
                             )
                         },
                     ): vol.Coerce(int),
+                    vol.Optional(
+                        CONF_HORIZON,
+                        description={
+                            "suggested_value": self.config_entry.options.get(
+                                CONF_HORIZON
+                            )
+                        },
+                    ): vol.Coerce(str),
                 }
             ),
             errors=errors,
