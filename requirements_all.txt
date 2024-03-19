@@ -73,7 +73,7 @@ PyMetEireann==2021.8.0
 
 # homeassistant.components.met
 # homeassistant.components.norway_air
-PyMetno==0.11.0
+PyMetno==0.12.0
 
 # homeassistant.components.keymitt_ble
 PyMicroBot==0.0.17
@@ -1964,7 +1964,7 @@ pymitv==1.4.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.6.5
+pymodbus==3.6.6
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -2631,7 +2631,7 @@ subarulink==0.7.9
 sunwatcher==0.2.1
 
 # homeassistant.components.sunweg
-sunweg==2.1.0
+sunweg==2.1.1
 
 # homeassistant.components.surepetcare
 surepy==0.9.0

@@ -35,6 +35,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util.async_ import create_eager_task
 
 from .const import (
@@ -221,7 +222,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         logging.getLogger(logging_namespace).setLevel(logging.ERROR)
 
     # This will load av so we run it in the executor
-    await hass.async_add_executor_job(set_pyav_logging, debug_enabled)
+    with async_pause_setup(hass, SetupPhases.WAIT_IMPORT_PACKAGES):
+        await hass.async_add_executor_job(set_pyav_logging, debug_enabled)
 
     # Keep import here so that we can import stream integration without installing reqs
     # pylint: disable-next=import-outside-toplevel

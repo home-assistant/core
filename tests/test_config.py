@@ -865,7 +865,7 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("minor_version", "users", "user_data", "default_language"),
-    (
+    [
         (2, (), {}, "en"),
         (2, ({"is_owner": True},), {}, "en"),
         (
@@ -894,7 +894,7 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
             {"user1": {"language": {"language": "sv"}}},
             "en",
         ),
-    ),
+    ],
 )
 async def test_language_default(
     hass: HomeAssistant,
