@@ -16,7 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DATA_DEVICE, DATA_DEVICE_INFO, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,8 +44,8 @@ async def async_setup_entry(
 ) -> None:
     """Setups Dice sensors."""
     data = hass.data[DOMAIN][config_entry.entry_id]
-    device = data["device"]
-    device_info = data["device_info"]
+    device = data[DATA_DEVICE]
+    device_info = data[DATA_DEVICE_INFO]
 
     entry_ctors = [
         DiceColorSensor,
@@ -63,21 +63,23 @@ class BaseSensor(SensorEntity):
     _attr_should_poll = False
     _attr_has_entity_name = True
 
-    def __init__(self, entity_description, devinfo) -> None:
+    def __init__(self, entity_description, device_info) -> None:
         """Set default values."""
         self.entity_description = entity_description
-        self._attr_device_info = devinfo
-        self._attr_unique_id = f"{devinfo['name']}_{self.entity_description.key}"
+        self._attr_device_info = device_info
+        self._attr_unique_id = (
+            f"{device_info[const.CONF_NAME]}_{self.entity_description.key}"
+        )
         self._attr_translation_key = entity_description.key
 
 
 class DiceColorSensor(RestoreSensor, BaseSensor):
     """Represents color of a dice (dots)."""
 
-    def __init__(self, devinfo, device) -> None:
+    def __init__(self, device_info, device) -> None:
         """Set default values."""
         descr = COLOR_SENSOR_DESCR
-        super().__init__(descr, devinfo)
+        super().__init__(descr, device_info)
         self.dice = device
 
     async def async_added_to_hass(self) -> None:
@@ -95,10 +97,10 @@ class BatteryLevelSensor(BaseSensor):
 
     _attr_should_poll = True
 
-    def __init__(self, devinfo, device) -> None:
+    def __init__(self, device_info, device) -> None:
         """Set default values."""
         descr = BATTERY_SENSOR_DESCR
-        super().__init__(descr, devinfo)
+        super().__init__(descr, device_info)
         self.dice = device
 
     async def async_update(self) -> None:
@@ -110,10 +112,10 @@ class BatteryLevelSensor(BaseSensor):
 class DiceNumberSensor(BaseSensor):
     """Represents the rolled dice number."""
 
-    def __init__(self, devinfo, device) -> None:
+    def __init__(self, device_info, device) -> None:
         """Set default values."""
         descr = ROLLED_NUMBER_SENSOR_DESCR
-        super().__init__(descr, devinfo)
+        super().__init__(descr, device_info)
         self.dice = device
 
     async def async_added_to_hass(self) -> None:

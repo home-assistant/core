@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from homeassistant.components.bluetooth import BluetoothServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_ADDRESS, CONF_NAME
 
 from .const import DOMAIN
 
@@ -37,17 +38,17 @@ class GoDiceConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title=self._discovery_info.name,
                 data={
-                    "name": self._discovery_info.name,
-                    "address": self._discovery_info.address,
+                    CONF_NAME: self._discovery_info.name,
+                    CONF_ADDRESS: self._discovery_info.address,
                 },
             )
 
         self._set_confirm_only()
-        self.context["title_placeholders"] = {"name": self._discovery_info.name}
+        self.context["title_placeholders"] = {CONF_NAME: self._discovery_info.name}
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={
-                "name": self._discovery_info.name,
-                "address": self._discovery_info.address,
+                CONF_NAME: self._discovery_info.name,
+                CONF_ADDRESS: self._discovery_info.address,
             },
         )
