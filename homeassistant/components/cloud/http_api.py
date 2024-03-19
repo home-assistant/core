@@ -428,10 +428,11 @@ async def websocket_subscription(
 
 def validate_language_voice(value: tuple[str, str]) -> tuple[str, str]:
     """Validate language and voice."""
-    if value[0] not in TTS_VOICES:
-        raise vol.Invalid(f"Invalid language {value[0]}")
-    if value[1] not in TTS_VOICES[value[0]]:
-        raise vol.Invalid(f"Invalid voice {value[1]} for language {value[0]}")
+    language, voice = value
+    if language not in TTS_VOICES:
+        raise vol.Invalid(f"Invalid language {language}")
+    if voice not in TTS_VOICES[language]:
+        raise vol.Invalid(f"Invalid voice {voice} for language {language}")
     return value
 
 
