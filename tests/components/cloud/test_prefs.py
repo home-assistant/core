@@ -1,7 +1,7 @@
 """Test Cloud preferences."""
 
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 import pytest
 
@@ -26,8 +26,34 @@ async def test_set_username(hass: HomeAssistant) -> None:
     assert prefs.google_enabled
 
 
+async def test_erase_config(hass: HomeAssistant) -> None:
+    """Test erasing config."""
+    prefs = CloudPreferences(hass)
+    await prefs.async_initialize()
+    assert prefs._prefs == {
+        **prefs._empty_config(""),
+        "google_local_webhook_id": ANY,
+        "instance_id": ANY,
+    }
+
+    await prefs.async_update(google_enabled=False)
+    assert prefs._prefs == {
+        **prefs._empty_config(""),
+        "google_enabled": False,
+        "google_local_webhook_id": ANY,
+        "instance_id": ANY,
+    }
+
+    await prefs.async_erase_config()
+    assert prefs._prefs == {
+        **prefs._empty_config(""),
+        "google_local_webhook_id": ANY,
+        "instance_id": ANY,
+    }
+
+
 async def test_set_username_migration(hass: HomeAssistant) -> None:
-    """Test we not clear config if we had no username."""
+    """Test we do not clear config if we had no username."""
     prefs = CloudPreferences(hass)
 
     with patch.object(prefs, "_empty_config", return_value=prefs._empty_config(None)):
