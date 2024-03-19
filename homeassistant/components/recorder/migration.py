@@ -25,6 +25,7 @@ from sqlalchemy.exc import (
 from sqlalchemy.orm.session import Session
 from sqlalchemy.schema import AddConstraint, DropConstraint
 from sqlalchemy.sql.expression import true
+from sqlalchemy.sql.lambdas import StatementLambdaElement
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util.enum import try_parse_enum
@@ -46,7 +47,12 @@ from .auto_repairs.statistics.schema import (
     correct_db_schema as statistics_correct_db_schema,
     validate_db_schema as statistics_validate_db_schema,
 )
-from .const import SupportedDialect
+from .const import (
+    CONTEXT_ID_AS_BINARY_SCHEMA_VERSION,
+    EVENT_TYPE_IDS_SCHEMA_VERSION,
+    STATES_META_SCHEMA_VERSION,
+    SupportedDialect,
+)
 from .db_schema import (
     CONTEXT_ID_BIN_MAX_LENGTH,
     DOUBLE_PRECISION_TYPE_SQL,
@@ -60,6 +66,7 @@ from .db_schema import (
     Base,
     Events,
     EventTypes,
+    MigrationChanges,
     SchemaChanges,
     States,
     StatesMeta,
@@ -80,6 +87,9 @@ from .queries import (
     find_states_context_ids_to_migrate,
     find_unmigrated_short_term_statistics_rows,
     find_unmigrated_statistics_rows,
+    has_entity_ids_to_migrate,
+    has_event_type_to_migrate,
+    has_states_context_ids_to_migrate,
     has_used_states_event_ids,
     migrate_single_short_term_statistics_row_to_timestamp,
     migrate_single_statistics_row_to_timestamp,
@@ -87,11 +97,17 @@ from .queries import (
 from .statistics import get_start_time
 from .tasks import (
     CommitTask,
+    EntityIDMigrationTask,
+    EventsContextIDMigrationTask,
+    EventTypeIDMigrationTask,
     PostSchemaMigrationTask,
+    RecorderTask,
+    StatesContextIDMigrationTask,
     StatisticsTimestampMigrationCleanupTask,
 )
 from .util import (
     database_job_retry_wrapper,
+    execute_stmt_lambda_element,
     get_index_by_name,
     retryable_database_job,
     session_scope,
@@ -1478,7 +1494,8 @@ def migrate_states_context_ids(instance: Recorder) -> bool:
             )
         # If there is more work to do return False
         # so that we can be called again
-        is_done = not states
+        if is_done := not states:
+            _mark_migration_done(session, StatesContextIDMigration)
 
     if is_done:
         _drop_index(session_maker, "states", "ix_states_context_id")
@@ -1515,7 +1532,8 @@ def migrate_events_context_ids(instance: Recorder) -> bool:
             )
         # If there is more work to do return False
         # so that we can be called again
-        is_done = not events
+        if is_done := not events:
+            _mark_migration_done(session, EventsContextIDMigration)
 
     if is_done:
         _drop_index(session_maker, "events", "ix_events_context_id")
@@ -1580,7 +1598,8 @@ def migrate_event_type_ids(instance: Recorder) -> bool:
 
         # If there is more work to do return False
         # so that we can be called again
-        is_done = not events
+        if is_done := not events:
+            _mark_migration_done(session, EventTypeIDMigration)
 
     if is_done:
         instance.event_type_manager.active = True
@@ -1654,7 +1673,8 @@ def migrate_entity_ids(instance: Recorder) -> bool:
 
         # If there is more work to do return False
         # so that we can be called again
-        is_done = not states
+        if is_done := not states:
+            _mark_migration_done(session, EntityIDMigration)
 
     _LOGGER.debug("Migrating entity_ids done=%s", is_done)
     return is_done
@@ -1757,3 +1777,89 @@ def initialize_database(session_maker: Callable[[], Session]) -> bool:
     except Exception as err:  # pylint: disable=broad-except
         _LOGGER.exception("Error when initialise database: %s", err)
         return False
+
+
+class BaseMigration:
+    """Base class for migrations."""
+
+    required_schema_version = 0
+    migration_version = 1
+    migration_id: str
+    task: Callable[[], RecorderTask]
+    query: Callable[[], StatementLambdaElement]
+
+    def __init__(
+        self, recorder: Recorder, session: Session, migration_changes: dict[str, int]
+    ) -> None:
+        """Initialize a new BaseMigration."""
+        self.recorder = recorder
+        self.session = session
+        self.migration_changes = migration_changes
+
+    def run(self) -> None:
+        """Run the migration."""
+        self.recorder.queue_task(self.task())
+
+    def check_if_data_is_migrated(self) -> bool:
+        """Check if the data is migrated.
+
+        This check is only called if the migration version is greater than the
+        version in the database or the migration version does not exist.
+        """
+        return bool(execute_stmt_lambda_element(self.session, self.query()))
+
+    def needs_migrate(self) -> bool:
+        """Return if the migration needs to run."""
+        # Schema is too old, we must have to migrate
+        if self.recorder.schema_version < self.required_schema_version:
+            return True
+        # Migration is not in the database
+        if self.migration_changes.get(self.migration_id, -1) < self.migration_version:
+            return True
+        # Migration is not done so we must do a (slow) manual check
+        return self.check_if_data_is_migrated()
+
+
+class StatesContextIDMigration(BaseMigration):
+    """Migration to migrate states context_ids to binary format."""
+
+    required_schema_version = CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
+    migration_id = "state_context_id_as_binary"
+    task = StatesContextIDMigrationTask
+    query = has_states_context_ids_to_migrate
+
+
+class EventsContextIDMigration(BaseMigration):
+    """Migration to migrate events context_ids to binary format."""
+
+    required_schema_version = CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
+    migration_id = "event_context_id_as_binary"
+    task = EventsContextIDMigrationTask
+    query = has_states_context_ids_to_migrate
+
+
+class EventTypeIDMigration(BaseMigration):
+    """Migration to migrate event_type to event_type_ids."""
+
+    required_schema_version = EVENT_TYPE_IDS_SCHEMA_VERSION
+    migration_id = "event_type_id_migration"
+    task = EventTypeIDMigrationTask
+    query = has_event_type_to_migrate
+
+
+class EntityIDMigration(BaseMigration):
+    """Migration to migrate entity_ids to states_meta."""
+
+    required_schema_version = STATES_META_SCHEMA_VERSION
+    migration_id = "entity_id_migration"
+    task = EntityIDMigrationTask
+    query = has_entity_ids_to_migrate
+
+
+def _mark_migration_done(session: Session, migration: type[BaseMigration]) -> None:
+    """Mark a migration as done."""
+    session.merge(
+        MigrationChanges(
+            migration_id=migration.migration_id, version=migration.migration_version
+        )
+    )

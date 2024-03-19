@@ -43,11 +43,9 @@ from homeassistant.util.enum import try_parse_enum
 
 from . import migration, statistics
 from .const import (
-    CONTEXT_ID_AS_BINARY_SCHEMA_VERSION,
     DB_WORKER_PREFIX,
     DOMAIN,
     ESTIMATED_QUEUE_ITEM_SIZE,
-    EVENT_TYPE_IDS_SCHEMA_VERSION,
     KEEPALIVE_TIME,
     LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION,
     MARIADB_PYMYSQL_URL_PREFIX,
@@ -58,7 +56,6 @@ from .const import (
     QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY,
     SQLITE_MAX_BIND_VARS,
     SQLITE_URL_PREFIX,
-    STATES_META_SCHEMA_VERSION,
     STATISTICS_ROWS_SCHEMA_VERSION,
     SupportedDialect,
 )
@@ -80,12 +77,7 @@ from .db_schema import (
 from .executor import DBInterruptibleThreadPoolExecutor
 from .models import DatabaseEngine, StatisticData, StatisticMetaData, UnsupportedDialect
 from .pool import POOL_SIZE, MutexPool, RecorderPool
-from .queries import (
-    has_entity_ids_to_migrate,
-    has_event_type_to_migrate,
-    has_events_context_ids_to_migrate,
-    has_states_context_ids_to_migrate,
-)
+from .queries import get_migration_changes
 from .table_managers.event_data import EventDataManager
 from .table_managers.event_types import EventTypeManager
 from .table_managers.recorder_runs import RecorderRunsManager
@@ -101,17 +93,13 @@ from .tasks import (
     CommitTask,
     CompileMissingStatisticsTask,
     DatabaseLockTask,
-    EntityIDMigrationTask,
     EntityIDPostMigrationTask,
     EventIdMigrationTask,
-    EventsContextIDMigrationTask,
-    EventTypeIDMigrationTask,
     ImportStatisticsTask,
     KeepAliveTask,
     PerodicCleanupTask,
     PurgeTask,
     RecorderTask,
-    StatesContextIDMigrationTask,
     StatisticsTask,
     StopTask,
     SynchronizeTask,
@@ -791,36 +779,29 @@ class Recorder(threading.Thread):
             if self.schema_version >= STATISTICS_ROWS_SCHEMA_VERSION:
                 self.statistics_meta_manager.load(session)
 
-            if (
-                self.schema_version < CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
-                or execute_stmt_lambda_element(
-                    session, has_states_context_ids_to_migrate()
-                )
-            ):
-                self.queue_task(StatesContextIDMigrationTask())
+            migration_changes: dict[str, int] = {
+                row[0]: row[1]
+                for row in execute_stmt_lambda_element(session, get_migration_changes())
+            }
 
-            if (
-                self.schema_version < CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
-                or execute_stmt_lambda_element(
-                    session, has_events_context_ids_to_migrate()
-                )
+            for migrator_cls in (
+                migration.StatesContextIDMigration,
+                migration.EventsContextIDMigration,
             ):
-                self.queue_task(EventsContextIDMigrationTask())
+                migrator = migrator_cls(self, session, migration_changes)
+                if migrator.needs_migrate():
+                    migrator.run()
 
-            if (
-                self.schema_version < EVENT_TYPE_IDS_SCHEMA_VERSION
-                or execute_stmt_lambda_element(session, has_event_type_to_migrate())
-            ):
-                self.queue_task(EventTypeIDMigrationTask())
+            migrator = migration.EventTypeIDMigration(self, session, migration_changes)
+            if migrator.needs_migrate():
+                migrator.run()
             else:
                 _LOGGER.debug("Activating event_types manager as all data is migrated")
                 self.event_type_manager.active = True
 
-            if (
-                self.schema_version < STATES_META_SCHEMA_VERSION
-                or execute_stmt_lambda_element(session, has_entity_ids_to_migrate())
-            ):
-                self.queue_task(EntityIDMigrationTask())
+            migrator = migration.EntityIDMigration(self, session, migration_changes)
+            if migrator.needs_migrate():
+                migrator.run()
             else:
                 _LOGGER.debug("Activating states_meta manager as all data is migrated")
                 self.states_meta_manager.active = True
