@@ -11,7 +11,7 @@ from yalexs.activity import SOURCE_PUBNUB, ActivityType, ActivityTypes
 from yalexs.lock import Lock, LockStatus
 from yalexs.util import get_latest_activity, update_lock_detail_from_activity
 
-from homeassistant.components.lock import ATTR_CHANGED_BY, LockEntity
+from homeassistant.components.lock import ATTR_CHANGED_BY, LockEntity, LockEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import HomeAssistant, callback
@@ -37,16 +37,11 @@ async def async_setup_entry(
     data: AugustData = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(AugustLock(data, lock) for lock in data.locks)
 
-class LockEntityFeature(IntFlag):
-    """Supported features of the lock entity."""
-
-    OPEN = 1
-
 class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
     """Representation of an August lock."""
 
     _attr_name = None
-    _attr_supported_features: LockEntityFeature = LockEntityFeature(0)
+    _attr_supported_features = LockEntityFeature.OPEN
 
     def __init__(self, data: AugustData, device: Lock) -> None:
         """Initialize the lock."""
