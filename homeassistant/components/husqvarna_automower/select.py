@@ -19,6 +19,9 @@ from .entity import AutomowerControlEntity
 _LOGGER = logging.getLogger(__name__)
 
 
+HEADLIGHT_MODES: list = [option.lower() for option in list(HeadlightModes)]
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -34,7 +37,7 @@ async def async_setup_entry(
 class AutomowerSelectEntity(AutomowerControlEntity, SelectEntity):
     """Defining the headlight mode entity."""
 
-    _attr_options = options = [option.lower() for option in list(HeadlightModes)]
+    _attr_options = HEADLIGHT_MODES
     _attr_icon = "mdi:car-light-high"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_translation_key = "headlight_mode"
