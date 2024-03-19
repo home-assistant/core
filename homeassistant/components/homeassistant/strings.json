@@ -163,7 +163,7 @@
       "message": "Error importing config platform {domain}: {error}"
     },
     "config_validation_err": {
-      "message": "Invalid config for integration {domain} at {config_file}, line {line}: {error}. Check the logs for more information."
+      "message": "Invalid config for integration {domain} at {config_file}, line {line}: {error}."
     },
     "config_validator_unknown_err": {
       "message": "Unknown error calling {domain} config validator - {error}."
@@ -178,7 +178,7 @@
       "message": "Value {value} for property {property_name} has a maximum length of {max_length} characters."
     },
     "platform_component_load_err": {
-      "message": "Platform error: {domain} - {error}. Check the logs for more information."
+      "message": "Platform error: {domain} - {error}."
     },
     "platform_component_load_exc": {
       "message": "[%key:component::homeassistant::exceptions::platform_component_load_err::message%]"

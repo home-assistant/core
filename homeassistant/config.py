@@ -138,6 +138,17 @@ class ConfigErrorTranslationKey(StrEnum):
     INTEGRATION_CONFIG_ERROR = "integration_config_error"
 
 
+_CONFIG_LOG_SHOW_STACK_TRACE: dict[ConfigErrorTranslationKey, bool] = {
+    ConfigErrorTranslationKey.COMPONENT_IMPORT_ERR: False,
+    ConfigErrorTranslationKey.CONFIG_PLATFORM_IMPORT_ERR: False,
+    ConfigErrorTranslationKey.CONFIG_VALIDATOR_UNKNOWN_ERR: True,
+    ConfigErrorTranslationKey.CONFIG_SCHEMA_UNKNOWN_ERR: True,
+    ConfigErrorTranslationKey.PLATFORM_COMPONENT_LOAD_ERR: False,
+    ConfigErrorTranslationKey.PLATFORM_COMPONENT_LOAD_EXC: True,
+    ConfigErrorTranslationKey.PLATFORM_SCHEMA_VALIDATOR_ERR: True,
+}
+
+
 @dataclass
 class ConfigExceptionInfo:
     """Configuration exception info class."""
@@ -1188,43 +1199,10 @@ def _get_log_message_and_stack_print_pref(
         "p_name": platform_path,
     }
 
-    log_message_mapping: dict[ConfigErrorTranslationKey, tuple[str, bool]] = {
-        ConfigErrorTranslationKey.COMPONENT_IMPORT_ERR: (
-            f"Unable to import {domain}: {exception}",
-            False,
-        ),
-        ConfigErrorTranslationKey.CONFIG_PLATFORM_IMPORT_ERR: (
-            f"Error importing config platform {domain}: {exception}",
-            False,
-        ),
-        ConfigErrorTranslationKey.CONFIG_VALIDATOR_UNKNOWN_ERR: (
-            f"Unknown error calling {domain} config validator. "
-            "Check the logs for more information",
-            True,
-        ),
-        ConfigErrorTranslationKey.CONFIG_SCHEMA_UNKNOWN_ERR: (
-            f"Unknown error calling {domain} CONFIG_SCHEMA. "
-            "Check the logs for more information",
-            True,
-        ),
-        ConfigErrorTranslationKey.PLATFORM_COMPONENT_LOAD_ERR: (
-            f"Platform error: {domain} - {exception}",
-            False,
-        ),
-        ConfigErrorTranslationKey.PLATFORM_COMPONENT_LOAD_EXC: (
-            f"Platform error: {domain} - {exception}",
-            True,
-        ),
-        ConfigErrorTranslationKey.PLATFORM_SCHEMA_VALIDATOR_ERR: (
-            f"Unknown error when validating config for {domain} "
-            f"from integration {platform_path} - {exception}",
-            True,
-        ),
-    }
-    log_message_show_stack_trace = log_message_mapping.get(
+    show_stack_trace: bool | None = _CONFIG_LOG_SHOW_STACK_TRACE.get(
         platform_exception.translation_key
     )
-    if log_message_show_stack_trace is None:
+    if show_stack_trace is None:
         # If no pre defined log_message is set, we generate an enriched error
         # message, so we can notify about it during setup
         show_stack_trace = False
@@ -1247,9 +1225,16 @@ def _get_log_message_and_stack_print_pref(
             show_stack_trace = True
         return (log_message, show_stack_trace, placeholders)
 
-    assert isinstance(log_message_show_stack_trace, tuple)
+    # Get the log message from the translation cache
+    log_message = str(
+        HomeAssistantError(
+            translation_domain="homeassistant",
+            translation_key=platform_exception.translation_key,
+            translation_placeholders=placeholders,
+        )
+    )
 
-    return (*log_message_show_stack_trace, placeholders)
+    return (log_message, show_stack_trace, placeholders)
 
 
 async def async_process_component_and_handle_errors(
