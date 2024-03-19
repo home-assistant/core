@@ -75,6 +75,12 @@ from .db_schema import (
     StatisticsShortTerm,
 )
 from .executor import DBInterruptibleThreadPoolExecutor
+from .migration import (
+    EntityIDMigration,
+    EventsContextIDMigration,
+    EventTypeIDMigration,
+    StatesContextIDMigration,
+)
 from .models import DatabaseEngine, StatisticData, StatisticMetaData, UnsupportedDialect
 from .pool import POOL_SIZE, MutexPool, RecorderPool
 from .queries import get_migration_changes
@@ -785,26 +791,19 @@ class Recorder(threading.Thread):
                 for row in execute_stmt_lambda_element(session, get_migration_changes())
             }
 
-            for migrator_cls in (
-                migration.StatesContextIDMigration,
-                migration.EventsContextIDMigration,
-            ):
+            for migrator_cls in (StatesContextIDMigration, EventsContextIDMigration):
                 migrator = migrator_cls(session, schema_version, migration_changes)
                 if migrator.needs_migrate():
                     self.queue_task(migrator.task())
 
-            migrator = migration.EventTypeIDMigration(
-                session, schema_version, migration_changes
-            )
+            migrator = EventTypeIDMigration(session, schema_version, migration_changes)
             if migrator.needs_migrate():
                 self.queue_task(migrator.task())
             else:
                 _LOGGER.debug("Activating event_types manager as all data is migrated")
                 self.event_type_manager.active = True
 
-            migrator = migration.EntityIDMigration(
-                session, schema_version, migration_changes
-            )
+            migrator = EntityIDMigration(session, schema_version, migration_changes)
             if migrator.needs_migrate():
                 self.queue_task(migrator.task())
             else:
