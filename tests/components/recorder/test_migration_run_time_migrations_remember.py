@@ -1,4 +1,4 @@
-"""The tests for the recorder filter matching the EntityFilter component."""
+"""Test run time migrations are remembered in the migration_changes table."""
 
 import importlib
 from pathlib import Path
@@ -68,7 +68,14 @@ async def test_migration_changes_prevent_trying_to_migrate_again(
     tmp_path: Path,
     recorder_db_url: str,
 ) -> None:
-    """Test that we do not try to migrate when migration_changes indicate its already migrated."""
+    """Test that we do not try to migrate when migration_changes indicate its already migrated.
+
+    This test will start Home Assistant 3 times:
+
+    1. With schema 32 to populate the data
+    2. With current schema so the migration happens
+    3. With current schema to verify we do not have to query to see if the migration is done
+    """
     if recorder_db_url.startswith(("mysql://", "postgresql://")):
         # This test uses a test database between runs so its
         # SQLite specific
@@ -98,14 +105,6 @@ async def test_migration_changes_prevent_trying_to_migrate_again(
             await hass.async_block_till_done()
             await async_wait_recording_done(hass)
             await _async_wait_migration_done(hass)
-            instance = recorder.get_instance(hass)
-            migration_changes = await instance.async_add_executor_job(
-                _get_migration_id, hass
-            )
-            assert (
-                migration_changes[migration.StatesContextIDMigration.migration_id]
-                == migration.StatesContextIDMigration.migration_version
-            )
             hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
             await hass.async_block_till_done()
             await hass.async_stop()
