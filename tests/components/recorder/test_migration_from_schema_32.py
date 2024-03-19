@@ -59,6 +59,11 @@ async def _async_wait_migration_done(hass: HomeAssistant) -> None:
     await async_recorder_block_till_done(hass)
 
 
+def _get_migration_id(hass: HomeAssistant) -> dict[str, int]:
+    with session_scope(hass=hass, read_only=True) as session:
+        return dict(execute_stmt_lambda_element(session, get_migration_changes()))
+
+
 def _create_engine_test(*args, **kwargs):
     """Test version of create_engine that initializes with old schema.
 
@@ -314,6 +319,12 @@ async def test_migrate_events_context_ids(
         event_with_garbage_context_id_no_time_fired_ts["context_parent_id_bin"] is None
     )
 
+    migration_changes = await instance.async_add_executor_job(_get_migration_id, hass)
+    assert (
+        migration_changes[migration.EventsContextIDMigration.migration_id]
+        == migration.EventsContextIDMigration.migration_version
+    )
+
 
 @pytest.mark.parametrize("enable_migrate_context_ids", [True])
 async def test_migrate_states_context_ids(
@@ -501,6 +512,12 @@ async def test_migrate_states_context_ids(
         == b"\n\xe2\x97\x99\xeeNOE\x81\x16\xf5\x82\xd7\xd3\xeee"
     )
 
+    migration_changes = await instance.async_add_executor_job(_get_migration_id, hass)
+    assert (
+        migration_changes[migration.StatesContextIDMigration.migration_id]
+        == migration.StatesContextIDMigration.migration_version
+    )
+
 
 @pytest.mark.parametrize("enable_migrate_event_type_ids", [True])
 async def test_migrate_event_type_ids(
@@ -584,11 +601,7 @@ async def test_migrate_event_type_ids(
     assert mapped["event_type_one"] is not None
     assert mapped["event_type_two"] is not None
 
-    def _get_migration_id():
-        with session_scope(hass=hass, read_only=True) as session:
-            return dict(execute_stmt_lambda_element(session, get_migration_changes()))
-
-    migration_changes = await instance.async_add_executor_job(_get_migration_id)
+    migration_changes = await instance.async_add_executor_job(_get_migration_id, hass)
     assert (
         migration_changes[migration.EventTypeIDMigration.migration_id]
         == migration.EventTypeIDMigration.migration_version
@@ -662,11 +675,7 @@ async def test_migrate_entity_ids(
     assert len(states_by_entity_id["sensor.two"]) == 2
     assert len(states_by_entity_id["sensor.one"]) == 1
 
-    def _get_migration_id():
-        with session_scope(hass=hass, read_only=True) as session:
-            return dict(execute_stmt_lambda_element(session, get_migration_changes()))
-
-    migration_changes = await instance.async_add_executor_job(_get_migration_id)
+    migration_changes = await instance.async_add_executor_job(_get_migration_id, hass)
     assert (
         migration_changes[migration.EntityIDMigration.migration_id]
         == migration.EntityIDMigration.migration_version
