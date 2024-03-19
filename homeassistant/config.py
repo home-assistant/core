@@ -130,7 +130,6 @@ class ConfigErrorTranslationKey(StrEnum):
     CONFIG_PLATFORM_IMPORT_ERR = "config_platform_import_err"
     CONFIG_VALIDATOR_UNKNOWN_ERR = "config_validator_unknown_err"
     CONFIG_SCHEMA_UNKNOWN_ERR = "config_schema_unknown_err"
-    PLATFORM_VALIDATOR_UNKNOWN_ERR = "platform_validator_unknown_err"
     PLATFORM_COMPONENT_LOAD_ERR = "platform_component_load_err"
     PLATFORM_COMPONENT_LOAD_EXC = "platform_component_load_exc"
     PLATFORM_SCHEMA_VALIDATOR_ERR = "platform_schema_validator_err"
@@ -1199,16 +1198,13 @@ def _get_log_message_and_stack_print_pref(
             False,
         ),
         ConfigErrorTranslationKey.CONFIG_VALIDATOR_UNKNOWN_ERR: (
-            f"Unknown error calling {domain} config validator",
+            f"Unknown error calling {domain} config validator. "
+            "Check the logs for more information",
             True,
         ),
         ConfigErrorTranslationKey.CONFIG_SCHEMA_UNKNOWN_ERR: (
-            f"Unknown error calling {domain} CONFIG_SCHEMA",
-            True,
-        ),
-        ConfigErrorTranslationKey.PLATFORM_VALIDATOR_UNKNOWN_ERR: (
-            f"Unknown error validating {platform_path} platform config with {domain} "
-            "component platform schema",
+            f"Unknown error calling {domain} CONFIG_SCHEMA. "
+            "Check the logs for more information",
             True,
         ),
         ConfigErrorTranslationKey.PLATFORM_COMPONENT_LOAD_ERR: (
@@ -1220,8 +1216,8 @@ def _get_log_message_and_stack_print_pref(
             True,
         ),
         ConfigErrorTranslationKey.PLATFORM_SCHEMA_VALIDATOR_ERR: (
-            f"Unknown error validating config for {platform_path} platform "
-            f"for {domain} component with PLATFORM_SCHEMA",
+            f"Unknown error when validating config for {domain} "
+            f"from integration {platform_path} - {exception}",
             True,
         ),
     }
