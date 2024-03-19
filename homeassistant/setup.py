@@ -427,15 +427,19 @@ async def _async_setup_component(  # noqa: C901
             )
             return False
 
-        # Flush out async_setup calling create_task. Fragile but covered by test.
-        await asyncio.sleep(0)
-        await hass.config_entries.flow.async_wait_import_flow_initialized(domain)
-
-        if load_translations_task:
-            await load_translations_task
         # Add to components before the entry.async_setup
         # call to avoid a deadlock when forwarding platforms
         hass.config.components.add(domain)
+
+        if load_translations_task:
+            await load_translations_task
+
+    if integration.platforms_exists(("config_flow",)):
+        # If the integration a config_flow, flush out async_setup calling create_task
+        # with an asyncio.sleep(0) so we can wait for import flows.
+        # Fragile but covered by test.
+        await asyncio.sleep(0)
+        await hass.config_entries.flow.async_wait_import_flow_initialized(domain)
 
     if entries := hass.config_entries.async_entries(
         domain, include_ignore=False, include_disabled=False
