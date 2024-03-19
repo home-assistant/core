@@ -1,4 +1,5 @@
 """Tests for device tracker platform."""
+
 from unittest.mock import AsyncMock, patch
 
 from syrupy import SnapshotAssertion
@@ -33,7 +34,7 @@ async def test_device_tracker_snapshot(
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test device tracker."""
+    """Test device tracker with a snapshot."""
     with patch(
         "homeassistant.components.husqvarna_automower.PLATFORMS",
         [Platform.DEVICE_TRACKER],

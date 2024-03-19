@@ -1,4 +1,5 @@
-"""Husqvarna Automower device tracker entity."""
+"""Creates a the device tracker entity for the mower."""
+
 from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -22,7 +23,7 @@ async def async_setup_entry(
 
 
 class AutomowerDeviceTrackerEntity(AutomowerBaseEntity, TrackerEntity):
-    """Defining the Device Tracker Entity."""
+    """Defining the AutomowerDeviceTrackerEntity."""
 
     _attr_name: str | None = None
 
