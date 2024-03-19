@@ -8,7 +8,16 @@ from unittest.mock import AsyncMock, patch
 import godice
 import pytest
 
-from homeassistant.components.godice.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.components.godice.const import (
+    DATA_DISCONNECTED_BY_REQUEST_FLAG,
+    DOMAIN,
+    SCAN_INTERVAL,
+)
+from homeassistant.components.godice.sensor import (
+    BATTERY_SENSOR_DESCR,
+    COLOR_SENSOR_DESCR,
+    ROLLED_NUMBER_SENSOR_DESCR,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -52,13 +61,18 @@ async def test_sensor_reading(hass: HomeAssistant, fake_dice) -> None:
     with patch(
         "godice.create",
         return_value=fake_dice,
+    ), patch(
+        "homeassistant.components.bluetooth.async_ble_device_from_address",
+        return_value=GODICE_DEVICE_SERVICE_INFO,
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     fake_dice.pulse_led.assert_called_once()
 
-    color_sensor = hass.states.get(f"sensor.{GODICE_DEVICE_SERVICE_INFO.name}_color")
+    color_sensor = hass.states.get(
+        f"sensor.{GODICE_DEVICE_SERVICE_INFO.name}_{COLOR_SENSOR_DESCR.key}"
+    )
     assert color_sensor is not None
     assert color_sensor.state == color.name
 
@@ -66,7 +80,7 @@ async def test_sensor_reading(hass: HomeAssistant, fake_dice) -> None:
     await hass.async_block_till_done()
 
     rolled_number_sensor = hass.states.get(
-        f"sensor.{GODICE_DEVICE_SERVICE_INFO.name}_rolled_number"
+        f"sensor.{GODICE_DEVICE_SERVICE_INFO.name}_{ROLLED_NUMBER_SENSOR_DESCR.key}"
     )
     assert rolled_number_sensor is not None
     assert rolled_number_sensor.state == str(rolled_number)
@@ -77,7 +91,7 @@ async def test_sensor_reading(hass: HomeAssistant, fake_dice) -> None:
     await hass.async_block_till_done()
 
     battery_level_sensor = hass.states.get(
-        f"sensor.{GODICE_DEVICE_SERVICE_INFO.name}_battery_level"
+        f"sensor.{GODICE_DEVICE_SERVICE_INFO.name}_{BATTERY_SENSOR_DESCR.key}"
     )
     assert battery_level_sensor is not None
     assert battery_level_sensor.state == str(battery_level)
@@ -93,13 +107,13 @@ async def test_sensor_reading(hass: HomeAssistant, fake_dice) -> None:
     await hass.async_block_till_done()
 
     rolled_number_sensor = hass.states.get(
-        f"sensor.{GODICE_DEVICE_SERVICE_INFO.name}_rolled_number"
+        f"sensor.{GODICE_DEVICE_SERVICE_INFO.name}_{ROLLED_NUMBER_SENSOR_DESCR.key}"
     )
     assert rolled_number_sensor is not None
     assert rolled_number_sensor.state == str(rolled_number)
 
     battery_level_sensor = hass.states.get(
-        f"sensor.{GODICE_DEVICE_SERVICE_INFO.name}_battery_level"
+        f"sensor.{GODICE_DEVICE_SERVICE_INFO.name}_{BATTERY_SENSOR_DESCR.key}"
     )
     assert battery_level_sensor is not None
     assert battery_level_sensor.state == str(battery_level)
@@ -129,19 +143,26 @@ async def test_reloading_on_connection_lost(hass: HomeAssistant, fake_dice) -> N
     ) as bleak_client, patch(
         "homeassistant.config_entries.ConfigEntries.async_reload",
         return_value=None,
-    ) as mock_reload:
+    ) as mock_reload, patch(
+        "homeassistant.components.bluetooth.async_ble_device_from_address",
+        return_value=GODICE_DEVICE_SERVICE_INFO,
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         disconnect_cb = bleak_client.call_args.kwargs["disconnected_callback"]
 
         # no reloading when disconnected by request
-        hass.data[DOMAIN][config_entry.entry_id]["is_disconnected_by_request"] = True
+        hass.data[DOMAIN][config_entry.entry_id][
+            DATA_DISCONNECTED_BY_REQUEST_FLAG
+        ] = True
         disconnect_cb(None)
         await hass.async_block_till_done()
         mock_reload.assert_not_called()
 
         # reloading when connection is lost
-        hass.data[DOMAIN][config_entry.entry_id]["is_disconnected_by_request"] = False
+        hass.data[DOMAIN][config_entry.entry_id][
+            DATA_DISCONNECTED_BY_REQUEST_FLAG
+        ] = False
         disconnect_cb(None)
         await hass.async_block_till_done()
         mock_reload.assert_called()
