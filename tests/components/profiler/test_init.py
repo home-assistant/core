@@ -129,18 +129,18 @@ async def test_object_growth_logging(
             )
 
         assert "Growth" in caplog.text
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         caplog.clear()
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert "Growth" in caplog.text
 
     await hass.services.async_call(DOMAIN, SERVICE_STOP_LOG_OBJECTS, {}, blocking=True)
     caplog.clear()
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=21))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert "Growth" not in caplog.text
 
     with pytest.raises(HomeAssistantError, match="Object logging not running"):
@@ -152,14 +152,14 @@ async def test_object_growth_logging(
         await hass.services.async_call(
             DOMAIN, SERVICE_START_LOG_OBJECTS, {CONF_SCAN_INTERVAL: 10}, blocking=True
         )
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         caplog.clear()
 
     assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=31))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert "Growth" not in caplog.text
 
 
