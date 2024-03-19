@@ -456,7 +456,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                 )
 
         # Read the Swing mode register if defined
-        if self._swing_mode_register is not None:
+        if self._swing_mode_register:
             swing_mode = await self._async_read_register(
                 CALL_TYPE_REGISTER_HOLDING,
                 self._swing_mode_register
