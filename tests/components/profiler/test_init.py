@@ -129,6 +129,7 @@ async def test_object_growth_logging(
             )
 
         assert "Growth" in caplog.text
+        await hass.async_block_till_done()
         caplog.clear()
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
