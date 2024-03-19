@@ -92,11 +92,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     discovery_responder = pywemo.ssdp.DiscoveryResponder(registry.port)
     await hass.async_add_executor_job(discovery_responder.start)
 
-    async def _on_hass_stop(_: Event) -> None:
-        await hass.async_add_executor_job(discovery_responder.stop)
-        await hass.async_add_executor_job(registry.stop)
+    def _on_hass_stop(_: Event) -> None:
+        discovery_responder.stop()
+        registry.stop()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_hass_stop)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, _on_hass_stop, run_immediately=True
+    )
 
     yaml_config = config.get(DOMAIN, {})
     hass.data[DOMAIN] = WemoData(
