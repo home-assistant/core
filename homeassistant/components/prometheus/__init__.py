@@ -31,6 +31,7 @@ from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES, ATTR_HUMID
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
+    ATTR_AREA_ID,
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -352,6 +353,7 @@ class PrometheusMetrics:
             "entity": state.entity_id,
             "domain": state.domain,
             "friendly_name": state.attributes.get(ATTR_FRIENDLY_NAME),
+            "area": state.attributes.get(ATTR_AREA_ID),
         }
 
     def _battery(self, state: State) -> None:
