@@ -168,7 +168,7 @@ async def _async_get_ws_stream_events(
     partial: bool,
 ) -> tuple[bytes, dt | None]:
     """Async wrapper around _ws_formatted_get_events."""
-    result = await get_instance(hass).async_add_executor_job(
+    return await get_instance(hass).async_add_executor_job(
         _ws_stream_get_events,
         msg_id,
         start_time,
@@ -177,8 +177,6 @@ async def _async_get_ws_stream_events(
         event_processor,
         partial,
     )
-    _LOGGER.warning("Result: %s", result)
-    return result
 
 
 def _generate_stream_message(
