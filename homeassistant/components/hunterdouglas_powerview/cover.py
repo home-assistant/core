@@ -521,6 +521,17 @@ class PowerViewShadeTiltOnly(PowerViewShadeWithTiltBase):
         self._max_tilt = self._shade.shade_limits.tilt_max
 
     @property
+    def current_cover_position(self) -> int:
+        """Return the current position of cover."""
+        # allows using parent class with no other alterations
+        return CLOSED_POSITION
+
+    @property
+    def transition_steps(self) -> int:
+        """Return the steps to make a move."""
+        return self.positions.tilt
+
+    @property
     def is_closed(self) -> bool:
         """Return if the cover is closed."""
         return self.positions.tilt <= CLOSED_POSITION
