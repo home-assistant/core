@@ -776,7 +776,8 @@ class Recorder(threading.Thread):
             # since we want the frontend queries to avoid a thundering
             # herd of queries to find the statistics meta data if
             # there are a lot of statistics graphs on the frontend.
-            if self.schema_version >= STATISTICS_ROWS_SCHEMA_VERSION:
+            schema_version = self.schema_version
+            if schema_version >= STATISTICS_ROWS_SCHEMA_VERSION:
                 self.statistics_meta_manager.load(session)
 
             migration_changes: dict[str, int] = {
@@ -788,20 +789,24 @@ class Recorder(threading.Thread):
                 migration.StatesContextIDMigration,
                 migration.EventsContextIDMigration,
             ):
-                migrator = migrator_cls(self, session, migration_changes)
+                migrator = migrator_cls(session, schema_version, migration_changes)
                 if migrator.needs_migrate():
-                    migrator.run()
+                    self.queue_task(migrator.task())
 
-            migrator = migration.EventTypeIDMigration(self, session, migration_changes)
+            migrator = migration.EventTypeIDMigration(
+                session, schema_version, migration_changes
+            )
             if migrator.needs_migrate():
-                migrator.run()
+                self.queue_task(migrator.task())
             else:
                 _LOGGER.debug("Activating event_types manager as all data is migrated")
                 self.event_type_manager.active = True
 
-            migrator = migration.EntityIDMigration(self, session, migration_changes)
+            migrator = migration.EntityIDMigration(
+                session, schema_version, migration_changes
+            )
             if migrator.needs_migrate():
-                migrator.run()
+                self.queue_task(migrator.task())
             else:
                 _LOGGER.debug("Activating states_meta manager as all data is migrated")
                 self.states_meta_manager.active = True

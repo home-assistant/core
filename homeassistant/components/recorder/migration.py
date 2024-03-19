@@ -1790,10 +1790,10 @@ class BaseMigration(ABC):
     task: Callable[[], RecorderTask]
 
     def __init__(
-        self, recorder: Recorder, session: Session, migration_changes: dict[str, int]
+        self, session: Session, schema_version: int, migration_changes: dict[str, int]
     ) -> None:
         """Initialize a new BaseMigration."""
-        self.recorder = recorder
+        self.schema_version = schema_version
         self.session = session
         self.migration_changes = migration_changes
 
@@ -1801,13 +1801,9 @@ class BaseMigration(ABC):
     def needs_migrate_query(self) -> StatementLambdaElement:
         """Return the query to check if the migration needs to run."""
 
-    def run(self) -> None:
-        """Run the migration."""
-        self.recorder.queue_task(self.task())
-
     def needs_migrate(self) -> bool:
         """Return if the migration needs to run."""
-        if self.recorder.schema_version < self.required_schema_version:
+        if self.schema_version < self.required_schema_version:
             # Schema is too old, we must have to migrate
             return True
         if self.migration_changes.get(self.migration_id, -1) >= self.migration_version:
