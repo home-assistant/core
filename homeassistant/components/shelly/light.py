@@ -126,8 +126,7 @@ def async_setup_rpc_entry(
         async_add_entities(RpcShellyRgbLight(coordinator, id_) for id_ in rgb_key_ids)
         return
 
-    rgbw_key_ids = get_rpc_key_ids(coordinator.device.status, "rgbw")
-    if rgbw_key_ids:
+    if rgbw_key_ids := get_rpc_key_ids(coordinator.device.status, "rgbw"):
         async_add_entities(RpcShellyRgbwLight(coordinator, id_) for id_ in rgbw_key_ids)
 
 
