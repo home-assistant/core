@@ -105,7 +105,6 @@ from .test_util.aiohttp import (  # noqa: E402, isort:skip
     mock_aiohttp_client,
 )
 
-
 _LOGGER = logging.getLogger(__name__)
 
 logging.basicConfig(level=logging.INFO)
@@ -1665,3 +1664,8 @@ def label_registry(hass: HomeAssistant) -> lr.LabelRegistry:
 def snapshot(snapshot: SnapshotAssertion) -> SnapshotAssertion:
     """Return snapshot assertion fixture with the Home Assistant extension."""
     return snapshot.use_extension(HomeAssistantSnapshotExtension)
+
+
+pytest_plugins = [
+    "tests.fixtures.pytest.light",
+]
