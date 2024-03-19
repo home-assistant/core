@@ -37,11 +37,16 @@ async def async_setup_entry(
     data: AugustData = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(AugustLock(data, lock) for lock in data.locks)
 
+class LockEntityFeature(IntFlag):
+    """Supported features of the lock entity."""
+
+    OPEN = 1
 
 class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
     """Representation of an August lock."""
 
     _attr_name = None
+    _attr_supported_features: LockEntityFeature = LockEntityFeature(0)
 
     def __init__(self, data: AugustData, device: Lock) -> None:
         """Initialize the lock."""
@@ -57,6 +62,14 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
             await self._data.async_lock_async(self._device_id, self._hyper_bridge)
             return
         await self._call_lock_operation(self._data.async_lock)
+
+    async def async_open(self, **kwargs: Any) -> None:
+        """Open/unlatch the device."""
+        assert self._data.activity_stream is not None
+        if self._data.activity_stream.pubnub.connected:
+            await self._data.async_unlatch_async(self._device_id, self._hyper_bridge)
+            return
+        await self._call_lock_operation(self._data.async_unlatch)
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
