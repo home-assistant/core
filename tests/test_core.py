@@ -2865,7 +2865,7 @@ async def test_state_changed_events_to_not_leak_contexts(hass: HomeAssistant) ->
     assert len(_get_by_type("homeassistant.core.Context")) == init_count
 
 
-@pytest.mark.parametrize("eager_start", (True, False))
+@pytest.mark.parametrize("eager_start", [True, False])
 async def test_background_task(hass: HomeAssistant, eager_start: bool) -> None:
     """Test background tasks being quit."""
     result = asyncio.Future()
@@ -2936,7 +2936,7 @@ async def test_shutdown_does_not_block_on_shielded_tasks(
     sleep_task.cancel()
 
 
-@pytest.mark.parametrize("eager_start", (True, False))
+@pytest.mark.parametrize("eager_start", [True, False])
 async def test_cancellable_hassjob(hass: HomeAssistant, eager_start: bool) -> None:
     """Simulate a shutdown, ensure cancellable jobs are cancelled."""
     job = MagicMock()

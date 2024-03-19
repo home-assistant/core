@@ -701,7 +701,9 @@ class HomeAssistant:
 
         target: target to call.
         """
-        self.loop.call_soon_threadsafe(self.async_create_task, target, name)
+        self.loop.call_soon_threadsafe(
+            functools.partial(self.async_create_task, target, name, eager_start=True)
+        )
 
     @callback
     def async_create_task(
