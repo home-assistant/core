@@ -318,8 +318,10 @@ async def test_stream_retries(
         # Request stream. Enable retries which are disabled by default in tests.
         should_retry.return_value = True
         await stream.start()
-        stream._thread.join()
-        stream._thread = None
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+        # Let the thread join itself in stop
+        # otherwise we will kill it too soon
         assert av_open.call_count == 2
         await hass.async_block_till_done()
 
