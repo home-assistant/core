@@ -196,7 +196,7 @@ async def test_setup_with_invalid_configs(
 
 @pytest.mark.parametrize(
     ("object_id", "broken_config", "problem", "details"),
-    (
+    [
         (
             "Bad Script",
             {},
@@ -212,7 +212,7 @@ async def test_setup_with_invalid_configs(
                 "reload, toggle, turn_off, turn_on. Got 'turn_on'"
             ),
         ),
-    ),
+    ],
 )
 async def test_bad_config_validation_critical(
     hass: HomeAssistant,
@@ -252,7 +252,7 @@ async def test_bad_config_validation_critical(
 
 @pytest.mark.parametrize(
     ("object_id", "broken_config", "problem", "details"),
-    (
+    [
         (
             "bad_script",
             {},
@@ -272,7 +272,7 @@ async def test_bad_config_validation_critical(
             "failed to setup actions",
             "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd.",
         ),
-    ),
+    ],
 )
 async def test_bad_config_validation(
     hass: HomeAssistant,
@@ -424,7 +424,7 @@ async def test_reload_unchanged_does_not_stop(hass: HomeAssistant, calls) -> Non
 
 @pytest.mark.parametrize(
     "script_config",
-    (
+    [
         {
             "test": {
                 "sequence": [{"service": "test.script"}],
@@ -458,7 +458,7 @@ async def test_reload_unchanged_does_not_stop(hass: HomeAssistant, calls) -> Non
                 }
             }
         },
-    ),
+    ],
 )
 async def test_reload_unchanged_script(
     hass: HomeAssistant, calls, script_config
@@ -1182,12 +1182,12 @@ async def test_script_restore_last_triggered(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("script_mode", "warning_msg"),
-    (
+    [
         (SCRIPT_MODE_PARALLEL, "Maximum number of runs exceeded"),
         (SCRIPT_MODE_QUEUED, "Disallowed recursion detected"),
         (SCRIPT_MODE_RESTART, "Disallowed recursion detected"),
         (SCRIPT_MODE_SINGLE, "Already running"),
-    ),
+    ],
 )
 async def test_recursive_script(
     hass: HomeAssistant, script_mode, warning_msg, caplog: pytest.LogCaptureFixture
@@ -1232,12 +1232,12 @@ async def test_recursive_script(
 
 @pytest.mark.parametrize(
     ("script_mode", "warning_msg"),
-    (
+    [
         (SCRIPT_MODE_PARALLEL, "Maximum number of runs exceeded"),
         (SCRIPT_MODE_QUEUED, "Disallowed recursion detected"),
         (SCRIPT_MODE_RESTART, "Disallowed recursion detected"),
         (SCRIPT_MODE_SINGLE, "Already running"),
-    ),
+    ],
 )
 async def test_recursive_script_indirect(
     hass: HomeAssistant, script_mode, warning_msg, caplog: pytest.LogCaptureFixture
@@ -1539,7 +1539,7 @@ async def test_blueprint_automation(hass: HomeAssistant, calls) -> None:
 
 @pytest.mark.parametrize(
     ("blueprint_inputs", "problem", "details"),
-    (
+    [
         (
             # No input
             {},
@@ -1562,7 +1562,7 @@ async def test_blueprint_automation(hass: HomeAssistant, calls) -> None:
             "Blueprint 'Call service' generated invalid script",
             "value should be a string for dictionary value @ data['sequence'][0]['service']",
         ),
-    ),
+    ],
 )
 async def test_blueprint_script_bad_config(
     hass: HomeAssistant,
@@ -1621,7 +1621,7 @@ async def test_blueprint_script_fails_substitution(
     )
 
 
-@pytest.mark.parametrize("response", ({"value": 5}, '{"value": 5}'))
+@pytest.mark.parametrize("response", [{"value": 5}, '{"value": 5}'])
 async def test_responses(hass: HomeAssistant, response: Any) -> None:
     """Test we can get responses."""
     mock_restore_cache(hass, ())
