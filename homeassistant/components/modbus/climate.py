@@ -225,6 +225,8 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             self._attr_fan_mode = FAN_AUTO
             self._attr_fan_modes = [FAN_AUTO]
 
+        # No SWING modes defined
+        self._swing_mode_register = None
         if CONF_SWING_MODE_REGISTER in config:
             self._attr_supported_features = (
                 self._attr_supported_features | ClimateEntityFeature.SWING_MODE
@@ -233,8 +235,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             self._swing_mode_register = mode_config[CONF_ADDRESS]
             self._attr_swing_modes = cast(list[str], [])
             self._attr_swing_mode = None
-            self._swing_mode_mapping_to_modbus: dict[str, int] = {}
-            self._swing_mode_mapping_from_modbus: dict[int, str] = {}
+            self._swing_mode_modbus_mapping: list[tuple[int, str]] = []
             mode_value_config = mode_config[CONF_SWING_MODE_VALUES]
             for swing_mode_kw, swing_mode in (
                 (CONF_SWING_MODE_SWING_ON, SWING_ON),
@@ -245,15 +246,8 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             ):
                 if swing_mode_kw in mode_value_config:
                     value = mode_value_config[swing_mode_kw]
-                    self._swing_mode_mapping_from_modbus[value] = swing_mode
-                    self._swing_mode_mapping_to_modbus[swing_mode] = value
+                    self._swing_mode_modbus_mapping.append((value, swing_mode))
                     self._attr_swing_modes.append(swing_mode)
-
-        else:
-            # No SWING modes defined
-            self._swing_mode_register = None
-            self._attr_swing_mode = SWING_OFF
-            self._attr_swing_modes = [SWING_OFF]
 
         if CONF_HVAC_ONOFF_REGISTER in config:
             self._hvac_onoff_register = config[CONF_HVAC_ONOFF_REGISTER]
@@ -337,22 +331,23 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         """Set new target swing mode."""
         if self._swing_mode_register:
             # Write a value to the mode register for the desired mode.
-            value = self._swing_mode_mapping_to_modbus[swing_mode]
-            if isinstance(self._swing_mode_register, list):
-                await self._hub.async_pb_call(
-                    self._slave,
-                    self._swing_mode_register[0],
-                    [value],
-                    CALL_TYPE_WRITE_REGISTERS,
-                )
-            else:
-                await self._hub.async_pb_call(
-                    self._slave,
-                    self._swing_mode_register,
-                    value,
-                    CALL_TYPE_WRITE_REGISTER,
-                )
-
+            for value, smode in self._swing_mode_modbus_mapping:
+                if swing_mode == smode:
+                    if isinstance(self._swing_mode_register, list):
+                        await self._hub.async_pb_call(
+                            self._slave,
+                            self._swing_mode_register[0],
+                            [value],
+                            CALL_TYPE_WRITE_REGISTERS,
+                        )
+                    else:
+                        await self._hub.async_pb_call(
+                            self._slave,
+                            self._swing_mode_register,
+                            value,
+                            CALL_TYPE_WRITE_REGISTER,
+                        )
+                    break
         await self.async_update()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -465,12 +460,13 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                 raw=True,
             )
 
-            if swing_mode in self._swing_mode_mapping_from_modbus:
-                self._attr_swing_mode = self._swing_mode_mapping_from_modbus.get(
-                    int(swing_mode)
-                )
-            else:
-                self._attr_swing_mode = STATE_UNKNOWN
+            self._attr_swing_mode = STATE_UNKNOWN
+            for value, smode in self._swing_mode_modbus_mapping:
+                if swing_mode == value:
+                    self._attr_swing_mode = smode
+                    break
+
+            if self._attr_swing_mode is STATE_UNKNOWN:
                 _err = f"{self.name}: No answer received from Swing mode register. State is Unknown"
                 _LOGGER.error(_err)
 
