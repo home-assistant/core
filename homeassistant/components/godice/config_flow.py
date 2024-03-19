@@ -12,8 +12,6 @@ from .const import DOMAIN
 class GoDiceConfigFlow(ConfigFlow, domain=DOMAIN):
     """Setup GoDice discovered via Bluetooth."""
 
-    VERSION = 1
-
     def __init__(self) -> None:
         """Declare fields used later on device discovery."""
         self._discovery_info: BluetoothServiceInfo | None = None

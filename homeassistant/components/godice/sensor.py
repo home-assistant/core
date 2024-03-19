@@ -2,7 +2,7 @@
 
 import logging
 
-from godice import Color as DiceColor
+import godice
 
 from homeassistant import const
 from homeassistant.components.sensor import (
@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_DEVICE, DATA_DEVICE_INFO, DOMAIN
@@ -27,7 +28,7 @@ ROLLED_NUMBER_SENSOR_DESCR = SensorEntityDescription(
 COLOR_SENSOR_DESCR = SensorEntityDescription(
     key="color",
     device_class=SensorDeviceClass.ENUM,
-    options=[color.name for color in DiceColor],
+    options=[color.name for color in godice.Color],
 )
 BATTERY_SENSOR_DESCR = SensorEntityDescription(
     key="battery_level",
@@ -63,7 +64,9 @@ class BaseSensor(SensorEntity):
     _attr_should_poll = False
     _attr_has_entity_name = True
 
-    def __init__(self, entity_description, device_info) -> None:
+    def __init__(
+        self, entity_description: SensorEntityDescription, device_info: DeviceInfo
+    ) -> None:
         """Set default values."""
         self.entity_description = entity_description
         self._attr_device_info = device_info
@@ -76,10 +79,11 @@ class BaseSensor(SensorEntity):
 class DiceColorSensor(RestoreSensor, BaseSensor):
     """Represents color of a dice (dots)."""
 
-    def __init__(self, device_info, device) -> None:
+    dice: godice.Dice
+
+    def __init__(self, device_info: DeviceInfo, device: godice.Dice) -> None:
         """Set default values."""
-        descr = COLOR_SENSOR_DESCR
-        super().__init__(descr, device_info)
+        super().__init__(COLOR_SENSOR_DESCR, device_info)
         self.dice = device
 
     async def async_added_to_hass(self) -> None:
@@ -96,11 +100,11 @@ class BatteryLevelSensor(BaseSensor):
     """Represents battery level."""
 
     _attr_should_poll = True
+    dice: godice.Dice
 
-    def __init__(self, device_info, device) -> None:
+    def __init__(self, device_info: DeviceInfo, device: godice.Dice) -> None:
         """Set default values."""
-        descr = BATTERY_SENSOR_DESCR
-        super().__init__(descr, device_info)
+        super().__init__(BATTERY_SENSOR_DESCR, device_info)
         self.dice = device
 
     async def async_update(self) -> None:
@@ -112,17 +116,20 @@ class BatteryLevelSensor(BaseSensor):
 class DiceNumberSensor(BaseSensor):
     """Represents the rolled dice number."""
 
-    def __init__(self, device_info, device) -> None:
+    dice: godice.Dice
+
+    def __init__(self, device_info: DeviceInfo, device: godice.Dice) -> None:
         """Set default values."""
-        descr = ROLLED_NUMBER_SENSOR_DESCR
-        super().__init__(descr, device_info)
+        super().__init__(ROLLED_NUMBER_SENSOR_DESCR, device_info)
         self.dice = device
 
     async def async_added_to_hass(self) -> None:
         """Subscribe on rolled number events."""
         await self.dice.subscribe_number_notification(self._handle_upd)
 
-    async def _handle_upd(self, number, _stability_descr):
+    async def _handle_upd(
+        self, number: int, _stability_descr: godice.StabilityDescriptor
+    ) -> None:
         """Handle a rolled number event, update the sensor."""
         _LOGGER.debug("Number update: %s", number)
         self._attr_native_value = number
