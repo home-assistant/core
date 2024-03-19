@@ -466,7 +466,7 @@ def _async_get_translations_cache(hass: HomeAssistant) -> _TranslationCache:
     return cache
 
 
-_DIRECT_MAPPED_CATEGORIES = {"state", "entity_component", "exceptions", "services"}
+_DIRECT_MAPPED_CATEGORIES = {"state", "entity_component", "services"}
 
 
 @callback
