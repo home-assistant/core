@@ -8,12 +8,13 @@ from epicstore_api import EpicGamesStoreAPI
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_LANGUAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import LanguageSelector, LanguageSelectorConfig
 
-from .const import CONF_LANGUAGE, CONF_SUPPORTED_LANGUAGES, DOMAIN
+from .const import CONF_SUPPORTED_LANGUAGES, DOMAIN
 from .helper import get_country_from_language
 
 _LOGGER = logging.getLogger(__name__)

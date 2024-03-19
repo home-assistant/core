@@ -9,10 +9,11 @@ from typing import Any
 from epicstore_api import EpicGamesStoreAPI
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_LANGUAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_LANGUAGE, DOMAIN
+from .const import DOMAIN
 from .helper import format_game_data, get_country_from_language
 
 SCAN_INTERVAL = timedelta(days=1)

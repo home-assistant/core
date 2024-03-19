@@ -2,8 +2,6 @@
 
 DOMAIN = "epic_games_store"
 
-CONF_LANGUAGE = "language"
-
 CONF_SUPPORTED_LANGUAGES = [
     "ar",
     "de",
