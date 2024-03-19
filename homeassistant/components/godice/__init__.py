@@ -37,13 +37,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if not is_disconnected_by_request:
             hass.create_task(hass.config_entries.async_reload(entry.entry_id))
 
-    ble_device = bluetooth.async_ble_device_from_address(hass, entry.data[CONF_ADDRESS])
-    assert ble_device is not None
-    client = bleak.BleakClient(
-        ble_device, timeout=20, disconnected_callback=on_disconnect_callback
-    )
-    dice = godice.create(client, godice.Shell.D6)
     try:
+        ble_device = bluetooth.async_ble_device_from_address(
+            hass, entry.data[CONF_ADDRESS]
+        )
+        assert ble_device is not None
+        client = bleak.BleakClient(
+            ble_device, timeout=20, disconnected_callback=on_disconnect_callback
+        )
+        dice = godice.create(client, godice.Shell.D6)
         await dice.connect()
         await dice.pulse_led(
             pulse_count=2, on_time_ms=50, off_time_ms=20, rgb_tuple=(0, 255, 0)
