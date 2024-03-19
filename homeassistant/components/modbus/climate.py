@@ -335,7 +335,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing mode."""
-        if self._swing_mode_register is not None:
+        if self._swing_mode_register:
             # Write a value to the mode register for the desired mode.
             value = self._swing_mode_mapping_to_modbus[swing_mode]
             if isinstance(self._swing_mode_register, list):
