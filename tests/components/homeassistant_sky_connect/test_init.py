@@ -1,4 +1,5 @@
 """Test the Home Assistant SkyConnect integration."""
+
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
@@ -52,7 +53,7 @@ def mock_zha_config_flow_setup() -> Generator[None, None, None]:
 
 
 @pytest.mark.parametrize(
-    ("onboarded", "num_entries", "num_flows"), ((False, 1, 0), (True, 0, 1))
+    ("onboarded", "num_entries", "num_flows"), [(False, 1, 0), (True, 0, 1)]
 )
 async def test_setup_entry(
     mock_zha_config_flow_setup,

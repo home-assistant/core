@@ -1,4 +1,5 @@
 """Support for August devices."""
+
 from __future__ import annotations
 
 import asyncio
@@ -249,10 +250,11 @@ class AugustData(AugustSubscriberMixin):
         device = self.get_device_detail(device_id)
         activities = activities_from_pubnub_message(device, date_time, message)
         activity_stream = self.activity_stream
-        if activities:
-            activity_stream.async_process_newer_device_activities(activities)
+        if activities and activity_stream.async_process_newer_device_activities(
+            activities
+        ):
             self.async_signal_device_id_update(device.device_id)
-        activity_stream.async_schedule_house_id_refresh(device.house_id)
+            activity_stream.async_schedule_house_id_refresh(device.house_id)
 
     @callback
     def async_stop(self) -> None:
@@ -303,6 +305,13 @@ class AugustData(AugustSubscriberMixin):
                     device_id,
                     exc_info=err,
                 )
+
+    async def refresh_camera_by_id(self, device_id: str) -> None:
+        """Re-fetch doorbell/camera data from API."""
+        await self._async_update_device_detail(
+            self._doorbells_by_id[device_id],
+            self._api.async_get_doorbell_detail,
+        )
 
     async def _async_refresh_device_detail_by_id(self, device_id: str) -> None:
         if device_id in self._locks_by_id:

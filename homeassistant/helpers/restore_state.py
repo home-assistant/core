@@ -1,4 +1,5 @@
 """Support for restoring entity states on startup."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -143,7 +144,8 @@ class RestoreStateData:
         """Set up up the instance of this data helper."""
         await self.async_load()
 
-        async def hass_start(hass: HomeAssistant) -> None:
+        @callback
+        def hass_start(hass: HomeAssistant) -> None:
             """Start the restore state task."""
             self.async_setup_dump()
 
@@ -251,7 +253,7 @@ class RestoreStateData:
 
         # Dump states when stopping hass
         self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, _async_dump_states_at_stop
+            EVENT_HOMEASSISTANT_STOP, _async_dump_states_at_stop, run_immediately=True
         )
 
     @callback

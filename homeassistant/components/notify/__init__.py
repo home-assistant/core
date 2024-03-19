@@ -1,7 +1,6 @@
 """Provides functionality to notify people."""
-from __future__ import annotations
 
-import asyncio
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -42,19 +41,14 @@ PLATFORM_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the notify services."""
 
-    platform_setups = async_setup_legacy(hass, config)
-
-    # We need to add the component here break the deadlock
-    # when setting up integrations from config entries as
-    # they would otherwise wait for notify to be
-    # setup and thus the config entries would not be able to
-    # setup their platforms, but we need to do it after
-    # the dispatcher is connected so we don't miss integrations
-    # that are registered before the dispatcher is connected
-    hass.config.components.add(DOMAIN)
-
-    if platform_setups:
-        await asyncio.wait([asyncio.create_task(setup) for setup in platform_setups])
+    for setup in async_setup_legacy(hass, config):
+        # Tasks are created as tracked tasks to ensure startup
+        # waits for them to finish, but we explicitly do not
+        # want to wait for them to finish here because we want
+        # any config entries that use notify as a base platform
+        # to be able to start with out having to wait for the
+        # legacy platforms to finish setting up.
+        hass.async_create_task(setup, eager_start=True)
 
     async def persistent_notification(service: ServiceCall) -> None:
         """Send notification via the built-in persistent_notify integration."""

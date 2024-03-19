@@ -1,6 +1,6 @@
 """Ecovacs image entities."""
 
-from deebot_client.capabilities import CapabilityMap
+from deebot_client.capabilities import CapabilityMap, VacuumCapabilities
 from deebot_client.device import Device
 from deebot_client.events.map import CachedMapInfoEvent, MapChangedEvent
 
@@ -23,8 +23,9 @@ async def async_setup_entry(
     """Add entities for passed config_entry in HA."""
     controller: EcovacsController = hass.data[DOMAIN][config_entry.entry_id]
     entities = []
-    for device in controller.devices:
-        if caps := device.capabilities.map:
+    for device in controller.devices(VacuumCapabilities):
+        capabilities: VacuumCapabilities = device.capabilities
+        if caps := capabilities.map:
             entities.append(EcovacsMap(device, caps, hass))
 
     if entities:
@@ -32,7 +33,7 @@ async def async_setup_entry(
 
 
 class EcovacsMap(
-    EcovacsEntity[CapabilityMap],
+    EcovacsEntity[VacuumCapabilities, CapabilityMap],
     ImageEntity,
 ):
     """Ecovacs map."""
@@ -72,7 +73,7 @@ class EcovacsMap(
             self._attr_image_last_updated = event.when
             self.async_write_ha_state()
 
-        self._subscribe(self._capability.chached_info.event, on_info)
+        self._subscribe(self._capability.cached_info.event, on_info)
         self._subscribe(self._capability.changed.event, on_changed)
 
     async def async_update(self) -> None:

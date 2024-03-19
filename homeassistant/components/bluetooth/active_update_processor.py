@@ -2,6 +2,7 @@
 
 Collects data from advertisements but can also poll.
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -91,6 +92,7 @@ class ActiveBluetoothProcessorCoordinator(
                 cooldown=POLL_DEFAULT_COOLDOWN,
                 immediate=POLL_DEFAULT_IMMEDIATE,
                 function=self._async_poll,
+                background=True,
             )
         else:
             poll_debouncer.function = self._async_poll
@@ -157,7 +159,7 @@ class ActiveBluetoothProcessorCoordinator(
         # We use bluetooth events to trigger the poll so that we scan as soon as
         # possible after a device comes online or back in range, if a poll is due
         if self.needs_poll(service_info):
-            self.hass.async_create_task(self._debounced_poll.async_call())
+            self._debounced_poll.async_schedule_call()
 
     @callback
     def _async_stop(self) -> None:

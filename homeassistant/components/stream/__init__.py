@@ -14,6 +14,7 @@ are no active output formats, the background worker is shut down and access
 tokens are expired. Alternatively, a Stream can be configured with keepalive
 to always keep workers active.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -34,6 +35,8 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.setup import SetupPhases, async_pause_setup
+from homeassistant.util.async_ import create_eager_task
 
 from .const import (
     ATTR_ENDPOINTS,
@@ -188,32 +191,39 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-@callback
-def update_pyav_logging(_event: Event | None = None) -> None:
-    """Adjust libav logging to only log when the stream logger is at DEBUG."""
+def set_pyav_logging(enable: bool) -> None:
+    """Turn PyAV logging on or off."""
+    import av  # pylint: disable=import-outside-toplevel
 
-    def set_pyav_logging(enable: bool) -> None:
-        """Turn PyAV logging on or off."""
-        import av  # pylint: disable=import-outside-toplevel
-
-        av.logging.set_level(av.logging.VERBOSE if enable else av.logging.FATAL)
-
-    # enable PyAV logging iff Stream logger is set to debug
-    set_pyav_logging(logging.getLogger(__name__).isEnabledFor(logging.DEBUG))
+    av.logging.set_level(av.logging.VERBOSE if enable else av.logging.FATAL)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up stream."""
+    debug_enabled = _LOGGER.isEnabledFor(logging.DEBUG)
+
+    @callback
+    def update_pyav_logging(_event: Event | None = None) -> None:
+        """Adjust libav logging to only log when the stream logger is at DEBUG."""
+        nonlocal debug_enabled
+        if (new_debug_enabled := _LOGGER.isEnabledFor(logging.DEBUG)) == debug_enabled:
+            return
+        debug_enabled = new_debug_enabled
+        # enable PyAV logging iff Stream logger is set to debug
+        set_pyav_logging(new_debug_enabled)
 
     # Only pass through PyAV log messages if stream logging is above DEBUG
     cancel_logging_listener = hass.bus.async_listen(
-        EVENT_LOGGING_CHANGED, update_pyav_logging
+        EVENT_LOGGING_CHANGED, update_pyav_logging, run_immediately=True
     )
     # libav.mp4 and libav.swscaler have a few unimportant messages that are logged
     # at logging.WARNING. Set those Logger levels to logging.ERROR
     for logging_namespace in ("libav.mp4", "libav.swscaler"):
         logging.getLogger(logging_namespace).setLevel(logging.ERROR)
-    update_pyav_logging()
+
+    # This will load av so we run it in the executor
+    with async_pause_setup(hass, SetupPhases.WAIT_IMPORT_PACKAGES):
+        await hass.async_add_executor_job(set_pyav_logging, debug_enabled)
 
     # Keep import here so that we can import stream integration without installing reqs
     # pylint: disable-next=import-outside-toplevel
@@ -249,14 +259,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         for stream in hass.data[DOMAIN][ATTR_STREAMS]:
             stream.dynamic_stream_settings.preload_stream = False
         if awaitables := [
-            asyncio.create_task(stream.stop())
+            create_eager_task(stream.stop())
             for stream in hass.data[DOMAIN][ATTR_STREAMS]
         ]:
             await asyncio.wait(awaitables)
         _LOGGER.debug("Stopped stream workers")
         cancel_logging_listener()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown, run_immediately=True)
 
     return True
 

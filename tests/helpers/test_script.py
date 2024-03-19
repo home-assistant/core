@@ -1,4 +1,5 @@
 """The tests for the Script component."""
+
 import asyncio
 from contextlib import contextmanager
 from datetime import timedelta
@@ -3440,7 +3441,8 @@ async def test_parallel_loop(
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
     hass.async_create_task(
-        script_obj.async_run(MappingProxyType({"what": "world"}), Context())
+        script_obj.async_run(MappingProxyType({"what": "world"}), Context()),
+        eager_start=True,
     )
     await hass.async_block_till_done()
 
@@ -3455,7 +3457,6 @@ async def test_parallel_loop(
     expected_trace = {
         "0": [{"variables": {"what": "world"}}],
         "0/parallel/0/sequence/0": [{}],
-        "0/parallel/1/sequence/0": [{}],
         "0/parallel/0/sequence/0/repeat/sequence/0": [
             {
                 "variables": {
@@ -3491,6 +3492,7 @@ async def test_parallel_loop(
                 "result": {"event": "loop1", "event_data": {"hello1": "loop1_c"}},
             },
         ],
+        "0/parallel/1/sequence/0": [{}],
         "0/parallel/1/sequence/0/repeat/sequence/0": [
             {
                 "variables": {
@@ -4117,7 +4119,9 @@ async def test_max_exceeded(
         )
     hass.states.async_set("switch.test", "on")
     for _ in range(max_runs + 1):
-        hass.async_create_task(script_obj.async_run(context=Context()))
+        hass.async_create_task(
+            script_obj.async_run(context=Context()), eager_start=True
+        )
     hass.states.async_set("switch.test", "off")
     await hass.async_block_till_done()
     if max_exceeded is None:
@@ -4343,7 +4347,7 @@ async def test_script_mode_queued_cancel(hass: HomeAssistant) -> None:
             await task2
 
         assert script_obj.is_running
-        assert script_obj.runs == 1
+        assert script_obj.runs == 2
 
         with pytest.raises(asyncio.CancelledError):
             task1.cancel()
@@ -4633,7 +4637,7 @@ async def test_validate_action_config(
     """Validate action config."""
 
     config_entry = MockConfigEntry(domain="fake_integration", data={})
-    config_entry.state = config_entries.ConfigEntryState.LOADED
+    config_entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
     config_entry.add_to_hass(hass)
 
     mock_device = device_registry.async_get_or_create(
@@ -5016,10 +5020,10 @@ async def test_stop_action(
 
 @pytest.mark.parametrize(
     ("error", "error_dict", "logmsg", "script_execution"),
-    (
+    [
         (True, {"error": "In the name of love"}, "Error", "aborted"),
         (False, {}, "Stop", "finished"),
-    ),
+    ],
 )
 async def test_stop_action_subscript(
     hass: HomeAssistant,
@@ -5620,3 +5624,20 @@ async def test_conversation_response_not_set_subscript_if(
         "1/if/condition/0": [{"result": {"result": var == 1, "entities": []}}],
     }
     assert_action_trace(expected_trace)
+
+
+async def test_stopping_run_before_starting(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test stopping a script run before its started."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"wait_template": "{{ 'on' == 'off' }}"},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+    # Tested directly because we are checking for a race in the internals
+    # where the script is stopped before it is started. Previously this
+    # would hang indefinitely.
+    run = script._ScriptRun(hass, script_obj, {}, None, True)
+    await run.async_stop()

@@ -1,4 +1,5 @@
 """Test D-Link Smart Plug config flow."""
+
 from unittest.mock import MagicMock, patch
 
 from homeassistant import data_entry_flow
@@ -152,7 +153,7 @@ async def test_dhcp_already_configured(
 
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert config_entry.unique_id == "aa:bb:cc:dd:ee:ff"
+    assert config_entry.unique_id == "aabbccddeeff"
 
 
 async def test_dhcp_unique_id_assignment(

@@ -1,4 +1,5 @@
 """The tests for the Monoprice Blackbird media player platform."""
+
 from collections import defaultdict
 from unittest import mock
 
@@ -175,7 +176,7 @@ async def setup_blackbird(hass, mock_blackbird):
     """Set up blackbird."""
     with mock.patch(
         "homeassistant.components.blackbird.media_player.get_blackbird",
-        new=lambda *a: mock_blackbird,
+        return_value=mock_blackbird,
     ):
         await hass.async_add_executor_job(
             setup_platform,

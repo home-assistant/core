@@ -1,4 +1,5 @@
 """Base entity definitions."""
+
 from typing import Generic, TypeVar
 
 from tplink_omada_client.devices import OmadaDevice

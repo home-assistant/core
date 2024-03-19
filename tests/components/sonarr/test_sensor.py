@@ -1,4 +1,5 @@
 """Tests for the Sonarr sensor platform."""
+
 from datetime import timedelta
 from unittest.mock import MagicMock
 
@@ -8,7 +9,6 @@ import pytest
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
-    ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
     UnitOfInformation,
@@ -50,41 +50,35 @@ async def test_sensors(
 
     state = hass.states.get("sensor.sonarr_commands")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:code-braces"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Commands"
     assert state.state == "2"
 
     state = hass.states.get("sensor.sonarr_disk_space")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:harddisk"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfInformation.GIGABYTES
     assert state.attributes.get("C:\\") == "263.10/465.42GB (56.53%)"
     assert state.state == "263.10"
 
     state = hass.states.get("sensor.sonarr_queue")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:download"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Episodes"
     assert state.attributes.get("The Andy Griffith Show S01E01") == "100.00%"
     assert state.state == "1"
 
     state = hass.states.get("sensor.sonarr_shows")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:television"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Series"
     assert state.attributes.get("The Andy Griffith Show") == "0/0 Episodes"
     assert state.state == "1"
 
     state = hass.states.get("sensor.sonarr_upcoming")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:television"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Episodes"
     assert state.attributes.get("Bob's Burgers") == "S04E11"
     assert state.state == "1"
 
     state = hass.states.get("sensor.sonarr_wanted")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:television"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Episodes"
     assert state.attributes.get("Bob's Burgers S04E11") == "2014-01-26T17:30:00-08:00"
     assert (
@@ -96,13 +90,13 @@ async def test_sensors(
 
 @pytest.mark.parametrize(
     "entity_id",
-    (
+    [
         "sensor.sonarr_commands",
         "sensor.sonarr_disk_space",
         "sensor.sonarr_queue",
         "sensor.sonarr_shows",
         "sensor.sonarr_wanted",
-    ),
+    ],
 )
 async def test_disabled_by_default_sensors(
     hass: HomeAssistant,

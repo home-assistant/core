@@ -1,4 +1,5 @@
 """The tests for the Template fan platform."""
+
 import pytest
 import voluptuous as vol
 
@@ -85,20 +86,6 @@ async def test_missing_optional_config(hass: HomeAssistant, start_ha) -> None:
                         "test_fan": {
                             "value_template": "{{ 'on' }}",
                             "turn_off": {"service": "script.fan_off"},
-                        }
-                    },
-                },
-            }
-        },
-        {
-            DOMAIN: {
-                "platform": "template",
-                "fans": {
-                    "platform": "template",
-                    "fans": {
-                        "test_fan": {
-                            "value_template": "{{ 'on' }}",
-                            "turn_on": {"service": "script.fan_on"},
                         }
                     },
                 },
@@ -403,17 +390,17 @@ async def test_invalid_availability_template_keeps_component_available(
 async def test_on_off(hass: HomeAssistant, calls) -> None:
     """Test turn on and turn off."""
     await _register_components(hass)
-    expected_calls = 0
 
-    for func, state, action in [
-        (common.async_turn_on, STATE_ON, "turn_on"),
-        (common.async_turn_off, STATE_OFF, "turn_off"),
-    ]:
+    for expected_calls, (func, state, action) in enumerate(
+        [
+            (common.async_turn_on, STATE_ON, "turn_on"),
+            (common.async_turn_off, STATE_OFF, "turn_off"),
+        ]
+    ):
         await func(hass, _TEST_FAN)
         assert hass.states.get(_STATE_INPUT_BOOLEAN).state == state
         _verify(hass, state, 0, None, None, None)
-        expected_calls += 1
-        assert len(calls) == expected_calls
+        assert len(calls) == expected_calls + 1
         assert calls[-1].data["action"] == action
         assert calls[-1].data["caller"] == _TEST_FAN
 
@@ -427,6 +414,7 @@ async def test_set_invalid_direction_from_initial_stage(
     await common.async_turn_on(hass, _TEST_FAN)
 
     await common.async_set_direction(hass, _TEST_FAN, "invalid")
+
     assert hass.states.get(_DIRECTION_INPUT_SELECT).state == ""
     _verify(hass, STATE_ON, 0, None, None, None)
 

@@ -1,4 +1,5 @@
 """Test switch of NextDNS integration."""
+
 from datetime import timedelta
 from unittest.mock import Mock, patch
 

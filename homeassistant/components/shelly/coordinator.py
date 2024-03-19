@@ -1,4 +1,5 @@
 """Coordinators for the Shelly integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -178,7 +179,9 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
             self.async_add_listener(self._async_device_updates_handler)
         )
         entry.async_on_unload(
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
+            hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop, run_immediately=True
+            )
         )
 
     @callback
@@ -216,7 +219,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         # Check for input events and config change
         cfg_changed = 0
         for block in self.device.blocks:
-            if block.type == "device":
+            if block.type == "device" and block.cfgChanged is not None:
                 cfg_changed = block.cfgChanged
 
             # Shelly TRV sends information about changing the configuration for no
@@ -279,7 +282,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
                 self.name,
                 ENTRY_RELOAD_COOLDOWN,
             )
-            self.hass.async_create_task(self._debounced_reload.async_call())
+            self._debounced_reload.async_schedule_call()
         self._last_cfg_changed = cfg_changed
 
     async def _async_update_data(self) -> None:
@@ -407,7 +410,9 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self._input_event_listeners: list[Callable[[dict[str, Any]], None]] = []
 
         entry.async_on_unload(
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
+            hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop, run_immediately=True
+            )
         )
         entry.async_on_unload(entry.add_update_listener(self._async_update_listener))
 
@@ -496,7 +501,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
                     self.name,
                     ENTRY_RELOAD_COOLDOWN,
                 )
-                self.hass.async_create_task(self._debounced_reload.async_call())
+                self._debounced_reload.async_schedule_call()
             elif event_type in RPC_INPUTS_EVENTS_TYPES:
                 for event_callback in self._input_event_listeners:
                     event_callback(event)
@@ -602,10 +607,10 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
     ) -> None:
         """Handle device update."""
         if update_type is RpcUpdateType.INITIALIZED:
-            self.hass.async_create_task(self._async_connected())
+            self.hass.async_create_task(self._async_connected(), eager_start=True)
             self.async_set_updated_data(None)
         elif update_type is RpcUpdateType.DISCONNECTED:
-            self.hass.async_create_task(self._async_disconnected())
+            self.hass.async_create_task(self._async_disconnected(), eager_start=True)
         elif update_type is RpcUpdateType.STATUS:
             self.async_set_updated_data(None)
             if self.sleep_period:
@@ -619,7 +624,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self.device.subscribe_updates(self._async_handle_update)
         if self.device.initialized:
             # If we are already initialized, we are connected
-            self.hass.async_create_task(self._async_connected())
+            self.hass.async_create_task(self._async_connected(), eager_start=True)
 
     async def shutdown(self) -> None:
         """Shutdown the coordinator."""
@@ -701,4 +706,4 @@ async def async_reconnect_soon(hass: HomeAssistant, entry: ConfigEntry) -> None:
         and (entry_data := get_entry_data(hass).get(entry.entry_id))
         and (coordinator := entry_data.rpc)
     ):
-        hass.async_create_task(coordinator.async_request_refresh())
+        hass.async_create_task(coordinator.async_request_refresh(), eager_start=True)

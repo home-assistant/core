@@ -1,4 +1,5 @@
 """Support for Ecobee Thermostats."""
+
 from __future__ import annotations
 
 import collections
@@ -708,7 +709,7 @@ class Thermostat(ClimateEntity):
 
     def set_humidity(self, humidity: int) -> None:
         """Set the humidity level."""
-        if humidity not in range(0, 101):
+        if humidity not in range(101):
             raise ValueError(
                 f"Invalid set_humidity value (must be in range 0-100): {humidity}"
             )

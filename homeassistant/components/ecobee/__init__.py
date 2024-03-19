@@ -1,4 +1,5 @@
 """Support for ecobee."""
+
 from datetime import timedelta
 
 from pyecobee import ECOBEE_API_KEY, ECOBEE_REFRESH_TOKEN, Ecobee, ExpiredTokenError

@@ -1,6 +1,9 @@
 """Test Cloud preferences."""
+
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import ANY, patch
+
+import pytest
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components.cloud.prefs import STORAGE_KEY, CloudPreferences
@@ -23,8 +26,34 @@ async def test_set_username(hass: HomeAssistant) -> None:
     assert prefs.google_enabled
 
 
+async def test_erase_config(hass: HomeAssistant) -> None:
+    """Test erasing config."""
+    prefs = CloudPreferences(hass)
+    await prefs.async_initialize()
+    assert prefs._prefs == {
+        **prefs._empty_config(""),
+        "google_local_webhook_id": ANY,
+        "instance_id": ANY,
+    }
+
+    await prefs.async_update(google_enabled=False)
+    assert prefs._prefs == {
+        **prefs._empty_config(""),
+        "google_enabled": False,
+        "google_local_webhook_id": ANY,
+        "instance_id": ANY,
+    }
+
+    await prefs.async_erase_config()
+    assert prefs._prefs == {
+        **prefs._empty_config(""),
+        "google_local_webhook_id": ANY,
+        "instance_id": ANY,
+    }
+
+
 async def test_set_username_migration(hass: HomeAssistant) -> None:
-    """Test we not clear config if we had no username."""
+    """Test we do not clear config if we had no username."""
     prefs = CloudPreferences(hass)
 
     with patch.object(prefs, "_empty_config", return_value=prefs._empty_config(None)):
@@ -98,3 +127,25 @@ async def test_setup_remove_cloud_user(
     assert cloud_user2
     assert cloud_user2.groups[0].id == GROUP_ID_ADMIN
     assert cloud_user2.id != cloud_user.id
+
+
+@pytest.mark.parametrize(
+    ("google_assistant_users", "google_connected"),
+    [([], False), (["cloud-user"], True), (["other-user"], False)],
+)
+async def test_import_google_assistant_settings(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    google_assistant_users: list[str],
+    google_connected: bool,
+) -> None:
+    """Test importing from the google assistant store."""
+    hass_storage[STORAGE_KEY] = {"version": 1, "data": {"username": "cloud-user"}}
+
+    with patch(
+        "homeassistant.components.cloud.prefs.async_get_google_assistant_users"
+    ) as mock_get_users:
+        mock_get_users.return_value = google_assistant_users
+        prefs = CloudPreferences(hass)
+        await prefs.async_initialize()
+        assert prefs.google_connected == google_connected

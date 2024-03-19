@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "signal_strength": {
+        "default": "mdi:wifi"
+      },
+      "meter_price": {
+        "default": "mdi:cash"
+      }
+    }
+  }
+}

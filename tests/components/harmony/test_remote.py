@@ -1,4 +1,5 @@
 """Test the Logitech Harmony Hub remote."""
+
 from datetime import timedelta
 
 from aioharmony.const import SendCommandDevice

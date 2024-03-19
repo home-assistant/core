@@ -1,4 +1,5 @@
 """Persistently store thread datasets."""
+
 from __future__ import annotations
 
 from asyncio import Event, Task, wait

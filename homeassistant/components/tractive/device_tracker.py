@@ -1,4 +1,5 @@
 """Support for Tractive device trackers."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -36,7 +37,6 @@ async def async_setup_entry(
 class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
     """Tractive device tracker."""
 
-    _attr_icon = "mdi:paw"
     _attr_translation_key = "tracker"
 
     def __init__(self, client: TractiveClient, item: Trackables) -> None:

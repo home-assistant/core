@@ -1,4 +1,5 @@
 """Harmony data object which contains the Harmony Client."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable

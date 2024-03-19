@@ -1,4 +1,5 @@
 """ISY Services and Commands."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -130,7 +131,7 @@ def async_get_entities(hass: HomeAssistant) -> dict[str, Entity]:
 
 
 @callback
-def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
+def async_setup_services(hass: HomeAssistant) -> None:
     """Create and register services for the ISY integration."""
     existing_services = hass.services.async_services_for_domain(DOMAIN)
     if existing_services and SERVICE_SEND_PROGRAM_COMMAND in existing_services:

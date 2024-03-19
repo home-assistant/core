@@ -1,4 +1,5 @@
 """Diagnostics platform for Traccar Server."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -30,6 +31,7 @@ async def async_get_config_entry_diagnostics(
 
     return async_redact_data(
         {
+            "subscription_status": coordinator.client.subscription_status,
             "config_entry_options": dict(config_entry.options),
             "coordinator_data": coordinator.data,
             "entities": [
@@ -63,6 +65,7 @@ async def async_get_device_diagnostics(
 
     return async_redact_data(
         {
+            "subscription_status": coordinator.client.subscription_status,
             "config_entry_options": dict(entry.options),
             "coordinator_data": coordinator.data,
             "entities": [
