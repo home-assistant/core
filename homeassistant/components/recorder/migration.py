@@ -1781,8 +1781,8 @@ def initialize_database(session_maker: Callable[[], Session]) -> bool:
         return False
 
 
-class BaseMigration(ABC):
-    """Base class for migrations."""
+class BaseRunTimeMigration(ABC):
+    """Base class for run time migrations."""
 
     required_schema_version = 0
     migration_version = 1
@@ -1792,7 +1792,7 @@ class BaseMigration(ABC):
     def __init__(
         self, session: Session, schema_version: int, migration_changes: dict[str, int]
     ) -> None:
-        """Initialize a new BaseMigration."""
+        """Initialize a new BaseRunTimeMigration."""
         self.schema_version = schema_version
         self.session = session
         self.migration_changes = migration_changes
@@ -1820,7 +1820,7 @@ class BaseMigration(ABC):
         return True
 
 
-class StatesContextIDMigration(BaseMigration):
+class StatesContextIDMigration(BaseRunTimeMigration):
     """Migration to migrate states context_ids to binary format."""
 
     required_schema_version = CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
@@ -1832,7 +1832,7 @@ class StatesContextIDMigration(BaseMigration):
         return has_states_context_ids_to_migrate()
 
 
-class EventsContextIDMigration(BaseMigration):
+class EventsContextIDMigration(BaseRunTimeMigration):
     """Migration to migrate events context_ids to binary format."""
 
     required_schema_version = CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
@@ -1844,7 +1844,7 @@ class EventsContextIDMigration(BaseMigration):
         return has_events_context_ids_to_migrate()
 
 
-class EventTypeIDMigration(BaseMigration):
+class EventTypeIDMigration(BaseRunTimeMigration):
     """Migration to migrate event_type to event_type_ids."""
 
     required_schema_version = EVENT_TYPE_IDS_SCHEMA_VERSION
@@ -1856,7 +1856,7 @@ class EventTypeIDMigration(BaseMigration):
         return has_event_type_to_migrate()
 
 
-class EntityIDMigration(BaseMigration):
+class EntityIDMigration(BaseRunTimeMigration):
     """Migration to migrate entity_ids to states_meta."""
 
     required_schema_version = STATES_META_SCHEMA_VERSION
@@ -1868,7 +1868,9 @@ class EntityIDMigration(BaseMigration):
         return has_entity_ids_to_migrate()
 
 
-def _mark_migration_done(session: Session, migration: type[BaseMigration]) -> None:
+def _mark_migration_done(
+    session: Session, migration: type[BaseRunTimeMigration]
+) -> None:
     """Mark a migration as done in the database."""
     session.merge(
         MigrationChanges(
