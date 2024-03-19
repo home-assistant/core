@@ -1,4 +1,5 @@
 """The tests for the Owntracks device tracker."""
+
 import json
 from unittest.mock import patch
 
@@ -963,7 +964,7 @@ async def test_mobile_exit_move_beacon(hass: HomeAssistant, context) -> None:
 async def test_mobile_multiple_async_enter_exit(hass: HomeAssistant, context) -> None:
     """Test the multiple entering."""
     # Test race condition
-    for _ in range(0, 20):
+    for _ in range(20):
         async_fire_mqtt_message(
             hass, EVENT_TOPIC, json.dumps(MOBILE_BEACON_ENTER_EVENT_MESSAGE)
         )
@@ -1382,7 +1383,7 @@ def mock_cipher():
 
         (mkey, plaintext) = pickle.loads(base64.b64decode(ciphertext))
         if key != mkey:
-            raise ValueError()
+            raise ValueError
         return plaintext
 
     return len(TEST_SECRET_KEY), mock_decrypt

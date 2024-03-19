@@ -1,4 +1,5 @@
 """Tests for Shelly coordinator."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -66,6 +67,18 @@ async def test_block_reload_on_cfg_change(
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "cfgChanged", 1)
     mock_block_device.mock_update()
     await hass.async_block_till_done()
+
+    # Make sure cfgChanged with None is ignored
+    monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "cfgChanged", None)
+    mock_block_device.mock_update()
+    await hass.async_block_till_done()
+
+    # Wait for debouncer
+    freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.test_name_channel_1") is not None
 
     # Generate config change from switch to light
     monkeypatch.setitem(

@@ -1,4 +1,5 @@
 """Tests for Shelly number platform."""
+
 from unittest.mock import AsyncMock, Mock
 
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError

@@ -1,4 +1,5 @@
 """Optical character recognition processing of seven segments displays."""
+
 from __future__ import annotations
 
 import io
@@ -56,15 +57,12 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Seven segments OCR platform."""
-    entities = []
-    for camera in config[CONF_SOURCE]:
-        entities.append(
-            ImageProcessingSsocr(
-                hass, camera[CONF_ENTITY_ID], config, camera.get(CONF_NAME)
-            )
+    async_add_entities(
+        ImageProcessingSsocr(
+            hass, camera[CONF_ENTITY_ID], config, camera.get(CONF_NAME)
         )
-
-    async_add_entities(entities)
+        for camera in config[CONF_SOURCE]
+    )
 
 
 class ImageProcessingSsocr(ImageProcessingEntity):
@@ -98,14 +96,14 @@ class ImageProcessingSsocr(ImageProcessingEntity):
         threshold = ["-t", str(config[CONF_THRESHOLD])]
         extra_arguments = config[CONF_EXTRA_ARGUMENTS].split(" ")
 
-        self._command = (
-            [config[CONF_SSOCR_BIN]]
-            + crop
-            + digits
-            + threshold
-            + rotate
-            + extra_arguments
-        )
+        self._command = [
+            config[CONF_SSOCR_BIN],
+            *crop,
+            *digits,
+            *threshold,
+            *rotate,
+            *extra_arguments,
+        ]
         self._command.append(self.filepath)
 
     @property

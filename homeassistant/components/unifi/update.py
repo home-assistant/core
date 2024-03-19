@@ -1,10 +1,11 @@
 """Update entities for Ubiquiti network devices."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
-from typing import Any, Generic, TypeVar
+from typing import Any, TypeVar
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
@@ -40,40 +41,26 @@ async def async_device_control_fn(api: aiounifi.Controller, obj_id: str) -> None
     await api.request(DeviceUpgradeRequest.create(obj_id))
 
 
-@dataclass(frozen=True)
-class UnifiUpdateEntityDescriptionMixin(Generic[_HandlerT, _DataT]):
-    """Validate and load entities from different UniFi handlers."""
+@dataclass(frozen=True, kw_only=True)
+class UnifiUpdateEntityDescription(
+    UpdateEntityDescription, UnifiEntityDescription[_HandlerT, _DataT]
+):
+    """Class describing UniFi update entity."""
 
     control_fn: Callable[[aiounifi.Controller, str], Coroutine[Any, Any, None]]
     state_fn: Callable[[aiounifi.Controller, _DataT], bool]
-
-
-@dataclass(frozen=True)
-class UnifiUpdateEntityDescription(
-    UpdateEntityDescription,
-    UnifiEntityDescription[_HandlerT, _DataT],
-    UnifiUpdateEntityDescriptionMixin[_HandlerT, _DataT],
-):
-    """Class describing UniFi update entity."""
 
 
 ENTITY_DESCRIPTIONS: tuple[UnifiUpdateEntityDescription, ...] = (
     UnifiUpdateEntityDescription[Devices, Device](
         key="Upgrade device",
         device_class=UpdateDeviceClass.FIRMWARE,
-        has_entity_name=True,
-        allowed_fn=lambda hub, obj_id: True,
         api_handler_fn=lambda api: api.devices,
         available_fn=async_device_available_fn,
         control_fn=async_device_control_fn,
         device_info_fn=async_device_device_info_fn,
-        event_is_on=None,
-        event_to_subscribe=None,
-        name_fn=lambda device: None,
         object_fn=lambda api, obj_id: api.devices[obj_id],
-        should_poll=False,
         state_fn=lambda api, device: device.state == 4,
-        supported_fn=lambda hub, obj_id: True,
         unique_id_fn=lambda hub, obj_id: f"device_update-{obj_id}",
     ),
 )
@@ -85,9 +72,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up update entities for UniFi Network integration."""
-    UnifiHub.register_platform(
-        hass,
-        config_entry,
+    UnifiHub.get_hub(hass, config_entry).entity_loader.register_platform(
         async_add_entities,
         UnifiDeviceUpdateEntity,
         ENTITY_DESCRIPTIONS,

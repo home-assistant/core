@@ -1,4 +1,5 @@
 """Test UniFi Network config flow."""
+
 import socket
 from unittest.mock import patch
 
@@ -75,14 +76,15 @@ DEVICES = [
 ]
 
 WLANS = [
-    {"_id": "1", "name": "SSID 1"},
+    {"_id": "1", "name": "SSID 1", "enabled": True},
     {
         "_id": "2",
         "name": "SSID 2",
         "name_combine_enabled": False,
         "name_combine_suffix": "_IOT",
+        "enabled": True,
     },
-    {"_id": "3", "name": "SSID 4", "name_combine_enabled": False},
+    {"_id": "3", "name": "SSID 4", "name_combine_enabled": False, "enabled": True},
 ]
 
 DPI_GROUPS = [
@@ -391,7 +393,7 @@ async def test_reauth_flow_update_configuration(
     """Verify reauth flow can update hub configuration."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
     hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-    hub.available = False
+    hub.websocket.available = False
 
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN,
@@ -541,12 +543,7 @@ async def test_simple_option_flow(
 ) -> None:
     """Test simple config flow options."""
     config_entry = await setup_unifi_integration(
-        hass,
-        aioclient_mock,
-        clients_response=CLIENTS,
-        wlans_response=WLANS,
-        dpigroup_response=DPI_GROUPS,
-        dpiapp_response=[],
+        hass, aioclient_mock, clients_response=CLIENTS
     )
 
     result = await hass.config_entries.options.async_init(

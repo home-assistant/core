@@ -1,4 +1,5 @@
 """Test the translation helper."""
+
 import asyncio
 from os import path
 import pathlib
@@ -8,7 +9,7 @@ from unittest.mock import Mock, call, patch
 import pytest
 
 from homeassistant import loader
-from homeassistant.const import EVENT_COMPONENT_LOADED, EVENT_CORE_CONFIG_UPDATE
+from homeassistant.const import EVENT_CORE_CONFIG_UPDATE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import translation
 from homeassistant.loader import async_get_integration
@@ -335,11 +336,44 @@ async def test_get_translation_categories(hass: HomeAssistant) -> None:
         assert "component.light.device_automation.action_type.turn_on" in translations
 
 
-async def test_translation_merging(
+async def test_legacy_platform_translations_not_used_built_in_integrations(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test we merge translations of two integrations."""
+    """Test legacy platform translations are not used for built-in integrations."""
     hass.config.components.add("moon.sensor")
+    hass.config.components.add("sensor")
+
+    load_requests = []
+
+    def mock_load_translations_files_by_language(files):
+        load_requests.append(files)
+        return {}
+
+    with patch(
+        "homeassistant.helpers.translation._load_translations_files_by_language",
+        mock_load_translations_files_by_language,
+    ):
+        await translation.async_get_translations(hass, "en", "state")
+
+    assert len(load_requests) == 1
+    to_load = load_requests[0]
+    assert len(to_load) == 1
+    en_load = to_load["en"]
+    assert len(en_load) == 1
+    assert "sensor" in en_load
+    assert "moon.sensor" not in en_load
+
+
+async def test_translation_merging_custom_components(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+) -> None:
+    """Test we merge translations of two integrations.
+
+    Legacy state translations only used for custom integrations.
+    """
+    hass.config.components.add("test_legacy_state_translations.sensor")
     hass.config.components.add("sensor")
 
     orig_load_translations = translation._load_translations_files_by_language
@@ -347,8 +381,12 @@ async def test_translation_merging(
     def mock_load_translations_files(files):
         """Mock loading."""
         result = orig_load_translations(files)
-        result["en"]["moon.sensor"] = {
-            "state": {"moon__phase": {"first_quarter": "First Quarter"}}
+        result["en"]["test_legacy_state_translations.sensor"] = {
+            "state": {
+                "test_legacy_state_translations__phase": {
+                    "first_quarter": "First Quarter"
+                }
+            }
         }
         return result
 
@@ -358,15 +396,20 @@ async def test_translation_merging(
     ):
         translations = await translation.async_get_translations(hass, "en", "state")
 
-    assert "component.sensor.state.moon__phase.first_quarter" in translations
+    assert (
+        "component.sensor.state.test_legacy_state_translations__phase.first_quarter"
+        in translations
+    )
 
-    hass.config.components.add("season.sensor")
+    hass.config.components.add("test_legacy_state_translations_bad_data.sensor")
 
     # Patch in some bad translation data
     def mock_load_bad_translations_files(files):
         """Mock loading."""
         result = orig_load_translations(files)
-        result["en"]["season.sensor"] = {"state": "bad data"}
+        result["en"]["test_legacy_state_translations_bad_data.sensor"] = {
+            "state": "bad data"
+        }
         return result
 
     with patch(
@@ -375,7 +418,10 @@ async def test_translation_merging(
     ):
         translations = await translation.async_get_translations(hass, "en", "state")
 
-        assert "component.sensor.state.moon__phase.first_quarter" in translations
+        assert (
+            "component.sensor.state.test_legacy_state_translations__phase.first_quarter"
+            in translations
+        )
 
     assert (
         "An integration providing translations for sensor provided invalid data:"
@@ -383,17 +429,26 @@ async def test_translation_merging(
     ) in caplog.text
 
 
-async def test_translation_merging_loaded_apart(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+async def test_translation_merging_loaded_apart_custom_integrations(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
 ) -> None:
-    """Test we merge translations of two integrations when they are not loaded at the same time."""
+    """Test we merge translations of two integrations when they are not loaded at the same time.
+
+    Legacy state translations only used for custom integrations.
+    """
     orig_load_translations = translation._load_translations_files_by_language
 
     def mock_load_translations_files(files):
         """Mock loading."""
         result = orig_load_translations(files)
-        result["en"]["moon.sensor"] = {
-            "state": {"moon__phase": {"first_quarter": "First Quarter"}}
+        result["en"]["test_legacy_state_translations.sensor"] = {
+            "state": {
+                "test_legacy_state_translations__phase": {
+                    "first_quarter": "First Quarter"
+                }
+            }
         }
         return result
 
@@ -405,9 +460,12 @@ async def test_translation_merging_loaded_apart(
     ):
         translations = await translation.async_get_translations(hass, "en", "state")
 
-    assert "component.sensor.state.moon__phase.first_quarter" not in translations
+    assert (
+        "component.sensor.state.test_legacy_state_translations__phase.first_quarter"
+        not in translations
+    )
 
-    hass.config.components.add("moon.sensor")
+    hass.config.components.add("test_legacy_state_translations.sensor")
 
     with patch(
         "homeassistant.helpers.translation._load_translations_files_by_language",
@@ -415,7 +473,10 @@ async def test_translation_merging_loaded_apart(
     ):
         translations = await translation.async_get_translations(hass, "en", "state")
 
-    assert "component.sensor.state.moon__phase.first_quarter" in translations
+    assert (
+        "component.sensor.state.test_legacy_state_translations__phase.first_quarter"
+        in translations
+    )
 
     with patch(
         "homeassistant.helpers.translation._load_translations_files_by_language",
@@ -425,7 +486,10 @@ async def test_translation_merging_loaded_apart(
             hass, "en", "state", integrations={"sensor"}
         )
 
-    assert "component.sensor.state.moon__phase.first_quarter" in translations
+    assert (
+        "component.sensor.state.test_legacy_state_translations__phase.first_quarter"
+        in translations
+    )
 
 
 async def test_translation_merging_loaded_together(
@@ -476,6 +540,37 @@ async def test_ensure_translations_still_load_if_one_integration_fails(
     )
 
     assert translations == sensor_translations
+
+
+async def test_load_translations_all_integrations_broken(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Ensure we do not try to load translations again if the integration is broken."""
+    hass.config.components.add("broken")
+    hass.config.components.add("broken2")
+
+    with patch(
+        "homeassistant.helpers.translation.async_get_integrations",
+        return_value={
+            "broken2": Exception("unhandled failure"),
+            "broken": Exception("unhandled failure"),
+        },
+    ):
+        translations = await translation.async_get_translations(
+            hass, "en", "entity_component", integrations={"broken", "broken2"}
+        )
+    assert "Failed to load integration for translation" in caplog.text
+    assert "broken" in caplog.text
+    assert "broken2" in caplog.text
+    assert not translations
+    caplog.clear()
+
+    translations = await translation.async_get_translations(
+        hass, "en", "entity_component", integrations={"broken", "broken2"}
+    )
+    assert not translations
+    # Ensure we do not try again
+    assert "Failed to load integration for translation" not in caplog.text
 
 
 async def test_caching(hass: HomeAssistant) -> None:
@@ -604,20 +699,6 @@ async def test_get_cached_translations(
 async def test_setup(hass: HomeAssistant):
     """Test the setup load listeners helper."""
     translation.async_setup(hass)
-
-    with patch(
-        "homeassistant.helpers.translation._TranslationCache.async_load",
-    ) as mock:
-        hass.bus.async_fire(EVENT_COMPONENT_LOADED, {"component": "loaded_component"})
-        await hass.async_block_till_done()
-        mock.assert_called_once_with(hass.config.language, {"loaded_component"})
-
-    with patch(
-        "homeassistant.helpers.translation._TranslationCache.async_load",
-    ) as mock:
-        hass.bus.async_fire(EVENT_COMPONENT_LOADED, {"component": "config.component"})
-        await hass.async_block_till_done()
-        mock.assert_not_called()
 
     # Should not be called if the language is the current language
     with patch(
@@ -751,3 +832,35 @@ async def test_translate_state(hass: HomeAssistant):
             ]
         )
         assert result == "on"
+
+
+async def test_get_translations_still_has_title_without_translations_files(
+    hass: HomeAssistant, mock_config_flows
+) -> None:
+    """Test the title still gets added in if there are no translation files."""
+    mock_config_flows["integration"].append("component1")
+    integration = Mock(file_path=pathlib.Path(__file__))
+    integration.name = "Component 1"
+
+    with patch(
+        "homeassistant.helpers.translation.component_translation_path",
+        return_value="bla.json",
+    ), patch(
+        "homeassistant.helpers.translation._load_translations_files_by_language",
+        return_value={},
+    ), patch(
+        "homeassistant.helpers.translation.async_get_integrations",
+        return_value={"component1": integration},
+    ):
+        translations = await translation.async_get_translations(
+            hass, "en", "title", config_flow=True
+        )
+        translations_again = await translation.async_get_translations(
+            hass, "en", "title", config_flow=True
+        )
+
+        assert translations == translations_again
+
+    assert translations == {
+        "component.component1.title": "Component 1",
+    }

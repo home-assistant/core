@@ -1,4 +1,5 @@
 """Constants for the Backup integration."""
+
 from logging import getLogger
 
 DOMAIN = "backup"

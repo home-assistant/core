@@ -1,4 +1,5 @@
 """Vera tests."""
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -228,7 +229,7 @@ async def test_exclude_and_light_ids(
         controller_config=new_simple_controller_config(
             config_source=ConfigSource.CONFIG_ENTRY,
             devices=(vera_device1, vera_device2, vera_device3, vera_device4),
-            config={**{CONF_CONTROLLER: "http://127.0.0.1:123"}, **options},
+            config={CONF_CONTROLLER: "http://127.0.0.1:123", **options},
         ),
     )
 

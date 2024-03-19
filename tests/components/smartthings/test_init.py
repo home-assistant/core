@@ -1,4 +1,5 @@
 """Tests for the SmartThings component init module."""
+
 from http import HTTPStatus
 from unittest.mock import Mock, patch
 from uuid import uuid4

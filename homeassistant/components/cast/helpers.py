@@ -1,4 +1,5 @@
 """Helpers to deal with Cast devices."""
+
 from __future__ import annotations
 
 import configparser
@@ -294,10 +295,7 @@ async def parse_m3u(hass, url):
                 continue
             length = info[0].split(" ", 1)
             title = info[1].strip()
-        elif line.startswith("#EXT-X-VERSION:"):
-            # HLS stream, supported by cast devices
-            raise PlaylistSupported("HLS")
-        elif line.startswith("#EXT-X-STREAM-INF:"):
+        elif line.startswith(("#EXT-X-VERSION:", "#EXT-X-STREAM-INF:")):
             # HLS stream, supported by cast devices
             raise PlaylistSupported("HLS")
         elif line.startswith("#"):
@@ -362,7 +360,7 @@ async def parse_pls(hass, url):
 
 async def parse_playlist(hass, url):
     """Parse an m3u or pls playlist."""
-    if url.endswith(".m3u") or url.endswith(".m3u8"):
+    if url.endswith((".m3u", ".m3u8")):
         playlist = await parse_m3u(hass, url)
     else:
         playlist = await parse_pls(hass, url)

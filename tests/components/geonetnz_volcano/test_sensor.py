@@ -1,4 +1,5 @@
 """The tests for the GeoNet NZ Volcano Feed integration."""
+
 from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time

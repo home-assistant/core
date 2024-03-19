@@ -1,4 +1,5 @@
 """Config Flow for OSO Energy."""
+
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -6,10 +7,13 @@ from typing import Any
 from apyosoenergyapi import OSOEnergy
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_API_KEY
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
@@ -18,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 _SCHEMA_STEP_USER = vol.Schema({vol.Required(CONF_API_KEY): str})
 
 
-class OSOEnergyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class OSOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a OSO Energy config flow."""
 
     VERSION = 1
@@ -27,7 +31,7 @@ class OSOEnergyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self.entry: ConfigEntry | None = None
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
 
@@ -36,10 +40,7 @@ class OSOEnergyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if user_email := await self.get_user_email(user_input[CONF_API_KEY]):
                 await self.async_set_unique_id(user_email)
 
-                if (
-                    self.context["source"] == config_entries.SOURCE_REAUTH
-                    and self.entry
-                ):
+                if self.context["source"] == SOURCE_REAUTH and self.entry:
                     self.hass.config_entries.async_update_entry(
                         self.entry, title=user_email, data=user_input
                     )
@@ -67,7 +68,9 @@ class OSOEnergyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unknown error occurred")
         return None
 
-    async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, user_input: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Re Authenticate a user."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         data = {CONF_API_KEY: user_input[CONF_API_KEY]}

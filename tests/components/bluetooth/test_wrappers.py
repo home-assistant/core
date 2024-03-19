@@ -1,4 +1,5 @@
 """Tests for the Bluetooth integration."""
+
 from __future__ import annotations
 
 from contextlib import contextmanager
@@ -243,7 +244,7 @@ async def test_test_switch_adapters_when_out_of_slots(
     ) as allocate_slot_mock:
         ble_device = hci0_device_advs["00:00:00:00:00:03"][0]
         client = bleak.BleakClient(ble_device)
-        await client.connect() is True
+        assert await client.connect() is True
         assert release_slot_mock.call_count == 0
 
     cancel_hci0()

@@ -1,4 +1,5 @@
 """Tests for the services module."""
+
 from pyheos import CommandFailedError, HeosError, const
 import pytest
 

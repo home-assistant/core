@@ -1,4 +1,5 @@
 """Setup fixtures for ScreenLogic integration tests."""
+
 import pytest
 
 from homeassistant.components.screenlogic import DOMAIN

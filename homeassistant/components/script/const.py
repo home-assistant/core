@@ -1,4 +1,5 @@
 """Constants for the script integration."""
+
 import logging
 
 DOMAIN = "script"
