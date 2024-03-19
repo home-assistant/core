@@ -5,9 +5,10 @@ from __future__ import annotations
 from collections.abc import Callable
 from contextlib import suppress
 from datetime import datetime
+from functools import wraps
 import json
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar
 
 import pychromecast
 from pychromecast.controllers.homeassistant import HomeAssistantController
@@ -19,6 +20,7 @@ from pychromecast.controllers.media import (
 )
 from pychromecast.controllers.multizone import MultizoneManager
 from pychromecast.controllers.receiver import VOLUME_CONTROL_TYPE_FIXED
+from pychromecast.error import PyChromecastError
 from pychromecast.quick_play import quick_play
 from pychromecast.socket_client import (
     CONNECTION_STATUS_CONNECTED,
@@ -82,6 +84,34 @@ _LOGGER = logging.getLogger(__name__)
 APP_IDS_UNRELIABLE_MEDIA_INFO = ("Netflix",)
 
 CAST_SPLASH = "https://www.home-assistant.io/images/cast/splash.png"
+
+
+_CastDeviceT = TypeVar("_CastDeviceT", bound="CastDevice")
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
+
+_FuncType = Callable[Concatenate[_CastDeviceT, _P], _R]
+_ReturnFuncType = Callable[Concatenate[_CastDeviceT, _P], _R]
+
+
+def api_error(
+    func: _FuncType[_CastDeviceT, _P, _R],
+) -> _ReturnFuncType[_CastDeviceT, _P, _R]:
+    """Handle PyChromecastError and reraise a HomeAssistantError."""
+
+    @wraps(func)
+    def wrapper(self: _CastDeviceT, *args: _P.args, **kwargs: _P.kwargs) -> _R:
+        """Wrap a CastDevice method."""
+        try:
+            return_value = func(self, *args, **kwargs)
+        except PyChromecastError as err:
+            raise HomeAssistantError(
+                f"{self.__class__.__name__}.{func.__name__} Failed: {err}"
+            ) from err
+
+        return return_value
+
+    return wrapper
 
 
 @callback
@@ -478,6 +508,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
         return media_controller
 
+    @api_error
     def turn_on(self) -> None:
         """Turn on the cast device."""
 
@@ -497,43 +528,52 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         else:
             chromecast.start_app(pychromecast.config.APP_MEDIA_RECEIVER)
 
+    @api_error
     def turn_off(self) -> None:
         """Turn off the cast device."""
-        self._get_chromecast().quit_app()
+        self._get_chromecast().quit_app(0)
 
+    @api_error
     def mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         self._get_chromecast().set_volume_muted(mute)
 
+    @api_error
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self._get_chromecast().set_volume(volume)
 
+    @api_error
     def media_play(self) -> None:
         """Send play command."""
         media_controller = self._media_controller()
         media_controller.play()
 
+    @api_error
     def media_pause(self) -> None:
         """Send pause command."""
         media_controller = self._media_controller()
         media_controller.pause()
 
+    @api_error
     def media_stop(self) -> None:
         """Send stop command."""
         media_controller = self._media_controller()
         media_controller.stop()
 
+    @api_error
     def media_previous_track(self) -> None:
         """Send previous track command."""
         media_controller = self._media_controller()
         media_controller.queue_prev()
 
+    @api_error
     def media_next_track(self) -> None:
         """Send next track command."""
         media_controller = self._media_controller()
         media_controller.queue_next()
 
+    @api_error
     def media_seek(self, position: float) -> None:
         """Seek the media to a specific location."""
         media_controller = self._media_controller()
@@ -616,6 +656,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             self.hass, media_content_id, content_filter=content_filter
         )
 
+    @api_error
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
