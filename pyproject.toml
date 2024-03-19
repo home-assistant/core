@@ -658,6 +658,7 @@ ignore = [
     "PLR0915", # Too many statements ({statements} > {max_statements})
     "PLR2004", # Magic value used in comparison, consider replacing {value} with a constant variable
     "PLW2901", # Outer {outer_kind} variable {name} overwritten by inner {inner_kind} target
+    "PT004", # Fixture {fixture} does not return anything, add leading underscore
     "SIM102", # Use a single if statement instead of nested if statements
     "SIM108", # Use ternary operator {contents} instead of if-else-block
     "SIM115", # Use context handler for opening files
@@ -682,8 +683,6 @@ ignore = [
     "PLE0605",
 
     # temporarily disabled
-    "PT004",
-    "PT007",
     "PT011",
     "PT018",
     "PT012",

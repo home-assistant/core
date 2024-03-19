@@ -754,7 +754,7 @@ async def test_automation_stops(hass: HomeAssistant, calls, service) -> None:
     assert len(calls) == (1 if service == "turn_off_no_stop" else 0)
 
 
-@pytest.mark.parametrize("extra_config", ({}, {"id": "sun"}))
+@pytest.mark.parametrize("extra_config", [{}, {"id": "sun"}])
 async def test_reload_unchanged_does_not_stop(
     hass: HomeAssistant, calls, extra_config
 ) -> None:
@@ -962,7 +962,7 @@ async def test_reload_identical_automations_without_id(
 
 @pytest.mark.parametrize(
     "automation_config",
-    (
+    [
         {
             "trigger": {"platform": "event", "event_type": "test_event"},
             "action": [{"service": "test.automation"}],
@@ -1029,7 +1029,7 @@ async def test_reload_identical_automations_without_id(
                 },
             },
         },
-    ),
+    ],
 )
 async def test_reload_unchanged_automation(
     hass: HomeAssistant, calls, automation_config
@@ -1065,7 +1065,7 @@ async def test_reload_unchanged_automation(
         assert len(calls) == 2
 
 
-@pytest.mark.parametrize("extra_config", ({}, {"id": "sun"}))
+@pytest.mark.parametrize("extra_config", [{}, {"id": "sun"}])
 async def test_reload_automation_when_blueprint_changes(
     hass: HomeAssistant, calls, extra_config
 ) -> None:
@@ -1362,7 +1362,7 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("broken_config", "problem", "details"),
-    (
+    [
         (
             {},
             "could not be validated",
@@ -1403,7 +1403,7 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             "failed to setup actions",
             "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd.",
         ),
-    ),
+    ],
 )
 async def test_automation_bad_config_validation(
     hass: HomeAssistant,
@@ -1561,6 +1561,10 @@ async def test_extraction_functions_not_setup(hass: HomeAssistant) -> None:
     assert automation.devices_in_automation(hass, "automation.test") == []
     assert automation.automations_with_entity(hass, "light.in_both") == []
     assert automation.entities_in_automation(hass, "automation.test") == []
+    assert automation.automations_with_floor(hass, "floor-in-both") == []
+    assert automation.floors_in_automation(hass, "automation.test") == []
+    assert automation.automations_with_label(hass, "label-in-both") == []
+    assert automation.labels_in_automation(hass, "automation.test") == []
 
 
 async def test_extraction_functions_unknown_automation(hass: HomeAssistant) -> None:
@@ -1570,6 +1574,8 @@ async def test_extraction_functions_unknown_automation(hass: HomeAssistant) -> N
     assert automation.blueprint_in_automation(hass, "automation.unknown") is None
     assert automation.devices_in_automation(hass, "automation.unknown") == []
     assert automation.entities_in_automation(hass, "automation.unknown") == []
+    assert automation.floors_in_automation(hass, "automation.unknown") == []
+    assert automation.labels_in_automation(hass, "automation.unknown") == []
 
 
 async def test_extraction_functions_unavailable_automation(hass: HomeAssistant) -> None:
@@ -1595,6 +1601,10 @@ async def test_extraction_functions_unavailable_automation(hass: HomeAssistant) 
     assert automation.devices_in_automation(hass, entity_id) == []
     assert automation.automations_with_entity(hass, "light.in_both") == []
     assert automation.entities_in_automation(hass, entity_id) == []
+    assert automation.automations_with_floor(hass, "floor-in-both") == []
+    assert automation.floors_in_automation(hass, entity_id) == []
+    assert automation.automations_with_label(hass, "label-in-both") == []
+    assert automation.labels_in_automation(hass, entity_id) == []
 
 
 async def test_extraction_functions(
@@ -1693,6 +1703,14 @@ async def test_extraction_functions(
                         {
                             "service": "test.test",
                             "target": {"area_id": "area-in-both"},
+                        },
+                        {
+                            "service": "test.test",
+                            "target": {"floor_id": "floor-in-both"},
+                        },
+                        {
+                            "service": "test.test",
+                            "target": {"label_id": "label-in-both"},
                         },
                     ],
                 },
@@ -1813,6 +1831,22 @@ async def test_extraction_functions(
                             "service": "test.test",
                             "target": {"area_id": "area-in-last"},
                         },
+                        {
+                            "service": "test.test",
+                            "target": {"floor_id": "floor-in-both"},
+                        },
+                        {
+                            "service": "test.test",
+                            "target": {"floor_id": "floor-in-last"},
+                        },
+                        {
+                            "service": "test.test",
+                            "target": {"label_id": "label-in-both"},
+                        },
+                        {
+                            "service": "test.test",
+                            "target": {"label_id": "label-in-last"},
+                        },
                     ],
                 },
             ]
@@ -1854,6 +1888,22 @@ async def test_extraction_functions(
     assert set(automation.areas_in_automation(hass, "automation.test3")) == {
         "area-in-both",
         "area-in-last",
+    }
+    assert set(automation.automations_with_floor(hass, "floor-in-both")) == {
+        "automation.test1",
+        "automation.test3",
+    }
+    assert set(automation.floors_in_automation(hass, "automation.test3")) == {
+        "floor-in-both",
+        "floor-in-last",
+    }
+    assert set(automation.automations_with_label(hass, "label-in-both")) == {
+        "automation.test1",
+        "automation.test3",
+    }
+    assert set(automation.labels_in_automation(hass, "automation.test3")) == {
+        "label-in-both",
+        "label-in-last",
     }
     assert automation.blueprint_in_automation(hass, "automation.test3") is None
 
@@ -2141,7 +2191,7 @@ async def test_blueprint_automation(hass: HomeAssistant, calls) -> None:
 
 @pytest.mark.parametrize(
     ("blueprint_inputs", "problem", "details"),
-    (
+    [
         (
             # No input
             {},
@@ -2167,7 +2217,7 @@ async def test_blueprint_automation(hass: HomeAssistant, calls) -> None:
                 " data['action'][0]['service']"
             ),
         ),
-    ),
+    ],
 )
 async def test_blueprint_automation_bad_config(
     hass: HomeAssistant,
@@ -2350,21 +2400,21 @@ async def test_trigger_condition_explicit_id(hass: HomeAssistant, calls) -> None
 
 @pytest.mark.parametrize(
     ("automation_mode", "automation_runs"),
-    (
+    [
         (SCRIPT_MODE_PARALLEL, 2),
         (SCRIPT_MODE_QUEUED, 2),
         (SCRIPT_MODE_RESTART, 2),
         (SCRIPT_MODE_SINGLE, 1),
-    ),
+    ],
 )
 @pytest.mark.parametrize(
     ("script_mode", "script_warning_msg"),
-    (
+    [
         (SCRIPT_MODE_PARALLEL, "script1: Maximum number of runs exceeded"),
         (SCRIPT_MODE_QUEUED, "script1: Disallowed recursion detected"),
         (SCRIPT_MODE_RESTART, "script1: Disallowed recursion detected"),
         (SCRIPT_MODE_SINGLE, "script1: Already running"),
-    ),
+    ],
 )
 @pytest.mark.parametrize("wait_for_stop_scripts_after_shutdown", [True])
 async def test_recursive_automation_starting_script(
