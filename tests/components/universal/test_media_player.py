@@ -365,8 +365,7 @@ async def test_platform_setup(hass: HomeAssistant) -> None:
 
     def add_entities(new_entities):
         """Add devices to list."""
-        for dev in new_entities:
-            entities.append(dev)
+        entities.extend(new_entities)
 
     setup_ok = True
     try:

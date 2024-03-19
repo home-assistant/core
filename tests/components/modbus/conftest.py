@@ -50,17 +50,18 @@ class ReadResult:
 @pytest.fixture(name="mock_pymodbus")
 def mock_pymodbus_fixture():
     """Mock pymodbus."""
-    mock_pb = mock.MagicMock()
+    mock_pb = mock.AsyncMock()
+    mock_pb.close = mock.MagicMock()
     with mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusTcpClient",
+        "homeassistant.components.modbus.modbus.AsyncModbusTcpClient",
         return_value=mock_pb,
         autospec=True,
     ), mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusSerialClient",
+        "homeassistant.components.modbus.modbus.AsyncModbusSerialClient",
         return_value=mock_pb,
         autospec=True,
     ), mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusUdpClient",
+        "homeassistant.components.modbus.modbus.AsyncModbusUdpClient",
         return_value=mock_pb,
         autospec=True,
     ):
@@ -118,9 +119,10 @@ async def mock_modbus_fixture(
             }
         ]
     }
-    mock_pb = mock.MagicMock()
+    mock_pb = mock.AsyncMock()
+    mock_pb.close = mock.MagicMock()
     with mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusTcpClient",
+        "homeassistant.components.modbus.modbus.AsyncModbusTcpClient",
         return_value=mock_pb,
         autospec=True,
     ):
