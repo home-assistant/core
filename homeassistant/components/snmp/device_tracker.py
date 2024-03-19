@@ -6,7 +6,6 @@ import binascii
 import logging
 
 from pysnmp.error import PySnmpError
-import pysnmp.hlapi.asyncio as hlapi
 from pysnmp.hlapi.asyncio import (
     CommunityData,
     ContextData,
@@ -26,27 +25,22 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_AUTH_KEY,
-    CONF_AUTH_PROTOCOL,
     CONF_BASEOID,
     CONF_COMMUNITY,
     CONF_PRIV_KEY,
-    CONF_PRIV_PROTOCOL,
-    CONF_VERSION,
     DEFAULT_AUTH_PROTOCOL,
     DEFAULT_COMMUNITY,
     DEFAULT_PORT,
     DEFAULT_PRIV_PROTOCOL,
     DEFAULT_TIMEOUT,
     DEFAULT_VERSION,
-    MAP_AUTH_PROTOCOLS,
-    MAP_PRIV_PROTOCOLS,
     SNMP_VERSIONS,
 )
 
@@ -56,18 +50,9 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_BASEOID): cv.string,
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): vol.In(SNMP_VERSIONS),
         vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): cv.string,
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_AUTH_KEY): cv.string,
-        vol.Optional(CONF_AUTH_PROTOCOL, default=DEFAULT_AUTH_PROTOCOL): vol.In(
-            MAP_AUTH_PROTOCOLS
-        ),
-        vol.Optional(CONF_PRIV_KEY): cv.string,
-        vol.Optional(CONF_PRIV_PROTOCOL, default=DEFAULT_PRIV_PROTOCOL): vol.In(
-            MAP_PRIV_PROTOCOLS
-        ),
+        vol.Inclusive(CONF_AUTH_KEY, "keys"): cv.string,
+        vol.Inclusive(CONF_PRIV_KEY, "keys"): cv.string,
     }
 )
 
@@ -88,15 +73,15 @@ class SnmpScanner(DeviceScanner):
     def __init__(self, config):
         """Initialize the scanner and test the target device."""
         host = config.get(CONF_HOST)
-        port = config.get(CONF_PORT)
+        port = DEFAULT_PORT
         community = config.get(CONF_COMMUNITY)
         baseoid = config.get(CONF_BASEOID)
-        version = config[CONF_VERSION]
-        username = config.get(CONF_USERNAME)
+        version = DEFAULT_VERSION
+        username = community
         authkey = config.get(CONF_AUTH_KEY)
-        authproto = config[CONF_AUTH_PROTOCOL]
+        authproto = DEFAULT_AUTH_PROTOCOL
         privkey = config.get(CONF_PRIV_KEY)
-        privproto = config[CONF_PRIV_PROTOCOL]
+        privproto = DEFAULT_PRIV_PROTOCOL
 
         try:
             # Try IPv4 first.
@@ -109,7 +94,7 @@ class SnmpScanner(DeviceScanner):
                 _LOGGER.error("Invalid SNMP host: %s", err)
                 return
 
-        if version == "3":
+        if authkey is not None or privkey is not None:
             if not authkey:
                 authproto = "none"
             if not privkey:
@@ -121,8 +106,8 @@ class SnmpScanner(DeviceScanner):
                     username,
                     authKey=authkey or None,
                     privKey=privkey or None,
-                    authProtocol=getattr(hlapi, MAP_AUTH_PROTOCOLS[authproto]),
-                    privProtocol=getattr(hlapi, MAP_PRIV_PROTOCOLS[privproto]),
+                    authProtocol=authproto,
+                    privProtocol=privproto,
                 ),
                 target,
                 ContextData(),
