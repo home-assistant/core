@@ -476,7 +476,11 @@ async def test_invalid_attribute_template(
     await hass.async_block_till_done()
     await async_update_entity(hass, "sensor.invalid_template")
     assert "TemplateError" in caplog_setup_text
-    assert "test_attribute" in caplog.text
+    assert (
+        "Template variable error: 'None' has no attribute 'attributes' when rendering"
+        in caplog.text
+    )
+    assert hass.states.get("sensor.invalid_template").state == "startup"
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, sensor.DOMAIN)])
