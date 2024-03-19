@@ -1869,7 +1869,7 @@ class EntityIDMigration(BaseMigration):
 
 
 def _mark_migration_done(session: Session, migration: type[BaseMigration]) -> None:
-    """Mark a migration as done."""
+    """Mark a migration as done in the database."""
     session.merge(
         MigrationChanges(
             migration_id=migration.migration_id, version=migration.migration_version
