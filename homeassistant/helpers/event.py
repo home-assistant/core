@@ -328,7 +328,7 @@ def _async_dispatch_entity_id_event(
         return
     for job in callbacks_list.copy():
         try:
-            hass.async_run_hass_job(job, event, eager_start=True)
+            hass.async_run_hass_job(job, event)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Error while dispatching event for %s to %s",
@@ -1599,7 +1599,7 @@ class _TrackTimeInterval:
             self._track_job,
             hass.loop.time() + self.seconds,
         )
-        hass.async_run_hass_job(self._run_job, now, eager_start=True, background=True)
+        hass.async_run_hass_job(self._run_job, now, background=True)
 
     @callback
     def async_cancel(self) -> None:
@@ -1684,7 +1684,7 @@ class SunListener:
         """Handle solar event."""
         self._unsub_sun = None
         self._listen_next_sun_event()
-        self.hass.async_run_hass_job(self.job, eager_start=True, background=True)
+        self.hass.async_run_hass_job(self.job, background=True)
 
     @callback
     def _handle_config_event(self, _event: Any) -> None:
@@ -1770,9 +1770,7 @@ class _TrackUTCTimeChange:
         # time when the timer was scheduled
         utc_now = time_tracker_utcnow()
         localized_now = dt_util.as_local(utc_now) if self.local else utc_now
-        hass.async_run_hass_job(
-            self.job, localized_now, eager_start=True, background=True
-        )
+        hass.async_run_hass_job(self.job, localized_now, background=True)
         if TYPE_CHECKING:
             assert self._pattern_time_change_listener_job is not None
         self._cancel_callback = async_track_point_in_utc_time(

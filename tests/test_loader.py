@@ -72,7 +72,7 @@ def test_component_loader_non_existing(hass: HomeAssistant) -> None:
     """Test loading components."""
     components = loader.Components(hass)
     with pytest.raises(ImportError):
-        components.non_existing
+        _ = components.non_existing
 
 
 async def test_component_wrapper(hass: HomeAssistant) -> None:
@@ -1520,6 +1520,9 @@ async def test_platforms_exists(
 
     assert integration.platforms_exists(["group"]) == ["group"]
 
+    assert integration.platforms_are_loaded(["group"]) is True
+    assert integration.platforms_are_loaded(["other"]) is False
+
 
 async def test_async_get_platforms_loads_loop_if_already_in_sys_modules(
     hass: HomeAssistant,
@@ -1685,3 +1688,11 @@ async def test_integration_warnings(
     """Test integration warnings."""
     await loader.async_get_integration(hass, "test_package_loaded_loop")
     assert "configured to to import its code in the event loop" in caplog.text
+
+
+async def test_has_services(hass: HomeAssistant, enable_custom_integrations) -> None:
+    """Test has_services."""
+    integration = await loader.async_get_integration(hass, "test")
+    assert integration.has_services is False
+    integration = await loader.async_get_integration(hass, "test_with_services")
+    assert integration.has_services is True

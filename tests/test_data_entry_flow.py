@@ -908,7 +908,7 @@ async def test_abort_raises_unknown_flow_if_not_in_progress(manager) -> None:
 
 @pytest.mark.parametrize(
     "menu_options",
-    (["target1", "target2"], {"target1": "Target 1", "target2": "Target 2"}),
+    [["target1", "target2"], {"target1": "Target 1", "target2": "Target 2"}],
 )
 async def test_show_menu(hass: HomeAssistant, manager, menu_options) -> None:
     """Test show menu."""

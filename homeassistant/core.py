@@ -31,7 +31,18 @@ import re
 import threading
 import time
 from time import monotonic
-from typing import TYPE_CHECKING, Any, Generic, Literal, ParamSpec, Self, cast, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Generic,
+    Literal,
+    NotRequired,
+    ParamSpec,
+    Self,
+    TypedDict,
+    cast,
+    overload,
+)
 from urllib.parse import urlparse
 
 from typing_extensions import TypeVar
@@ -524,30 +535,45 @@ class HomeAssistant:
         if target is None:
             raise ValueError("Don't call add_job with None")
         if asyncio.iscoroutine(target):
-            self.loop.call_soon_threadsafe(self.async_add_job, target)
+            self.loop.call_soon_threadsafe(
+                functools.partial(self.async_create_task, target, eager_start=True)
+            )
             return
         if TYPE_CHECKING:
             target = cast(Callable[..., Any], target)
-        self.loop.call_soon_threadsafe(self.async_add_job, target, *args)
+        self.loop.call_soon_threadsafe(
+            functools.partial(
+                self.async_add_hass_job, HassJob(target), *args, eager_start=True
+            )
+        )
 
     @overload
     @callback
     def async_add_job(
-        self, target: Callable[..., Coroutine[Any, Any, _R]], *args: Any
+        self,
+        target: Callable[..., Coroutine[Any, Any, _R]],
+        *args: Any,
+        eager_start: bool = False,
     ) -> asyncio.Future[_R] | None:
         ...
 
     @overload
     @callback
     def async_add_job(
-        self, target: Callable[..., Coroutine[Any, Any, _R] | _R], *args: Any
+        self,
+        target: Callable[..., Coroutine[Any, Any, _R] | _R],
+        *args: Any,
+        eager_start: bool = False,
     ) -> asyncio.Future[_R] | None:
         ...
 
     @overload
     @callback
     def async_add_job(
-        self, target: Coroutine[Any, Any, _R], *args: Any
+        self,
+        target: Coroutine[Any, Any, _R],
+        *args: Any,
+        eager_start: bool = False,
     ) -> asyncio.Future[_R] | None:
         ...
 
@@ -556,6 +582,7 @@ class HomeAssistant:
         self,
         target: Callable[..., Coroutine[Any, Any, _R] | _R] | Coroutine[Any, Any, _R],
         *args: Any,
+        eager_start: bool = False,
     ) -> asyncio.Future[_R] | None:
         """Add a job to be executed by the event loop or by an executor.
 
@@ -567,11 +594,22 @@ class HomeAssistant:
         target: target to call.
         args: parameters for method to call.
         """
+        # late import to avoid circular imports
+        from .helpers import frame  # pylint: disable=import-outside-toplevel
+
+        frame.report(
+            "calls `async_add_job`, which is deprecated and will be removed in Home "
+            "Assistant 2025.4; Please review "
+            "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
+            " for replacement options",
+            error_if_core=False,
+        )
+
         if target is None:
             raise ValueError("Don't call async_add_job with None")
 
         if asyncio.iscoroutine(target):
-            return self.async_create_task(target)
+            return self.async_create_task(target, eager_start=eager_start)
 
         # This code path is performance sensitive and uses
         # if TYPE_CHECKING to avoid the overhead of constructing
@@ -579,7 +617,7 @@ class HomeAssistant:
         # https://github.com/home-assistant/core/pull/71960
         if TYPE_CHECKING:
             target = cast(Callable[..., Coroutine[Any, Any, _R] | _R], target)
-        return self.async_add_hass_job(HassJob(target), *args)
+        return self.async_add_hass_job(HassJob(target), *args, eager_start=eager_start)
 
     @overload
     @callback
@@ -663,7 +701,9 @@ class HomeAssistant:
 
         target: target to call.
         """
-        self.loop.call_soon_threadsafe(self.async_create_task, target, name)
+        self.loop.call_soon_threadsafe(
+            functools.partial(self.async_create_task, target, name, eager_start=True)
+        )
 
     @callback
     def async_create_task(
@@ -750,7 +790,6 @@ class HomeAssistant:
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R]],
         *args: Any,
-        eager_start: bool = False,
         background: bool = False,
     ) -> asyncio.Future[_R] | None:
         ...
@@ -761,7 +800,6 @@ class HomeAssistant:
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
         *args: Any,
-        eager_start: bool = False,
         background: bool = False,
     ) -> asyncio.Future[_R] | None:
         ...
@@ -771,14 +809,12 @@ class HomeAssistant:
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
         *args: Any,
-        eager_start: bool = False,
         background: bool = False,
     ) -> asyncio.Future[_R] | None:
         """Run a HassJob from within the event loop.
 
         This method must be run in the event loop.
 
-        If eager_start is True, coroutine functions will be scheduled eagerly.
         If background is True, the task will created as a background task.
 
         hassjob: HassJob
@@ -795,7 +831,7 @@ class HomeAssistant:
             return None
 
         return self.async_add_hass_job(
-            hassjob, *args, eager_start=eager_start, background=background
+            hassjob, *args, eager_start=True, background=background
         )
 
     @overload
@@ -832,8 +868,19 @@ class HomeAssistant:
         target: target to call.
         args: parameters for method to call.
         """
+        # late import to avoid circular imports
+        from .helpers import frame  # pylint: disable=import-outside-toplevel
+
+        frame.report(
+            "calls `async_run_job`, which is deprecated and will be removed in Home "
+            "Assistant 2025.4; Please review "
+            "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
+            " for replacement options",
+            error_if_core=False,
+        )
+
         if asyncio.iscoroutine(target):
-            return self.async_create_task(target)
+            return self.async_create_task(target, eager_start=True)
 
         # This code path is performance sensitive and uses
         # if TYPE_CHECKING to avoid the overhead of constructing
@@ -1091,7 +1138,7 @@ class HomeAssistant:
             if (
                 not handle.cancelled()
                 and (args := handle._args)  # pylint: disable=protected-access
-                and type(job := args[0]) is HassJob  # noqa: E721
+                and type(job := args[0]) is HassJob
                 and job.cancel_on_shutdown
             ):
                 handle.cancel()
@@ -1254,7 +1301,7 @@ _FilterableJobType = tuple[
 @dataclass(slots=True)
 class _OneTimeListener:
     hass: HomeAssistant
-    listener: Callable[[Event], Coroutine[Any, Any, None] | None]
+    listener_job: HassJob[[Event], Coroutine[Any, Any, None] | None]
     remove: CALLBACK_TYPE | None = None
 
     @callback
@@ -1265,14 +1312,14 @@ class _OneTimeListener:
             return
         self.remove()
         self.remove = None
-        self.hass.async_run_job(self.listener, event)
+        self.hass.async_run_hass_job(self.listener_job, event)
 
     def __repr__(self) -> str:
         """Return the representation of the listener and source module."""
-        module = inspect.getmodule(self.listener)
+        module = inspect.getmodule(self.listener_job.target)
         if module:
-            return f"<_OneTimeListener {module.__name__}:{self.listener}>"
-        return f"<_OneTimeListener {self.listener}>"
+            return f"<_OneTimeListener {module.__name__}:{self.listener_job.target}>"
+        return f"<_OneTimeListener {self.listener_job.target}>"
 
 
 class EventBus:
@@ -1355,7 +1402,7 @@ class EventBus:
                     continue
             if run_immediately:
                 try:
-                    self._hass.async_run_hass_job(job, event, eager_start=True)
+                    self._hass.async_run_hass_job(job, event)
                 except Exception:  # pylint: disable=broad-except
                     _LOGGER.exception("Error running job: %s", job)
             else:
@@ -1451,6 +1498,7 @@ class EventBus:
         self,
         event_type: str,
         listener: Callable[[Event[Any]], Coroutine[Any, Any, None] | None],
+        run_immediately: bool = False,
     ) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 
@@ -1461,7 +1509,7 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        one_time_listener = _OneTimeListener(self._hass, listener)
+        one_time_listener = _OneTimeListener(self._hass, HassJob(listener))
         remove = self._async_listen_filterable_job(
             event_type,
             (
@@ -1471,7 +1519,7 @@ class EventBus:
                     job_type=HassJobType.Callback,
                 ),
                 None,
-                False,
+                run_immediately,
             ),
         )
         one_time_listener.remove = remove
@@ -1499,14 +1547,24 @@ class EventBus:
             )
 
 
+class CompressedState(TypedDict):
+    """Compressed dict of a state."""
+
+    s: str  # COMPRESSED_STATE_STATE
+    a: ReadOnlyDict[str, Any]  # COMPRESSED_STATE_ATTRIBUTES
+    c: str | dict[str, Any]  # COMPRESSED_STATE_CONTEXT
+    lc: float  # COMPRESSED_STATE_LAST_CHANGED
+    lu: NotRequired[float]  # COMPRESSED_STATE_LAST_UPDATED
+
+
 class State:
     """Object to represent a state within the state machine.
 
     entity_id: the entity that is represented.
     state: the state of the entity
     attributes: extra information on entity and state
-    last_changed: last time the state was changed, not the attributes.
-    last_updated: last time this object was updated.
+    last_changed: last time the state was changed.
+    last_updated: last time the state or attributes were changed.
     context: Context in which it was created
     domain: Domain of this state.
     object_id: Object id of this state.
@@ -1539,7 +1597,7 @@ class State:
         # State only creates and expects a ReadOnlyDict so
         # there is no need to check for subclassing with
         # isinstance here so we can use the faster type check.
-        if type(attributes) is not ReadOnlyDict:  # noqa: E721
+        if type(attributes) is not ReadOnlyDict:
             self.attributes = ReadOnlyDict(attributes or {})
         else:
             self.attributes = attributes
@@ -1628,7 +1686,7 @@ class State:
         return json_fragment(self.as_dict_json)
 
     @cached_property
-    def as_compressed_state(self) -> dict[str, Any]:
+    def as_compressed_state(self) -> CompressedState:
         """Build a compressed dict of a state for adds.
 
         Omits the lu (last_updated) if it matches (lc) last_changed.
@@ -1643,7 +1701,7 @@ class State:
             # to avoid callers outside of this module
             # from misusing it by mistake.
             context = state_context._as_dict  # pylint: disable=protected-access
-        compressed_state = {
+        compressed_state: CompressedState = {
             COMPRESSED_STATE_STATE: self.state,
             COMPRESSED_STATE_ATTRIBUTES: self.attributes,
             COMPRESSED_STATE_CONTEXT: context,

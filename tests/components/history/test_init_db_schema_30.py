@@ -257,9 +257,7 @@ def test_get_significant_states_only(legacy_hass_history) -> None:
         return hass.states.get(entity_id)
 
     start = dt_util.utcnow() - timedelta(minutes=4)
-    points = []
-    for i in range(1, 4):
-        points.append(start + timedelta(minutes=i))
+    points = [start + timedelta(minutes=i) for i in range(1, 4)]
 
     states = []
     with freeze_time(start) as freezer:

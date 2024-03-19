@@ -116,18 +116,18 @@ async def test_enumerate_remote(
         },
     ]
 
-    for button in ("button1", "button2", "button3", "button4"):
-        for subtype in ("single_press", "double_press", "long_press"):
-            expected.append(
-                {
-                    "device_id": device.id,
-                    "domain": "homekit_controller",
-                    "platform": "device",
-                    "type": button,
-                    "subtype": subtype,
-                    "metadata": {},
-                }
-            )
+    expected.extend(
+        {
+            "device_id": device.id,
+            "domain": "homekit_controller",
+            "platform": "device",
+            "type": button,
+            "subtype": subtype,
+            "metadata": {},
+        }
+        for button in ("button1", "button2", "button3", "button4")
+        for subtype in ("single_press", "double_press", "long_press")
+    )
 
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device.id
@@ -167,17 +167,17 @@ async def test_enumerate_button(
         },
     ]
 
-    for subtype in ("single_press", "double_press", "long_press"):
-        expected.append(
-            {
-                "device_id": device.id,
-                "domain": "homekit_controller",
-                "platform": "device",
-                "type": "button1",
-                "subtype": subtype,
-                "metadata": {},
-            }
-        )
+    expected.extend(
+        {
+            "device_id": device.id,
+            "domain": "homekit_controller",
+            "platform": "device",
+            "type": "button1",
+            "subtype": subtype,
+            "metadata": {},
+        }
+        for subtype in ("single_press", "double_press", "long_press")
+    )
 
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device.id
@@ -217,17 +217,17 @@ async def test_enumerate_doorbell(
         },
     ]
 
-    for subtype in ("single_press", "double_press", "long_press"):
-        expected.append(
-            {
-                "device_id": device.id,
-                "domain": "homekit_controller",
-                "platform": "device",
-                "type": "doorbell",
-                "subtype": subtype,
-                "metadata": {},
-            }
-        )
+    expected.extend(
+        {
+            "device_id": device.id,
+            "domain": "homekit_controller",
+            "platform": "device",
+            "type": "doorbell",
+            "subtype": subtype,
+            "metadata": {},
+        }
+        for subtype in ("single_press", "double_press", "long_press")
+    )
 
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device.id

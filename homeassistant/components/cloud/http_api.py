@@ -71,6 +71,7 @@ _CLOUD_ERRORS: dict[type[Exception], tuple[HTTPStatus, str]] = {
 @callback
 def async_setup(hass: HomeAssistant) -> None:
     """Initialize the HTTP API."""
+    websocket_api.async_register_command(hass, websocket_cloud_remove_data)
     websocket_api.async_register_command(hass, websocket_cloud_status)
     websocket_api.async_register_command(hass, websocket_subscription)
     websocket_api.async_register_command(hass, websocket_update_prefs)
@@ -327,6 +328,33 @@ class CloudForgotPasswordView(HomeAssistantView):
             await cloud.auth.async_forgot_password(data["email"])
 
         return self.json_message("ok")
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required("type"): "cloud/remove_data"})
+@websocket_api.async_response
+async def websocket_cloud_remove_data(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle request for account info.
+
+    Async friendly.
+    """
+    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+    if cloud.is_logged_in:
+        connection.send_message(
+            websocket_api.error_message(
+                msg["id"], "logged_in", "Can't remove data when logged in."
+            )
+        )
+        return
+
+    await cloud.remove_data()
+    await cloud.client.prefs.async_erase_config()
+
+    connection.send_message(websocket_api.result_message(msg["id"]))
 
 
 @websocket_api.websocket_command({vol.Required("type"): "cloud/status"})
@@ -649,16 +677,14 @@ async def google_assistant_list(
     gconf = await cloud.client.get_google_config()
     entities = google_helpers.async_get_entities(hass, gconf)
 
-    result = []
-
-    for entity in entities:
-        result.append(
-            {
-                "entity_id": entity.entity_id,
-                "traits": [trait.name for trait in entity.traits()],
-                "might_2fa": entity.might_2fa_traits(),
-            }
-        )
+    result = [
+        {
+            "entity_id": entity.entity_id,
+            "traits": [trait.name for trait in entity.traits()],
+            "might_2fa": entity.might_2fa_traits(),
+        }
+        for entity in entities
+    ]
 
     connection.send_result(msg["id"], result)
 
@@ -743,16 +769,14 @@ async def alexa_list(
     alexa_config = await cloud.client.get_alexa_config()
     entities = alexa_entities.async_get_entities(hass, alexa_config)
 
-    result = []
-
-    for entity in entities:
-        result.append(
-            {
-                "entity_id": entity.entity_id,
-                "display_categories": entity.default_display_categories(),
-                "interfaces": [ifc.name() for ifc in entity.interfaces()],
-            }
-        )
+    result = [
+        {
+            "entity_id": entity.entity_id,
+            "display_categories": entity.default_display_categories(),
+            "interfaces": [ifc.name() for ifc in entity.interfaces()],
+        }
+        for entity in entities
+    ]
 
     connection.send_result(msg["id"], result)
 

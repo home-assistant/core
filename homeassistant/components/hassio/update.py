@@ -67,14 +67,14 @@ async def async_setup_entry(
         ),
     ]
 
-    for addon in coordinator.data[DATA_KEY_ADDONS].values():
-        entities.append(
-            SupervisorAddonUpdateEntity(
-                addon=addon,
-                coordinator=coordinator,
-                entity_description=ENTITY_DESCRIPTION,
-            )
+    entities.extend(
+        SupervisorAddonUpdateEntity(
+            addon=addon,
+            coordinator=coordinator,
+            entity_description=ENTITY_DESCRIPTION,
         )
+        for addon in coordinator.data[DATA_KEY_ADDONS].values()
+    )
 
     if coordinator.is_hass_os:
         entities.append(

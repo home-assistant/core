@@ -838,6 +838,11 @@ class Integration:
         """Return if the integration has translations."""
         return "translations" in self._top_level_files
 
+    @cached_property
+    def has_services(self) -> bool:
+        """Return if the integration has services."""
+        return "services.yaml" in self._top_level_files
+
     @property
     def mqtt(self) -> list[str] | None:
         """Return Integration MQTT entries."""
@@ -1167,6 +1172,13 @@ class Integration:
             raise self._missing_platforms_cache[full_name]
         return None
 
+    def platforms_are_loaded(self, platform_names: Iterable[str]) -> bool:
+        """Check if a platforms are loaded for an integration."""
+        return all(
+            f"{self.domain}.{platform_name}" in self._cache
+            for platform_name in platform_names
+        )
+
     def get_platform_cached(self, platform_name: str) -> ModuleType | None:
         """Return a platform for an integration from cache."""
         return self._cache.get(f"{self.domain}.{platform_name}")  # type: ignore[return-value]
@@ -1294,7 +1306,7 @@ def async_get_loaded_integration(hass: HomeAssistant, domain: str) -> Integratio
         cache = cast(dict[str, Integration | asyncio.Future[None]], cache)
     int_or_fut = cache.get(domain, _UNDEF)
     # Integration is never subclassed, so we can check for type
-    if type(int_or_fut) is Integration:  # noqa: E721
+    if type(int_or_fut) is Integration:
         return int_or_fut
     raise IntegrationNotLoaded(domain)
 
@@ -1321,7 +1333,7 @@ async def async_get_integrations(
     for domain in domains:
         int_or_fut = cache.get(domain, _UNDEF)
         # Integration is never subclassed, so we can check for type
-        if type(int_or_fut) is Integration:  # noqa: E721
+        if type(int_or_fut) is Integration:
             results[domain] = int_or_fut
         elif int_or_fut is not _UNDEF:
             in_progress[domain] = cast(asyncio.Future[None], int_or_fut)
