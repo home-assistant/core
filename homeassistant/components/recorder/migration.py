@@ -1802,7 +1802,14 @@ class BaseRunTimeMigration(ABC):
         """Return the query to check if the migration needs to run."""
 
     def needs_migrate(self) -> bool:
-        """Return if the migration needs to run."""
+        """Return if the migration needs to run.
+
+        If the migration needs to run, it will return True.
+
+        If the migration does not need to run, it will return False and
+        mark the migration as done in the database if its not already
+        marked as done.
+        """
         if self.schema_version < self.required_schema_version:
             # Schema is too old, we must have to migrate
             return True
