@@ -297,6 +297,9 @@ async def test_stream_retries(
 
     stream.set_update_callback(update_callback)
 
+    open_future1 = hass.loop.create_future()
+    open_future2 = hass.loop.create_future()
+    futures = [open_future2, open_future1]
     cur_time = 0
 
     def time_side_effect():
@@ -308,18 +311,22 @@ async def test_stream_retries(
         cur_time += 40
         return cur_time
 
+    def av_open_side_effect(*args, **kwargs):
+        hass.loop.call_soon_threadsafe(futures.pop().set_result, None)
+        raise av.error.InvalidDataError(-2, "error")
+
     with patch("av.open") as av_open, patch(
         "homeassistant.components.stream.time"
     ) as mock_time, patch(
         "homeassistant.components.stream.STREAM_RESTART_INCREMENT", 0
     ):
-        av_open.side_effect = av.error.InvalidDataError(-2, "error")
+        av_open.side_effect = av_open_side_effect
         mock_time.time.side_effect = time_side_effect
         # Request stream. Enable retries which are disabled by default in tests.
         should_retry.return_value = True
         await stream.start()
-        stream._thread.join()
-        stream._thread = None
+        await open_future1
+        await open_future2
         assert av_open.call_count == 2
         await hass.async_block_till_done()
 
