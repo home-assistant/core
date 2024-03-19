@@ -299,7 +299,7 @@ async def test_stream_retries(
 
     open_future1 = hass.loop.create_future()
     open_future2 = hass.loop.create_future()
-    futures = [open_future1, open_future2]
+    futures = [open_future2, open_future1]
     cur_time = 0
 
     def time_side_effect():
