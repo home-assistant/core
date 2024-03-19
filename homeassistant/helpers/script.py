@@ -13,7 +13,7 @@ from functools import partial
 import itertools
 import logging
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, TypedDict, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar, cast
 
 import async_interrupt
 import voluptuous as vol
@@ -1385,51 +1385,23 @@ class Script:
     def referenced_floors(self) -> set[str]:
         """Return a set of referenced fooors."""
         referenced_floors: set[str] = set()
-        Script._find_referenced_floors(referenced_floors, self.sequence)
+        Script._find_referenced_target(ATTR_FLOOR_ID, referenced_floors, self.sequence)
         return referenced_floors
-
-    @staticmethod
-    def _find_referenced_floors(
-        referenced: set[str], sequence: Sequence[dict[str, Any]]
-    ) -> None:
-        """Find referenced floors in a sequence."""
-        for step in sequence:
-            action = cv.determine_script_action(step)
-
-            if action == cv.SCRIPT_ACTION_CALL_SERVICE:
-                for data in (
-                    step.get(CONF_TARGET),
-                    step.get(CONF_SERVICE_DATA),
-                    step.get(CONF_SERVICE_DATA_TEMPLATE),
-                ):
-                    _referenced_extract_ids(data, ATTR_FLOOR_ID, referenced)
-
-            elif action == cv.SCRIPT_ACTION_CHOOSE:
-                for choice in step[CONF_CHOOSE]:
-                    Script._find_referenced_floors(referenced, choice[CONF_SEQUENCE])
-                if CONF_DEFAULT in step:
-                    Script._find_referenced_floors(referenced, step[CONF_DEFAULT])
-
-            elif action == cv.SCRIPT_ACTION_IF:
-                Script._find_referenced_floors(referenced, step[CONF_THEN])
-                if CONF_ELSE in step:
-                    Script._find_referenced_floors(referenced, step[CONF_ELSE])
-
-            elif action == cv.SCRIPT_ACTION_PARALLEL:
-                for script in step[CONF_PARALLEL]:
-                    Script._find_referenced_floors(referenced, script[CONF_SEQUENCE])
 
     @cached_property
     def referenced_areas(self) -> set[str]:
         """Return a set of referenced areas."""
         referenced_areas: set[str] = set()
-        Script._find_referenced_areas(referenced_areas, self.sequence)
+        Script._find_referenced_target(ATTR_AREA_ID, referenced_areas, self.sequence)
         return referenced_areas
 
     @staticmethod
-    def _find_referenced_areas(
-        referenced: set[str], sequence: Sequence[dict[str, Any]]
+    def _find_referenced_target(
+        target: Literal["area_id", "floor_id"],
+        referenced: set[str],
+        sequence: Sequence[dict[str, Any]],
     ) -> None:
+        """Find referenced target in a sequence."""
         for step in sequence:
             action = cv.determine_script_action(step)
 
@@ -1439,22 +1411,28 @@ class Script:
                     step.get(CONF_SERVICE_DATA),
                     step.get(CONF_SERVICE_DATA_TEMPLATE),
                 ):
-                    _referenced_extract_ids(data, ATTR_AREA_ID, referenced)
+                    _referenced_extract_ids(data, target, referenced)
 
             elif action == cv.SCRIPT_ACTION_CHOOSE:
                 for choice in step[CONF_CHOOSE]:
-                    Script._find_referenced_areas(referenced, choice[CONF_SEQUENCE])
+                    Script._find_referenced_target(
+                        target, referenced, choice[CONF_SEQUENCE]
+                    )
                 if CONF_DEFAULT in step:
-                    Script._find_referenced_areas(referenced, step[CONF_DEFAULT])
+                    Script._find_referenced_target(
+                        target, referenced, step[CONF_DEFAULT]
+                    )
 
             elif action == cv.SCRIPT_ACTION_IF:
-                Script._find_referenced_areas(referenced, step[CONF_THEN])
+                Script._find_referenced_target(target, referenced, step[CONF_THEN])
                 if CONF_ELSE in step:
-                    Script._find_referenced_areas(referenced, step[CONF_ELSE])
+                    Script._find_referenced_target(target, referenced, step[CONF_ELSE])
 
             elif action == cv.SCRIPT_ACTION_PARALLEL:
                 for script in step[CONF_PARALLEL]:
-                    Script._find_referenced_areas(referenced, script[CONF_SEQUENCE])
+                    Script._find_referenced_target(
+                        target, referenced, script[CONF_SEQUENCE]
+                    )
 
     @cached_property
     def referenced_devices(self) -> set[str]:
