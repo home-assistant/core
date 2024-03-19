@@ -222,7 +222,7 @@ class CloudProvider(Provider):
     @property
     def supported_options(self) -> list[str]:
         """Return list of supported options like voice, emotion."""
-        # The gender option is deprecated and will be removed in 2024.9.0.
+        # The gender option is deprecated and will be removed in 2024.10.0.
         return [ATTR_GENDER, ATTR_VOICE, ATTR_AUDIO_OUTPUT]
 
     @callback
