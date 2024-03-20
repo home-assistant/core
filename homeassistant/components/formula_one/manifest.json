@@ -1,0 +1,9 @@
+{
+  "domain": "formula_one",
+  "name": "Formula 1",
+  "codeowners": ["@y34hbuddy"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/formula_one",
+  "iot_class": "cloud_polling",
+  "requirements": ["ergast-py==1.0.0"]
+}

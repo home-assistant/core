@@ -668,6 +668,9 @@ epion==0.0.3
 # homeassistant.components.epson
 epson-projector==0.5.1
 
+# homeassistant.components.formula_one
+ergast-py==1.0.0
+
 # homeassistant.components.esphome
 esphome-dashboard-api==1.2.3
 
