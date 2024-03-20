@@ -1,7 +1,6 @@
 """Support for The Things Network entities."""
 
 from abc import ABC, abstractmethod
-from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Optional
 
@@ -20,7 +19,6 @@ if TYPE_CHECKING:
 from .const import (
     CONF_APP_ID,
     OPTIONS_DEVICE_NAME,
-    OPTIONS_FIELD_CONTEXT_RECENT_TIME_S,
     OPTIONS_FIELD_ICON,
     OPTIONS_FIELD_NAME,
     OPTIONS_FIELD_PICTURE,
@@ -57,7 +55,6 @@ class TTN_Entity(CoordinatorEntity, Entity, ABC):
         self._unit_of_measurement = None
         self.__icon = None
         self.__picture = None
-        self.__context_recent_time_s = 5
 
         self.__refresh_names()
 
@@ -156,11 +153,6 @@ class TTN_Entity(CoordinatorEntity, Entity, ABC):
         return self.__picture
 
     @property
-    def context_recent_time(self) -> timedelta:
-        """Time that a context is considered recent."""
-        return timedelta(seconds=self.__context_recent_time_s)
-
-    @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return True
@@ -206,9 +198,6 @@ class TTN_Entity(CoordinatorEntity, Entity, ABC):
         self._unit_of_measurement = field_opts.get(OPTIONS_FIELD_UNIT_MEASUREMENT, None)
         self.__icon = field_opts.get(OPTIONS_FIELD_ICON, None)
         self.__picture = field_opts.get(OPTIONS_FIELD_PICTURE, None)
-        self.__context_recent_time_s = field_opts.get(
-            OPTIONS_FIELD_CONTEXT_RECENT_TIME_S, 5
-        )
 
         self.__device_name = device_name
         self.__name = f"{device_name} {field_name}"

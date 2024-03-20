@@ -1,7 +1,7 @@
 """The Things Network's integration constants."""
 
 CONF_HOSTNAME = "hostname"
-CONF_ACCESS_KEY = "access_key"
+CONF_API_KEY = "access_key"
 CONF_APP_ID = "app_id"
 CONF_VALUES = "values"
 CONF_VALUES_NAME = "name"
@@ -44,8 +44,6 @@ OPTIONS_FIELD_ICON = "icon"
 OPTIONS_FIELD_PICTURE = "picture"
 OPTIONS_FIELD_SUPPORTED_FEATURES = "supported_features"
 OPTIONS_FIELD_CONTEXT_RECENT_TIME_S = "context_recent_time_s"
-OPTIONS_FIELD_DEVICE_SCOPE = "device_scope"
-OPTIONS_FIELD_DEVICE_SCOPE_GLOBAL = "GLOBAL"
 
 
 ATTR_DEVICE_ID = "device_id"

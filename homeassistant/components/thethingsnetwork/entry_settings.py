@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.config_entries import ConfigEntry
 
 from .const import (
-    OPTIONS_FIELD_DEVICE_SCOPE,
     OPTIONS_FIELD_ENTITY_TYPE,
     OPTIONS_MENU_EDIT_DEVICES,
     OPTIONS_MENU_EDIT_FIELDS,
@@ -63,10 +62,7 @@ class TTN_EntrySettings:
             OPTIONS_MENU_EDIT_FIELDS,
             MappingProxyType[str, MappingProxyType[str, Any]]({}),
         )
-        field_opts = fields.get(field_id, MappingProxyType[str, Any]({}))
-        if field_opts.get(OPTIONS_FIELD_DEVICE_SCOPE, device_id) == device_id:
-            return field_opts
-        return MappingProxyType[str, Any]({})
+        return fields.get(field_id, MappingProxyType[str, Any]({}))
 
     def get_entity_type(self, device_id: str, field_id: str) -> str | None:
         """Get entity type based on the field_id and the integration options."""

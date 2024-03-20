@@ -14,7 +14,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
-    CONF_ACCESS_KEY,
+    CONF_API_KEY,
     CONF_APP_ID,
     CONF_HOSTNAME,
     DEFAULT_API_REFRESH_PERIOD_S,
@@ -55,7 +55,7 @@ class TTNCoordinator(DataUpdateCoordinator):
         self.__client = TTNClient(
             entry.data[CONF_HOSTNAME],
             entry.data[CONF_APP_ID],
-            entry.data[CONF_ACCESS_KEY],
+            entry.data[CONF_API_KEY],
             self.__entry.options.get(OPTIONS_MENU_EDIT_INTEGRATION, {}).get(
                 OPTIONS_MENU_INTEGRATION_FIRST_FETCH_TIME_H, DEFAULT_FIRST_FETCH_LAST_H
             ),
@@ -75,7 +75,7 @@ class TTNCoordinator(DataUpdateCoordinator):
             _LOGGER.debug("fetched data: %s", measurements)
 
             # Register newly found entities - nop if no new entities
-            self.async_add_entities(measurements)
+            self.__async_add_entities(measurements)
 
             # Return measurements
             return measurements
@@ -93,7 +93,7 @@ class TTNCoordinator(DataUpdateCoordinator):
         _LOGGER.debug("pushed data: %s", data)
 
         # Register newly found entities - nop if no new entities
-        self.async_add_entities(data)
+        self.__async_add_entities(data)
 
         # Push data to entities
         self.async_set_updated_data(data)
@@ -115,11 +115,11 @@ class TTNCoordinator(DataUpdateCoordinator):
             )
         )
 
-    def async_add_entities(self, data: TTNClient.DATA_TYPE | None = None) -> None:
+    def __async_add_entities(self, data: TTNClient.DATA_TYPE) -> None:
         """Create new entities out of received TTN data if they are seen for the first time."""
 
         for entity_class in self.__entity_class_register:
-            entity_class.async_add_entities(data if data else self.data)
+            entity_class.async_add_entities(data)
 
     class __RegisteredEntityClass:
         def __init__(
@@ -142,7 +142,7 @@ class TTNCoordinator(DataUpdateCoordinator):
                     entrySettings.get_coordinator(),
                     ttn_value,
                 )
-                for device_id, device_uplinks in entrySettings.get_coordinator().data.items()
+                for device_id, device_uplinks in data.items()
                 for field_id, ttn_value in device_uplinks.items()
                 if not self.__entity_class.exits(self.__entry, device_id, field_id)
                 and self.__entity_class.manages_uplink(entrySettings, ttn_value)

@@ -14,7 +14,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
 )
 
-from .const import CONF_ACCESS_KEY, CONF_APP_ID, CONF_HOSTNAME, DOMAIN, TTN_API_HOSTNAME
+from .const import CONF_API_KEY, CONF_APP_ID, CONF_HOSTNAME, DOMAIN, TTN_API_HOSTNAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ class TTNFlowHandler(ConfigFlow):
             {
                 vol.Required(CONF_HOSTNAME, default=self.__hostname): str,
                 vol.Required(CONF_APP_ID, default=self.__app_id): str,
-                vol.Required(CONF_ACCESS_KEY, default=self.__access_key): str,
+                vol.Required(CONF_API_KEY, default=self.__access_key): str,
             }
         )
 
@@ -52,7 +52,7 @@ class TTNFlowHandler(ConfigFlow):
         if user_input is not None:
             self.__hostname = user_input[CONF_HOSTNAME]
             self.__app_id = user_input[CONF_APP_ID]
-            self.__access_key = user_input[CONF_ACCESS_KEY]
+            self.__access_key = user_input[CONF_API_KEY]
 
             connection_error = await self.__connection_error
 
@@ -74,7 +74,7 @@ class TTNFlowHandler(ConfigFlow):
         self.__reauth_entry = entry
         self.__hostname = entry.data[CONF_HOSTNAME]
         self.__app_id = entry.data[CONF_APP_ID]
-        self.__access_key = entry.data[CONF_ACCESS_KEY]
+        self.__access_key = entry.data[CONF_API_KEY]
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
