@@ -38,6 +38,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_DOMAIN,
+    ATTR_RETURN_RESPONSE,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
     ATTR_SUPPORTED_FEATURES,
@@ -273,6 +274,7 @@ async def handle_webhook(
         vol.Required(ATTR_DOMAIN): cv.string,
         vol.Required(ATTR_SERVICE): cv.string,
         vol.Optional(ATTR_SERVICE_DATA, default={}): dict,
+        vol.Optional(ATTR_RETURN_RESPONSE, default=False): bool,
     }
 )
 async def webhook_call_service(
@@ -280,13 +282,19 @@ async def webhook_call_service(
 ) -> Response:
     """Handle a call service webhook."""
     try:
-        await hass.services.async_call(
+        result = await hass.services.async_call(
             data[ATTR_DOMAIN],
             data[ATTR_SERVICE],
             data[ATTR_SERVICE_DATA],
             blocking=True,
             context=registration_context(config_entry.data),
+            return_response=data[ATTR_RETURN_RESPONSE],
         )
+        if data[ATTR_RETURN_RESPONSE]:
+            return webhook_response(result, registration=config_entry.data)
+
+        return empty_okay_response()
+
     except (vol.Invalid, ServiceNotFound, Exception) as ex:
         _LOGGER.error(
             (
@@ -297,8 +305,6 @@ async def webhook_call_service(
             ex,
         )
         raise HTTPBadRequest from ex
-
-    return empty_okay_response()
 
 
 @WEBHOOK_COMMANDS.register("fire_event")
