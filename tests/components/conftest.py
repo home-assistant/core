@@ -6,6 +6,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from homeassistant.const import STATE_OFF, STATE_ON
+
 if TYPE_CHECKING:
     from tests.components.light.common import MockLight, SetupLightPlatformCallable
 
@@ -109,8 +111,6 @@ def prevent_ffmpeg_subprocess() -> Generator[None, None, None]:
 @pytest.fixture
 def mock_light_entities() -> list["MockLight"]:
     """Return mocked light entities."""
-    from homeassistant.const import STATE_OFF, STATE_ON
-
     from tests.components.light.common import MockLight
 
     return [
