@@ -158,7 +158,7 @@ async def test_simple_function_multiargs(hass: HomeAssistant) -> None:
     assert calls == [3, 2, "bla"]
 
 
-@pytest.mark.no_fail_on_log_exception()
+@pytest.mark.no_fail_on_log_exception
 async def test_callback_exception_gets_logged(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -179,7 +179,7 @@ async def test_callback_exception_gets_logged(
     )
 
 
-@pytest.mark.no_fail_on_log_exception()
+@pytest.mark.no_fail_on_log_exception
 async def test_coro_exception_gets_logged(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:

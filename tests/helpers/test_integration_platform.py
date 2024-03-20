@@ -188,7 +188,7 @@ async def _process_platform_coro(
     raise HomeAssistantError("Non-compliant platform")
 
 
-@pytest.mark.no_fail_on_log_exception()
+@pytest.mark.no_fail_on_log_exception
 @pytest.mark.parametrize(
     "process_platform", [_process_platform_callback, _process_platform_coro]
 )

@@ -70,7 +70,7 @@ async def test_migrate_log_handler(hass: HomeAssistant) -> None:
     assert not listener_thread.is_alive()
 
 
-@pytest.mark.no_fail_on_log_exception()
+@pytest.mark.no_fail_on_log_exception
 async def test_async_create_catching_coro(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -112,7 +112,7 @@ def test_catch_log_exception() -> None:
     assert not asyncio.iscoroutinefunction(wrapped)
 
 
-@pytest.mark.no_fail_on_log_exception()
+@pytest.mark.no_fail_on_log_exception
 async def test_catch_log_exception_catches_and_logs() -> None:
     """Test it is still a callback after wrapping including partial."""
     saved_args = []

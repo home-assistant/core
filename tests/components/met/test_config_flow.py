@@ -138,7 +138,7 @@ async def test_onboarding_step_abort_no_home(
     assert result["reason"] == "no_home"
 
 
-@pytest.mark.disable_autouse_fixture()
+@pytest.mark.disable_autouse_fixture
 async def test_options_flow(hass: HomeAssistant) -> None:
     """Test show options form."""
     update_data = {

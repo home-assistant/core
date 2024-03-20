@@ -184,7 +184,7 @@ async def test_get_non_existing_triggers(
     assert triggers == []
 
 
-@pytest.mark.no_fail_on_log_exception()
+@pytest.mark.no_fail_on_log_exception
 async def test_discover_bad_triggers(
     hass: HomeAssistant,
     device_reg,

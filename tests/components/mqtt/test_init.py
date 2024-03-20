@@ -2667,7 +2667,7 @@ async def test_default_entry_setting_are_applied(
     assert device_entry is not None
 
 
-@pytest.mark.no_fail_on_log_exception()
+@pytest.mark.no_fail_on_log_exception
 async def test_message_callback_exception_gets_logged(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,

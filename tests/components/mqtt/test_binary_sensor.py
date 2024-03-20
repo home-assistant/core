@@ -984,7 +984,7 @@ async def test_discovery_update_unchanged_binary_sensor(
         )
 
 
-@pytest.mark.no_fail_on_log_exception()
+@pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,

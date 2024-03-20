@@ -125,7 +125,7 @@ async def test_invalid_json(
 @pytest.mark.parametrize(
     "domain", ["tag", "device_automation", Platform.SENSOR, Platform.LIGHT]
 )
-@pytest.mark.no_fail_on_log_exception()
+@pytest.mark.no_fail_on_log_exception
 async def test_discovery_schema_error(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
