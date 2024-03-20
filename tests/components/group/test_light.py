@@ -45,7 +45,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_capture_events, get_fixture_path
-from tests.fixtures.pytest.light import MockLight, SetupLightPlatformCallable
+from tests.components.light.common import MockLight, SetupLightPlatformCallable
 
 
 async def test_default_state(
@@ -269,7 +269,7 @@ async def test_brightness(
         MockLight("test1", STATE_ON),
         MockLight("test2", STATE_OFF),
     ]
-    setup_light_platform(entities)
+    setup_light_platform(hass, entities)
 
     entity0 = entities[0]
     entity0.supported_color_modes = {ColorMode.BRIGHTNESS}
@@ -342,7 +342,7 @@ async def test_color_hs(
         MockLight("test1", STATE_ON),
         MockLight("test2", STATE_OFF),
     ]
-    setup_light_platform(entities)
+    setup_light_platform(hass, entities)
 
     entity0 = entities[0]
     entity0.supported_color_modes = {ColorMode.HS}
@@ -414,7 +414,7 @@ async def test_color_rgb(
         MockLight("test1", STATE_ON),
         MockLight("test2", STATE_OFF),
     ]
-    setup_light_platform(entities)
+    setup_light_platform(hass, entities)
 
     entity0 = entities[0]
     entity0.supported_color_modes = {ColorMode.RGB}
@@ -488,7 +488,7 @@ async def test_color_rgbw(
         MockLight("test1", STATE_ON),
         MockLight("test2", STATE_OFF),
     ]
-    setup_light_platform(entities)
+    setup_light_platform(hass, entities)
 
     entity0 = entities[0]
     entity0.supported_color_modes = {ColorMode.RGBW}
@@ -562,7 +562,7 @@ async def test_color_rgbww(
         MockLight("test1", STATE_ON),
         MockLight("test2", STATE_OFF),
     ]
-    setup_light_platform(entities)
+    setup_light_platform(hass, entities)
 
     entity0 = entities[0]
     entity0.supported_color_modes = {ColorMode.RGBWW}
@@ -636,7 +636,7 @@ async def test_white(
         MockLight("test1", STATE_ON),
         MockLight("test2", STATE_ON),
     ]
-    setup_light_platform(entities)
+    setup_light_platform(hass, entities)
 
     entity0 = entities[0]
     entity0.supported_color_modes = {ColorMode.HS, ColorMode.WHITE}
@@ -695,7 +695,7 @@ async def test_color_temp(
         MockLight("test1", STATE_ON),
         MockLight("test2", STATE_OFF),
     ]
-    setup_light_platform(entities)
+    setup_light_platform(hass, entities)
 
     entity0 = entities[0]
     entity0.supported_color_modes = {ColorMode.COLOR_TEMP}
@@ -767,7 +767,7 @@ async def test_emulated_color_temp_group(
         MockLight("test2", STATE_OFF),
         MockLight("test3", STATE_OFF),
     ]
-    setup_light_platform(entities)
+    setup_light_platform(hass, entities)
 
     entity0 = entities[0]
     entity0.supported_color_modes = {ColorMode.COLOR_TEMP}
@@ -835,7 +835,7 @@ async def test_min_max_mireds(
         MockLight("test1", STATE_ON),
         MockLight("test2", STATE_OFF),
     ]
-    setup_light_platform(entities)
+    setup_light_platform(hass, entities)
 
     entity0 = entities[0]
     entity0.supported_color_modes = {ColorMode.COLOR_TEMP}
@@ -1014,7 +1014,7 @@ async def test_supported_color_modes(
         MockLight("test2", STATE_OFF),
         MockLight("test3", STATE_OFF),
     ]
-    setup_light_platform(entities)
+    setup_light_platform(hass, entities)
 
     entity0 = entities[0]
     entity0.supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
@@ -1064,7 +1064,7 @@ async def test_color_mode(
         MockLight("test2", STATE_OFF),
         MockLight("test3", STATE_OFF),
     ]
-    setup_light_platform(entities)
+    setup_light_platform(hass, entities)
 
     entity0 = entities[0]
     entity0.supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
@@ -1142,7 +1142,7 @@ async def test_color_mode2(
         MockLight("test5", STATE_ON),
         MockLight("test6", STATE_ON),
     ]
-    setup_light_platform(entities)
+    setup_light_platform(hass, entities)
 
     entity = entities[0]
     entity.supported_color_modes = {ColorMode.COLOR_TEMP}
@@ -1265,7 +1265,7 @@ async def test_service_calls(
         MockLight("ceiling_lights", STATE_OFF),
         MockLight("kitchen_lights", STATE_OFF),
     ]
-    setup_light_platform(entities)
+    setup_light_platform(hass, entities)
 
     entity0 = entities[0]
     entity0.supported_color_modes = {supported_color_modes}
