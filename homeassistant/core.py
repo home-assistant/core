@@ -1333,6 +1333,10 @@ class _OneTimeListener:
         return f"<_OneTimeListener {self.listener_job.target}>"
 
 
+# Empty list, used by EventBus._async_fire
+EMPTY_LIST: list[Any] = []
+
+
 class EventBus:
     """Allow the firing of and listening for events."""
 
@@ -1417,12 +1421,16 @@ class EventBus:
                 "Bus:Handling %s", _event_repr(event_type, origin, event_data)
             )
 
-        listeners = self._listeners.get(event_type)
+        listeners = self._listeners.get(event_type, EMPTY_LIST)
         if event_type not in EVENTS_EXCLUDED_FROM_MATCH_ALL:
-            if listeners:
-                listeners = self._match_all_listeners + listeners
-            else:
-                listeners = self._match_all_listeners.copy()
+            match_all_listeners = self._match_all_listeners
+        else:
+            match_all_listeners = EMPTY_LIST
+        if event_type == EVENT_STATE_CHANGED:
+            aliased_listeners = self._listeners.get(EVENT_STATE_REPORTED, EMPTY_LIST)
+        else:
+            aliased_listeners = EMPTY_LIST
+        listeners = listeners + match_all_listeners + aliased_listeners
         if not listeners:
             return
 
@@ -2167,12 +2175,6 @@ class StateMachine:
         self._states[entity_id] = state
         self._bus._async_fire(  # pylint: disable=protected-access
             EVENT_STATE_CHANGED,
-            {"entity_id": entity_id, "old_state": old_state, "new_state": state},
-            context=context,
-            time_fired=timestamp,
-        )
-        self._bus._async_fire(  # pylint: disable=protected-access
-            EVENT_STATE_REPORTED,
             {"entity_id": entity_id, "old_state": old_state, "new_state": state},
             context=context,
             time_fired=timestamp,
