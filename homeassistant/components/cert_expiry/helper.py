@@ -2,13 +2,13 @@
 
 import asyncio
 import datetime
-from functools import cache
 import socket
 import ssl
 from typing import Any
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
+from homeassistant.util.ssl import get_default_context
 
 from .const import TIMEOUT
 from .errors import (
@@ -17,12 +17,6 @@ from .errors import (
     ResolveFailed,
     ValidationFailure,
 )
-
-
-@cache
-def _get_default_ssl_context() -> ssl.SSLContext:
-    """Return the default SSL context."""
-    return ssl.create_default_context()
 
 
 async def async_get_cert(
@@ -36,7 +30,7 @@ async def async_get_cert(
             asyncio.Protocol,
             host,
             port,
-            ssl=_get_default_ssl_context(),
+            ssl=get_default_context(),
             happy_eyeballs_delay=0.25,
             server_hostname=host,
         )

@@ -1,0 +1,35 @@
+# serializer version: 1
+# name: test_setup_platform
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_humidity': 18.7,
+      'current_temperature': 27.4,
+      'fan_mode': 'low',
+      'fan_modes': list([
+        'auto',
+        'high',
+        'medium',
+        'low',
+      ]),
+      'friendly_name': 'Melissa 12345678',
+      'hvac_modes': list([
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 30,
+      'min_temp': 16,
+      'supported_features': <ClimateEntityFeature: 393>,
+      'target_temp_step': 1,
+      'temperature': 16,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.melissa_12345678',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---

@@ -236,7 +236,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         )
         if len(presets):
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
-            self._attr_preset_modes = [PRESET_NONE] + list(presets.keys())
+            self._attr_preset_modes = [PRESET_NONE, *presets.keys()]
         else:
             self._attr_preset_modes = [PRESET_NONE]
         self._presets = presets
@@ -279,7 +279,9 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                 STATE_UNAVAILABLE,
                 STATE_UNKNOWN,
             ):
-                self.hass.create_task(self._check_switch_initial_state())
+                self.hass.async_create_task(
+                    self._check_switch_initial_state(), eager_start=True
+                )
 
         if self.hass.state is CoreState.running:
             _async_startup()
@@ -443,7 +445,9 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         if new_state is None:
             return
         if old_state is None:
-            self.hass.create_task(self._check_switch_initial_state())
+            self.hass.async_create_task(
+                self._check_switch_initial_state(), eager_start=True
+            )
         self.async_write_ha_state()
 
     @callback
