@@ -6,7 +6,11 @@ from collections.abc import Iterable
 from typing import Any
 import asyncio
 
-from homeassistant.components.remote import ATTR_DELAY_SECS, ATTR_NUM_REPEATS, RemoteEntity
+from homeassistant.components.remote import (
+    ATTR_DELAY_SECS,
+    ATTR_NUM_REPEATS,
+    RemoteEntity
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
