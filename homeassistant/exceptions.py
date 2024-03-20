@@ -64,6 +64,12 @@ class HomeAssistantError(Exception):
             return self._message
 
         if not self.generate_message:
+            # Initialize self._message to prevent a recursive loop
+            self._message = super(HomeAssistantError).__str__()  # type: ignore[misc]
+            # If the there is an other super class involved,
+            # we want to call its __str__ method.
+            # If the super().__str__ method is missing in the base_class
+            # the call will be recursive and we return our initialized default.
             self._message = super().__str__()
             return self._message
 
