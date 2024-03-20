@@ -105,20 +105,6 @@ async def test_missing_optional_config(hass: HomeAssistant, start_ha) -> None:
                 },
             }
         },
-        {
-            DOMAIN: {
-                "platform": "template",
-                "fans": {
-                    "platform": "template",
-                    "fans": {
-                        "test_fan": {
-                            "value_template": "{{ 'on' }}",
-                            "turn_on": {"service": "script.fan_on"},
-                        }
-                    },
-                },
-            }
-        },
     ],
 )
 async def test_wrong_template_config(hass: HomeAssistant, start_ha) -> None:
@@ -428,6 +414,7 @@ async def test_set_invalid_direction_from_initial_stage(
     await common.async_turn_on(hass, _TEST_FAN)
 
     await common.async_set_direction(hass, _TEST_FAN, "invalid")
+
     assert hass.states.get(_DIRECTION_INPUT_SELECT).state == ""
     _verify(hass, STATE_ON, 0, None, None, None)
 

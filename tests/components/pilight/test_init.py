@@ -5,6 +5,7 @@ import logging
 import socket
 from unittest.mock import patch
 
+import pytest
 from voluptuous import MultipleInvalid
 
 from homeassistant.components import pilight
@@ -104,7 +105,7 @@ async def test_send_code_no_protocol(hass: HomeAssistant) -> None:
         assert await async_setup_component(hass, pilight.DOMAIN, {pilight.DOMAIN: {}})
 
         # Call without protocol info, should raise an error
-        try:
+        with pytest.raises(MultipleInvalid) as excinfo:
             await hass.services.async_call(
                 pilight.DOMAIN,
                 pilight.SERVICE_NAME,
@@ -112,8 +113,7 @@ async def test_send_code_no_protocol(hass: HomeAssistant) -> None:
                 blocking=True,
             )
             await hass.async_block_till_done()
-        except MultipleInvalid as error:
-            assert "required key not provided @ data['protocol']" in str(error)
+        assert "required key not provided @ data['protocol']" in str(excinfo.value)
 
 
 @patch("homeassistant.components.pilight._LOGGER.error")

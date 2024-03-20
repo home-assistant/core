@@ -84,6 +84,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.electricity_teststrasse_1_total_consumption',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '11934.8699715',
   })
@@ -137,6 +138,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.electricity_teststrasse_1_total_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -226,6 +228,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.gas_teststrasse_1_total_gas_consumption',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '21064.8',
   })

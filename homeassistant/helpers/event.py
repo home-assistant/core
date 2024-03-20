@@ -109,7 +109,7 @@ class _KeyedEventTracker(Generic[_TypedDictT]):
         [
             HomeAssistant,
             dict[str, list[HassJob[[Event[_TypedDictT]], Any]]],
-            Event[_TypedDictT],
+            _TypedDictT,
         ],
         bool,
     ]
@@ -237,11 +237,11 @@ def async_track_state_change(
     job = HassJob(action, f"track state change {entity_ids} {from_state} {to_state}")
 
     @callback
-    def state_change_filter(event: Event[EventStateChangedData]) -> bool:
+    def state_change_filter(event_data: EventStateChangedData) -> bool:
         """Handle specific state changes."""
         if from_state is not None:
             old_state_str: str | None = None
-            if (old_state := event.data["old_state"]) is not None:
+            if (old_state := event_data["old_state"]) is not None:
                 old_state_str = old_state.state
 
             if not match_from_state(old_state_str):
@@ -249,7 +249,7 @@ def async_track_state_change(
 
         if to_state is not None:
             new_state_str: str | None = None
-            if (new_state := event.data["new_state"]) is not None:
+            if (new_state := event_data["new_state"]) is not None:
                 new_state_str = new_state.state
 
             if not match_to_state(new_state_str):
@@ -270,7 +270,7 @@ def async_track_state_change(
     @callback
     def state_change_listener(event: Event[EventStateChangedData]) -> None:
         """Handle specific state changes."""
-        if not state_change_filter(event):
+        if not state_change_filter(event.data):
             return
 
         state_change_dispatcher(event)
@@ -341,10 +341,10 @@ def _async_dispatch_entity_id_event(
 def _async_state_change_filter(
     hass: HomeAssistant,
     callbacks: dict[str, list[HassJob[[Event[EventStateChangedData]], Any]]],
-    event: Event[EventStateChangedData],
+    event_data: EventStateChangedData,
 ) -> bool:
     """Filter state changes by entity_id."""
-    return event.data["entity_id"] in callbacks
+    return event_data["entity_id"] in callbacks
 
 
 _KEYED_TRACK_STATE_CHANGE = _KeyedEventTracker(
@@ -473,10 +473,10 @@ def _async_dispatch_old_entity_id_or_entity_id_event(
 def _async_entity_registry_updated_filter(
     hass: HomeAssistant,
     callbacks: dict[str, list[HassJob[[Event[EventEntityRegistryUpdatedData]], Any]]],
-    event: Event[EventEntityRegistryUpdatedData],
+    event_data: EventEntityRegistryUpdatedData,
 ) -> bool:
     """Filter entity registry updates by entity_id."""
-    return event.data.get("old_entity_id", event.data["entity_id"]) in callbacks
+    return event_data.get("old_entity_id", event_data["entity_id"]) in callbacks
 
 
 _KEYED_TRACK_ENTITY_REGISTRY_UPDATED = _KeyedEventTracker(
@@ -512,10 +512,10 @@ def async_track_entity_registry_updated_event(
 def _async_device_registry_updated_filter(
     hass: HomeAssistant,
     callbacks: dict[str, list[HassJob[[Event[EventDeviceRegistryUpdatedData]], Any]]],
-    event: Event[EventDeviceRegistryUpdatedData],
+    event_data: EventDeviceRegistryUpdatedData,
 ) -> bool:
     """Filter device registry updates by device_id."""
-    return event.data["device_id"] in callbacks
+    return event_data["device_id"] in callbacks
 
 
 @callback
@@ -585,12 +585,12 @@ def _async_dispatch_domain_event(
 def _async_domain_added_filter(
     hass: HomeAssistant,
     callbacks: dict[str, list[HassJob[[Event[EventStateChangedData]], Any]]],
-    event: Event[EventStateChangedData],
+    event_data: EventStateChangedData,
 ) -> bool:
     """Filter state changes by entity_id."""
-    return event.data["old_state"] is None and (
+    return event_data["old_state"] is None and (
         MATCH_ALL in callbacks
-        or split_entity_id(event.data["entity_id"])[0] in callbacks
+        or split_entity_id(event_data["entity_id"])[0] in callbacks
     )
 
 
@@ -634,12 +634,12 @@ def _async_track_state_added_domain(
 def _async_domain_removed_filter(
     hass: HomeAssistant,
     callbacks: dict[str, list[HassJob[[Event[EventStateChangedData]], Any]]],
-    event: Event[EventStateChangedData],
+    event_data: EventStateChangedData,
 ) -> bool:
     """Filter state changes by entity_id."""
-    return event.data["new_state"] is None and (
+    return event_data["new_state"] is None and (
         MATCH_ALL in callbacks
-        or split_entity_id(event.data["entity_id"])[0] in callbacks
+        or split_entity_id(event_data["entity_id"])[0] in callbacks
     )
 
 

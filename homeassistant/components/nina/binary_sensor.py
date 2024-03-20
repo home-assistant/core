@@ -47,7 +47,7 @@ async def async_setup_entry(
     async_add_entities(
         NINAMessage(coordinator, ent, regions[ent], i + 1, config_entry)
         for ent in coordinator.data
-        for i in range(0, message_slots)
+        for i in range(message_slots)
     )
 
 

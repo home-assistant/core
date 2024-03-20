@@ -433,7 +433,9 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         """Save template result and trigger forecast listener."""
         attr_result = None if isinstance(result, TemplateError) else result
         setattr(self, f"_forecast_{forecast_type}", attr_result)
-        self.hass.create_task(self.async_update_listeners([forecast_type]))
+        self.hass.async_create_task(
+            self.async_update_listeners([forecast_type]), eager_start=True
+        )
 
     @callback
     def _validate_forecast(
