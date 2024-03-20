@@ -29,7 +29,8 @@
           "ssl": "[%key:common::config_flow::data::ssl%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your FRITZ!Box router."
+          "host": "The hostname or IP address of your FRITZ!Box router.",
+          "port": "Leave it empty to use the default port."
         }
       }
     },
