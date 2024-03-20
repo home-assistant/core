@@ -531,7 +531,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
     @api_error
     def turn_off(self) -> None:
         """Turn off the cast device."""
-        self._get_chromecast().quit_app(0)
+        self._get_chromecast().quit_app()
 
     @api_error
     def mute_volume(self, mute: bool) -> None:
