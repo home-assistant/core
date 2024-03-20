@@ -1,0 +1,45 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "elect_add": {
+        "default": "mdi:electric-switch",
+        "state": {
+          "on": "mdi:electric-switch-closed"
+        }
+      }
+    },
+    "number": {
+      "degree_minutes": {
+        "default": "mdi:thermometer-lines"
+      }
+    },
+    "sensor": {
+      "airflow": {
+        "default": "mdi:weather-windy"
+      },
+      "elect_add": {
+        "default": "mdi:heat-wave"
+      },
+      "fan_mode": {
+        "default": "mdi:fan"
+      },
+      "priority": {
+        "default": "mdi:priority-high"
+      },
+      "status_compressor": {
+        "default": "mdi:heat-pump-outline"
+      }
+    },
+    "switch": {
+      "boost_ventilation": {
+        "default": "mdi:fan-plus"
+      },
+      "temporary_lux": {
+        "default": "mdi:water-alert-outline",
+        "state": {
+          "on": "mdi:water-alert"
+        }
+      }
+    }
+  }
+}

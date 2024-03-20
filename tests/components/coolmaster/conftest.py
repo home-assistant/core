@@ -72,7 +72,7 @@ class CoolMasterNetUnitMock:
     async def set_swing(self, value: str | None) -> CoolMasterNetUnitMock:
         """Set the swing mode."""
         if value == "":
-            raise ValueError()
+            raise ValueError
         self._attributes["swing"] = value
         return CoolMasterNetUnitMock(self.unit_id, self._attributes)
 

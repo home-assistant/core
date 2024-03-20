@@ -300,7 +300,7 @@ async def test_preset_mode_validation(
 
     with pytest.raises(
         ServiceValidationError,
-        match="The preset_mode invalid is not a valid preset_mode: home, away",
+        match="Preset mode invalid is not valid. Valid preset modes are: home, away",
     ) as exc:
         await hass.services.async_call(
             DOMAIN,
@@ -313,13 +313,13 @@ async def test_preset_mode_validation(
         )
     assert (
         str(exc.value)
-        == "The preset_mode invalid is not a valid preset_mode: home, away"
+        == "Preset mode invalid is not valid. Valid preset modes are: home, away"
     )
     assert exc.value.translation_key == "not_valid_preset_mode"
 
     with pytest.raises(
         ServiceValidationError,
-        match="The swing_mode invalid is not a valid swing_mode: auto, off",
+        match="Swing mode invalid is not valid. Valid swing modes are: auto, off",
     ) as exc:
         await hass.services.async_call(
             DOMAIN,
@@ -331,13 +331,14 @@ async def test_preset_mode_validation(
             blocking=True,
         )
     assert (
-        str(exc.value) == "The swing_mode invalid is not a valid swing_mode: auto, off"
+        str(exc.value)
+        == "Swing mode invalid is not valid. Valid swing modes are: auto, off"
     )
     assert exc.value.translation_key == "not_valid_swing_mode"
 
     with pytest.raises(
         ServiceValidationError,
-        match="The fan_mode invalid is not a valid fan_mode: auto, off",
+        match="Fan mode invalid is not valid. Valid fan modes are: auto, off",
     ) as exc:
         await hass.services.async_call(
             DOMAIN,
@@ -348,7 +349,10 @@ async def test_preset_mode_validation(
             },
             blocking=True,
         )
-    assert str(exc.value) == "The fan_mode invalid is not a valid fan_mode: auto, off"
+    assert (
+        str(exc.value)
+        == "Fan mode invalid is not valid. Valid fan modes are: auto, off"
+    )
     assert exc.value.translation_key == "not_valid_fan_mode"
 
 

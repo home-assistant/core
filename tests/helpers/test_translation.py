@@ -112,7 +112,7 @@ def test__load_translations_files_by_language(
 
 @pytest.mark.parametrize(
     ("language", "expected_translation", "expected_errors"),
-    (
+    [
         (
             "en",
             {
@@ -154,7 +154,7 @@ def test__load_translations_files_by_language(
                 "component.test.entity.switch.outlet.name",
             ],
         ),
-    ),
+    ],
 )
 async def test_load_translations_files_invalid_localized_placeholders(
     hass: HomeAssistant,

@@ -198,12 +198,12 @@ async def test_abort_when_metering_point_id_exist(
 
 @pytest.mark.parametrize(
     ("side_effect", "base_error"),
-    (
+    [
         (ElviaError.ElviaException("Boom"), "unknown"),
         (ElviaError.AuthError("Boom", 403, {}, ""), "invalid_auth"),
         (ElviaError.ElviaServerException("Boom", 500, {}, ""), "unknown"),
         (ElviaError.ElviaClientException("Boom"), "unknown"),
-    ),
+    ],
 )
 async def test_form_exceptions(
     recorder_mock: Recorder,
