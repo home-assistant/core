@@ -9,17 +9,11 @@ import godice
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS, CONF_NAME, Platform
+from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import (
-    DATA_DEVICE,
-    DATA_DEVICE_INFO,
-    DATA_DISCONNECTED_BY_REQUEST_FLAG,
-    DOMAIN,
-)
+from .const import DATA_DEVICE, DATA_DISCONNECTED_BY_REQUEST_FLAG, DOMAIN
 
 PLATFORMS = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
@@ -55,7 +49,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         DATA_DEVICE: dice,
-        DATA_DEVICE_INFO: create_device_info(entry),
         DATA_DISCONNECTED_BY_REQUEST_FLAG: False,
     }
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -73,15 +66,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await device.disconnect()
     hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
-
-
-def create_device_info(conf_entry: ConfigEntry):
-    """Set device info displayed in HA."""
-    device_name = conf_entry.data[CONF_NAME]
-    return DeviceInfo(
-        identifiers={(DOMAIN, device_name)},
-        name=device_name,
-        manufacturer="Particula",
-        model="GoDice",
-        sw_version="unknown",
-    )
