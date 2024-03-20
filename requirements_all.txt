@@ -54,7 +54,7 @@ ProgettiHWSW==0.1.3
 # PyBluez==0.22
 
 # homeassistant.components.cast
-PyChromecast==14.0.0
+PyChromecast==14.0.1
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
@@ -73,7 +73,7 @@ PyMetEireann==2021.8.0
 
 # homeassistant.components.met
 # homeassistant.components.norway_air
-PyMetno==0.11.0
+PyMetno==0.12.0
 
 # homeassistant.components.keymitt_ble
 PyMicroBot==0.0.17
@@ -242,7 +242,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==23.1.1
+aioesphomeapi==23.2.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -455,7 +455,7 @@ anthemav==1.4.1
 apple_weatherkit==1.1.2
 
 # homeassistant.components.apprise
-apprise==1.7.2
+apprise==1.7.4
 
 # homeassistant.components.aprs
 aprslib==0.7.0
@@ -618,7 +618,7 @@ brunt==1.2.0
 bt-proximity==0.2.1
 
 # homeassistant.components.bthome
-bthome-ble==3.8.0
+bthome-ble==3.8.1
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
@@ -1964,7 +1964,7 @@ pymitv==1.4.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.6.5
+pymodbus==3.6.6
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -2333,7 +2333,7 @@ pytrydan==0.4.0
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==5.0.1
+pyunifiprotect==5.0.2
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -2556,7 +2556,7 @@ smart-meter-texas==0.4.7
 smhi-pkg==1.0.16
 
 # homeassistant.components.snapcast
-snapcast==2.3.3
+snapcast==2.3.6
 
 # homeassistant.components.sonos
 soco==0.30.2
@@ -2631,7 +2631,7 @@ subarulink==0.7.9
 sunwatcher==0.2.1
 
 # homeassistant.components.sunweg
-sunweg==2.1.0
+sunweg==2.1.1
 
 # homeassistant.components.surepetcare
 surepy==0.9.0
@@ -2841,7 +2841,7 @@ webmin-xmlrpc==0.0.2
 webrtc-noise-gain==1.2.3
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.18.4
+whirlpool-sixth-sense==0.18.6
 
 # homeassistant.components.whois
 whois==0.9.27
@@ -2865,7 +2865,7 @@ wyoming==1.5.3
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.27.0
+xiaomi-ble==0.27.1
 
 # homeassistant.components.knx
 xknx==2.12.2

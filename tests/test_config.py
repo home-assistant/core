@@ -865,7 +865,7 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("minor_version", "users", "user_data", "default_language"),
-    (
+    [
         (2, (), {}, "en"),
         (2, ({"is_owner": True},), {}, "en"),
         (
@@ -894,7 +894,7 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
             {"user1": {"language": {"language": "sv"}}},
             "en",
         ),
-    ),
+    ],
 )
 async def test_language_default(
     hass: HomeAssistant,
@@ -1971,7 +1971,7 @@ async def test_core_store_historic_currency(
     assert issue
     assert issue.translation_placeholders == {"currency": "LTT"}
 
-    await hass.config.async_update(**{"currency": "EUR"})
+    await hass.config.async_update(currency="EUR")
     issue = issue_registry.async_get_issue("homeassistant", issue_id)
     assert not issue
 
@@ -2027,7 +2027,7 @@ async def test_core_store_no_country(
     issue = issue_registry.async_get_issue("homeassistant", issue_id)
     assert issue
 
-    await hass.config.async_update(**{"country": "SE"})
+    await hass.config.async_update(country="SE")
     issue = issue_registry.async_get_issue("homeassistant", issue_id)
     assert not issue
 

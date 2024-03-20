@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+from typing import Any
 
 from aiohttp import client_exceptions
 from pyControl4.account import C4Account
@@ -36,13 +37,14 @@ from .const import (
     CONF_DIRECTOR_ALL_ITEMS,
     CONF_DIRECTOR_MODEL,
     CONF_DIRECTOR_SW_VERSION,
+    CONF_UI_CONFIGURATION,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.LIGHT]
+PLATFORMS = [Platform.LIGHT, Platform.MEDIA_PLAYER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -105,6 +107,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     director_all_items = json.loads(director_all_items)
     entry_data[CONF_DIRECTOR_ALL_ITEMS] = director_all_items
 
+    entry_data[CONF_UI_CONFIGURATION] = json.loads(await director.getUiConfiguration())
+
     # Load options from config entry
     entry_data[CONF_SCAN_INTERVAL] = entry.options.get(
         CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
@@ -145,14 +149,14 @@ async def get_items_of_category(hass: HomeAssistant, entry: ConfigEntry, categor
     ]
 
 
-class Control4Entity(CoordinatorEntity):
+class Control4Entity(CoordinatorEntity[Any]):
     """Base entity for Control4."""
 
     def __init__(
         self,
         entry_data: dict,
-        coordinator: DataUpdateCoordinator,
-        name: str,
+        coordinator: DataUpdateCoordinator[Any],
+        name: str | None,
         idx: int,
         device_name: str | None,
         device_manufacturer: str | None,

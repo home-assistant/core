@@ -513,6 +513,9 @@ ATTR_DEVICE_ID: Final = "device_id"
 # Contains one string or a list of strings, each being an floor id
 ATTR_FLOOR_ID: Final = "floor_id"
 
+# Contains one string or a list of strings, each being an label id
+ATTR_LABEL_ID: Final = "label_id"
+
 # String with a friendly name for the entity
 ATTR_FRIENDLY_NAME: Final = "friendly_name"
 

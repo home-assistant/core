@@ -231,7 +231,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v4.0.1
+        uses: actions/cache@v4.0.2
         with:
           path: venv
           key: >-
@@ -243,11 +243,11 @@ jobs:
           python -m venv venv
           . venv/bin/activate
           python --version
-          pip install "$(cat requirements_test.txt | grep uv)"
+          pip install "$(grep '^uv' < requirements_test.txt)"
           uv pip install "$(cat requirements_test.txt | grep pre-commit)"
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v4.0.1
+        uses: actions/cache@v4.0.2
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           lookup-only: true
@@ -277,7 +277,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.0.1
+        uses: actions/cache/restore@v4.0.2
         with:
           path: venv
           fail-on-cache-miss: true
@@ -286,7 +286,7 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v4.0.1
+        uses: actions/cache/restore@v4.0.2
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
@@ -317,7 +317,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.0.1
+        uses: actions/cache/restore@v4.0.2
         with:
           path: venv
           fail-on-cache-miss: true
@@ -326,7 +326,7 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v4.0.1
+        uses: actions/cache/restore@v4.0.2
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
@@ -356,7 +356,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.0.1
+        uses: actions/cache/restore@v4.0.2
         with:
           path: venv
           fail-on-cache-miss: true
@@ -365,7 +365,7 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v4.0.1
+        uses: actions/cache/restore@v4.0.2
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
@@ -455,7 +455,7 @@ jobs:
             env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v4.0.1
+        uses: actions/cache@v4.0.2
         with:
           path: venv
           lookup-only: true
@@ -464,7 +464,7 @@ jobs:
             needs.info.outputs.python_cache_key }}
       - name: Restore uv wheel cache
         if: steps.cache-venv.outputs.cache-hit != 'true'
-        uses: actions/cache@v4.0.1
+        uses: actions/cache@v4.0.2
         with:
           path: ${{ env.UV_CACHE_DIR }}
           key: >-
@@ -493,7 +493,7 @@ jobs:
           python -m venv venv
           . venv/bin/activate
           python --version
-          pip install "$(cat requirements_test.txt | grep uv)"
+          pip install "$(grep '^uv' < requirements_test.txt)"
           uv pip install -U "pip>=21.3.1" setuptools wheel
           uv pip install -r requirements_all.txt
           uv pip install -r requirements_test.txt
@@ -519,7 +519,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.0.1
+        uses: actions/cache/restore@v4.0.2
         with:
           path: venv
           fail-on-cache-miss: true
@@ -551,7 +551,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.0.1
+        uses: actions/cache/restore@v4.0.2
         with:
           path: venv
           fail-on-cache-miss: true
@@ -584,7 +584,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.0.1
+        uses: actions/cache/restore@v4.0.2
         with:
           path: venv
           fail-on-cache-miss: true
@@ -635,7 +635,7 @@ jobs:
             env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.0.1
+        uses: actions/cache/restore@v4.0.2
         with:
           path: venv
           fail-on-cache-miss: true
@@ -643,7 +643,7 @@ jobs:
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
       - name: Restore mypy cache
-        uses: actions/cache@v4.0.1
+        uses: actions/cache@v4.0.2
         with:
           path: .mypy_cache
           key: >-
@@ -710,7 +710,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.0.1
+        uses: actions/cache/restore@v4.0.2
         with:
           path: venv
           fail-on-cache-miss: true
@@ -857,7 +857,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.0.1
+        uses: actions/cache/restore@v4.0.2
         with:
           path: venv
           fail-on-cache-miss: true
@@ -979,7 +979,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.0.1
+        uses: actions/cache/restore@v4.0.2
         with:
           path: venv
           fail-on-cache-miss: true

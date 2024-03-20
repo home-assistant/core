@@ -109,7 +109,6 @@ class DevoloSwitchEntity(DevoloCoordinatorEntity[_DataT], SwitchEntity):
         except DevicePasswordProtected as ex:
             self.entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
-                f"Device {self.entry.title} require re-authenticatication to set or change the password",
                 translation_domain=DOMAIN,
                 translation_key="password_protected",
                 translation_placeholders={"title": self.entry.title},
@@ -125,7 +124,6 @@ class DevoloSwitchEntity(DevoloCoordinatorEntity[_DataT], SwitchEntity):
         except DevicePasswordProtected as ex:
             self.entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
-                f"Device {self.entry.title} require re-authenticatication to set or change the password",
                 translation_domain=DOMAIN,
                 translation_key="password_protected",
                 translation_placeholders={"title": self.entry.title},
