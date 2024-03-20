@@ -1,14 +1,15 @@
 """Test initialization of lamarzocco."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
-from lmcloud.exceptions import AuthFail, BluetoothDeviceNotFound, RequestNotSuccessful
+from lmcloud.exceptions import AuthFail, RequestNotSuccessful
 
 from homeassistant.components.lamarzocco.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
 
-from . import async_init_integration
+from . import async_init_integration, get_bluetooth_service_info
 
 from tests.common import MockConfigEntry
 
@@ -67,33 +68,20 @@ async def test_invalid_auth(
     assert flow["context"].get("entry_id") == mock_config_entry.entry_id
 
 
-async def test_first_refresh_bluetooth_fail(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_lamarzocco: MagicMock,
-) -> None:
-    """Test if the first refresh throws BluetoothDeviceNotFound."""
-    mock_lamarzocco.init_bluetooth.side_effect = BluetoothDeviceNotFound("")
-
-    await async_init_integration(hass, mock_config_entry)
-
-    coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
-    assert coordinator._use_bluetooth is False
-
-
-async def test_found_bluetooth_is_set_on_reset(
+async def test_bluetooth_is_set_from_discovery(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_lamarzocco: MagicMock,
 ) -> None:
     """Assert we're not searching for a new BT device when we already found one previously."""
-
-    await async_init_integration(hass, mock_config_entry)
-
-    mock_lamarzocco.init_bluetooth.assert_called_once()
-
-    mock_lamarzocco.initialized = False
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
+    service_info = get_bluetooth_service_info(
+        mock_lamarzocco.model_name, mock_lamarzocco.serial_number
+    )
+    with patch(
+        "homeassistant.components.lamarzocco.coordinator.async_discovered_service_info",
+        return_value=[service_info],
+    ):
+        await async_init_integration(hass, mock_config_entry)
     mock_lamarzocco.init_bluetooth_with_known_device.assert_called_once()
+    assert mock_config_entry.data[CONF_NAME] == service_info.name
+    assert mock_config_entry.data[CONF_MAC] == service_info.address

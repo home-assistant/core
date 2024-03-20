@@ -7,14 +7,13 @@ from typing import Any
 
 from bleak.backends.device import BLEDevice
 from lmcloud import LMCloud as LaMarzoccoClient
-from lmcloud.exceptions import (
-    AuthFail,
-    BluetoothConnectionFailed,
-    BluetoothDeviceNotFound,
-    RequestNotSuccessful,
-)
+from lmcloud.const import BT_MODEL_NAMES
+from lmcloud.exceptions import AuthFail, RequestNotSuccessful
 
-from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth import (
+    async_ble_device_from_address,
+    async_discovered_service_info,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -90,44 +89,40 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 
         # initialize Bluetooth
         if self.config_entry.data.get(CONF_USE_BLUETOOTH, True):
-            username = self.config_entry.data[CONF_USERNAME]
-            if (mac_address := self.config_entry.data.get(CONF_MAC, "")) and (
-                name := self.config_entry.data.get(CONF_NAME, "")
-            ):
-                # coming from discovery or last time we used bluetooth
-                _LOGGER.debug("Initializing with known Bluetooth device")
-                await self.lm.init_bluetooth_with_known_device(
-                    username, mac_address, name
-                )
-                self._use_bluetooth = True
-            else:
-                # check if there are any bluetooth adapters to use
-                count = bluetooth.async_scanner_count(self.hass, connectable=True)
-                if count > 0:
-                    _LOGGER.debug(
-                        "Found Bluetooth adapters, initializing with Bluetooth"
-                    )
 
-                    try:
-                        await self.lm.init_bluetooth(
-                            username=username,
-                            init_client=False,
-                            bluetooth_scanner=bluetooth.async_get_scanner(self.hass),
+            def bluetooth_configured() -> bool:
+                return self.config_entry.data.get(
+                    CONF_MAC, ""
+                ) and self.config_entry.data.get(CONF_NAME, "")
+
+            if not bluetooth_configured():
+                for discovery_info in async_discovered_service_info(self.hass):
+                    name = str(discovery_info.name)
+                    if (name.startswith(tuple(BT_MODEL_NAMES))) and (
+                        name.split("_")[1] == self.config_entry.data[CONF_MACHINE]
+                    ):
+                        _LOGGER.debug(
+                            "Found Bluetooth device, configuring with Bluetooth"
                         )
-                    except (BluetoothConnectionFailed, BluetoothDeviceNotFound) as ex:
-                        _LOGGER.debug(ex, exc_info=True)
-                    else:
                         # found a device, add MAC address to config entry
                         new_data = self.config_entry.data.copy()
-                        new_data[CONF_MAC] = self.lm.lm_bluetooth.address
-                        new_data[
-                            CONF_NAME
-                        ] = f"{self.lm.model_name}_{self.lm.serial_number.upper()}"
+                        new_data[CONF_MAC] = discovery_info.address
+                        new_data[CONF_NAME] = discovery_info.name
                         self.hass.config_entries.async_update_entry(
                             self.config_entry,
                             data=new_data,
                         )
-                        self._use_bluetooth = True
+                        break
+
+            if bluetooth_configured():
+                # config entry contains BT config
+                _LOGGER.debug("Initializing with known Bluetooth device")
+                await self.lm.init_bluetooth_with_known_device(
+                    self.config_entry.data[CONF_USERNAME],
+                    self.config_entry.data.get(CONF_MAC, ""),
+                    self.config_entry.data.get(CONF_NAME, ""),
+                )
+                self._use_bluetooth = True
 
         self.lm.initialized = True
 
@@ -155,6 +150,7 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
         if not self._use_bluetooth:
             return None
 
-        return bluetooth.async_ble_device_from_address(
-            self.hass, self.lm.lm_bluetooth.address, connectable=True
+        return async_ble_device_from_address(
+            self.hass,
+            self.lm.lm_bluetooth.address,
         )
