@@ -5,12 +5,13 @@ The idea was taken from https://github.com/KpaBap/hue-flux/
 
 from __future__ import annotations
 
-import datetime
+from datetime import datetime, time, timedelta
 import logging
 from typing import Any
 
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -21,7 +22,8 @@ from homeassistant.components.light import (
     VALID_TRANSITION,
     is_on,
 )
-from homeassistant.components.switch import DOMAIN, SwitchEntity
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_BRIGHTNESS,
@@ -34,34 +36,42 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import config_validation as cv, event
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    HomeAssistant,
+)
+from homeassistant.helpers import config_validation as cv, entity_platform, event
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import slugify
 from homeassistant.util.color import (
     color_RGB_to_xy_brightness,
     color_temperature_kelvin_to_mired,
     color_temperature_to_rgb,
 )
-from homeassistant.util.dt import as_local, utcnow as dt_utcnow
+from homeassistant.util.dt import as_local, parse_time, utcnow as dt_utcnow
+
+from .const import (
+    CONF_ADJUST_BRIGHTNESS,
+    CONF_INTERVAL,
+    CONF_START_CT,
+    CONF_START_TIME,
+    CONF_STOP_CT,
+    CONF_STOP_TIME,
+    CONF_SUNSET_CT,
+    DEFAULT_MODE,
+    DOMAIN,
+    MODE_MIRED,
+    MODE_RGB,
+    MODE_XY,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_START_TIME = "start_time"
-CONF_STOP_TIME = "stop_time"
-CONF_START_CT = "start_colortemp"
-CONF_SUNSET_CT = "sunset_colortemp"
-CONF_STOP_CT = "stop_colortemp"
 CONF_DISABLE_BRIGHTNESS_ADJUST = "disable_brightness_adjust"
-CONF_INTERVAL = "interval"
-
-MODE_XY = "xy"
-MODE_MIRED = "mired"
-MODE_RGB = "rgb"
-DEFAULT_MODE = MODE_XY
 
 PLATFORM_SCHEMA = vol.Schema(
     {
@@ -92,7 +102,9 @@ PLATFORM_SCHEMA = vol.Schema(
 )
 
 
-async def async_set_lights_xy(hass, lights, x_val, y_val, brightness, transition):
+async def async_set_lights_xy(
+    hass: HomeAssistant, lights, x_val, y_val, brightness, transition: timedelta
+):
     """Set color of array of lights."""
     for light in lights:
         if is_on(hass, light):
@@ -102,11 +114,13 @@ async def async_set_lights_xy(hass, lights, x_val, y_val, brightness, transition
             if brightness is not None:
                 service_data[ATTR_BRIGHTNESS] = brightness
             if transition is not None:
-                service_data[ATTR_TRANSITION] = transition
+                service_data[ATTR_TRANSITION] = transition.total_seconds()
             await hass.services.async_call(LIGHT_DOMAIN, SERVICE_TURN_ON, service_data)
 
 
-async def async_set_lights_temp(hass, lights, mired, brightness, transition):
+async def async_set_lights_temp(
+    hass: HomeAssistant, lights, mired, brightness, transition: timedelta
+):
     """Set color of array of lights."""
     for light in lights:
         if is_on(hass, light):
@@ -116,11 +130,11 @@ async def async_set_lights_temp(hass, lights, mired, brightness, transition):
             if brightness is not None:
                 service_data[ATTR_BRIGHTNESS] = brightness
             if transition is not None:
-                service_data[ATTR_TRANSITION] = transition
+                service_data[ATTR_TRANSITION] = transition.total_seconds()
             await hass.services.async_call(LIGHT_DOMAIN, SERVICE_TURN_ON, service_data)
 
 
-async def async_set_lights_rgb(hass, lights, rgb, transition):
+async def async_set_lights_rgb(hass: HomeAssistant, lights, rgb, transition: timedelta):
     """Set color of array of lights."""
     for light in lights:
         if is_on(hass, light):
@@ -128,7 +142,7 @@ async def async_set_lights_rgb(hass, lights, rgb, transition):
             if rgb is not None:
                 service_data[ATTR_RGB_COLOR] = rgb
             if transition is not None:
-                service_data[ATTR_TRANSITION] = transition
+                service_data[ATTR_TRANSITION] = transition.total_seconds()
             await hass.services.async_call(LIGHT_DOMAIN, SERVICE_TURN_ON, service_data)
 
 
@@ -138,19 +152,52 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Flux switches."""
-    name = config.get(CONF_NAME)
-    lights = config.get(CONF_LIGHTS)
-    start_time = config.get(CONF_START_TIME)
-    stop_time = config.get(CONF_STOP_TIME)
-    start_colortemp = config.get(CONF_START_CT)
-    sunset_colortemp = config.get(CONF_SUNSET_CT)
-    stop_colortemp = config.get(CONF_STOP_CT)
-    brightness = config.get(CONF_BRIGHTNESS)
-    disable_brightness_adjust = config.get(CONF_DISABLE_BRIGHTNESS_ADJUST)
-    mode = config.get(CONF_MODE)
-    interval = config.get(CONF_INTERVAL)
-    transition = config.get(ATTR_TRANSITION)
+    """Old method of loading Flux from yaml configuration."""
+
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2024.11.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Flux",
+        },
+    )
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: config_entries.ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Flux lights."""
+    name = entry.options[CONF_NAME]
+    lights = entry.options[CONF_LIGHTS]
+
+    start_time = parse_time(entry.options.get(CONF_START_TIME))  # type: ignore[arg-type]
+    stop_time = parse_time(entry.options.get(CONF_STOP_TIME))  # type: ignore[arg-type]
+
+    start_colortemp = entry.options[CONF_START_CT]
+    sunset_colortemp = entry.options[CONF_SUNSET_CT]
+    stop_colortemp = entry.options[CONF_STOP_CT]
+
+    brightness = None
+    disable_brightness_adjust = not entry.options[CONF_ADJUST_BRIGHTNESS]
+    mode = entry.options[CONF_MODE]
+    interval = timedelta(**entry.options[CONF_INTERVAL])
+    transition = timedelta(**entry.options[ATTR_TRANSITION])
+
     flux = FluxSwitch(
         name,
         hass,
@@ -166,14 +213,20 @@ async def async_setup_platform(
         interval,
         transition,
     )
+
     async_add_entities([flux])
 
-    async def async_update(call: ServiceCall | None = None) -> None:
+    platform = entity_platform.async_get_current_platform()
+
+    async def async_update() -> None:
         """Update lights."""
         await flux.async_flux_update()
 
-    service_name = slugify(f"{name} update")
-    hass.services.async_register(DOMAIN, service_name, async_update)
+    platform.async_register_entity_service(
+        "flux_update",
+        {},
+        async_update,
+    )
 
 
 class FluxSwitch(SwitchEntity, RestoreEntity):
@@ -181,20 +234,20 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
 
     def __init__(
         self,
-        name,
-        hass,
+        name: str,
+        hass: HomeAssistant,
         lights,
-        start_time,
-        stop_time,
+        start_time: time | None,
+        stop_time: time | None,
         start_colortemp,
         sunset_colortemp,
         stop_colortemp,
         brightness,
         disable_brightness_adjust,
         mode,
-        interval,
-        transition,
-    ):
+        interval: timedelta,
+        transition: timedelta,
+    ) -> None:
         """Initialize the Flux switch."""
         self._name = name
         self.hass = hass
@@ -209,7 +262,7 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
         self._mode = mode
         self._interval = interval
         self._transition = transition
-        self.unsub_tracker = None
+        self.unsub_tracker: CALLBACK_TYPE | None = None
 
     @property
     def name(self):
@@ -239,9 +292,7 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
             return
 
         self.unsub_tracker = event.async_track_time_interval(
-            self.hass,
-            self.async_flux_update,
-            datetime.timedelta(seconds=self._interval),
+            self.hass, self.async_flux_update, self._interval
         )
 
         # Make initial update
@@ -251,7 +302,7 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off flux."""
-        if self.is_on:
+        if self.unsub_tracker is not None:
             self.unsub_tracker()
             self.unsub_tracker = None
 
@@ -272,10 +323,10 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
             # stop_time does not happen in the same day as start_time
             if start_time < now:
                 # stop time is tomorrow
-                stop_time += datetime.timedelta(days=1)
+                stop_time += timedelta(days=1)
         elif now < start_time:
             # stop_time was yesterday since the new start_time is not reached
-            stop_time -= datetime.timedelta(days=1)
+            stop_time -= timedelta(days=1)
 
         if start_time < now < sunset:
             # Daytime
@@ -296,7 +347,7 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
             if now < stop_time:
                 if stop_time < start_time and stop_time.day == sunset.day:
                     # we need to use yesterday's sunset time
-                    sunset_time = sunset - datetime.timedelta(days=1)
+                    sunset_time = sunset - timedelta(days=1)
                 else:
                     sunset_time = sunset
 
@@ -360,22 +411,18 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
                 now,
             )
 
-    def find_start_time(self, now):
+    def find_start_time(self, now: datetime):
         """Return sunrise or start_time if given."""
         if self._start_time:
-            sunrise = now.replace(
-                hour=self._start_time.hour, minute=self._start_time.minute, second=0
-            )
+            sunrise = datetime.combine(now.date(), self._start_time, now.tzinfo)
         else:
-            sunrise = get_astral_event_date(self.hass, SUN_EVENT_SUNRISE, now.date())
+            sunrise = get_astral_event_date(self.hass, SUN_EVENT_SUNRISE, now.date())  # type: ignore[assignment]
         return sunrise
 
-    def find_stop_time(self, now):
+    def find_stop_time(self, now: datetime):
         """Return dusk or stop_time if given."""
         if self._stop_time:
-            dusk = now.replace(
-                hour=self._stop_time.hour, minute=self._stop_time.minute, second=0
-            )
+            dusk = datetime.combine(now.date(), self._stop_time, now.tzinfo)
         else:
-            dusk = get_astral_event_date(self.hass, "dusk", now.date())
+            dusk = get_astral_event_date(self.hass, "dusk", now.date())  # type: ignore[assignment]
         return dusk

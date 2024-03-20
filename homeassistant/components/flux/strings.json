@@ -1,0 +1,43 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Flux will update the temperature and brightness of your lights based on the time of day. During the day they will be bright, and they will gradually dim and fade to a red/orange at night. It will only affect lights that are turned on and listed below.",
+        "data": {
+          "name": "A name for your flux configuration",
+          "lights": "Select the lights you want controlled by Flux"
+        }
+      }
+    },
+    "error": {
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "options": {
+    "flow_title": "Flux Options",
+    "step": {
+      "init": {
+        "description": "Flux will update the temperature and brightness of your lights based on the time of day. During the day they will be bright, and they will gradually dim and fade to a red/orange at night. It will only affect lights that are turned on and listed below.",
+        "data": {
+          "name": "A name for your flux configuration",
+          "lights": "Select the lights you want controlled by Flux",
+          "start_time": "Start time",
+          "stop_time": "Stop time",
+          "start_colortemp": "Start color temperature",
+          "sunset_colortemp": "Sunset color temperature",
+          "stop_colortemp": "Stop color temperature",
+          "adjust_brightness": "Adjust brightness",
+          "mode": "Select how color temperature is passed to lights",
+          "transition": "Transition time",
+          "interval": "Interval duration"
+        },
+        "data_description": {
+          "start_time": "If left empty this will be the sunrise time at your location.",
+          "stop_time": "If left empty this will be the dusk time at your location.",
+          "transition": "Transition time for the light changes.",
+          "interval": "Time between between consecutive light updates."
+        }
+      }
+    }
+  }
+}

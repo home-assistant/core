@@ -168,6 +168,7 @@ FLOWS = {
         "flipr",
         "flo",
         "flume",
+        "flux",
         "flux_led",
         "forecast_solar",
         "forked_daapd",
