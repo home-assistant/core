@@ -1,11 +1,8 @@
-"""Constants for room occupancy."""
+"""Constants for the Room Occupancy integration."""
 DOMAIN = "room_occupancy"
 PLATFORMS = ["binary_sensor"]
 TIMEOUT = 2
-ROOMNAME = "Livingroom"
-ENTITIES_TOGGLE = ["binary_sensor.livingroom_motion"]
-ENTITIES_KEEP = ["binary_sensor.livingroom_occupancy"]
-DEFAULT_ACTIVE_STATES = ["active", "on", True, "occupied", 1]
+DEFAULT_ACTIVE_STATES = '["active", "on", True, "occupied", 1]'
 
 DEFAULT_NAME = "Room Occupancy Sensor"
 CONF_ROOMNAME = "roomname"

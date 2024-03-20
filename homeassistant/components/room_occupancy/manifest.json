@@ -4,7 +4,10 @@
   "codeowners": ["@maxgeilert"],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/maxgeilert/room_occupancy",
+  "documentation": "https://www.home-assistant.io/integrations/room_occupancy",
+  "homekit": {},
   "iot_class": "calculated",
-  "requirements": []
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": []
 }
