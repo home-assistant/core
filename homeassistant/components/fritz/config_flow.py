@@ -38,7 +38,6 @@ from .const import (
     CONF_OLD_DISCOVERY,
     DEFAULT_CONF_OLD_DISCOVERY,
     DEFAULT_HOST,
-    DEFAULT_PORT,
     DEFAULT_SSL,
     DOMAIN,
     ERROR_AUTH_INVALID,
@@ -54,7 +53,7 @@ _LOGGER = logging.getLogger(__name__)
 class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a FRITZ!Box Tools config flow."""
 
-    VERSION = 2
+    VERSION = 1
 
     @staticmethod
     @callback
@@ -201,17 +200,27 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self, errors: dict[str, str] | None = None
     ) -> ConfigFlowResult:
         """Show the setup form to the user."""
+
+        if self.show_advanced_options:
+            advanced_data_schema = {
+                vol.Optional(CONF_PORT): vol.Coerce(int),
+            }
+        else:
+            advanced_data_schema = {}
+
+        data_schema = vol.Schema(
+            {
+                vol.Optional(CONF_HOST, default=DEFAULT_HOST): str,
+                **advanced_data_schema,
+                vol.Required(CONF_USERNAME): str,
+                vol.Required(CONF_PASSWORD): str,
+                vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
+            }
+        )
+
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(CONF_HOST, default=DEFAULT_HOST): str,
-                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Required(CONF_SSL, default=DEFAULT_SSL): bool,
-                }
-            ),
+            data_schema=data_schema,
             errors=errors or {},
         )
 
@@ -238,7 +247,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self._show_setup_form_init()
         self._host = user_input[CONF_HOST]
-        self._port = user_input[CONF_PORT]
+        self._port = user_input.get(CONF_PORT)
         self._username = user_input[CONF_USERNAME]
         self._password = user_input[CONF_PASSWORD]
         self._use_tls = user_input[CONF_SSL]
