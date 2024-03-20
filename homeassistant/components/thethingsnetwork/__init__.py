@@ -55,11 +55,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Create coordinator to fetch TTN updates
     entry.coordinator = coordinator = TTNCoordinator(hass, entry)
 
-    # Fetch all existing values in the TTN storage DB - NOTE: the free TTN only keeps 24 hours
-    await coordinator.async_config_entry_first_refresh()
-
     # Trigger the creation of entities for each supported platform
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Fetch all existing values in the TTN storage DB - NOTE: the free TTN only keeps 24 hours
+    await coordinator.async_config_entry_first_refresh()
 
     # Register callback for entry updates (when options changed in ConfigFlow)
     entry.async_on_unload(entry.add_update_listener(update_listener))

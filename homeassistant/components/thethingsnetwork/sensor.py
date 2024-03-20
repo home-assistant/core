@@ -21,7 +21,6 @@ async def async_setup_entry(
 
     coordinator = TTN_EntrySettings(entry).get_coordinator()
     coordinator.register_platform_entity_class(TtnDataSensor, async_add_entities)
-    coordinator.async_add_entities()
 
 
 async def async_unload_entry(
