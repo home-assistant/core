@@ -53,7 +53,7 @@ def tag_mock() -> Generator[AsyncMock, None, None]:
         yield mock_tag
 
 
-@pytest.mark.no_fail_on_log_exception
+@pytest.mark.no_fail_on_log_exception()
 async def test_discover_bad_tag(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

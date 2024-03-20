@@ -392,7 +392,7 @@ async def test_no_fan_vacuum(
 
 
 @pytest.mark.parametrize("hass_config", [CONFIG_ALL_SERVICES])
-@pytest.mark.no_fail_on_log_exception
+@pytest.mark.no_fail_on_log_exception()
 async def test_status_invalid_json(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
@@ -593,7 +593,7 @@ async def test_discovery_update_unchanged_vacuum(
         )
 
 
-@pytest.mark.no_fail_on_log_exception
+@pytest.mark.no_fail_on_log_exception()
 async def test_discovery_broken(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,

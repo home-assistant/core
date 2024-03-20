@@ -464,7 +464,7 @@ async def test_start_stop_scanner(mock_source_set, hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_get_source_ip")
-@pytest.mark.no_fail_on_log_exception
+@pytest.mark.no_fail_on_log_exception()
 @patch("homeassistant.components.ssdp.async_get_ssdp", return_value={})
 async def test_scan_with_registered_callback(
     mock_get_ssdp,

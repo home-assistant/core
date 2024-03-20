@@ -182,7 +182,7 @@ async def test_norway_in_june(hass: HomeAssistant) -> None:
     assert state.state == sun.STATE_ABOVE_HORIZON
 
 
-@pytest.mark.skip
+@pytest.mark.skip()
 async def test_state_change_count(hass: HomeAssistant) -> None:
     """Count the number of state change events in a location."""
     # Skipped because it's a bit slow. Has been validated with

@@ -1058,7 +1058,7 @@ async def test_discovery_update_unchanged_sensor(
         )
 
 
-@pytest.mark.no_fail_on_log_exception
+@pytest.mark.no_fail_on_log_exception()
 async def test_discovery_broken(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
@@ -1213,7 +1213,7 @@ async def test_entity_disabled_by_default(
     )
 
 
-@pytest.mark.no_fail_on_log_exception
+@pytest.mark.no_fail_on_log_exception()
 async def test_entity_category(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:

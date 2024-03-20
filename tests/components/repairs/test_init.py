@@ -464,7 +464,7 @@ async def test_delete_issue(
     }
 
 
-@pytest.mark.no_fail_on_log_exception
+@pytest.mark.no_fail_on_log_exception()
 async def test_non_compliant_platform(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:

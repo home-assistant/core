@@ -487,7 +487,7 @@ async def test_discovery_update_event_template(
     assert state.attributes.get("val") == "200"
 
 
-@pytest.mark.no_fail_on_log_exception
+@pytest.mark.no_fail_on_log_exception()
 async def test_discovery_broken(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
@@ -634,7 +634,7 @@ async def test_entity_disabled_by_default(
     )
 
 
-@pytest.mark.no_fail_on_log_exception
+@pytest.mark.no_fail_on_log_exception()
 async def test_entity_category(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
