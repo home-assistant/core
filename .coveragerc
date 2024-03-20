@@ -1,6 +1,6 @@
 [run]
 source = homeassistant
-omit = 
+omit =
     homeassistant/__main__.py
     homeassistant/helpers/signal.py
     homeassistant/scripts/__init__.py
