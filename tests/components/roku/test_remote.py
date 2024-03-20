@@ -1,9 +1,11 @@
 """The tests for the Roku remote platform."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, call
 
 from homeassistant.components.remote import (
     ATTR_COMMAND,
+    ATTR_DELAY_SECS,
+    ATTR_NUM_REPEATS,
     DOMAIN as REMOTE_DOMAIN,
     SERVICE_SEND_COMMAND,
 )
@@ -65,3 +67,23 @@ async def test_main_services(
     )
     assert mock_roku.remote.call_count == 3
     mock_roku.remote.assert_called_with("home")
+
+    mock_roku.remote.reset_mock()
+    await hass.services.async_call(
+        REMOTE_DOMAIN,
+        SERVICE_SEND_COMMAND,
+        {
+            ATTR_ENTITY_ID: MAIN_ENTITY_ID,
+            ATTR_COMMAND: ["left", "right"]
+            ATTR_NUM_REPEATS: 2,
+            ATTR_DELAY_SECS: 1
+        },
+        blocking=True,
+    )
+    assert mock_roku.remote.call_count == 4
+    mock_roku.remote.assert_has_calls([
+        call("left"),
+        call("right"),
+        call("left"),
+        call("right"),
+    ])
