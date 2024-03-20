@@ -65,6 +65,10 @@
         }
       }
     },
+    "record": {
+      "name": "Record",
+      "description": "Requests camera to record a video clip."
+    },
     "trigger_camera": {
       "name": "Trigger camera",
       "description": "Requests camera to take new image."
