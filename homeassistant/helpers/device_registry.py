@@ -276,6 +276,7 @@ class DeviceEntry:
             "hw_version": self.hw_version,
             "id": self.id,
             "identifiers": list(self.identifiers),
+            "labels": list(self.labels),
             "manufacturer": self.manufacturer,
             "model": self.model,
             "name_by_user": self.name_by_user,
@@ -755,7 +756,7 @@ class DeviceRegistry(BaseRegistry):
         config_entries = old.config_entries
 
         if merge_identifiers is not UNDEFINED and new_identifiers is not UNDEFINED:
-            raise HomeAssistantError()
+            raise HomeAssistantError
 
         if isinstance(disabled_by, str) and not isinstance(
             disabled_by, DeviceEntryDisabler
@@ -1144,10 +1145,10 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
 
     @callback
     def _label_removed_from_registry_filter(
-        event: lr.EventLabelRegistryUpdated,
+        event_data: lr.EventLabelRegistryUpdatedData,
     ) -> bool:
         """Filter all except for the remove action from label registry events."""
-        return event.data["action"] == "remove"
+        return event_data["action"] == "remove"
 
     @callback
     def _handle_label_registry_update(event: lr.EventLabelRegistryUpdated) -> None:
@@ -1177,12 +1178,12 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
         debounced_cleanup.async_schedule_call()
 
     @callback
-    def entity_registry_changed_filter(event: Event) -> bool:
+    def entity_registry_changed_filter(event_data: Mapping[str, Any]) -> bool:
         """Handle entity updated or removed filter."""
         if (
-            event.data["action"] == "update"
-            and "device_id" not in event.data["changes"]
-        ) or event.data["action"] == "create":
+            event_data["action"] == "update"
+            and "device_id" not in event_data["changes"]
+        ) or event_data["action"] == "create":
             return False
 
         return True

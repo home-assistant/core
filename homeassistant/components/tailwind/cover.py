@@ -71,19 +71,16 @@ class TailwindDoorCoverEntity(TailwindDoorEntity, CoverEntity):
             )
         except TailwindDoorDisabledError as exc:
             raise HomeAssistantError(
-                str(exc),
                 translation_domain=DOMAIN,
                 translation_key="door_disabled",
             ) from exc
         except TailwindDoorLockedOutError as exc:
             raise HomeAssistantError(
-                str(exc),
                 translation_domain=DOMAIN,
                 translation_key="door_locked_out",
             ) from exc
         except TailwindError as exc:
             raise HomeAssistantError(
-                str(exc),
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
             ) from exc
@@ -106,19 +103,16 @@ class TailwindDoorCoverEntity(TailwindDoorEntity, CoverEntity):
             )
         except TailwindDoorDisabledError as exc:
             raise HomeAssistantError(
-                str(exc),
                 translation_domain=DOMAIN,
                 translation_key="door_disabled",
             ) from exc
         except TailwindDoorLockedOutError as exc:
             raise HomeAssistantError(
-                str(exc),
                 translation_domain=DOMAIN,
                 translation_key="door_locked_out",
             ) from exc
         except TailwindError as exc:
             raise HomeAssistantError(
-                str(exc),
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
             ) from exc

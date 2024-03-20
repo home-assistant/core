@@ -1520,6 +1520,9 @@ async def test_platforms_exists(
 
     assert integration.platforms_exists(["group"]) == ["group"]
 
+    assert integration.platforms_are_loaded(["group"]) is True
+    assert integration.platforms_are_loaded(["other"]) is False
+
 
 async def test_async_get_platforms_loads_loop_if_already_in_sys_modules(
     hass: HomeAssistant,
