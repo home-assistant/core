@@ -105,7 +105,7 @@ class MatterEventEntity(MatterEntity, EventEntity):
         """Call when Node attribute(s) changed."""
 
     @callback
-    def _on_matter_node_event(  # noqa: F821
+    def _on_matter_node_event(
         self,
         event: EventType,
         data: MatterNodeEvent,

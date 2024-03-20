@@ -70,11 +70,11 @@ async def test_import_config(
 
 @pytest.mark.parametrize(
     ("override", "expected_reason"),
-    (
+    [
         ({CONF_AGENCY: "not muni"}, "invalid_agency"),
         ({CONF_ROUTE: "not F"}, "invalid_route"),
         ({CONF_STOP: "not 5650"}, "invalid_stop"),
-    ),
+    ],
 )
 async def test_import_config_invalid(
     hass: HomeAssistant,

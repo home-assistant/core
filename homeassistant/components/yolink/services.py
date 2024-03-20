@@ -36,7 +36,6 @@ def async_register_services(hass: HomeAssistant) -> None:
                     break
             if entry is None or entry.state == ConfigEntryState.NOT_LOADED:
                 raise ServiceValidationError(
-                    "Config entry not found or not loaded!",
                     translation_domain=DOMAIN,
                     translation_key="invalid_config_entry",
                 )

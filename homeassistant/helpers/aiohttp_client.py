@@ -191,11 +191,11 @@ async def async_aiohttp_proxy_web(
 
     except TimeoutError as err:
         # Timeout trying to start the web request
-        raise HTTPGatewayTimeout() from err
+        raise HTTPGatewayTimeout from err
 
     except aiohttp.ClientError as err:
         # Something went wrong with the connection
-        raise HTTPBadGateway() from err
+        raise HTTPBadGateway from err
 
     try:
         return await async_aiohttp_proxy_stream(

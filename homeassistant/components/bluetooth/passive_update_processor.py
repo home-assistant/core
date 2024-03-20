@@ -272,7 +272,9 @@ async def async_setup(hass: HomeAssistant) -> None:
         await _async_save_processor_data(None)
 
     hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, _async_save_processor_data_at_stop
+        EVENT_HOMEASSISTANT_STOP,
+        _async_save_processor_data_at_stop,
+        run_immediately=True,
     )
 
 

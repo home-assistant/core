@@ -314,10 +314,11 @@ class AreaRegistry(BaseRegistry):
 
         @callback
         def _removed_from_registry_filter(
-            event: fr.EventFloorRegistryUpdated | lr.EventLabelRegistryUpdated,
+            event_data: fr.EventFloorRegistryUpdatedData
+            | lr.EventLabelRegistryUpdatedData,
         ) -> bool:
             """Filter all except for the item removed from registry events."""
-            return event.data["action"] == "remove"
+            return event_data["action"] == "remove"
 
         @callback
         def _handle_floor_registry_update(event: fr.EventFloorRegistryUpdated) -> None:
@@ -331,6 +332,7 @@ class AreaRegistry(BaseRegistry):
             event_type=fr.EVENT_FLOOR_REGISTRY_UPDATED,
             event_filter=_removed_from_registry_filter,
             listener=_handle_floor_registry_update,
+            run_immediately=True,
         )
 
         @callback
@@ -347,6 +349,7 @@ class AreaRegistry(BaseRegistry):
             event_type=lr.EVENT_LABEL_REGISTRY_UPDATED,
             event_filter=_removed_from_registry_filter,
             listener=_handle_label_registry_update,
+            run_immediately=True,
         )
 
 

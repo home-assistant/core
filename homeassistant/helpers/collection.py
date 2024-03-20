@@ -221,10 +221,10 @@ class YamlCollection(ObservableCollection[dict]):
             self.data[item_id] = item
             change_sets.append(CollectionChangeSet(event, item_id, item))
 
-        for item_id in old_ids:
-            change_sets.append(
-                CollectionChangeSet(CHANGE_REMOVED, item_id, self.data.pop(item_id))
-            )
+        change_sets.extend(
+            CollectionChangeSet(CHANGE_REMOVED, item_id, self.data.pop(item_id))
+            for item_id in old_ids
+        )
 
         if change_sets:
             await self.notify_changes(change_sets)

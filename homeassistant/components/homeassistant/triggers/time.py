@@ -76,7 +76,6 @@ async def async_attach_trigger(
                     "entity_id": entity_id,
                 }
             },
-            eager_start=True,
         )
 
     @callback
