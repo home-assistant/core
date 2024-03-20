@@ -4140,14 +4140,14 @@ async def test_validate_unit_change_convertible(
 
     # No statistics, unit in state matching device class - empty response
     hass.states.async_set(
-        "sensor.test", 10, attributes={**attributes, **{"unit_of_measurement": unit}}
+        "sensor.test", 10, attributes={**attributes, "unit_of_measurement": unit}
     )
     await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
 
     # No statistics, unit in state not matching device class - empty response
     hass.states.async_set(
-        "sensor.test", 11, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
+        "sensor.test", 11, attributes={**attributes, "unit_of_measurement": "dogs"}
     )
     await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
@@ -4156,7 +4156,7 @@ async def test_validate_unit_change_convertible(
     await async_recorder_block_till_done(hass)
     do_adhoc_statistics(hass, start=now)
     hass.states.async_set(
-        "sensor.test", 12, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
+        "sensor.test", 12, attributes={**attributes, "unit_of_measurement": "dogs"}
     )
     await async_recorder_block_till_done(hass)
     expected = {
@@ -4176,7 +4176,7 @@ async def test_validate_unit_change_convertible(
 
     # Valid state - empty response
     hass.states.async_set(
-        "sensor.test", 13, attributes={**attributes, **{"unit_of_measurement": unit}}
+        "sensor.test", 13, attributes={**attributes, "unit_of_measurement": unit}
     )
     await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
@@ -4188,7 +4188,7 @@ async def test_validate_unit_change_convertible(
 
     # Valid state in compatible unit - empty response
     hass.states.async_set(
-        "sensor.test", 13, attributes={**attributes, **{"unit_of_measurement": unit2}}
+        "sensor.test", 13, attributes={**attributes, "unit_of_measurement": unit2}
     )
     await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
@@ -4263,7 +4263,7 @@ async def test_validate_statistics_unit_ignore_device_class(
     do_adhoc_statistics(hass, start=now)
     await async_recorder_block_till_done(hass)
     hass.states.async_set(
-        "sensor.test", 12, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
+        "sensor.test", 12, attributes={**attributes, "unit_of_measurement": "dogs"}
     )
     await hass.async_block_till_done()
     await assert_validation_result(client, {})
@@ -4350,14 +4350,14 @@ async def test_validate_statistics_unit_change_no_device_class(
 
     # No statistics, sensor state set - empty response
     hass.states.async_set(
-        "sensor.test", 10, attributes={**attributes, **{"unit_of_measurement": unit}}
+        "sensor.test", 10, attributes={**attributes, "unit_of_measurement": unit}
     )
     await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
 
     # No statistics, sensor state set to an incompatible unit - empty response
     hass.states.async_set(
-        "sensor.test", 11, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
+        "sensor.test", 11, attributes={**attributes, "unit_of_measurement": "dogs"}
     )
     await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
@@ -4366,7 +4366,7 @@ async def test_validate_statistics_unit_change_no_device_class(
     await async_recorder_block_till_done(hass)
     do_adhoc_statistics(hass, start=now)
     hass.states.async_set(
-        "sensor.test", 12, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
+        "sensor.test", 12, attributes={**attributes, "unit_of_measurement": "dogs"}
     )
     await async_recorder_block_till_done(hass)
     expected = {
@@ -4386,7 +4386,7 @@ async def test_validate_statistics_unit_change_no_device_class(
 
     # Valid state - empty response
     hass.states.async_set(
-        "sensor.test", 13, attributes={**attributes, **{"unit_of_measurement": unit}}
+        "sensor.test", 13, attributes={**attributes, "unit_of_measurement": unit}
     )
     await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
@@ -4398,7 +4398,7 @@ async def test_validate_statistics_unit_change_no_device_class(
 
     # Valid state in compatible unit - empty response
     hass.states.async_set(
-        "sensor.test", 13, attributes={**attributes, **{"unit_of_measurement": unit2}}
+        "sensor.test", 13, attributes={**attributes, "unit_of_measurement": unit2}
     )
     await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
@@ -4739,13 +4739,13 @@ async def test_validate_statistics_unit_change_no_conversion(
 
     # No statistics, original unit - empty response
     hass.states.async_set(
-        "sensor.test", 10, attributes={**attributes, **{"unit_of_measurement": unit1}}
+        "sensor.test", 10, attributes={**attributes, "unit_of_measurement": unit1}
     )
     await assert_validation_result(client, {})
 
     # No statistics, changed unit - empty response
     hass.states.async_set(
-        "sensor.test", 11, attributes={**attributes, **{"unit_of_measurement": unit2}}
+        "sensor.test", 11, attributes={**attributes, "unit_of_measurement": unit2}
     )
     await assert_validation_result(client, {})
 
@@ -4757,7 +4757,7 @@ async def test_validate_statistics_unit_change_no_conversion(
 
     # No statistics, original unit - empty response
     hass.states.async_set(
-        "sensor.test", 12, attributes={**attributes, **{"unit_of_measurement": unit1}}
+        "sensor.test", 12, attributes={**attributes, "unit_of_measurement": unit1}
     )
     await assert_validation_result(client, {})
 
@@ -4772,7 +4772,7 @@ async def test_validate_statistics_unit_change_no_conversion(
 
     # Change unit - expect error
     hass.states.async_set(
-        "sensor.test", 13, attributes={**attributes, **{"unit_of_measurement": unit2}}
+        "sensor.test", 13, attributes={**attributes, "unit_of_measurement": unit2}
     )
     await async_recorder_block_till_done(hass)
     expected = {
@@ -4792,7 +4792,7 @@ async def test_validate_statistics_unit_change_no_conversion(
 
     # Original unit - empty response
     hass.states.async_set(
-        "sensor.test", 14, attributes={**attributes, **{"unit_of_measurement": unit1}}
+        "sensor.test", 14, attributes={**attributes, "unit_of_measurement": unit1}
     )
     await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
@@ -4874,7 +4874,7 @@ async def test_validate_statistics_unit_change_equivalent_units(
 
     # No statistics, original unit - empty response
     hass.states.async_set(
-        "sensor.test", 10, attributes={**attributes, **{"unit_of_measurement": unit1}}
+        "sensor.test", 10, attributes={**attributes, "unit_of_measurement": unit1}
     )
     await assert_validation_result(client, {})
 
@@ -4888,7 +4888,7 @@ async def test_validate_statistics_unit_change_equivalent_units(
 
     # Units changed to an equivalent unit - empty response
     hass.states.async_set(
-        "sensor.test", 12, attributes={**attributes, **{"unit_of_measurement": unit2}}
+        "sensor.test", 12, attributes={**attributes, "unit_of_measurement": unit2}
     )
     await assert_validation_result(client, {})
 
@@ -4960,7 +4960,7 @@ async def test_validate_statistics_unit_change_equivalent_units_2(
 
     # No statistics, original unit - empty response
     hass.states.async_set(
-        "sensor.test", 10, attributes={**attributes, **{"unit_of_measurement": unit1}}
+        "sensor.test", 10, attributes={**attributes, "unit_of_measurement": unit1}
     )
     await assert_validation_result(client, {})
 
@@ -4974,7 +4974,7 @@ async def test_validate_statistics_unit_change_equivalent_units_2(
 
     # Units changed to an equivalent unit which is not known by the unit converters
     hass.states.async_set(
-        "sensor.test", 12, attributes={**attributes, **{"unit_of_measurement": unit2}}
+        "sensor.test", 12, attributes={**attributes, "unit_of_measurement": unit2}
     )
     expected = {
         "sensor.test": [

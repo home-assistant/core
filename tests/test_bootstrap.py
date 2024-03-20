@@ -14,7 +14,7 @@ from homeassistant import bootstrap, loader, runner
 import homeassistant.config as config_util
 from homeassistant.config_entries import HANDLERS, ConfigEntry
 from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
-from homeassistant.core import HomeAssistant, async_get_hass, callback
+from homeassistant.core import CoreState, HomeAssistant, async_get_hass, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType
@@ -869,6 +869,9 @@ async def test_empty_integrations_list_is_only_sent_at_the_end_of_bootstrap(
     hass: HomeAssistant,
 ) -> None:
     """Test empty integrations list is only sent at the end of bootstrap."""
+    # setup times only tracked when not running
+    hass.set_state(CoreState.not_running)
+
     order = []
 
     def gen_domain_setup(domain):
@@ -1118,6 +1121,7 @@ async def test_bootstrap_dependencies(
     # We patch the _import platform method to avoid loading the platform module
     # to avoid depending on non core components in the tests.
     mqtt_integration._import_platform = Mock()
+    mqtt_integration.platforms_exists = Mock(return_value=True)
 
     integrations = {
         "mqtt": {

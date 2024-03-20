@@ -285,7 +285,7 @@ async def test_manual_dns_error(hass: HomeAssistant) -> None:
 
         async def async_setup(self):
             """Mock setup."""
-            raise socket.gaierror()
+            raise socket.gaierror
 
         def async_stop(self):
             """Mock teardown."""

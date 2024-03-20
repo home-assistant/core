@@ -274,10 +274,10 @@ async def test_direction_list(
 
 @pytest.mark.parametrize(
     "client_exception",
-    (
+    [
         NextBusHTTPError("failed", HTTPError("url", 500, "error", MagicMock(), None)),
         NextBusFormatError("failed"),
-    ),
+    ],
 )
 async def test_prediction_exceptions(
     hass: HomeAssistant,
@@ -312,10 +312,10 @@ async def test_custom_name(
 
 @pytest.mark.parametrize(
     "prediction_results",
-    (
+    [
         {},
         {"Error": "Failed"},
-    ),
+    ],
 )
 async def test_no_predictions(
     hass: HomeAssistant,

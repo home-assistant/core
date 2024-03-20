@@ -647,8 +647,6 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         elif mode_type == "fan":
             translation_key = "not_valid_fan_mode"
         raise ServiceValidationError(
-            f"The {mode_type}_mode {mode} is not a valid {mode_type}_mode:"
-            f" {modes_str}",
             translation_domain=DOMAIN,
             translation_key=translation_key,
             translation_placeholders={
@@ -659,7 +657,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -669,7 +667,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
@@ -683,7 +681,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
@@ -691,7 +689,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
@@ -705,7 +703,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
@@ -719,7 +717,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
@@ -727,7 +725,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
@@ -735,7 +733,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def turn_aux_heat_off(self) -> None:
         """Turn auxiliary heater off."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_turn_aux_heat_off(self) -> None:
         """Turn auxiliary heater off."""

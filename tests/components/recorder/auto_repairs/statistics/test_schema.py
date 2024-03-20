@@ -42,8 +42,8 @@ async def test_validate_db_schema_fix_utf8_issue(
 
 
 @pytest.mark.parametrize("enable_schema_validation", [True])
-@pytest.mark.parametrize("table", ("statistics_short_term", "statistics"))
-@pytest.mark.parametrize("db_engine", ("mysql", "postgresql"))
+@pytest.mark.parametrize("table", ["statistics_short_term", "statistics"])
+@pytest.mark.parametrize("db_engine", ["mysql", "postgresql"])
 async def test_validate_db_schema_fix_float_issue(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,

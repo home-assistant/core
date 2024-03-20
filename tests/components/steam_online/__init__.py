@@ -71,7 +71,7 @@ class MockedInterface(dict):
         fake_friends = [{"steamid": ACCOUNT_2}]
         fake_friends.extend(
             {"steamid": "".join(random.choices(string.digits, k=len(ACCOUNT_1)))}
-            for _ in range(0, 4)
+            for _ in range(4)
         )
         return {"friendslist": {"friends": fake_friends}}
 

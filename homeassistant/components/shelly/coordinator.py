@@ -179,7 +179,9 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
             self.async_add_listener(self._async_device_updates_handler)
         )
         entry.async_on_unload(
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
+            hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop, run_immediately=True
+            )
         )
 
     @callback
@@ -408,7 +410,9 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self._input_event_listeners: list[Callable[[dict[str, Any]], None]] = []
 
         entry.async_on_unload(
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
+            hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop, run_immediately=True
+            )
         )
         entry.async_on_unload(entry.add_update_listener(self._async_update_listener))
 

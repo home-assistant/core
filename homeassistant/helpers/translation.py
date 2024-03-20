@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterable, Mapping
+from contextlib import suppress
 import logging
 import string
 from typing import Any
@@ -13,7 +14,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, async_get_hass, callback
 from homeassistant.loader import (
     Integration,
     async_get_config_flows,
@@ -491,11 +492,11 @@ def async_setup(hass: HomeAssistant) -> None:
     hass.data[TRANSLATION_FLATTEN_CACHE] = cache
 
     @callback
-    def _async_load_translations_filter(event: Event) -> bool:
+    def _async_load_translations_filter(event_data: Mapping[str, Any]) -> bool:
         """Filter out unwanted events."""
         nonlocal current_language
         if (
-            new_language := event.data.get("language")
+            new_language := event_data.get("language")
         ) and new_language != current_language:
             current_language = new_language
             return True
@@ -526,6 +527,35 @@ def async_translations_loaded(hass: HomeAssistant, components: set[str]) -> bool
     return _async_get_translations_cache(hass).async_is_loaded(
         hass.config.language, components
     )
+
+
+@callback
+def async_get_exception_message(
+    translation_domain: str,
+    translation_key: str,
+    translation_placeholders: dict[str, str] | None = None,
+) -> str:
+    """Return a translated exception message.
+
+    Defaults to English, requires translations to already be cached.
+    """
+    language = "en"
+    hass = async_get_hass()
+    localize_key = (
+        f"component.{translation_domain}.exceptions.{translation_key}.message"
+    )
+    translations = async_get_cached_translations(hass, language, "exceptions")
+    if localize_key in translations:
+        if message := translations[localize_key]:
+            message = message.rstrip(".")
+        if not translation_placeholders:
+            return message
+        with suppress(KeyError):
+            message = message.format(**translation_placeholders)
+        return message
+
+    # We return the translation key when was not found in the cache
+    return translation_key
 
 
 @callback
