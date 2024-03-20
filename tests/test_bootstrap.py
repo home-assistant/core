@@ -509,15 +509,6 @@ async def test_setup_after_deps_not_present(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture
-def mock_is_virtual_env() -> Generator[Mock, None, None]:
-    """Mock is_virtual_env."""
-    with patch(
-        "homeassistant.bootstrap.is_virtual_env", return_value=False
-    ) as is_virtual_env:
-        yield is_virtual_env
-
-
-@pytest.fixture
 def mock_enable_logging() -> Generator[Mock, None, None]:
     """Mock enable logging."""
     with patch("homeassistant.bootstrap.async_enable_logging") as enable_logging:
@@ -555,7 +546,6 @@ def mock_ensure_config_exists() -> Generator[AsyncMock, None, None]:
 async def test_setup_hass(
     mock_hass_config: None,
     mock_enable_logging: Mock,
-    mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
@@ -604,7 +594,6 @@ async def test_setup_hass(
 async def test_setup_hass_takes_longer_than_log_slow_startup(
     mock_hass_config: None,
     mock_enable_logging: Mock,
-    mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
@@ -643,7 +632,6 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
 
 async def test_setup_hass_invalid_yaml(
     mock_enable_logging: Mock,
-    mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
@@ -670,7 +658,6 @@ async def test_setup_hass_invalid_yaml(
 
 async def test_setup_hass_config_dir_nonexistent(
     mock_enable_logging: Mock,
-    mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
@@ -696,7 +683,6 @@ async def test_setup_hass_config_dir_nonexistent(
 
 async def test_setup_hass_recovery_mode(
     mock_enable_logging: Mock,
-    mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
@@ -729,7 +715,6 @@ async def test_setup_hass_recovery_mode(
 async def test_setup_hass_safe_mode(
     mock_hass_config: None,
     mock_enable_logging: Mock,
-    mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
@@ -761,7 +746,6 @@ async def test_setup_hass_safe_mode(
 async def test_setup_hass_recovery_mode_and_safe_mode(
     mock_hass_config: None,
     mock_enable_logging: Mock,
-    mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
@@ -794,7 +778,6 @@ async def test_setup_hass_recovery_mode_and_safe_mode(
 async def test_setup_hass_invalid_core_config(
     mock_hass_config: None,
     mock_enable_logging: Mock,
-    mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
@@ -833,7 +816,6 @@ async def test_setup_hass_invalid_core_config(
 async def test_setup_recovery_mode_if_no_frontend(
     mock_hass_config: None,
     mock_enable_logging: Mock,
-    mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,

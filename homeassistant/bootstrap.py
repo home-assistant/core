@@ -89,7 +89,7 @@ from .setup import (
 )
 from .util.async_ import create_eager_task
 from .util.logging import async_activate_log_queue_handler
-from .util.package import async_get_user_site, is_virtual_env
+from .util.package import async_get_user_site
 
 if TYPE_CHECKING:
     from .runner import RuntimeConfig
@@ -248,8 +248,7 @@ async def async_setup_hass(
                 err,
             )
         else:
-            if not is_virtual_env():
-                await async_mount_local_lib_path(runtime_config.config_dir)
+            await async_mount_local_lib_path(runtime_config.config_dir)
 
             basic_setup_success = (
                 await async_from_config_dict(config_dict, hass) is not None
@@ -568,6 +567,8 @@ async def async_mount_local_lib_path(config_dir: str) -> str:
     deps_dir = os.path.join(config_dir, "deps")
     if (lib_dir := await async_get_user_site(deps_dir)) not in sys.path:
         sys.path.insert(0, lib_dir)
+    if deps_dir not in sys.path:
+        sys.path.insert(0, deps_dir)
     return deps_dir
 
 
