@@ -11,7 +11,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from .config import (
+from .conftest import (
     APP_ID,
     CONFIG_ENTRY,
     DATA_UPDATE,

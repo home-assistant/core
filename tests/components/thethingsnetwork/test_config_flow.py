@@ -13,7 +13,7 @@ from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .config import API_KEY, APP_ID, CONFIG_ENTRY, HOSTNAME
+from .conftest import API_KEY, APP_ID, CONFIG_ENTRY, HOSTNAME
 
 USER_DATA = {CONF_HOSTNAME: HOSTNAME, CONF_APP_ID: APP_ID, CONF_API_KEY: API_KEY}
 USER_DATA_PARTIAL = {CONF_APP_ID: APP_ID, CONF_API_KEY: API_KEY}
