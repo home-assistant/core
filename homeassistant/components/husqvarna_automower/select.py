@@ -19,7 +19,12 @@ from .entity import AutomowerControlEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-HEADLIGHT_MODES: list = [option.lower() for option in list(HeadlightModes)]
+HEADLIGHT_MODES: list = [
+    HeadlightModes.ALWAYS_OFF.lower(),
+    HeadlightModes.ALWAYS_ON.lower(),
+    HeadlightModes.EVENING_AND_NIGHT.lower(),
+    HeadlightModes.EVENING_ONLY.lower(),
+]
 
 
 async def async_setup_entry(
