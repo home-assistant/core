@@ -122,6 +122,7 @@ async def test_reading_yaml_config(
         0
     ]
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert device.dev_id == config.dev_id
     assert device.track == config.track
     assert device.mac == config.mac
