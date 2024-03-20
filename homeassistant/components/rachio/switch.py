@@ -1,7 +1,6 @@
 """Integration with the Rachio Iro sprinkler system controller."""
 
 from abc import abstractmethod
-from collections.abc import Callable
 from contextlib import suppress
 from datetime import timedelta
 import logging
@@ -12,7 +11,7 @@ import voluptuous as vol
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_ID
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
@@ -282,7 +281,7 @@ class RachioRainDelay(RachioSwitch):
 
     def __init__(self, controller) -> None:
         """Set up a Rachio rain delay switch."""
-        self._cancel_update: Callable | None = None
+        self._cancel_update: CALLBACK_TYPE | None = None
         super().__init__(controller)
 
     @property
