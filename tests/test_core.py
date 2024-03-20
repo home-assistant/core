@@ -57,6 +57,7 @@ from homeassistant.exceptions import (
     ServiceNotFound,
 )
 from homeassistant.helpers.json import json_dumps
+from homeassistant.setup import async_setup_component
 from homeassistant.util.async_ import create_eager_task
 import homeassistant.util.dt as dt_util
 from homeassistant.util.read_only_dict import ReadOnlyDict
@@ -1304,6 +1305,8 @@ async def test_eventbus_coroutine_event_listener(hass: HomeAssistant) -> None:
 async def test_eventbus_max_length_exceeded(hass: HomeAssistant) -> None:
     """Test that an exception is raised when the max character length is exceeded."""
 
+    await async_setup_component(hass, "homeassistant", {})
+
     long_evt_name = (
         "this_event_exceeds_the_max_character_length_even_with_the_new_limit"
     )
@@ -1311,6 +1314,10 @@ async def test_eventbus_max_length_exceeded(hass: HomeAssistant) -> None:
     with pytest.raises(MaxLengthExceeded) as exc_info:
         hass.bus.async_fire(long_evt_name)
 
+    assert (
+        str(exc_info.value)
+        == f"Value {long_evt_name} for property event_type has a max length of 64 characters"
+    )
     assert exc_info.value.property_name == "event_type"
     assert exc_info.value.max_length == 64
     assert exc_info.value.value == long_evt_name
