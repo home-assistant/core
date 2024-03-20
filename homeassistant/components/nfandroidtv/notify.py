@@ -133,21 +133,39 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                         "Invalid interrupt-value: %s", data.get(ATTR_INTERRUPT)
                     )
             if imagedata := data.get(ATTR_IMAGE):
-                image_file = self.load_file(
-                    url=imagedata.get(ATTR_IMAGE_URL),
-                    local_path=imagedata.get(ATTR_IMAGE_PATH),
-                    username=imagedata.get(ATTR_IMAGE_USERNAME),
-                    password=imagedata.get(ATTR_IMAGE_PASSWORD),
-                    auth=imagedata.get(ATTR_IMAGE_AUTH),
-                )
+                if isinstance(imagedata, str):
+                    image_file = (
+                        self.load_file(url=imagedata)
+                        if imagedata.startswith("http")
+                        else self.load_file(local_path=imagedata)
+                    )
+                elif isinstance(imagedata, dict):
+                    image_file = self.load_file(
+                        url=imagedata.get(ATTR_IMAGE_URL),
+                        local_path=imagedata.get(ATTR_IMAGE_PATH),
+                        username=imagedata.get(ATTR_IMAGE_USERNAME),
+                        password=imagedata.get(ATTR_IMAGE_PASSWORD),
+                        auth=imagedata.get(ATTR_IMAGE_AUTH),
+                    )
+                else:
+                    _LOGGER.error("Unexpected image data passed to notify service")
             if icondata := data.get(ATTR_ICON):
-                icon = self.load_file(
-                    url=icondata.get(ATTR_ICON_URL),
-                    local_path=icondata.get(ATTR_ICON_PATH),
-                    username=icondata.get(ATTR_ICON_USERNAME),
-                    password=icondata.get(ATTR_ICON_PASSWORD),
-                    auth=icondata.get(ATTR_ICON_AUTH),
-                )
+                if isinstance(icondata, str):
+                    icondata = (
+                        self.load_file(url=icondata)
+                        if icondata.startswith("http")
+                        else self.load_file(local_path=icondata)
+                    )
+                elif isinstance(icondata, dict):
+                    icon = self.load_file(
+                        url=icondata.get(ATTR_ICON_URL),
+                        local_path=icondata.get(ATTR_ICON_PATH),
+                        username=icondata.get(ATTR_ICON_USERNAME),
+                        password=icondata.get(ATTR_ICON_PASSWORD),
+                        auth=icondata.get(ATTR_ICON_AUTH),
+                    )
+                else:
+                    _LOGGER.error("Unexpected icon data passed to notify service")
         self.notify.send(
             message,
             title=title,
