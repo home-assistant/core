@@ -1,0 +1,27 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured"
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to ZCC",
+      "connection_refused": "Connection refused from ZCC",
+      "discovery_failure": "Unable to discover ZCC on LAN",
+      "invalid_auth": "Unable to authorise connection to ZCC",
+      "invalid_host": "Invalid host for ZCC",
+      "timeout": "Timeout connecting to ZCC",
+      "unknown": "Unexpected error"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "Host for ZCC (blank for auto-discover)",
+          "port": "Port for ZCC (blank for auto-discover)",
+          "timeout": "Connection timeout (in secs)",
+          "verbosity": "Verbosity (0-2) for logging",
+          "watchdog": "Watchdog timeout (in secs)"
+        }
+      }
+    }
+  }
+}
