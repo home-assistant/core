@@ -1,4 +1,5 @@
 """Test the MyPermobil config flow."""
+
 from unittest.mock import Mock, patch
 
 from mypermobil import (

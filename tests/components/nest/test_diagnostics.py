@@ -1,4 +1,5 @@
 """Test nest diagnostics."""
+
 from unittest.mock import patch
 
 from google_nest_sdm.exceptions import SubscriberException

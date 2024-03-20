@@ -1,7 +1,9 @@
 """Test the Z-Wave JS update entities."""
+
 import asyncio
 from datetime import timedelta
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from zwave_js_server.event import Event
 from zwave_js_server.exceptions import FailedZWaveCommand
@@ -628,6 +630,7 @@ async def test_update_entity_delay(
     ge_in_wall_dimmer_switch,
     zen_31,
     hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test update occurs on a delay after HA starts."""
     client.async_send_command.reset_mock()

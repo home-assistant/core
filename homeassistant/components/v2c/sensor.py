@@ -1,4 +1,5 @@
 """Support for V2C EVSE sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -25,16 +26,11 @@ from .entity import V2CBaseEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class V2CRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class V2CSensorEntityDescription(SensorEntityDescription):
+    """Describes an EVSE Power sensor entity."""
 
     value_fn: Callable[[TrydanData], float]
-
-
-@dataclass(frozen=True)
-class V2CSensorEntityDescription(SensorEntityDescription, V2CRequiredKeysMixin):
-    """Describes an EVSE Power sensor entity."""
 
 
 TRYDAN_SENSORS = (
@@ -50,7 +46,6 @@ TRYDAN_SENSORS = (
     V2CSensorEntityDescription(
         key="charge_energy",
         translation_key="charge_energy",
-        icon="mdi:ev-station",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
@@ -59,7 +54,6 @@ TRYDAN_SENSORS = (
     V2CSensorEntityDescription(
         key="charge_time",
         translation_key="charge_time",
-        icon="mdi:timer",
         native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.DURATION,
@@ -68,7 +62,6 @@ TRYDAN_SENSORS = (
     V2CSensorEntityDescription(
         key="house_power",
         translation_key="house_power",
-        icon="mdi:home-lightning-bolt",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
@@ -77,7 +70,6 @@ TRYDAN_SENSORS = (
     V2CSensorEntityDescription(
         key="fv_power",
         translation_key="fv_power",
-        icon="mdi:solar-power-variant",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,

@@ -1,4 +1,5 @@
 """Test Google Assistant helpers."""
+
 from datetime import timedelta
 from http import HTTPStatus
 from unittest.mock import Mock, call, patch
@@ -403,7 +404,7 @@ async def test_config_local_sdk_allow_min_version(
     ) not in caplog.text
 
 
-@pytest.mark.parametrize("version", (None, "2.1.4"))
+@pytest.mark.parametrize("version", [None, "2.1.4"])
 async def test_config_local_sdk_warn_version(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

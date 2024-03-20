@@ -15,7 +15,7 @@ from aiohttp.web import Request, Response
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.network import get_url, is_cloud_connection
@@ -91,7 +91,6 @@ def async_generate_url(
     hass: HomeAssistant,
     webhook_id: str,
     prefer_external: bool = True,
-    allow_cloud: bool = False,
     allow_ip: bool | None = None,
 ) -> str:
     """Generate the full URL for a webhook_id."""
@@ -99,7 +98,7 @@ def async_generate_url(
         get_url(
             hass,
             prefer_external=prefer_external,
-            allow_cloud=allow_cloud,
+            allow_cloud=False,
             allow_ip=allow_ip,
         ),
         async_generate_path(webhook_id),
@@ -214,14 +213,13 @@ class WebhookView(HomeAssistantView):
     async def _handle(self, request: Request, webhook_id: str) -> Response:
         """Handle webhook call."""
         _LOGGER.debug("Handling webhook %s payload for %s", request.method, webhook_id)
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
         return await async_handle_webhook(hass, webhook_id, request)
 
     get = _handle
     head = _handle
     post = _handle
     put = _handle
-    get = _handle
 
 
 @websocket_api.websocket_command(

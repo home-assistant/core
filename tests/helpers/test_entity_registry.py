@@ -1,4 +1,5 @@
 """Tests for the Entity Registry."""
+
 from datetime import timedelta
 from typing import Any
 from unittest.mock import patch
@@ -91,7 +92,6 @@ def test_get_or_create_updates_data(entity_registry: er.EntityRegistry) -> None:
     )
 
     assert set(entity_registry.async_device_ids()) == {"mock-dev-id"}
-    assert set(entity_registry.async_entity_ids()) == {"light.hue_5678"}
 
     assert orig_entry == er.RegistryEntry(
         "light.hue_5678",
@@ -163,7 +163,6 @@ def test_get_or_create_updates_data(entity_registry: er.EntityRegistry) -> None:
     )
 
     assert set(entity_registry.async_device_ids()) == {"new-mock-dev-id"}
-    assert set(entity_registry.async_entity_ids()) == {"light.hue_5678"}
 
     new_entry = entity_registry.async_get_or_create(
         "light",
@@ -210,7 +209,6 @@ def test_get_or_create_updates_data(entity_registry: er.EntityRegistry) -> None:
     )
 
     assert set(entity_registry.async_device_ids()) == set()
-    assert set(entity_registry.async_entity_ids()) == {"light.hue_5678"}
 
 
 def test_get_or_create_suggested_object_id_conflict_register(
@@ -282,7 +280,9 @@ async def test_loading_saving_data(
         orig_entry2.entity_id, "light", {"minimum_brightness": 20}
     )
     entity_registry.async_update_entity(
-        orig_entry2.entity_id, labels={"label1", "label2"}
+        orig_entry2.entity_id,
+        categories={"scope", "id"},
+        labels={"label1", "label2"},
     )
     orig_entry2 = entity_registry.async_get(orig_entry2.entity_id)
     orig_entry3 = entity_registry.async_get_or_create("light", "hue", "ABCD")
@@ -312,6 +312,7 @@ async def test_loading_saving_data(
     assert orig_entry4 == new_entry4
 
     assert new_entry2.area_id == "mock-area-id"
+    assert new_entry2.categories == {"scope", "id"}
     assert new_entry2.capabilities == {"max": 100}
     assert new_entry2.config_entry_id == mock_config.entry_id
     assert new_entry2.device_class == "user-class"
@@ -454,8 +455,6 @@ def test_async_get_entity_id(entity_registry: er.EntityRegistry) -> None:
         entity_registry.async_get_entity_id("light", "hue", "1234") == "light.hue_1234"
     )
     assert entity_registry.async_get_entity_id("light", "hue", "123") is None
-
-    assert set(entity_registry.async_entity_ids()) == {"light.hue_1234"}
 
 
 async def test_updating_config_entry_id(
@@ -1480,7 +1479,6 @@ def test_entity_registry_items() -> None:
     entities = er.EntityRegistryItems()
     assert entities.get_entity_id(("a", "b", "c")) is None
     assert entities.get_entry("abc") is None
-    assert set(entities.get_entity_ids()) == set()
 
     entry1 = er.RegistryEntry("test.entity1", "1234", "hue")
     entry2 = er.RegistryEntry("test.entity2", "2345", "hue")
@@ -1494,7 +1492,6 @@ def test_entity_registry_items() -> None:
     assert entities.get_entry(entry1.id) is entry1
     assert entities.get_entity_id(("test", "hue", "2345")) is entry2.entity_id
     assert entities.get_entry(entry2.id) is entry2
-    assert set(entities.get_entity_ids()) == {"test.entity2", "test.entity1"}
 
     entities.pop("test.entity1")
     del entities["test.entity2"]
@@ -1503,8 +1500,6 @@ def test_entity_registry_items() -> None:
     assert entities.get_entry(entry1.id) is None
     assert entities.get_entity_id(("test", "hue", "2345")) is None
     assert entities.get_entry(entry2.id) is None
-
-    assert set(entities.get_entity_ids()) == set()
 
 
 async def test_disabled_by_str_not_allowed(
@@ -1780,8 +1775,7 @@ async def test_async_migrate_entry_delete_other(
             entity_registry.async_remove(entry2.entity_id)
             return None
         if entity_entry == entry2:
-            # We should not get here
-            pytest.fail()
+            pytest.fail("We should not get here")
         return None
 
     entries = set()
@@ -1855,3 +1849,76 @@ async def test_entries_for_label(entity_registry: er.EntityRegistry) -> None:
 
     assert not er.async_entries_for_label(entity_registry, "unknown")
     assert not er.async_entries_for_label(entity_registry, "")
+
+
+async def test_removing_categories(entity_registry: er.EntityRegistry) -> None:
+    """Make sure we can clear categories."""
+    entry = entity_registry.async_get_or_create(
+        domain="light",
+        platform="hue",
+        unique_id="5678",
+    )
+    entry = entity_registry.async_update_entity(
+        entry.entity_id, categories={"scope1": "id", "scope2": "id"}
+    )
+
+    entity_registry.async_clear_category_id("scope1", "id")
+    entry_cleared_scope1 = entity_registry.async_get(entry.entity_id)
+
+    entity_registry.async_clear_category_id("scope2", "id")
+    entry_cleared_scope2 = entity_registry.async_get(entry.entity_id)
+
+    assert entry_cleared_scope1
+    assert entry_cleared_scope2
+    assert entry != entry_cleared_scope1
+    assert entry != entry_cleared_scope2
+    assert entry_cleared_scope1 != entry_cleared_scope2
+    assert entry.categories == {"scope1": "id", "scope2": "id"}
+    assert entry_cleared_scope1.categories == {"scope2": "id"}
+    assert not entry_cleared_scope2.categories
+
+
+async def test_entries_for_category(entity_registry: er.EntityRegistry) -> None:
+    """Test getting entity entries by category."""
+    entity_registry.async_get_or_create(
+        domain="light",
+        platform="hue",
+        unique_id="000",
+    )
+    entry = entity_registry.async_get_or_create(
+        domain="light",
+        platform="hue",
+        unique_id="123",
+    )
+    category_1 = entity_registry.async_update_entity(
+        entry.entity_id, categories={"scope1": "id"}
+    )
+    entry = entity_registry.async_get_or_create(
+        domain="light",
+        platform="hue",
+        unique_id="456",
+    )
+    category_2 = entity_registry.async_update_entity(
+        entry.entity_id, categories={"scope2": "id"}
+    )
+    entry = entity_registry.async_get_or_create(
+        domain="light",
+        platform="hue",
+        unique_id="789",
+    )
+    category_1_and_2 = entity_registry.async_update_entity(
+        entry.entity_id, categories={"scope1": "id", "scope2": "id"}
+    )
+
+    entries = er.async_entries_for_category(entity_registry, "scope1", "id")
+    assert len(entries) == 2
+    assert entries == [category_1, category_1_and_2]
+
+    entries = er.async_entries_for_category(entity_registry, "scope2", "id")
+    assert len(entries) == 2
+    assert entries == [category_2, category_1_and_2]
+
+    assert not er.async_entries_for_category(entity_registry, "unknown", "id")
+    assert not er.async_entries_for_category(entity_registry, "", "id")
+    assert not er.async_entries_for_category(entity_registry, "scope1", "unknown")
+    assert not er.async_entries_for_category(entity_registry, "scope1", "")

@@ -1,4 +1,5 @@
 """Device tracker support for OPNSense routers."""
+
 from __future__ import annotations
 
 from homeassistant.components.device_tracker import DeviceScanner

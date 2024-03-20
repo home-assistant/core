@@ -3,6 +3,7 @@
 This module has quite some complex parts. I have tried to add as much
 documentation as possible to keep it understandable.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -67,6 +68,7 @@ _LOGGER = logging.getLogger(__name__)
 #
 BASE_PRELOAD_PLATFORMS = [
     "config",
+    "config_flow",
     "diagnostics",
     "energy",
     "group",
@@ -81,6 +83,19 @@ BASE_PRELOAD_PLATFORMS = [
 ]
 
 
+@dataclass
+class BlockedIntegration:
+    """Blocked custom integration details."""
+
+    lowest_good_version: AwesomeVersion | None
+    reason: str
+
+
+BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
+    # Added in 2024.3.0 because of https://github.com/home-assistant/core/issues/112464
+    "start_time": BlockedIntegration(AwesomeVersion("1.1.7"), "breaks Home Assistant")
+}
+
 DATA_COMPONENTS = "components"
 DATA_INTEGRATIONS = "integrations"
 DATA_MISSING_PLATFORMS = "missing_platforms"
@@ -94,10 +109,15 @@ CUSTOM_WARNING = (
     "cause stability problems, be sure to disable it if you "
     "experience issues with Home Assistant"
 )
+IMPORT_EVENT_LOOP_WARNING = (
+    "We found an integration %s which is configured to "
+    "to import its code in the event loop. This component might "
+    "cause stability problems, be sure to disable it if you "
+    "experience issues with Home Assistant"
+)
 
 _UNDEF = object()  # Internal; not helpers.typing.UNDEFINED due to circular dependency
 
-MAX_LOAD_CONCURRENTLY = 4
 
 MOVED_ZEROCONF_PROPS = ("macaddress", "model", "manufacturer")
 
@@ -639,10 +659,14 @@ class Integration:
                 None if is_virtual else set(os.listdir(file_path)),
             )
 
+            if not integration.import_executor:
+                _LOGGER.warning(IMPORT_EVENT_LOOP_WARNING, integration.domain)
+
             if integration.is_built_in:
                 return integration
 
             _LOGGER.warning(CUSTOM_WARNING, integration.domain)
+
             if integration.version is None:
                 _LOGGER.error(
                     (
@@ -679,6 +703,21 @@ class Integration:
                     integration.version,
                 )
                 return None
+
+            if blocked := BLOCKED_CUSTOM_INTEGRATIONS.get(integration.domain):
+                if _version_blocked(integration.version, blocked):
+                    _LOGGER.error(
+                        (
+                            "Version %s of custom integration '%s' %s and was blocked "
+                            "from loading, please %s"
+                        ),
+                        integration.version,
+                        integration.domain,
+                        blocked.reason,
+                        async_suggest_report_issue(None, integration=integration),
+                    )
+                    return None
+
             return integration
 
         return None
@@ -791,9 +830,18 @@ class Integration:
     def import_executor(self) -> bool:
         """Import integration in the executor."""
         # If the integration does not explicitly set import_executor, we default to
-        # True if it's a built-in integration and False if it's a custom integration.
-        # In the future, we want to default to True for all integrations.
-        return self.manifest.get("import_executor", self.is_built_in)
+        # True.
+        return self.manifest.get("import_executor", True)
+
+    @cached_property
+    def has_translations(self) -> bool:
+        """Return if the integration has translations."""
+        return "translations" in self._top_level_files
+
+    @cached_property
+    def has_services(self) -> bool:
+        """Return if the integration has services."""
+        return "services.yaml" in self._top_level_files
 
     @property
     def mqtt(self) -> list[str] | None:
@@ -901,6 +949,10 @@ class Integration:
         and will check if import_executor is set and load it in the executor,
         otherwise it will load it in the event loop.
         """
+        domain = self.domain
+        if domain in (cache := self._cache):
+            return cache[domain]
+
         if self._component_future:
             return await self._component_future
 
@@ -914,7 +966,7 @@ class Integration:
             or (self.config_flow and f"{self.pkg_path}.config_flow" not in sys.modules)
         )
         if not load_executor:
-            comp = self.get_component()
+            comp = self._get_component()
             if debug:
                 _LOGGER.debug(
                     "Component %s import took %.3f seconds (loaded_executor=False)",
@@ -927,7 +979,7 @@ class Integration:
         try:
             try:
                 comp = await self.hass.async_add_import_executor_job(
-                    self.get_component, True
+                    self._get_component, True
                 )
             except ImportError as ex:
                 load_executor = False
@@ -936,7 +988,7 @@ class Integration:
                 )
                 # If importing in the executor deadlocks because there is a circular
                 # dependency, we fall back to the event loop.
-                comp = self.get_component()
+                comp = self._get_component()
             self._component_future.set_result(comp)
         except BaseException as ex:
             self._component_future.set_exception(ex)
@@ -959,22 +1011,29 @@ class Integration:
 
         return comp
 
-    def get_component(self, preload_platforms: bool = False) -> ComponentProtocol:
+    def get_component(self) -> ComponentProtocol:
         """Return the component.
 
         This method must be thread-safe as it's called from the executor
         and the event loop.
 
+        This method checks the cache and if the component is not loaded
+        it will load it in the executor if import_executor is set, otherwise
+        it will load it in the event loop.
+
         This is mostly a thin wrapper around importlib.import_module
         with a dict cache which is thread-safe since importlib has
         appropriate locks.
         """
+        domain = self.domain
+        if domain in (cache := self._cache):
+            return cache[domain]
+        return self._get_component()
+
+    def _get_component(self, preload_platforms: bool = False) -> ComponentProtocol:
+        """Return the component."""
         cache = self._cache
         domain = self.domain
-
-        if domain in cache:
-            return cache[domain]
-
         try:
             cache[domain] = cast(
                 ComponentProtocol, importlib.import_module(self.pkg_path)
@@ -994,15 +1053,6 @@ class Integration:
             for platform_name in self.platforms_exists(self._platforms_to_preload):
                 with suppress(ImportError):
                     self.get_platform(platform_name)
-
-            if self.config_flow:
-                # If there is a config flow, we will cache it as well since
-                # config entry setup always has to load the flow to get the
-                # major/minor version for migrations. Since we may be running
-                # in the executor we will use this opportunity to cache the
-                # config_flow as well.
-                with suppress(ImportError):
-                    self.get_platform("config_flow")
 
         return cache[domain]
 
@@ -1122,6 +1172,13 @@ class Integration:
             raise self._missing_platforms_cache[full_name]
         return None
 
+    def platforms_are_loaded(self, platform_names: Iterable[str]) -> bool:
+        """Check if a platforms are loaded for an integration."""
+        return all(
+            f"{self.domain}.{platform_name}" in self._cache
+            for platform_name in platform_names
+        )
+
     def get_platform_cached(self, platform_name: str) -> ModuleType | None:
         """Return a platform for an integration from cache."""
         return self._cache.get(f"{self.domain}.{platform_name}")  # type: ignore[return-value]
@@ -1208,6 +1265,20 @@ class Integration:
         return f"<Integration {self.domain}: {self.pkg_path}>"
 
 
+def _version_blocked(
+    integration_version: AwesomeVersion,
+    blocked_integration: BlockedIntegration,
+) -> bool:
+    """Return True if the integration version is blocked."""
+    if blocked_integration.lowest_good_version is None:
+        return True
+
+    if integration_version >= blocked_integration.lowest_good_version:
+        return False
+
+    return True
+
+
 def _resolve_integrations_from_root(
     hass: HomeAssistant, root_module: ModuleType, domains: Iterable[str]
 ) -> dict[str, Integration]:
@@ -1235,7 +1306,7 @@ def async_get_loaded_integration(hass: HomeAssistant, domain: str) -> Integratio
         cache = cast(dict[str, Integration | asyncio.Future[None]], cache)
     int_or_fut = cache.get(domain, _UNDEF)
     # Integration is never subclassed, so we can check for type
-    if type(int_or_fut) is Integration:  # noqa: E721
+    if type(int_or_fut) is Integration:
         return int_or_fut
     raise IntegrationNotLoaded(domain)
 
@@ -1262,7 +1333,7 @@ async def async_get_integrations(
     for domain in domains:
         int_or_fut = cache.get(domain, _UNDEF)
         # Integration is never subclassed, so we can check for type
-        if type(int_or_fut) is Integration:  # noqa: E721
+        if type(int_or_fut) is Integration:
             results[domain] = int_or_fut
         elif int_or_fut is not _UNDEF:
             in_progress[domain] = cast(asyncio.Future[None], int_or_fut)
@@ -1563,6 +1634,7 @@ def is_component_module_loaded(hass: HomeAssistant, module: str) -> bool:
 def async_get_issue_tracker(
     hass: HomeAssistant | None,
     *,
+    integration: Integration | None = None,
     integration_domain: str | None = None,
     module: str | None = None,
 ) -> str | None:
@@ -1570,18 +1642,22 @@ def async_get_issue_tracker(
     issue_tracker = (
         "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
     )
-    if not integration_domain and not module:
+    if not integration and not integration_domain and not module:
         # If we know nothing about the entity, suggest opening an issue on HA core
         return issue_tracker
 
-    if hass and integration_domain:
+    if not integration and (hass and integration_domain):
         with suppress(IntegrationNotLoaded):
             integration = async_get_loaded_integration(hass, integration_domain)
-            if not integration.is_built_in:
-                return integration.issue_tracker
+
+    if integration and not integration.is_built_in:
+        return integration.issue_tracker
 
     if module and "custom_components" in module:
         return None
+
+    if integration:
+        integration_domain = integration.domain
 
     if integration_domain:
         issue_tracker += f"+label%3A%22integration%3A+{integration_domain}%22"
@@ -1592,15 +1668,21 @@ def async_get_issue_tracker(
 def async_suggest_report_issue(
     hass: HomeAssistant | None,
     *,
+    integration: Integration | None = None,
     integration_domain: str | None = None,
     module: str | None = None,
 ) -> str:
     """Generate a blurb asking the user to file a bug report."""
     issue_tracker = async_get_issue_tracker(
-        hass, integration_domain=integration_domain, module=module
+        hass,
+        integration=integration,
+        integration_domain=integration_domain,
+        module=module,
     )
 
     if not issue_tracker:
+        if integration:
+            integration_domain = integration.domain
         if not integration_domain:
             return "report it to the custom integration author"
         return (

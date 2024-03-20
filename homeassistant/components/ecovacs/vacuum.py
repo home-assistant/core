@@ -1,4 +1,5 @@
 """Support for Ecovacs Ecovacs Vacuums."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -45,13 +46,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Ecovacs vacuums."""
-    vacuums: list[EcovacsVacuum | EcovacsLegacyVacuum] = []
     controller: EcovacsController = hass.data[DOMAIN][config_entry.entry_id]
+    vacuums: list[EcovacsVacuum | EcovacsLegacyVacuum] = [
+        EcovacsVacuum(device) for device in controller.devices(VacuumCapabilities)
+    ]
     for device in controller.legacy_devices:
         await hass.async_add_executor_job(device.connect_and_wait_until_ready)
         vacuums.append(EcovacsLegacyVacuum(device))
-    for device in controller.devices(VacuumCapabilities):
-        vacuums.append(EcovacsVacuum(device))
     _LOGGER.debug("Adding Ecovacs Vacuums to Home Assistant: %s", vacuums)
     async_add_entities(vacuums)
 
@@ -336,7 +337,6 @@ class EcovacsVacuum(
             params = {}
         elif isinstance(params, list):
             raise ServiceValidationError(
-                "Params must be a dict!",
                 translation_domain=DOMAIN,
                 translation_key="vacuum_send_command_params_dict",
             )
@@ -344,7 +344,6 @@ class EcovacsVacuum(
         if command in ["spot_area", "custom_area"]:
             if params is None:
                 raise ServiceValidationError(
-                    f"Params are required for {command}!",
                     translation_domain=DOMAIN,
                     translation_key="vacuum_send_command_params_required",
                     translation_placeholders={"command": command},
@@ -353,7 +352,6 @@ class EcovacsVacuum(
                 info = self._device.device_info
                 name = info.get("nick", info["name"])
                 raise ServiceValidationError(
-                    f"Vacuum {name} does not support area capability!",
                     translation_domain=DOMAIN,
                     translation_key="vacuum_send_command_area_not_supported",
                     translation_placeholders={"name": name},

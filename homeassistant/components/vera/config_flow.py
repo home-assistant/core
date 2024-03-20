@@ -1,4 +1,5 @@
 """Config flow for Vera."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -115,15 +116,15 @@ class VeraFlowHandler(ConfigFlow, domain=DOMAIN):
                 {
                     **user_input,
                     **options_data(user_input),
-                    **{CONF_SOURCE: SOURCE_USER},
-                    **{CONF_LEGACY_UNIQUE_ID: False},
+                    CONF_SOURCE: SOURCE_USER,
+                    CONF_LEGACY_UNIQUE_ID: False,
                 }
             )
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
-                {**{vol.Required(CONF_CONTROLLER): str}, **options_schema()}
+                {vol.Required(CONF_CONTROLLER): str, **options_schema()}
             ),
         )
 
@@ -147,8 +148,8 @@ class VeraFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self.async_step_finish(
             {
                 **config,
-                **{CONF_SOURCE: SOURCE_IMPORT},
-                **{CONF_LEGACY_UNIQUE_ID: use_legacy_unique_id},
+                CONF_SOURCE: SOURCE_IMPORT,
+                CONF_LEGACY_UNIQUE_ID: use_legacy_unique_id,
             }
         )
 

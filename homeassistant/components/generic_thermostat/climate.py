@@ -1,4 +1,5 @@
 """Adds support for generic thermostat units."""
+
 from __future__ import annotations
 
 import asyncio
@@ -59,7 +60,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, PLATFORMS
 
@@ -235,7 +236,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         )
         if len(presets):
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
-            self._attr_preset_modes = [PRESET_NONE] + list(presets.keys())
+            self._attr_preset_modes = [PRESET_NONE, *presets.keys()]
         else:
             self._attr_preset_modes = [PRESET_NONE]
         self._presets = presets
@@ -278,7 +279,9 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                 STATE_UNAVAILABLE,
                 STATE_UNKNOWN,
             ):
-                self.hass.create_task(self._check_switch_initial_state())
+                self.hass.async_create_task(
+                    self._check_switch_initial_state(), eager_start=True
+                )
 
         if self.hass.state is CoreState.running:
             _async_startup()
@@ -412,9 +415,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         # Get default temp from super class
         return super().max_temp
 
-    async def _async_sensor_changed(
-        self, event: EventType[EventStateChangedData]
-    ) -> None:
+    async def _async_sensor_changed(self, event: Event[EventStateChangedData]) -> None:
         """Handle temperature changes."""
         new_state = event.data["new_state"]
         if new_state is None or new_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
@@ -437,14 +438,16 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             await self._async_heater_turn_off()
 
     @callback
-    def _async_switch_changed(self, event: EventType[EventStateChangedData]) -> None:
+    def _async_switch_changed(self, event: Event[EventStateChangedData]) -> None:
         """Handle heater switch state changes."""
         new_state = event.data["new_state"]
         old_state = event.data["old_state"]
         if new_state is None:
             return
         if old_state is None:
-            self.hass.create_task(self._check_switch_initial_state())
+            self.hass.async_create_task(
+                self._check_switch_initial_state(), eager_start=True
+            )
         self.async_write_ha_state()
 
     @callback

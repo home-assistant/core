@@ -1,4 +1,5 @@
 """Test the EnergyZero config flow."""
+
 from unittest.mock import MagicMock
 
 from syrupy.assertion import SnapshotAssertion

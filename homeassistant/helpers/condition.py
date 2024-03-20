@@ -1,4 +1,5 @@
 """Offer reusable conditions."""
+
 from __future__ import annotations
 
 import asyncio
@@ -361,7 +362,7 @@ def numeric_state(
     ).result()
 
 
-def async_numeric_state(  # noqa: C901
+def async_numeric_state(
     hass: HomeAssistant,
     entity: None | str | State,
     below: float | str | None = None,

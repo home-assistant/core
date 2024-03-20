@@ -402,8 +402,8 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     def set_timer(
         self,
         temperature: float,
-        time_period: int,
-        requested_overlay: str,
+        time_period: int | None = None,
+        requested_overlay: str | None = None,
     ):
         """Set the timer on the entity, and temperature if supported."""
 

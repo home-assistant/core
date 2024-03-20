@@ -1,4 +1,5 @@
 """The Tankerkoenig update coordinator."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -61,8 +62,18 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator):
             try:
                 station = await self._tankerkoenig.station_details(station_id)
             except TankerkoenigInvalidKeyError as err:
+                _LOGGER.debug(
+                    "invalid key error occur during setup of station %s %s",
+                    station_id,
+                    err,
+                )
                 raise ConfigEntryAuthFailed(err) from err
             except TankerkoenigConnectionError as err:
+                _LOGGER.debug(
+                    "connection error occur during setup of station %s %s",
+                    station_id,
+                    err,
+                )
                 raise ConfigEntryNotReady(err) from err
             except TankerkoenigError as err:
                 _LOGGER.error("Error when adding station %s %s", station_id, err)
@@ -85,17 +96,27 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator):
         # The API seems to only return at most 10 results, so split the list in chunks of 10
         # and merge it together.
         for index in range(ceil(len(station_ids) / 10)):
+            stations = station_ids[index * 10 : (index + 1) * 10]
             try:
-                data = await self._tankerkoenig.prices(
-                    station_ids[index * 10 : (index + 1) * 10]
-                )
+                data = await self._tankerkoenig.prices(stations)
             except TankerkoenigInvalidKeyError as err:
+                _LOGGER.debug(
+                    "invalid key error occur during update of stations %s %s",
+                    stations,
+                    err,
+                )
                 raise ConfigEntryAuthFailed(err) from err
+            except TankerkoenigRateLimitError as err:
+                _LOGGER.warning(
+                    "API rate limit reached, consider to increase polling interval"
+                )
+                raise UpdateFailed(err) from err
             except (TankerkoenigError, TankerkoenigConnectionError) as err:
-                if isinstance(err, TankerkoenigRateLimitError):
-                    _LOGGER.warning(
-                        "API rate limit reached, consider to increase polling interval"
-                    )
+                _LOGGER.debug(
+                    "error occur during update of stations %s %s",
+                    stations,
+                    err,
+                )
                 raise UpdateFailed(err) from err
 
             prices.update(data)

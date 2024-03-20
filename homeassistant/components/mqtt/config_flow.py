@@ -1,4 +1,5 @@
 """Config flow for MQTT."""
+
 from __future__ import annotations
 
 from collections import OrderedDict
@@ -571,7 +572,7 @@ async def async_get_broker_settings(
             )
             schema = vol.Schema({cv.string: cv.template})
             schema(validated_user_input[CONF_WS_HEADERS])
-        except JSON_DECODE_EXCEPTIONS + (vol.MultipleInvalid,):
+        except (*JSON_DECODE_EXCEPTIONS, vol.MultipleInvalid):
             errors["base"] = "bad_ws_headers"
             return False
         return True

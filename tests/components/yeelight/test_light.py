@@ -1,4 +1,5 @@
 """Test the Yeelight light."""
+
 from datetime import timedelta
 import logging
 import socket
@@ -856,7 +857,6 @@ async def test_device_types(
             state = hass.states.get(f"{entity_id}_nightlight")
             assert state.state == "on"
             nightlight_entity_properties["friendly_name"] = f"{name} Nightlight"
-            nightlight_entity_properties["icon"] = "mdi:weather-night"
             nightlight_entity_properties["flowing"] = False
             nightlight_entity_properties["night_light"] = True
             nightlight_entity_properties["music_mode"] = False
@@ -1418,9 +1418,10 @@ async def test_effects(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert hass.states.get(ENTITY_LIGHT).attributes.get(
-        "effect_list"
-    ) == YEELIGHT_COLOR_EFFECT_LIST + ["mock_effect"]
+    assert hass.states.get(ENTITY_LIGHT).attributes.get("effect_list") == [
+        *YEELIGHT_COLOR_EFFECT_LIST,
+        "mock_effect",
+    ]
 
     async def _async_test_effect(name, target=None, called=True):
         async_mocked_start_flow = AsyncMock()

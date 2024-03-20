@@ -1,4 +1,5 @@
 """Test the Threshold config flow."""
+
 from unittest.mock import patch
 
 import pytest
@@ -60,7 +61,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
     assert config_entry.title == "My threshold sensor"
 
 
-@pytest.mark.parametrize(("extra_input_data", "error"), (({}, "need_lower_upper"),))
+@pytest.mark.parametrize(("extra_input_data", "error"), [({}, "need_lower_upper")])
 async def test_fail(hass: HomeAssistant, extra_input_data, error) -> None:
     """Test not providing lower or upper limit fails."""
     input_sensor = "sensor.input"

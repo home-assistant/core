@@ -1,4 +1,5 @@
 """Support for track controls on the Sisyphus Kinetic Art Table."""
+
 from __future__ import annotations
 
 import aiohttp
@@ -34,7 +35,7 @@ async def async_setup_platform(
         table_holder = hass.data[DATA_SISYPHUS][host]
         table = await table_holder.get_table()
     except aiohttp.ClientError as err:
-        raise PlatformNotReady() from err
+        raise PlatformNotReady from err
 
     add_entities([SisyphusPlayer(table_holder.name, host, table)], True)
 

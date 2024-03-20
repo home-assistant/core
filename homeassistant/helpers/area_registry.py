@@ -1,4 +1,5 @@
 """Provide a way to connect devices to one physical location."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -14,6 +15,7 @@ from .normalized_name_base_registry import (
     NormalizedNameBaseRegistryItems,
     normalize_name,
 )
+from .registry import BaseRegistry
 from .storage import Store
 from .typing import UNDEFINED, UndefinedType
 
@@ -22,7 +24,6 @@ EVENT_AREA_REGISTRY_UPDATED = "area_registry_updated"
 STORAGE_KEY = "core.area_registry"
 STORAGE_VERSION_MAJOR = 1
 STORAGE_VERSION_MINOR = 6
-SAVE_DELAY = 10
 
 
 class EventAreaRegistryUpdatedData(TypedDict):
@@ -86,7 +87,7 @@ class AreaRegistryStore(Store[dict[str, list[dict[str, Any]]]]):
         return old_data
 
 
-class AreaRegistry:
+class AreaRegistry(BaseRegistry):
     """Class to hold a registry of areas."""
 
     areas: NormalizedNameBaseRegistryItems[AreaEntry]
@@ -274,11 +275,6 @@ class AreaRegistry:
         self._area_data = areas.data
 
     @callback
-    def async_schedule_save(self) -> None:
-        """Schedule saving the area registry."""
-        self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
-
-    @callback
     def _data_to_save(self) -> dict[str, list[dict[str, Any]]]:
         """Return data of area registry to store in a file."""
         data = {}
@@ -318,10 +314,11 @@ class AreaRegistry:
 
         @callback
         def _removed_from_registry_filter(
-            event: fr.EventFloorRegistryUpdated | lr.EventLabelRegistryUpdated,
+            event_data: fr.EventFloorRegistryUpdatedData
+            | lr.EventLabelRegistryUpdatedData,
         ) -> bool:
             """Filter all except for the item removed from registry events."""
-            return event.data["action"] == "remove"
+            return event_data["action"] == "remove"
 
         @callback
         def _handle_floor_registry_update(event: fr.EventFloorRegistryUpdated) -> None:
@@ -333,8 +330,9 @@ class AreaRegistry:
 
         self.hass.bus.async_listen(
             event_type=fr.EVENT_FLOOR_REGISTRY_UPDATED,
-            event_filter=_removed_from_registry_filter,  # type: ignore[arg-type]
-            listener=_handle_floor_registry_update,  # type: ignore[arg-type]
+            event_filter=_removed_from_registry_filter,
+            listener=_handle_floor_registry_update,
+            run_immediately=True,
         )
 
         @callback
@@ -349,8 +347,9 @@ class AreaRegistry:
 
         self.hass.bus.async_listen(
             event_type=lr.EVENT_LABEL_REGISTRY_UPDATED,
-            event_filter=_removed_from_registry_filter,  # type: ignore[arg-type]
-            listener=_handle_label_registry_update,  # type: ignore[arg-type]
+            event_filter=_removed_from_registry_filter,
+            listener=_handle_label_registry_update,
+            run_immediately=True,
         )
 
 

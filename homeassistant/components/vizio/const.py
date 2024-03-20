@@ -1,4 +1,5 @@
 """Constants used by vizio component."""
+
 from pyvizio.const import (
     DEVICE_CLASS_SPEAKER as VIZIO_DEVICE_CLASS_SPEAKER,
     DEVICE_CLASS_TV as VIZIO_DEVICE_CLASS_TV,
@@ -49,10 +50,6 @@ DEFAULT_VOLUME_STEP = 1
 DEVICE_ID = "pyvizio"
 
 DOMAIN = "vizio"
-ICON = {
-    MediaPlayerDeviceClass.TV: "mdi:television",
-    MediaPlayerDeviceClass.SPEAKER: "mdi:speaker",
-}
 
 COMMON_SUPPORTED_COMMANDS = (
     MediaPlayerEntityFeature.SELECT_SOURCE

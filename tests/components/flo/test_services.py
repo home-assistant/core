@@ -1,4 +1,5 @@
 """Test the services for the Flo by Moen integration."""
+
 import pytest
 from voluptuous.error import MultipleInvalid
 

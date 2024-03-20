@@ -1,4 +1,5 @@
 """Test the Android IP Webcam config flow."""
+
 from unittest.mock import Mock, patch
 
 import aiohttp

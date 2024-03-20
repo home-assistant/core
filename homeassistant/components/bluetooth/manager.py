@@ -1,4 +1,5 @@
 """The bluetooth integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
@@ -134,9 +135,11 @@ class HomeAssistantBluetoothManager(BluetoothManager):
             self._bluetooth_adapters, self.storage
         )
         self._cancel_logging_listener = self.hass.bus.async_listen(
-            EVENT_LOGGING_CHANGED, self._async_logging_changed
+            EVENT_LOGGING_CHANGED, self._async_logging_changed, run_immediately=True
         )
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, self.async_stop, run_immediately=True
+        )
         seen: set[str] = set()
         for address, service_info in itertools.chain(
             self._connectable_history.items(), self._all_history.items()
