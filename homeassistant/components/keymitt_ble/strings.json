@@ -2,7 +2,7 @@
   "config": {
     "flow_title": "{name}",
     "step": {
-      "init": {
+      "user": {
         "title": "Set up MicroBot device",
         "data": {
           "address": "Device address",
