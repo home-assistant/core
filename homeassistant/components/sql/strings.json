@@ -7,6 +7,7 @@
       "db_url_invalid": "Database URL invalid",
       "query_invalid": "SQL Query invalid",
       "query_no_read_only": "SQL query must be read-only",
+      "module_not_found": "Module not found, see the documentation for the URL for the database.",
       "multiple_queries": "Multiple SQL queries are not supported",
       "column_invalid": "The column `{column}` is not returned by the query"
     },
@@ -64,6 +65,7 @@
       "db_url_invalid": "[%key:component::sql::config::error::db_url_invalid%]",
       "query_invalid": "[%key:component::sql::config::error::query_invalid%]",
       "query_no_read_only": "[%key:component::sql::config::error::query_no_read_only%]",
+      "module_not_found": "[%key:component::sql::config::error::module_not_found%]",
       "multiple_queries": "[%key:component::sql::config::error::multiple_queries%]",
       "column_invalid": "[%key:component::sql::config::error::column_invalid%]"
     }
@@ -134,6 +136,10 @@
     "entity_id_query_does_full_table_scan": {
       "title": "SQL query does full table scan",
       "description": "The query `{query}` contains the keyword `entity_id` but does not reference the `states_meta` table. This will cause a full table scan and database instability. Please check the documentation and use `states_meta.entity_id` instead."
+    },
+    "module_not_found": {
+      "title": "Database URL: module not found",
+      "description": "Module {module} not found, see [the documentation for the URL for the database]({link})."
     }
   }
 }
