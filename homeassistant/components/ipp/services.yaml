@@ -29,11 +29,6 @@ dump:
             - "GET_JOB_ATTRIBUTES"
             - "GET_JOBS"
             - "GET_PRINTER_ATTRIBUTES"
-            - "GET_PRINTER_SUPPORTED_VALUES"
-            - "GET_SUBSCRIPTION_ATTRIBUTES"
-            - "GET_SUBSCRIPTIONS"
-            - "GET_SYSTEM_ATTRIBUTES"
-            - "GET_SYSTEM_SUPPORTED_VALUES"
     payload:
       example: "{}"
       selector:
