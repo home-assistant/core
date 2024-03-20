@@ -39,6 +39,7 @@
     'context': <ANY>,
     'entity_id': 'calendar.twente_milieu',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })

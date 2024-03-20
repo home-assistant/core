@@ -264,6 +264,7 @@ async def test_config_entry_accessory(
                 "context": {"id": ANY, "parent_id": None, "user_id": None},
                 "entity_id": "light.demo",
                 "last_changed": ANY,
+                "last_reported": ANY,
                 "last_updated": ANY,
                 "state": "on",
             },

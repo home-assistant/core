@@ -44,6 +44,7 @@
     'context': <ANY>,
     'entity_id': 'media_player.test_media_player',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'idle',
   })
@@ -59,6 +60,7 @@
     'context': <ANY>,
     'entity_id': 'media_player.test_media_player',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'idle',
   })

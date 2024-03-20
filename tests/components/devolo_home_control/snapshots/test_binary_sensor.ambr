@@ -8,6 +8,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_door',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -54,6 +55,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_overload',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -99,6 +101,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_button_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
