@@ -92,12 +92,12 @@ class BedrockAgentConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
-                errors["base"] = "Unable to connect. Check region string."
+                errors["base"] = "cannot_connect"
             except InvalidAuth:
-                errors["base"] = "Client unable to connect. Check credentials."
+                errors["base"] = "invalid_auth"
             except HomeAssistantError:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
-                errors["base"] = "Unknown error. Please check log files."
+                errors["base"] = "unknown"
             else:
                 return self.async_create_entry(title=info["title"], data=user_input)
 
@@ -141,12 +141,12 @@ class OptionsFlowHandler(OptionsFlow):
                     self.config_entry, data=user_input
                 )
             except CannotConnect:
-                errors["base"] = "Unable to connect. Check region string."
+                errors["base"] = "cannot_connect"
             except InvalidAuth:
-                errors["base"] = "Client unable to connect. Check credentials."
+                errors["base"] = "invalid_auth"
             except HomeAssistantError:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
-                errors["base"] = "Unknown error. Please check log files."
+                errors["base"] = "unknown"
             else:
                 return self.async_create_entry(title=info["title"], data=user_input)
 
