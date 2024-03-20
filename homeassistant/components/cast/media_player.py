@@ -509,6 +509,20 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         return media_controller
 
     @api_error
+    def _quick_play(self, app_name: str, data: dict[str, Any]) -> None:
+        """Launch the app `app_name` and start playing media defined by `data`."""
+        quick_play(self._get_chromecast(), app_name, data)
+
+    @api_error
+    def _quit_app(self) -> None:
+        """Quit the currently running app."""
+        self._get_chromecast().quit_app()
+
+    @api_error
+    def _start_app(self, app_id: str) -> None:
+        """Start an app."""
+        self._get_chromecast().start_app(app_id)
+
     def turn_on(self) -> None:
         """Turn on the cast device."""
 
@@ -519,14 +533,14 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
         if chromecast.app_id is not None:
             # Quit the previous app before starting splash screen or media player
-            chromecast.quit_app()
+            self._quit_app()
 
         # The only way we can turn the Chromecast is on is by launching an app
         if chromecast.cast_type == pychromecast.const.CAST_TYPE_CHROMECAST:
             app_data = {"media_id": CAST_SPLASH, "media_type": "image/png"}
-            quick_play(chromecast, "default_media_receiver", app_data)
+            self._quick_play("default_media_receiver", app_data)
         else:
-            chromecast.start_app(pychromecast.config.APP_MEDIA_RECEIVER)
+            self._start_app(pychromecast.config.APP_MEDIA_RECEIVER)
 
     @api_error
     def turn_off(self) -> None:
@@ -656,7 +670,6 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             self.hass, media_content_id, content_filter=content_filter
         )
 
-    @api_error
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -687,7 +700,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             if "app_id" in app_data:
                 app_id = app_data.pop("app_id")
                 _LOGGER.info("Starting Cast app by ID %s", app_id)
-                await self.hass.async_add_executor_job(chromecast.start_app, app_id)
+                await self.hass.async_add_executor_job(self._start_app, app_id)
                 if app_data:
                     _LOGGER.warning(
                         "Extra keys %s were ignored. Please use app_name to cast media",
@@ -698,7 +711,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             app_name = app_data.pop("app_name")
             try:
                 await self.hass.async_add_executor_job(
-                    quick_play, chromecast, app_name, app_data
+                    self._quick_play, app_name, app_data
                 )
             except NotImplementedError:
                 _LOGGER.error("App %s not supported", app_name)
@@ -768,7 +781,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             app_data,
         )
         await self.hass.async_add_executor_job(
-            quick_play, chromecast, "default_media_receiver", app_data
+            self._quick_play, "default_media_receiver", app_data
         )
 
     def _media_status(self):
