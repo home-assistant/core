@@ -11,6 +11,7 @@ from homeassistant.helpers.typing import ConfigType
 DOMAIN = "panel_iframe"
 
 CONF_TITLE = "title"
+CONF_ALLOW = "allow"
 
 CONF_RELATIVE_URL_ERROR_MSG = "Invalid relative URL. Absolute path required."
 CONF_RELATIVE_URL_REGEX = r"\A/"
@@ -24,6 +25,7 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_TITLE): cv.string,
                     vol.Optional(CONF_ICON): cv.icon,
                     vol.Optional(CONF_REQUIRE_ADMIN, default=False): cv.boolean,
+                    vol.Optional(CONF_ALLOW, default="fullscreen"): cv.string,
                     vol.Required(CONF_URL): vol.Any(
                         vol.Match(
                             CONF_RELATIVE_URL_REGEX, msg=CONF_RELATIVE_URL_ERROR_MSG
@@ -47,7 +49,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             info.get(CONF_TITLE),
             info.get(CONF_ICON),
             url_path,
-            {"url": info[CONF_URL]},
+            {CONF_URL: info[CONF_URL], CONF_ALLOW: info[CONF_ALLOW]},
             require_admin=info[CONF_REQUIRE_ADMIN],
         )
 
