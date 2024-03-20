@@ -536,8 +536,9 @@ class States(Base):
             # Join the state_attributes table on attributes_id to get the attributes
             # for newer states
             attrs,
-            last_changed,
-            last_updated,
+            last_changed=last_changed,
+            last_reported=last_updated,  # Recorder does not yet record last_reported
+            last_updated=last_updated,
             context=context,
             validate_entity_id=validate_entity_id,
         )
