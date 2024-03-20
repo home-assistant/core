@@ -7,6 +7,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -38,6 +39,8 @@ class Alpha2IODeviceBatterySensor(
 
     _attr_device_class = BinarySensorDeviceClass.BATTERY
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_has_entity_name = True
+    _attr_translation_key = "io_device_battery"
 
     def __init__(self, coordinator: Alpha2BaseCoordinator, io_device_id: str) -> None:
         """Initialize Alpha2IODeviceBatterySensor."""
@@ -46,8 +49,12 @@ class Alpha2IODeviceBatterySensor(
         self._attr_unique_id = f"{io_device_id}:battery"
         io_device = self.coordinator.data["io_devices"][io_device_id]
         heat_area = self.coordinator.data["heat_areas"][io_device["_HEATAREA_ID"]]
-        self._attr_name = (
-            f"{heat_area['HEATAREA_NAME']} IO device {io_device['NR']} battery"
+        self._attr_translation_placeholders = {"io_device_nr": io_device["NR"]}
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, io_device["_HEATAREA_ID"])},
+            manufacturer="Möhlenhoff",
+            model="Alpha2",
+            name=heat_area["HEATAREA_NAME"],
         )
 
     @property
