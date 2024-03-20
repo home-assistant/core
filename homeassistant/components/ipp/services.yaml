@@ -13,7 +13,7 @@ dump:
           max: 65535
     base_path:
       default: "/ipp/print"
-      example: "/ipp/print2"
+      example: "/ipp/print"
       selector:
         text:
     ssl:
