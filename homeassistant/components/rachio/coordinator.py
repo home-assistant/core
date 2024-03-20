@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from rachiopy import Rachio
 from requests.exceptions import Timeout
@@ -17,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 UPDATE_DELAY_TIME = 8
 
 
-class RachioUpdateCoordinator(DataUpdateCoordinator):
+class RachioUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator Class for Rachio Hose Timers."""
 
     def __init__(
@@ -44,7 +45,7 @@ class RachioUpdateCoordinator(DataUpdateCoordinator):
             ),
         )
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update smart hose timer data."""
         try:
             data = await self.hass.async_add_executor_job(

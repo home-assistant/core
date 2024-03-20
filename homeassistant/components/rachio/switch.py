@@ -205,12 +205,11 @@ def _create_entities(hass: HomeAssistant, config_entry: ConfigEntry) -> list[Ent
             RachioSchedule(person, controller, schedule, current_schedule)
             for schedule in schedules + flex_schedules
         )
-    for base in person.base_stations:
-        coordinator = base.coordinator
-        entities.extend(
-            RachioValve(person, base, valve, coordinator)
-            for valve in base.coordinator.data.values()
-        )
+    entities.extend(
+        RachioValve(person, base_station, valve, base_station.coordinator)
+        for base_station in person.base_stations
+        for valve in base_station.coordinator.data.values()
+    )
     return entities
 
 
@@ -581,7 +580,7 @@ class RachioValve(CoordinatorEntity[RachioUpdateCoordinator], SwitchEntity):
     @property
     def available(self) -> bool:
         """Return if the valve is available."""
-        return self._static_attrs[KEY_CONNECTED]
+        return super().available and self._static_attrs[KEY_CONNECTED]
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on this valve."""
