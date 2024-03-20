@@ -1,1 +1,1 @@
-"""Tests for the the Reddit component."""
+"""Tests for the Reddit component."""

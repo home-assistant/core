@@ -52,7 +52,10 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
             is_fixable=False,
             severity=IssueSeverity.ERROR,
             translation_key="deprecated_yaml_import_issue",
-            translation_placeholders={"error_type": error_type},
+            translation_placeholders={
+                "error_type": error_type,
+                "url": "/config/integrations/dashboard/add?domain=hydrawise",
+            },
         )
         return self.async_abort(reason=error_type)
 

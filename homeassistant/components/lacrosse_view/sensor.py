@@ -36,18 +36,11 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class LaCrosseSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class LaCrosseSensorEntityDescription(SensorEntityDescription):
+    """Description for LaCrosse View sensor."""
 
     value_fn: Callable[[Sensor, str], float | int | str | None]
-
-
-@dataclass(frozen=True)
-class LaCrosseSensorEntityDescription(
-    SensorEntityDescription, LaCrosseSensorEntityDescriptionMixin
-):
-    """Description for LaCrosse View sensor."""
 
 
 def get_value(sensor: Sensor, field: str) -> float | int | str | None:

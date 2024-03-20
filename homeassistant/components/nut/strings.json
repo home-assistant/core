@@ -166,7 +166,9 @@
       "ups_delay_reboot": { "name": "UPS reboot delay" },
       "ups_delay_shutdown": { "name": "UPS shutdown delay" },
       "ups_delay_start": { "name": "Load restart delay" },
-      "ups_display_language": { "name": "Language" },
+      "ups_display_language": {
+        "name": "[%key:common::config_flow::data::language%]"
+      },
       "ups_efficiency": { "name": "Efficiency" },
       "ups_id": { "name": "System identifier" },
       "ups_load": { "name": "Load" },

@@ -151,8 +151,7 @@ async def async_setup_entry(
         entities.append(keypad_battery_sensor)
         migrate_unique_id_devices.append(keypad_battery_sensor)
 
-    for device in operation_sensors:
-        entities.append(AugustOperatorSensor(data, device))
+    entities.extend(AugustOperatorSensor(data, device) for device in operation_sensors)
 
     await _async_migrate_old_unique_ids(hass, migrate_unique_id_devices)
 

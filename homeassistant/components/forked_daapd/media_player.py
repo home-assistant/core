@@ -106,10 +106,9 @@ async def async_setup_entry(
 
     @callback
     def async_add_zones(api, outputs):
-        zone_entities = []
-        for output in outputs:
-            zone_entities.append(ForkedDaapdZone(api, output, config_entry.entry_id))
-        async_add_entities(zone_entities, False)
+        async_add_entities(
+            ForkedDaapdZone(api, output, config_entry.entry_id) for output in outputs
+        )
 
     remove_add_zones_listener = async_dispatcher_connect(
         hass, SIGNAL_ADD_ZONES.format(config_entry.entry_id), async_add_zones
@@ -433,17 +432,16 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         # restore state
         await self.api.set_volume(volume=self._last_volume * 100)
         if self._last_outputs:
-            futures: list[asyncio.Task[int]] = []
-            for output in self._last_outputs:
-                futures.append(
-                    asyncio.create_task(
-                        self.api.change_output(
-                            output["id"],
-                            selected=output["selected"],
-                            volume=output["volume"],
-                        )
+            futures: list[asyncio.Task[int]] = [
+                asyncio.create_task(
+                    self.api.change_output(
+                        output["id"],
+                        selected=output["selected"],
+                        volume=output["volume"],
                     )
                 )
+                for output in self._last_outputs
+            ]
             await asyncio.wait(futures)
         else:  # enable all outputs
             await self.api.set_enabled_outputs(
@@ -651,15 +649,14 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         self._last_outputs = self._outputs
         if self._outputs:
             await self.api.set_volume(volume=self._tts_volume * 100)
-            futures = []
-            for output in self._outputs:
-                futures.append(
-                    asyncio.create_task(
-                        self.api.change_output(
-                            output["id"], selected=True, volume=self._tts_volume * 100
-                        )
+            futures = [
+                asyncio.create_task(
+                    self.api.change_output(
+                        output["id"], selected=True, volume=self._tts_volume * 100
                     )
                 )
+                for output in self._outputs
+            ]
             await asyncio.wait(futures)
 
     async def _pause_and_wait_for_callback(self):

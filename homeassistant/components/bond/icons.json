@@ -1,0 +1,107 @@
+{
+  "entity": {
+    "button": {
+      "stop_actions": {
+        "default": "mdi:stop-circle-outline"
+      },
+      "toggle_power": {
+        "default": "mdi:power-cycle"
+      },
+      "toggle_light": {
+        "default": "mdi:lightbulb"
+      },
+      "increase_brightness": {
+        "default": "mdi:brightness-7"
+      },
+      "decrease_brightness": {
+        "default": "mdi:brightness-1"
+      },
+      "toggle_up_light": {
+        "default": "mdi:lightbulb"
+      },
+      "toggle_down_light": {
+        "default": "mdi:lightbulb"
+      },
+      "start_dimmer": {
+        "default": "mdi:brightness-percent"
+      },
+      "start_up_light_dimmer": {
+        "default": "mdi:brightness-percent"
+      },
+      "start_down_light_dimmer": {
+        "default": "mdi:brightness-percent"
+      },
+      "start_increasing_brightness": {
+        "default": "mdi:brightness-percent"
+      },
+      "start_decreasing_brightness": {
+        "default": "mdi:brightness-percent"
+      },
+      "increase_up_light_brightness": {
+        "default": "mdi:brightness-percent"
+      },
+      "decrease_up_light_brightness": {
+        "default": "mdi:brightness-percent"
+      },
+      "increase_down_light_brightness": {
+        "default": "mdi:brightness-percent"
+      },
+      "decrease_down_light_brightness": {
+        "default": "mdi:brightness-percent"
+      },
+      "cycle_up_light_brightness": {
+        "default": "mdi:brightness-percent"
+      },
+      "cycle_down_light_brightness": {
+        "default": "mdi:brightness-percent"
+      },
+      "cycle_brightness": {
+        "default": "mdi:brightness-percent"
+      },
+      "increase_speed": {
+        "default": "mdi:skew-more"
+      },
+      "decrease_speed": {
+        "default": "mdi:skew-less"
+      },
+      "toggle_direction": {
+        "default": "mdi:directions-fork"
+      },
+      "increase_temperature": {
+        "default": "mdi:thermometer-plus"
+      },
+      "decrease_temperature": {
+        "default": "mdi:thermometer-minus"
+      },
+      "increase_flame": {
+        "default": "mdi:fire"
+      },
+      "decrease_flame": {
+        "default": "mdi:fire-off"
+      },
+      "increase_position": {
+        "default": "mdi:plus-box"
+      },
+      "decrease_position": {
+        "default": "mdi:minus-box"
+      }
+    },
+    "light": {
+      "fireplace": {
+        "default": "mdi:fireplace-off",
+        "state": {
+          "on": "mdi:fireplace"
+        }
+      }
+    }
+  },
+  "services": {
+    "set_fan_speed_tracked_state": "mdi:fan",
+    "set_switch_power_tracked_state": "mdi:toggle-switch-variant",
+    "set_light_power_tracked_state": "mdi:lightbulb",
+    "set_light_brightness_tracked_state": "mdi:lightbulb-on",
+    "start_increasing_brightness": "mdi:brightness-7",
+    "start_decreasing_brightness": "mdi:brightness-1",
+    "stop": "mdi:stop"
+  }
+}

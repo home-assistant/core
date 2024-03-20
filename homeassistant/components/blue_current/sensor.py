@@ -217,13 +217,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up Blue Current sensors."""
     connector: Connector = hass.data[DOMAIN][entry.entry_id]
-    sensor_list: list[SensorEntity] = []
-    for evse_id in connector.charge_points:
-        for sensor in SENSORS:
-            sensor_list.append(ChargePointSensor(connector, sensor, evse_id))
+    sensor_list: list[SensorEntity] = [
+        ChargePointSensor(connector, sensor, evse_id)
+        for evse_id in connector.charge_points
+        for sensor in SENSORS
+    ]
 
-    for grid_sensor in GRID_SENSORS:
-        sensor_list.append(GridSensor(connector, grid_sensor))
+    sensor_list.extend(GridSensor(connector, sensor) for sensor in GRID_SENSORS)
 
     async_add_entities(sensor_list)
 

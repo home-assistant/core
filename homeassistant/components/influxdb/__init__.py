@@ -551,7 +551,7 @@ class InfluxThread(threading.Thread):
 
                 if item is None:
                     self.shutdown = True
-                elif type(item) is tuple:  # noqa: E721
+                elif type(item) is tuple:
                     timestamp, event = item
                     age = time.monotonic() - timestamp
 

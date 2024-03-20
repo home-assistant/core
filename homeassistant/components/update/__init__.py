@@ -374,7 +374,7 @@ class UpdateEntity(
         The backup parameter indicates a backup should be taken before
         installing the update.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_release_notes(self) -> str | None:
         """Return full release notes.
@@ -390,7 +390,7 @@ class UpdateEntity(
         This is suitable for a long changelog that does not fit in the release_summary
         property. The returned string can contain markdown.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     @final

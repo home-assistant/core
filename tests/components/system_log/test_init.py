@@ -459,14 +459,19 @@ async def test__figure_out_source(hass: HomeAssistant) -> None:
     except ValueError as ex:
         exc_info = (type(ex), ex, ex.__traceback__)
     mock_record = MagicMock(
-        pathname="should not hit",
+        pathname="figure_out_source is False",
         lineno=5,
         exc_info=exc_info,
     )
     regex_str = f"({__file__})"
+    paths_re = re.compile(regex_str)
     file, line_no = system_log._figure_out_source(
         mock_record,
-        re.compile(regex_str),
+        paths_re,
+        traceback.extract_tb(exc_info[2]),
     )
     assert file == __file__
     assert line_no != 5
+
+    entry = system_log.LogEntry(mock_record, paths_re, figure_out_source=False)
+    assert entry.source == ("figure_out_source is False", 5)

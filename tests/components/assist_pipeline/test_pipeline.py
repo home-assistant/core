@@ -86,12 +86,12 @@ async def test_load_pipelines(hass: HomeAssistant, init_components) -> None:
             "wake_word_id": "wakeword_id_3",
         },
     ]
-    pipeline_ids = []
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
     store1 = pipeline_data.pipeline_store
-    for pipeline in pipelines:
-        pipeline_ids.append((await store1.async_create_item(pipeline)).id)
+    pipeline_ids = [
+        (await store1.async_create_item(pipeline)).id for pipeline in pipelines
+    ]
     assert len(store1.data) == 4  # 3 manually created plus a default pipeline
     assert store1.async_get_preferred_item() == list(store1.data)[0]
 

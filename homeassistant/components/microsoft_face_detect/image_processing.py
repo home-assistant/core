@@ -56,15 +56,12 @@ async def async_setup_platform(
     api = hass.data[DATA_MICROSOFT_FACE]
     attributes = config[CONF_ATTRIBUTES]
 
-    entities = []
-    for camera in config[CONF_SOURCE]:
-        entities.append(
-            MicrosoftFaceDetectEntity(
-                camera[CONF_ENTITY_ID], api, attributes, camera.get(CONF_NAME)
-            )
+    async_add_entities(
+        MicrosoftFaceDetectEntity(
+            camera[CONF_ENTITY_ID], api, attributes, camera.get(CONF_NAME)
         )
-
-    async_add_entities(entities)
+        for camera in config[CONF_SOURCE]
+    )
 
 
 class MicrosoftFaceDetectEntity(ImageProcessingFaceEntity):

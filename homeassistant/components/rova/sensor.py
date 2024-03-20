@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from typing import Any
 
 from requests.exceptions import ConnectTimeout, HTTPError
 from rova.rova import Rova
@@ -14,21 +15,31 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 from homeassistant.util.dt import get_time_zone
 
-from .const import CONF_HOUSE_NUMBER, CONF_HOUSE_NUMBER_SUFFIX, CONF_ZIP_CODE, LOGGER
+from .const import (
+    CONF_HOUSE_NUMBER,
+    CONF_HOUSE_NUMBER_SUFFIX,
+    CONF_ZIP_CODE,
+    DOMAIN,
+    LOGGER,
+)
+
+ISSUE_PLACEHOLDER = {"url": "/config/integrations/dashboard/add?domain=rova"}
 
 UPDATE_DELAY = timedelta(hours=12)
 SCAN_INTERVAL = timedelta(hours=12)
 
-
-SENSOR_TYPES: dict[str, SensorEntityDescription] = {
+SENSOR_TYPES = {
     "bio": SensorEntityDescription(
         key="gft",
         name="bio",
@@ -64,39 +75,71 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Create the Rova data service and sensors."""
+    """Set up the rova sensor platform through yaml configuration."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=config,
+    )
+    if (
+        result["type"] == FlowResultType.CREATE_ENTRY
+        or result["reason"] == "already_configured"
+    ):
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2024.10.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Rova",
+            },
+        )
+    else:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_${result['reason']}",
+            breaks_in_ha_version="2024.10.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_${result['reason']}",
+            translation_placeholders=ISSUE_PLACEHOLDER,
+        )
 
-    zip_code = config[CONF_ZIP_CODE]
-    house_number = config[CONF_HOUSE_NUMBER]
-    house_number_suffix = config[CONF_HOUSE_NUMBER_SUFFIX]
-    platform_name = config[CONF_NAME]
 
-    # Create new Rova object to  retrieve data
-    api = Rova(zip_code, house_number, house_number_suffix)
-
-    try:
-        if not api.is_rova_area():
-            LOGGER.error("ROVA does not collect garbage in this area")
-            return
-    except (ConnectTimeout, HTTPError):
-        LOGGER.error("Could not retrieve details from ROVA API")
-        return
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Add Rova entry."""
+    # get api from hass
+    api: Rova = hass.data[DOMAIN][entry.entry_id]
 
     # Create rova data service which will retrieve and update the data.
     data_service = RovaData(api)
 
+    # generate unique name for rova integration
+    name = f"{entry.data[CONF_ZIP_CODE]}{entry.data[CONF_HOUSE_NUMBER]}{entry.data[CONF_HOUSE_NUMBER_SUFFIX]}"
+
     # Create a new sensor for each garbage type.
     entities = [
-        RovaSensor(platform_name, SENSOR_TYPES[sensor_key], data_service)
-        for sensor_key in config[CONF_MONITORED_CONDITIONS]
+        RovaSensor(name, description, data_service)
+        for key, description in SENSOR_TYPES.items()
     ]
-    add_entities(entities, True)
+    async_add_entities(entities, True)
 
 
 class RovaSensor(SensorEntity):
@@ -109,7 +152,8 @@ class RovaSensor(SensorEntity):
         self.entity_description = description
         self.data_service = data_service
 
-        self._attr_name = f"{platform_name}_{description.name}"
+        self._attr_name = f"{platform_name}_{description.key}"
+        self._attr_unique_id = f"{platform_name}_{description.key}"
         self._attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def update(self) -> None:
@@ -123,10 +167,10 @@ class RovaSensor(SensorEntity):
 class RovaData:
     """Get and update the latest data from the Rova API."""
 
-    def __init__(self, api):
+    def __init__(self, api) -> None:
         """Initialize the data object."""
         self.api = api
-        self.data = {}
+        self.data: dict[str, Any] = {}
 
     @Throttle(UPDATE_DELAY)
     def update(self):

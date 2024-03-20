@@ -197,11 +197,7 @@ def _has_name(
     if (entity is None) or (not entity.aliases):
         return False
 
-    for alias in entity.aliases:
-        if name == alias.casefold():
-            return True
-
-    return False
+    return any(name == alias.casefold() for alias in entity.aliases)
 
 
 def _find_area(
@@ -379,7 +375,7 @@ class IntentHandler:
 
     async def async_handle(self, intent_obj: Intent) -> IntentResponse:
         """Handle the intent."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def __repr__(self) -> str:
         """Represent a string of an intent handler."""
@@ -443,7 +439,7 @@ class DynamicServiceIntentHandler(IntentHandler):
         self, intent_obj: Intent, state: State
     ) -> tuple[str, str]:
         """Get the domain and service name to call."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_handle(self, intent_obj: Intent) -> IntentResponse:
         """Handle the hass intent."""

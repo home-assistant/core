@@ -120,7 +120,7 @@ async def test_create_cloud_hook_on_setup(
     await _test_create_cloud_hook(hass, hass_admin_user, {}, True, additional_steps)
 
 
-@pytest.mark.parametrize("exception", (CloudNotAvailable, ValueError))
+@pytest.mark.parametrize("exception", [CloudNotAvailable, ValueError])
 async def test_remove_cloudhook(
     hass: HomeAssistant,
     hass_admin_user: MockUser,

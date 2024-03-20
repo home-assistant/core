@@ -64,12 +64,13 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Neato vacuum with config entry."""
-    dev = []
     neato: NeatoHub = hass.data[NEATO_LOGIN]
     mapdata: dict[str, Any] | None = hass.data.get(NEATO_MAP_DATA)
     persistent_maps: dict[str, Any] | None = hass.data.get(NEATO_PERSISTENT_MAPS)
-    for robot in hass.data[NEATO_ROBOTS]:
-        dev.append(NeatoConnectedVacuum(neato, robot, mapdata, persistent_maps))
+    dev = [
+        NeatoConnectedVacuum(neato, robot, mapdata, persistent_maps)
+        for robot in hass.data[NEATO_ROBOTS]
+    ]
 
     if not dev:
         return

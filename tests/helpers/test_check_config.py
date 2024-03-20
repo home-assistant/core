@@ -43,11 +43,9 @@ BAD_CORE_CONFIG = "homeassistant:\n  unit_system: bad\n\n\n"
 
 def log_ha_config(conf):
     """Log the returned config."""
-    cnt = 0
     _LOGGER.debug("CONFIG - %s lines - %s errors", len(conf), len(conf.errors))
-    for key, val in conf.items():
-        _LOGGER.debug("#%s - %s: %s", cnt, key, val)
-        cnt += 1
+    for cnt, (key, val) in enumerate(conf.items()):
+        _LOGGER.debug("#%s - %s: %s", cnt + 1, key, val)
     for cnt, err in enumerate(conf.errors):
         _LOGGER.debug("error[%s] = %s", cnt, err)
 
@@ -173,7 +171,7 @@ async def test_integration_import_error(hass: HomeAssistant) -> None:
     # Make sure they don't exist
     files = {YAML_CONFIG_FILE: BASE_CONFIG + "light:"}
     with patch(
-        "homeassistant.loader.Integration.get_component",
+        "homeassistant.loader.Integration.async_get_component",
         side_effect=ImportError("blablabla"),
     ), patch("os.path.isfile", return_value=True), patch_yaml_files(files):
         res = await async_check_ha_config_file(hass)

@@ -72,10 +72,7 @@ def _same_lists(list_a, list_b):
     if len(list_a) != len(list_b):
         return False
 
-    for item in list_a:
-        if item not in list_b:
-            return False
-    return True
+    return all(item in list_b for item in list_a)
 
 
 @pytest.fixture

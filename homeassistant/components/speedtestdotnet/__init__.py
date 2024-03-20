@@ -7,9 +7,10 @@ from functools import partial
 import speedtest
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, Platform
-from homeassistant.core import CoreState, Event, HomeAssistant
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.start import async_at_started
 
 from .const import DOMAIN
 from .coordinator import SpeedTestDataCoordinator
@@ -28,21 +29,17 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     except speedtest.SpeedtestException as err:
         raise ConfigEntryNotReady from err
 
-    async def _request_refresh(event: Event) -> None:
-        """Request a refresh."""
-        await coordinator.async_request_refresh()
-
-    if hass.state is CoreState.running:
+    async def _async_finish_startup(hass: HomeAssistant) -> None:
+        """Run this only when HA has finished its startup."""
         await coordinator.async_config_entry_first_refresh()
-    else:
-        # Running a speed test during startup can prevent
-        # integrations from being able to setup because it
-        # can saturate the network interface.
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _request_refresh)
+
+    # Don't start a speedtest during startup
+    async_at_started(hass, _async_finish_startup)
 
     hass.data[DOMAIN] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
 
     return True
 
@@ -54,3 +51,8 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     ):
         hass.data.pop(DOMAIN)
     return unload_ok
+
+
+async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(config_entry.entry_id)

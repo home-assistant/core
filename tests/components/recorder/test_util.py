@@ -60,7 +60,7 @@ def test_recorder_bad_execute(hass_recorder: Callable[..., HomeAssistant]) -> No
 
     def to_native(validate_entity_id=True):
         """Raise exception."""
-        raise SQLAlchemyError()
+        raise SQLAlchemyError
 
     mck1 = MagicMock()
     mck1.to_native = to_native

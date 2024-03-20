@@ -4,6 +4,7 @@ from datetime import timedelta
 from typing import Any
 
 from tesla_fleet_api import EnergySpecific, VehicleSpecific
+from tesla_fleet_api.const import VehicleDataEndpoint
 from tesla_fleet_api.exceptions import TeslaFleetError, VehicleOffline
 
 from homeassistant.core import HomeAssistant
@@ -13,6 +14,13 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import LOGGER, TeslemetryState
 
 SYNC_INTERVAL = 60
+ENDPOINTS = [
+    VehicleDataEndpoint.CHARGE_STATE,
+    VehicleDataEndpoint.CLIMATE_STATE,
+    VehicleDataEndpoint.DRIVE_STATE,
+    VehicleDataEndpoint.LOCATION_DATA,
+    VehicleDataEndpoint.VEHICLE_STATE,
+]
 
 
 class TeslemetryDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -54,7 +62,7 @@ class TeslemetryVehicleDataCoordinator(TeslemetryDataCoordinator):
         """Update vehicle data using Teslemetry API."""
 
         try:
-            data = await self.api.vehicle_data()
+            data = await self.api.vehicle_data(endpoints=ENDPOINTS)
         except VehicleOffline:
             self.data["state"] = TeslemetryState.OFFLINE
             return self.data

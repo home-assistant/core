@@ -65,10 +65,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def dynalite_service(service_call: ServiceCall) -> None:
         data = service_call.data
         host = data.get(ATTR_HOST, "")
-        bridges = []
-        for cur_bridge in hass.data[DOMAIN].values():
-            if not host or cur_bridge.host == host:
-                bridges.append(cur_bridge)
+        bridges = [
+            bridge
+            for bridge in hass.data[DOMAIN].values()
+            if not host or bridge.host == host
+        ]
         LOGGER.debug("Selected bridged for service call: %s", bridges)
         if service_call.service == SERVICE_REQUEST_AREA_PRESET:
             bridge_attr = "request_area_preset"

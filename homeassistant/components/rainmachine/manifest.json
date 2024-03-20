@@ -10,7 +10,7 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["regenmaschine"],
-  "requirements": ["regenmaschine==2024.01.0"],
+  "requirements": ["regenmaschine==2024.03.0"],
   "zeroconf": [
     {
       "type": "_http._tcp.local.",

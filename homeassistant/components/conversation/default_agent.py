@@ -53,7 +53,9 @@ _DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
 _ENTITY_REGISTRY_UPDATE_FIELDS = ["aliases", "name", "original_name"]
 
 REGEX_TYPE = type(re.compile(""))
-TRIGGER_CALLBACK_TYPE = Callable[[str, RecognizeResult], Awaitable[str | None]]
+TRIGGER_CALLBACK_TYPE = Callable[
+    [str, RecognizeResult, str | None], Awaitable[str | None]
+]
 METADATA_CUSTOM_SENTENCE = "hass_custom_sentence"
 METADATA_CUSTOM_FILE = "hass_custom_file"
 
@@ -224,7 +226,7 @@ class DefaultAgent(AbstractConversationAgent):
             # Gather callback responses in parallel
             trigger_callbacks = [
                 self._trigger_sentences[trigger_id].callback(
-                    result.sentence, trigger_result
+                    result.sentence, trigger_result, user_input.device_id
                 )
                 for trigger_id, trigger_result in result.matched_triggers.items()
             ]

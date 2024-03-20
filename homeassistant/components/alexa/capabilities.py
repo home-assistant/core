@@ -1196,11 +1196,12 @@ class AlexaThermostatController(AlexaCapability):
         if self.entity.domain == water_heater.DOMAIN:
             return None
 
-        supported_modes: list[str] = []
         hvac_modes = self.entity.attributes.get(climate.ATTR_HVAC_MODES) or []
-        for mode in hvac_modes:
-            if thermostat_mode := API_THERMOSTAT_MODES.get(mode):
-                supported_modes.append(thermostat_mode)
+        supported_modes: list[str] = [
+            API_THERMOSTAT_MODES[mode]
+            for mode in hvac_modes
+            if mode in API_THERMOSTAT_MODES
+        ]
 
         preset_modes = self.entity.attributes.get(climate.ATTR_PRESET_MODES)
         if preset_modes:

@@ -96,7 +96,8 @@
         "location": "Location",
         "pin": "PIN code",
         "mode": "Mode",
-        "path": "Path"
+        "path": "Path",
+        "language": "Language"
       },
       "create_entry": {
         "authenticated": "Successfully authenticated"

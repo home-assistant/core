@@ -28,9 +28,10 @@ class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
         self.mower_id = mower_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, mower_id)},
-            name=self.mower_attributes.system.name,
             manufacturer="Husqvarna",
             model=self.mower_attributes.system.model,
+            name=self.mower_attributes.system.name,
+            serial_number=self.mower_attributes.system.serial_number,
             suggested_area="Garden",
         )
 

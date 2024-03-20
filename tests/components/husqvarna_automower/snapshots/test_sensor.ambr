@@ -234,7 +234,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:battery-sync-outline',
+    'original_icon': None,
     'original_name': 'Number of charging cycles',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
@@ -248,7 +248,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 1 Number of charging cycles',
-      'icon': 'mdi:battery-sync-outline',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
@@ -283,7 +282,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:counter',
+    'original_icon': None,
     'original_name': 'Number of collisions',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
@@ -297,7 +296,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 1 Number of collisions',
-      'icon': 'mdi:counter',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,

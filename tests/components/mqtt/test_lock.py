@@ -24,7 +24,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     STATE_UNKNOWN,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 
@@ -81,13 +80,6 @@ CONFIG_WITH_STATES = {
         }
     }
 }
-
-
-@pytest.fixture(autouse=True)
-def lock_platform_only():
-    """Only setup the lock platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LOCK]):
-        yield
 
 
 @pytest.mark.parametrize(

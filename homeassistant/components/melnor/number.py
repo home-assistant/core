@@ -26,19 +26,12 @@ from .models import (
 )
 
 
-@dataclass(frozen=True)
-class MelnorZoneNumberEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class MelnorZoneNumberEntityDescription(NumberEntityDescription):
+    """Describes Melnor number entity."""
 
     set_num_fn: Callable[[Valve, int], Coroutine[Any, Any, None]]
     state_fn: Callable[[Valve], Any]
-
-
-@dataclass(frozen=True)
-class MelnorZoneNumberEntityDescription(
-    NumberEntityDescription, MelnorZoneNumberEntityDescriptionMixin
-):
-    """Describes Melnor number entity."""
 
 
 ZONE_ENTITY_DESCRIPTIONS: list[MelnorZoneNumberEntityDescription] = [

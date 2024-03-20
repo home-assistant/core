@@ -21,10 +21,7 @@ async def test_executor_shutdown_can_interrupt_threads(
         while True:
             time.sleep(0.1)
 
-    sleep_futures = []
-
-    for _ in range(100):
-        sleep_futures.append(iexecutor.submit(_loop_sleep_in_executor))
+    sleep_futures = [iexecutor.submit(_loop_sleep_in_executor) for _ in range(100)]
 
     iexecutor.shutdown()
 

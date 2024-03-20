@@ -62,7 +62,6 @@ def __get_date(date_input: str | None) -> date | datetime:
         return value
 
     raise ServiceValidationError(
-        "Invalid datetime provided.",
         translation_domain=DOMAIN,
         translation_key="invalid_date",
         translation_placeholders={
@@ -93,7 +92,6 @@ def __get_coordinator(
 
     if not entry:
         raise ServiceValidationError(
-            f"Invalid config entry: {entry_id}",
             translation_domain=DOMAIN,
             translation_key="invalid_config_entry",
             translation_placeholders={
@@ -102,7 +100,6 @@ def __get_coordinator(
         )
     if entry.state != ConfigEntryState.LOADED:
         raise ServiceValidationError(
-            f"{entry.title} is not loaded",
             translation_domain=DOMAIN,
             translation_key="unloaded_config_entry",
             translation_placeholders={

@@ -26,18 +26,11 @@ from .coordinator import TrainData, TVDataUpdateCoordinator
 ATTR_PRODUCT_FILTER = "product_filter"
 
 
-@dataclass(frozen=True)
-class TrafikverketRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class TrafikverketSensorEntityDescription(SensorEntityDescription):
+    """Describes Trafikverket sensor entity."""
 
     value_fn: Callable[[TrainData], StateType | datetime]
-
-
-@dataclass(frozen=True)
-class TrafikverketSensorEntityDescription(
-    SensorEntityDescription, TrafikverketRequiredKeysMixin
-):
-    """Describes Trafikverket sensor entity."""
 
 
 SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (

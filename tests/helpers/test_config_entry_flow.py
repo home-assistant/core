@@ -404,6 +404,7 @@ async def test_webhook_create_cloudhook(
 
     assert len(mock_delete.mock_calls) == 1
     assert result["require_restart"] is False
+    await hass.async_block_till_done()
 
 
 async def test_webhook_create_cloudhook_aborts_not_connected(

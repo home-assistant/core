@@ -297,7 +297,7 @@ async def test_controlling_state_via_mqtt_tilt(
     assert state.attributes["current_position"] == 100
 
 
-@pytest.mark.parametrize("tilt", ("", ',"Tilt":0'))
+@pytest.mark.parametrize("tilt", ["", ',"Tilt":0'])
 async def test_controlling_state_via_mqtt_inverted(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota, tilt
 ) -> None:

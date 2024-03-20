@@ -1292,17 +1292,16 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
             "unit": "%",
         },
     )
-    sensors_config = []
-    for characteristic in characteristics:
-        sensors_config.append(
-            {
-                "platform": "statistics",
-                "name": f"test_{characteristic['source_sensor_domain']}_{characteristic['name']}",
-                "entity_id": f"{characteristic['source_sensor_domain']}.test_monitored",
-                "state_characteristic": characteristic["name"],
-                "max_age": {"minutes": 8},  # 9 values spaces by one minute
-            }
-        )
+    sensors_config = [
+        {
+            "platform": "statistics",
+            "name": f"test_{characteristic['source_sensor_domain']}_{characteristic['name']}",
+            "entity_id": f"{characteristic['source_sensor_domain']}.test_monitored",
+            "state_characteristic": characteristic["name"],
+            "max_age": {"minutes": 8},  # 9 values spaces by one minute
+        }
+        for characteristic in characteristics
+    ]
 
     with freeze_time(current_time) as freezer:
         assert await async_setup_component(

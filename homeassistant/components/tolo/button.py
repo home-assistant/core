@@ -1,6 +1,6 @@
 """TOLO Sauna Button controls."""
 
-from tololib.const import LampMode
+from tololib import LampMode
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry

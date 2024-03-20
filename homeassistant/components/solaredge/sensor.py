@@ -34,18 +34,11 @@ from .coordinator import (
 )
 
 
-@dataclass(frozen=True)
-class SolarEdgeSensorEntityRequiredKeyMixin:
-    """Sensor entity description with json_key for SolarEdge."""
+@dataclass(frozen=True, kw_only=True)
+class SolarEdgeSensorEntityDescription(SensorEntityDescription):
+    """Sensor entity description for SolarEdge."""
 
     json_key: str
-
-
-@dataclass(frozen=True)
-class SolarEdgeSensorEntityDescription(
-    SensorEntityDescription, SolarEdgeSensorEntityRequiredKeyMixin
-):
-    """Sensor entity description for SolarEdge."""
 
 
 SENSOR_TYPES = [

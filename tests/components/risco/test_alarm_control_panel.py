@@ -512,7 +512,8 @@ async def _check_local_state(
 
 
 @pytest.fixture
-def _mock_partition_handler():
+def mock_partition_handler():
+    """Create a mock for add_partition_handler."""
     with patch(
         "homeassistant.components.risco.RiscoLocal.add_partition_handler"
     ) as mock:
@@ -523,11 +524,11 @@ def _mock_partition_handler():
 async def test_local_states(
     hass: HomeAssistant,
     two_part_local_alarm,
-    _mock_partition_handler,
+    mock_partition_handler,
     setup_risco_local,
 ) -> None:
     """Test the various alarm states."""
-    callback = _mock_partition_handler.call_args.args[0]
+    callback = mock_partition_handler.call_args.args[0]
 
     assert callback is not None
 

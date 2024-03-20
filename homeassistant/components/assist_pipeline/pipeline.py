@@ -765,12 +765,12 @@ class PipelineRun:
                 # spoken, we need to make sure pending audio is forwarded to
                 # speech-to-text so the user does not have to pause before
                 # speaking the voice command.
-                for chunk_ts in result.queued_audio:
-                    audio_chunks_for_stt.append(
-                        ProcessedAudioChunk(
-                            audio=chunk_ts[0], timestamp_ms=chunk_ts[1], is_speech=False
-                        )
+                audio_chunks_for_stt.extend(
+                    ProcessedAudioChunk(
+                        audio=chunk_ts[0], timestamp_ms=chunk_ts[1], is_speech=False
                     )
+                    for chunk_ts in result.queued_audio
+                )
 
             wake_word_output = asdict(result)
 

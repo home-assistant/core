@@ -125,9 +125,7 @@ def _make_v2_resultset(*args):
 
 def _make_v2_buckets_resultset():
     """Create a mock V2 'buckets()' resultset."""
-    records = []
-    for name in [DEFAULT_BUCKET, "bucket2"]:
-        records.append(Record({"name": name}))
+    records = [Record({"name": name}) for name in [DEFAULT_BUCKET, "bucket2"]]
 
     return [Table(records)]
 

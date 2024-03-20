@@ -176,10 +176,10 @@ def async_subscribe_events(
     event_forwarder = event_forwarder_filtered(
         target, entities_filter, entity_ids, device_ids
     )
-    for event_type in event_types:
-        subscriptions.append(
-            hass.bus.async_listen(event_type, event_forwarder, run_immediately=True)
-        )
+    subscriptions.extend(
+        hass.bus.async_listen(event_type, event_forwarder, run_immediately=True)
+        for event_type in event_types
+    )
 
     if device_ids and not entity_ids:
         # No entities to subscribe to but we are filtering

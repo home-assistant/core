@@ -32,13 +32,10 @@ async def async_setup_entry(
     isy_options = entry.options
     restore_light_state = isy_options.get(CONF_RESTORE_LIGHT_STATE, False)
 
-    entities = []
-    for node in isy_data.nodes[Platform.LIGHT]:
-        entities.append(
-            ISYLightEntity(node, restore_light_state, devices.get(node.primary_node))
-        )
-
-    async_add_entities(entities)
+    async_add_entities(
+        ISYLightEntity(node, restore_light_state, devices.get(node.primary_node))
+        for node in isy_data.nodes[Platform.LIGHT]
+    )
 
 
 class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):

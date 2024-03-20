@@ -29,6 +29,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "leaving_dock": {
+        "name": "Leaving dock"
+      },
+      "returning_to_dock": {
+        "name": "Returning to dock"
+      }
+    },
     "switch": {
       "enable_schedule": {
         "name": "Enable schedule"

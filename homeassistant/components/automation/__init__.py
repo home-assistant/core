@@ -234,6 +234,30 @@ def areas_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
 
 
 @callback
+def automations_with_floor(hass: HomeAssistant, floor_id: str) -> list[str]:
+    """Return all automations that reference the floor."""
+    return _automations_with_x(hass, floor_id, "referenced_floors")
+
+
+@callback
+def floors_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return all floors in an automation."""
+    return _x_in_automation(hass, entity_id, "referenced_floors")
+
+
+@callback
+def automations_with_label(hass: HomeAssistant, label_id: str) -> list[str]:
+    """Return all automations that reference the label."""
+    return _automations_with_x(hass, label_id, "referenced_labels")
+
+
+@callback
+def labels_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return all labels in an automation."""
+    return _x_in_automation(hass, entity_id, "referenced_labels")
+
+
+@callback
 def automations_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list[str]:
     """Return all automations that reference the blueprint."""
     if DOMAIN not in hass.data:
@@ -343,6 +367,16 @@ class BaseAutomationEntity(ToggleEntity, ABC):
 
     @cached_property
     @abstractmethod
+    def referenced_labels(self) -> set[str]:
+        """Return a set of referenced labels."""
+
+    @cached_property
+    @abstractmethod
+    def referenced_floors(self) -> set[str]:
+        """Return a set of referenced floors."""
+
+    @cached_property
+    @abstractmethod
     def referenced_areas(self) -> set[str]:
         """Return a set of referenced areas."""
 
@@ -395,6 +429,16 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
     def name(self) -> str:
         """Return the name of the entity."""
         return self._name
+
+    @cached_property
+    def referenced_labels(self) -> set[str]:
+        """Return a set of referenced labels."""
+        return set()
+
+    @cached_property
+    def referenced_floors(self) -> set[str]:
+        """Return a set of referenced floors."""
+        return set()
 
     @cached_property
     def referenced_areas(self) -> set[str]:
@@ -482,6 +526,16 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
     def is_on(self) -> bool:
         """Return True if entity is on."""
         return self._async_detach_triggers is not None or self._is_enabled
+
+    @property
+    def referenced_labels(self) -> set[str]:
+        """Return a set of referenced labels."""
+        return self.action_script.referenced_labels
+
+    @property
+    def referenced_floors(self) -> set[str]:
+        """Return a set of referenced floors."""
+        return self.action_script.referenced_floors
 
     @cached_property
     def referenced_areas(self) -> set[str]:
@@ -702,18 +756,13 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         await super().async_will_remove_from_hass()
         await self.async_disable()
 
-    async def _async_enable_automation(self) -> None:
+    async def _async_enable_automation(self, event: Event) -> None:
         """Start automation on startup."""
         # Don't do anything if no longer enabled or already attached
         if not self._is_enabled or self._async_detach_triggers is not None:
             return
 
         self._async_detach_triggers = await self._async_attach_triggers(True)
-
-    @callback
-    def _async_create_enable_automation_task(self, event: Event) -> None:
-        """Create a task to enable the automation."""
-        self.hass.async_create_task(self._async_enable_automation(), eager_start=True)
 
     async def async_enable(self) -> None:
         """Enable this automation entity.
@@ -732,7 +781,9 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             return
 
         self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STARTED, self._async_create_enable_automation_task
+            EVENT_HOMEASSISTANT_STARTED,
+            self._async_enable_automation,
+            run_immediately=True,
         )
         self.async_write_ha_state()
 

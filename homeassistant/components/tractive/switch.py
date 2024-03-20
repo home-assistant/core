@@ -29,18 +29,11 @@ from .entity import TractiveEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class TractiveRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class TractiveSwitchEntityDescription(SwitchEntityDescription):
+    """Class describing Tractive switch entities."""
 
     method: Literal["async_set_buzzer", "async_set_led", "async_set_live_tracking"]
-
-
-@dataclass(frozen=True)
-class TractiveSwitchEntityDescription(
-    SwitchEntityDescription, TractiveRequiredKeysMixin
-):
-    """Class describing Tractive switch entities."""
 
 
 SWITCH_TYPES: tuple[TractiveSwitchEntityDescription, ...] = (

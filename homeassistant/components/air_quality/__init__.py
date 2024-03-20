@@ -17,6 +17,8 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, StateType
 
+from . import group as group_pre_import  # noqa: F401
+
 _LOGGER: Final = logging.getLogger(__name__)
 
 ATTR_AQI: Final = "air_quality_index"
@@ -81,7 +83,7 @@ class AirQualityEntity(Entity):
     @property
     def particulate_matter_2_5(self) -> StateType:
         """Return the particulate matter 2.5 level."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     def particulate_matter_10(self) -> StateType:

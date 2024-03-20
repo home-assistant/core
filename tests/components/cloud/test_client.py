@@ -8,6 +8,7 @@ from aiohttp import web
 from hass_nabucasa.client import RemoteActivationNotAllowed
 import pytest
 
+from homeassistant.components import webhook
 from homeassistant.components.cloud import DOMAIN
 from homeassistant.components.cloud.client import (
     VALID_REPAIR_TRANSLATION_KEYS,
@@ -206,7 +207,7 @@ async def test_webhook_msg(
         received.append(request)
         return web.json_response({"from": "handler"})
 
-    hass.components.webhook.async_register("test", "Test", "mock-webhook-id", handler)
+    webhook.async_register(hass, "test", "Test", "mock-webhook-id", handler)
 
     response = await cloud.client.async_webhook_message(
         {

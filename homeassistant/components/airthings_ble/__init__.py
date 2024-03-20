@@ -28,7 +28,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     address = entry.unique_id
 
-    elevation = hass.config.elevation
     is_metric = hass.config.units is METRIC_SYSTEM
     assert address is not None
 
@@ -41,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Could not find Airthings device with address {address}"
         )
 
-    airthings = AirthingsBluetoothDeviceData(_LOGGER, elevation, is_metric)
+    airthings = AirthingsBluetoothDeviceData(_LOGGER, is_metric)
 
     async def _async_update_method() -> AirthingsDevice:
         """Get data from Airthings BLE."""

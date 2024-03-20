@@ -40,7 +40,7 @@ class BlueCurrentEntity(Entity):
     @property
     def available(self) -> bool:
         """Return entity availability."""
-        return self.connector.available and self.has_value
+        return self.connector.connected and self.has_value
 
     @callback
     @abstractmethod

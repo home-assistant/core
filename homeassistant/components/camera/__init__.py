@@ -417,7 +417,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             stream.add_provider("hls")
             await stream.start()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, preload_stream)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STARTED, preload_stream, run_immediately=True
+    )
 
     @callback
     def update_tokens(t: datetime) -> None:
@@ -435,7 +437,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Unsubscribe track time interval timer."""
         unsub()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unsub_track_time_interval)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, unsub_track_time_interval, run_immediately=True
+    )
 
     component.async_register_entity_service(
         SERVICE_ENABLE_MOTION, {}, "async_enable_motion_detection"
@@ -651,7 +655,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return bytes of camera image."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
@@ -696,7 +700,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def turn_off(self) -> None:
         """Turn off camera."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_turn_off(self) -> None:
         """Turn off camera."""
@@ -704,7 +708,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def turn_on(self) -> None:
         """Turn off camera."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_turn_on(self) -> None:
         """Turn off camera."""
@@ -712,7 +716,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_enable_motion_detection(self) -> None:
         """Call the job and enable motion detection."""
@@ -720,7 +724,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def disable_motion_detection(self) -> None:
         """Disable motion detection in camera."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_disable_motion_detection(self) -> None:
         """Call the job and disable motion detection."""
@@ -797,7 +801,7 @@ class CameraView(HomeAssistantView):
     async def get(self, request: web.Request, entity_id: str) -> web.StreamResponse:
         """Start a GET request."""
         if (camera := self.component.get_entity(entity_id)) is None:
-            raise web.HTTPNotFound()
+            raise web.HTTPNotFound
 
         authenticated = (
             request[KEY_AUTHENTICATED]
@@ -808,19 +812,19 @@ class CameraView(HomeAssistantView):
             # Attempt with invalid bearer token, raise unauthorized
             # so ban middleware can handle it.
             if hdrs.AUTHORIZATION in request.headers:
-                raise web.HTTPUnauthorized()
+                raise web.HTTPUnauthorized
             # Invalid sigAuth or camera access token
-            raise web.HTTPForbidden()
+            raise web.HTTPForbidden
 
         if not camera.is_on:
             _LOGGER.debug("Camera is off")
-            raise web.HTTPServiceUnavailable()
+            raise web.HTTPServiceUnavailable
 
         return await self.handle(request, camera)
 
     async def handle(self, request: web.Request, camera: Camera) -> web.StreamResponse:
         """Handle the camera request."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class CameraImageView(CameraView):
@@ -841,7 +845,7 @@ class CameraImageView(CameraView):
                 int(height) if height else None,
             )
         except (HomeAssistantError, ValueError) as ex:
-            raise web.HTTPInternalServerError() from ex
+            raise web.HTTPInternalServerError from ex
 
         return web.Response(body=image.content, content_type=image.content_type)
 
@@ -861,7 +865,7 @@ class CameraMjpegStream(CameraView):
                 stream = None
                 _LOGGER.debug("Error while writing MJPEG stream to transport")
             if stream is None:
-                raise web.HTTPBadGateway()
+                raise web.HTTPBadGateway
             return stream
 
         try:
@@ -871,7 +875,7 @@ class CameraMjpegStream(CameraView):
                 raise ValueError(f"Stream interval must be > {MIN_STREAM_INTERVAL}")
             return await camera.handle_async_still_stream(request, interval)
         except ValueError as err:
-            raise web.HTTPBadRequest() from err
+            raise web.HTTPBadRequest from err
 
 
 @websocket_api.websocket_command(

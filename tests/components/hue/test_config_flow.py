@@ -260,8 +260,8 @@ async def test_flow_timeout_discovery(hass: HomeAssistant) -> None:
             const.DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-    assert result["type"] == "abort"
-    assert result["reason"] == "discover_timeout"
+    assert result["type"] == "form"
+    assert result["step_id"] == "manual"
 
 
 async def test_flow_link_unknown_error(hass: HomeAssistant) -> None:

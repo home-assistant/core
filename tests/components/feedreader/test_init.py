@@ -15,6 +15,7 @@ from homeassistant.components.feedreader import (
     CONF_MAX_ENTRIES,
     CONF_URLS,
     DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
     EVENT_FEEDREADER,
 )
 from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START
@@ -34,7 +35,7 @@ VALID_CONFIG_5 = {feedreader.DOMAIN: {CONF_URLS: [URL], CONF_MAX_ENTRIES: 1}}
 
 def load_fixture_bytes(src: str) -> bytes:
     """Return byte stream of fixture."""
-    feed_data = load_fixture(src)
+    feed_data = load_fixture(src, DOMAIN)
     raw = bytes(feed_data, "utf-8")
     return raw
 

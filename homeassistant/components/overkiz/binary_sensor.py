@@ -23,18 +23,11 @@ from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
 from .entity import OverkizDescriptiveEntity
 
 
-@dataclass(frozen=True)
-class OverkizBinarySensorDescriptionMixin:
-    """Define an entity description mixin for binary sensor entities."""
+@dataclass(frozen=True, kw_only=True)
+class OverkizBinarySensorDescription(BinarySensorEntityDescription):
+    """Class to describe an Overkiz binary sensor."""
 
     value_fn: Callable[[OverkizStateType], bool]
-
-
-@dataclass(frozen=True)
-class OverkizBinarySensorDescription(
-    BinarySensorEntityDescription, OverkizBinarySensorDescriptionMixin
-):
-    """Class to describe an Overkiz binary sensor."""
 
 
 BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
@@ -135,15 +128,15 @@ async def async_setup_entry(
         ):
             continue
 
-        for state in device.definition.states:
-            if description := SUPPORTED_STATES.get(state.qualified_name):
-                entities.append(
-                    OverkizBinarySensor(
-                        device.device_url,
-                        data.coordinator,
-                        description,
-                    )
-                )
+        entities.extend(
+            OverkizBinarySensor(
+                device.device_url,
+                data.coordinator,
+                description,
+            )
+            for state in device.definition.states
+            if (description := SUPPORTED_STATES.get(state.qualified_name))
+        )
 
     async_add_entities(entities)
 

@@ -141,8 +141,7 @@ def test_invalid_switches(hass: HomeAssistant) -> None:
 
     def add_entities(devices, action):
         """Mock add devices."""
-        for device in devices:
-            hass_devices.append(device)
+        hass_devices.extend(devices)
 
     bad_conf = {}  # No subscription
 

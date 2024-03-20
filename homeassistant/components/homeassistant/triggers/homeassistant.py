@@ -56,7 +56,6 @@ async def async_attach_trigger(
                     "description": "Home Assistant starting",
                 }
             },
-            eager_start=True,
         )
 
     return lambda: None

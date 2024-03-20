@@ -140,7 +140,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
     def log(self, level: int, msg: str, *args, **kwargs):
         """Log a message."""
         msg = f"%s: {msg}"
-        args = (self.entity_id,) + args
+        args = (self.entity_id, *args)
         _LOGGER.log(level, msg, *args, **kwargs)
 
 
@@ -311,6 +311,10 @@ class ZhaGroupEntity(BaseZhaEntity):
 
         self._handled_group_membership = True
         await self.async_remove(force_remove=True)
+        if len(self._group.members) >= 2:
+            async_dispatcher_send(
+                self.hass, SIGNAL_GROUP_ENTITY_REMOVED, self._group_id
+            )
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -336,13 +340,6 @@ class ZhaGroupEntity(BaseZhaEntity):
         self._async_unsub_state_changed = async_track_state_change_event(
             self.hass, self._entity_ids, self.async_state_changed_listener
         )
-
-        def send_removed_signal():
-            async_dispatcher_send(
-                self.hass, SIGNAL_GROUP_ENTITY_REMOVED, self._group_id
-            )
-
-        self.async_on_remove(send_removed_signal)
 
     @callback
     def async_state_changed_listener(self, event: Event[EventStateChangedData]) -> None:

@@ -137,7 +137,7 @@ class APIEventStream(HomeAssistantView):
 
         restrict: list[str] | None = None
         if restrict_str := request.query.get("restrict"):
-            restrict = restrict_str.split(",") + [EVENT_HOMEASSISTANT_STOP]
+            restrict = [*restrict_str.split(","), EVENT_HOMEASSISTANT_STOP]
 
         async def forward_events(event: Event) -> None:
             """Forward events to the open request."""
@@ -413,7 +413,7 @@ class APIDomainServicesView(HomeAssistantView):
                 )
             )
         except (vol.Invalid, ServiceNotFound) as ex:
-            raise HTTPBadRequest() from ex
+            raise HTTPBadRequest from ex
         finally:
             cancel_listen()
 

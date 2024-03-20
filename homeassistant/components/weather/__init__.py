@@ -61,7 +61,8 @@ from homeassistant.util.dt import utcnow
 from homeassistant.util.json import JsonValueType
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from .const import (  # noqa: F401
+from . import group as group_pre_import  # noqa: F401
+from .const import (
     ATTR_WEATHER_APPARENT_TEMPERATURE,
     ATTR_WEATHER_CLOUD_COVERAGE,
     ATTR_WEATHER_DEW_POINT,
@@ -674,7 +675,7 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
 
     @final
     @property
-    def state_attributes(self) -> dict[str, Any]:  # noqa: C901
+    def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes, converted.
 
         Attributes are configured from native units to user-configured units.

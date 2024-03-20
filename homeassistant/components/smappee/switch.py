@@ -36,18 +36,18 @@ async def async_setup_entry(
                     )
                 )
             elif actuator.type == "INFINITY_OUTPUT_MODULE":
-                for option in actuator.state_options:
-                    entities.append(
-                        SmappeeActuator(
-                            smappee_base,
-                            service_location,
-                            actuator.name,
-                            actuator_id,
-                            actuator.type,
-                            actuator.serialnumber,
-                            actuator_state_option=option,
-                        )
+                entities.extend(
+                    SmappeeActuator(
+                        smappee_base,
+                        service_location,
+                        actuator.name,
+                        actuator_id,
+                        actuator.type,
+                        actuator.serialnumber,
+                        actuator_state_option=option,
                     )
+                    for option in actuator.state_options
+                )
 
     async_add_entities(entities, True)
 

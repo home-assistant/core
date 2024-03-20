@@ -180,16 +180,17 @@ async def async_setup_entry(
     entities: list[EcovacsEntity] = get_supported_entitites(
         controller, EcovacsSensor, ENTITY_DESCRIPTIONS
     )
-    for device in controller.devices(Capabilities):
-        lifespan_capability = device.capabilities.life_span
-        for description in LIFESPAN_ENTITY_DESCRIPTIONS:
-            if description.component in lifespan_capability.types:
-                entities.append(
-                    EcovacsLifespanSensor(device, lifespan_capability, description)
-                )
-
-        if capability := device.capabilities.error:
-            entities.append(EcovacsErrorSensor(device, capability))
+    entities.extend(
+        EcovacsLifespanSensor(device, device.capabilities.life_span, description)
+        for device in controller.devices(Capabilities)
+        for description in LIFESPAN_ENTITY_DESCRIPTIONS
+        if description.component in device.capabilities.life_span.types
+    )
+    entities.extend(
+        EcovacsErrorSensor(device, capability)
+        for device in controller.devices(Capabilities)
+        if (capability := device.capabilities.error)
+    )
 
     async_add_entities(entities)
 

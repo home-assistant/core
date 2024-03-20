@@ -142,34 +142,6 @@ MQTT_DISCONNECTED = "mqtt_disconnected"
 PAYLOAD_EMPTY_JSON = "{}"
 PAYLOAD_NONE = "None"
 
-PLATFORMS = [
-    Platform.ALARM_CONTROL_PANEL,
-    Platform.BINARY_SENSOR,
-    Platform.BUTTON,
-    Platform.CAMERA,
-    Platform.CLIMATE,
-    Platform.COVER,
-    Platform.DEVICE_TRACKER,
-    Platform.EVENT,
-    Platform.FAN,
-    Platform.HUMIDIFIER,
-    Platform.IMAGE,
-    Platform.LAWN_MOWER,
-    Platform.LIGHT,
-    Platform.LOCK,
-    Platform.NUMBER,
-    Platform.SCENE,
-    Platform.SELECT,
-    Platform.SENSOR,
-    Platform.SIREN,
-    Platform.SWITCH,
-    Platform.TEXT,
-    Platform.UPDATE,
-    Platform.VACUUM,
-    Platform.VALVE,
-    Platform.WATER_HEATER,
-]
-
 RELOADABLE_PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,

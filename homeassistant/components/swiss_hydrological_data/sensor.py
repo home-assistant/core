@@ -73,12 +73,13 @@ def setup_platform(
         _LOGGER.error("The station doesn't exists: %s", station)
         return
 
-    entities = []
-
-    for condition in monitored_conditions:
-        entities.append(SwissHydrologicalDataSensor(hydro_data, station, condition))
-
-    add_entities(entities, True)
+    add_entities(
+        (
+            SwissHydrologicalDataSensor(hydro_data, station, condition)
+            for condition in monitored_conditions
+        ),
+        True,
+    )
 
 
 class SwissHydrologicalDataSensor(SensorEntity):
