@@ -261,7 +261,6 @@ class ServiceNotFound(HomeAssistantError):
         """Initialize error."""
         super().__init__(
             self,
-            f"Service {domain}.{service} not found.",
             translation_domain="homeassistant",
             translation_key="service_not_found",
             translation_placeholders={"domain": domain, "service": service},
