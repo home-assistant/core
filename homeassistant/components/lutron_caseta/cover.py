@@ -94,7 +94,7 @@ class LutronCasetaTiltOnlyBlind(LutronCasetaDeviceUpdatableEntity, CoverEntity):
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover."""
-        await self._smartbridge.lower_cover(self.device_id)
+        await self._smartbridge.set_tilt(self.device_id, 0)
         await self.async_update()
         self.async_write_ha_state()
 
