@@ -82,7 +82,7 @@ async def ban_middleware(
         # Verify if IP is not banned
         ip_address_ = ip_address(request.remote)  # type: ignore[arg-type]
         if ip_address_ in ip_bans_lookup:
-            raise HTTPForbidden()
+            raise HTTPForbidden
 
     try:
         return await handler(request)

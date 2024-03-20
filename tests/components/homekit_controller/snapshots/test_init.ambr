@@ -37,6 +37,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -77,6 +79,8 @@
             'area_id': None,
             'capabilities': dict({
               'preset_modes': None,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -126,6 +130,8 @@
                 'manual',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -174,6 +180,8 @@
                 'purifying',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -220,6 +228,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -262,6 +272,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -303,6 +315,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -353,6 +367,8 @@
                 'router_eligible',
                 'sleepy',
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -411,6 +427,8 @@
                 'router',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -459,6 +477,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -497,6 +517,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -535,6 +557,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -609,6 +633,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -680,6 +706,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -719,6 +747,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -758,6 +788,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -798,6 +830,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -841,6 +875,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -911,6 +947,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -950,6 +988,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -989,6 +1029,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1029,6 +1071,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -1072,6 +1116,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1142,6 +1188,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1181,6 +1229,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1220,6 +1270,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1260,6 +1312,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -1303,6 +1357,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1377,6 +1433,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1419,6 +1477,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1463,6 +1523,8 @@
               'mode': <NumberMode.AUTO: 'auto'>,
               'step': 1,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1505,6 +1567,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1575,6 +1639,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1614,6 +1680,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1654,6 +1722,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -1733,6 +1803,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1775,6 +1847,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1822,6 +1896,8 @@
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -1882,6 +1958,8 @@
               'mode': <NumberMode.AUTO: 'auto'>,
               'step': 1,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1924,6 +2002,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1998,6 +2078,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -2038,6 +2120,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -2117,6 +2201,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -2156,6 +2242,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -2195,6 +2283,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -2242,6 +2332,8 @@
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -2299,6 +2391,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -2340,6 +2434,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -2385,6 +2481,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -2428,6 +2526,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -2469,6 +2569,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -2507,6 +2609,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -2581,6 +2685,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -2621,6 +2727,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -2665,6 +2773,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -2707,6 +2817,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -2751,6 +2863,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -2793,6 +2907,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -2837,6 +2953,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -2878,6 +2996,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -2917,6 +3037,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -2992,6 +3114,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -3031,6 +3155,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -3071,6 +3197,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -3145,6 +3273,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -3184,6 +3314,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -3223,6 +3355,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -3261,6 +3395,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -3310,6 +3446,8 @@
               'max_temp': 33.3,
               'min_humidity': 20,
               'min_temp': 7.2,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -3373,6 +3511,8 @@
                 'away',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -3421,6 +3561,8 @@
                 'fahrenheit',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -3465,6 +3607,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -3507,6 +3651,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -3581,6 +3727,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -3620,6 +3768,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -3660,6 +3810,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -3734,6 +3886,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -3773,6 +3927,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -3813,6 +3969,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -3891,6 +4049,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -3930,6 +4090,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -3969,6 +4131,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -4007,6 +4171,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -4056,6 +4222,8 @@
               'max_temp': 33.3,
               'min_humidity': 20,
               'min_temp': 7.2,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -4119,6 +4287,8 @@
                 'away',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -4167,6 +4337,8 @@
                 'fahrenheit',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -4211,6 +4383,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -4253,6 +4427,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -4331,6 +4507,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -4370,6 +4548,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -4441,6 +4621,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -4490,6 +4672,8 @@
               'max_temp': 33.3,
               'min_humidity': 20,
               'min_temp': 7.2,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -4552,6 +4736,8 @@
                 'fahrenheit',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -4596,6 +4782,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -4638,6 +4826,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -4712,6 +4902,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -4751,6 +4943,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -4791,6 +4985,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -4865,6 +5061,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -4904,6 +5102,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -4944,6 +5144,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -5022,6 +5224,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -5061,6 +5265,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -5100,6 +5306,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -5138,6 +5346,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -5191,6 +5401,8 @@
               'max_temp': 33.3,
               'min_humidity': 20,
               'min_temp': 7.2,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -5259,6 +5471,8 @@
                 'away',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -5307,6 +5521,8 @@
                 'fahrenheit',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -5351,6 +5567,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -5393,6 +5611,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -5471,6 +5691,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -5510,6 +5732,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -5549,6 +5773,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -5589,6 +5815,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -5633,6 +5861,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -5674,6 +5904,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -5748,6 +5980,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -5791,6 +6025,8 @@
               'min': -450,
               'mode': <NumberMode.AUTO: 'auto'>,
               'step': 1,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -5839,6 +6075,8 @@
                 'fahrenheit',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -5883,6 +6121,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -5925,6 +6165,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -5970,6 +6212,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -6012,6 +6256,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -6090,6 +6336,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -6130,6 +6378,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -6174,6 +6424,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -6216,6 +6468,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -6260,6 +6514,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -6301,6 +6557,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -6340,6 +6598,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -6414,6 +6674,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -6453,6 +6715,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -6491,6 +6755,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -6531,6 +6797,8 @@
             'area_id': None,
             'capabilities': dict({
               'preset_modes': None,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -6607,6 +6875,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -6646,6 +6916,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -6720,6 +6992,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -6759,6 +7033,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -6800,6 +7076,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -6875,6 +7153,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -6946,6 +7226,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -6985,6 +7267,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -7026,6 +7310,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -7105,6 +7391,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -7145,6 +7433,8 @@
             'area_id': None,
             'capabilities': dict({
               'preset_modes': None,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -7221,6 +7511,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -7292,6 +7584,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -7332,6 +7626,8 @@
             'area_id': None,
             'capabilities': dict({
               'preset_modes': None,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -7413,6 +7709,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -7461,6 +7759,8 @@
               'max_temp': 35,
               'min_temp': 7,
               'target_temp_step': 1.0,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -7514,6 +7814,8 @@
             'capabilities': dict({
               'preset_modes': None,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -7563,6 +7865,8 @@
                 'fahrenheit',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -7607,6 +7911,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -7649,6 +7955,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -7723,6 +8031,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -7798,6 +8108,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -7869,6 +8181,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -7911,6 +8225,8 @@
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -7957,6 +8273,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -8036,6 +8354,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -8075,6 +8395,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -8116,6 +8438,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -8191,6 +8515,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -8262,6 +8588,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -8301,6 +8629,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -8342,6 +8672,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -8421,6 +8753,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -8461,6 +8795,8 @@
             'area_id': None,
             'capabilities': dict({
               'preset_modes': None,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -8537,6 +8873,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -8608,6 +8946,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -8648,6 +8988,8 @@
             'area_id': None,
             'capabilities': dict({
               'preset_modes': None,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -8730,6 +9072,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -8801,6 +9145,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -8841,6 +9187,8 @@
             'area_id': None,
             'capabilities': dict({
               'preset_modes': None,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -8923,6 +9271,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -8975,6 +9325,8 @@
                 'vertical',
               ]),
               'target_temp_step': 1.0,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -9033,6 +9385,8 @@
             'capabilities': dict({
               'preset_modes': None,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -9082,6 +9436,8 @@
                 'fahrenheit',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -9126,6 +9482,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -9168,6 +9526,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -9242,6 +9602,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -9317,6 +9679,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -9388,6 +9752,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -9433,6 +9799,8 @@
               ]),
               'max_humidity': 100,
               'min_humidity': 0,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -9484,6 +9852,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -9562,6 +9932,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -9633,6 +10005,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -9678,6 +10052,8 @@
               ]),
               'max_humidity': 80,
               'min_humidity': 20,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -9729,6 +10105,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -9807,6 +10185,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -9878,6 +10258,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -9925,6 +10307,8 @@
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -9981,6 +10365,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -10060,6 +10446,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -10114,6 +10502,8 @@
               'max_temp': 32,
               'min_temp': 18,
               'target_temp_step': 0.5,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -10174,6 +10564,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -10252,6 +10644,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -10298,6 +10692,8 @@
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -10384,6 +10780,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -10430,6 +10828,8 @@
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -10516,6 +10916,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -10562,6 +10964,8 @@
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -10648,6 +11052,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -10694,6 +11100,8 @@
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -10780,6 +11188,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -10826,6 +11236,8 @@
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -10922,6 +11334,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -10968,6 +11382,8 @@
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -11064,6 +11480,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -11106,6 +11524,8 @@
               'event_types': list([
                 'single_press',
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -11154,6 +11574,8 @@
                 'single_press',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -11200,6 +11622,8 @@
               'event_types': list([
                 'single_press',
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -11248,6 +11672,8 @@
                 'single_press',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -11292,6 +11718,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -11367,6 +11795,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -11409,6 +11839,8 @@
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -11486,6 +11918,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -11528,6 +11962,8 @@
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -11605,6 +12041,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -11647,6 +12085,8 @@
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -11724,6 +12164,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -11766,6 +12208,8 @@
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -11843,6 +12287,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -11885,6 +12331,8 @@
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -11962,6 +12410,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -12004,6 +12454,8 @@
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -12081,6 +12533,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -12123,6 +12577,8 @@
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -12200,6 +12656,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -12275,6 +12733,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -12322,6 +12782,8 @@
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -12413,6 +12875,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -12453,6 +12917,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -12495,6 +12961,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -12570,6 +13038,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -12610,6 +13080,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -12652,6 +13124,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -12690,6 +13164,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -12764,6 +13240,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -12811,6 +13289,8 @@
               ]),
               'max_temp': 37,
               'min_temp': 4.5,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -12870,6 +13350,8 @@
                 'fahrenheit',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -12914,6 +13396,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -12956,6 +13440,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -13034,6 +13520,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -13082,6 +13570,8 @@
                 'AV',
                 'HDMI 4',
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -13133,6 +13623,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -13207,6 +13699,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -13247,6 +13741,8 @@
             'area_id': None,
             'capabilities': dict({
               'preset_modes': None,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -13323,6 +13819,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -13398,6 +13896,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -13437,6 +13937,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -13475,6 +13977,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -13513,6 +14017,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -13551,6 +14057,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -13589,6 +14097,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -13663,6 +14173,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -13705,6 +14217,8 @@
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -13786,6 +14300,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -13833,6 +14349,8 @@
               ]),
               'max_temp': 35,
               'min_temp': 7,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -13889,6 +14407,8 @@
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -13938,6 +14458,8 @@
                 'fahrenheit',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -13982,6 +14504,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -14024,6 +14548,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -14102,6 +14628,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -14149,6 +14677,8 @@
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -14223,6 +14753,8 @@
                 'sleepy',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -14279,6 +14811,8 @@
                 'leader',
                 'router',
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -14364,6 +14898,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -14403,6 +14939,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -14442,6 +14980,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -14486,6 +15026,8 @@
                 'double_press',
                 'long_press',
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -14532,6 +15074,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -14570,6 +15114,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -14644,6 +15190,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -14683,6 +15231,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -14722,6 +15272,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -14797,6 +15349,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -14837,6 +15391,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -14879,6 +15435,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -14923,6 +15481,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -14966,6 +15526,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15008,6 +15570,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -15086,6 +15650,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15125,6 +15691,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15166,6 +15734,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15207,6 +15777,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15248,6 +15820,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15289,6 +15863,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15330,6 +15906,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15371,6 +15949,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15412,6 +15992,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15489,6 +16071,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15528,6 +16112,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15569,6 +16155,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -15644,6 +16232,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15715,6 +16305,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15754,6 +16346,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15795,6 +16389,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -15874,6 +16470,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15913,6 +16511,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15954,6 +16554,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -16029,6 +16631,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -16068,6 +16672,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -16109,6 +16715,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -16184,6 +16792,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -16223,6 +16833,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -16264,6 +16876,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -16339,6 +16953,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -16410,6 +17026,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -16449,6 +17067,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -16490,6 +17110,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -16569,6 +17191,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -16608,6 +17232,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -16683,6 +17309,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -16723,6 +17351,8 @@
             'area_id': None,
             'capabilities': dict({
               'preset_modes': None,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -16771,6 +17401,8 @@
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -16852,6 +17484,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -16923,6 +17557,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -16963,6 +17599,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -17007,6 +17645,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -17049,6 +17689,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -17123,6 +17765,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -17162,6 +17806,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -17239,6 +17885,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -17284,6 +17932,8 @@
               ]),
               'max_humidity': 100,
               'min_humidity': 0,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -17342,6 +17992,8 @@
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -17412,6 +18064,8 @@
               'mode': <NumberMode.AUTO: 'auto'>,
               'step': 1,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -17455,6 +18109,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -17533,6 +18189,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -17573,6 +18231,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -17615,6 +18275,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,

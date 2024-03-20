@@ -20,6 +20,7 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfTemperature,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -70,7 +71,8 @@ SENSORS: list[DROPSensorEntityDescription] = [
     DROPSensorEntityDescription(
         key=CURRENT_FLOW_RATE,
         translation_key=CURRENT_FLOW_RATE,
-        native_unit_of_measurement="gpm",
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
         suggested_display_precision=1,
         value_fn=lambda device: device.drop_api.current_flow_rate(),
         state_class=SensorStateClass.MEASUREMENT,
@@ -78,7 +80,8 @@ SENSORS: list[DROPSensorEntityDescription] = [
     DROPSensorEntityDescription(
         key=PEAK_FLOW_RATE,
         translation_key=PEAK_FLOW_RATE,
-        native_unit_of_measurement="gpm",
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
         suggested_display_precision=1,
         value_fn=lambda device: device.drop_api.peak_flow_rate(),
         state_class=SensorStateClass.MEASUREMENT,

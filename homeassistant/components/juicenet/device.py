@@ -10,7 +10,7 @@ class JuiceNetApi:
         self._devices = []
 
     async def setup(self):
-        """JuiceNet device setup."""  # noqa: D403
+        """JuiceNet device setup."""
         self._devices = await self.api.get_devices()
 
     @property

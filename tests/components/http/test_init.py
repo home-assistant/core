@@ -470,7 +470,7 @@ async def test_storing_config(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
     await hass.async_block_till_done()
 
-    restored = await hass.components.http.async_get_last_config()
+    restored = await http.async_get_last_config(hass)
     restored["trusted_proxies"][0] = ip_network(restored["trusted_proxies"][0])
 
     assert restored == http.HTTP_SCHEMA(config)

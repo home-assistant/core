@@ -34,7 +34,6 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-from . import group as group_pre_import  # noqa: F401
 from .const import (  # noqa: F401
     _DEPRECATED_DEVICE_CLASS_DEHUMIDIFIER,
     _DEPRECATED_DEVICE_CLASS_HUMIDIFIER,
@@ -249,7 +248,7 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
 
     def set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
@@ -257,7 +256,7 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
 
     def set_mode(self, mode: str) -> None:
         """Set new mode."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_mode(self, mode: str) -> None:
         """Set new mode."""

@@ -117,7 +117,6 @@ async def test_call_setup_entry(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert entry.supports_unload
-    assert entry.supports_migrate
 
 
 async def test_call_setup_entry_without_reload_support(hass: HomeAssistant) -> None:
@@ -147,7 +146,6 @@ async def test_call_setup_entry_without_reload_support(hass: HomeAssistant) -> N
     assert len(mock_setup_entry.mock_calls) == 1
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert not entry.supports_unload
-    assert entry.supports_migrate
 
 
 @pytest.mark.parametrize(("major_version", "minor_version"), [(2, 1), (1, 2), (2, 2)])
@@ -291,7 +289,6 @@ async def test_call_async_migrate_entry_failure_not_supported(
     )
     entry.add_to_hass(hass)
     assert not entry.supports_unload
-    entry.supports_migrate = True
 
     mock_setup_entry = AsyncMock(return_value=True)
 
@@ -1458,13 +1455,13 @@ async def test_entry_setup_succeed(
 
 @pytest.mark.parametrize(
     "state",
-    (
+    [
         config_entries.ConfigEntryState.LOADED,
         config_entries.ConfigEntryState.SETUP_ERROR,
         config_entries.ConfigEntryState.MIGRATION_ERROR,
         config_entries.ConfigEntryState.SETUP_RETRY,
         config_entries.ConfigEntryState.FAILED_UNLOAD,
-    ),
+    ],
 )
 async def test_entry_setup_invalid_state(
     hass: HomeAssistant,
@@ -1509,11 +1506,11 @@ async def test_entry_unload_succeed(
 
 @pytest.mark.parametrize(
     "state",
-    (
+    [
         config_entries.ConfigEntryState.NOT_LOADED,
         config_entries.ConfigEntryState.SETUP_ERROR,
         config_entries.ConfigEntryState.SETUP_RETRY,
-    ),
+    ],
 )
 async def test_entry_unload_failed_to_load(
     hass: HomeAssistant,
@@ -1535,10 +1532,10 @@ async def test_entry_unload_failed_to_load(
 
 @pytest.mark.parametrize(
     "state",
-    (
+    [
         config_entries.ConfigEntryState.MIGRATION_ERROR,
         config_entries.ConfigEntryState.FAILED_UNLOAD,
-    ),
+    ],
 )
 async def test_entry_unload_invalid_state(
     hass: HomeAssistant,
@@ -1591,11 +1588,11 @@ async def test_entry_reload_succeed(
 
 @pytest.mark.parametrize(
     "state",
-    (
+    [
         config_entries.ConfigEntryState.NOT_LOADED,
         config_entries.ConfigEntryState.SETUP_ERROR,
         config_entries.ConfigEntryState.SETUP_RETRY,
-    ),
+    ],
 )
 async def test_entry_reload_not_loaded(
     hass: HomeAssistant,
@@ -1630,10 +1627,10 @@ async def test_entry_reload_not_loaded(
 
 @pytest.mark.parametrize(
     "state",
-    (
+    [
         config_entries.ConfigEntryState.MIGRATION_ERROR,
         config_entries.ConfigEntryState.FAILED_UNLOAD,
-    ),
+    ],
 )
 async def test_entry_reload_error(
     hass: HomeAssistant,
@@ -2931,7 +2928,7 @@ async def test_async_setup_update_entry(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     "discovery_source",
-    (
+    [
         (config_entries.SOURCE_BLUETOOTH, BaseServiceInfo()),
         (config_entries.SOURCE_DISCOVERY, {}),
         (config_entries.SOURCE_SSDP, BaseServiceInfo()),
@@ -2943,7 +2940,7 @@ async def test_async_setup_update_entry(hass: HomeAssistant) -> None:
             config_entries.SOURCE_HASSIO,
             HassioServiceInfo(config={}, name="Test", slug="test", uuid="1234"),
         ),
-    ),
+    ],
 )
 async def test_flow_with_default_discovery(
     hass: HomeAssistant,
@@ -4337,10 +4334,10 @@ async def test_task_tracking(hass: HomeAssistant) -> None:
     hass.loop.call_soon(event.set)
     await entry._async_process_on_unload(hass)
     assert results == [
-        "on_unload",
         "background",
         "background",
         "normal",
+        "on_unload",
     ]
 
 
@@ -4839,7 +4836,7 @@ async def test_directly_mutating_blocked(
 
 @pytest.mark.parametrize(
     "field",
-    (
+    [
         "data",
         "options",
         "title",
@@ -4847,7 +4844,7 @@ async def test_directly_mutating_blocked(
         "pref_disable_polling",
         "minor_version",
         "version",
-    ),
+    ],
 )
 async def test_report_direct_mutation_of_config_entry(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, field: str

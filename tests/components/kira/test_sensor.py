@@ -39,7 +39,7 @@ def test_kira_sensor_callback(
     codeTuple = (codeName, deviceName)
     sensor._update_callback(codeTuple)
 
-    mock_schedule_update_ha_state.assert_called
+    mock_schedule_update_ha_state.assert_called()
 
     assert sensor.state == codeName
     assert sensor.extra_state_attributes == {kira.CONF_DEVICE: deviceName}

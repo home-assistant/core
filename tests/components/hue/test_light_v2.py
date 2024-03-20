@@ -550,7 +550,7 @@ async def test_grouped_lights(
 
     # PUT request should have been sent to ALL group lights with correct params
     assert len(mock_bridge_v2.mock_requests) == 3
-    for index in range(0, 3):
+    for index in range(3):
         assert (
             mock_bridge_v2.mock_requests[index]["json"]["identify"]["action"]
             == "identify"
@@ -588,7 +588,7 @@ async def test_grouped_lights(
 
     # PUT request should have been sent to ALL group lights with correct params
     assert len(mock_bridge_v2.mock_requests) == 3
-    for index in range(0, 3):
+    for index in range(3):
         assert (
             mock_bridge_v2.mock_requests[index]["json"]["identify"]["action"]
             == "identify"

@@ -94,10 +94,11 @@ async def test_invalid_hostname(hass: HomeAssistant) -> None:
     assert result["errors"] == {CONF_HOST: "wrong_host"}
 
 
-async def test_connection_error(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("exc", [ConnectionError, TimeoutError])
+async def test_connection_error(hass: HomeAssistant, exc: Exception) -> None:
     """Test connection to host error."""
     with patch("brother.Brother.initialize"), patch(
-        "brother.Brother._get_data", side_effect=ConnectionError()
+        "brother.Brother._get_data", side_effect=exc
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
@@ -148,10 +149,11 @@ async def test_device_exists_abort(hass: HomeAssistant) -> None:
         assert result["reason"] == "already_configured"
 
 
-async def test_zeroconf_snmp_error(hass: HomeAssistant) -> None:
-    """Test we abort zeroconf flow on SNMP error."""
+@pytest.mark.parametrize("exc", [ConnectionError, TimeoutError, SnmpError("error")])
+async def test_zeroconf_exception(hass: HomeAssistant, exc: Exception) -> None:
+    """Test we abort zeroconf flow on exception."""
     with patch("brother.Brother.initialize"), patch(
-        "brother.Brother._get_data", side_effect=SnmpError("error")
+        "brother.Brother._get_data", side_effect=exc
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

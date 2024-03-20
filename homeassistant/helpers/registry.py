@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from .storage import Store
 
 SAVE_DELAY = 10
-SAVE_DELAY_STARTING = 300
+SAVE_DELAY_LONG = 180
 
 
 class BaseRegistry(ABC):
@@ -25,9 +25,7 @@ class BaseRegistry(ABC):
         """Schedule saving the registry."""
         # Schedule the save past startup to avoid writing
         # the file while the system is starting.
-        delay = (
-            SAVE_DELAY_STARTING if self.hass.state is CoreState.starting else SAVE_DELAY
-        )
+        delay = SAVE_DELAY if self.hass.state is CoreState.running else SAVE_DELAY_LONG
         self._store.async_delay_save(self._data_to_save, delay)
 
     @callback

@@ -46,7 +46,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str,
             CONF_API_USER: data[CONF_API_USER],
         }
     except ClientResponseError as ex:
-        raise InvalidAuth() from ex
+        raise InvalidAuth from ex
 
 
 class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):

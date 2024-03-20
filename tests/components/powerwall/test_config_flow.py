@@ -60,7 +60,7 @@ async def test_form_source_user(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.parametrize("exc", (PowerwallUnreachableError, TimeoutError))
+@pytest.mark.parametrize("exc", [PowerwallUnreachableError, TimeoutError])
 async def test_form_cannot_connect(hass: HomeAssistant, exc: Exception) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(

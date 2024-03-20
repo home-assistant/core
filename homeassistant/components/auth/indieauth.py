@@ -158,7 +158,7 @@ def _parse_client_id(client_id: str) -> ParseResult:
     # Client identifier URLs
     # MUST have either an https or http scheme
     if parts.scheme not in ("http", "https"):
-        raise ValueError()
+        raise ValueError
 
     # MUST contain a path component
     # Handled by url canonicalization.
@@ -183,7 +183,7 @@ def _parse_client_id(client_id: str) -> ParseResult:
     # MAY contain a port
     try:
         # parts raises ValueError when port cannot be parsed as int
-        parts.port
+        _ = parts.port
     except ValueError as ex:
         raise ValueError("Client ID contains invalid port") from ex
 

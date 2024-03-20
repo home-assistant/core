@@ -331,6 +331,7 @@ class AreaRegistry(BaseRegistry):
             event_type=fr.EVENT_FLOOR_REGISTRY_UPDATED,
             event_filter=_removed_from_registry_filter,
             listener=_handle_floor_registry_update,
+            run_immediately=True,
         )
 
         @callback
@@ -347,6 +348,7 @@ class AreaRegistry(BaseRegistry):
             event_type=lr.EVENT_LABEL_REGISTRY_UPDATED,
             event_filter=_removed_from_registry_filter,
             listener=_handle_label_registry_update,
+            run_immediately=True,
         )
 
 

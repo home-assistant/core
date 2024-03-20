@@ -28,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         registry = dr.async_get(hass)
         controller.remove_stale_devices(registry)
         return True
-    raise ConfigEntryNotReady()
+    raise ConfigEntryNotReady
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

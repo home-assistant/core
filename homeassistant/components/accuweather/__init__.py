@@ -52,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Remove ozone sensors from registry if they exist
     ent_reg = er.async_get(hass)
-    for day in range(0, 5):
+    for day in range(5):
         unique_id = f"{coordinator.location_key}-ozone-{day}"
         if entity_id := ent_reg.async_get_entity_id(SENSOR_PLATFORM, DOMAIN, unique_id):
             _LOGGER.debug("Removing ozone sensor entity %s", entity_id)
@@ -135,4 +135,4 @@ class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):  
         ) as error:
             raise UpdateFailed(error) from error
         _LOGGER.debug("Requests remaining: %d", self.accuweather.requests_remaining)
-        return {**current, **{ATTR_FORECAST: forecast}}
+        return {**current, ATTR_FORECAST: forecast}

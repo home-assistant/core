@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await vlc.login()
         except AuthError as err:
             await disconnect_vlc(vlc)
-            raise ConfigEntryAuthFailed() from err
+            raise ConfigEntryAuthFailed from err
 
     domain_data = hass.data.setdefault(DOMAIN, {})
     domain_data[entry.entry_id] = {DATA_VLC: vlc, DATA_AVAILABLE: available}

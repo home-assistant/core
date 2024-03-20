@@ -5,5 +5,10 @@
         "default": "mdi:robot"
       }
     }
+  },
+  "services": {
+    "capture_image": "mdi:camera",
+    "change_setting": "mdi:cog",
+    "trigger_automation": "mdi:play"
   }
 }

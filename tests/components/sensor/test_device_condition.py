@@ -131,12 +131,12 @@ async def test_get_conditions(
 
 @pytest.mark.parametrize(
     ("hidden_by", "entity_category"),
-    (
+    [
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
-    ),
+    ],
 )
 async def test_get_conditions_hidden_auxiliary(
     hass: HomeAssistant,
@@ -225,13 +225,13 @@ async def test_get_conditions_no_state(
 
 @pytest.mark.parametrize(
     ("state_class", "unit", "condition_types"),
-    (
+    [
         (SensorStateClass.MEASUREMENT, None, ["is_value"]),
         (SensorStateClass.TOTAL, None, ["is_value"]),
         (SensorStateClass.TOTAL_INCREASING, None, ["is_value"]),
         (SensorStateClass.MEASUREMENT, "dogs", ["is_value"]),
         (None, None, []),
-    ),
+    ],
 )
 async def test_get_conditions_no_unit_or_stateclass(
     hass: HomeAssistant,

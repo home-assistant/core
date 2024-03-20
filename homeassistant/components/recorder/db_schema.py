@@ -84,6 +84,7 @@ TABLE_STATISTICS = "statistics"
 TABLE_STATISTICS_META = "statistics_meta"
 TABLE_STATISTICS_RUNS = "statistics_runs"
 TABLE_STATISTICS_SHORT_TERM = "statistics_short_term"
+TABLE_MIGRATION_CHANGES = "migration_changes"
 
 STATISTICS_TABLES = ("statistics", "statistics_short_term")
 
@@ -100,6 +101,7 @@ ALL_TABLES = [
     TABLE_EVENT_TYPES,
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
+    TABLE_MIGRATION_CHANGES,
     TABLE_STATES_META,
     TABLE_STATISTICS,
     TABLE_STATISTICS_META,
@@ -769,6 +771,15 @@ class RecorderRuns(Base):
     def to_native(self, validate_entity_id: bool = True) -> Self:
         """Return self, native format is this model."""
         return self
+
+
+class MigrationChanges(Base):
+    """Representation of migration changes."""
+
+    __tablename__ = TABLE_MIGRATION_CHANGES
+
+    migration_id: Mapped[str] = mapped_column(String(255), primary_key=True)
+    version: Mapped[int] = mapped_column(SmallInteger)
 
 
 class SchemaChanges(Base):

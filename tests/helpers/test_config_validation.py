@@ -1397,7 +1397,7 @@ def test_key_value_schemas_with_default() -> None:
 
 @pytest.mark.parametrize(
     ("config", "error"),
-    (
+    [
         ({"delay": "{{ invalid"}, "should be format 'HH:MM'"),
         ({"wait_template": "{{ invalid"}, "invalid template"),
         ({"condition": "invalid"}, "Unexpected value for condition: 'invalid'"),
@@ -1432,7 +1432,7 @@ def test_key_value_schemas_with_default() -> None:
             },
             "not allowed to add a response to an error stop action",
         ),
-    ),
+    ],
 )
 def test_script(caplog: pytest.LogCaptureFixture, config: dict, error: str) -> None:
     """Test script validation is user friendly."""
@@ -1591,7 +1591,7 @@ def test_config_entry_only_schema_cant_find_module() -> None:
 def test_config_entry_only_schema_no_hass(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test if the the hass context is not set in our context."""
+    """Test if the hass context is not set in our context."""
     with patch(
         "homeassistant.helpers.config_validation.async_get_hass",
         side_effect=HomeAssistantError,

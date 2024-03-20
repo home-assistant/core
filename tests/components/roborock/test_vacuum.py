@@ -140,7 +140,7 @@ async def test_failed_user_command(
     setup_entry: MockConfigEntry,
 ) -> None:
     """Test that when a user sends an invalid command, we raise HomeAssistantError."""
-    data = {ATTR_ENTITY_ID: ENTITY_ID, **{"command": "fake_command"}}
+    data = {ATTR_ENTITY_ID: ENTITY_ID, "command": "fake_command"}
     with patch(
         "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_command",
         side_effect=RoborockException(),

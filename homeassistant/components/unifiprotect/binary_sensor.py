@@ -458,6 +458,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         name="Package Detected",
         icon="mdi:package-variant-closed",
         ufp_value="is_package_currently_detected",
+        entity_registry_enabled_default=False,
         ufp_required_field="can_detect_package",
         ufp_enabled="is_package_detection_on",
         ufp_event_obj="last_package_detect_event",

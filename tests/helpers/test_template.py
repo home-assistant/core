@@ -1140,14 +1140,14 @@ def test_timestamp_local(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     "input",
-    (
+    [
         "2021-06-03 13:00:00.000000+00:00",
         "1986-07-09T12:00:00Z",
         "2016-10-19 15:22:05.588122+0100",
         "2016-10-19",
         "2021-01-01 00:00:01",
         "invalid",
-    ),
+    ],
 )
 def test_as_datetime(hass: HomeAssistant, input) -> None:
     """Test converting a timestamp string to a date object."""
@@ -1466,11 +1466,11 @@ def test_max(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     "attribute",
-    (
+    [
         "a",
         "b",
         "c",
-    ),
+    ],
 )
 def test_min_max_attribute(hass: HomeAssistant, attribute) -> None:
     """Test the min and max filters with attribute."""

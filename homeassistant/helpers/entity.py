@@ -1648,7 +1648,7 @@ class ToggleEntity(
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
@@ -1656,7 +1656,7 @@ class ToggleEntity(
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""

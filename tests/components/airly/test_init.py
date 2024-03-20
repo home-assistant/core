@@ -196,7 +196,7 @@ async def test_unload_entry(
     assert not hass.data.get(DOMAIN)
 
 
-@pytest.mark.parametrize("old_identifier", ((DOMAIN, 123, 456), (DOMAIN, "123", "456")))
+@pytest.mark.parametrize("old_identifier", [(DOMAIN, 123, 456), (DOMAIN, "123", "456")])
 async def test_migrate_device_entry(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,

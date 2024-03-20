@@ -467,19 +467,17 @@ async def test_register_view_with_location(
     with patch(
         "homeassistant.components.cloud.http_api.async_detect_location_info",
         return_value=LocationInfo(
-            **{
-                "country_code": "XX",
-                "zip_code": "12345",
-                "region_code": "GH",
-                "ip": "1.2.3.4",
-                "city": "Gotham",
-                "region_name": "Gotham",
-                "time_zone": "Earth/Gotham",
-                "currency": "XXX",
-                "latitude": "12.34567",
-                "longitude": "12.34567",
-                "use_metric": True,
-            }
+            country_code="XX",
+            zip_code="12345",
+            region_code="GH",
+            ip="1.2.3.4",
+            city="Gotham",
+            region_name="Gotham",
+            time_zone="Earth/Gotham",
+            currency="XXX",
+            latitude="12.34567",
+            longitude="12.34567",
+            use_metric=True,
         ),
     ):
         req = await cloud_client.post(
@@ -699,6 +697,45 @@ async def test_resend_confirm_view_unknown_error(
     assert req.status == HTTPStatus.BAD_GATEWAY
 
 
+async def test_websocket_remove_data(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    cloud: MagicMock,
+    setup_cloud: None,
+) -> None:
+    """Test removing cloud data."""
+    cloud.id_token = None
+    client = await hass_ws_client(hass)
+
+    with patch.object(cloud.client.prefs, "async_erase_config") as mock_erase_config:
+        await client.send_json_auto_id({"type": "cloud/remove_data"})
+        response = await client.receive_json()
+
+        assert response["success"]
+        cloud.remove_data.assert_awaited_once_with()
+        mock_erase_config.assert_awaited_once_with()
+
+
+async def test_websocket_remove_data_logged_in(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    cloud: MagicMock,
+    setup_cloud: None,
+) -> None:
+    """Test removing cloud data."""
+    cloud.iot.state = STATE_CONNECTED
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "cloud/remove_data"})
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "logged_in",
+        "message": "Can't remove data when logged in.",
+    }
+
+
 async def test_websocket_status(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -889,6 +926,8 @@ async def test_websocket_update_preferences_alexa_report_state(
     client = await hass_ws_client(hass)
 
     with patch(
+        "homeassistant.components.cloud.alexa_config.CloudAlexaConfig.async_sync_entities"
+    ), patch(
         (
             "homeassistant.components.cloud.alexa_config.CloudAlexaConfig"
             ".async_get_access_token"
@@ -904,6 +943,7 @@ async def test_websocket_update_preferences_alexa_report_state(
         response = await client.receive_json()
 
         set_authorized_mock.assert_called_once_with(True)
+        await hass.async_block_till_done()
 
     assert response["success"]
 

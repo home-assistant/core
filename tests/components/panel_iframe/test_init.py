@@ -9,10 +9,10 @@ from homeassistant.setup import async_setup_component
 
 @pytest.mark.parametrize(
     "config_to_try",
-    (
+    [
         {"invalid space": {"url": "https://home-assistant.io"}},
         {"router": {"url": "not-a-url"}},
-    ),
+    ],
 )
 async def test_wrong_config(hass: HomeAssistant, config_to_try) -> None:
     """Test setup with wrong configuration."""

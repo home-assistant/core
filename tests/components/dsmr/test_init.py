@@ -78,7 +78,6 @@ from tests.common import MockConfigEntry
         ("5B", "1234_Max_current_per_phase", "1234_belgium_max_current_per_phase"),
         ("5L", "1234_Energy_Consumption_(total)", "1234_electricity_imported_total"),
         ("5L", "1234_Energy_Production_(total)", "1234_electricity_exported_total"),
-        ("5L", "1234_Energy_Production_(total)", "1234_electricity_exported_total"),
         ("5", "1234_Gas_Consumption", "1234_hourly_gas_meter_reading"),
         ("5B", "1234_Gas_Consumption", "1234_belgium_5min_gas_meter_reading"),
         ("2.2", "1234_Gas_Consumption", "1234_gas_meter_reading"),

@@ -52,6 +52,11 @@
         None,
       ]),
     }),
+    'sleep': list([
+      0,
+      1,
+      False,
+    ]),
     'status': dict({
       'alerts': 0,
       'currently_obstructed': False,

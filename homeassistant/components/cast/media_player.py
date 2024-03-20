@@ -685,11 +685,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                         "hlsVideoSegmentFormat": "fmp4",
                     },
                 }
-        elif (
-            media_id.endswith(".m3u")
-            or media_id.endswith(".m3u8")
-            or media_id.endswith(".pls")
-        ):
+        elif media_id.endswith((".m3u", ".m3u8", ".pls")):
             try:
                 playlist = await parse_playlist(self.hass, media_id)
                 _LOGGER.debug(
