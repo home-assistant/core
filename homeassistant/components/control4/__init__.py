@@ -30,6 +30,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
+    API_RETRY_TIMES,
     CONF_ACCOUNT,
     CONF_CONFIG_LISTENER,
     CONF_CONTROLLER_UNIQUE_ID,
@@ -74,19 +75,37 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     controller_unique_id = config[CONF_CONTROLLER_UNIQUE_ID]
     entry_data[CONF_CONTROLLER_UNIQUE_ID] = controller_unique_id
 
-    director_token_dict = await account.getDirectorBearerToken(controller_unique_id)
-    director_session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
+    # Add retry for C4 Account API due to instability
+    for i in range(API_RETRY_TIMES):
+        try:
+            director_token_dict = await account.getDirectorBearerToken(
+                controller_unique_id
+            )
+            break
+        except client_exceptions.ClientError as exception:
+            _LOGGER.error("Error connecting to Control4 account API: %s", exception)
+            if i == API_RETRY_TIMES - 1:
+                raise ConfigEntryNotReady(exception) from exception
 
+    director_session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
     director = C4Director(
         config[CONF_HOST], director_token_dict[CONF_TOKEN], director_session
     )
     entry_data[CONF_DIRECTOR] = director
 
-    # Add Control4 controller to device registry
-    controller_href = (await account.getAccountControllers())["href"]
-    entry_data[CONF_DIRECTOR_SW_VERSION] = await account.getControllerOSVersion(
-        controller_href
-    )
+    # Add retry for C4 Account API due to instability
+    for i in range(API_RETRY_TIMES):
+        try:
+            # Add Control4 controller to device registry
+            controller_href = (await account.getAccountControllers())["href"]
+            entry_data[CONF_DIRECTOR_SW_VERSION] = await account.getControllerOSVersion(
+                controller_href
+            )
+            break
+        except client_exceptions.ClientError as exception:
+            _LOGGER.error("Error connecting to Control4 account API: %s", exception)
+            if i == API_RETRY_TIMES - 1:
+                raise ConfigEntryNotReady(exception) from exception
 
     _, model, mac_address = controller_unique_id.split("_", 3)
     entry_data[CONF_DIRECTOR_MODEL] = model.upper()
