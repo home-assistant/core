@@ -1,6 +1,9 @@
 {
   "title": "Combine the state of several sensors",
   "config": {
+    "abort": {
+      "being_removed": "Combine the state of several sensors ss being removed. Please configure a Group Sensor instead which provides this functionality."
+    },
     "step": {
       "user": {
         "title": "[%key:component::min_max::title%]",
