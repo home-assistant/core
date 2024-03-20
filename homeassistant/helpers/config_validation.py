@@ -1825,7 +1825,7 @@ SCRIPT_ACTION_WAIT_FOR_TRIGGER = "wait_for_trigger"
 SCRIPT_ACTION_WAIT_TEMPLATE = "wait_template"
 
 
-ACTIONS = {
+ACTIONS_MAP = {
     CONF_DELAY: SCRIPT_ACTION_DELAY,
     CONF_WAIT_TEMPLATE: SCRIPT_ACTION_WAIT_TEMPLATE,
     CONF_CONDITION: SCRIPT_ACTION_CHECK_CONDITION,
@@ -1847,14 +1847,14 @@ ACTIONS = {
     CONF_SET_CONVERSATION_RESPONSE: SCRIPT_ACTION_SET_CONVERSATION_RESPONSE,
 }
 
-ALL_ACTIONS = set(ACTIONS)
+ACTIONS_SET = set(ACTIONS_MAP)
 
 
 def determine_script_action(action: dict[str, Any]) -> str:
     """Determine action type."""
-    if not (actions := ALL_ACTIONS.intersection(action)):
+    if not (actions := ACTIONS_SET.intersection(action)):
         raise ValueError("Unable to determine action")
-    return ACTIONS[actions.pop()]
+    return ACTIONS_MAP[actions.pop()]
 
 
 ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
