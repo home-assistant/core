@@ -9,6 +9,7 @@ from typing import Any
 from homeassistant.components.remote import (
     ATTR_DELAY_SECS,
     ATTR_NUM_REPEATS,
+    DEFAULT_DELAY_SECS,
     RemoteEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -65,7 +66,7 @@ class RokuRemote(RokuEntity, RemoteEntity):
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to one device."""
         num_repeats = kwargs[ATTR_NUM_REPEATS]
-        delay = kwargs[ATTR_DELAY_SECS]
+        delay = kwargs.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
 
         for _ in range(num_repeats):
             for single_command in command:
