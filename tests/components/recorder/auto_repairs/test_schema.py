@@ -23,7 +23,7 @@ from tests.typing import RecorderInstanceGenerator
 
 
 @pytest.mark.parametrize("enable_schema_validation", [True])
-@pytest.mark.parametrize("db_engine", ("mysql", "postgresql"))
+@pytest.mark.parametrize("db_engine", ["mysql", "postgresql"])
 async def test_validate_db_schema(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,

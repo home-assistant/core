@@ -18,6 +18,7 @@ from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.json import json_bytes
+from homeassistant.util.async_ import create_eager_task
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
@@ -395,7 +396,7 @@ async def ws_event_stream(
         # Unsubscribe happened while sending historical events
         return
 
-    live_stream.task = asyncio.create_task(
+    live_stream.task = create_eager_task(
         _async_events_consumer(
             subscriptions_setup_complete_time,
             connection,
@@ -405,7 +406,7 @@ async def ws_event_stream(
         )
     )
 
-    live_stream.wait_sync_task = asyncio.create_task(
+    live_stream.wait_sync_task = create_eager_task(
         get_instance(hass).async_block_till_done()
     )
     await live_stream.wait_sync_task
@@ -422,7 +423,10 @@ async def ws_event_stream(
         hass,
         connection,
         msg_id,
-        last_event_time or start_time,
+        # Add one microsecond so we are outside the window of
+        # the last event we got from the database since otherwise
+        # we could fetch the same event twice
+        (last_event_time or start_time) + timedelta(microseconds=1),
         subscriptions_setup_complete_time,
         messages.event_message,
         event_processor,

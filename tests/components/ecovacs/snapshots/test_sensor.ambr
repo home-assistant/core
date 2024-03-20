@@ -41,6 +41,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_area_cleaned',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10',
   })
@@ -88,6 +89,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_battery',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
@@ -138,6 +140,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_cleaning_duration',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5.0',
   })
@@ -184,6 +187,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_error',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -230,6 +234,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_filter_lifespan',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '56',
   })
@@ -275,6 +280,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_ip_address',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '192.168.0.10',
   })
@@ -321,6 +327,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_main_brush_lifespan',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '80',
   })
@@ -367,6 +374,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_side_brushes_lifespan',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40',
   })
@@ -416,6 +424,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_total_area_cleaned',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '60',
   })
@@ -469,6 +478,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_total_cleaning_duration',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40.000',
   })
@@ -517,6 +527,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_total_cleanings',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '123',
   })
@@ -562,6 +573,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_wi_fi_rssi',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-62',
   })
@@ -607,6 +619,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_wi_fi_ssid',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Testnetwork',
   })

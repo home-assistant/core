@@ -37,6 +37,7 @@
     'context': <ANY>,
     'entity_id': 'switch.gs01234',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -82,6 +83,7 @@
     'context': <ANY>,
     'entity_id': 'switch.gs01234_auto_on_off',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -127,6 +129,7 @@
     'context': <ANY>,
     'entity_id': 'switch.gs01234_steam_boiler',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
