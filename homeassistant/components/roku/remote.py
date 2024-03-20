@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from typing import Any
+import asyncio
 
-from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
+from homeassistant.components.remote import ATTR_DELAY_SECS, ATTR_NUM_REPEATS, RemoteEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -60,9 +61,13 @@ class RokuRemote(RokuEntity, RemoteEntity):
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to one device."""
         num_repeats = kwargs[ATTR_NUM_REPEATS]
+        delay = kwargs[ATTR_DELAY_SECS]
 
         for _ in range(num_repeats):
             for single_command in command:
                 await self.coordinator.roku.remote(single_command)
+        
+            if num_repeats > 1:
+                await asyncio.sleep(delay)
 
         await self.coordinator.async_request_refresh()
