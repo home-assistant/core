@@ -30,7 +30,7 @@
         "step": {
           "confirm": {
             "title": "[%key:component::cloud::issues::deprecated_voice::title%]",
-            "description": "The ''{deprecated_option}'' option for text-to-speech in the {integration_name} integration is deprecated and will be removed.\nPlease update your automations and scripts to replace the ''{deprecated_option}'' option with an option for a supported ''{replacement_option}'' instead."
+            "description": "The `{deprecated_option}` option for text-to-speech in the {integration_name} integration is deprecated and will be removed.\nPlease update your automations and scripts to replace the `{deprecated_option}` option with an option for a supported `{replacement_option}` instead."
           }
         }
       }
