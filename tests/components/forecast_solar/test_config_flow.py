@@ -7,6 +7,7 @@ from homeassistant.components.forecast_solar.const import (
     CONF_DAMPING_EVENING,
     CONF_DAMPING_MORNING,
     CONF_DECLINATION,
+    CONF_HORIZON,
     CONF_INVERTER_SIZE,
     CONF_MODULES_POWER,
     DOMAIN,
@@ -37,6 +38,7 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
             CONF_AZIMUTH: 142,
             CONF_DECLINATION: 42,
             CONF_MODULES_POWER: 4242,
+            CONF_HORIZON: "0,0,30,25,15,10,5,0",
         },
     )
 
@@ -50,6 +52,7 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
         CONF_AZIMUTH: 142,
         CONF_DECLINATION: 42,
         CONF_MODULES_POWER: 4242,
+        CONF_HORIZON: "0,0,30,25,15,10,5,0",
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -80,6 +83,7 @@ async def test_options_flow_invalid_api(
             CONF_DAMPING_MORNING: 0.25,
             CONF_DAMPING_EVENING: 0.25,
             CONF_INVERTER_SIZE: 2000,
+            CONF_HORIZON: "0,0,30,25,15,10,5,0",
         },
     )
     await hass.async_block_till_done()
@@ -114,6 +118,7 @@ async def test_options_flow(
             CONF_DAMPING_MORNING: 0.25,
             CONF_DAMPING_EVENING: 0.25,
             CONF_INVERTER_SIZE: 2000,
+            CONF_HORIZON: "0,0,30,25,15,10,5,0",
         },
     )
     await hass.async_block_till_done()
@@ -127,6 +132,7 @@ async def test_options_flow(
         CONF_DAMPING_MORNING: 0.25,
         CONF_DAMPING_EVENING: 0.25,
         CONF_INVERTER_SIZE: 2000,
+        CONF_HORIZON: "0,0,30,25,15,10,5,0",
     }
 
 
@@ -155,6 +161,7 @@ async def test_options_flow_without_key(
             CONF_DAMPING_MORNING: 0.25,
             CONF_DAMPING_EVENING: 0.25,
             CONF_INVERTER_SIZE: 2000,
+            CONF_HORIZON: "0,0,30,25,15,10,5,0",
         },
     )
     await hass.async_block_till_done()
@@ -168,4 +175,5 @@ async def test_options_flow_without_key(
         CONF_DAMPING_MORNING: 0.25,
         CONF_DAMPING_EVENING: 0.25,
         CONF_INVERTER_SIZE: 2000,
+        CONF_HORIZON: "0,0,30,25,15,10,5,0",
     }

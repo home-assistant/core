@@ -9,7 +9,6 @@
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]",
           "modules_power": "Total Watt peak power of your solar modules",
-          "horizon": "Horizon profile as comma-separated list of degrees (0,0,25,30,20,10,0)",
           "name": "[%key:common::config_flow::data::name%]"
         }
       }
@@ -30,7 +29,7 @@
           "inverter_size": "Inverter size (Watt)",
           "declination": "[%key:component::forecast_solar::config::step::user::data::declination%]",
           "modules_power": "[%key:component::forecast_solar::config::step::user::data::modules_power%]",
-          "horizon": "[%key:component::forecast_solar::config::step::user::data::horizon%]"
+          "horizon": "Horizon profile as comma-separated list of degrees (0,0,25,30,20,10,0). See PVGIS."
         }
       }
     }

@@ -12,6 +12,7 @@ from homeassistant.components.forecast_solar.const import (
     CONF_DAMPING_EVENING,
     CONF_DAMPING_MORNING,
     CONF_DECLINATION,
+    CONF_HORIZON,
     CONF_INVERTER_SIZE,
     CONF_MODULES_POWER,
     DOMAIN,
@@ -52,6 +53,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_DAMPING_MORNING: 0.5,
             CONF_DAMPING_EVENING: 0.5,
             CONF_INVERTER_SIZE: 2000,
+            CONF_HORIZON: "0,0,30,25,15,10,5,0",
         },
     )
 
