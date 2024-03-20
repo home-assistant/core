@@ -30,14 +30,14 @@ class RachioUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     ) -> None:
         """Initialize the Rachio Update Coordinator."""
         self.hass = hass
-        self.rachio: Rachio = rachio
+        self.rachio = rachio
         self.base_station = base_station
-        # To avoid exceeding the rate limit, increase polling interval for
-        # each additional base station on the account
         super().__init__(
             hass,
             _LOGGER,
             name=f"{DOMAIN} update coordinator",
+            # To avoid exceeding the rate limit, increase polling interval for
+            # each additional base station on the account
             update_interval=timedelta(minutes=(base_count + 1)),
             # Debouncer used because the API takes a bit to update state changes
             request_refresh_debouncer=Debouncer(
