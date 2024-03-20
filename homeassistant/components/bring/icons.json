@@ -5,5 +5,8 @@
         "default": "mdi:cart"
       }
     }
+  },
+  "services": {
+    "push_notification": "mdi:message-alert"
   }
 }
