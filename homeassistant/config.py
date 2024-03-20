@@ -63,6 +63,7 @@ from .exceptions import ConfigValidationError, HomeAssistantError
 from .generated.currencies import HISTORIC_CURRENCIES
 from .helpers import config_validation as cv, issue_registry as ir
 from .helpers.entity_values import EntityValues
+from .helpers.translation import async_get_exception_message
 from .helpers.typing import ConfigType
 from .loader import ComponentProtocol, Integration, IntegrationNotFound
 from .requirements import RequirementsNotFound, async_get_integration_with_requirements
@@ -1225,13 +1226,11 @@ def _get_log_message_and_stack_print_pref(
             show_stack_trace = True
         return (log_message, show_stack_trace, placeholders)
 
-    # Get the log message from the translation cache
-    log_message = str(
-        HomeAssistantError(
-            translation_domain="homeassistant",
-            translation_key=platform_exception.translation_key,
-            translation_placeholders=placeholders,
-        )
+    # Generate the log message from the English translations
+    log_message = async_get_exception_message(
+        CONF_CORE,
+        platform_exception.translation_key,
+        translation_placeholders=placeholders,
     )
 
     return (log_message, show_stack_trace, placeholders)
@@ -1342,7 +1341,7 @@ def async_handle_component_errors(
     raise ConfigValidationError(
         translation_key,
         [platform_exception.exception for platform_exception in config_exception_info],
-        translation_domain="homeassistant",
+        translation_domain=CONF_CORE,
         translation_key=translation_key,
         translation_placeholders=placeholders,
     )
