@@ -36,6 +36,14 @@
     "deprecated_legacy_api_password": {
       "title": "The legacy API password is deprecated",
       "description": "The legacy API password authentication provider is deprecated and will be removed. Please remove it from your YAML configuration and use the default Home Assistant authentication provider instead."
+    },
+    "homeassistant_auth_duplicate_username": {
+      "title": "Duplicate usernames detected",
+      "description": "The Home Assistant auth provider is running in legacy mode because we detected usernames that are case-insensitive equivalent. Please change the username: `{username}`."
+    },
+    "homeassistant_auth_username_begins_or_ends_with_space": {
+      "title": "Username begins or ends with space",
+      "description": "The Home Assistant auth provider is running in legacy mode because we detected usernames that start or end with a space. Please change the username: `{username}`."
     }
   }
 }
