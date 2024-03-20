@@ -81,9 +81,11 @@ async def test_main_services(
         blocking=True,
     )
     assert mock_roku.remote.call_count == 4
-    mock_roku.remote.assert_has_calls([
-        call("left"),
-        call("right"),
-        call("left"),
-        call("right"),
-    ])
+    mock_roku.remote.assert_has_calls(
+        [
+            call("left"),
+            call("right"),
+            call("left"),
+            call("right"),
+        ],
+    )
