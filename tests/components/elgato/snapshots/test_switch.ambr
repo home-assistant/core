@@ -3,11 +3,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Frenck Energy saving',
-      'icon': 'mdi:leaf',
     }),
     'context': <ANY>,
     'entity_id': 'switch.frenck_energy_saving',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -29,11 +29,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:leaf',
+    'original_icon': None,
     'original_name': 'Energy saving',
     'platform': 'elgato',
     'previous_unique_id': None,
@@ -65,6 +67,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Elgato',
     'model': 'Elgato Key Light Mini',
     'name': 'Frenck',
@@ -79,11 +83,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Frenck Studio mode',
-      'icon': 'mdi:battery-off-outline',
     }),
     'context': <ANY>,
     'entity_id': 'switch.frenck_studio_mode',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -105,11 +109,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:battery-off-outline',
+    'original_icon': None,
     'original_name': 'Studio mode',
     'platform': 'elgato',
     'previous_unique_id': None,
@@ -141,6 +147,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Elgato',
     'model': 'Elgato Key Light Mini',
     'name': 'Frenck',

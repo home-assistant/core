@@ -1,4 +1,5 @@
 """Test ZHA Gateway."""
+
 import asyncio
 from unittest.mock import MagicMock, PropertyMock, patch
 
@@ -198,7 +199,7 @@ async def test_gateway_group_methods(
     # the group entity should not have been cleaned up
     assert entity_id not in hass.states.async_entity_ids(Platform.LIGHT)
 
-    with patch("zigpy.zcl.Cluster.request", side_effect=asyncio.TimeoutError):
+    with patch("zigpy.zcl.Cluster.request", side_effect=TimeoutError):
         await zha_group.members[0].async_remove_from_group()
         assert len(zha_group.members) == 1
         for member in zha_group.members:
@@ -250,9 +251,10 @@ async def test_gateway_initialize_bellows_thread(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test ZHA disabling the UART thread when connecting to a TCP coordinator."""
-    config_entry.data = dict(config_entry.data)
-    config_entry.data["device"]["path"] = device_path
+    data = dict(config_entry.data)
+    data["device"]["path"] = device_path
     config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(config_entry, data=data)
 
     zha_gateway = ZHAGateway(hass, {"zigpy_config": config_override}, config_entry)
 
@@ -262,7 +264,7 @@ async def test_gateway_initialize_bellows_thread(
     ) as mock_new:
         await zha_gateway.async_initialize()
 
-    mock_new.mock_calls[-1].kwargs["config"]["use_thread"] is thread_state
+    assert mock_new.mock_calls[-1].kwargs["config"]["use_thread"] is thread_state
 
     await zha_gateway.shutdown()
 
@@ -285,9 +287,10 @@ async def test_gateway_force_multi_pan_channel(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test ZHA disabling the UART thread when connecting to a TCP coordinator."""
-    config_entry.data = dict(config_entry.data)
-    config_entry.data["device"]["path"] = device_path
+    data = dict(config_entry.data)
+    data["device"]["path"] = device_path
     config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(config_entry, data=data)
 
     zha_gateway = ZHAGateway(hass, {"zigpy_config": config_override}, config_entry)
 
@@ -365,7 +368,7 @@ async def test_startup_concurrency_limit(
             zigpy.zdo.types.NodeDescriptor.MACCapabilityFlags.MainsPowered
         )
 
-        zha_gateway._async_get_or_create_device(zigpy_dev, restored=True)
+        zha_gateway._async_get_or_create_device(zigpy_dev)
 
     # Keep track of request concurrency during initialization
     current_concurrency = 0

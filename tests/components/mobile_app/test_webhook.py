@@ -1,4 +1,5 @@
 """Webhook tests for mobile_app."""
+
 from binascii import unhexlify
 from http import HTTPStatus
 from unittest.mock import patch
@@ -347,13 +348,13 @@ async def test_webhook_returns_error_incorrect_json(
 
 @pytest.mark.parametrize(
     ("msg", "generate_response"),
-    (
+    [
         (RENDER_TEMPLATE, lambda hass: {"one": "Hello world"}),
         (
             {"type": "get_zones", "data": {}},
             lambda hass: [hass.states.get("zone.home").as_dict()],
         ),
-    ),
+    ],
 )
 async def test_webhook_handle_decryption(
     hass: HomeAssistant, webhook_client, create_registrations, msg, generate_response

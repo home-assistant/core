@@ -1,4 +1,5 @@
 """The lawn mower integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -107,7 +108,7 @@ class LawnMowerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def start_mowing(self) -> None:
         """Start or resume mowing."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_start_mowing(self) -> None:
         """Start or resume mowing."""
@@ -115,7 +116,7 @@ class LawnMowerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def dock(self) -> None:
         """Dock the mower."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_dock(self) -> None:
         """Dock the mower."""
@@ -123,7 +124,7 @@ class LawnMowerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def pause(self) -> None:
         """Pause the lawn mower."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_pause(self) -> None:
         """Pause the lawn mower."""

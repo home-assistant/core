@@ -1,11 +1,14 @@
 """Test issues from supervisor issues."""
+
 from __future__ import annotations
 
-from asyncio import TimeoutError
+from datetime import timedelta
+from http import HTTPStatus
 import os
 from typing import Any
 from unittest.mock import ANY, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
@@ -14,7 +17,7 @@ from homeassistant.setup import async_setup_component
 
 from .test_init import MOCK_ENVIRON
 
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 from tests.typing import WebSocketGenerator
 
 
@@ -41,6 +44,7 @@ def mock_resolution_info(
     unsupported: list[str] | None = None,
     unhealthy: list[str] | None = None,
     issues: list[dict[str, str]] | None = None,
+    suggestion_result: str = "ok",
 ):
     """Mock resolution/info endpoint with unsupported/unhealthy reasons and/or issues."""
     aioclient_mock.get(
@@ -77,7 +81,7 @@ def mock_resolution_info(
             for suggestion in suggestions:
                 aioclient_mock.post(
                     f"http://127.0.0.1/resolution/suggestion/{suggestion['uuid']}",
-                    json={"result": "ok"},
+                    json={"result": suggestion_result},
                 )
 
 
@@ -527,6 +531,83 @@ async def test_supervisor_issues(
         fixable=True,
         reference="/dev/sda1",
     )
+
+
+async def test_supervisor_issues_initial_failure(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test issues manager retries after initial update failure."""
+    responses = [
+        AiohttpClientMockResponse(
+            method="get",
+            url="http://127.0.0.1/resolution/info",
+            status=HTTPStatus.BAD_REQUEST,
+            json={
+                "result": "error",
+                "message": "System is not ready with state: setup",
+            },
+        ),
+        AiohttpClientMockResponse(
+            method="get",
+            url="http://127.0.0.1/resolution/info",
+            status=HTTPStatus.OK,
+            json={
+                "result": "ok",
+                "data": {
+                    "unsupported": [],
+                    "unhealthy": [],
+                    "suggestions": [],
+                    "issues": [
+                        {
+                            "uuid": "1234",
+                            "type": "reboot_required",
+                            "context": "system",
+                            "reference": None,
+                        },
+                    ],
+                    "checks": [
+                        {"enabled": True, "slug": "supervisor_trust"},
+                        {"enabled": True, "slug": "free_space"},
+                    ],
+                },
+            },
+        ),
+    ]
+
+    async def mock_responses(*args):
+        nonlocal responses
+        return responses.pop(0)
+
+    aioclient_mock.get(
+        "http://127.0.0.1/resolution/info",
+        side_effect=mock_responses,
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/resolution/issue/1234/suggestions",
+        json={"result": "ok", "data": {"suggestions": []}},
+    )
+
+    with patch("homeassistant.components.hassio.issues.REQUEST_REFRESH_DELAY", new=0.1):
+        result = await async_setup_component(hass, "hassio", {})
+        await hass.async_block_till_done()
+        assert result
+
+        client = await hass_ws_client(hass)
+
+        await client.send_json({"id": 1, "type": "repairs/list_issues"})
+        msg = await client.receive_json()
+        assert msg["success"]
+        assert len(msg["result"]["issues"]) == 0
+
+        freezer.tick(timedelta(milliseconds=200))
+        await hass.async_block_till_done()
+        await client.send_json({"id": 2, "type": "repairs/list_issues"})
+        msg = await client.receive_json()
+        assert msg["success"]
+        assert len(msg["result"]["issues"]) == 1
 
 
 async def test_supervisor_issues_add_remove(

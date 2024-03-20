@@ -1,4 +1,5 @@
 """Test ZHA WebSocket API."""
+
 from __future__ import annotations
 
 from binascii import unhexlify
@@ -13,6 +14,7 @@ import zigpy.backups
 import zigpy.profiles.zha
 import zigpy.types
 from zigpy.types.named import EUI64
+import zigpy.util
 import zigpy.zcl.clusters.general as general
 from zigpy.zcl.clusters.general import Groups
 import zigpy.zcl.clusters.security as security
@@ -497,7 +499,7 @@ async def app_controller(
 
 @pytest.mark.parametrize(
     ("params", "duration", "node"),
-    (
+    [
         ({}, 60, None),
         ({ATTR_DURATION: 30}, 30, None),
         (
@@ -510,7 +512,7 @@ async def app_controller(
             60,
             zigpy.types.EUI64.convert("aa:bb:cc:dd:aa:bb:cc:d1"),
         ),
-    ),
+    ],
 )
 async def test_permit_ha12(
     hass: HomeAssistant,
@@ -528,7 +530,7 @@ async def test_permit_ha12(
     assert app_controller.permit.await_count == 1
     assert app_controller.permit.await_args[1]["time_s"] == duration
     assert app_controller.permit.await_args[1]["node"] == node
-    assert app_controller.permit_with_key.call_count == 0
+    assert app_controller.permit_with_link_key.call_count == 0
 
 
 IC_TEST_PARAMS = (
@@ -538,7 +540,9 @@ IC_TEST_PARAMS = (
             ATTR_INSTALL_CODE: "5279-7BF4-A508-4DAA-8E17-12B6-1741-CA02-4051",
         },
         zigpy.types.EUI64.convert(IEEE_SWITCH_DEVICE),
-        unhexlify("52797BF4A5084DAA8E1712B61741CA024051"),
+        zigpy.util.convert_install_code(
+            unhexlify("52797BF4A5084DAA8E1712B61741CA024051")
+        ),
     ),
     (
         {
@@ -546,7 +550,9 @@ IC_TEST_PARAMS = (
             ATTR_INSTALL_CODE: "52797BF4A5084DAA8E1712B61741CA024051",
         },
         zigpy.types.EUI64.convert(IEEE_SWITCH_DEVICE),
-        unhexlify("52797BF4A5084DAA8E1712B61741CA024051"),
+        zigpy.util.convert_install_code(
+            unhexlify("52797BF4A5084DAA8E1712B61741CA024051")
+        ),
     ),
 )
 
@@ -566,10 +572,10 @@ async def test_permit_with_install_code(
         DOMAIN, SERVICE_PERMIT, params, True, Context(user_id=hass_admin_user.id)
     )
     assert app_controller.permit.await_count == 0
-    assert app_controller.permit_with_key.call_count == 1
-    assert app_controller.permit_with_key.await_args[1]["time_s"] == 60
-    assert app_controller.permit_with_key.await_args[1]["node"] == src_ieee
-    assert app_controller.permit_with_key.await_args[1]["code"] == code
+    assert app_controller.permit_with_link_key.call_count == 1
+    assert app_controller.permit_with_link_key.await_args[1]["time_s"] == 60
+    assert app_controller.permit_with_link_key.await_args[1]["node"] == src_ieee
+    assert app_controller.permit_with_link_key.await_args[1]["link_key"] == code
 
 
 IC_FAIL_PARAMS = (
@@ -621,19 +627,23 @@ async def test_permit_with_install_code_fail(
             DOMAIN, SERVICE_PERMIT, params, True, Context(user_id=hass_admin_user.id)
         )
     assert app_controller.permit.await_count == 0
-    assert app_controller.permit_with_key.call_count == 0
+    assert app_controller.permit_with_link_key.call_count == 0
 
 
 IC_QR_CODE_TEST_PARAMS = (
     (
         {ATTR_QR_CODE: "000D6FFFFED4163B|52797BF4A5084DAA8E1712B61741CA024051"},
         zigpy.types.EUI64.convert("00:0D:6F:FF:FE:D4:16:3B"),
-        unhexlify("52797BF4A5084DAA8E1712B61741CA024051"),
+        zigpy.util.convert_install_code(
+            unhexlify("52797BF4A5084DAA8E1712B61741CA024051")
+        ),
     ),
     (
         {ATTR_QR_CODE: "Z:000D6FFFFED4163B$I:52797BF4A5084DAA8E1712B61741CA024051"},
         zigpy.types.EUI64.convert("00:0D:6F:FF:FE:D4:16:3B"),
-        unhexlify("52797BF4A5084DAA8E1712B61741CA024051"),
+        zigpy.util.convert_install_code(
+            unhexlify("52797BF4A5084DAA8E1712B61741CA024051")
+        ),
     ),
     (
         {
@@ -643,7 +653,22 @@ IC_QR_CODE_TEST_PARAMS = (
             )
         },
         zigpy.types.EUI64.convert("04:CF:8C:DF:3C:3C:3C:3C"),
-        unhexlify("52797BF4A5084DAA8E1712B61741CA024051"),
+        zigpy.util.convert_install_code(
+            unhexlify("52797BF4A5084DAA8E1712B61741CA024051")
+        ),
+    ),
+    (
+        {
+            ATTR_QR_CODE: (
+                "RB01SG"
+                "0D836591B3CC0010000000000000000000"
+                "000D6F0019107BB1"
+                "DLK"
+                "E4636CB6C41617C3E08F7325FFBFE1F9"
+            )
+        },
+        zigpy.types.EUI64.convert("00:0D:6F:00:19:10:7B:B1"),
+        zigpy.types.KeyData.convert("E4:63:6C:B6:C4:16:17:C3:E0:8F:73:25:FF:BF:E1:F9"),
     ),
 )
 
@@ -663,10 +688,10 @@ async def test_permit_with_qr_code(
         DOMAIN, SERVICE_PERMIT, params, True, Context(user_id=hass_admin_user.id)
     )
     assert app_controller.permit.await_count == 0
-    assert app_controller.permit_with_key.call_count == 1
-    assert app_controller.permit_with_key.await_args[1]["time_s"] == 60
-    assert app_controller.permit_with_key.await_args[1]["node"] == src_ieee
-    assert app_controller.permit_with_key.await_args[1]["code"] == code
+    assert app_controller.permit_with_link_key.call_count == 1
+    assert app_controller.permit_with_link_key.await_args[1]["time_s"] == 60
+    assert app_controller.permit_with_link_key.await_args[1]["node"] == src_ieee
+    assert app_controller.permit_with_link_key.await_args[1]["link_key"] == code
 
 
 @pytest.mark.parametrize(("params", "src_ieee", "code"), IC_QR_CODE_TEST_PARAMS)
@@ -679,16 +704,22 @@ async def test_ws_permit_with_qr_code(
         {ID: 14, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}", **params}
     )
 
-    msg = await zha_client.receive_json()
+    msg_type = None
+    while msg_type != const.TYPE_RESULT:
+        # There will be logging events coming over the websocket
+        # as well so we want to ignore those
+        msg = await zha_client.receive_json()
+        msg_type = msg["type"]
+
     assert msg["id"] == 14
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
 
     assert app_controller.permit.await_count == 0
-    assert app_controller.permit_with_key.call_count == 1
-    assert app_controller.permit_with_key.await_args[1]["time_s"] == 60
-    assert app_controller.permit_with_key.await_args[1]["node"] == src_ieee
-    assert app_controller.permit_with_key.await_args[1]["code"] == code
+    assert app_controller.permit_with_link_key.call_count == 1
+    assert app_controller.permit_with_link_key.await_args[1]["time_s"] == 60
+    assert app_controller.permit_with_link_key.await_args[1]["node"] == src_ieee
+    assert app_controller.permit_with_link_key.await_args[1]["link_key"] == code
 
 
 @pytest.mark.parametrize("params", IC_FAIL_PARAMS)
@@ -707,12 +738,12 @@ async def test_ws_permit_with_install_code_fail(
     assert msg["success"] is False
 
     assert app_controller.permit.await_count == 0
-    assert app_controller.permit_with_key.call_count == 0
+    assert app_controller.permit_with_link_key.call_count == 0
 
 
 @pytest.mark.parametrize(
     ("params", "duration", "node"),
-    (
+    [
         ({}, 60, None),
         ({ATTR_DURATION: 30}, 30, None),
         (
@@ -725,7 +756,7 @@ async def test_ws_permit_with_install_code_fail(
             60,
             zigpy.types.EUI64.convert("aa:bb:cc:dd:aa:bb:cc:d1"),
         ),
-    ),
+    ],
 )
 async def test_ws_permit_ha12(
     app_controller: ControllerApplication, zha_client, params, duration, node
@@ -736,7 +767,13 @@ async def test_ws_permit_ha12(
         {ID: 14, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}", **params}
     )
 
-    msg = await zha_client.receive_json()
+    msg_type = None
+    while msg_type != const.TYPE_RESULT:
+        # There will be logging events coming over the websocket
+        # as well so we want to ignore those
+        msg = await zha_client.receive_json()
+        msg_type = msg["type"]
+
     assert msg["id"] == 14
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
@@ -744,7 +781,7 @@ async def test_ws_permit_ha12(
     assert app_controller.permit.await_count == 1
     assert app_controller.permit.await_args[1]["time_s"] == duration
     assert app_controller.permit.await_args[1]["node"] == node
-    assert app_controller.permit_with_key.call_count == 0
+    assert app_controller.permit_with_link_key.call_count == 0
 
 
 async def test_get_network_settings(
@@ -901,7 +938,7 @@ async def test_websocket_change_channel(
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
 
-    change_channel_mock.mock_calls == [call(ANY, new_channel)]
+    change_channel_mock.assert_has_calls([call(ANY, new_channel)])
 
 
 @pytest.mark.parametrize(

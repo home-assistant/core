@@ -1,15 +1,15 @@
 """The ViCare integration."""
+
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from contextlib import suppress
-from dataclasses import dataclass
 import logging
 import os
 from typing import Any
 
 from PyViCare.PyViCare import PyViCare
-from PyViCare.PyViCareDevice import Device
+from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidConfigurationError,
     PyViCareInvalidCredentialsError,
@@ -22,33 +22,17 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
-    CONF_HEATING_TYPE,
-    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_CACHE_DURATION,
+    DEVICE_LIST,
     DOMAIN,
-    HEATING_TYPE_TO_CREATOR_METHOD,
     PLATFORMS,
-    VICARE_API,
-    VICARE_DEVICE_CONFIG,
-    VICARE_DEVICE_CONFIG_LIST,
-    HeatingType,
+    UNSUPPORTED_DEVICES,
 )
+from .types import ViCareDevice
+from .utils import get_device
 
 _LOGGER = logging.getLogger(__name__)
 _TOKEN_FILENAME = "vicare_token.save"
-
-
-@dataclass(frozen=True)
-class ViCareRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    value_getter: Callable[[Device], Any]
-
-
-@dataclass(frozen=True)
-class ViCareRequiredKeysMixinWithSet(ViCareRequiredKeysMixin):
-    """Mixin for required keys with setter."""
-
-    value_setter: Callable[[Device], bool]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -68,10 +52,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-def vicare_login(hass: HomeAssistant, entry_data: Mapping[str, Any]) -> PyViCare:
+def vicare_login(
+    hass: HomeAssistant,
+    entry_data: Mapping[str, Any],
+    cache_duration=DEFAULT_CACHE_DURATION,
+) -> PyViCare:
     """Login via PyVicare API."""
     vicare_api = PyViCare()
-    vicare_api.setCacheDuration(DEFAULT_SCAN_INTERVAL)
+    vicare_api.setCacheDuration(cache_duration)
     vicare_api.initWithCredentials(
         entry_data[CONF_USERNAME],
         entry_data[CONF_PASSWORD],
@@ -85,20 +73,26 @@ def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up PyVicare API."""
     vicare_api = vicare_login(hass, entry.data)
 
-    for device in vicare_api.devices:
-        _LOGGER.info(
+    device_config_list = get_supported_devices(vicare_api.devices)
+    if (number_of_devices := len(device_config_list)) > 1:
+        cache_duration = DEFAULT_CACHE_DURATION * number_of_devices
+        _LOGGER.debug(
+            "Found %s devices, adjusting cache duration to %s",
+            number_of_devices,
+            cache_duration,
+        )
+        vicare_api = vicare_login(hass, entry.data, cache_duration)
+        device_config_list = get_supported_devices(vicare_api.devices)
+
+    for device in device_config_list:
+        _LOGGER.debug(
             "Found device: %s (online: %s)", device.getModel(), str(device.isOnline())
         )
 
-    # Currently we only support a single device
-    device_list = vicare_api.devices
-    device = device_list[0]
-    hass.data[DOMAIN][entry.entry_id][VICARE_DEVICE_CONFIG_LIST] = device_list
-    hass.data[DOMAIN][entry.entry_id][VICARE_DEVICE_CONFIG] = device
-    hass.data[DOMAIN][entry.entry_id][VICARE_API] = getattr(
-        device,
-        HEATING_TYPE_TO_CREATOR_METHOD[HeatingType(entry.data[CONF_HEATING_TYPE])],
-    )()
+    hass.data[DOMAIN][entry.entry_id][DEVICE_LIST] = [
+        ViCareDevice(config=device_config, api=get_device(entry, device_config))
+        for device_config in device_config_list
+    ]
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -113,3 +107,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     return unload_ok
+
+
+def get_supported_devices(
+    devices: list[PyViCareDeviceConfig],
+) -> list[PyViCareDeviceConfig]:
+    """Remove unsupported devices from the list."""
+    return [
+        device_config
+        for device_config in devices
+        if device_config.getModel() not in UNSUPPORTED_DEVICES
+    ]

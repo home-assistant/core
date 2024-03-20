@@ -6,7 +6,6 @@
       'device_class': 'firmware',
       'entity_picture': 'https://brands.home-assistant.io/_/lamarzocco/icon.png',
       'friendly_name': 'GS01234 Gateway firmware',
-      'icon': 'mdi:cloud-download',
       'in_progress': False,
       'installed_version': 'v2.2-rc0',
       'latest_version': 'v3.1-rc4',
@@ -19,6 +18,7 @@
     'context': <ANY>,
     'entity_id': 'update.gs01234_gateway_firmware',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -40,11 +40,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
-    'original_icon': 'mdi:cloud-download',
+    'original_icon': None,
     'original_name': 'Gateway firmware',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
@@ -61,7 +63,6 @@
       'device_class': 'firmware',
       'entity_picture': 'https://brands.home-assistant.io/_/lamarzocco/icon.png',
       'friendly_name': 'GS01234 Machine firmware',
-      'icon': 'mdi:cloud-download',
       'in_progress': False,
       'installed_version': '1.1',
       'latest_version': '1.2',
@@ -74,6 +75,7 @@
     'context': <ANY>,
     'entity_id': 'update.gs01234_machine_firmware',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -95,11 +97,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
-    'original_icon': 'mdi:cloud-download',
+    'original_icon': None,
     'original_name': 'Machine firmware',
     'platform': 'lamarzocco',
     'previous_unique_id': None,

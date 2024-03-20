@@ -1,7 +1,5 @@
 """The twinkly component."""
 
-import asyncio
-
 from aiohttp import ClientError
 from ttls.client import Twinkly
 
@@ -31,7 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         device_info = await client.get_details()
         software_version = await client.get_firmware_version()
-    except (asyncio.TimeoutError, ClientError) as exception:
+    except (TimeoutError, ClientError) as exception:
         raise ConfigEntryNotReady from exception
 
     hass.data[DOMAIN][entry.entry_id] = {

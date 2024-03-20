@@ -1,4 +1,5 @@
 """Test deCONZ diagnostics."""
+
 from pydeconz.websocket import State
 from syrupy import SnapshotAssertion
 

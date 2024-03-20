@@ -1,4 +1,5 @@
 """Webhook handlers for mobile_app."""
+
 from __future__ import annotations
 
 import asyncio
@@ -99,7 +100,6 @@ from .const import (
     DATA_DEVICES,
     DOMAIN,
     ERR_ENCRYPTION_ALREADY_ENABLED,
-    ERR_ENCRYPTION_NOT_AVAILABLE,
     ERR_ENCRYPTION_REQUIRED,
     ERR_INVALID_FORMAT,
     ERR_SENSOR_NOT_REGISTERED,
@@ -114,7 +114,6 @@ from .helpers import (
     error_response,
     registration_context,
     safe_registration,
-    supports_encryption,
     webhook_response,
 )
 
@@ -297,7 +296,7 @@ async def webhook_call_service(
             config_entry.data[ATTR_DEVICE_NAME],
             ex,
         )
-        raise HTTPBadRequest() from ex
+        raise HTTPBadRequest from ex
 
     return empty_okay_response()
 
@@ -482,13 +481,6 @@ async def webhook_enable_encryption(
         return error_response(
             ERR_ENCRYPTION_ALREADY_ENABLED, "Encryption already enabled"
         )
-
-    if not supports_encryption():
-        _LOGGER.warning(
-            "Unable to enable encryption for %s because libsodium is unavailable!",
-            config_entry.data[ATTR_DEVICE_NAME],
-        )
-        return error_response(ERR_ENCRYPTION_NOT_AVAILABLE, "Encryption is unavailable")
 
     secret = secrets.token_hex(SecretBox.KEY_SIZE)
 
@@ -743,7 +735,7 @@ async def webhook_get_config(
         resp[CONF_CLOUDHOOK_URL] = config_entry.data[CONF_CLOUDHOOK_URL]
 
     if cloud.async_active_subscription(hass):
-        with suppress(hass.components.cloud.CloudNotAvailable):
+        with suppress(cloud.CloudNotAvailable):
             resp[CONF_REMOTE_UI_URL] = cloud.async_remote_ui_url(hass)
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]

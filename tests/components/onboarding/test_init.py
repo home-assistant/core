@@ -1,4 +1,5 @@
 """Tests for the init."""
+
 from typing import Any
 from unittest.mock import Mock, patch
 
@@ -47,10 +48,10 @@ async def test_is_onboarded() -> None:
 
     assert onboarding.async_is_onboarded(hass)
 
-    hass.data[onboarding.DOMAIN] = True
+    hass.data[onboarding.DOMAIN] = onboarding.OnboardingData([], True, {"done": []})
     assert onboarding.async_is_onboarded(hass)
 
-    hass.data[onboarding.DOMAIN] = {"done": []}
+    hass.data[onboarding.DOMAIN] = onboarding.OnboardingData([], False, {"done": []})
     assert not onboarding.async_is_onboarded(hass)
 
 
@@ -61,10 +62,15 @@ async def test_is_user_onboarded() -> None:
 
     assert onboarding.async_is_user_onboarded(hass)
 
-    hass.data[onboarding.DOMAIN] = True
+    hass.data[onboarding.DOMAIN] = onboarding.OnboardingData([], True, {"done": []})
     assert onboarding.async_is_user_onboarded(hass)
 
-    hass.data[onboarding.DOMAIN] = {"done": []}
+    hass.data[onboarding.DOMAIN] = onboarding.OnboardingData(
+        [], False, {"done": ["user"]}
+    )
+    assert onboarding.async_is_user_onboarded(hass)
+
+    hass.data[onboarding.DOMAIN] = onboarding.OnboardingData([], False, {"done": []})
     assert not onboarding.async_is_user_onboarded(hass)
 
 

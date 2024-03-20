@@ -1,4 +1,17 @@
 {
+  "config": {
+    "step": {
+      "user": {
+        "description": "Select a location to get to store downloads. The setup will check if the directory exists."
+      }
+    },
+    "error": {
+      "cannot_connect": "The directory could not be reached. Please check your settings."
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  },
   "services": {
     "download_file": {
       "name": "Download file",
@@ -21,6 +34,16 @@
           "description": "Whether to overwrite the file or not."
         }
       }
+    }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "title": "The {integration_title} YAML configuration is being removed",
+      "description": "Configuring {integration_title} using YAML is being removed.\n\nYour configuration is already imported.\n\nRemove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    },
+    "import_failed": {
+      "title": "The {integration_title} failed to import",
+      "description": "The {integration_title} integration failed to import.\n\nPlease check the logs for more details."
     }
   }
 }

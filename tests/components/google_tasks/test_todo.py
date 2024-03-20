@@ -1,6 +1,5 @@
 """Tests for Google Tasks todo platform."""
 
-
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 import json

@@ -1,4 +1,5 @@
 """The tests for the logbook component."""
+
 import asyncio
 import collections
 from collections.abc import Callable
@@ -293,14 +294,25 @@ def create_state_changed_event(
     state,
     attributes=None,
     last_changed=None,
+    last_reported=None,
     last_updated=None,
 ):
     """Create state changed event."""
     old_state = ha.State(
-        entity_id, "old", attributes, last_changed, last_updated
+        entity_id,
+        "old",
+        attributes,
+        last_changed=last_changed,
+        last_reported=last_reported,
+        last_updated=last_updated,
     ).as_dict()
     new_state = ha.State(
-        entity_id, state, attributes, last_changed, last_updated
+        entity_id,
+        state,
+        attributes,
+        last_changed=last_changed,
+        last_reported=last_reported,
+        last_updated=last_updated,
     ).as_dict()
 
     return create_state_changed_event_from_old_new(
@@ -2654,7 +2666,7 @@ async def test_get_events_with_device_ids(
 
             async_describe_event("test", "mock_event", async_describe_test_event)
 
-    await logbook._process_logbook_platform(hass, "test", MockLogbookPlatform)
+    logbook._process_logbook_platform(hass, "test", MockLogbookPlatform)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     hass.bus.async_fire("mock_event", {"device_id": device.id})

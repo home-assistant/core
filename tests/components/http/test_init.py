@@ -1,4 +1,5 @@
 """The tests for the Home Assistant HTTP component."""
+
 import asyncio
 from datetime import timedelta
 from http import HTTPStatus
@@ -14,6 +15,7 @@ from homeassistant.auth.providers.legacy_api_password import (
 )
 import homeassistant.components.http as http
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.http import KEY_HASS
 from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -95,6 +97,15 @@ async def test_registering_view_while_running(
     await hass.async_start()
     # This raises a RuntimeError if app is frozen
     hass.http.register_view(TestView)
+
+
+async def test_homeassistant_assigned_to_app(hass: HomeAssistant) -> None:
+    """Test HomeAssistant instance is assigned to HomeAssistantApp."""
+    assert await async_setup_component(hass, "api", {"http": {}})
+    await hass.async_start()
+    assert hass.http.app[KEY_HASS] == hass
+    assert hass.http.app["hass"] == hass  # For backwards compatibility
+    await hass.async_stop()
 
 
 async def test_not_log_password(
@@ -459,7 +470,7 @@ async def test_storing_config(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
     await hass.async_block_till_done()
 
-    restored = await hass.components.http.async_get_last_config()
+    restored = await http.async_get_last_config(hass)
     restored["trusted_proxies"][0] = ip_network(restored["trusted_proxies"][0])
 
     assert restored == http.HTTP_SCHEMA(config)

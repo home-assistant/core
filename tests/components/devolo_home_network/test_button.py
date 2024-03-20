@@ -1,4 +1,5 @@
 """Tests for the devolo Home Network buttons."""
+
 from unittest.mock import AsyncMock
 
 from devolo_plc_api.exceptions.device import DevicePasswordProtected, DeviceUnavailable
@@ -39,26 +40,26 @@ async def test_button_setup(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("name", "api_name", "trigger_method"),
     [
-        [
+        (
             "identify_device_with_a_blinking_led",
             "plcnet",
             "async_identify_device_start",
-        ],
-        [
+        ),
+        (
             "start_plc_pairing",
             "plcnet",
             "async_pair_device",
-        ],
-        [
+        ),
+        (
             "restart_device",
             "device",
             "async_restart",
-        ],
-        [
+        ),
+        (
             "start_wps",
             "device",
             "async_start_wps",
-        ],
+        ),
     ],
 )
 @pytest.mark.freeze_time("2023-01-13 12:00:00+00:00")

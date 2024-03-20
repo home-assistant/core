@@ -1,4 +1,5 @@
 """Support the Universal Devices ISY/IoX controllers."""
+
 from __future__ import annotations
 
 import asyncio
@@ -102,7 +103,7 @@ async def async_setup_entry(
     try:
         async with asyncio.timeout(60):
             await isy.initialize()
-    except asyncio.TimeoutError as err:
+    except TimeoutError as err:
         raise ConfigEntryNotReady(
             "Timed out initializing the ISY; device may be busy, trying again later:"
             f" {err}"
@@ -165,7 +166,9 @@ async def async_setup_entry(
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_auto_update)
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, _async_stop_auto_update, run_immediately=True
+        )
     )
 
     # Register Integration-wide Services:

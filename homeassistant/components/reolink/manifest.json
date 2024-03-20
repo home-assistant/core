@@ -18,5 +18,5 @@
   "documentation": "https://www.home-assistant.io/integrations/reolink",
   "iot_class": "local_push",
   "loggers": ["reolink_aio"],
-  "requirements": ["reolink-aio==0.8.7"]
+  "requirements": ["reolink-aio==0.8.9"]
 }

@@ -1,4 +1,5 @@
 """The tests for Octoptint binary sensor module."""
+
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er

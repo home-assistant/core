@@ -1,4 +1,5 @@
 """Water heater entities for the Overkiz (by Somfy) integration."""
+
 from pyoverkiz.enums.ui import UIWidget
 
 from .atlantic_pass_apc_dhw import AtlanticPassAPCDHW

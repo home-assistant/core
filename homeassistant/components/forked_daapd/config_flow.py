@@ -1,15 +1,20 @@
 """Config flow to configure forked-daapd devices."""
+
 from contextlib import suppress
 import logging
 
 from pyforked_daapd import ForkedDaapdAPI
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -43,10 +48,10 @@ TEST_CONNECTION_ERROR_DICT = {
 }
 
 
-class ForkedDaapdOptionsFlowHandler(config_entries.OptionsFlow):
+class ForkedDaapdOptionsFlowHandler(OptionsFlow):
     """Handle a forked-daapd options flow."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize."""
         self.config_entry = config_entry
 
@@ -99,7 +104,7 @@ def fill_in_schema_dict(some_input):
     return schema_dict
 
 
-class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class ForkedDaapdFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a forked-daapd config flow."""
 
     VERSION = 1
@@ -111,7 +116,7 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> ForkedDaapdOptionsFlowHandler:
         """Return options flow handler."""
         return ForkedDaapdOptionsFlowHandler(config_entry)
@@ -159,7 +164,7 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Prepare configuration for a discovered forked-daapd device."""
         version_num = 0
         zeroconf_properties = discovery_info.properties
