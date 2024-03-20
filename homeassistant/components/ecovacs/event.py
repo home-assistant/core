@@ -58,8 +58,12 @@ class EcovacsLastJobEventEntity(
                 # we trigger only on job done
                 return
 
+            event_type = event.status.name.lower()
+            if event.status == CleanJobStatus.MANUAL_STOPPED:
+                event_type = "manually_stopped"
+
             self._trigger_event(
-                event.status.name.lower(),
+                event_type,
                 {
                     "room_ids": event.content,
                 },
