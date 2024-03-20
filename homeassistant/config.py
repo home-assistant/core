@@ -537,9 +537,12 @@ def load_yaml_config_file(
         _LOGGER.error(msg)
         raise HomeAssistantError(msg) from exc
 
-    # Convert values to dictionaries if they are None
+    # Convert values to empty dictionaries if they are None
     for key, value in conf_dict.items():
-        conf_dict[key] = value or {}
+        if value is not None:
+            continue
+        conf_dict[key] = {}
+
     return conf_dict
 
 
