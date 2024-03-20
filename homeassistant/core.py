@@ -67,6 +67,7 @@ from .const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
+    EVENT_LOGGING_CHANGED,
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
     EVENT_STATE_CHANGED,
@@ -1215,24 +1216,24 @@ class Event(Generic[_DataT]):
         event_type: str,
         data: _DataT | None = None,
         origin: EventOrigin = EventOrigin.local,
-        time_fired: datetime.datetime | None = None,
+        time_fired_timestamp: float | None = None,
         context: Context | None = None,
     ) -> None:
         """Initialize a new event."""
         self.event_type = event_type
         self.data: _DataT = data or {}  # type: ignore[assignment]
         self.origin = origin
-        self.time_fired = time_fired or dt_util.utcnow()
+        self.time_fired_timestamp = time_fired_timestamp or time.time()
         if not context:
-            context = Context(id=ulid_at_time(self.time_fired.timestamp()))
+            context = Context(id=ulid_at_time(self.time_fired_timestamp))
         self.context = context
         if not context.origin_event:
             context.origin_event = self
 
     @cached_property
-    def time_fired_timestamp(self) -> float:
+    def time_fired(self) -> datetime.datetime:
         """Return time fired as a timestamp."""
-        return self.time_fired.timestamp()
+        return dt_util.utc_from_timestamp(self.time_fired_timestamp)
 
     @cached_property
     def _as_dict(self) -> dict[str, Any]:
@@ -1282,18 +1283,22 @@ class Event(Generic[_DataT]):
 
     def __repr__(self) -> str:
         """Return the representation."""
-        if self.data:
-            return (
-                f"<Event {self.event_type}[{str(self.origin)[0]}]:"
-                f" {util.repr_helper(self.data)}>"
-            )
+        return _event_repr(self.event_type, self.origin, self.data)
 
-        return f"<Event {self.event_type}[{str(self.origin)[0]}]>"
+
+def _event_repr(
+    event_type: str, origin: EventOrigin, data: Mapping[str, Any] | None
+) -> str:
+    """Return the representation."""
+    if data:
+        return f"<Event {event_type}[{str(origin)[0]}]: {util.repr_helper(data)}>"
+
+    return f"<Event {event_type}[{str(origin)[0]}]>"
 
 
 _FilterableJobType = tuple[
     HassJob[[Event[_DataT]], Coroutine[Any, Any, None] | None],  # job
-    Callable[[Event[_DataT]], bool] | None,  # event_filter
+    Callable[[_DataT], bool] | None,  # event_filter
     bool,  # run_immediately
 ]
 
@@ -1325,7 +1330,7 @@ class _OneTimeListener:
 class EventBus:
     """Allow the firing of and listening for events."""
 
-    __slots__ = ("_listeners", "_match_all_listeners", "_hass")
+    __slots__ = ("_debug", "_hass", "_listeners", "_match_all_listeners")
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a new event bus."""
@@ -1333,6 +1338,15 @@ class EventBus:
         self._match_all_listeners: list[_FilterableJobType[Any]] = []
         self._listeners[MATCH_ALL] = self._match_all_listeners
         self._hass = hass
+        self._async_logging_changed()
+        self.async_listen(
+            EVENT_LOGGING_CHANGED, self._async_logging_changed, run_immediately=True
+        )
+
+    @callback
+    def _async_logging_changed(self, event: Event | None = None) -> None:
+        """Handle logging change."""
+        self._debug = _LOGGER.isEnabledFor(logging.DEBUG)
 
     @callback
     def async_listeners(self) -> dict[str, int]:
@@ -1366,7 +1380,7 @@ class EventBus:
         event_data: Mapping[str, Any] | None = None,
         origin: EventOrigin = EventOrigin.local,
         context: Context | None = None,
-        time_fired: datetime.datetime | None = None,
+        time_fired: float | None = None,
     ) -> None:
         """Fire an event.
 
@@ -1376,30 +1390,57 @@ class EventBus:
             raise MaxLengthExceeded(
                 event_type, "event_type", MAX_LENGTH_EVENT_EVENT_TYPE
             )
+        return self._async_fire(event_type, event_data, origin, context, time_fired)
 
-        listeners = self._listeners.get(event_type, [])
-        match_all_listeners = self._match_all_listeners
+    @callback
+    def _async_fire(
+        self,
+        event_type: str,
+        event_data: Mapping[str, Any] | None = None,
+        origin: EventOrigin = EventOrigin.local,
+        context: Context | None = None,
+        time_fired: float | None = None,
+    ) -> None:
+        """Fire an event.
 
-        event = Event(event_type, event_data, origin, time_fired, context)
+        This method must be run in the event loop.
+        """
 
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            _LOGGER.debug("Bus:Handling %s", event)
+        if self._debug:
+            _LOGGER.debug(
+                "Bus:Handling %s", _event_repr(event_type, origin, event_data)
+            )
 
-        if not listeners and not match_all_listeners:
-            return
-
+        listeners = self._listeners.get(event_type)
         # EVENT_HOMEASSISTANT_CLOSE should not be sent to MATCH_ALL listeners
         if event_type != EVENT_HOMEASSISTANT_CLOSE:
-            listeners = match_all_listeners + listeners
+            if listeners:
+                listeners = self._match_all_listeners + listeners
+            else:
+                listeners = self._match_all_listeners.copy()
+        if not listeners:
+            return
+
+        event: Event | None = None
 
         for job, event_filter, run_immediately in listeners:
             if event_filter is not None:
                 try:
-                    if not event_filter(event):
+                    if event_data is None or not event_filter(event_data):
                         continue
                 except Exception:  # pylint: disable=broad-except
                     _LOGGER.exception("Error in event filter")
                     continue
+
+            if not event:
+                event = Event(
+                    event_type,
+                    event_data,
+                    origin,
+                    time_fired,
+                    context,
+                )
+
             if run_immediately:
                 try:
                     self._hass.async_run_hass_job(job, event)
@@ -1433,7 +1474,7 @@ class EventBus:
         self,
         event_type: str,
         listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
-        event_filter: Callable[[Event[_DataT]], bool] | None = None,
+        event_filter: Callable[[_DataT], bool] | None = None,
         run_immediately: bool = False,
     ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
@@ -1952,7 +1993,7 @@ class StateMachine:
             return False
 
         old_state.expire()
-        self._bus.async_fire(
+        self._bus._async_fire(  # pylint: disable=protected-access
             EVENT_STATE_CHANGED,
             {"entity_id": entity_id, "old_state": old_state, "new_state": None},
             context=context,
@@ -2047,32 +2088,35 @@ class StateMachine:
             same_attr = old_state.attributes == attributes
             last_changed = old_state.last_changed if same_state else None
 
+        # It is much faster to convert a timestamp to a utc datetime object
+        # than converting a utc datetime object to a timestamp since cpython
+        # does not have a fast path for handling the UTC timezone and has to do
+        # multiple local timezone conversions.
+        #
+        # from_timestamp implementation:
+        # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L2936
+        #
+        # timestamp implementation:
+        # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6387
+        # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6323
+        timestamp = time.time()
+        now = dt_util.utc_from_timestamp(timestamp)
+
         if same_state and same_attr:
             return
 
         if context is None:
-            # It is much faster to convert a timestamp to a utc datetime object
-            # than converting a utc datetime object to a timestamp since cpython
-            # does not have a fast path for handling the UTC timezone and has to do
-            # multiple local timezone conversions.
-            #
-            # from_timestamp implementation:
-            # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L2936
-            #
-            # timestamp implementation:
-            # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6387
-            # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6323
-            timestamp = time.time()
-            now = dt_util.utc_from_timestamp(timestamp)
+            if TYPE_CHECKING:
+                assert timestamp is not None
             context = Context(id=ulid_at_time(timestamp))
-        else:
-            now = dt_util.utcnow()
 
         if same_attr:
             if TYPE_CHECKING:
                 assert old_state is not None
             attributes = old_state.attributes
 
+        # This is intentionally called with positional only arguments for performance
+        # reasons
         state = State(
             entity_id,
             new_state,
@@ -2086,11 +2130,11 @@ class StateMachine:
         if old_state is not None:
             old_state.expire()
         self._states[entity_id] = state
-        self._bus.async_fire(
+        self._bus._async_fire(  # pylint: disable=protected-access
             EVENT_STATE_CHANGED,
             {"entity_id": entity_id, "old_state": old_state, "new_state": state},
             context=context,
-            time_fired=now,
+            time_fired=timestamp,
         )
 
 
@@ -2429,7 +2473,7 @@ class ServiceRegistry:
             domain, service, processed_data, context, return_response
         )
 
-        self._hass.bus.async_fire(
+        self._hass.bus._async_fire(  # pylint: disable=protected-access
             EVENT_CALL_SERVICE,
             {
                 ATTR_DOMAIN: domain,
