@@ -1,10 +1,8 @@
 """Tests for egps config flow."""
 
-from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 
 from pyegps.exceptions import UsbError
-import pytest
 
 from homeassistant.components.egps.const import CONF_DEVICE_API_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -14,32 +12,9 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture(name="mock_get_device")
-def patch_get_device(pyegps_device_mock: MagicMock) -> Generator[MagicMock, None, None]:
-    """Fixture to patch the `get_device` api method."""
-    with patch(
-        "homeassistant.components.egps.config_flow.get_device",
-        return_value=pyegps_device_mock,
-    ) as mock:
-        yield mock
-
-
-@pytest.fixture(name="mock_search_for_devices")
-def patch_search_devices(
-    pyegps_device_mock: MagicMock,
-) -> Generator[MagicMock, None, None]:
-    """Fixture to patch the `search_for_devices` api method."""
-    with patch(
-        "homeassistant.components.egps.config_flow.search_for_devices",
-        return_value=[pyegps_device_mock],
-    ) as mock:
-        yield mock
-
-
 async def test_user_flow(
     hass: HomeAssistant,
     demo_config_data: dict,
-    setup_entry_mock: AsyncMock,
     mock_get_device: MagicMock,
     mock_search_for_devices: MagicMock,
 ) -> None:
@@ -62,7 +37,6 @@ async def test_user_flow(
 async def test_user_flow_already_exists(
     hass: HomeAssistant,
     valid_config_entry: MockConfigEntry,
-    setup_entry_mock: AsyncMock,
     mock_get_device: MagicMock,
     mock_search_for_devices: MagicMock,
 ) -> None:
@@ -84,7 +58,6 @@ async def test_user_flow_already_exists(
 async def test_user_flow_no_new_device(
     hass: HomeAssistant,
     valid_config_entry: MockConfigEntry,
-    setup_entry_mock: AsyncMock,
     mock_get_device: MagicMock,
     mock_search_for_devices: MagicMock,
 ) -> None:
@@ -106,7 +79,6 @@ async def test_user_flow_no_new_device(
 async def test_user_flow_no_device_found(
     hass: HomeAssistant,
     demo_config_data: dict,
-    setup_entry_mock: AsyncMock,
     mock_get_device: MagicMock,
     mock_search_for_devices: MagicMock,
 ) -> None:
@@ -125,7 +97,6 @@ async def test_user_flow_no_device_found(
 async def test_user_flow_device_not_found(
     hass: HomeAssistant,
     demo_config_data: dict,
-    setup_entry_mock: AsyncMock,
     mock_get_device: MagicMock,
     mock_search_for_devices: MagicMock,
 ) -> None:
@@ -150,7 +121,6 @@ async def test_user_flow_device_not_found(
 
 async def test_user_flow_no_usb_access(
     hass: HomeAssistant,
-    setup_entry_mock: AsyncMock,
     mock_get_device: MagicMock,
     mock_search_for_devices: MagicMock,
 ) -> None:

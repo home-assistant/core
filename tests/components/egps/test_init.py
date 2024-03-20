@@ -1,25 +1,14 @@
 """Tests for setting up egps integration."""
 
-from collections.abc import Generator
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from pyegps.exceptions import UsbError
-import pytest
 
 from homeassistant.components.egps.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture(name="mock_get_device")
-def patch_get_device(pyegps_device_mock: MagicMock) -> Generator[MagicMock, None, None]:
-    """Fixture to patch the `get_device` api method."""
-    with patch(
-        "homeassistant.components.egps.get_device", return_value=pyegps_device_mock
-    ) as mock:
-        yield mock
 
 
 async def test_load_unload_entry(

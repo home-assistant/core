@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from typing import Final
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from pyegps.fakes.powerstrip import FakePowerStrip
 import pytest
@@ -34,17 +34,8 @@ def valid_config_entry() -> MockConfigEntry:
     )
 
 
-@pytest.fixture(name="setup_entry_mock")
-def patch_setup_entry() -> Generator[AsyncMock, None, None]:
-    """Fixture to patch the `async_setup_entry` method in the egps component."""
-    with patch(
-        "homeassistant.components.egps.async_setup_entry", return_value=True
-    ) as mock:
-        yield mock
-
-
 @pytest.fixture(name="pyegps_device_mock")
-def patch_pyegps_get_device() -> MagicMock:
+def get_pyegps_device_mock() -> MagicMock:
     """Fixture for a mocked FakePowerStrip."""
 
     fkObj = FakePowerStrip(
@@ -61,3 +52,26 @@ def patch_pyegps_get_device() -> MagicMock:
     usb_device_mock.name = "MockedUSBDevice"
 
     return usb_device_mock
+
+
+@pytest.fixture(name="mock_get_device")
+def patch_get_device(pyegps_device_mock: MagicMock) -> Generator[MagicMock, None, None]:
+    """Fixture to patch the `get_device` api method."""
+    with (
+        patch("homeassistant.components.egps.get_device") as m1,
+        patch("homeassistant.components.egps.config_flow.get_device", new=m1) as mock,
+    ):
+        mock.return_value = pyegps_device_mock
+        yield mock
+
+
+@pytest.fixture(name="mock_search_for_devices")
+def patch_search_devices(
+    pyegps_device_mock: MagicMock,
+) -> Generator[MagicMock, None, None]:
+    """Fixture to patch the `search_for_devices` api method."""
+    with patch(
+        "homeassistant.components.egps.config_flow.search_for_devices",
+        return_value=[pyegps_device_mock],
+    ) as mock:
+        yield mock
