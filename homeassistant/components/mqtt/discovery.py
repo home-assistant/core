@@ -403,14 +403,17 @@ async def async_start(  # noqa: C901
                 ):
                     mqtt_data.integration_unsubscribe.pop(key)()
 
-        for topic in topics:
-            key = f"{integration}_{topic}"
-            mqtt_data.integration_unsubscribe[key] = await mqtt.async_subscribe(
-                hass,
-                topic,
-                functools.partial(async_integration_message_received, integration),
-                0,
-            )
+        mqtt_data.integration_unsubscribe.update(
+            {
+                f"{integration}_{topic}": await mqtt.async_subscribe(
+                    hass,
+                    topic,
+                    functools.partial(async_integration_message_received, integration),
+                    0,
+                )
+                for topic in topics
+            }
+        )
 
 
 async def async_stop(hass: HomeAssistant) -> None:

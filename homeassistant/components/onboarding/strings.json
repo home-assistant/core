@@ -3,5 +3,8 @@
     "living_room": "Living Room",
     "bedroom": "Bedroom",
     "kitchen": "Kitchen"
+  },
+  "dashboard": {
+    "map": { "title": "Map" }
   }
 }

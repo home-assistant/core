@@ -666,7 +666,10 @@ async def test_if_not_fires_on_entities_change_with_for_after_stop(
                     "to": "world",
                     "for": {"seconds": 5},
                 },
-                "action": {"service": "test.automation"},
+                "action": [
+                    {"delay": "0.0001"},
+                    {"service": "test.automation"},
+                ],
             }
         },
     )
@@ -1624,7 +1627,10 @@ async def test_attribute_if_not_fires_on_entities_change_with_for_after_stop(
                     "attribute": "name",
                     "for": 5,
                 },
-                "action": {"service": "test.automation"},
+                "action": [
+                    {"delay": "0.0001"},
+                    {"service": "test.automation"},
+                ],
             }
         },
     )

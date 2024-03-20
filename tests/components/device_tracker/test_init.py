@@ -121,6 +121,7 @@ async def test_reading_yaml_config(
     config = (await legacy.async_load_config(yaml_devices, hass, device.consider_home))[
         0
     ]
+    await hass.async_block_till_done()
     assert device.dev_id == config.dev_id
     assert device.track == config.track
     assert device.mac == config.mac
@@ -310,6 +311,7 @@ async def test_entity_attributes(
 
     with assert_setup_component(1, device_tracker.DOMAIN):
         assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)
+        await hass.async_block_till_done()
 
     attrs = hass.states.get(entity_id).attributes
 

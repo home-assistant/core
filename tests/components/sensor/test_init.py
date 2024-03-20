@@ -130,7 +130,7 @@ async def test_temperature_conversion(
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == state_unit
 
 
-@pytest.mark.parametrize("device_class", (None, SensorDeviceClass.PRESSURE))
+@pytest.mark.parametrize("device_class", [None, SensorDeviceClass.PRESSURE])
 async def test_temperature_conversion_wrong_device_class(
     hass: HomeAssistant, device_class, enable_custom_integrations: None
 ) -> None:
@@ -154,7 +154,7 @@ async def test_temperature_conversion_wrong_device_class(
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.FAHRENHEIT
 
 
-@pytest.mark.parametrize("state_class", ("measurement", "total_increasing"))
+@pytest.mark.parametrize("state_class", ["measurement", "total_increasing"])
 async def test_deprecated_last_reset(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -1785,11 +1785,11 @@ async def test_invalid_enumeration_entity_without_device_class(
 
 @pytest.mark.parametrize(
     "device_class",
-    (
+    [
         SensorDeviceClass.DATE,
         SensorDeviceClass.ENUM,
         SensorDeviceClass.TIMESTAMP,
-    ),
+    ],
 )
 async def test_non_numeric_device_class_with_unit_of_measurement(
     hass: HomeAssistant,
@@ -1819,7 +1819,7 @@ async def test_non_numeric_device_class_with_unit_of_measurement(
 
 @pytest.mark.parametrize(
     "device_class",
-    (
+    [
         SensorDeviceClass.APPARENT_POWER,
         SensorDeviceClass.AQI,
         SensorDeviceClass.ATMOSPHERIC_PRESSURE,
@@ -1864,7 +1864,7 @@ async def test_non_numeric_device_class_with_unit_of_measurement(
         SensorDeviceClass.WATER,
         SensorDeviceClass.WEIGHT,
         SensorDeviceClass.WIND_SPEED,
-    ),
+    ],
 )
 async def test_device_classes_with_invalid_unit_of_measurement(
     hass: HomeAssistant,
@@ -1952,7 +1952,7 @@ async def test_non_numeric_validation_error(
 
 
 @pytest.mark.parametrize(
-    ("device_class", "state_class", "unit", "precision"), ((None, None, None, 1),)
+    ("device_class", "state_class", "unit", "precision"), [(None, None, None, 1)]
 )
 @pytest.mark.parametrize(
     ("native_value", "expected"),
