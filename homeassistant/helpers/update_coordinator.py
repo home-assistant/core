@@ -6,6 +6,7 @@ from abc import abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Generator
 from datetime import datetime, timedelta
+from inspect import Parameter, signature
 import logging
 from random import randint
 from time import monotonic
@@ -468,9 +469,21 @@ class BaseCoordinatorEntity(entity.Entity, Generic[_BaseDataUpdateCoordinatorT])
     """Base class for all Coordinator entities."""
 
     def __init__(
-        self, coordinator: _BaseDataUpdateCoordinatorT, context: Any = None
+        self,
+        coordinator: _BaseDataUpdateCoordinatorT,
+        context: Any = None,
+        **kwargs: Any,
     ) -> None:
         """Create the entity with a DataUpdateCoordinator."""
+        call_super = True
+        if not kwargs:
+            super_parameters = signature(super().__init__).parameters
+            for param in super_parameters.values():
+                if param.default == Parameter.empty:
+                    call_super = False
+                    break
+        if call_super:
+            super().__init__(**kwargs)
         self.coordinator = coordinator
         self.coordinator_context = context
 
@@ -505,7 +518,7 @@ class CoordinatorEntity(BaseCoordinatorEntity[_DataUpdateCoordinatorT]):
     """A class for entities using DataUpdateCoordinator."""
 
     def __init__(
-        self, coordinator: _DataUpdateCoordinatorT, context: Any = None
+        self, coordinator: _DataUpdateCoordinatorT, context: Any = None, **kwargs: Any
     ) -> None:
         """Create the entity with a DataUpdateCoordinator.
 
@@ -513,7 +526,7 @@ class CoordinatorEntity(BaseCoordinatorEntity[_DataUpdateCoordinatorT]):
 
         Necessary to bind TypeVar to correct scope.
         """
-        super().__init__(coordinator, context)
+        super().__init__(coordinator=coordinator, context=context, **kwargs)
 
     @property
     def available(self) -> bool:
