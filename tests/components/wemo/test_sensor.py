@@ -32,7 +32,7 @@ class InsightTestTemplate(EntityTestHelpers):
 class TestInsightCurrentPower(InsightTestTemplate):
     """Test the InsightCurrentPower class."""
 
-    ENTITY_ID_SUFFIX = "_current_power"
+    ENTITY_ID_SUFFIX = "_power"
     EXPECTED_STATE_VALUE = str(MOCK_INSIGHT_CURRENT_WATTS)
 
 
