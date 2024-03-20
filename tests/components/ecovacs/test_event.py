@@ -84,3 +84,17 @@ async def test_last_job(
     assert state.state == "2024-03-20T00:10:00.000+00:00"
     assert state.attributes[ATTR_EVENT_TYPE] == "manually_stopped"
     assert state.attributes["room_ids"] == [1]
+
+    freezer.tick(timedelta(minutes=5))
+    for status in (CleanJobStatus.NO_STATUS, CleanJobStatus.CLEANING):
+        # we should not trigger on these statuses
+        await notify_and_wait(
+            hass,
+            event_bus,
+            ReportStatsEvent(12, 11, "spotArea", "4", status, [1, 2, 3]),
+        )
+
+        assert (state := hass.states.get(state.entity_id))
+        assert state.state == "2024-03-20T00:10:00.000+00:00"
+        assert state.attributes[ATTR_EVENT_TYPE] == "manually_stopped"
+        assert state.attributes["room_ids"] == [1]
