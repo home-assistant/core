@@ -1,4 +1,5 @@
 """Support for P1 Monitor sensors."""
+
 from __future__ import annotations
 
 from typing import Literal
@@ -88,7 +89,6 @@ SENSORS_SMARTMETER: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="energy_tariff_period",
         translation_key="energy_tariff_period",
-        icon="mdi:calendar-clock",
     ),
 )
 

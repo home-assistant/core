@@ -1,4 +1,5 @@
 """Test ESPHome binary sensors."""
+
 from collections.abc import Awaitable, Callable
 
 from aioesphomeapi import (
@@ -44,7 +45,7 @@ async def test_assist_in_progress(
 
 
 @pytest.mark.parametrize(
-    "binary_state", ((True, STATE_ON), (False, STATE_OFF), (None, STATE_UNKNOWN))
+    "binary_state", [(True, STATE_ON), (False, STATE_OFF), (None, STATE_UNKNOWN)]
 )
 async def test_binary_sensor_generic_entity(
     hass: HomeAssistant,

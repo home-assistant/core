@@ -1,4 +1,5 @@
 """Test diagnostics of LaCrosse View."""
+
 from unittest.mock import patch
 
 from syrupy.assertion import SnapshotAssertion

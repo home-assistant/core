@@ -1,4 +1,5 @@
 """Test the Improv via BLE config flow."""
+
 from collections.abc import Callable
 from unittest.mock import patch
 
@@ -362,11 +363,11 @@ async def test_bluetooth_step_already_in_progress(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("exc", "error"),
-    (
+    [
         (BleakError, "cannot_connect"),
         (Exception, "unknown"),
         (improv_ble_errors.CharacteristicMissingError, "characteristic_missing"),
-    ),
+    ],
 )
 async def test_can_identify_fails(hass: HomeAssistant, exc, error) -> None:
     """Test bluetooth flow with error."""
@@ -397,11 +398,11 @@ async def test_can_identify_fails(hass: HomeAssistant, exc, error) -> None:
 
 @pytest.mark.parametrize(
     ("exc", "error"),
-    (
+    [
         (BleakError, "cannot_connect"),
         (Exception, "unknown"),
         (improv_ble_errors.CharacteristicMissingError, "characteristic_missing"),
-    ),
+    ],
 )
 async def test_identify_fails(hass: HomeAssistant, exc, error) -> None:
     """Test bluetooth flow with error."""
@@ -440,11 +441,11 @@ async def test_identify_fails(hass: HomeAssistant, exc, error) -> None:
 
 @pytest.mark.parametrize(
     ("exc", "error"),
-    (
+    [
         (BleakError, "cannot_connect"),
         (Exception, "unknown"),
         (improv_ble_errors.CharacteristicMissingError, "characteristic_missing"),
-    ),
+    ],
 )
 async def test_need_authorization_fails(hass: HomeAssistant, exc, error) -> None:
     """Test bluetooth flow with error."""
@@ -484,11 +485,11 @@ async def test_need_authorization_fails(hass: HomeAssistant, exc, error) -> None
 
 @pytest.mark.parametrize(
     ("exc", "error"),
-    (
+    [
         (BleakError, "cannot_connect"),
         (Exception, "unknown"),
         (improv_ble_errors.CharacteristicMissingError, "characteristic_missing"),
-    ),
+    ],
 )
 async def test_authorize_fails(hass: HomeAssistant, exc, error) -> None:
     """Test bluetooth flow with error."""
@@ -576,12 +577,12 @@ async def _test_provision_error(hass: HomeAssistant, exc) -> None:
 
 @pytest.mark.parametrize(
     ("exc", "error"),
-    (
+    [
         (BleakError, "cannot_connect"),
         (Exception, "unknown"),
         (improv_ble_errors.CharacteristicMissingError, "characteristic_missing"),
         (improv_ble_errors.ProvisioningFailed(Error.UNKNOWN_ERROR), "unknown"),
-    ),
+    ],
 )
 async def test_provision_fails(hass: HomeAssistant, exc, error) -> None:
     """Test bluetooth flow with error."""
@@ -594,7 +595,7 @@ async def test_provision_fails(hass: HomeAssistant, exc, error) -> None:
 
 @pytest.mark.parametrize(
     ("exc", "error"),
-    ((improv_ble_errors.ProvisioningFailed(Error.NOT_AUTHORIZED), "unknown"),),
+    [(improv_ble_errors.ProvisioningFailed(Error.NOT_AUTHORIZED), "unknown")],
 )
 async def test_provision_not_authorized(hass: HomeAssistant, exc, error) -> None:
     """Test bluetooth flow with error."""
@@ -618,12 +619,12 @@ async def test_provision_not_authorized(hass: HomeAssistant, exc, error) -> None
 
 @pytest.mark.parametrize(
     ("exc", "error"),
-    (
+    [
         (
             improv_ble_errors.ProvisioningFailed(Error.UNABLE_TO_CONNECT),
             "unable_to_connect",
         ),
-    ),
+    ],
 )
 async def test_provision_retry(hass: HomeAssistant, exc, error) -> None:
     """Test bluetooth flow with error."""

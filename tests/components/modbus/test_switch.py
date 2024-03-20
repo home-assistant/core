@@ -1,4 +1,5 @@
 """The tests for the Modbus switch component."""
+
 from datetime import timedelta
 from unittest import mock
 

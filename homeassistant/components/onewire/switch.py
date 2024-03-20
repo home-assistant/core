@@ -1,4 +1,5 @@
 """Support for 1-Wire environment switches."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -42,7 +43,8 @@ DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
                 key=f"PIO.{id}",
                 entity_registry_enabled_default=False,
                 read_mode=READ_MODE_BOOL,
-                translation_key=f"pio_{id.lower()}",
+                translation_key="pio_id",
+                translation_placeholders={"id": str(id)},
             )
             for id in DEVICE_KEYS_A_B
         ]
@@ -51,7 +53,8 @@ DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
                 key=f"latch.{id}",
                 entity_registry_enabled_default=False,
                 read_mode=READ_MODE_BOOL,
-                translation_key=f"latch_{id.lower()}",
+                translation_key="latch_id",
+                translation_placeholders={"id": str(id)},
             )
             for id in DEVICE_KEYS_A_B
         ]
@@ -71,7 +74,8 @@ DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
                 key=f"PIO.{id}",
                 entity_registry_enabled_default=False,
                 read_mode=READ_MODE_BOOL,
-                translation_key=f"pio_{id}",
+                translation_key="pio_id",
+                translation_placeholders={"id": str(id)},
             )
             for id in DEVICE_KEYS_0_7
         ]
@@ -80,7 +84,8 @@ DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
                 key=f"latch.{id}",
                 entity_registry_enabled_default=False,
                 read_mode=READ_MODE_BOOL,
-                translation_key=f"latch_{id}",
+                translation_key="latch_id",
+                translation_placeholders={"id": str(id)},
             )
             for id in DEVICE_KEYS_0_7
         ]
@@ -90,7 +95,8 @@ DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
             key=f"PIO.{id}",
             entity_registry_enabled_default=False,
             read_mode=READ_MODE_BOOL,
-            translation_key=f"pio_{id.lower()}",
+            translation_key="pio_id",
+            translation_placeholders={"id": str(id)},
         )
         for id in DEVICE_KEYS_A_B
     ),
@@ -106,7 +112,8 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireEntityDescription, ...]] = {
             entity_registry_enabled_default=False,
             read_mode=READ_MODE_BOOL,
             entity_category=EntityCategory.CONFIG,
-            translation_key=f"hub_branch_{id}",
+            translation_key="hub_branch_id",
+            translation_placeholders={"id": str(id)},
         )
         for id in DEVICE_KEYS_0_3
     ),
@@ -117,7 +124,8 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireEntityDescription, ...]] = {
                 entity_registry_enabled_default=False,
                 read_mode=READ_MODE_BOOL,
                 entity_category=EntityCategory.CONFIG,
-                translation_key=f"leaf_sensor_{id}",
+                translation_key="leaf_sensor_id",
+                translation_placeholders={"id": str(id)},
             )
             for id in DEVICE_KEYS_0_3
         ]
@@ -127,7 +135,8 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireEntityDescription, ...]] = {
                 entity_registry_enabled_default=False,
                 read_mode=READ_MODE_BOOL,
                 entity_category=EntityCategory.CONFIG,
-                translation_key=f"moisture_sensor_{id}",
+                translation_key="moisture_sensor_id",
+                translation_placeholders={"id": str(id)},
             )
             for id in DEVICE_KEYS_0_3
         ]
@@ -172,6 +181,9 @@ def get_entities(onewire_hub: OneWireHub) -> list[OneWireSwitch]:
         if "EF" in family:
             device_sub_type = "HobbyBoard"
             family = device_type
+        elif "A6" in family:
+            # A6 is a secondary family code for DS2438
+            family = "26"
 
         if family not in get_sensor_types(device_sub_type):
             continue
@@ -196,8 +208,10 @@ class OneWireSwitch(OneWireEntity, SwitchEntity):
     entity_description: OneWireSwitchEntityDescription
 
     @property
-    def is_on(self) -> bool:
-        """Return true if sensor is on."""
+    def is_on(self) -> bool | None:
+        """Return true if switch is on."""
+        if self._state is None:
+            return None
         return bool(self._state)
 
     def turn_on(self, **kwargs: Any) -> None:

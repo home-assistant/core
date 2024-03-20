@@ -1,4 +1,5 @@
 """Test Websocket API messages module."""
+
 import pytest
 
 from homeassistant.components.websocket_api.messages import (

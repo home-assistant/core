@@ -1,4 +1,5 @@
 """Test the cloud component."""
+
 from collections.abc import Callable, Coroutine
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -71,12 +72,14 @@ async def test_remote_services(
 
     with patch("hass_nabucasa.remote.RemoteUI.connect") as mock_connect:
         await hass.services.async_call(DOMAIN, "remote_connect", blocking=True)
+        await hass.async_block_till_done()
 
     assert mock_connect.called
     assert cloud.client.remote_autostart
 
     with patch("hass_nabucasa.remote.RemoteUI.disconnect") as mock_disconnect:
         await hass.services.async_call(DOMAIN, "remote_disconnect", blocking=True)
+        await hass.async_block_till_done()
 
     assert mock_disconnect.called
     assert not cloud.client.remote_autostart
@@ -103,8 +106,8 @@ async def test_remote_services(
     assert mock_disconnect.called is False
 
 
-async def test_startup_shutdown_events(hass: HomeAssistant, mock_cloud_fixture) -> None:
-    """Test if the cloud will start on startup event."""
+async def test_shutdown_event(hass: HomeAssistant, mock_cloud_fixture) -> None:
+    """Test if the cloud will stop on shutdown event."""
     with patch("hass_nabucasa.Cloud.stop") as mock_stop:
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()

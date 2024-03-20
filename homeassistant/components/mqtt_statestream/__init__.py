@@ -1,6 +1,9 @@
 """Publish simple item state changes via MQTT."""
+
+from collections.abc import Mapping
 import json
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -89,9 +92,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     @callback
     def _ha_started(hass: HomeAssistant) -> None:
         @callback
-        def _event_filter(evt: Event) -> bool:
-            entity_id: str = evt.data["entity_id"]
-            new_state: State | None = evt.data["new_state"]
+        def _event_filter(event_data: Mapping[str, Any]) -> bool:
+            entity_id: str = event_data["entity_id"]
+            new_state: State | None = event_data["new_state"]
             if new_state is None:
                 return False
             if not publish_filter(entity_id):

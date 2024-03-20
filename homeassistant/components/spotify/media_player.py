@@ -1,4 +1,5 @@
 """Support for interacting with Spotify Connect."""
+
 from __future__ import annotations
 
 from asyncio import run_coroutine_threadsafe
@@ -118,9 +119,9 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     """Representation of a Spotify controller."""
 
     _attr_has_entity_name = True
-    _attr_icon = "mdi:spotify"
     _attr_media_image_remotely_accessible = False
     _attr_name = None
+    _attr_translation_key = "spotify"
 
     def __init__(
         self,

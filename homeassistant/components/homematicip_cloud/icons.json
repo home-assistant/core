@@ -1,0 +1,12 @@
+{
+  "services": {
+    "activate_eco_mode_with_duration": "mdi:leaf",
+    "activate_eco_mode_with_period": "mdi:leaf",
+    "activate_vacation": "mdi:compass",
+    "deactivate_eco_mode": "mdi:leaf-off",
+    "deactivate_vacation": "mdi:compass-off",
+    "set_active_climate_profile": "mdi:home-thermometer",
+    "dump_hap_config": "mdi:database-export",
+    "reset_energy_counter": "mdi:reload"
+  }
+}

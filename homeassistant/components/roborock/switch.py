@@ -1,4 +1,5 @@
 """Support for Roborock switch."""
+
 from __future__ import annotations
 
 import asyncio
@@ -24,9 +25,9 @@ from .device import RoborockEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class RoborockSwitchDescriptionMixin:
-    """Define an entity description mixin for switch entities."""
+@dataclass(frozen=True, kw_only=True)
+class RoborockSwitchDescription(SwitchEntityDescription):
+    """Class to describe a Roborock switch entity."""
 
     # Gets the status of the switch
     cache_key: CacheableAttribute
@@ -34,13 +35,6 @@ class RoborockSwitchDescriptionMixin:
     update_value: Callable[[AttributeCache, bool], Coroutine[Any, Any, dict]]
     # Attribute from cache
     attribute: str
-
-
-@dataclass(frozen=True)
-class RoborockSwitchDescription(
-    SwitchEntityDescription, RoborockSwitchDescriptionMixin
-):
-    """Class to describe an Roborock switch entity."""
 
 
 SWITCH_DESCRIPTIONS: list[RoborockSwitchDescription] = [
@@ -52,7 +46,6 @@ SWITCH_DESCRIPTIONS: list[RoborockSwitchDescription] = [
         attribute="lock_status",
         key="child_lock",
         translation_key="child_lock",
-        icon="mdi:account-lock",
         entity_category=EntityCategory.CONFIG,
     ),
     RoborockSwitchDescription(
@@ -63,7 +56,6 @@ SWITCH_DESCRIPTIONS: list[RoborockSwitchDescription] = [
         attribute="status",
         key="status_indicator",
         translation_key="status_indicator",
-        icon="mdi:alarm-light-outline",
         entity_category=EntityCategory.CONFIG,
     ),
     RoborockSwitchDescription(
@@ -81,7 +73,6 @@ SWITCH_DESCRIPTIONS: list[RoborockSwitchDescription] = [
         attribute="enabled",
         key="dnd_switch",
         translation_key="dnd_switch",
-        icon="mdi:bell-cancel",
         entity_category=EntityCategory.CONFIG,
     ),
     RoborockSwitchDescription(
@@ -99,7 +90,6 @@ SWITCH_DESCRIPTIONS: list[RoborockSwitchDescription] = [
         attribute="enabled",
         key="off_peak_switch",
         translation_key="off_peak_switch",
-        icon="mdi:power-plug",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),

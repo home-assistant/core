@@ -1,4 +1,5 @@
 """Support for the Daikin HVAC."""
+
 from __future__ import annotations
 
 import logging
@@ -128,6 +129,7 @@ class DaikinClimate(ClimateEntity):
     _attr_target_temperature_step = 1
     _attr_fan_modes: list[str]
     _attr_swing_modes: list[str]
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, api: DaikinApi) -> None:
         """Initialize the climate device."""
@@ -142,7 +144,11 @@ class DaikinClimate(ClimateEntity):
             ATTR_SWING_MODE: self._attr_swing_modes,
         }
 
-        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+        self._attr_supported_features = (
+            ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TARGET_TEMPERATURE
+        )
 
         if api.device.support_away_mode or api.device.support_advanced_modes:
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE

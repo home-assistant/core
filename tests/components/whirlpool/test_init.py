@@ -1,4 +1,5 @@
 """Test the Whirlpool Sixth Sense init."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 import aiohttp
@@ -6,7 +7,7 @@ from whirlpool.backendselector import Brand, Region
 
 from homeassistant.components.whirlpool.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from . import init_integration, init_integration_with_entry
@@ -18,13 +19,14 @@ async def test_setup(
     hass: HomeAssistant,
     mock_backend_selector_api: MagicMock,
     region,
+    brand,
     mock_aircon_api_instances: MagicMock,
 ) -> None:
     """Test setup."""
-    entry = await init_integration(hass, region[0])
+    entry = await init_integration(hass, region[0], brand[0])
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.state is ConfigEntryState.LOADED
-    mock_backend_selector_api.assert_called_once_with(region[2], region[1])
+    mock_backend_selector_api.assert_called_once_with(brand[1], region[1])
 
 
 async def test_setup_region_fallback(
@@ -48,6 +50,31 @@ async def test_setup_region_fallback(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.state is ConfigEntryState.LOADED
     mock_backend_selector_api.assert_called_once_with(Brand.Whirlpool, Region.EU)
+
+
+async def test_setup_brand_fallback(
+    hass: HomeAssistant,
+    region,
+    mock_backend_selector_api: MagicMock,
+    mock_aircon_api_instances: MagicMock,
+) -> None:
+    """Test setup when no brand is available on the ConfigEntry.
+
+    This can happen after a version update, since the brand was not selected or stored in the earlier versions.
+    """
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "nobody",
+            CONF_PASSWORD: "qwerty",
+            CONF_REGION: region[0],
+        },
+    )
+    entry = await init_integration_with_entry(hass, entry)
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert entry.state is ConfigEntryState.LOADED
+    mock_backend_selector_api.assert_called_once_with(Brand.Whirlpool, region[1])
 
 
 async def test_setup_http_exception(

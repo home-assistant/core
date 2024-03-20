@@ -1,4 +1,5 @@
 """Test the Zeversolar config flow."""
+
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -30,7 +31,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("side_effect", "errors"),
-    (
+    [
         (
             ZeverSolarHTTPNotFound,
             {"base": "invalid_host"},
@@ -47,7 +48,7 @@ async def test_form(hass: HomeAssistant) -> None:
             RuntimeError,
             {"base": "unknown"},
         ),
-    ),
+    ],
 )
 async def test_form_errors(
     hass: HomeAssistant,

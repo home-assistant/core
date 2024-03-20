@@ -1,4 +1,5 @@
 """Test the devolo Home Network integration setup."""
+
 from unittest.mock import patch
 
 from devolo_plc_api.exceptions.device import DeviceNotFound
@@ -94,15 +95,15 @@ async def test_hass_stop(hass: HomeAssistant, mock_device: MockDevice) -> None:
 @pytest.mark.parametrize(
     ("device", "expected_platforms"),
     [
-        [
+        (
             "mock_device",
             (BINARY_SENSOR, BUTTON, DEVICE_TRACKER, IMAGE, SENSOR, SWITCH, UPDATE),
-        ],
-        [
+        ),
+        (
             "mock_repeater_device",
             (BUTTON, DEVICE_TRACKER, IMAGE, SENSOR, SWITCH, UPDATE),
-        ],
-        ["mock_nonwifi_device", (BINARY_SENSOR, BUTTON, SENSOR, SWITCH, UPDATE)],
+        ),
+        ("mock_nonwifi_device", (BINARY_SENSOR, BUTTON, SENSOR, SWITCH, UPDATE)),
     ],
 )
 async def test_platforms(

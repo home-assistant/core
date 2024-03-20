@@ -1,4 +1,5 @@
 """Tests for the Nextcloud config flow."""
+
 from unittest.mock import Mock, patch
 
 from nextcloudmonitor import (

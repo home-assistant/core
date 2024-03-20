@@ -1,4 +1,5 @@
 """Support for the DOODS service."""
+
 from __future__ import annotations
 
 import io
@@ -111,19 +112,17 @@ def setup_platform(
         )
         return
 
-    entities = []
-    for camera in config[CONF_SOURCE]:
-        entities.append(
-            Doods(
-                hass,
-                camera[CONF_ENTITY_ID],
-                camera.get(CONF_NAME),
-                doods,
-                detector,
-                config,
-            )
+    add_entities(
+        Doods(
+            hass,
+            camera[CONF_ENTITY_ID],
+            camera.get(CONF_NAME),
+            doods,
+            detector,
+            config,
         )
-    add_entities(entities)
+        for camera in config[CONF_SOURCE]
+    )
 
 
 class Doods(ImageProcessingEntity):

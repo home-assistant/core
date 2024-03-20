@@ -15,6 +15,7 @@ from .const import (
     CONF_LISTENING_PORT_DEFAULT,
     CONF_MULTICAST_ADDRESS_DEFAULT,
     CONF_TARGET_PORT_DEFAULT,
+    DISCOVERY_TIMEOUT,
     DOMAIN,
 )
 
@@ -41,10 +42,10 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
     await controller.start()
 
     try:
-        async with asyncio.timeout(delay=5):
+        async with asyncio.timeout(delay=DISCOVERY_TIMEOUT):
             while not controller.devices:
                 await asyncio.sleep(delay=1)
-    except asyncio.TimeoutError:
+    except TimeoutError:
         _LOGGER.debug("No devices found")
 
     devices_count = len(controller.devices)

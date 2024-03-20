@@ -1,4 +1,5 @@
 """Support for airthings ble sensors."""
+
 from __future__ import annotations
 
 import dataclasses
@@ -16,7 +17,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
-    LIGHT_LUX,
     PERCENTAGE,
     EntityCategory,
     Platform,
@@ -51,25 +51,23 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
         key="radon_1day_avg",
         translation_key="radon_1day_avg",
         native_unit_of_measurement=VOLUME_BECQUEREL,
+        suggested_display_precision=0,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:radioactive",
     ),
     "radon_longterm_avg": SensorEntityDescription(
         key="radon_longterm_avg",
         translation_key="radon_longterm_avg",
         native_unit_of_measurement=VOLUME_BECQUEREL,
+        suggested_display_precision=0,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:radioactive",
     ),
     "radon_1day_level": SensorEntityDescription(
         key="radon_1day_level",
         translation_key="radon_1day_level",
-        icon="mdi:radioactive",
     ),
     "radon_longterm_level": SensorEntityDescription(
         key="radon_longterm_level",
         translation_key="radon_longterm_level",
-        icon="mdi:radioactive",
     ),
     "temperature": SensorEntityDescription(
         key="temperature",
@@ -85,7 +83,7 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
     ),
     "pressure": SensorEntityDescription(
         key="pressure",
-        device_class=SensorDeviceClass.PRESSURE,
+        device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         native_unit_of_measurement=UnitOfPressure.MBAR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -107,12 +105,11 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:cloud",
     ),
     "illuminance": SensorEntityDescription(
         key="illuminance",
-        device_class=SensorDeviceClass.ILLUMINANCE,
-        native_unit_of_measurement=LIGHT_LUX,
+        translation_key="illuminance",
+        native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }
@@ -174,6 +171,7 @@ async def async_setup_entry(
             sensors_mapping[key] = dataclasses.replace(
                 val,
                 native_unit_of_measurement=VOLUME_PICOCURIE,
+                suggested_display_precision=1,
             )
 
     entities = []
@@ -227,7 +225,7 @@ class AirthingsSensor(
             manufacturer=airthings_device.manufacturer,
             hw_version=airthings_device.hw_version,
             sw_version=airthings_device.sw_version,
-            model=airthings_device.model,
+            model=airthings_device.model.name,
         )
 
     @property

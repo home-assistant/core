@@ -1,4 +1,5 @@
 """The AccuWeather component."""
+
 from __future__ import annotations
 
 from asyncio import timeout
@@ -51,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Remove ozone sensors from registry if they exist
     ent_reg = er.async_get(hass)
-    for day in range(0, 5):
+    for day in range(5):
         unique_id = f"{coordinator.location_key}-ozone-{day}"
         if entity_id := ent_reg.async_get_entity_id(SENSOR_PLATFORM, DOMAIN, unique_id):
             _LOGGER.debug("Removing ozone sensor entity %s", entity_id)
@@ -75,7 +76,7 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching AccuWeather data API."""
 
     def __init__(
@@ -134,4 +135,4 @@ class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         ) as error:
             raise UpdateFailed(error) from error
         _LOGGER.debug("Requests remaining: %d", self.accuweather.requests_remaining)
-        return {**current, **{ATTR_FORECAST: forecast}}
+        return {**current, ATTR_FORECAST: forecast}

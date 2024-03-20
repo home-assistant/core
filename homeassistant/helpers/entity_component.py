@@ -1,11 +1,11 @@
 """Helpers for components that manage entities."""
+
 from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Iterable
 from datetime import timedelta
 from functools import partial
-from itertools import chain
 import logging
 from types import ModuleType
 from typing import Any, Generic
@@ -23,6 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     Event,
     HassJob,
+    HassJobType,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -119,7 +120,9 @@ class EntityComponent(Generic[_EntityT]):
         Note: this is only required if the integration never calls
         `setup` or `async_setup`.
         """
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, self._async_shutdown, run_immediately=True
+        )
 
     def setup(self, config: ConfigType) -> None:
         """Set up a full entity component.
@@ -148,6 +151,7 @@ class EntityComponent(Generic[_EntityT]):
                 self.hass.async_create_task(
                     self.async_setup_platform(p_type, p_config),
                     f"EntityComponent setup platform {p_type} {self.domain}",
+                    eager_start=True,
                 )
 
         # Generic discovery listener for loading platform dynamically
@@ -278,6 +282,7 @@ class EntityComponent(Generic[_EntityT]):
             ),
             schema,
             supports_response,
+            job_type=HassJobType.Coroutinefunction,
         )
 
     async def async_setup_platform(
@@ -382,7 +387,7 @@ class EntityComponent(Generic[_EntityT]):
         if scan_interval is None:
             scan_interval = self.scan_interval
 
-        return EntityPlatform(
+        entity_platform = EntityPlatform(
             hass=self.hass,
             logger=self.logger,
             domain=self.domain,
@@ -391,9 +396,11 @@ class EntityComponent(Generic[_EntityT]):
             scan_interval=scan_interval,
             entity_namespace=entity_namespace,
         )
+        entity_platform.async_prepare()
+        return entity_platform
 
-    async def _async_shutdown(self, event: Event) -> None:
+    @callback
+    def _async_shutdown(self, event: Event) -> None:
         """Call when Home Assistant is stopping."""
-        await asyncio.gather(
-            *(platform.async_shutdown() for platform in chain(self._platforms.values()))
-        )
+        for platform in self._platforms.values():
+            platform.async_shutdown()

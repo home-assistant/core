@@ -1,4 +1,5 @@
 """Test the motionEye camera web hooks."""
+
 import copy
 from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, call, patch

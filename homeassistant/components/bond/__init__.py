@@ -1,5 +1,5 @@
 """The Bond integration."""
-from asyncio import TimeoutError as AsyncIOTimeoutError
+
 from http import HTTPStatus
 import logging
 from typing import Any
@@ -56,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.error("Bond token no longer valid: %s", ex)
             return False
         raise ConfigEntryNotReady from ex
-    except (ClientError, AsyncIOTimeoutError, OSError) as error:
+    except (ClientError, TimeoutError, OSError) as error:
         raise ConfigEntryNotReady from error
 
     bpup_subs = BPUPSubscriptions()
@@ -68,7 +68,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(_async_stop_event)
     entry.async_on_unload(
-        hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, _async_stop_event)
+        hass.bus.async_listen(
+            EVENT_HOMEASSISTANT_STOP, _async_stop_event, run_immediately=True
+        )
     )
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = BondData(hub, bpup_subs)
 

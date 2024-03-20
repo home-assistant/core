@@ -1,4 +1,5 @@
 """Test the Reolink init."""
+
 from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch

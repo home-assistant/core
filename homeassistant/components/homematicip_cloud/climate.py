@@ -1,4 +1,5 @@
 """Support for HomematicIP Cloud climate devices."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -50,12 +51,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the HomematicIP climate from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
-    entities = []
-    for device in hap.home.groups:
-        if isinstance(device, AsyncHeatingGroup):
-            entities.append(HomematicipHeatingGroup(hap, device))
 
-    async_add_entities(entities)
+    async_add_entities(
+        HomematicipHeatingGroup(hap, device)
+        for device in hap.home.groups
+        if isinstance(device, AsyncHeatingGroup)
+    )
 
 
 class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
@@ -70,6 +71,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, hap: HomematicipHAP, device: AsyncHeatingGroup) -> None:
         """Initialize heating group."""
@@ -303,11 +305,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     @property
     def _has_switch(self) -> bool:
         """Return, if a switch is in the hmip heating group."""
-        for device in self._device.devices:
-            if isinstance(device, Switch):
-                return True
-
-        return False
+        return any(isinstance(device, Switch) for device in self._device.devices)
 
     @property
     def _has_radiator_thermostat(self) -> bool:

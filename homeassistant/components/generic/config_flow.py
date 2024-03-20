@@ -1,4 +1,5 @@
 """Config flow for generic (IP Camera)."""
+
 from __future__ import annotations
 
 import asyncio
@@ -30,7 +31,12 @@ from homeassistant.components.stream import (
     SOURCE_TIMEOUT,
     create_stream,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_NAME,
@@ -41,7 +47,7 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult, UnknownFlow
+from homeassistant.data_entry_flow import UnknownFlow
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template as template_helper
 from homeassistant.helpers.httpx_client import get_async_client
@@ -313,7 +319,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the start of the config flow."""
         errors = {}
         hass = self.hass
@@ -357,7 +363,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user_confirm_still(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle user clicking confirm after still preview."""
         if user_input:
             if not user_input.get(CONF_CONFIRMED_OK):
@@ -389,7 +395,7 @@ class GenericOptionsFlowHandler(OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage Generic IP Camera options."""
         errors: dict[str, str] = {}
         hass = self.hass
@@ -430,7 +436,7 @@ class GenericOptionsFlowHandler(OptionsFlow):
 
     async def async_step_confirm_still(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle user clicking confirm after still preview."""
         if user_input:
             if not user_input.get(CONF_CONFIRMED_OK):
@@ -474,12 +480,12 @@ class CameraImagePreview(HomeAssistantView):
                 flow = self.hass.config_entries.options.async_get(flow_id)
             except UnknownFlow as exc:
                 _LOGGER.warning("Unknown flow while getting image preview")
-                raise web.HTTPNotFound() from exc
+                raise web.HTTPNotFound from exc
         user_input = flow["context"]["preview_cam"]
         camera = GenericCamera(self.hass, user_input, flow_id, "preview")
         if not camera.is_on:
             _LOGGER.debug("Camera is off")
-            raise web.HTTPServiceUnavailable()
+            raise web.HTTPServiceUnavailable
         image = await _async_get_image(
             camera,
             CAMERA_IMAGE_TIMEOUT,
