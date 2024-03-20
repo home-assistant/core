@@ -520,7 +520,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
     dev_reg = dr.async_get(hass)
-    coordinator = HassioDataUpdateCoordinator(hass, entry, dev_reg)
+    coordinator = HassioDataUpdateCoordinator(hass, dev_reg)
     await coordinator.async_config_entry_first_refresh()
     hass.data[ADDONS_COORDINATOR] = coordinator
 
