@@ -34,7 +34,7 @@
           'uniqueId': 'abc123',
         }),
         'geofence': dict({
-          'area': 'string',
+          'area': '**REDACTED**',
           'attributes': dict({
           }),
           'calendarId': 0,
@@ -214,7 +214,7 @@
           'uniqueId': 'abc123',
         }),
         'geofence': dict({
-          'area': 'string',
+          'area': '**REDACTED**',
           'attributes': dict({
           }),
           'calendarId': 0,

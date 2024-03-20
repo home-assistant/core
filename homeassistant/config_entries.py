@@ -2519,16 +2519,16 @@ class EntityRegistryDisabledHandler:
 
 
 @callback
-def _handle_entry_updated_filter(event: Event) -> bool:
+def _handle_entry_updated_filter(event_data: Mapping[str, Any]) -> bool:
     """Handle entity registry entry update filter.
 
     Only handle changes to "disabled_by".
     If "disabled_by" was CONFIG_ENTRY, reload is not needed.
     """
     if (
-        event.data["action"] != "update"
-        or "disabled_by" not in event.data["changes"]
-        or event.data["changes"]["disabled_by"]
+        event_data["action"] != "update"
+        or "disabled_by" not in event_data["changes"]
+        or event_data["changes"]["disabled_by"]
         is entity_registry.RegistryEntryDisabler.CONFIG_ENTRY
     ):
         return False

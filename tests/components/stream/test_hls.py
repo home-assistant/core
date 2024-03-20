@@ -327,6 +327,8 @@ async def test_stream_retries(
         await stream.start()
         await open_future1
         await open_future2
+        await hass.async_add_executor_job(stream._thread.join)
+        stream._thread = None
         assert av_open.call_count == 2
         await hass.async_block_till_done()
 

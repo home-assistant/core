@@ -836,18 +836,23 @@ def test_event_eq() -> None:
     data = {"some": "attr"}
     context = ha.Context()
     event1, event2 = (
-        ha.Event("some_type", data, time_fired=now, context=context) for _ in range(2)
+        ha.Event(
+            "some_type", data, time_fired_timestamp=now.timestamp(), context=context
+        )
+        for _ in range(2)
     )
 
     assert event1.as_dict() == event2.as_dict()
 
 
-def test_event_time_fired_timestamp() -> None:
-    """Test time_fired_timestamp."""
+def test_event_time() -> None:
+    """Test time_fired and time_fired_timestamp."""
     now = dt_util.utcnow()
-    event = ha.Event("some_type", {"some": "attr"}, time_fired=now)
+    event = ha.Event(
+        "some_type", {"some": "attr"}, time_fired_timestamp=now.timestamp()
+    )
     assert event.time_fired_timestamp == now.timestamp()
-    assert event.time_fired_timestamp == now.timestamp()
+    assert event.time_fired == now
 
 
 def test_event_json_fragment() -> None:
@@ -856,7 +861,10 @@ def test_event_json_fragment() -> None:
     data = {"some": "attr"}
     context = ha.Context()
     event1, event2 = (
-        ha.Event("some_type", data, time_fired=now, context=context) for _ in range(2)
+        ha.Event(
+            "some_type", data, time_fired_timestamp=now.timestamp(), context=context
+        )
+        for _ in range(2)
     )
 
     # We are testing that the JSON fragments are the same when as_dict is called
@@ -898,7 +906,7 @@ def test_event_as_dict() -> None:
     now = dt_util.utcnow()
     data = {"some": "attr"}
 
-    event = ha.Event(event_type, data, ha.EventOrigin.local, now)
+    event = ha.Event(event_type, data, ha.EventOrigin.local, now.timestamp())
     expected = {
         "event_type": event_type,
         "data": data,
@@ -1108,9 +1116,9 @@ async def test_eventbus_filtered_listener(hass: HomeAssistant) -> None:
         calls.append(event)
 
     @ha.callback
-    def filter(event):
+    def filter(event_data):
         """Mock filter."""
-        return not event.data["filtered"]
+        return not event_data["filtered"]
 
     unsub = hass.bus.async_listen("test", listener, event_filter=filter)
 
@@ -3152,3 +3160,63 @@ async def test_async_add_job_deprecated(
         "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
         " for replacement options"
     ) in caplog.text
+
+
+async def test_eventbus_lazy_object_creation(hass: HomeAssistant) -> None:
+    """Test we don't create unneeded objects when firing events."""
+    calls = []
+
+    @ha.callback
+    def listener(event):
+        """Mock listener."""
+        calls.append(event)
+
+    @ha.callback
+    def filter(event_data):
+        """Mock filter."""
+        return not event_data["filtered"]
+
+    unsub = hass.bus.async_listen("test_1", listener, event_filter=filter)
+
+    # Test lazy creation of Event objects
+    with patch("homeassistant.core.Event") as mock_event:
+        # Fire an event which is filtered out by its listener
+        hass.bus.async_fire("test_1", {"filtered": True})
+        await hass.async_block_till_done()
+        mock_event.assert_not_called()
+        assert len(calls) == 0
+
+        # Fire an event which has no listener
+        hass.bus.async_fire("test_2")
+        await hass.async_block_till_done()
+        mock_event.assert_not_called()
+        assert len(calls) == 0
+
+        # Fire an event which is not filtered out by its listener
+        hass.bus.async_fire("test_1", {"filtered": False})
+        await hass.async_block_till_done()
+        mock_event.assert_called_once()
+        assert len(calls) == 1
+
+    calls = []
+    # Test lazy creation of Context objects
+    with patch("homeassistant.core.Context") as mock_context:
+        # Fire an event which is filtered out by its listener
+        hass.bus.async_fire("test_1", {"filtered": True})
+        await hass.async_block_till_done()
+        mock_context.assert_not_called()
+        assert len(calls) == 0
+
+        # Fire an event which has no listener
+        hass.bus.async_fire("test_2")
+        await hass.async_block_till_done()
+        mock_context.assert_not_called()
+        assert len(calls) == 0
+
+        # Fire an event which is not filtered out by its listener
+        hass.bus.async_fire("test_1", {"filtered": False})
+        await hass.async_block_till_done()
+        mock_context.assert_called_once()
+        assert len(calls) == 1
+
+    unsub()

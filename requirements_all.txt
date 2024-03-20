@@ -347,7 +347,7 @@ aiopyarr==23.4.0
 aioqsw==0.3.5
 
 # homeassistant.components.rainforest_raven
-aioraven==0.5.1
+aioraven==0.5.2
 
 # homeassistant.components.recollect_waste
 aiorecollect==2023.09.0
@@ -568,7 +568,7 @@ blinkpy==0.22.6
 blockchain==1.4.4
 
 # homeassistant.components.blue_current
-bluecurrent-api==1.0.6
+bluecurrent-api==1.2.2
 
 # homeassistant.components.bluemaestro
 bluemaestro-ble==0.2.3
@@ -1406,7 +1406,7 @@ nsw-fuel-api-client==1.1.0
 nuheat==1.0.1
 
 # homeassistant.components.numato
-numato-gpio==0.12.0
+numato-gpio==0.13.0
 
 # homeassistant.components.compensation
 # homeassistant.components.iqvia
