@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from ring_doorbell import RingGeneric, RingStickUpCam
+from ring_doorbell import RingDevices, RingStickUpCam
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -33,14 +33,14 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the switches for the Ring devices."""
-    devices = hass.data[DOMAIN][config_entry.entry_id][RING_DEVICES]
+    devices: RingDevices = hass.data[DOMAIN][config_entry.entry_id][RING_DEVICES]
     coordinator: RingDataCoordinator = hass.data[DOMAIN][config_entry.entry_id][
         RING_DEVICES_COORDINATOR
     ]
 
     async_add_entities(
         SirenSwitch(device, coordinator)
-        for device in devices["stickup_cams"]
+        for device in devices.stickup_cams
         if device.has_capability("siren")
     )
 
@@ -48,8 +48,10 @@ async def async_setup_entry(
 class BaseRingSwitch(RingEntity, SwitchEntity):
     """Represents a switch for controlling an aspect of a ring device."""
 
+    _device: RingStickUpCam
+
     def __init__(
-        self, device: RingGeneric, coordinator: RingDataCoordinator, device_type: str
+        self, device: RingStickUpCam, coordinator: RingDataCoordinator, device_type: str
     ) -> None:
         """Initialize the switch."""
         super().__init__(device, coordinator)
@@ -62,26 +64,27 @@ class SirenSwitch(BaseRingSwitch):
 
     _attr_translation_key = "siren"
 
-    def __init__(self, device, coordinator: RingDataCoordinator) -> None:
+    def __init__(
+        self, device: RingStickUpCam, coordinator: RingDataCoordinator
+    ) -> None:
         """Initialize the switch for a device with a siren."""
         super().__init__(device, coordinator, "siren")
         self._no_updates_until = dt_util.utcnow()
         self._attr_is_on = device.siren > 0
 
     @callback
-    def _handle_coordinator_update(self):
+    def _handle_coordinator_update(self) -> None:
         """Call update method."""
         if self._no_updates_until > dt_util.utcnow():
             return
-
-        if (device := self._get_coordinator_device()) and isinstance(
-            device, RingStickUpCam
-        ):
-            self._attr_is_on = device.siren > 0
+        device = self._get_coordinator_data().get_stickup_cam(
+            self._device.device_api_id
+        )
+        self._attr_is_on = device.siren > 0
         super()._handle_coordinator_update()
 
     @exception_wrap
-    def _set_switch(self, new_state):
+    def _set_switch(self, new_state: int) -> None:
         """Update switch state, and causes Home Assistant to correctly update."""
         self._device.siren = new_state
 

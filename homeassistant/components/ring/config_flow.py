@@ -28,7 +28,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 
 
-async def validate_input(hass: HomeAssistant, data):
+async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
 
     auth = Auth(f"{APPLICATION_NAME}/{ha_version}")
@@ -56,7 +56,9 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
     user_pass: dict[str, Any] = {}
     reauth_entry: ConfigEntry | None = None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -82,7 +84,9 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_2fa(self, user_input=None):
+    async def async_step_2fa(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle 2fa step."""
         if user_input:
             if self.reauth_entry:

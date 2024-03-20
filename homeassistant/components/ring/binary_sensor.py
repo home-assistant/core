@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
+
+from ring_doorbell import Ring, RingDevices, RingEvent, RingGeneric
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -17,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, RING_API, RING_DEVICES, RING_NOTIFICATIONS_COORDINATOR
 from .coordinator import RingNotificationsCoordinator
-from .entity import RingEntity
+from .entity import RingBaseEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -48,8 +51,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Ring binary sensors from a config entry."""
-    ring = hass.data[DOMAIN][config_entry.entry_id][RING_API]
-    devices = hass.data[DOMAIN][config_entry.entry_id][RING_DEVICES]
+    ring: Ring = hass.data[DOMAIN][config_entry.entry_id][RING_API]
+    devices: RingDevices = hass.data[DOMAIN][config_entry.entry_id][RING_DEVICES]
     notifications_coordinator: RingNotificationsCoordinator = hass.data[DOMAIN][
         config_entry.entry_id
     ][RING_NOTIFICATIONS_COORDINATOR]
@@ -65,17 +68,17 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class RingBinarySensor(RingEntity, BinarySensorEntity):
+class RingBinarySensor(RingBaseEntity, BinarySensorEntity):
     """A binary sensor implementation for Ring device."""
 
-    _active_alert: dict[str, Any] | None = None
+    _active_alert: RingEvent | None = None
     entity_description: RingBinarySensorEntityDescription
 
     def __init__(
         self,
-        ring,
-        device,
-        coordinator,
+        ring: Ring,
+        device: RingGeneric,
+        coordinator: RingNotificationsCoordinator,
         description: RingBinarySensorEntityDescription,
     ) -> None:
         """Initialize a sensor for Ring device."""
@@ -89,13 +92,13 @@ class RingBinarySensor(RingEntity, BinarySensorEntity):
         self._update_alert()
 
     @callback
-    def _handle_coordinator_update(self, _=None):
+    def _handle_coordinator_update(self, _: Any = None) -> None:
         """Call update method."""
         self._update_alert()
         super()._handle_coordinator_update()
 
     @callback
-    def _update_alert(self):
+    def _update_alert(self) -> None:
         """Update active alert."""
         self._active_alert = next(
             (
@@ -108,21 +111,23 @@ class RingBinarySensor(RingEntity, BinarySensorEntity):
         )
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return True if the binary sensor is on."""
         return self._active_alert is not None
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         attrs = super().extra_state_attributes
+        assert isinstance(attrs, dict)
 
         if self._active_alert is None:
             return attrs
 
         attrs["state"] = self._active_alert["state"]
-        attrs["expires_at"] = datetime.fromtimestamp(
-            self._active_alert.get("now") + self._active_alert.get("expires_in")
-        ).isoformat()
+        now = self._active_alert.get("now")
+        expires_in = self._active_alert.get("expires_in")
+        assert now and expires_in
+        attrs["expires_at"] = datetime.fromtimestamp(now + expires_in).isoformat()
 
         return attrs

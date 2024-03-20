@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from functools import partial
 import logging
+from typing import Any
 
 from ring_doorbell import Auth, Ring
 
@@ -29,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
 
-    def token_updater(token):
+    def token_updater(token: dict[str, Any]) -> None:
         """Handle from sync context when token is updated."""
         hass.loop.call_soon_threadsafe(
             partial(
@@ -121,8 +122,8 @@ async def _migrate_old_unique_ids(hass: HomeAssistant, entry_id: str) -> None:
     @callback
     def _async_migrator(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
         # Old format for camera and light was int
-        if isinstance(entity_entry.unique_id, int):
-            new_unique_id = str(entity_entry.unique_id)
+        if isinstance(entity_entry.unique_id, int):  # type: ignore[unreachable]
+            new_unique_id = str(entity_entry.unique_id)  # type: ignore[unreachable]
             if existing_entity_id := entity_registry.async_get_entity_id(
                 entity_entry.domain, entity_entry.platform, new_unique_id
             ):
