@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from tessie_api import (
@@ -17,13 +16,12 @@ from homeassistant.components.lock import ATTR_CODE, LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, TessieChargeCableLockStates
 from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -77,9 +75,6 @@ class TessieSpeedLimitEntity(TessieEntity, LockEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, "vehicle_state_speed_limit_mode_active")
-        _LOGGER.warning(
-            "The Tessie speed limit lock entity has been deprecated and will be removed in Home Assistant 2024.6.0"
-        )
 
     @property
     def is_locked(self) -> bool | None:
@@ -88,8 +83,15 @@ class TessieSpeedLimitEntity(TessieEntity, LockEntity):
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Enable speed limit with pin."""
-        _LOGGER.warning(
-            "The Tessie speed limit lock entity has been deprecated and will be removed in Home Assistant 2024.6.0"
+        ir.async_create_issue(
+            self.coordinator.hass,
+            DOMAIN,
+            "service_deprecation",
+            breaks_in_ha_version="2024.10.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="service_deprecation",
         )
         code: str | None = kwargs.get(ATTR_CODE)
         if code:
@@ -98,8 +100,15 @@ class TessieSpeedLimitEntity(TessieEntity, LockEntity):
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Disable speed limit with pin."""
-        _LOGGER.warning(
-            "The Tessie speed limit lock entity has been deprecated and will be removed in Home Assistant 2024.6.0"
+        ir.async_create_issue(
+            self.coordinator.hass,
+            DOMAIN,
+            "service_deprecation",
+            breaks_in_ha_version="2024.10.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="service_deprecation",
         )
         code: str | None = kwargs.get(ATTR_CODE)
         if code:
