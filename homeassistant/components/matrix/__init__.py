@@ -7,12 +7,14 @@ from collections.abc import Sequence
 import logging
 import mimetypes
 import os
+import pathlib
 import re
 from typing import Final, NewType, Required, TypedDict
 
 import aiofiles.os
-from nio import AsyncClient, Event, MatrixRoom
+from nio import AsyncClient, AsyncClientConfig, Event, MatrixRoom
 from nio.events.room_events import RoomMessageText
+from nio.exceptions import OlmUnverifiedDeviceError
 from nio.responses import (
     ErrorResponse,
     JoinError,
@@ -39,16 +41,25 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event as HassEvent, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.json import save_json
+from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import JsonObjectType, load_json_object
 
-from .const import DOMAIN, FORMAT_HTML, FORMAT_TEXT, SERVICE_SEND_MESSAGE
+from .const import (
+    DOMAIN,
+    FORMAT_HTML,
+    FORMAT_TEXT,
+    SERVICE_SEND_MESSAGE,
+    SERVICE_TRUST_BLACKLIST_DEVICE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 SESSION_FILE = ".matrix.conf"
+STORE_DIRECTORY = ".matrixstore"
 
 CONF_HOMESERVER: Final = "homeserver"
 CONF_ROOMS: Final = "rooms"
@@ -62,12 +73,21 @@ CONF_ROOMS_REGEX = "^[!|#][^:]*:.*"
 EVENT_MATRIX_COMMAND = "matrix_command"
 
 DEFAULT_CONTENT_TYPE = "application/octet-stream"
+MAX_ALLOWED_DOWNLOAD_SIZE_BYTES = 52428800
 
 MESSAGE_FORMATS = [FORMAT_HTML, FORMAT_TEXT]
 DEFAULT_MESSAGE_FORMAT = FORMAT_TEXT
 
 ATTR_FORMAT = "format"  # optional message format
 ATTR_IMAGES = "images"  # optional images
+ATTR_IMAGE_URLS = "image_urls"  # optional images from url
+ATTR_VERIFY_SSL = "verify_ssl"  # optional verify ssl
+ATTR_USER_ID = "user_id"
+ATTR_DEVICE_ID = "device_id"
+ATTR_BLACKLIST = "blacklist"
+ATTR_APPLY_ALL_DEVICES = "apply_all_devices"
+ATTR_APPLY_ALL_USER_DEVICES = "apply_all_user_devices"
+ATTR_ACCESS_TOKEN = "access_token"
 
 WordCommand = NewType("WordCommand", str)
 ExpressionCommand = NewType("ExpressionCommand", re.Pattern)
@@ -125,10 +145,22 @@ SERVICE_SCHEMA_SEND_MESSAGE = vol.Schema(
                 MESSAGE_FORMATS
             ),
             vol.Optional(ATTR_IMAGES): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(ATTR_IMAGE_URLS): vol.All(cv.ensure_list, [cv.url]),
+            vol.Optional(ATTR_VERIFY_SSL, default=True): cv.boolean,
         },
         vol.Required(ATTR_TARGET): vol.All(
             cv.ensure_list, [cv.matches_regex(CONF_ROOMS_REGEX)]
         ),
+    }
+)
+
+SERVICE_SCHEMA_TRUST_BLACKLIST_DEVICE = vol.Schema(
+    {
+        vol.Optional(ATTR_USER_ID, default=""): cv.string,
+        vol.Optional(ATTR_DEVICE_ID, default=""): cv.string,
+        vol.Exclusive(ATTR_APPLY_ALL_DEVICES, "apply_type"): cv.boolean,
+        vol.Exclusive(ATTR_APPLY_ALL_USER_DEVICES, "apply_type"): cv.boolean,
+        vol.Optional(ATTR_BLACKLIST, default=False): cv.boolean,
     }
 )
 
@@ -137,9 +169,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Matrix bot component."""
     config = config[DOMAIN]
 
+    # Cleanup the old session file. This file is incompatible with the new e2e encryption
+    # implementation and will raise a LocalProtocolError. The new session file is stored
+    # in .storage and is not backwards compatible with the old session file.
+    old_session_file = pathlib.Path(hass.config.path()) / SESSION_FILE
+    old_session_file.unlink(missing_ok=True)
+
     matrix_bot = MatrixBot(
         hass,
-        os.path.join(hass.config.path(), SESSION_FILE),
+        os.path.join(hass.config.path(STORAGE_DIR, STORE_DIRECTORY), SESSION_FILE),
         config[CONF_HOMESERVER],
         config[CONF_VERIFY_SSL],
         config[CONF_USERNAME],
@@ -154,6 +192,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_SEND_MESSAGE,
         matrix_bot.handle_send_message,
         schema=SERVICE_SCHEMA_SEND_MESSAGE,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_TRUST_BLACKLIST_DEVICE,
+        matrix_bot.handle_trust_blacklist_device,
+        schema=SERVICE_SCHEMA_TRUST_BLACKLIST_DEVICE,
     )
 
     return True
@@ -186,8 +230,14 @@ class MatrixBot:
         self._mx_id = username
         self._password = password
 
+        store_path = pathlib.Path(hass.config.path(STORAGE_DIR, STORE_DIRECTORY))
+        store_path.mkdir(parents=True, exist_ok=True)
         self._client = AsyncClient(
-            homeserver=self._homeserver, user=self._mx_id, ssl=self._verify_tls
+            homeserver=self._homeserver,
+            user=self._mx_id,
+            ssl=self._verify_tls,
+            config=AsyncClientConfig(encryption_enabled=True),
+            store_path=str(store_path.absolute()),
         )
 
         self._listening_rooms: dict[RoomAnyID, RoomID] = {}
@@ -347,9 +397,12 @@ class MatrixBot:
             )
             return {}
 
-    async def _store_auth_token(self, token: str) -> None:
+    async def _store_auth_token(self) -> None:
         """Store authentication token to session and persistent storage."""
-        self._access_tokens[self._mx_id] = token
+        self._access_tokens[self._client.user] = {
+            ATTR_DEVICE_ID: self._client.device_id,
+            ATTR_ACCESS_TOKEN: self._client.access_token,
+        }
 
         await self.hass.async_add_executor_job(
             save_json,
@@ -367,12 +420,14 @@ class MatrixBot:
         """
 
         # If we have an access token
-        if (token := self._access_tokens.get(self._mx_id)) is not None:
+        if (
+            token_data := self._access_tokens.get(self._mx_id)
+        ) is not None and isinstance(token_data, dict):
             _LOGGER.debug("Restoring login from stored access token")
             self._client.restore_login(
-                user_id=self._client.user_id,
-                device_id=self._client.device_id,
-                access_token=token,
+                user_id=self._mx_id,
+                device_id=str(token_data[ATTR_DEVICE_ID]),
+                access_token=str(token_data[ATTR_ACCESS_TOKEN]),
             )
             response = await self._client.whoami()
             if isinstance(response, WhoamiError):
@@ -402,31 +457,35 @@ class MatrixBot:
                     response.status_code,
                     response.message,
                 )
+            self._client.load_store()
 
         if not self._client.logged_in:
             raise ConfigEntryAuthFailed(
                 "Login failed, both token and username/password are invalid"
             )
 
-        await self._store_auth_token(self._client.access_token)
+        await self._store_auth_token()
 
     async def _handle_room_send(
         self, target_room: RoomAnyID, message_type: str, content: dict
     ) -> None:
         """Wrap _client.room_send and handle ErrorResponses."""
-        response: Response = await self._client.room_send(
-            room_id=self._listening_rooms.get(target_room, target_room),
-            message_type=message_type,
-            content=content,
-        )
-        if isinstance(response, ErrorResponse):
-            _LOGGER.error(
-                "Unable to deliver message to room '%s': %s",
-                target_room,
-                response,
+        try:
+            response: Response = await self._client.room_send(
+                room_id=self._listening_rooms.get(target_room, target_room),
+                message_type=message_type,
+                content=content,
             )
-        else:
-            _LOGGER.debug("Message delivered to room '%s'", target_room)
+            if isinstance(response, ErrorResponse):
+                _LOGGER.error(
+                    "Unable to deliver message to room '%s': %s",
+                    target_room,
+                    response,
+                )
+            else:
+                _LOGGER.debug("Message delivered to room '%s'", target_room)
+        except OlmUnverifiedDeviceError as ex:
+            _LOGGER.error("Unverified device: %s", ex)
 
     async def _handle_multi_room_send(
         self, target_rooms: Sequence[RoomAnyID], message_type: str, content: dict
@@ -443,16 +502,57 @@ class MatrixBot:
             for target_room in target_rooms
         )
 
+    async def _send_image_url(
+        self, image_url: str, target_rooms: Sequence[RoomAnyID], verify_ssl: bool
+    ) -> None:
+        """Upload an image from a URL, then send it to all target_rooms."""
+        # Get required image metadata.
+        if not self.hass.config.is_allowed_external_url(image_url):
+            _LOGGER.error("URL '%s' not in allow list", image_url)
+            return
+        session = aiohttp_client.async_get_clientsession(self.hass)
+        resp = await session.get(
+            image_url, raise_for_status=True, verify_ssl=verify_ssl
+        )
+        image_type = (
+            resp.headers.get("Content-Type")
+            or mimetypes.guess_type(image_url)[0]
+            or "image/jpeg"
+        )
+        if (
+            int(resp.headers.get("Content-Length", "0"))
+            > MAX_ALLOWED_DOWNLOAD_SIZE_BYTES
+        ):
+            _LOGGER.error(
+                "Attachment too large (Content-Length reports %s). Max size: %s"
+                " bytes",
+                int(str(resp.headers.get("Content-Length"))),
+                MAX_ALLOWED_DOWNLOAD_SIZE_BYTES,
+            )
+            return
+        async with aiofiles.tempfile.TemporaryDirectory() as tempdir:
+            image_extension = mimetypes.guess_extension(image_type)
+            path = pathlib.Path(tempdir) / f"image{image_extension}"
+            async with aiofiles.open(path, "wb") as f:
+                await f.write(await resp.read())
+            await self._send_image(
+                str(path.absolute()), target_rooms, skip_check_allowed=True
+            )
+
     async def _send_image(
-        self, image_path: str, target_rooms: Sequence[RoomAnyID]
+        self,
+        image_path: str,
+        target_rooms: Sequence[RoomAnyID],
+        skip_check_allowed: bool = False,
     ) -> None:
         """Upload an image, then send it to all target_rooms."""
-        _is_allowed_path = await self.hass.async_add_executor_job(
-            self.hass.config.is_allowed_path, image_path
-        )
-        if not _is_allowed_path:
-            _LOGGER.error("Path not allowed: %s", image_path)
-            return
+        if not skip_check_allowed:
+            _is_allowed_path = await self.hass.async_add_executor_job(
+                self.hass.config.is_allowed_path, image_path
+            )
+            if not _is_allowed_path:
+                _LOGGER.error("Path not allowed: %s", image_path)
+                return
 
         # Get required image metadata.
         image = await self.hass.async_add_executor_job(Image.open, image_path)
@@ -508,16 +608,91 @@ class MatrixBot:
             target_rooms=target_rooms, message_type="m.room.message", content=content
         )
 
+        if data is not None and len(target_rooms) > 0:
+            tasks = []
+            if image_paths := data.get(ATTR_IMAGES, []):
+                image_tasks = [
+                    self.hass.async_create_task(
+                        self._send_image(image_path, target_rooms)
+                    )
+                    for image_path in image_paths
+                ]
+                tasks.extend(image_tasks)
+            if image_urls := data.get(ATTR_IMAGE_URLS, []):
+                image_url_tasks = [
+                    self.hass.async_create_task(
+                        self._send_image_url(
+                            image_url, target_rooms, data[ATTR_VERIFY_SSL]
+                        )
+                    )
+                    for image_url in image_urls
+                ]
+                tasks.extend(image_url_tasks)
+            if tasks:
+                await asyncio.wait(tasks)
+
+    async def _trust_blacklist_device(
+        self,
+        blacklist: bool,
+        trusted_user_id: str = "",
+        trusted_device_id: str = "",
+        apply_all_user_devices: bool = False,  # Apply only to specified user's devices
+        apply_all_devices: bool = False,  # Apply to all devices regardless of user
+    ) -> None:
+        """Trust or blacklist a user's device."""
         if (
-            data is not None
-            and (image_paths := data.get(ATTR_IMAGES, []))
-            and len(target_rooms) > 0
+            sum(
+                [
+                    trusted_user_id != "" and trusted_device_id != "",
+                    apply_all_user_devices,
+                    apply_all_devices,
+                ]
+            )
+            != 1
         ):
-            image_tasks = [
-                self.hass.async_create_task(self._send_image(image_path, target_rooms))
-                for image_path in image_paths
-            ]
-            await asyncio.wait(image_tasks)
+            _LOGGER.error(
+                "Exactly one of trusted_user_id and apply_all_user_devices, "
+                "trusted_user_id and trusted_device_id, or apply_all_devices must be specified!"
+            )
+            return
+        if trusted_user_id == "" and apply_all_user_devices:
+            _LOGGER.error(
+                "A trusted_user_id must be specified when using apply_all_user_devices!"
+            )
+            return
+        for user_id, devices in self._client.device_store.items():
+            if not apply_all_devices and trusted_user_id != user_id:
+                continue
+            for device_id, olm_device in devices.items():
+                if (
+                    apply_all_devices
+                    or apply_all_user_devices
+                    or trusted_device_id == device_id
+                ):
+                    if blacklist:
+                        self._client.blacklist_device(olm_device)
+                        _LOGGER.debug(
+                            "Blacklisting %s from user %s",
+                            trusted_device_id,
+                            trusted_user_id,
+                        )
+                    else:
+                        self._client.verify_device(olm_device)
+                        _LOGGER.debug(
+                            "Trusting %s from user %s",
+                            trusted_device_id,
+                            trusted_user_id,
+                        )
+
+    async def handle_trust_blacklist_device(self, service: ServiceCall) -> None:
+        """Handle the trust_blacklist_device service."""
+        await self._trust_blacklist_device(
+            service.data[ATTR_BLACKLIST],
+            trusted_user_id=service.data[ATTR_USER_ID],
+            trusted_device_id=service.data[ATTR_DEVICE_ID],
+            apply_all_devices=service.data.get(ATTR_APPLY_ALL_DEVICES, False),
+            apply_all_user_devices=service.data.get(ATTR_APPLY_ALL_USER_DEVICES, False),
+        )
 
     async def handle_send_message(self, service: ServiceCall) -> None:
         """Handle the send_message service."""

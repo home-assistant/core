@@ -3,7 +3,7 @@
 from pydantic.dataclasses import dataclass
 import pytest
 
-from homeassistant.components.matrix import MatrixBot
+from homeassistant.components.matrix import ATTR_ACCESS_TOKEN, ATTR_DEVICE_ID, MatrixBot
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 
 from tests.components.matrix.conftest import (
@@ -19,7 +19,7 @@ class LoginTestParameters:
     """Dataclass of parameters representing the login parameters and expected result state."""
 
     password: str
-    access_token: dict[str, str]
+    access_token: dict[str, dict[str, str]]
     expected_login_state: bool
     expected_caplog_messages: set[str]
     expected_expection: type(Exception) | None = None
@@ -34,7 +34,9 @@ good_password_missing_token = LoginTestParameters(
 
 good_password_bad_token = LoginTestParameters(
     password=TEST_PASSWORD,
-    access_token={TEST_MXID: "WrongToken"},
+    access_token={
+        TEST_MXID: {ATTR_ACCESS_TOKEN: "WrongToken", ATTR_DEVICE_ID: TEST_DEVICE_ID}
+    },
     expected_login_state=True,
     expected_caplog_messages={
         "Restoring login from stored access token",
@@ -45,7 +47,12 @@ good_password_bad_token = LoginTestParameters(
 
 bad_password_good_access_token = LoginTestParameters(
     password="WrongPassword",
-    access_token={TEST_MXID: TEST_TOKEN},
+    access_token={
+        TEST_MXID: {
+            ATTR_ACCESS_TOKEN: TEST_TOKEN,
+            ATTR_DEVICE_ID: TEST_DEVICE_ID,
+        }
+    },
     expected_login_state=True,
     expected_caplog_messages={
         "Restoring login from stored access token",
@@ -55,7 +62,9 @@ bad_password_good_access_token = LoginTestParameters(
 
 bad_password_bad_access_token = LoginTestParameters(
     password="WrongPassword",
-    access_token={TEST_MXID: "WrongToken"},
+    access_token={
+        TEST_MXID: {ATTR_ACCESS_TOKEN: "WrongToken", ATTR_DEVICE_ID: TEST_DEVICE_ID}
+    },
     expected_login_state=False,
     expected_caplog_messages={
         "Restoring login from stored access token",
@@ -110,7 +119,9 @@ async def test_get_auth_tokens(matrix_bot: MatrixBot, mock_load_json):
 
     # Test loading good tokens.
     loaded_tokens = await matrix_bot._get_auth_tokens()
-    assert loaded_tokens == {TEST_MXID: TEST_TOKEN}
+    assert loaded_tokens == {
+        TEST_MXID: {ATTR_ACCESS_TOKEN: TEST_TOKEN, ATTR_DEVICE_ID: TEST_DEVICE_ID}
+    }
 
     # Test miscellaneous error from hass.
     mock_load_json.side_effect = HomeAssistantError()
