@@ -34,6 +34,7 @@ from homeassistant.const import (
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
     EVENT_STATE_CHANGED,
+    EVENT_STATE_REPORTED,
     MATCH_ALL,
     __version__,
 )
@@ -2780,11 +2781,14 @@ def test_state_timestamps() -> None:
         "on",
         {"brightness": 100},
         last_changed=now,
+        last_reported=now,
         last_updated=now,
         context=ha.Context(id="1234"),
     )
     assert state.last_changed_timestamp == now.timestamp()
     assert state.last_changed_timestamp == now.timestamp()
+    assert state.last_reported_timestamp == now.timestamp()
+    assert state.last_reported_timestamp == now.timestamp()
     assert state.last_updated_timestamp == now.timestamp()
     assert state.last_updated_timestamp == now.timestamp()
 
@@ -3225,3 +3229,30 @@ async def test_eventbus_lazy_object_creation(hass: HomeAssistant) -> None:
         assert len(calls) == 1
 
     unsub()
+
+
+async def test_statemachine_report_state(hass: HomeAssistant) -> None:
+    """Test report state event."""
+    hass.states.async_set("light.bowl", "on", {})
+    state_changed_events = async_capture_events(hass, EVENT_STATE_CHANGED)
+    state_reported_events = async_capture_events(hass, EVENT_STATE_REPORTED)
+
+    hass.states.async_set("light.bowl", "on")
+    await hass.async_block_till_done()
+    assert len(state_changed_events) == 0
+    assert len(state_reported_events) == 1
+
+    hass.states.async_set("light.bowl", "on", None, True)
+    await hass.async_block_till_done()
+    assert len(state_changed_events) == 1
+    assert len(state_reported_events) == 2
+
+    hass.states.async_set("light.bowl", "off")
+    await hass.async_block_till_done()
+    assert len(state_changed_events) == 2
+    assert len(state_reported_events) == 3
+
+    hass.states.async_remove("light.bowl")
+    await hass.async_block_till_done()
+    assert len(state_changed_events) == 3
+    assert len(state_reported_events) == 4
