@@ -1,0 +1,127 @@
+{
+  "entity": {
+    "climate": {
+      "climate_entity": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "0": "Low",
+              "1": "Normal",
+              "2": "High"
+            }
+          },
+          "preset_mode": {
+            "state": {
+              "0": "Stop",
+              "1": "Auto",
+              "2": "Manual",
+              "3": "Fireplace"
+            }
+          }
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "menu_options": {
+          "extract_fan": "Extract fan",
+          "supply_fan": "Supply fan",
+          "temperature": "Temperature",
+          "air_quality": "Air Quality",
+          "misc": "Miscellaneous"
+        },
+        "description": "Note that incorrect parameter settings can cause moisture problems, operational disruption and other types of malfunction.\nFor this reason, the settings must be configured by suitably qualified professionals.",
+        "title": "Fläktgroup Device Configuration"
+      },
+      "extract_fan": {
+        "description": "The speeds for each operating mode",
+        "data": {
+          "extract_fan_config_low": "Low/Tickle",
+          "extract_fan_config_normal": "Normal",
+          "extract_fan_config_high": "High/Boost",
+          "extract_fan_config_cooker_hood": "Cooker hood",
+          "extract_fan_config_fireplace": "Fireplace"
+        },
+        "data_description": {
+          "extract_fan_config_low": "{extract_fan_config_low_result}",
+          "extract_fan_config_normal": "{extract_fan_config_normal_result}",
+          "extract_fan_config_high": "{extract_fan_config_high_result}",
+          "extract_fan_config_cooker_hood": "{extract_fan_config_cooker_hood_result}",
+          "extract_fan_config_fireplace": "{extract_fan_config_fireplace_result}"
+        },
+        "title": "Extract fan configuration"
+      },
+      "supply_fan": {
+        "description": "The speeds for each operating mode",
+        "data": {
+          "supply_fan_config_low": "Low/Tickle",
+          "supply_fan_config_normal": "Normal",
+          "supply_fan_config_high": "High/Boost",
+          "supply_fan_config_cooker_hood": "Cooker hood",
+          "supply_fan_config_fireplace": "Fireplace"
+        },
+        "data_description": {
+          "supply_fan_config_low": "{supply_fan_config_low_result}",
+          "supply_fan_config_normal": "{supply_fan_config_normal_result}",
+          "supply_fan_config_high": "{supply_fan_config_high_result}",
+          "supply_fan_config_cooker_hood": "{supply_fan_config_cooker_hood_result}",
+          "supply_fan_config_fireplace": "{supply_fan_config_fireplace_result}"
+        },
+        "title": "Supply fan configuration"
+      },
+      "temperature": {
+        "data": {
+          "temperature_set_point": "Temperature Set Point",
+          "min_supply_temperature": "Min Supply Temperature",
+          "max_supply_temperature": "Max Supply Temperature"
+        },
+        "data_description": {
+          "temperature_set_point": "{temperature_set_point_result}",
+          "min_supply_temperature": "{min_supply_temperature_result}",
+          "max_supply_temperature": "{max_supply_temperature_result}"
+        },
+        "title": "Temperature configuration"
+      },
+      "air_quality": {
+        "description": "This function regulates towards a preset setpoint. The fan speed is automatically adjusted to achieve the desired CO2 level.\n NOTE! Only available if optional moisture control or CO2 control is activated.",
+        "data": {
+          "set_point_co2": "Set point CO2"
+        },
+        "data_description": {
+          "set_point_co2": "{set_point_co2_result}"
+        },
+        "title": "Air Quality Configuration"
+      },
+      "misc": {
+        "data": {
+          "dirty_filter_alarm_time": "Dirty Filter Alarm Time"
+        },
+        "data_description": {
+          "dirty_filter_alarm_time": "{dirty_filter_alarm_time_result}"
+        },
+        "title": "Miscellaneous Configuration"
+      }
+    },
+    "error": {
+      "error_register_write": "Error writing data to register"
+    }
+  },
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up FläktGroup Modbus device",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "update_interval": "Update interval"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  }
+}
