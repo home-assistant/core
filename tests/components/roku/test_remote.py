@@ -74,9 +74,9 @@ async def test_main_services(
         SERVICE_SEND_COMMAND,
         {
             ATTR_ENTITY_ID: MAIN_ENTITY_ID,
-            ATTR_COMMAND: ["left", "right"]
+            ATTR_COMMAND: ["left", "right"],
             ATTR_NUM_REPEATS: 2,
-            ATTR_DELAY_SECS: 1
+            ATTR_DELAY_SECS: 1,
         },
         blocking=True,
     )
