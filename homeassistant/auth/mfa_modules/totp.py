@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from io import BytesIO
 from typing import Any, cast
 
 import voluptuous as vol
@@ -20,7 +19,7 @@ from . import (
     SetupFlow,
 )
 
-REQUIREMENTS = ["pyotp==2.8.0", "PyQRCode==1.2.1"]
+REQUIREMENTS = ["pyotp==2.8.0"]
 
 CONFIG_SCHEMA = MULTI_FACTOR_AUTH_MODULE_SCHEMA.extend({}, extra=vol.PREVENT_EXTRA)
 
@@ -35,29 +34,7 @@ INPUT_FIELD_CODE = "code"
 DUMMY_SECRET = "FPPTH34D4E3MI2HG"
 
 
-def _generate_qr_code(data: str) -> str:
-    """Generate a base64 PNG string represent QR Code image of data."""
-    import pyqrcode  # pylint: disable=import-outside-toplevel
-
-    qr_code = pyqrcode.create(data)
-
-    with BytesIO() as buffer:
-        qr_code.svg(file=buffer, scale=4)
-        return str(
-            buffer.getvalue()
-            .decode("ascii")
-            .replace("\n", "")
-            .replace(
-                (
-                    '<?xml version="1.0" encoding="UTF-8"?>'
-                    '<svg xmlns="http://www.w3.org/2000/svg"'
-                ),
-                "<svg",
-            )
-        )
-
-
-def _generate_secret_and_qr_code(username: str) -> tuple[str, str, str]:
+def _generate_secret_and_qr_code(username: str) -> tuple[str, str]:
     """Generate a secret, url, and QR code."""
     import pyotp  # pylint: disable=import-outside-toplevel
 
@@ -65,8 +42,7 @@ def _generate_secret_and_qr_code(username: str) -> tuple[str, str, str]:
     url = pyotp.totp.TOTP(ota_secret).provisioning_uri(
         username, issuer_name="Home Assistant"
     )
-    image = _generate_qr_code(url)
-    return ota_secret, url, image
+    return ota_secret, url
 
 
 @MULTI_FACTOR_AUTH_MODULES.register("totp")
@@ -88,7 +64,7 @@ class TotpAuthModule(MultiFactorAuthModule):
     @property
     def input_schema(self) -> vol.Schema:
         """Validate login flow input data."""
-        return vol.Schema({vol.Required(INPUT_FIELD_CODE): str})
+        return vol.Schema({vol.Required(INPUT_FIELD_CODE): int})
 
     async def _async_load(self) -> None:
         """Load stored data."""
@@ -187,7 +163,6 @@ class TotpSetupFlow(SetupFlow):
         self._user = user
         self._ota_secret: str = ""
         self._url: str | None = None
-        self._image: str | None = None
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -218,7 +193,6 @@ class TotpSetupFlow(SetupFlow):
             (
                 self._ota_secret,
                 self._url,
-                self._image,
             ) = await hass.async_add_executor_job(
                 _generate_secret_and_qr_code,
                 str(self._user.name),
@@ -230,7 +204,6 @@ class TotpSetupFlow(SetupFlow):
             description_placeholders={
                 "code": self._ota_secret,
                 "url": self._url,
-                "qr_code": self._image,
             },
             errors=errors,
         )
