@@ -28,7 +28,7 @@ from .const import (
     DOMAIN,
 )
 
-LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -61,13 +61,13 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     try:
         response = await hass.async_add_executor_job(bedrock.list_foundation_models)
     except EndpointConnectionError as err:
-        LOGGER.exception("Unable to connect to AWS Endpoint")
+        _LOGGER.exception("Unable to connect to AWS Endpoint")
         raise CannotConnect from err
     except bedrock.exceptions.ClientError as err:
-        LOGGER.exception("Unable to ")
+        _LOGGER.exception("Unable to ")
         raise InvalidAuth from err
     except Exception as err:  # pylint: disable=broad-except
-        LOGGER.exception("Unexpected exception")
+        _LOGGER.exception("Unexpected exception")
         raise HomeAssistantError from err
     finally:
         bedrock.close()
@@ -96,7 +96,7 @@ class BedrockAgentConfigFlow(ConfigFlow, domain=DOMAIN):
             except InvalidAuth:
                 errors["base"] = "Client unable to connect. Check credentials."
             except HomeAssistantError:  # pylint: disable=broad-except
-                LOGGER.exception("Unexpected exception")
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "Unknown error. Please check log files."
             else:
                 return self.async_create_entry(title=info["title"], data=user_input)
@@ -145,7 +145,7 @@ class OptionsFlowHandler(OptionsFlow):
             except InvalidAuth:
                 errors["base"] = "Client unable to connect. Check credentials."
             except HomeAssistantError:  # pylint: disable=broad-except
-                LOGGER.exception("Unexpected exception")
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "Unknown error. Please check log files."
             else:
                 return self.async_create_entry(title=info["title"], data=user_input)
