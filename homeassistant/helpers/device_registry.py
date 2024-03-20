@@ -9,7 +9,6 @@ from functools import lru_cache, partial
 import logging
 import time
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar, cast
-from urllib.parse import urlparse
 
 import attr
 from yarl import URL
@@ -212,22 +211,22 @@ def _validate_device_info(
     return device_info_type
 
 
+_cached_parse_url = lru_cache(maxsize=512)(URL)
+"""Parse a URL and cache the result."""
+
+
 def _validate_configuration_url(value: Any) -> str | None:
     """Validate and convert configuration_url."""
     if value is None:
         return None
-    if (
-        isinstance(value, URL)
-        and (value.scheme not in CONFIGURATION_URL_SCHEMES or not value.host)
-    ) or (
-        (parsed_url := urlparse(str(value)))
-        and (
-            parsed_url.scheme not in CONFIGURATION_URL_SCHEMES
-            or not parsed_url.hostname
-        )
-    ):
+
+    url_as_str = str(value)
+    url = value if type(value) is URL else _cached_parse_url(url_as_str)
+
+    if url.scheme not in CONFIGURATION_URL_SCHEMES or not url.host:
         raise ValueError(f"invalid configuration_url '{value}'")
-    return str(value)
+
+    return url_as_str
 
 
 @attr.s(frozen=True)
