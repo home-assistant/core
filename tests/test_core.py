@@ -1327,7 +1327,7 @@ async def test_eventbus_max_length_exceeded(hass: HomeAssistant) -> None:
 
     assert (
         str(exc_info.value)
-        == f"Value {long_evt_name} for property event_type has a max length of 64 characters"
+        == f"Value {long_evt_name} for property event_type has a maximum length of 64 characters"
     )
     assert exc_info.value.property_name == "event_type"
     assert exc_info.value.max_length == 64
