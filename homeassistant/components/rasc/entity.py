@@ -45,7 +45,7 @@ class BaseRoutineEntity:
     def __init__(
         self,
         name: str | None,
-        routine_id: str | None,
+        routine_id: str,
         actions: dict[str, ActionEntity],
         action_script: Sequence[dict[str, Any]],
         # timeout: float,
@@ -70,12 +70,11 @@ class BaseRoutineEntity:
         routine_entity = {}
 
         for action_id, entity in self.actions.items():
-            if action_id is not None:
+            if not entity.is_end_node:
                 routine_entity[action_id] = ActionEntity(
                     hass=entity.hass,
                     action=entity.action,
                     action_id=entity.action_id,
-                    routine_id=entity.routine_id,
                     duration=entity.duration,
                     delay=entity.delay,
                     variables=var,
@@ -87,21 +86,21 @@ class BaseRoutineEntity:
                 routine_entity[CONF_END_VIRTUAL_NODE] = ActionEntity(
                     hass=entity.hass,
                     action={},
-                    action_id=None,
-                    routine_id=entity.routine_id,
+                    action_id="",
+                    duration=entity.duration,
+                    is_end_node=True,
                     logger=entity.logger,
                 )
 
         for action_id, entity in self.actions.items():
-            if action_id is not None:
+            if not entity.is_end_node:
                 for parent in entity.parents:
-                    if parent.action_id is not None:
-                        routine_entity[action_id].parents.append(
-                            routine_entity[parent.action_id]
-                        )
+                    routine_entity[action_id].parents.append(
+                        routine_entity[parent.action_id]
+                    )
 
                 for child in entity.children:
-                    if child.action_id is not None:
+                    if not child.is_end_node:
                         routine_entity[action_id].children.append(
                             routine_entity[child.action_id]
                         )
@@ -111,12 +110,11 @@ class BaseRoutineEntity:
                         )
             else:
                 for parent in entity.parents:
-                    if parent.action_id is not None:
-                        routine_entity[CONF_END_VIRTUAL_NODE].parents.append(
-                            routine_entity[parent.action_id]
-                        )
+                    routine_entity[CONF_END_VIRTUAL_NODE].parents.append(
+                        routine_entity[parent.action_id]
+                    )
 
-        if self._last_trigger_time is None:
+        if not self._last_trigger_time:
             self._start_time = time.time()
             self._last_trigger_time = self._start_time
         else:
@@ -169,7 +167,7 @@ class RoutineEntity(BaseRoutineEntity):
     def __init__(
         self,
         name: str | None,
-        routine_id: str | None,
+        routine_id: str,
         actions: dict[str, ActionEntity],
         action_script: Sequence[dict[str, Any]],
         start_time: float | None = None,
@@ -185,7 +183,7 @@ class RoutineEntity(BaseRoutineEntity):
         self._log_exceptions = log_exceptions
 
     @property
-    def routine_id(self) -> str | None:
+    def routine_id(self) -> str:
         """Get routine id."""
         return self._routine_id
 
@@ -204,9 +202,9 @@ class ActionEntity:
         self,
         hass: HomeAssistant,
         action: dict[str, Any],
-        action_id: str | None,
-        routine_id: str | None,
-        duration: timedelta | None = None,
+        action_id: str,
+        duration: timedelta,
+        is_end_node: bool = False,
         delay: timedelta | None = None,
         variables: dict[str, Any] | None = None,
         context: Context | None = None,
@@ -217,7 +215,6 @@ class ActionEntity:
         self.action = action
         self._action_id = action_id
         self.action_completed = False
-        self._routine_id = routine_id
         self.parents: list[ActionEntity] = []
         self.children: list[ActionEntity] = []
         self.duration = duration
@@ -227,16 +224,17 @@ class ActionEntity:
         self._log_exceptions = False
         self._set_logger(logger)
         self._stop = asyncio.Event()
+        self._attr_is_end_node = is_end_node
 
     @property
-    def action_id(self) -> str | None:
+    def action_id(self) -> str:
         """Get action id."""
         return self._action_id
 
     @property
-    def routine_id(self) -> str | None:
-        """Get routine id."""
-        return self._routine_id
+    def is_end_node(self) -> bool:
+        """Get is_end_node attribute."""
+        return self._attr_is_end_node
 
     @property
     def logger(self) -> logging.Logger | None:
@@ -490,17 +488,6 @@ class Queue(Generic[_KT, _VT]):
         """Check if the key contains in the queue."""
         return key in self._keys if isinstance(key, str) else False
 
-    def __eq__(self, other: object) -> bool:
-        """Check if the other Queue is the same as the current Queue."""
-        try:
-            return (
-                self._data == dict(other.items()) and self._keys == list(other.keys())
-                if isinstance(other, Queue)
-                else False
-            )
-        except AttributeError:
-            return False
-
     def keys(self) -> Iterator[_KT]:
         """Get keys."""
         yield from self._keys
@@ -543,12 +530,6 @@ class Queue(Generic[_KT, _VT]):
         self._keys = []
         self._data = {}
 
-    def update(self, queue: Queue):
-        """Extend the queue."""
-        for key, value in queue.items():
-            self._keys.append(key)
-            self._data[key] = value
-
     def updateitem(self, key: _KT, value: _VT) -> None:
         """Update the item."""
         try:
@@ -566,11 +547,21 @@ class Queue(Generic[_KT, _VT]):
 
     def top(self):
         """Get the first item in the queue."""
-        return self._keys[0], self.get(self._keys[0]) if self._keys else None, None
+        if not self._keys:
+            return None, None
+
+        key = self._keys[0]
+        value = self._data[key]
+        return key, value
 
     def end(self):
         """Get the last element in the queue."""
-        return self._keys[-1], self.get(self._keys[-1]) if self._keys else None, None
+        if not self._keys:
+            return None, None
+
+        key = self._keys[-1]
+        value = self._data[key]
+        return key, value
 
     def insert_before(self, key: _KT, new_key: _KT, value: _VT) -> None:
         """Insert the new_key before the key with the value."""
@@ -607,6 +598,14 @@ class Queue(Generic[_KT, _VT]):
         """Return the next item with the index."""
         if index + 1 < len(self._keys):
             key = self._keys[index + 1]
+            return self._data[key]
+        return None
+
+    def prev(self, key: _KT) -> Any:
+        """Return the previous item with the key."""
+        index = self._keys.index(key)
+        if index - 1 >= 0:
+            key = self._keys[index - 1]
             return self._data[key]
         return None
 
