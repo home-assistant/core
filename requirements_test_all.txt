@@ -221,7 +221,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==23.1.1
+aioesphomeapi==23.2.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -2188,7 +2188,7 @@ webmin-xmlrpc==0.0.2
 webrtc-noise-gain==1.2.3
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.18.4
+whirlpool-sixth-sense==0.18.6
 
 # homeassistant.components.whois
 whois==0.9.27
