@@ -400,7 +400,7 @@ async def test_delete_non_exist_file_blueprint(
 
 @pytest.mark.parametrize(
     "automation_config",
-    (
+    [
         {
             "automation": {
                 "use_blueprint": {
@@ -413,7 +413,7 @@ async def test_delete_non_exist_file_blueprint(
                 }
             }
         },
-    ),
+    ],
 )
 async def test_delete_blueprint_in_use_by_automation(
     hass: HomeAssistant,
@@ -446,7 +446,7 @@ async def test_delete_blueprint_in_use_by_automation(
 
 @pytest.mark.parametrize(
     "script_config",
-    (
+    [
         {
             "script": {
                 "test_script": {
@@ -459,7 +459,7 @@ async def test_delete_blueprint_in_use_by_automation(
                 }
             }
         },
-    ),
+    ],
 )
 async def test_delete_blueprint_in_use_by_script(
     hass: HomeAssistant,

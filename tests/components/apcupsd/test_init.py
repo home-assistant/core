@@ -21,7 +21,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 @pytest.mark.parametrize(
     "status",
-    (
+    [
         # Contains "SERIALNO" and "UPSNAME" fields.
         # We should create devices for the entities and prefix their IDs with "MyUPS".
         MOCK_STATUS,
@@ -31,7 +31,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
         # Does not contain either "SERIALNO" field.
         # We should _not_ create devices for the entities and their IDs will not have prefixes.
         MOCK_MINIMAL_STATUS,
-    ),
+    ],
 )
 async def test_async_setup_entry(hass: HomeAssistant, status: OrderedDict) -> None:
     """Test a successful setup entry."""
@@ -53,7 +53,7 @@ async def test_async_setup_entry(hass: HomeAssistant, status: OrderedDict) -> No
 
 @pytest.mark.parametrize(
     "status",
-    (
+    [
         # We should not create device entries if SERIALNO is not reported.
         MOCK_MINIMAL_STATUS,
         # We should set the device name to be the friendly UPSNAME field if available.
@@ -62,7 +62,7 @@ async def test_async_setup_entry(hass: HomeAssistant, status: OrderedDict) -> No
         MOCK_MINIMAL_STATUS | {"SERIALNO": "XXXX"},
         # We should create all fields of the device entry if they are available.
         MOCK_STATUS,
-    ),
+    ],
 )
 async def test_device_entry(
     hass: HomeAssistant, status: OrderedDict, device_registry: dr.DeviceRegistry
@@ -139,7 +139,7 @@ async def test_multiple_integrations_different_devices(hass: HomeAssistant) -> N
 
 @pytest.mark.parametrize(
     "error",
-    (OSError(), asyncio.IncompleteReadError(partial=b"", expected=0)),
+    [OSError(), asyncio.IncompleteReadError(partial=b"", expected=0)],
 )
 async def test_connection_error(hass: HomeAssistant, error: Exception) -> None:
     """Test connection error during integration setup."""

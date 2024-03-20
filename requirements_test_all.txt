@@ -45,7 +45,7 @@ PlexAPI==4.15.10
 ProgettiHWSW==0.1.3
 
 # homeassistant.components.cast
-PyChromecast==14.0.0
+PyChromecast==14.0.1
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
@@ -61,7 +61,7 @@ PyMetEireann==2021.8.0
 
 # homeassistant.components.met
 # homeassistant.components.norway_air
-PyMetno==0.11.0
+PyMetno==0.12.0
 
 # homeassistant.components.keymitt_ble
 PyMicroBot==0.0.17
@@ -526,7 +526,7 @@ brottsplatskartan==1.0.5
 brunt==1.2.0
 
 # homeassistant.components.bthome
-bthome-ble==3.8.0
+bthome-ble==3.8.1
 
 # homeassistant.components.buienradar
 buienradar==1.0.5
@@ -1524,7 +1524,7 @@ pymeteoclimatic==0.1.0
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.6.5
+pymodbus==3.6.6
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -2032,7 +2032,7 @@ subarulink==0.7.9
 sunwatcher==0.2.1
 
 # homeassistant.components.sunweg
-sunweg==2.1.0
+sunweg==2.1.1
 
 # homeassistant.components.surepetcare
 surepy==0.9.0

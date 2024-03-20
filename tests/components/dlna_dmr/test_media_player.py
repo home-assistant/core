@@ -272,7 +272,7 @@ async def test_setup_entry_no_options(
 
 @pytest.mark.parametrize(
     "core_state",
-    (CoreState.not_running, CoreState.running),
+    [CoreState.not_running, CoreState.running],
 )
 async def test_setup_entry_with_options(
     hass: HomeAssistant,
@@ -1261,7 +1261,7 @@ async def test_playback_update_state(
 
 @pytest.mark.parametrize(
     "core_state",
-    (CoreState.not_running, CoreState.running),
+    [CoreState.not_running, CoreState.running],
 )
 async def test_unavailable_device(
     hass: HomeAssistant,
@@ -1388,7 +1388,7 @@ async def test_unavailable_device(
 
 @pytest.mark.parametrize(
     "core_state",
-    (CoreState.not_running, CoreState.running),
+    [CoreState.not_running, CoreState.running],
 )
 async def test_become_available(
     hass: HomeAssistant,
@@ -1479,7 +1479,7 @@ async def test_become_available(
 
 @pytest.mark.parametrize(
     "core_state",
-    (CoreState.not_running, CoreState.running),
+    [CoreState.not_running, CoreState.running],
 )
 async def test_alive_but_gone(
     hass: HomeAssistant,
@@ -2329,7 +2329,7 @@ async def test_config_update_mac_address(
 
 @pytest.mark.parametrize(
     "core_state",
-    (CoreState.not_running, CoreState.running),
+    [CoreState.not_running, CoreState.running],
 )
 async def test_connections_restored(
     hass: HomeAssistant,

@@ -50,6 +50,7 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, GPSType, StateType
 from homeassistant.setup import (
+    SetupPhases,
     async_notify_setup_error,
     async_prepare_setup_platform,
     async_start_setup,
@@ -270,7 +271,9 @@ async def _async_setup_legacy_integration(
         """
         cancel_update_stale()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_hass_stop)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, _on_hass_stop, run_immediately=True
+    )
 
 
 @attr.s
@@ -307,7 +310,12 @@ class DeviceTrackerPlatform:
         assert self.type == PLATFORM_TYPE_LEGACY
         full_name = f"{self.name}.{DOMAIN}"
         LOGGER.info("Setting up %s", full_name)
-        with async_start_setup(hass, [full_name]):
+        with async_start_setup(
+            hass,
+            integration=self.name,
+            group=str(id(self.config)),
+            phase=SetupPhases.PLATFORM_SETUP,
+        ):
             try:
                 scanner = None
                 setup: bool | None = None

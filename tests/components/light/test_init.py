@@ -438,7 +438,7 @@ async def test_services(
 
 @pytest.mark.parametrize(
     ("profile_name", "last_call", "expected_data"),
-    (
+    [
         (
             "test",
             "turn_on",
@@ -501,7 +501,7 @@ async def test_services(
                 light.ATTR_TRANSITION: 5.3,
             },
         ),
-    ),
+    ],
 )
 async def test_light_profiles(
     hass: HomeAssistant,
@@ -591,7 +591,7 @@ async def test_default_profiles_group(
         "expected_params_state_was_off",
         "expected_params_state_was_on",
     ),
-    (
+    [
         (
             # No turn on params, should apply profile
             {},
@@ -774,7 +774,7 @@ async def test_default_profiles_group(
                 light.ATTR_TRANSITION: 1,
             },
         ),
-    ),
+    ],
 )
 async def test_default_profiles_light(
     hass: HomeAssistant,
@@ -1128,7 +1128,7 @@ invalid_no_brightness_no_color_no_transition,,,
         assert invalid_profile_name not in profiles.data
 
 
-@pytest.mark.parametrize("light_state", (STATE_ON, STATE_OFF))
+@pytest.mark.parametrize("light_state", [STATE_ON, STATE_OFF])
 async def test_light_backwards_compatibility_supported_color_modes(
     hass: HomeAssistant, light_state, enable_custom_integrations: None
 ) -> None:
