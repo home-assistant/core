@@ -397,17 +397,17 @@ async def test_entry_missing_gen(hass: HomeAssistant, mock_block_device: Mock) -
 
 async def test_entry_missing_port(hass: HomeAssistant) -> None:
     """Test successful Gen2 device init when port is missing in entry data."""
+    data = {
+        CONF_HOST: "192.168.1.37",
+        CONF_SLEEP_PERIOD: 0,
+        "model": MODEL_PLUS_2PM,
+        CONF_GEN: 2,
+    }
+    entry = MockConfigEntry(domain=DOMAIN, data=data, unique_id=MOCK_MAC)
+    entry.add_to_hass(hass)
     with patch(
         "aioshelly.rpc_device.RpcDevice.create", return_value=Mock()
     ) as rpc_device_mock:
-        data = {
-            CONF_HOST: "192.168.1.37",
-            CONF_SLEEP_PERIOD: 0,
-            "model": MODEL_PLUS_2PM,
-            CONF_GEN: 2,
-        }
-        entry = MockConfigEntry(domain=DOMAIN, data=data, unique_id=MOCK_MAC)
-        entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
