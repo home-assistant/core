@@ -33,6 +33,10 @@ cached_get_user = cache(getuser)
 @bind_hass
 async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
     """Return info about the system."""
+    # Local import to avoid circular dependencies
+    # We use the import helper because hassio
+    # may not be loaded yet and we don't want to
+    # do blocking I/O in the event loop to import it.
     if TYPE_CHECKING:
         # pylint: disable-next=import-outside-toplevel
         from homeassistant.components import hassio
