@@ -70,7 +70,7 @@ class RokuRemote(RokuEntity, RemoteEntity):
         for _ in range(num_repeats):
             for single_command in command:
                 await self.coordinator.roku.remote(single_command)
-        
+
             if num_repeats > 1:
                 await asyncio.sleep(delay)
 
