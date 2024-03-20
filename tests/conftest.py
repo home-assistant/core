@@ -105,7 +105,6 @@ from .test_util.aiohttp import (  # noqa: E402, isort:skip
     mock_aiohttp_client,
 )
 
-
 _LOGGER = logging.getLogger(__name__)
 
 logging.basicConfig(level=logging.INFO)
@@ -114,6 +113,10 @@ logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
 asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 # Disable fixtures overriding our beautiful policy
 asyncio.set_event_loop_policy = lambda policy: None
+
+pytest_plugins = [
+    "tests.fixtures.pytest.light",
+]
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
