@@ -406,7 +406,7 @@ async def test_entry_missing_port(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=DOMAIN, data=data, unique_id=MOCK_MAC)
     entry.add_to_hass(hass)
     with patch(
-        "aioshelly.rpc_device.RpcDevice.create", return_value=Mock()
+        "homeassistant.components.shelly.__init__.RpcDevice.create", return_value=Mock()
     ) as rpc_device_mock:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -418,18 +418,18 @@ async def test_entry_missing_port(hass: HomeAssistant) -> None:
 
 async def test_rpc_entry_custom_port(hass: HomeAssistant) -> None:
     """Test successful Gen2 device init using custom port."""
+    data = {
+        CONF_HOST: "192.168.1.37",
+        CONF_SLEEP_PERIOD: 0,
+        "model": MODEL_PLUS_2PM,
+        CONF_GEN: 2,
+        CONF_PORT: 8001,
+    }
+    entry = MockConfigEntry(domain=DOMAIN, data=data, unique_id=MOCK_MAC)
+    entry.add_to_hass(hass)
     with patch(
         "aioshelly.rpc_device.RpcDevice.create", return_value=Mock()
     ) as rpc_device_mock:
-        data = {
-            CONF_HOST: "192.168.1.37",
-            CONF_SLEEP_PERIOD: 0,
-            "model": MODEL_PLUS_2PM,
-            CONF_GEN: 2,
-            CONF_PORT: 8001,
-        }
-        entry = MockConfigEntry(domain=DOMAIN, data=data, unique_id=MOCK_MAC)
-        entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
