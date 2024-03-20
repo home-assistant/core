@@ -392,6 +392,7 @@ FLOWS = {
         "ping",
         "plaato",
         "plex",
+        "plexamp",
         "plugwise",
         "plum_lightpad",
         "point",
