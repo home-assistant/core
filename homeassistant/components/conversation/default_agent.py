@@ -44,9 +44,15 @@ from homeassistant.helpers.event import (
     async_track_state_added_domain,
 )
 from homeassistant.util.json import JsonObjectType, json_loads_object
+from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
-from .const import DEFAULT_EXPOSED_ATTRIBUTES, DOMAIN
+from .const import (
+    ATTR_TRANSLATED_STATE,
+    ATTR_UNTRANSLATED_STATE,
+    DEFAULT_EXPOSED_ATTRIBUTES,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 _DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
@@ -474,7 +480,15 @@ class DefaultAgent(AbstractConversationAgent):
         for state in all_states:
             device_class = state.attributes.get("device_class", "_")
             key = f"component.{state.domain}.entity_component.{device_class}.state.{state.state}"
-            state.state = translations.get(key, state.state)
+            attributes = ReadOnlyDict(
+                state.attributes
+                | {
+                    ATTR_TRANSLATED_STATE: translations.get(key, state.state),
+                    ATTR_UNTRANSLATED_STATE: state.state,
+                }
+            )
+            state.attributes = attributes
+            state.state = str(state.attributes[ATTR_TRANSLATED_STATE])
 
         # Get first matched or unmatched state.
         # This is available in the response template as "state".
