@@ -75,7 +75,7 @@ async def async_setup_entry(
     async_add_entities([entity])
 
 
-class GenericBlind(MotionblindsBLEEntity, CoverEntity):
+class MotionblindsBLECoverEntity(MotionblindsBLEEntity, CoverEntity):
     """Representation of a blind."""
 
     _attr_is_closed: bool | None = None
@@ -136,7 +136,7 @@ class GenericBlind(MotionblindsBLEEntity, CoverEntity):
         self.async_write_ha_state()
 
 
-class PositionBlind(GenericBlind):
+class PositionBlind(MotionblindsBLECoverEntity):
     """Representation of a blind with position capability."""
 
     _attr_supported_features = (
@@ -170,7 +170,7 @@ class PositionBlind(GenericBlind):
         await self._device.position(new_position)
 
 
-class TiltBlind(GenericBlind):
+class TiltBlind(MotionblindsBLECoverEntity):
     """Representation of a blind with tilt capability."""
 
     _attr_supported_features = (
@@ -223,7 +223,7 @@ class PositionTiltBlind(PositionBlind, TiltBlind):
     )
 
 
-BLIND_TYPE_TO_CLASS: dict[str, type[GenericBlind]] = {
+BLIND_TYPE_TO_CLASS: dict[str, type[MotionblindsBLECoverEntity]] = {
     MotionBlindType.ROLLER.name: PositionBlind,
     MotionBlindType.HONEYCOMB.name: PositionBlind,
     MotionBlindType.ROMAN.name: PositionBlind,
