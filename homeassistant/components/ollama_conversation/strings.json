@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]",
+          "model": "Model name",
+          "prompt": "Prompt Template",
+          "model_options": "Model options",
+          "max_history": "Max history messages"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]",
+          "model": "Model name",
+          "prompt": "Prompt Template",
+          "model_options": "Model options",
+          "max_history": "Max history messages"
+        }
+      }
+    }
+  }
+}

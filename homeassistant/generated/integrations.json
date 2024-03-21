@@ -4136,6 +4136,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "ollama_conversation": {
+      "name": "Ollama Conversation",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "ombi": {
       "name": "Ombi",
       "integration_type": "hub",
