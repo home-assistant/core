@@ -43,7 +43,6 @@ class AutomowerSelectEntity(AutomowerControlEntity, SelectEntity):
     """Defining the headlight mode entity."""
 
     _attr_options = HEADLIGHT_MODES
-    _attr_icon = "mdi:car-light-high"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_translation_key = "headlight_mode"
 
@@ -58,7 +57,7 @@ class AutomowerSelectEntity(AutomowerControlEntity, SelectEntity):
 
     @property
     def current_option(self) -> str:
-        """Return a the current option for the entity."""
+        """Return the current option for the entity."""
         return self.mower_attributes.headlight.mode.lower()
 
     async def async_select_option(self, option: str) -> None:
