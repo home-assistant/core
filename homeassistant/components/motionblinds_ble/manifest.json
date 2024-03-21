@@ -3,7 +3,7 @@
   "name": "Motionblinds BLE",
   "bluetooth": [
     {
-      "local_name": "MOTION_****",
+      "local_name": "MOTION_*",
       "connectable": true
     }
   ],
