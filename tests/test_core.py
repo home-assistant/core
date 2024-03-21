@@ -1676,8 +1676,18 @@ async def test_serviceregistry_service_that_not_exists(hass: HomeAssistant) -> N
     await hass.async_block_till_done()
     assert len(calls_remove) == 0
 
-    with pytest.raises(ServiceNotFound):
+    with pytest.raises(ServiceNotFound) as exc:
         await hass.services.async_call("test_do_not", "exist", {})
+    assert exc.value.translation_domain == "homeassistant"
+    assert exc.value.translation_key == "service_not_found"
+    assert exc.value.translation_placeholders == {
+        "domain": "test_do_not",
+        "service": "exist",
+    }
+    assert exc.value.domain == "test_do_not"
+    assert exc.value.service == "exist"
+
+    assert str(exc.value) == "Service test_do_not.exist not found."
 
 
 async def test_serviceregistry_async_service_raise_exception(
