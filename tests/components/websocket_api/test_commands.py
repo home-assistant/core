@@ -24,7 +24,6 @@ from homeassistant.core import Context, HomeAssistant, State, SupportsResponse, 
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import json_loads
