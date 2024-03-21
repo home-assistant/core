@@ -6,6 +6,7 @@ import logging
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
 import pytest
+from syrupy import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant import config_entries, loader
@@ -690,7 +691,9 @@ async def test_get_states(
 
 
 async def test_get_services(
-    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test get_services command."""
     for id_ in (5, 6):
@@ -700,7 +703,7 @@ async def test_get_services(
         assert msg["id"] == id_
         assert msg["type"] == const.TYPE_RESULT
         assert msg["success"]
-        assert msg["result"] == hass.services.async_services()
+        assert msg["result"] == snapshot
 
 
 async def test_get_config(
