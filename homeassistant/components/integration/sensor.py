@@ -398,11 +398,7 @@ class IntegrationSensor(RestoreSensor):
     ) -> None:
         old_state = event.data["old_state"]
         new_state = event.data["new_state"]
-        return self._integrate_on_state_change(old_state, new_state)
 
-    def _integrate_on_state_change(
-        self, old_state: State | None, new_state: State | None
-    ) -> None:
         if old_state is None or new_state is None:
             return
 
