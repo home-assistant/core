@@ -1,4 +1,5 @@
 """Sensors for the weatherflow integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -46,13 +47,6 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 from .const import DOMAIN, LOGGER, format_dispatch_call
 
 
-@dataclass(frozen=True)
-class WeatherFlowSensorRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    raw_data_conv_fn: Callable[[WeatherFlowDevice], datetime | StateType]
-
-
 def precipitation_raw_conversion_fn(raw_data: Enum):
     """Parse parse precipitation type."""
     if raw_data.name.lower() == "unknown":
@@ -60,14 +54,14 @@ def precipitation_raw_conversion_fn(raw_data: Enum):
     return raw_data.name.lower()
 
 
-@dataclass(frozen=True)
-class WeatherFlowSensorEntityDescription(
-    SensorEntityDescription, WeatherFlowSensorRequiredKeysMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class WeatherFlowSensorEntityDescription(SensorEntityDescription):
     """Describes WeatherFlow sensor entity."""
 
+    raw_data_conv_fn: Callable[[WeatherFlowDevice], datetime | StateType]
+
     event_subscriptions: list[str] = field(default_factory=lambda: [EVENT_OBSERVATION])
-    imperial_suggested_unit: None | str = None
+    imperial_suggested_unit: str | None = None
 
     def get_native_value(self, device: WeatherFlowDevice) -> datetime | StateType:
         """Return the parsed sensor value."""

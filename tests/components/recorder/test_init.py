@@ -1,4 +1,5 @@
 """The tests for the Recorder component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -141,7 +142,7 @@ async def test_shutdown_before_startup_finishes(
     hass.set_state(CoreState.not_running)
 
     recorder_helper.async_initialize_recorder(hass)
-    hass.create_task(async_setup_recorder_instance(hass, config))
+    hass.async_create_task(async_setup_recorder_instance(hass, config))
     await recorder_helper.async_wait_recorder(hass)
     instance = get_instance(hass)
 
@@ -171,7 +172,7 @@ async def test_canceled_before_startup_finishes(
     """Test recorder shuts down when its startup future is canceled out from under it."""
     hass.set_state(CoreState.not_running)
     recorder_helper.async_initialize_recorder(hass)
-    hass.create_task(async_setup_recorder_instance(hass))
+    hass.async_create_task(async_setup_recorder_instance(hass))
     await recorder_helper.async_wait_recorder(hass)
 
     instance = get_instance(hass)
@@ -223,7 +224,7 @@ async def test_state_gets_saved_when_set_before_start_event(
     hass.set_state(CoreState.not_running)
 
     recorder_helper.async_initialize_recorder(hass)
-    hass.create_task(async_setup_recorder_instance(hass))
+    hass.async_create_task(async_setup_recorder_instance(hass))
     await recorder_helper.async_wait_recorder(hass)
 
     entity_id = "test.recorder"
@@ -273,11 +274,11 @@ async def test_saving_state(recorder_mock: Recorder, hass: HomeAssistant) -> Non
 
 @pytest.mark.parametrize(
     ("dialect_name", "expected_attributes"),
-    (
+    [
         (SupportedDialect.MYSQL, {"test_attr": 5, "test_attr_10": "silly\0stuff"}),
         (SupportedDialect.POSTGRESQL, {"test_attr": 5, "test_attr_10": "silly"}),
         (SupportedDialect.SQLITE, {"test_attr": 5, "test_attr_10": "silly\0stuff"}),
-    ),
+    ],
 )
 async def test_saving_state_with_nul(
     recorder_mock: Recorder, hass: HomeAssistant, dialect_name, expected_attributes
@@ -542,7 +543,7 @@ def test_saving_state_with_commit_interval_zero(
 ) -> None:
     """Test saving a state with a commit interval of zero."""
     hass = hass_recorder({"commit_interval": 0})
-    get_instance(hass).commit_interval == 0
+    assert get_instance(hass).commit_interval == 0
 
     entity_id = "test.recorder"
     state = "restoring_from_db"
@@ -2115,14 +2116,14 @@ async def test_async_block_till_done(
 
 @pytest.mark.parametrize(
     ("db_url", "echo"),
-    (
+    [
         ("sqlite://blabla", None),
         ("mariadb://blabla", False),
         ("mysql://blabla", False),
         ("mariadb+pymysql://blabla", False),
         ("mysql+pymysql://blabla", False),
         ("postgresql://blabla", False),
-    ),
+    ],
 )
 async def test_disable_echo(
     hass: HomeAssistant, db_url, echo, caplog: pytest.LogCaptureFixture
@@ -2147,7 +2148,7 @@ async def test_disable_echo(
 
 @pytest.mark.parametrize(
     ("config_url", "expected_connect_args"),
-    (
+    [
         (
             "mariadb://user:password@SERVER_IP/DB_NAME",
             {"charset": "utf8mb4"},
@@ -2180,7 +2181,7 @@ async def test_disable_echo(
             "sqlite://blabla",
             {},
         ),
-    ),
+    ],
 )
 async def test_mysql_missing_utf8mb4(
     hass: HomeAssistant, config_url, expected_connect_args
@@ -2208,11 +2209,11 @@ async def test_mysql_missing_utf8mb4(
 
 @pytest.mark.parametrize(
     "config_url",
-    (
+    [
         "mysql://user:password@SERVER_IP/DB_NAME",
         "mysql://user:password@SERVER_IP/DB_NAME?charset=utf8mb4",
         "mysql://user:password@SERVER_IP/DB_NAME?blah=bleh&charset=other",
-    ),
+    ],
 )
 async def test_connect_args_priority(hass: HomeAssistant, config_url) -> None:
     """Test connect_args has priority over URL query."""
@@ -2489,3 +2490,73 @@ async def test_events_are_recorded_until_final_write(
     await hass.async_block_till_done()
 
     assert not instance.engine
+
+
+async def test_commit_before_commits_pending_writes(
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
+    recorder_db_url: str,
+    tmp_path: Path,
+) -> None:
+    """Test commit_before with a non-zero commit interval.
+
+    All of our test run with a commit interval of 0 by
+    default, so we need to test this with a non-zero commit
+    """
+    config = {
+        recorder.CONF_DB_URL: recorder_db_url,
+        recorder.CONF_COMMIT_INTERVAL: 60,
+    }
+
+    recorder_helper.async_initialize_recorder(hass)
+    hass.async_create_task(async_setup_recorder_instance(hass, config))
+    await recorder_helper.async_wait_recorder(hass)
+    instance = get_instance(hass)
+    assert instance.commit_interval == 60
+    verify_states_in_queue_future = hass.loop.create_future()
+    verify_session_commit_future = hass.loop.create_future()
+
+    class VerifyCommitBeforeTask(recorder.tasks.RecorderTask):
+        """Task to verify that commit before ran.
+
+        If commit_before is true, we should have no pending writes.
+        """
+
+        commit_before = True
+
+        def run(self, instance: Recorder) -> None:
+            if not instance._event_session_has_pending_writes:
+                hass.loop.call_soon_threadsafe(
+                    verify_session_commit_future.set_result, None
+                )
+                return
+            hass.loop.call_soon_threadsafe(
+                verify_session_commit_future.set_exception,
+                RuntimeError("Session still has pending write"),
+            )
+
+    class VerifyStatesInQueueTask(recorder.tasks.RecorderTask):
+        """Task to verify that states are in the queue."""
+
+        commit_before = False
+
+        def run(self, instance: Recorder) -> None:
+            if instance._event_session_has_pending_writes:
+                hass.loop.call_soon_threadsafe(
+                    verify_states_in_queue_future.set_result, None
+                )
+                return
+            hass.loop.call_soon_threadsafe(
+                verify_states_in_queue_future.set_exception,
+                RuntimeError("Session has no pending write"),
+            )
+
+    # First insert an event
+    instance.queue_task(Event("fake_event"))
+    # Next verify that the event session has pending writes
+    instance.queue_task(VerifyStatesInQueueTask())
+    # Finally, verify that the session was committed
+    instance.queue_task(VerifyCommitBeforeTask())
+
+    await verify_states_in_queue_future
+    await verify_session_commit_future

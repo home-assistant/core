@@ -1,6 +1,5 @@
 """Tests for rainbird sensor platform."""
 
-
 from http import HTTPStatus
 
 import pytest

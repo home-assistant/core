@@ -1,4 +1,5 @@
 """Test the Vallox integration config flow."""
+
 from unittest.mock import patch
 
 from vallox_websocket_api import ValloxApiException, ValloxWebsocketException

@@ -3,6 +3,7 @@
 For more info on the API see:
 https://help.rejseplanen.dk/hc/en-us/articles/214174465-Rejseplanen-s-API
 """
+
 from __future__ import annotations
 
 from contextlib import suppress

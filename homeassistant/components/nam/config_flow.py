@@ -1,4 +1,5 @@
 """Adds config flow for Nettigo Air Monitor."""
+
 from __future__ import annotations
 
 import asyncio

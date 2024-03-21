@@ -1,4 +1,5 @@
 """Test the huum config flow."""
+
 from unittest.mock import patch
 
 from huum.exceptions import Forbidden

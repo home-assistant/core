@@ -1,4 +1,5 @@
 """Support for KNX/IP climate devices."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -203,10 +204,10 @@ class KNXClimate(KnxEntity, ClimateEntity):
         """Return the list of available operation/controller modes."""
         ha_controller_modes: list[HVACMode | None] = []
         if self._device.mode is not None:
-            for knx_controller_mode in self._device.mode.controller_modes:
-                ha_controller_modes.append(
-                    CONTROLLER_MODES.get(knx_controller_mode.value)
-                )
+            ha_controller_modes.extend(
+                CONTROLLER_MODES.get(knx_controller_mode.value)
+                for knx_controller_mode in self._device.mode.controller_modes
+            )
 
         if self._device.supports_on_off:
             if not ha_controller_modes:

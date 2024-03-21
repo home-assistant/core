@@ -1,4 +1,5 @@
 """Config flow for the Atag component."""
+
 from typing import Any
 
 import pyatag

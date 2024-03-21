@@ -1,4 +1,5 @@
 """Test Automation config panel."""
+
 from http import HTTPStatus
 import json
 from unittest.mock import ANY, patch
@@ -18,9 +19,10 @@ from tests.typing import ClientSessionGenerator
 async def setup_scene(hass, scene_config):
     """Set up scene integration."""
     assert await async_setup_component(hass, "scene", {"scene": scene_config})
+    await hass.async_block_till_done()
 
 
-@pytest.mark.parametrize("scene_config", ({},))
+@pytest.mark.parametrize("scene_config", [{}])
 async def test_create_scene(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -67,7 +69,7 @@ async def test_create_scene(
     ]
 
 
-@pytest.mark.parametrize("scene_config", ({},))
+@pytest.mark.parametrize("scene_config", [{}])
 async def test_update_scene(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -115,7 +117,7 @@ async def test_update_scene(
     ]
 
 
-@pytest.mark.parametrize("scene_config", ({},))
+@pytest.mark.parametrize("scene_config", [{}])
 async def test_bad_formatted_scene(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -175,12 +177,12 @@ async def test_bad_formatted_scene(
 
 @pytest.mark.parametrize(
     "scene_config",
-    (
+    [
         [
             {"id": "light_on", "name": "Light on", "entities": {}},
             {"id": "light_off", "name": "Light off", "entities": {}},
         ],
-    ),
+    ],
 )
 async def test_delete_scene(
     hass: HomeAssistant,
@@ -224,7 +226,7 @@ async def test_delete_scene(
     assert len(entity_registry.entities) == 1
 
 
-@pytest.mark.parametrize("scene_config", ({},))
+@pytest.mark.parametrize("scene_config", [{}])
 async def test_api_calls_require_admin(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

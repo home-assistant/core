@@ -1,4 +1,5 @@
 """Integration for Apple's WeatherKit API."""
+
 from __future__ import annotations
 
 from apple_weatherkit.client import (

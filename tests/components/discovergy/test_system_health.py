@@ -1,4 +1,5 @@
 """Test Discovergy system health."""
+
 import asyncio
 
 from aiohttp import ClientError

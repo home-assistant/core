@@ -1,4 +1,5 @@
 """Tests for HomematicIP Cloud alarm control panel."""
+
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
 )

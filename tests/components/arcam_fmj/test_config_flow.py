@@ -1,4 +1,5 @@
 """Tests for the Arcam FMJ config flow module."""
+
 from dataclasses import replace
 from unittest.mock import AsyncMock, patch
 

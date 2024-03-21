@@ -1,11 +1,10 @@
 """Component providing HA switch support for Ring Door Bell/Chimes."""
+
 from datetime import timedelta
 import logging
 from typing import Any
 
-import requests
-from ring_doorbell import RingStickUpCam
-from ring_doorbell.generic import RingGeneric
+from ring_doorbell import RingGeneric, RingStickUpCam
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -15,7 +14,7 @@ import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN, RING_DEVICES, RING_DEVICES_COORDINATOR
 from .coordinator import RingDataCoordinator
-from .entity import RingEntity
+from .entity import RingEntity, exception_wrap
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,13 +37,12 @@ async def async_setup_entry(
     coordinator: RingDataCoordinator = hass.data[DOMAIN][config_entry.entry_id][
         RING_DEVICES_COORDINATOR
     ]
-    switches = []
 
-    for device in devices["stickup_cams"]:
-        if device.has_capability("siren"):
-            switches.append(SirenSwitch(device, coordinator))
-
-    async_add_entities(switches)
+    async_add_entities(
+        SirenSwitch(device, coordinator)
+        for device in devices["stickup_cams"]
+        if device.has_capability("siren")
+    )
 
 
 class BaseRingSwitch(RingEntity, SwitchEntity):
@@ -82,13 +80,10 @@ class SirenSwitch(BaseRingSwitch):
             self._attr_is_on = device.siren > 0
         super()._handle_coordinator_update()
 
+    @exception_wrap
     def _set_switch(self, new_state):
         """Update switch state, and causes Home Assistant to correctly update."""
-        try:
-            self._device.siren = new_state
-        except requests.Timeout:
-            _LOGGER.error("Time out setting %s siren to %s", self.entity_id, new_state)
-            return
+        self._device.siren = new_state
 
         self._attr_is_on = new_state > 0
         self._no_updates_until = dt_util.utcnow() + SKIP_UPDATES_DELAY

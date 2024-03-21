@@ -1,4 +1,5 @@
 """Tests for the HDMI-CEC component."""
+
 from unittest.mock import AsyncMock, Mock
 
 from homeassistant.components.hdmi_cec import KeyPressCommand, KeyReleaseCommand

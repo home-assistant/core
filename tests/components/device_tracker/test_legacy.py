@@ -1,4 +1,5 @@
 """Tests for the legacy device tracker component."""
+
 from unittest.mock import mock_open, patch
 
 from homeassistant.components.device_tracker import legacy

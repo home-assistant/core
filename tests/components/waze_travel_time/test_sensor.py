@@ -1,4 +1,5 @@
 """Test Waze Travel Time sensors."""
+
 import pytest
 from pywaze.route_calculator import WRCError
 

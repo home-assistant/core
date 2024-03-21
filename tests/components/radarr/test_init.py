@@ -1,4 +1,5 @@
 """Test Radarr integration."""
+
 import pytest
 
 from homeassistant.components.radarr.const import DEFAULT_NAME, DOMAIN

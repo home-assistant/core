@@ -1,4 +1,5 @@
 """The tests for Network UPS Tools (NUT) device actions."""
+
 from unittest.mock import MagicMock
 
 from pynut2.nut2 import PyNUTError

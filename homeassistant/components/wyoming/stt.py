@@ -1,4 +1,5 @@
 """Support for Wyoming speech-to-text services."""
+
 from collections.abc import AsyncIterable
 import logging
 

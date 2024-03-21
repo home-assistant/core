@@ -1,4 +1,5 @@
 """Tests for init methods."""
+
 from unittest.mock import patch
 
 from homeassistant.components.flipr.const import CONF_FLIPR_ID, DOMAIN

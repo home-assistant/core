@@ -1,4 +1,5 @@
 """Support for Tuya buttons."""
+
 from __future__ import annotations
 
 from tuya_sharing import CustomerDevice, Manager
@@ -70,11 +71,11 @@ async def async_setup_entry(
         for device_id in device_ids:
             device = hass_data.manager.device_map[device_id]
             if descriptions := BUTTONS.get(device.category):
-                for description in descriptions:
-                    if description.key in device.status:
-                        entities.append(
-                            TuyaButtonEntity(device, hass_data.manager, description)
-                        )
+                entities.extend(
+                    TuyaButtonEntity(device, hass_data.manager, description)
+                    for description in descriptions
+                    if description.key in device.status
+                )
 
         async_add_entities(entities)
 

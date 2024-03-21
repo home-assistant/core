@@ -1,4 +1,5 @@
 """Helpers for data entry flows for config entries."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -68,8 +69,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow, Generic[_R]):
 
             if not (has_devices := bool(in_progress)):
                 has_devices = await cast(
-                    "asyncio.Future[bool]",
-                    self.hass.async_add_job(self._discovery_function, self.hass),
+                    "asyncio.Future[bool]", self._discovery_function(self.hass)
                 )
 
             if not has_devices:

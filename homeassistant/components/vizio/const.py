@@ -1,4 +1,5 @@
 """Constants used by vizio component."""
+
 from pyvizio.const import (
     DEVICE_CLASS_SPEAKER as VIZIO_DEVICE_CLASS_SPEAKER,
     DEVICE_CLASS_TV as VIZIO_DEVICE_CLASS_TV,

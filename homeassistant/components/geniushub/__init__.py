@@ -1,4 +1,5 @@
 """Support for a Genius Hub system."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta

@@ -1,4 +1,5 @@
 """The tests for the trigger helper."""
+
 from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
 import pytest

@@ -1,4 +1,5 @@
 """Sensor platform for Trafikverket Camera integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -23,18 +24,11 @@ from .entity import TrafikverketCameraNonCameraEntity
 PARALLEL_UPDATES = 0
 
 
-@dataclass(frozen=True)
-class DeviceBaseEntityDescriptionMixin:
-    """Mixin for required Trafikverket Camera base description keys."""
+@dataclass(frozen=True, kw_only=True)
+class TVCameraSensorEntityDescription(SensorEntityDescription):
+    """Describes Trafikverket Camera sensor entity."""
 
     value_fn: Callable[[CameraData], StateType | datetime]
-
-
-@dataclass(frozen=True)
-class TVCameraSensorEntityDescription(
-    SensorEntityDescription, DeviceBaseEntityDescriptionMixin
-):
-    """Describes Trafikverket Camera sensor entity."""
 
 
 SENSOR_TYPES: tuple[TVCameraSensorEntityDescription, ...] = (

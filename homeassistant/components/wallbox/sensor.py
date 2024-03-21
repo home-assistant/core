@@ -1,4 +1,5 @@
 """Home Assistant component for accessing the Wallbox Portal API. The sensor component creates multiple sensors regarding wallbox performance."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

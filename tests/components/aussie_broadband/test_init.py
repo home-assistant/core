@@ -1,4 +1,5 @@
 """Test the Aussie Broadband init."""
+
 from unittest.mock import patch
 
 from aiohttp import ClientConnectionError

@@ -1,21 +1,9 @@
 """Constants for the Dexcom integration."""
+
 from homeassistant.const import Platform
 
 DOMAIN = "dexcom"
 PLATFORMS = [Platform.SENSOR]
-
-GLUCOSE_TREND_ICON = [
-    "mdi:help",
-    "mdi:arrow-up-thick",
-    "mdi:arrow-up",
-    "mdi:arrow-top-right",
-    "mdi:arrow-right",
-    "mdi:arrow-bottom-right",
-    "mdi:arrow-down",
-    "mdi:arrow-down-thick",
-    "mdi:help",
-    "mdi:alert-circle-outline",
-]
 
 MMOL_L = "mmol/L"
 MG_DL = "mg/dL"

@@ -1,4 +1,5 @@
 """Config flow to configure the Venstar integration."""
+
 from typing import Any
 
 from venstarcolortouch import VenstarColorTouch

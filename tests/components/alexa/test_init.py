@@ -1,4 +1,5 @@
 """Tests for alexa."""
+
 from homeassistant.components.alexa.const import EVENT_ALEXA_SMART_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component

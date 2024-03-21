@@ -1,4 +1,5 @@
 """Platform for the opengarage.io binary sensor component."""
+
 from __future__ import annotations
 
 import logging

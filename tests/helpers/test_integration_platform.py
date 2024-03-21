@@ -1,4 +1,5 @@
 """Test integration platform helpers."""
+
 from collections.abc import Callable
 from types import ModuleType
 from unittest.mock import Mock, patch
@@ -189,7 +190,7 @@ async def _process_platform_coro(
 
 @pytest.mark.no_fail_on_log_exception
 @pytest.mark.parametrize(
-    "process_platform", (_process_platform_callback, _process_platform_coro)
+    "process_platform", [_process_platform_callback, _process_platform_coro]
 )
 async def test_process_integration_platforms_non_compliant(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, process_platform: Callable

@@ -1,4 +1,5 @@
 """Select platform for Sensibo integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -20,21 +21,14 @@ from .entity import SensiboDeviceBaseEntity, async_handle_api_call
 PARALLEL_UPDATES = 0
 
 
-@dataclass(frozen=True)
-class SensiboSelectDescriptionMixin:
-    """Mixin values for Sensibo entities."""
+@dataclass(frozen=True, kw_only=True)
+class SensiboSelectEntityDescription(SelectEntityDescription):
+    """Class describing Sensibo Select entities."""
 
     data_key: str
     value_fn: Callable[[SensiboDevice], str | None]
     options_fn: Callable[[SensiboDevice], list[str] | None]
     transformation: Callable[[SensiboDevice], dict | None]
-
-
-@dataclass(frozen=True)
-class SensiboSelectEntityDescription(
-    SelectEntityDescription, SensiboSelectDescriptionMixin
-):
-    """Class describing Sensibo Select entities."""
 
 
 DEVICE_SELECT_TYPES = (
@@ -106,8 +100,6 @@ class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
         if self.entity_description.key not in self.device_data.active_features:
             hvac_mode = self.device_data.hvac_mode if self.device_data.hvac_mode else ""
             raise HomeAssistantError(
-                f"Current mode {self.device_data.hvac_mode} doesn't support setting"
-                f" {self.entity_description.name}",
                 translation_domain=DOMAIN,
                 translation_key="select_option_not_available",
                 translation_placeholders={

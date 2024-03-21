@@ -1,4 +1,5 @@
 """Config flow for the Hardkernel integration."""
+
 from __future__ import annotations
 
 from typing import Any

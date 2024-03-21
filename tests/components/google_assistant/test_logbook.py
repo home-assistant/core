@@ -1,4 +1,5 @@
 """The tests for Google Assistant logbook."""
+
 from homeassistant.components.google_assistant.const import (
     DOMAIN,
     EVENT_COMMAND_RECEIVED,

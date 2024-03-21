@@ -1,4 +1,5 @@
 """Tests for the system health component init."""
+
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.client_exceptions import ClientError

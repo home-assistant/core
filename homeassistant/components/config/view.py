@@ -1,4 +1,5 @@
 """Component to configure Home Assistant via an API."""
+
 from __future__ import annotations
 
 import asyncio
@@ -10,7 +11,7 @@ from typing import Any, Generic, TypeVar, cast
 from aiohttp import web
 import voluptuous as vol
 
-from homeassistant.components.http import HomeAssistantView, require_admin
+from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -80,7 +81,7 @@ class BaseEditConfigView(HomeAssistantView, Generic[_DataT]):
     @require_admin
     async def get(self, request: web.Request, config_key: str) -> web.Response:
         """Fetch device specific config."""
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
         async with self.mutation_lock:
             current = await self.read_config(hass)
             value = self._get_value(hass, current, config_key)
@@ -103,7 +104,7 @@ class BaseEditConfigView(HomeAssistantView, Generic[_DataT]):
         except vol.Invalid as err:
             return self.json_message(f"Key malformed: {err}", HTTPStatus.BAD_REQUEST)
 
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
 
         try:
             # We just validate, we don't store that data because
@@ -135,7 +136,7 @@ class BaseEditConfigView(HomeAssistantView, Generic[_DataT]):
     @require_admin
     async def delete(self, request: web.Request, config_key: str) -> web.Response:
         """Remove an entry."""
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
         async with self.mutation_lock:
             current = await self.read_config(hass)
             value = self._get_value(hass, current, config_key)

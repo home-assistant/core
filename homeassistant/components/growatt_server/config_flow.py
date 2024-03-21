@@ -1,4 +1,5 @@
 """Config flow for growatt server integration."""
+
 import growattServer
 import voluptuous as vol
 

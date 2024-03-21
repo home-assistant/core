@@ -1,4 +1,5 @@
 """Definitions for DSMR Reader sensors added to MQTT."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

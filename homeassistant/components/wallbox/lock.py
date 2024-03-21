@@ -1,4 +1,5 @@
 """Home Assistant component for accessing the Wallbox Portal API. The lock component creates a lock entity."""
+
 from __future__ import annotations
 
 from typing import Any

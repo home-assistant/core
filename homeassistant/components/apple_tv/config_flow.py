@@ -1,4 +1,5 @@
 """Config flow for Apple TV integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -340,7 +341,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
             self.hass, self.scan_filter, self.hass.loop
         )
         if not self.atv:
-            raise DeviceNotFound()
+            raise DeviceNotFound
 
         # Protocols supported by the device are prospects for pairing
         self.protocols_to_pair = deque(
@@ -383,7 +384,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
                         self.hass.config_entries.async_reload(entry.entry_id)
                     )
             if not allow_exist:
-                raise DeviceAlreadyConfigured()
+                raise DeviceAlreadyConfigured
 
     async def async_step_confirm(
         self, user_input: dict[str, str] | None = None

@@ -1,4 +1,5 @@
 """Number entity platform for Tailwind."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -76,7 +77,6 @@ class TailwindNumberEntity(TailwindEntity, NumberEntity):
             await self.entity_description.set_value_fn(self.coordinator.tailwind, value)
         except TailwindError as exc:
             raise HomeAssistantError(
-                str(exc),
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
             ) from exc

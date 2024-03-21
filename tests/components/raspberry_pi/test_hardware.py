@@ -1,4 +1,5 @@
 """Test the Raspberry Pi hardware platform."""
+
 from unittest.mock import patch
 
 import pytest

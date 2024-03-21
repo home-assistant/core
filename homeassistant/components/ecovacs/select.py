@@ -1,4 +1,5 @@
 """Ecovacs select entity module."""
+
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Generic

@@ -1,4 +1,5 @@
 """Tests for the Rituals Perfume Genie number platform."""
+
 from __future__ import annotations
 
 import pytest

@@ -1,4 +1,5 @@
 """Test cases for the sensors of the Huisbaasje integration."""
+
 from unittest.mock import patch
 
 from homeassistant.components import huisbaasje

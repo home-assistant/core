@@ -1,4 +1,5 @@
 """Fully Kiosk Browser button."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -22,18 +23,11 @@ from .coordinator import FullyKioskDataUpdateCoordinator
 from .entity import FullyKioskEntity
 
 
-@dataclass(frozen=True)
-class FullyButtonEntityDescriptionMixin:
-    """Mixin to describe a Fully Kiosk Browser button entity."""
+@dataclass(frozen=True, kw_only=True)
+class FullyButtonEntityDescription(ButtonEntityDescription):
+    """Fully Kiosk Browser button description."""
 
     press_action: Callable[[FullyKiosk], Any]
-
-
-@dataclass(frozen=True)
-class FullyButtonEntityDescription(
-    ButtonEntityDescription, FullyButtonEntityDescriptionMixin
-):
-    """Fully Kiosk Browser button description."""
 
 
 BUTTONS: tuple[FullyButtonEntityDescription, ...] = (

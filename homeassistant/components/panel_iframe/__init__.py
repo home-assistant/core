@@ -1,4 +1,5 @@
 """Register an iFrame front end panel."""
+
 import voluptuous as vol
 
 from homeassistant.components import frontend

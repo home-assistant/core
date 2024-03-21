@@ -1,4 +1,5 @@
 """Support for ASUSWRT routers."""
+
 from __future__ import annotations
 
 from homeassistant.components.device_tracker import ScannerEntity, SourceType

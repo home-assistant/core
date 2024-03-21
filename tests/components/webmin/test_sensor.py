@@ -1,4 +1,5 @@
 """Test cases for the Webmin sensors."""
+
 import pytest
 from syrupy.assertion import SnapshotAssertion
 

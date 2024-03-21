@@ -1,4 +1,5 @@
 """Button entities for Tami4Edge."""
+
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging

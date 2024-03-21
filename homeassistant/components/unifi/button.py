@@ -2,6 +2,7 @@
 
 Support for restarting UniFi devices.
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -68,33 +69,26 @@ ENTITY_DESCRIPTIONS: tuple[UnifiButtonEntityDescription, ...] = (
     UnifiButtonEntityDescription[Devices, Device](
         key="Device restart",
         entity_category=EntityCategory.CONFIG,
-        has_entity_name=True,
         device_class=ButtonDeviceClass.RESTART,
-        allowed_fn=lambda hub, obj_id: True,
         api_handler_fn=lambda api: api.devices,
         available_fn=async_device_available_fn,
         control_fn=async_restart_device_control_fn,
         device_info_fn=async_device_device_info_fn,
         name_fn=lambda _: "Restart",
         object_fn=lambda api, obj_id: api.devices[obj_id],
-        supported_fn=lambda hub, obj_id: True,
         unique_id_fn=lambda hub, obj_id: f"device_restart-{obj_id}",
     ),
     UnifiButtonEntityDescription[Ports, Port](
         key="PoE power cycle",
         entity_category=EntityCategory.CONFIG,
-        has_entity_name=True,
         device_class=ButtonDeviceClass.RESTART,
-        allowed_fn=lambda hub, obj_id: True,
         api_handler_fn=lambda api: api.ports,
         available_fn=async_device_available_fn,
         control_fn=async_power_cycle_port_control_fn,
         device_info_fn=async_device_device_info_fn,
-        event_is_on=None,
-        event_to_subscribe=None,
         name_fn=lambda port: f"{port.name} Power Cycle",
         object_fn=lambda api, obj_id: api.ports[obj_id],
-        supported_fn=lambda hub, obj_id: hub.api.ports[obj_id].port_poe,
+        supported_fn=lambda hub, obj_id: bool(hub.api.ports[obj_id].port_poe),
         unique_id_fn=lambda hub, obj_id: f"power_cycle-{obj_id}",
     ),
 )
@@ -106,9 +100,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up button platform for UniFi Network integration."""
-    UnifiHub.register_platform(
-        hass,
-        config_entry,
+    UnifiHub.get_hub(hass, config_entry).entity_loader.register_platform(
         async_add_entities,
         UnifiButtonEntity,
         ENTITY_DESCRIPTIONS,

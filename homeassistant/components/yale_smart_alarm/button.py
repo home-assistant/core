@@ -1,4 +1,5 @@
 """Support for Yale Smart Alarm button."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

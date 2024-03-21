@@ -1,4 +1,5 @@
 """Tests for the Nightscout integration."""
+
 import json
 from unittest.mock import patch
 

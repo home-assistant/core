@@ -1,4 +1,5 @@
 """The Hunter Douglas PowerView integration."""
+
 import asyncio
 import logging
 

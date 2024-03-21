@@ -1,4 +1,5 @@
 """Support for Lutron Homeworks lights."""
+
 from __future__ import annotations
 
 import logging

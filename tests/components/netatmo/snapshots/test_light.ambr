@@ -50,6 +50,7 @@
     'context': <ANY>,
     'entity_id': 'light.bathroom_light',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -104,6 +105,7 @@
     'context': <ANY>,
     'entity_id': 'light.front',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -160,6 +162,7 @@
     'context': <ANY>,
     'entity_id': 'light.unknown_00_11_22_33_00_11_45_fe',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })

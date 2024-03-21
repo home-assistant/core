@@ -1,4 +1,5 @@
 """Component to configure Home Assistant via an API."""
+
 from __future__ import annotations
 
 from homeassistant.components import frontend
@@ -13,6 +14,7 @@ from . import (
     auth,
     auth_provider_homeassistant,
     automation,
+    category_registry,
     config_entries,
     core,
     device_registry,
@@ -29,6 +31,7 @@ SECTIONS = (
     auth,
     auth_provider_homeassistant,
     automation,
+    category_registry,
     config_entries,
     core,
     device_registry,

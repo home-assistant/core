@@ -1,4 +1,5 @@
 """The tests for the mFi switch platform."""
+
 import unittest.mock as mock
 
 import pytest

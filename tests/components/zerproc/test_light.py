@@ -1,4 +1,5 @@
 """Test the zerproc lights."""
+
 from unittest.mock import MagicMock, patch
 
 import pytest

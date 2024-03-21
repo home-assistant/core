@@ -1,4 +1,5 @@
 """API for Neato Botvac bound to Home Assistant OAuth."""
+
 from __future__ import annotations
 
 from asyncio import run_coroutine_threadsafe

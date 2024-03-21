@@ -1,4 +1,5 @@
 """Config flow to configure IPMA component."""
+
 import logging
 from typing import Any
 

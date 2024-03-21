@@ -1,4 +1,5 @@
 """Support for Voice mailboxes."""
+
 from __future__ import annotations
 
 import asyncio
@@ -179,7 +180,7 @@ class Mailbox:
     @property
     def media_type(self) -> str:
         """Return the supported media type."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     def can_delete(self) -> bool:
@@ -193,15 +194,15 @@ class Mailbox:
 
     async def async_get_media(self, msgid: str) -> bytes:
         """Return the media blob for the msgid."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_get_messages(self) -> list[dict[str, Any]]:
         """Return a list of the current messages."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_delete(self, msgid: str) -> bool:
         """Delete the specified messages."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class StreamError(Exception):
@@ -231,16 +232,16 @@ class MailboxPlatformsView(MailboxView):
 
     async def get(self, request: web.Request) -> web.Response:
         """Retrieve list of platforms."""
-        platforms: list[dict[str, Any]] = []
-        for mailbox in self.mailboxes:
-            platforms.append(
+        return self.json(
+            [
                 {
                     "name": mailbox.name,
                     "has_media": mailbox.has_media,
                     "can_delete": mailbox.can_delete,
                 }
-            )
-        return self.json(platforms)
+                for mailbox in self.mailboxes
+            ]
+        )
 
 
 class MailboxMessageView(MailboxView):

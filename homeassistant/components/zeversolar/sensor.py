@@ -1,4 +1,5 @@
 """Support for the Zeversolar platform."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -22,18 +23,11 @@ from .coordinator import ZeversolarCoordinator
 from .entity import ZeversolarEntity
 
 
-@dataclass(frozen=True)
-class ZeversolarEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class ZeversolarEntityDescription(SensorEntityDescription):
+    """Describes Zeversolar sensor entity."""
 
     value_fn: Callable[[zeversolar.ZeverSolarData], zeversolar.kWh | zeversolar.Watt]
-
-
-@dataclass(frozen=True)
-class ZeversolarEntityDescription(
-    SensorEntityDescription, ZeversolarEntityDescriptionMixin
-):
-    """Describes Zeversolar sensor entity."""
 
 
 SENSOR_TYPES = (

@@ -1,4 +1,5 @@
 """Component that will help set the OpenALPR cloud for ALPR processing."""
+
 from __future__ import annotations
 
 import asyncio
@@ -79,15 +80,12 @@ async def async_setup_platform(
         "country": config[CONF_REGION],
     }
 
-    entities = []
-    for camera in config[CONF_SOURCE]:
-        entities.append(
-            OpenAlprCloudEntity(
-                camera[CONF_ENTITY_ID], params, confidence, camera.get(CONF_NAME)
-            )
+    async_add_entities(
+        OpenAlprCloudEntity(
+            camera[CONF_ENTITY_ID], params, confidence, camera.get(CONF_NAME)
         )
-
-    async_add_entities(entities)
+        for camera in config[CONF_SOURCE]
+    )
 
 
 class ImageProcessingAlprEntity(ImageProcessingEntity):
@@ -141,8 +139,7 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
 
         # Send events
         for i_plate in new_plates:
-            self.hass.async_add_job(
-                self.hass.bus.async_fire,
+            self.hass.bus.async_fire(
                 EVENT_FOUND_PLATE,
                 {
                     ATTR_PLATE: i_plate,

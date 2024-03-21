@@ -1,4 +1,5 @@
 """Support for Template lights."""
+
 from __future__ import annotations
 
 import logging

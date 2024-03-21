@@ -1,4 +1,5 @@
 """Define tests for the Ambient PWS config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from aioambient.errors import AmbientError

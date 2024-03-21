@@ -1,4 +1,5 @@
 """Tracks the latency of a host by sending ICMP echo requests (ping)."""
+
 from __future__ import annotations
 
 import logging

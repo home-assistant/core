@@ -1,4 +1,5 @@
 """Test the Rituals Perfume Genie config flow."""
+
 from http import HTTPStatus
 from unittest.mock import AsyncMock, MagicMock, patch
 

@@ -1,4 +1,5 @@
 """Support for scanning a network with nmap."""
+
 from __future__ import annotations
 
 import logging

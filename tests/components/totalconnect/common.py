@@ -1,4 +1,5 @@
 """Common methods used across tests for TotalConnect."""
+
 from unittest.mock import patch
 
 from total_connect_client import ArmingState, ResultCode, ZoneStatus, ZoneType

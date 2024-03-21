@@ -1,4 +1,5 @@
 """Test the Motionblinds config flow."""
+
 import socket
 from unittest.mock import Mock, patch
 

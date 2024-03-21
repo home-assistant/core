@@ -1,4 +1,5 @@
 """Test the A. O. Smith config flow."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 

@@ -1,4 +1,5 @@
 """Config flow for Google Tasks."""
+
 import logging
 from typing import Any
 

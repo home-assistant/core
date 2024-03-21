@@ -1,4 +1,5 @@
 """Support for the GPSLogger device tracking."""
+
 from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (

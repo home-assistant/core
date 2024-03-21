@@ -1,4 +1,5 @@
 """Support for the Nettigo Air Monitor service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -74,16 +75,11 @@ PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class NAMSensorRequiredKeysMixin:
-    """Class for NAM entity required keys."""
+@dataclass(frozen=True, kw_only=True)
+class NAMSensorEntityDescription(SensorEntityDescription):
+    """NAM sensor entity description."""
 
     value: Callable[[NAMSensors], StateType | datetime]
-
-
-@dataclass(frozen=True)
-class NAMSensorEntityDescription(SensorEntityDescription, NAMSensorRequiredKeysMixin):
-    """NAM sensor entity description."""
 
 
 SENSORS: tuple[NAMSensorEntityDescription, ...] = (
@@ -371,12 +367,11 @@ async def async_setup_entry(
             )
             ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
-    sensors: list[NAMSensor] = []
-    for description in SENSORS:
-        if getattr(coordinator.data, description.key) is not None:
-            sensors.append(NAMSensor(coordinator, description))
-
-    async_add_entities(sensors, False)
+    async_add_entities(
+        NAMSensor(coordinator, description)
+        for description in SENSORS
+        if getattr(coordinator.data, description.key) is not None
+    )
 
 
 class NAMSensor(CoordinatorEntity[NAMDataUpdateCoordinator], SensorEntity):

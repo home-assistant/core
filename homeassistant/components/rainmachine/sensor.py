@@ -1,4 +1,5 @@
 """Support for sensor data from RainMachine."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

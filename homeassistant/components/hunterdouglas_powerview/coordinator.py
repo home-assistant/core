@@ -1,4 +1,5 @@
 """Coordinate data for powerview devices."""
+
 from __future__ import annotations
 
 import asyncio

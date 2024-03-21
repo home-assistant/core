@@ -1,4 +1,5 @@
 """The tests for Shelly logbook."""
+
 from unittest.mock import Mock
 
 from homeassistant.components.shelly.const import (

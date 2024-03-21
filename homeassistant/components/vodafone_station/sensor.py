@@ -1,4 +1,5 @@
 """Vodafone Station sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -24,21 +25,14 @@ from .coordinator import VodafoneStationRouter
 NOT_AVAILABLE: list = ["", "N/A", "0.0.0.0"]
 
 
-@dataclass(frozen=True)
-class VodafoneStationBaseEntityDescription:
-    """Vodafone Station entity base description."""
+@dataclass(frozen=True, kw_only=True)
+class VodafoneStationEntityDescription(SensorEntityDescription):
+    """Vodafone Station entity description."""
 
     value: Callable[[Any, Any], Any] = (
         lambda coordinator, key: coordinator.data.sensors[key]
     )
     is_suitable: Callable[[dict], bool] = lambda val: True
-
-
-@dataclass(frozen=True, kw_only=True)
-class VodafoneStationEntityDescription(
-    VodafoneStationBaseEntityDescription, SensorEntityDescription
-):
-    """Vodafone Station entity description."""
 
 
 def _calculate_uptime(coordinator: VodafoneStationRouter, key: str) -> datetime:

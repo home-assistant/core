@@ -1,4 +1,5 @@
 """The tests for Home Assistant frontend."""
+
 from http import HTTPStatus
 import re
 from typing import Any

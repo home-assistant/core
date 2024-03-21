@@ -1,4 +1,5 @@
 """UniFi Network sensor platform tests."""
+
 from copy import deepcopy
 from datetime import datetime, timedelta
 from unittest.mock import patch

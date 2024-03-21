@@ -1,4 +1,5 @@
 """Support for Aseko Pool Live binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -56,11 +57,11 @@ async def async_setup_entry(
     data: list[tuple[Unit, AsekoDataUpdateCoordinator]] = hass.data[DOMAIN][
         config_entry.entry_id
     ]
-    entities: list[BinarySensorEntity] = []
-    for unit, coordinator in data:
-        for description in UNIT_BINARY_SENSORS:
-            entities.append(AsekoUnitBinarySensorEntity(unit, coordinator, description))
-    async_add_entities(entities)
+    async_add_entities(
+        AsekoUnitBinarySensorEntity(unit, coordinator, description)
+        for unit, coordinator in data
+        for description in UNIT_BINARY_SENSORS
+    )
 
 
 class AsekoUnitBinarySensorEntity(AsekoEntity, BinarySensorEntity):

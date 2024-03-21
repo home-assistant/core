@@ -1,4 +1,5 @@
 """Test recorder system health."""
+
 from unittest.mock import ANY, Mock, patch
 
 import pytest

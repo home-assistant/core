@@ -1,4 +1,5 @@
 """Sensor platform for Sensibo integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -36,33 +37,19 @@ from .entity import SensiboDeviceBaseEntity, SensiboMotionBaseEntity
 PARALLEL_UPDATES = 0
 
 
-@dataclass(frozen=True)
-class MotionBaseEntityDescriptionMixin:
-    """Mixin for required Sensibo base description keys."""
+@dataclass(frozen=True, kw_only=True)
+class SensiboMotionSensorEntityDescription(SensorEntityDescription):
+    """Describes Sensibo Motion sensor entity."""
 
     value_fn: Callable[[MotionSensor], StateType]
 
 
-@dataclass(frozen=True)
-class DeviceBaseEntityDescriptionMixin:
-    """Mixin for required Sensibo base description keys."""
+@dataclass(frozen=True, kw_only=True)
+class SensiboDeviceSensorEntityDescription(SensorEntityDescription):
+    """Describes Sensibo Device sensor entity."""
 
     value_fn: Callable[[SensiboDevice], StateType | datetime]
     extra_fn: Callable[[SensiboDevice], dict[str, str | bool | None] | None] | None
-
-
-@dataclass(frozen=True)
-class SensiboMotionSensorEntityDescription(
-    SensorEntityDescription, MotionBaseEntityDescriptionMixin
-):
-    """Describes Sensibo Motion sensor entity."""
-
-
-@dataclass(frozen=True)
-class SensiboDeviceSensorEntityDescription(
-    SensorEntityDescription, DeviceBaseEntityDescriptionMixin
-):
-    """Describes Sensibo Device sensor entity."""
 
 
 FILTER_LAST_RESET_DESCRIPTION = SensiboDeviceSensorEntityDescription(

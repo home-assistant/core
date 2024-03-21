@@ -1,4 +1,5 @@
 """Config flow for Evil Genius Labs integration."""
+
 from __future__ import annotations
 
 import asyncio

@@ -1,4 +1,5 @@
 """The FiveM sensor platform."""
+
 from dataclasses import dataclass
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription

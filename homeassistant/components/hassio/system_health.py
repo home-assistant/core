@@ -1,4 +1,5 @@
 """Provide info to system health."""
+
 from __future__ import annotations
 
 import os

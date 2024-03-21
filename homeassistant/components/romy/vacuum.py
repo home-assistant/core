@@ -4,7 +4,6 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/vacuum.romy/.
 """
 
-
 from typing import Any
 
 from romy import RomyRobot

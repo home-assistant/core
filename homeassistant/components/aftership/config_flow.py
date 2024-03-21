@@ -1,4 +1,5 @@
 """Config flow for AfterShip integration."""
+
 from __future__ import annotations
 
 import logging

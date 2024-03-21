@@ -1,4 +1,5 @@
 """The tests for the Group components."""
+
 from __future__ import annotations
 
 from collections import OrderedDict
@@ -1231,6 +1232,8 @@ async def test_group_vacuum_on(hass: HomeAssistant) -> None:
 
 async def test_device_tracker_not_home(hass: HomeAssistant) -> None:
     """Test group of device_tracker not_home."""
+    await async_setup_component(hass, "device_tracker", {})
+    await hass.async_block_till_done()
     hass.states.async_set("device_tracker.one", "not_home")
     hass.states.async_set("device_tracker.two", "not_home")
     hass.states.async_set("device_tracker.three", "not_home")
@@ -1623,7 +1626,7 @@ async def test_plant_group(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("group_type", "member_state", "extra_options"),
-    (
+    [
         ("binary_sensor", "on", {"all": False}),
         ("cover", "open", {}),
         ("fan", "on", {}),
@@ -1639,7 +1642,7 @@ async def test_plant_group(hass: HomeAssistant) -> None:
                 "state_class": "measurement",
             },
         ),
-    ),
+    ],
 )
 async def test_setup_and_remove_config_entry(
     hass: HomeAssistant,
@@ -1686,24 +1689,24 @@ async def test_setup_and_remove_config_entry(
 
 @pytest.mark.parametrize(
     ("hide_members", "hidden_by_initial", "hidden_by"),
-    (
+    [
         (False, er.RegistryEntryHider.INTEGRATION, er.RegistryEntryHider.INTEGRATION),
         (False, None, None),
         (False, er.RegistryEntryHider.USER, er.RegistryEntryHider.USER),
         (True, er.RegistryEntryHider.INTEGRATION, None),
         (True, None, None),
         (True, er.RegistryEntryHider.USER, er.RegistryEntryHider.USER),
-    ),
+    ],
 )
 @pytest.mark.parametrize(
     ("group_type", "extra_options"),
-    (
+    [
         ("binary_sensor", {"all": False}),
         ("cover", {}),
         ("fan", {}),
         ("light", {"all": False}),
         ("media_player", {}),
-    ),
+    ],
 )
 async def test_unhide_members_on_remove(
     hass: HomeAssistant,

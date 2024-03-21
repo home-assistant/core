@@ -1,4 +1,5 @@
 """Http views to control the config manager."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -12,7 +13,7 @@ import voluptuous as vol
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES, POLICY_EDIT
 from homeassistant.components import websocket_api
-from homeassistant.components.http import HomeAssistantView, require_admin
+from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import DependencyError, Unauthorized
@@ -64,7 +65,7 @@ class ConfigManagerEntryIndexView(HomeAssistantView):
 
     async def get(self, request: web.Request) -> web.Response:
         """List available config entries."""
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
         domain = None
         if "domain" in request.query:
             domain = request.query["domain"]
@@ -88,7 +89,7 @@ class ConfigManagerEntryResourceView(HomeAssistantView):
         if not request["hass_user"].is_admin:
             raise Unauthorized(config_entry_id=entry_id, permission="remove")
 
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
 
         try:
             result = await hass.config_entries.async_remove(entry_id)
@@ -109,7 +110,7 @@ class ConfigManagerEntryResourceReloadView(HomeAssistantView):
         if not request["hass_user"].is_admin:
             raise Unauthorized(config_entry_id=entry_id, permission="remove")
 
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
         entry = hass.config_entries.async_get_entry(entry_id)
         if not entry:
             return self.json_message("Invalid entry specified", HTTPStatus.NOT_FOUND)
@@ -235,7 +236,7 @@ class ConfigManagerAvailableFlowView(HomeAssistantView):
 
     async def get(self, request: web.Request) -> web.Response:
         """List available flow handlers."""
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
         kwargs: dict[str, Any] = {}
         if "type" in request.query:
             kwargs["type_filter"] = request.query["type"]

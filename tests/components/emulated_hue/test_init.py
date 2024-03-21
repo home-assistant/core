@@ -1,4 +1,5 @@
 """Test the Emulated Hue component."""
+
 from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch

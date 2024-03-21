@@ -1,4 +1,5 @@
 """Support for LIFX lights."""
+
 from __future__ import annotations
 
 import asyncio
@@ -417,7 +418,7 @@ class LIFXMultiZone(LIFXColor):
                 await super().set_color(hsbk, kwargs, duration)
                 return
 
-            zones = list(range(0, num_zones))
+            zones = list(range(num_zones))
         else:
             zones = [x for x in set(zones) if x < num_zones]
 

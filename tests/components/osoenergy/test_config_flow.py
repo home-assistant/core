@@ -1,4 +1,5 @@
 """Test the OSO Energy config flow."""
+
 from unittest.mock import patch
 
 from apyosoenergyapi.helper import osoenergy_exceptions

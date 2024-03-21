@@ -1,4 +1,5 @@
 """Offer Home Assistant core automation rules."""
+
 import voluptuous as vol
 
 from homeassistant.const import CONF_EVENT, CONF_PLATFORM

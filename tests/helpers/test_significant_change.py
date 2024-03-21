@@ -1,4 +1,5 @@
 """Test significant change helper."""
+
 import pytest
 
 from homeassistant.components.sensor import SensorDeviceClass

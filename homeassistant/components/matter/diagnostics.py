@@ -1,4 +1,5 @@
 """Provide diagnostics for Matter."""
+
 from __future__ import annotations
 
 from copy import deepcopy

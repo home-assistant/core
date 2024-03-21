@@ -1,4 +1,5 @@
 """Test the devolo_home_control config flow."""
+
 from unittest.mock import patch
 
 import pytest

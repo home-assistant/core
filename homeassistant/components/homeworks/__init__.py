@@ -1,4 +1,5 @@
 """Support for Lutron Homeworks Series 4 and 8 systems."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -20,6 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
@@ -36,13 +38,14 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.LIGHT]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.LIGHT]
 
 EVENT_BUTTON_PRESS = "homeworks_button_press"
 EVENT_BUTTON_RELEASE = "homeworks_button_release"
 
 DEFAULT_FADE_RATE = 1.0
 
+KEYPAD_LEDSTATE_POLL_COOLDOWN = 1.0
 
 CV_FADE_RATE = vol.All(vol.Coerce(float), vol.Range(min=0, max=20))
 
@@ -207,6 +210,13 @@ class HomeworksKeypad:
         """Register callback that will be used for signals."""
         self._addr = addr
         self._controller = controller
+        self._debouncer = Debouncer(
+            hass,
+            _LOGGER,
+            cooldown=KEYPAD_LEDSTATE_POLL_COOLDOWN,
+            immediate=False,
+            function=self._request_keypad_led_states,
+        )
         self._hass = hass
         self._name = name
         self._id = slugify(self._name)
@@ -228,3 +238,15 @@ class HomeworksKeypad:
             return
         data = {CONF_ID: self._id, CONF_NAME: self._name, "button": values[1]}
         self._hass.bus.async_fire(event, data)
+
+    def _request_keypad_led_states(self) -> None:
+        """Query keypad led state."""
+        # pylint: disable-next=protected-access
+        self._controller._send(f"RKLS, {self._addr}")
+
+    async def request_keypad_led_states(self) -> None:
+        """Query keypad led state.
+
+        Debounced to not storm the controller during setup.
+        """
+        await self._debouncer.async_call()

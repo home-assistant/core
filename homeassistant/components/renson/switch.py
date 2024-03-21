@@ -1,4 +1,5 @@
 """Breeze switch of the Renson ventilation unit."""
+
 from __future__ import annotations
 
 import logging

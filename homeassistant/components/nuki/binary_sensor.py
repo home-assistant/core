@@ -1,4 +1,5 @@
 """Doorsensor Support for the Nuki Lock."""
+
 from __future__ import annotations
 
 from pynuki.constants import STATE_DOORSENSOR_OPENED

@@ -1,4 +1,5 @@
 """The opensky component."""
+
 from __future__ import annotations
 
 from aiohttp import BasicAuth

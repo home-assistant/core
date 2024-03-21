@@ -1,4 +1,5 @@
 """Test the File Upload integration."""
+
 from contextlib import contextmanager
 from pathlib import Path
 from random import getrandbits

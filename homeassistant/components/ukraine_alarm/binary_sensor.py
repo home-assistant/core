@@ -1,4 +1,5 @@
 """binary sensors for Ukraine Alarm integration."""
+
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (

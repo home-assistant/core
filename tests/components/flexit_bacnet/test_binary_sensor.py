@@ -1,4 +1,5 @@
 """Tests for the Flexit Nordic (BACnet) binary sensor entities."""
+
 from unittest.mock import AsyncMock
 
 from syrupy.assertion import SnapshotAssertion

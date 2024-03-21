@@ -1,4 +1,5 @@
 """Switch for Shelly."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -45,7 +46,7 @@ from .utils import (
 )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class BlockSwitchDescription(BlockEntityDescription, SwitchEntityDescription):
     """Class to describe a BLOCK switch."""
 

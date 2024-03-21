@@ -1,4 +1,5 @@
 """Test the Z-Wave JS button entities."""
+
 import pytest
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS

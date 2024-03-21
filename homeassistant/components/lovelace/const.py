@@ -1,4 +1,5 @@
 """Constants for Lovelace."""
+
 from typing import Any
 
 import voluptuous as vol
@@ -23,6 +24,7 @@ MODE_STORAGE = "storage"
 MODE_AUTO = "auto-gen"
 
 LOVELACE_CONFIG_FILE = "ui-lovelace.yaml"
+CONF_ALLOW_SINGLE_WORD = "allow_single_word"
 CONF_URL_PATH = "url_path"
 CONF_RESOURCE_TYPE_WS = "res_type"
 
@@ -74,6 +76,8 @@ STORAGE_DASHBOARD_CREATE_FIELDS = {
     # For now we write "storage" as all modes.
     # In future we can adjust this to be other modes.
     vol.Optional(CONF_MODE, default=MODE_STORAGE): MODE_STORAGE,
+    # Set to allow adding dashboard without hyphen
+    vol.Optional(CONF_ALLOW_SINGLE_WORD): bool,
 }
 
 STORAGE_DASHBOARD_UPDATE_FIELDS = DASHBOARD_BASE_UPDATE_FIELDS
