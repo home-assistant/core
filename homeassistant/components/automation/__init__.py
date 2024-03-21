@@ -246,6 +246,18 @@ def floors_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
 
 
 @callback
+def automations_with_label(hass: HomeAssistant, label_id: str) -> list[str]:
+    """Return all automations that reference the label."""
+    return _automations_with_x(hass, label_id, "referenced_labels")
+
+
+@callback
+def labels_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return all labels in an automation."""
+    return _x_in_automation(hass, entity_id, "referenced_labels")
+
+
+@callback
 def automations_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list[str]:
     """Return all automations that reference the blueprint."""
     if DOMAIN not in hass.data:
@@ -355,6 +367,11 @@ class BaseAutomationEntity(ToggleEntity, ABC):
 
     @cached_property
     @abstractmethod
+    def referenced_labels(self) -> set[str]:
+        """Return a set of referenced labels."""
+
+    @cached_property
+    @abstractmethod
     def referenced_floors(self) -> set[str]:
         """Return a set of referenced floors."""
 
@@ -412,6 +429,11 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
     def name(self) -> str:
         """Return the name of the entity."""
         return self._name
+
+    @cached_property
+    def referenced_labels(self) -> set[str]:
+        """Return a set of referenced labels."""
+        return set()
 
     @cached_property
     def referenced_floors(self) -> set[str]:
@@ -504,6 +526,11 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
     def is_on(self) -> bool:
         """Return True if entity is on."""
         return self._async_detach_triggers is not None or self._is_enabled
+
+    @property
+    def referenced_labels(self) -> set[str]:
+        """Return a set of referenced labels."""
+        return self.action_script.referenced_labels
 
     @property
     def referenced_floors(self) -> set[str]:

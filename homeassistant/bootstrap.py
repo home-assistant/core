@@ -78,6 +78,7 @@ from .helpers import (
     translation,
 )
 from .helpers.dispatcher import async_dispatcher_send
+from .helpers.system_info import async_get_system_info
 from .helpers.typing import ConfigType
 from .setup import (
     BASE_PLATFORMS,
@@ -358,6 +359,7 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
         create_eager_task(template.async_load_custom_templates(hass)),
         create_eager_task(restore_state.async_load(hass)),
         create_eager_task(hass.config_entries.async_initialize()),
+        create_eager_task(async_get_system_info(hass)),
     )
 
 
