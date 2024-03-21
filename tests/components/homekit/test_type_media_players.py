@@ -357,7 +357,7 @@ async def test_media_player_television(
 
     with pytest.raises(ValueError):
         acc.char_remote_key.client_update_value(20)
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     acc.char_remote_key.client_update_value(7)
     await hass.async_block_till_done()

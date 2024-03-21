@@ -112,7 +112,7 @@ async def test_send_code_no_protocol(hass: HomeAssistant) -> None:
                 service_data={"noprotocol": "test", "value": 42},
                 blocking=True,
             )
-            await hass.async_block_till_done()
+        await hass.async_block_till_done()
         assert "required key not provided @ data['protocol']" in str(excinfo.value)
 
 

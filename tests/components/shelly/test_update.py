@@ -180,7 +180,7 @@ async def test_block_update_connection_error(
             {ATTR_ENTITY_ID: "update.test_name_firmware_update"},
             blocking=True,
         )
-        assert "Error starting OTA update" in caplog.text
+    assert "Error starting OTA update" in caplog.text
 
 
 async def test_block_update_auth_error(
@@ -621,7 +621,7 @@ async def test_rpc_update_errors(
             {ATTR_ENTITY_ID: "update.test_name_firmware_update"},
             blocking=True,
         )
-        assert error in caplog.text
+    assert error in caplog.text
 
 
 async def test_rpc_update_auth_error(

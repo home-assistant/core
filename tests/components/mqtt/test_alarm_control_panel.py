@@ -1341,7 +1341,7 @@ async def test_reload_after_invalid_config(
                 {},
                 blocking=True,
             )
-            await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
         # Make sure the config is loaded now
         assert hass.states.get("alarm_control_panel.test") is not None

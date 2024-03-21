@@ -104,8 +104,8 @@ async def test_errors(
             {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
-        mock_on.assert_called_once()
-        assert error.from_exception == InvalidCommand
+    mock_on.assert_called_once()
+    assert error.from_exception == InvalidCommand
 
 
 async def test_asleep_or_offline(
@@ -139,7 +139,7 @@ async def test_asleep_or_offline(
             {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
-        assert error
+    assert error
     mock_wake_up.assert_called_once()
 
     mock_wake_up.side_effect = None
@@ -157,7 +157,7 @@ async def test_asleep_or_offline(
             {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
-        assert error
+    assert error
     mock_wake_up.assert_called_once()
     mock_vehicle.assert_called()
 

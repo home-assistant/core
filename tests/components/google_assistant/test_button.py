@@ -43,9 +43,8 @@ async def test_sync_button(hass: HomeAssistant, hass_owner_user: MockUser) -> No
         )
         mock_sync_entities.assert_called_once_with(hass_owner_user.id)
 
+        mock_sync_entities.return_value = 400
         with pytest.raises(HomeAssistantError):
-            mock_sync_entities.return_value = 400
-
             await hass.services.async_call(
                 "button",
                 "press",

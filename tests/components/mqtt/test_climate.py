@@ -1140,7 +1140,7 @@ async def test_set_preset_mode_optimistic(
 
     with pytest.raises(ServiceValidationError):
         await common.async_set_preset_mode(hass, "invalid", ENTITY_CLIMATE)
-        assert "'invalid' is not a valid preset mode" in caplog.text
+    assert "'invalid' is not a valid preset mode" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -1198,7 +1198,7 @@ async def test_set_preset_mode_explicit_optimistic(
 
     with pytest.raises(ServiceValidationError):
         await common.async_set_preset_mode(hass, "invalid", ENTITY_CLIMATE)
-        assert "'invalid' is not a valid preset mode" in caplog.text
+    assert "'invalid' is not a valid preset mode" in caplog.text
 
 
 @pytest.mark.parametrize(

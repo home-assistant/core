@@ -57,23 +57,22 @@ async def test_pause_job(hass: HomeAssistant) -> None:
         assert len(pause_command.mock_calls) == 0
 
     # Test pausing the printer when it is stopped
-    with patch(
-        "pyoctoprintapi.OctoprintClient.pause_job"
-    ) as pause_command, pytest.raises(InvalidPrinterState):
+    with patch("pyoctoprintapi.OctoprintClient.pause_job") as pause_command:
         coordinator.data["printer"] = OctoprintPrinterInfo(
             {
                 "state": {"flags": {"printing": False, "paused": False}},
                 "temperature": [],
             }
         )
-        await hass.services.async_call(
-            BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {
-                ATTR_ENTITY_ID: "button.octoprint_pause_job",
-            },
-            blocking=True,
-        )
+        with pytest.raises(InvalidPrinterState):
+            await hass.services.async_call(
+                BUTTON_DOMAIN,
+                SERVICE_PRESS,
+                {
+                    ATTR_ENTITY_ID: "button.octoprint_pause_job",
+                },
+                blocking=True,
+            )
 
 
 async def test_resume_job(hass: HomeAssistant) -> None:
@@ -117,23 +116,22 @@ async def test_resume_job(hass: HomeAssistant) -> None:
         assert len(resume_command.mock_calls) == 0
 
     # Test resuming the printer when it is stopped
-    with patch(
-        "pyoctoprintapi.OctoprintClient.resume_job"
-    ) as resume_command, pytest.raises(InvalidPrinterState):
+    with patch("pyoctoprintapi.OctoprintClient.resume_job") as resume_command:
         coordinator.data["printer"] = OctoprintPrinterInfo(
             {
                 "state": {"flags": {"printing": False, "paused": False}},
                 "temperature": [],
             }
         )
-        await hass.services.async_call(
-            BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {
-                ATTR_ENTITY_ID: "button.octoprint_resume_job",
-            },
-            blocking=True,
-        )
+        with pytest.raises(InvalidPrinterState):
+            await hass.services.async_call(
+                BUTTON_DOMAIN,
+                SERVICE_PRESS,
+                {
+                    ATTR_ENTITY_ID: "button.octoprint_resume_job",
+                },
+                blocking=True,
+            )
 
 
 async def test_stop_job(hass: HomeAssistant) -> None:

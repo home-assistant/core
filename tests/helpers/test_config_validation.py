@@ -601,7 +601,9 @@ def test_x10_address() -> None:
     schema = vol.Schema(cv.x10_address)
     with pytest.raises(vol.Invalid):
         schema("Q1")
+    with pytest.raises(vol.Invalid):
         schema("q55")
+    with pytest.raises(vol.Invalid):
         schema("garbage_addr")
 
     schema("a1")
@@ -808,6 +810,7 @@ def test_multi_select() -> None:
 
     with pytest.raises(vol.Invalid):
         schema("robban")
+    with pytest.raises(vol.Invalid):
         schema(["paulus", "martinhj"])
 
     schema(["robban", "paulus"])
@@ -1334,7 +1337,7 @@ def test_key_value_schemas() -> None:
 
     with pytest.raises(vol.Invalid) as excinfo:
         schema(True)
-        assert str(excinfo.value) == "Expected a dictionary"
+    assert str(excinfo.value) == "Expected a dictionary"
 
     for mode in None, {"a": "dict"}, "invalid":
         with pytest.raises(vol.Invalid) as excinfo:
@@ -1372,7 +1375,7 @@ def test_key_value_schemas_with_default() -> None:
 
     with pytest.raises(vol.Invalid) as excinfo:
         schema(True)
-        assert str(excinfo.value) == "Expected a dictionary"
+    assert str(excinfo.value) == "Expected a dictionary"
 
     for mode in None, {"a": "dict"}, "invalid":
         with pytest.raises(vol.Invalid) as excinfo:

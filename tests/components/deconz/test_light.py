@@ -1327,6 +1327,7 @@ async def test_non_color_light_reports_color(
     # device won't have neither color temp nor color
     with pytest.raises(AssertionError):
         assert hass.states.get("light.group").attributes.get(ATTR_COLOR_TEMP) is None
+    with pytest.raises(AssertionError):
         assert hass.states.get("light.group").attributes.get(ATTR_HS_COLOR) is None
 
 

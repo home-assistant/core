@@ -69,13 +69,14 @@ async def test_thermostat(
     # change system mode to heat_cool
     set_node_attribute(thermostat, 1, 513, 28, 1)
     await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("climate.longan_link_hvac")
+    assert state
+    assert state.state == HVACMode.HEAT_COOL
     with pytest.raises(
         ValueError,
         match="current target_temperature_low and target_temperature_high should not be None",
     ):
-        state = hass.states.get("climate.longan_link_hvac")
-        assert state
-        assert state.state == HVACMode.HEAT_COOL
         await hass.services.async_call(
             "climate",
             "set_temperature",

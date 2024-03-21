@@ -91,8 +91,7 @@ def test_send_message_with_bad_data_throws_vol_error(
     with caplog.at_level(
         logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
     ), pytest.raises(vol.Invalid) as exc:
-        data = {"test": "test"}
-        signal_notification_service.send_message(MESSAGE, data=data)
+        signal_notification_service.send_message(MESSAGE, data={"test": "test"})
 
     assert "Sending signal message" in caplog.text
     assert "extra keys not allowed" in str(exc.value)
@@ -183,8 +182,9 @@ def test_get_attachments_with_large_attachment(
     """Test getting attachments as URL with large attachment (per Content-Length header) throws error."""
     signal_requests_mock = signal_requests_mock_factory(True, str(len(CONTENT) + 1))
     with pytest.raises(ValueError) as exc:
-        data = {"urls": [URL_ATTACHMENT]}
-        signal_notification_service.get_attachments_as_bytes(data, len(CONTENT), hass)
+        signal_notification_service.get_attachments_as_bytes(
+            {"urls": [URL_ATTACHMENT]}, len(CONTENT), hass
+        )
 
     assert signal_requests_mock.called
     assert signal_requests_mock.call_count == 1
@@ -199,9 +199,8 @@ def test_get_attachments_with_large_attachment_no_header(
     """Test getting attachments as URL with large attachment (per content length) throws error."""
     signal_requests_mock = signal_requests_mock_factory()
     with pytest.raises(ValueError) as exc:
-        data = {"urls": [URL_ATTACHMENT]}
         signal_notification_service.get_attachments_as_bytes(
-            data, len(CONTENT) - 1, hass
+            {"urls": [URL_ATTACHMENT]}, len(CONTENT) - 1, hass
         )
 
     assert signal_requests_mock.called

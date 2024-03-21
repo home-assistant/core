@@ -1167,9 +1167,10 @@ async def test_exception(hass: HomeAssistant) -> None:
         # When an unforeseen exception occurs, we close the ADB connection and raise the exception
         with patchers.PATCH_ANDROIDTV_UPDATE_EXCEPTION, pytest.raises(Exception):
             await async_update_entity(hass, entity_id)
-            state = hass.states.get(entity_id)
-            assert state is not None
-            assert state.state == STATE_UNAVAILABLE
+
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_UNAVAILABLE
 
         # On the next update, HA will reconnect to the device
         await async_update_entity(hass, entity_id)

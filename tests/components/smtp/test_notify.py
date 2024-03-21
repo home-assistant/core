@@ -170,7 +170,7 @@ def test_sending_insecure_files_fails(
         ServiceValidationError
     ) as exc:
         result, _ = message.send_message(message_data, data=data)
-        assert content_type in result
+    assert content_type in result
     assert exc.value.translation_key == "remote_path_not_allowed"
     assert exc.value.translation_domain == DOMAIN
     assert (

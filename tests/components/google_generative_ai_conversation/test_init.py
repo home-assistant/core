@@ -232,19 +232,20 @@ async def test_generate_content_service_error(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test generate content service handles errors."""
-    with patch("google.generativeai.GenerativeModel") as mock_model, pytest.raises(
-        HomeAssistantError, match="Error generating content: None reason"
-    ):
+    with patch("google.generativeai.GenerativeModel") as mock_model:
         mock_model.return_value.generate_content_async = AsyncMock(
             side_effect=ClientError("reason")
         )
-        await hass.services.async_call(
-            "google_generative_ai_conversation",
-            "generate_content",
-            {"prompt": "write a story about an epic fail"},
-            blocking=True,
-            return_response=True,
-        )
+        with pytest.raises(
+            HomeAssistantError, match="Error generating content: None reason"
+        ):
+            await hass.services.async_call(
+                "google_generative_ai_conversation",
+                "generate_content",
+                {"prompt": "write a story about an epic fail"},
+                blocking=True,
+                return_response=True,
+            )
 
 
 async def test_generate_content_service_with_image_not_allowed_path(

@@ -136,7 +136,7 @@ async def test_async_setup_entry_connect_failure(
     controller.connect.side_effect = HeosError()
     with pytest.raises(ConfigEntryNotReady):
         await async_setup_entry(hass, config_entry)
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert controller.connect.call_count == 1
     assert controller.disconnect.call_count == 1
     controller.connect.reset_mock()
@@ -151,7 +151,7 @@ async def test_async_setup_entry_player_failure(
     controller.get_players.side_effect = HeosError()
     with pytest.raises(ConfigEntryNotReady):
         await async_setup_entry(hass, config_entry)
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert controller.connect.call_count == 1
     assert controller.disconnect.call_count == 1
     controller.connect.reset_mock()
