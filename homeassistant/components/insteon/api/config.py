@@ -74,18 +74,19 @@ def remove_x10_device(hass: HomeAssistant, housecode: str, unitcode: int):
 
     config_entry = get_insteon_config_entry(hass)
     new_options = {**config_entry.options}
-    new_x10 = []
     try:
         new_options.pop(CONF_X10)
     except KeyError:
         # There are no X10 devices so nothing to do
         return
-    for existing_device in config_entry.options[CONF_X10]:
-        if (
-            existing_device[CONF_HOUSECODE].lower() != housecode.lower()
-            or existing_device[CONF_UNITCODE] != unitcode
-        ):
-            new_x10.append(existing_device)
+
+    new_x10 = [
+        existing_device
+        for existing_device in config_entry.options[CONF_X10]
+        if existing_device[CONF_HOUSECODE].lower() != housecode.lower()
+        or existing_device[CONF_UNITCODE] != unitcode
+    ]
+
     if new_x10:
         new_options[CONF_X10] = new_x10
     hass.config_entries.async_update_entry(entry=config_entry, options=new_options)
@@ -122,15 +123,17 @@ def remove_device_override(hass: HomeAssistant, address: Address):
 
     config_entry = get_insteon_config_entry(hass)
     new_options = {**config_entry.options}
-    new_overrides = []
     try:
         new_options.pop(CONF_OVERRIDE)
     except KeyError:
         # There are no overrides so nothing to do
         return
-    for existing_override in config_entry.options[CONF_OVERRIDE]:
-        if Address(existing_override[CONF_ADDRESS]) != address:
-            new_overrides.append(existing_override)
+
+    new_overrides = [
+        existing_override
+        for existing_override in config_entry.options[CONF_OVERRIDE]
+        if Address(existing_override[CONF_ADDRESS]) != address
+    ]
     if new_overrides:
         new_options[CONF_OVERRIDE] = new_overrides
     hass.config_entries.async_update_entry(entry=config_entry, options=new_options)
