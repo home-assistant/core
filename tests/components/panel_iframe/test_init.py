@@ -5,7 +5,7 @@ from typing import Any
 import pytest
 
 from homeassistant.components.panel_iframe import DOMAIN
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
@@ -150,6 +150,4 @@ async def test_create_issue_when_manually_configured(hass: HomeAssistant) -> Non
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     issue_registry = ir.async_get(hass)
-    assert issue_registry.async_get_issue(
-        HOMEASSISTANT_DOMAIN, "deprecated_yaml_panel_iframe"
-    )
+    assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml")
