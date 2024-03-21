@@ -62,12 +62,7 @@ class EcovacsLastJobEventEntity(
             if event.status == CleanJobStatus.MANUAL_STOPPED:
                 event_type = "manually_stopped"
 
-            self._trigger_event(
-                event_type,
-                {
-                    "room_ids": event.content,
-                },
-            )
+            self._trigger_event(event_type)
             self.async_write_ha_state()
 
         self._subscribe(self._capability.event, on_event)

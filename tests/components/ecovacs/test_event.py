@@ -71,7 +71,6 @@ async def test_last_job(
     assert (state := hass.states.get(state.entity_id))
     assert state.state == "2024-03-20T00:05:00.000+00:00"
     assert state.attributes[ATTR_EVENT_TYPE] == "finished_with_warnings"
-    assert state.attributes["room_ids"] == [2, 3]
 
     freezer.tick(timedelta(minutes=5))
     await notify_and_wait(
@@ -83,7 +82,6 @@ async def test_last_job(
     assert (state := hass.states.get(state.entity_id))
     assert state.state == "2024-03-20T00:10:00.000+00:00"
     assert state.attributes[ATTR_EVENT_TYPE] == "manually_stopped"
-    assert state.attributes["room_ids"] == [1]
 
     freezer.tick(timedelta(minutes=5))
     for status in (CleanJobStatus.NO_STATUS, CleanJobStatus.CLEANING):
@@ -97,4 +95,3 @@ async def test_last_job(
         assert (state := hass.states.get(state.entity_id))
         assert state.state == "2024-03-20T00:10:00.000+00:00"
         assert state.attributes[ATTR_EVENT_TYPE] == "manually_stopped"
-        assert state.attributes["room_ids"] == [1]

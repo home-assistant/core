@@ -48,10 +48,6 @@
         'manually_stopped',
       ]),
       'friendly_name': 'Ozmo 950 Last job',
-      'room_ids': list([
-        1,
-        2,
-      ]),
     }),
     'context': <ANY>,
     'entity_id': 'event.ozmo_950_last_job',
