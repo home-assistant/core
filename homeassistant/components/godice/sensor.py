@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_DICE, DOMAIN
+from .const import DATA_DICE, DOMAIN, MANUFACTURER, MODEL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,11 +49,11 @@ async def async_setup_entry(
     device_info = DeviceInfo(
         identifiers={(DOMAIN, config_entry.data[const.CONF_ADDRESS])},
         name=config_entry.data[const.CONF_NAME],
-        manufacturer="Particula",
-        model="GoDice",
+        manufacturer=MANUFACTURER,
+        model=MODEL,
     )
 
-    sensor_create_data = [
+    entities = [
         (DiceColorSensor, COLOR_SENSOR_DESCR),
         (BatteryLevelSensor, BATTERY_SENSOR_DESCR),
         (DiceNumberSensor, ROLLED_NUMBER_SENSOR_DESCR),
@@ -62,7 +62,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             entity_class(device_info, entity_description, dice)
-            for entity_class, entity_description in sensor_create_data
+            for entity_class, entity_description in entities
         ]
     )
 
