@@ -748,8 +748,8 @@ def async_start_setup(
                 "Setup of domain %s took %.2f seconds", integration, time_taken
             )
         elif _LOGGER.isEnabledFor(logging.DEBUG):
-            wait_time = sum(value for value in group_setup_times.values() if value < 0)
-            calculated_time = time_taken + wait_time
+            wait_time = -sum(value for value in group_setup_times.values() if value < 0)
+            calculated_time = time_taken - wait_time
             _LOGGER.debug(
                 "Phase %s for %s (%s) took %.2fs (elapsed=%.2fs) (wait_time=%.2fs)",
                 phase,
@@ -757,7 +757,7 @@ def async_start_setup(
                 group,
                 calculated_time,
                 time_taken,
-                -wait_time,
+                wait_time,
             )
 
 
