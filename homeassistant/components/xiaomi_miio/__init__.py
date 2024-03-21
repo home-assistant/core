@@ -410,9 +410,9 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
     try:
         await gateway.async_connect_gateway(host, token)
     except AuthException as error:
-        raise ConfigEntryAuthFailed() from error
+        raise ConfigEntryAuthFailed from error
     except SetupException as error:
-        raise ConfigEntryNotReady() from error
+        raise ConfigEntryNotReady from error
     gateway_info = gateway.gateway_info
 
     device_registry = dr.async_get(hass)

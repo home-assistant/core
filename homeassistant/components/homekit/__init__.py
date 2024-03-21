@@ -550,8 +550,13 @@ class HomeKit:
         self._reset_lock = asyncio.Lock()
         self._cancel_reload_dispatcher: CALLBACK_TYPE | None = None
 
-    def setup(self, async_zeroconf_instance: AsyncZeroconf, uuid: str) -> None:
-        """Set up bridge and accessory driver."""
+    def setup(self, async_zeroconf_instance: AsyncZeroconf, uuid: str) -> bool:
+        """Set up bridge and accessory driver.
+
+        Returns True if data was loaded from disk
+
+        Returns False if the persistent data was not loaded
+        """
         assert self.iid_storage is not None
         persist_file = get_persist_fullpath_for_entry_id(self.hass, self._entry_id)
         self.driver = HomeDriver(
@@ -573,6 +578,9 @@ class HomeKit:
         # as pyhap uses a random one until state is restored
         if os.path.exists(persist_file):
             self.driver.load()
+            return True
+
+        return False
 
     async def async_reset_accessories(self, entity_ids: Iterable[str]) -> None:
         """Reset the accessory to load the latest configuration."""
@@ -842,7 +850,9 @@ class HomeKit:
         # Avoid gather here since it will be I/O bound anyways
         await self.aid_storage.async_initialize()
         await self.iid_storage.async_initialize()
-        await self.hass.async_add_executor_job(self.setup, async_zc_instance, uuid)
+        loaded_from_disk = await self.hass.async_add_executor_job(
+            self.setup, async_zc_instance, uuid
+        )
         assert self.driver is not None
 
         if not await self._async_create_accessories():
@@ -850,8 +860,12 @@ class HomeKit:
         self._async_register_bridge()
         _LOGGER.debug("Driver start for %s", self._name)
         await self.driver.async_start()
-        async with self.hass.data[PERSIST_LOCK_DATA]:
-            await self.hass.async_add_executor_job(self.driver.persist)
+        if not loaded_from_disk:
+            # If the state was not loaded from disk, it means this is the
+            # first time the bridge is ever starting up. In this case, we
+            # need to make sure its persisted to disk.
+            async with self.hass.data[PERSIST_LOCK_DATA]:
+                await self.hass.async_add_executor_job(self.driver.persist)
         self.status = STATUS_RUNNING
 
         if self.driver.state.paired:
@@ -1163,7 +1177,7 @@ class HomeKitPairingQRView(HomeAssistantView):
     async def get(self, request: web.Request) -> web.Response:
         """Retrieve the pairing QRCode image."""
         if not request.query_string:
-            raise Unauthorized()
+            raise Unauthorized
         entry_id, secret = request.query_string.split("-")
         hass = request.app[KEY_HASS]
         domain_data: dict[str, HomeKitEntryData] = hass.data[DOMAIN]
@@ -1173,7 +1187,7 @@ class HomeKitPairingQRView(HomeAssistantView):
             or not entry_data.pairing_qr_secret
             or secret != entry_data.pairing_qr_secret
         ):
-            raise Unauthorized()
+            raise Unauthorized
         return web.Response(
             body=entry_data.pairing_qr,
             content_type="image/svg+xml",

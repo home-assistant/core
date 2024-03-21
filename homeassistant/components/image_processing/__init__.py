@@ -165,7 +165,7 @@ class ImageProcessingEntity(Entity):
 
     def process_image(self, image: bytes) -> None:
         """Process image."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_process_image(self, image: bytes) -> None:
         """Process image."""

@@ -92,7 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # The IQVIA API can be selectively flaky, meaning that any number of the setup
         # API calls could fail. We only retry integration setup if *all* of the initial
         # API calls fail:
-        raise ConfigEntryNotReady()
+        raise ConfigEntryNotReady
 
     # Once we've successfully authenticated, we re-enable client request retries:
     client.enable_request_retries()
