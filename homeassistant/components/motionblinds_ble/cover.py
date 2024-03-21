@@ -89,6 +89,9 @@ class MotionblindsBLECoverEntity(MotionblindsBLEEntity, CoverEntity):
         super().__init__(
             device, entry, COVER_TYPES[entry.data[CONF_BLIND_TYPE].upper()]
         )
+
+    async def async_added_to_hass(self) -> None:
+        """Register device callbacks."""
         self._device.register_running_callback(self.async_update_running)
         self._device.register_position_callback(self.async_update_position)
 
