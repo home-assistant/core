@@ -7,7 +7,6 @@ import logging
 from typing import Any
 
 from motionblindsble.const import MotionBlindType, MotionRunningType
-from motionblindsble.device import MotionDevice
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -48,7 +47,7 @@ VERTICAL_ENTITY_DESCRIPTION = MotionCoverEntityDescription(
     device_class=CoverDeviceClass.CURTAIN, icon=ICON_VERTICAL_BLIND
 )
 
-COVER_TYPES: dict[str, MotionCoverEntityDescription] = {
+BLIND_TYPE_TO_ENTITY_DESCRIPTION: dict[str, MotionCoverEntityDescription] = {
     MotionBlindType.HONEYCOMB.name: SHADE_ENTITY_DESCRIPTION,
     MotionBlindType.ROMAN.name: SHADE_ENTITY_DESCRIPTION,
     MotionBlindType.ROLLER.name: SHADE_ENTITY_DESCRIPTION,
@@ -67,7 +66,8 @@ async def async_setup_entry(
 
     blind_class = BLIND_TYPE_TO_CLASS[entry.data[CONF_BLIND_TYPE].upper()]
     device = hass.data[DOMAIN][entry.entry_id]
-    entity = blind_class(device, entry)
+    entity_description = BLIND_TYPE_TO_ENTITY_DESCRIPTION[entry.data[CONF_BLIND_TYPE].upper()]
+    entity = blind_class(device, entry, entity_description)
 
     async_add_entities([entity])
 
@@ -78,20 +78,14 @@ class MotionblindsBLECoverEntity(MotionblindsBLEEntity, CoverEntity):
     _attr_is_closed: bool | None = None
     _attr_name = None
 
-    def __init__(self, device: MotionDevice, entry: ConfigEntry) -> None:
-        """Initialize the blind."""
-        _LOGGER.debug(
-            "(%s) Setting up %s cover entity (%s)",
-            entry.data[CONF_MAC_CODE],
-            entry.data[CONF_BLIND_TYPE].upper(),
-            BLIND_TYPE_TO_CLASS[entry.data[CONF_BLIND_TYPE].upper()].__name__,
-        )
-        super().__init__(
-            device, entry, COVER_TYPES[entry.data[CONF_BLIND_TYPE].upper()]
-        )
-
     async def async_added_to_hass(self) -> None:
         """Register device callbacks."""
+        _LOGGER.debug(
+            "(%s) Setting up %s cover entity (%s)",
+            self.entry.data[CONF_MAC_CODE],
+            self.entry.data[CONF_BLIND_TYPE].upper(),
+            BLIND_TYPE_TO_CLASS[self.entry.data[CONF_BLIND_TYPE].upper()].__name__,
+        )
         self.device.register_running_callback(self.async_update_running)
         self.device.register_position_callback(self.async_update_position)
 
