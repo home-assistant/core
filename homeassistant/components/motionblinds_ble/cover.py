@@ -35,31 +35,28 @@ class MotionCoverEntityDescription(CoverEntityDescription):
     translation_key: str = CoverDeviceClass.BLIND.value
 
 
+SHADE_ENTITY_DESCRIPTION = MotionCoverEntityDescription(
+    device_class=CoverDeviceClass.SHADE
+)
+BLIND_ENTITY_DESCRIPTION = MotionCoverEntityDescription(
+    device_class=CoverDeviceClass.BLIND
+)
+CURTAIN_ENTITY_DESCRIPTION = MotionCoverEntityDescription(
+    device_class=CoverDeviceClass.CURTAIN
+)
+VERTICAL_ENTITY_DESCRIPTION = MotionCoverEntityDescription(
+    device_class=CoverDeviceClass.CURTAIN, icon=ICON_VERTICAL_BLIND
+)
+
 COVER_TYPES: dict[str, MotionCoverEntityDescription] = {
-    MotionBlindType.HONEYCOMB.name: MotionCoverEntityDescription(
-        device_class=CoverDeviceClass.SHADE
-    ),
-    MotionBlindType.ROMAN.name: MotionCoverEntityDescription(
-        device_class=CoverDeviceClass.SHADE
-    ),
-    MotionBlindType.ROLLER.name: MotionCoverEntityDescription(
-        device_class=CoverDeviceClass.SHADE
-    ),
-    MotionBlindType.DOUBLE_ROLLER.name: MotionCoverEntityDescription(
-        device_class=CoverDeviceClass.SHADE
-    ),
-    MotionBlindType.VENETIAN.name: MotionCoverEntityDescription(
-        device_class=CoverDeviceClass.BLIND
-    ),
-    MotionBlindType.VENETIAN_TILT_ONLY.name: MotionCoverEntityDescription(
-        device_class=CoverDeviceClass.BLIND
-    ),
-    MotionBlindType.CURTAIN.name: MotionCoverEntityDescription(
-        device_class=CoverDeviceClass.CURTAIN
-    ),
-    MotionBlindType.VERTICAL.name: MotionCoverEntityDescription(
-        device_class=CoverDeviceClass.CURTAIN, icon=ICON_VERTICAL_BLIND
-    ),
+    MotionBlindType.HONEYCOMB.name: SHADE_ENTITY_DESCRIPTION,
+    MotionBlindType.ROMAN.name: SHADE_ENTITY_DESCRIPTION,
+    MotionBlindType.ROLLER.name: SHADE_ENTITY_DESCRIPTION,
+    MotionBlindType.DOUBLE_ROLLER.name: SHADE_ENTITY_DESCRIPTION,
+    MotionBlindType.VENETIAN.name: BLIND_ENTITY_DESCRIPTION,
+    MotionBlindType.VENETIAN_TILT_ONLY.name: BLIND_ENTITY_DESCRIPTION,
+    MotionBlindType.CURTAIN.name: CURTAIN_ENTITY_DESCRIPTION,
+    MotionBlindType.VERTICAL.name: VERTICAL_ENTITY_DESCRIPTION,
 }
 
 
