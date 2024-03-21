@@ -54,7 +54,7 @@ class AutomowerSelectEntity(AutomowerControlEntity, SelectEntity):
     ) -> None:
         """Set up select platform."""
         super().__init__(mower_id, coordinator)
-        self._attr_unique_id = f"{mower_id}_{self._attr_translation_key}"
+        self._attr_unique_id = f"{mower_id}_headlight_mode"
 
     @property
     def current_option(self) -> str:

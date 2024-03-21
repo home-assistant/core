@@ -42,7 +42,7 @@
         "name": "Headlight mode",
         "state": {
           "always_on": "Always on",
-          "always_off": "Always Off",
+          "always_off": "Always off",
           "evening_only": "Evening only",
           "evening_and_night": "Evening and night"
         }
