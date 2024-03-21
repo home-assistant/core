@@ -105,7 +105,7 @@ class MotionblindsBLECoverEntity(MotionblindsBLEEntity, CoverEntity):
         self, running_type: MotionRunningType | None, write_state: bool = True
     ) -> None:
         """Update whether the blind is running (opening/closing) or not."""
-        if running_type in [None, MotionRunningType.STILL, MotionRunningType.UNKNOWN]:
+        if running_type in {None, MotionRunningType.STILL, MotionRunningType.UNKNOWN}:
             self._attr_is_opening = False
             self._attr_is_closing = False
         else:
