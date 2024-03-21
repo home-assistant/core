@@ -6,7 +6,6 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    ATTR_AUX_HEAT,
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
@@ -25,7 +24,6 @@ from homeassistant.components.climate import (
     DOMAIN,
     PRESET_AWAY,
     PRESET_ECO,
-    SERVICE_SET_AUX_HEAT,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_HVAC_MODE,
@@ -40,8 +38,6 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -81,7 +77,6 @@ def test_setup_params(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_HUMIDITY) == 67
     assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == 54
     assert state.attributes.get(ATTR_SWING_MODE) == "off"
-    assert state.attributes.get(ATTR_AUX_HEAT) == STATE_OFF
     assert state.attributes.get(ATTR_HVAC_MODES) == [
         HVACMode.OFF,
         HVACMode.HEAT,
@@ -382,49 +377,6 @@ async def test_set_hold_mode_eco(hass: HomeAssistant) -> None:
 
     state = hass.states.get(ENTITY_ECOBEE)
     assert state.attributes.get(ATTR_PRESET_MODE) == PRESET_ECO
-
-
-async def test_set_aux_heat_bad_attr(hass: HomeAssistant) -> None:
-    """Test setting the auxiliary heater without required attribute."""
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get(ATTR_AUX_HEAT) == STATE_OFF
-
-    with pytest.raises(vol.Invalid):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_AUX_HEAT,
-            {ATTR_ENTITY_ID: ENTITY_CLIMATE, ATTR_AUX_HEAT: None},
-            blocking=True,
-        )
-
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get(ATTR_AUX_HEAT) == STATE_OFF
-
-
-async def test_set_aux_heat_on(hass: HomeAssistant) -> None:
-    """Test setting the axillary heater on/true."""
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_AUX_HEAT,
-        {ATTR_ENTITY_ID: ENTITY_CLIMATE, ATTR_AUX_HEAT: True},
-        blocking=True,
-    )
-
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get(ATTR_AUX_HEAT) == STATE_ON
-
-
-async def test_set_aux_heat_off(hass: HomeAssistant) -> None:
-    """Test setting the auxiliary heater off/false."""
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_AUX_HEAT,
-        {ATTR_ENTITY_ID: ENTITY_CLIMATE, ATTR_AUX_HEAT: False},
-        blocking=True,
-    )
-
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get(ATTR_AUX_HEAT) == STATE_OFF
 
 
 async def test_turn_on(hass: HomeAssistant) -> None:
