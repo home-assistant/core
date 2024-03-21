@@ -199,12 +199,18 @@ async def test_home_assistant_error_subclass(hass: HomeAssistant) -> None:
                 translation_key="bla",
                 translation_placeholders={"bla": "Bla"},
             )
-        assert str(exc.value) == "<super: <class 'HomeAssistantError'>, NULL>"
+        assert (
+            str(exc.value)
+            == "<class 'tests.test_exceptions.test_home_assistant_error_subclass.<locals>._SubExceptionConstructor'>"
+        )
         with pytest.raises(HomeAssistantError) as exc:
             raise _SubExceptionConstructor(
                 "custom arg",
             )
-        assert str(exc.value) == "<super: <class 'HomeAssistantError'>, NULL>"
+        assert (
+            str(exc.value)
+            == "<class 'tests.test_exceptions.test_home_assistant_error_subclass.<locals>._SubExceptionConstructor'>"
+        )
 
         # A subclass with a constructor that generates the message
         with pytest.raises(HomeAssistantError) as exc:
