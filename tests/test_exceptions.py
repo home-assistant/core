@@ -201,7 +201,7 @@ async def test_home_assistant_error_subclass(hass: HomeAssistant) -> None:
             )
         assert (
             str(exc.value)
-            == "<class 'tests.test_exceptions.test_home_assistant_error_subclass.<locals>._SubExceptionConstructor'>"
+            == "Parent class _SubExceptionConstructor is missing __str__ method"
         )
         with pytest.raises(HomeAssistantError) as exc:
             raise _SubExceptionConstructor(
@@ -209,7 +209,7 @@ async def test_home_assistant_error_subclass(hass: HomeAssistant) -> None:
             )
         assert (
             str(exc.value)
-            == "<class 'tests.test_exceptions.test_home_assistant_error_subclass.<locals>._SubExceptionConstructor'>"
+            == "Parent class _SubExceptionConstructor is missing __str__ method"
         )
 
         # A subclass with a constructor that generates the message

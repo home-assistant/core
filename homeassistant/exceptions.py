@@ -66,7 +66,9 @@ class HomeAssistantError(Exception):
         if not self.generate_message:
             # Initialize self._message to the string repr of the class
             # to prevent a recursive loop.
-            self._message = str(self.__class__)
+            self._message = (
+                f"Parent class {self.__class__.__name__} is missing __str__ method"
+            )
             # If the there is an other super class involved,
             # we want to call its __str__ method.
             # If the super().__str__ method is missing in the base_class
