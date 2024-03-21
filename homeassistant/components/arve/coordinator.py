@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_SECRET, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
@@ -29,10 +30,14 @@ class ArveCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=60),
             update_method=self._async_update_data,
         )
+
+        self._client_session = async_get_clientsession(hass)
+
         self.arve = Arve(
             self.config_entry.data[CONF_ACCESS_TOKEN],
             self.config_entry.data[CONF_CLIENT_SECRET],
             self.config_entry.data[CONF_NAME],
+            session=self._client_session,
         )
 
         self.first_refresh = True

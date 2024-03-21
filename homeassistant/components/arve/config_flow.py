@@ -17,7 +17,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class ArveConfigFlowHadler(config_entries.ConfigFlow, domain=DOMAIN):
+class ArveConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Arve."""
 
     async def async_step_user(

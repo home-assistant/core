@@ -5,13 +5,11 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-ACC_TOKEN_SELECTION = {CONF_ACCESS_TOKEN: "249e597c-e0cc-436e-abbd-867d61d6c5a9"}
-
-CLIENT_SECRET_SELECTION = {CONF_CLIENT_SECRET: "73bdb639-a454-4f9e-879c-793ee39bb268"}
-
-USER_INPUT = (
-    ACC_TOKEN_SELECTION | CLIENT_SECRET_SELECTION | {CONF_NAME: "A0120-0000-0000-1780"}
-)
+USER_INPUT = {
+    CONF_ACCESS_TOKEN: "test-access-token",
+    CONF_CLIENT_SECRET: "test-customer-token",
+    CONF_NAME: "test-serial-number",
+}
 
 
 async def async_init_integration(

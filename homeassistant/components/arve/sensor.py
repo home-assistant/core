@@ -1,4 +1,4 @@
-"""Support for Arve devices."""
+"""Sensor platform for Arve devices."""
 
 from collections.abc import Callable
 from dataclasses import dataclass

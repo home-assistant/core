@@ -3,24 +3,19 @@
 from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
-from homeassistant.components.arve.config_flow import CannotConnect, InvalidAuth
+from homeassistant.components.arve.config_flow import ArveConnectionError
 from homeassistant.components.arve.const import DOMAIN
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_SECRET, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-CREDENTIALS = {
-    CONF_ACCESS_TOKEN: "test-access-token",
-    CONF_CLIENT_SECRET: "test-client-secret",
-    CONF_NAME: "test-name",
-}
+from . import USER_INPUT
 
 
 async def create_entry(result, mock_setup_entry: AsyncMock):
     """Create test entry."""
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Name of the device"
-    assert result["data"] == CREDENTIALS
+    assert result["data"] == USER_INPUT
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -32,54 +27,6 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.arve.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            CREDENTIALS,
-        )
-        await hass.async_block_till_done()
-
-    create_entry(result, mock_setup_entry)
-
-
-async def test_form_invalid_auth(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test we handle invalid auth."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.arve.config_flow.PlaceholderHub.authenticate",
-        side_effect=InvalidAuth,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            CREDENTIALS,
-        )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
-
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
-    with patch(
-        "homeassistant.components.arve.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            CREDENTIALS,
-        )
-        await hass.async_block_till_done()
-
-    create_entry(result, mock_setup_entry)
-
 
 async def test_form_cannot_connect(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
@@ -90,29 +37,13 @@ async def test_form_cannot_connect(
     )
 
     with patch(
-        "homeassistant.components.arve.config_flow.PlaceholderHub.authenticate",
-        side_effect=CannotConnect,
+        "asyncarve.Arve.get_sensor_info",
+        side_effect=ArveConnectionError,
     ):
-        result = await hass.config_entries.flow.async_configure(
+        result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            CREDENTIALS,
+            USER_INPUT,
         )
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
-
-    with patch(
-        "homeassistant.components.arve.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            CREDENTIALS,
-        )
-        await hass.async_block_till_done()
-
-    create_entry(result, mock_setup_entry)
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}

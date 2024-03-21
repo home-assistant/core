@@ -22,7 +22,6 @@ class ArveDeviceEntity(CoordinatorEntity[ArveCoordinator]):
         """Initialize the Arve device entity."""
         super().__init__(coordinator)
 
-        self._entry = coordinator.config_entry
         self.entity_description = description
 
         self._attr_unique_id = (
@@ -35,5 +34,6 @@ class ArveDeviceEntity(CoordinatorEntity[ArveCoordinator]):
             identifiers={(DOMAIN, coordinator.arve.device_sn)},
             manufacturer="Calanda Air AG",
             model="Arve Sens Pro",
-            sw_version="1.0.0",
+            serial_number=coordinator.arve.device_sn,
+            name=coordinator.config_entry.title,
         )
