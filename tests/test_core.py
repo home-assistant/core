@@ -58,6 +58,7 @@ from homeassistant.exceptions import (
     ServiceNotFound,
 )
 from homeassistant.helpers.json import json_dumps
+from homeassistant.setup import async_setup_component
 from homeassistant.util.async_ import create_eager_task
 import homeassistant.util.dt as dt_util
 from homeassistant.util.read_only_dict import ReadOnlyDict
@@ -1314,9 +1315,26 @@ async def test_eventbus_max_length_exceeded(hass: HomeAssistant) -> None:
         "this_event_exceeds_the_max_character_length_even_with_the_new_limit"
     )
 
+    # Without cached translations the translation key is returned
     with pytest.raises(MaxLengthExceeded) as exc_info:
         hass.bus.async_fire(long_evt_name)
 
+    assert str(exc_info.value) == "max_length_exceeded"
+    assert exc_info.value.property_name == "event_type"
+    assert exc_info.value.max_length == 64
+    assert exc_info.value.value == long_evt_name
+
+    # Fetch translations
+    await async_setup_component(hass, "homeassistant", {})
+
+    # With cached translations the formatted message is returned
+    with pytest.raises(MaxLengthExceeded) as exc_info:
+        hass.bus.async_fire(long_evt_name)
+
+    assert (
+        str(exc_info.value)
+        == f"Value {long_evt_name} for property event_type has a maximum length of 64 characters"
+    )
     assert exc_info.value.property_name == "event_type"
     assert exc_info.value.max_length == 64
     assert exc_info.value.value == long_evt_name
@@ -1658,8 +1676,18 @@ async def test_serviceregistry_service_that_not_exists(hass: HomeAssistant) -> N
     await hass.async_block_till_done()
     assert len(calls_remove) == 0
 
-    with pytest.raises(ServiceNotFound):
+    with pytest.raises(ServiceNotFound) as exc:
         await hass.services.async_call("test_do_not", "exist", {})
+    assert exc.value.translation_domain == "homeassistant"
+    assert exc.value.translation_key == "service_not_found"
+    assert exc.value.translation_placeholders == {
+        "domain": "test_do_not",
+        "service": "exist",
+    }
+    assert exc.value.domain == "test_do_not"
+    assert exc.value.service == "exist"
+
+    assert str(exc.value) == "Service test_do_not.exist not found."
 
 
 async def test_serviceregistry_async_service_raise_exception(
