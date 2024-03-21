@@ -36,7 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def _async_connected(future: asyncio.Future[None]) -> None:
+def _set_future_if_not_done(future: asyncio.Future[None]) -> None:
     if not future.done():
         future.set_result(None)
 
@@ -62,17 +62,18 @@ class YeelightScanner:
         self._host_capabilities: dict[str, CaseInsensitiveDict] = {}
         self._track_interval: CALLBACK_TYPE | None = None
         self._listeners: list[SsdpSearchListener] = []
-        self._connected_futures: list[asyncio.Future[None]] = []
+        self._setup_future: asyncio.Future[None] | None = None
 
     async def async_setup(self) -> None:
         """Set up the scanner."""
-        if self._connected_futures:
-            await self._async_wait_connected()
-            return
+        if self._setup_future is not None:
+            return await self._setup_future
 
+        self._setup_future = self._hass.loop.create_future()
+        connected_futures: list[asyncio.Future[None]] = []
         for source_ip in await self._async_build_source_set():
             future = self._hass.loop.create_future()
-            self._connected_futures.append(future)
+            connected_futures.append(future)
             source = (str(source_ip), 0)
             self._listeners.append(
                 SsdpSearchListener(
@@ -80,7 +81,7 @@ class YeelightScanner:
                     search_target=SSDP_ST,
                     target=SSDP_TARGET,
                     source=source,
-                    connect_callback=partial(_async_connected, future),
+                    connect_callback=partial(_set_future_if_not_done, future),
                 )
             )
 
@@ -101,21 +102,17 @@ class YeelightScanner:
                 result,
             )
             failed_listeners.append(self._listeners[idx])
-            _async_connected(self._connected_futures[idx])
+            _set_future_if_not_done(connected_futures[idx])
 
         for listener in failed_listeners:
             self._listeners.remove(listener)
 
-        await self._async_wait_connected()
+        await asyncio.wait(connected_futures)
         self._track_interval = async_track_time_interval(
             self._hass, self.async_scan, DISCOVERY_INTERVAL, cancel_on_shutdown=True
         )
         self.async_scan()
-
-    async def _async_wait_connected(self):
-        """Wait for the listeners to be up and connected."""
-        if not all(future.done() for future in self._connected_futures):
-            await asyncio.wait(self._connected_futures)
+        _set_future_if_not_done(self._setup_future)
 
     async def _async_build_source_set(self) -> set[IPv4Address]:
         """Build the list of ssdp sources."""
