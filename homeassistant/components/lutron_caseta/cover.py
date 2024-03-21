@@ -22,8 +22,16 @@ from .models import LutronCasetaData
 _LOGGER = logging.getLogger(__name__)
 
 
-class LutronCasetaCover(LutronCasetaDeviceUpdatableEntity, CoverEntity):
-    """Representation of a Lutron shade."""
+class LutronCasetaCoverBase(LutronCasetaDeviceUpdatableEntity, CoverEntity):
+    """Representation of a Lutron cover base class."""
+
+    async def async_stop_cover(self, **kwargs: Any) -> None:
+        """Stop the cover."""
+        await self._smartbridge.stop_cover(self.device_id)
+
+
+class LutronCasetaCover(LutronCasetaCoverBase):
+    """Representation of a Lutron shade with open/close functionality."""
 
     _attr_supported_features = (
         CoverEntityFeature.OPEN
@@ -42,10 +50,6 @@ class LutronCasetaCover(LutronCasetaDeviceUpdatableEntity, CoverEntity):
     def current_cover_position(self) -> int:
         """Return the current position of cover."""
         return self._device["current_state"]
-
-    async def async_stop_cover(self, **kwargs: Any) -> None:
-        """Top the cover."""
-        await self._smartbridge.stop_cover(self.device_id)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
@@ -66,7 +70,7 @@ class LutronCasetaCover(LutronCasetaDeviceUpdatableEntity, CoverEntity):
             await self._smartbridge.set_value(self.device_id, position)
 
 
-class LutronCasetaTiltOnlyBlind(LutronCasetaDeviceUpdatableEntity, CoverEntity):
+class LutronCasetaTiltOnlyBlind(LutronCasetaCoverBase):
     """Representation of a Lutron tilt only blind."""
 
     _attr_supported_features = (
@@ -87,10 +91,6 @@ class LutronCasetaTiltOnlyBlind(LutronCasetaDeviceUpdatableEntity, CoverEntity):
     def current_cover_tilt_position(self) -> int:
         """Return the current position of cover."""
         return self._device["tilt"]
-
-    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
-        """Top the cover."""
-        await self._smartbridge.stop_cover(self.device_id)
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover."""
@@ -119,19 +119,9 @@ PYLUTRON_TYPE_TO_CLASSES = {
     "TriathlonRollerShade": LutronCasetaCover,
     "QsWirelessShade": LutronCasetaCover,
     "QsWirelessHorizontalSheerBlind": LutronCasetaCover,
-    # "QsWirelessWoodBlind": LutronCasetaCover, # implement tilt and lift wood blind
-    # "RightDrawDrape": LutronCasetaCover, # implement drape
     "Shade": LutronCasetaCover,
     "PalladiomWireFreeShade": LutronCasetaCover,
 }
-
-
-def _map_covertype_pylutron_to_ha(pylutron_name):
-    try:
-        return PYLUTRON_TYPE_TO_CLASSES[pylutron_name]
-    except KeyError:
-        _LOGGER.error("%s cover type not implemented" | format(pylutron_name))
-        return None
 
 
 async def async_setup_entry(
