@@ -332,7 +332,7 @@ class IntegrationSensor(RestoreSensor):
             == SensorDeviceClass.POWER
         ):
             self._attr_device_class = SensorDeviceClass.ENERGY
-            self._attr_icon = None
+            self._attr_icon = None  # Appropriate icon will be derived if device class is ENERGY so remove any custom icon
 
     def _update_integral(self, area: Decimal) -> None:
         area_scaled = area / (self._unit_prefix * self._unit_time)
