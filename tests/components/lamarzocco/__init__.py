@@ -18,6 +18,13 @@ PASSWORD_SELECTION = {
 
 USER_INPUT = PASSWORD_SELECTION | {CONF_USERNAME: "username"}
 
+MODEL_DICT = {
+    LaMarzoccoModel.GS3_AV: ("GS01234", "GS3 AV"),
+    LaMarzoccoModel.GS3_MP: ("GS01234", "GS3 MP"),
+    LaMarzoccoModel.LINEA_MICRA: ("MR01234", "Linea Micra"),
+    LaMarzoccoModel.LINEA_MINI: ("LM01234", "Linea Mini"),
+}
+
 
 async def async_init_integration(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
