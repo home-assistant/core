@@ -59,14 +59,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     # Register Home Assistant functions to use in the library
-    device.set_ha_create_task(
+    device.set_create_task_factory(
         partial(
             entry.async_create_background_task,
             hass=hass,
             name=device.ble_device.address,
         )
     )
-    device.set_ha_call_later(partial(async_call_later, hass=hass))
+    device.set_call_later_factory(partial(async_call_later, hass=hass))
 
     # Register a callback that updates the BLEDevice in the library
     @callback
