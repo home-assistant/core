@@ -148,9 +148,11 @@ class BatterySensor(GenericSensor):
     def async_update_battery_percentage(self, battery_percentage: int | None) -> None:
         """Update the battery percentage sensor value."""
         if battery_percentage is None:
+            # Battery percentage is unknown
             self._attr_native_value = None
             self._attr_icon = "mdi:battery-unknown"
         elif battery_percentage == 0xFF:
+            # Motor is wired and does not have a battery
             self._attr_native_value = "100"
             self._attr_icon = "mdi:power-plug-outline"
         else:
