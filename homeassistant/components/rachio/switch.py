@@ -565,13 +565,13 @@ class RachioValve(CoordinatorEntity[RachioUpdateCoordinator], SwitchEntity):
             identifiers={
                 (
                     DOMAIN_RACHIO,
-                    self._base.serial_number,
+                    self.id,
                 )
             },
             connections={(dr.CONNECTION_NETWORK_MAC, self._base.mac_address)},
             manufacturer=DEFAULT_NAME,
             model="Smart Hose Timer",
-            name="Smart Hose Timer Base Station",
+            name=self._attr_name,
             configuration_url="https://app.rach.io",
         )
 
