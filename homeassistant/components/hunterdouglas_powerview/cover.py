@@ -66,7 +66,7 @@ async def async_setup_entry(
         """
 
         for shade in pv_entry.shade_data.values():
-            _LOGGER.warning("Initial refresh of shade: %s", shade.name)
+            _LOGGER.debug("Initial refresh of shade: %s", shade.name)
             await shade.refresh(suppress_timeout=True, timeout=10)
 
     entities: list[ShadeEntity] = []
