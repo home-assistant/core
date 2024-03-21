@@ -1,11 +1,9 @@
 """Support for La Marzocco update entities."""
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from lmcloud import LMCloud as LaMarzoccoClient
-from lmcloud.const import LaMarzoccoUpdateableComponent
+from lmcloud.const import FirmwareType
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -30,9 +28,7 @@ class LaMarzoccoUpdateEntityDescription(
 ):
     """Description of a La Marzocco update entities."""
 
-    current_fw_fn: Callable[[LaMarzoccoClient], str]
-    latest_fw_fn: Callable[[LaMarzoccoClient], str]
-    component: LaMarzoccoUpdateableComponent
+    component: FirmwareType
 
 
 ENTITIES: tuple[LaMarzoccoUpdateEntityDescription, ...] = (
@@ -40,18 +36,14 @@ ENTITIES: tuple[LaMarzoccoUpdateEntityDescription, ...] = (
         key="machine_firmware",
         translation_key="machine_firmware",
         device_class=UpdateDeviceClass.FIRMWARE,
-        current_fw_fn=lambda lm: lm.firmware_version,
-        latest_fw_fn=lambda lm: lm.latest_firmware_version,
-        component=LaMarzoccoUpdateableComponent.MACHINE,
+        component=FirmwareType.MACHINE,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     LaMarzoccoUpdateEntityDescription(
         key="gateway_firmware",
         translation_key="gateway_firmware",
         device_class=UpdateDeviceClass.FIRMWARE,
-        current_fw_fn=lambda lm: lm.gateway_version,
-        latest_fw_fn=lambda lm: lm.latest_gateway_version,
-        component=LaMarzoccoUpdateableComponent.GATEWAY,
+        component=FirmwareType.GATEWAY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
@@ -81,12 +73,16 @@ class LaMarzoccoUpdateEntity(LaMarzoccoEntity, UpdateEntity):
     @property
     def installed_version(self) -> str | None:
         """Return the current firmware version."""
-        return self.entity_description.current_fw_fn(self.coordinator.lm)
+        return self.coordinator.device.firmware[
+            self.entity_description.component
+        ].current_version
 
     @property
     def latest_version(self) -> str:
         """Return the latest firmware version."""
-        return self.entity_description.latest_fw_fn(self.coordinator.lm)
+        return self.coordinator.device.firmware[
+            self.entity_description.component
+        ].latest_version
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
@@ -94,7 +90,7 @@ class LaMarzoccoUpdateEntity(LaMarzoccoEntity, UpdateEntity):
         """Install an update."""
         self._attr_in_progress = True
         self.async_write_ha_state()
-        success = await self.coordinator.lm.update_firmware(
+        success = await self.coordinator.device.update_firmware(
             self.entity_description.component
         )
         if not success:

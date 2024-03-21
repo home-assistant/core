@@ -4,14 +4,15 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
+from lmcloud.const import BoilerType
+
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import LaMarzoccoUpdateCoordinator
+from .coordinator import LaMarzoccoMachineUpdateCoordinator
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 
 
@@ -22,8 +23,10 @@ class LaMarzoccoSwitchEntityDescription(
 ):
     """Description of a La Marzocco Switch."""
 
-    control_fn: Callable[[LaMarzoccoUpdateCoordinator, bool], Coroutine[Any, Any, bool]]
-    is_on_fn: Callable[[LaMarzoccoUpdateCoordinator], bool]
+    control_fn: Callable[
+        [LaMarzoccoMachineUpdateCoordinator, bool], Coroutine[Any, Any, bool]
+    ]
+    is_on_fn: Callable[[LaMarzoccoMachineUpdateCoordinator], bool]
 
 
 ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
@@ -31,30 +34,16 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
         key="main",
         translation_key="main",
         name=None,
-        control_fn=lambda coordinator, state: coordinator.lm.set_power(
-            state, coordinator.async_get_ble_device()
-        ),
-        is_on_fn=lambda coordinator: coordinator.lm.current_status["power"],
-    ),
-    LaMarzoccoSwitchEntityDescription(
-        key="auto_on_off",
-        translation_key="auto_on_off",
-        control_fn=lambda coordinator, state: coordinator.lm.set_auto_on_off_global(
-            state
-        ),
-        is_on_fn=lambda coordinator: coordinator.lm.current_status["global_auto"]
-        == "Enabled",
-        entity_category=EntityCategory.CONFIG,
+        control_fn=lambda coordinator, state: coordinator.device.set_power(state),
+        is_on_fn=lambda coordinator: coordinator.device.config.turned_on,
     ),
     LaMarzoccoSwitchEntityDescription(
         key="steam_boiler_enable",
         translation_key="steam_boiler",
-        control_fn=lambda coordinator, state: coordinator.lm.set_steam(
-            state, coordinator.async_get_ble_device()
-        ),
-        is_on_fn=lambda coordinator: coordinator.lm.current_status[
-            "steam_boiler_enable"
-        ],
+        control_fn=lambda coordinator, state: coordinator.device.set_steam(state),
+        is_on_fn=lambda coordinator: coordinator.device.config.boilers[
+            BoilerType.STEAM
+        ].enabled,
     ),
 )
 

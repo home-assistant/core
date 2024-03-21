@@ -3,45 +3,46 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from lmcloud import LMCloud as LaMarzoccoClient
+from lmcloud.const import FirmwareType
+from lmcloud.lm_machine import LaMarzoccoMachine
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import LaMarzoccoUpdateCoordinator
+from .coordinator import LaMarzoccoMachineUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
 class LaMarzoccoEntityDescription(EntityDescription):
     """Description for all LM entities."""
 
-    available_fn: Callable[[LaMarzoccoClient], bool] = lambda _: True
-    supported_fn: Callable[[LaMarzoccoUpdateCoordinator], bool] = lambda _: True
+    available_fn: Callable[[LaMarzoccoMachine], bool] = lambda _: True
+    supported_fn: Callable[[LaMarzoccoMachineUpdateCoordinator], bool] = lambda _: True
 
 
-class LaMarzoccoBaseEntity(CoordinatorEntity[LaMarzoccoUpdateCoordinator]):
+class LaMarzoccoBaseEntity(CoordinatorEntity[LaMarzoccoMachineUpdateCoordinator]):
     """Common elements for all entities."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: LaMarzoccoUpdateCoordinator,
+        coordinator: LaMarzoccoMachineUpdateCoordinator,
         key: str,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        lm = coordinator.lm
-        self._attr_unique_id = f"{lm.serial_number}_{key}"
+        device = coordinator.device
+        self._attr_unique_id = f"{device.serial_number}_{key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, lm.serial_number)},
-            name=lm.machine_name,
+            identifiers={(DOMAIN, device.serial_number)},
+            name=device.name,
             manufacturer="La Marzocco",
-            model=lm.true_model_name,
-            serial_number=lm.serial_number,
-            sw_version=lm.firmware_version,
+            model=device.full_model_name,
+            serial_number=device.serial_number,
+            sw_version=device.firmware[FirmwareType.MACHINE].current_version,
         )
 
 
@@ -50,19 +51,18 @@ class LaMarzoccoEntity(LaMarzoccoBaseEntity):
 
     entity_description: LaMarzoccoEntityDescription
 
-    def __init__(
-        self,
-        coordinator: LaMarzoccoUpdateCoordinator,
-        entity_description: LaMarzoccoEntityDescription,
-    ) -> None:
-        """Initialize the entity."""
-
-        super().__init__(coordinator, entity_description.key)
-        self.entity_description = entity_description
-
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self.entity_description.available_fn(
-            self.coordinator.lm
+            self.coordinator.device
         )
+
+    def __init__(
+        self,
+        coordinator: LaMarzoccoMachineUpdateCoordinator,
+        entity_description: LaMarzoccoEntityDescription,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator, entity_description.key)
+        self.entity_description = entity_description

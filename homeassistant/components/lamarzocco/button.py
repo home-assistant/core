@@ -4,7 +4,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
-from lmcloud import LMCloud as LaMarzoccoClient
+from lmcloud.lm_machine import LaMarzoccoMachine
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -22,7 +22,7 @@ class LaMarzoccoButtonEntityDescription(
 ):
     """Description of a La Marzocco button."""
 
-    press_fn: Callable[[LaMarzoccoClient], Coroutine[Any, Any, None]]
+    press_fn: Callable[[LaMarzoccoMachine], Coroutine[Any, Any, None]]
 
 
 ENTITIES: tuple[LaMarzoccoButtonEntityDescription, ...] = (
@@ -56,4 +56,4 @@ class LaMarzoccoButtonEntity(LaMarzoccoEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Press button."""
-        await self.entity_description.press_fn(self.coordinator.lm)
+        await self.entity_description.press_fn(self.coordinator.device)

@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from lmcloud import LMCloud as LaMarzoccoClient
+from lmcloud.lm_machine import LaMarzoccoMachine
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -26,7 +26,7 @@ class LaMarzoccoBinarySensorEntityDescription(
 ):
     """Description of a La Marzocco binary sensor."""
 
-    is_on_fn: Callable[[LaMarzoccoClient], bool]
+    is_on_fn: Callable[[LaMarzoccoMachine], bool]
 
 
 ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
@@ -34,7 +34,7 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
         key="water_tank",
         translation_key="water_tank",
         device_class=BinarySensorDeviceClass.PROBLEM,
-        is_on_fn=lambda lm: not lm.current_status.get("water_reservoir_contact"),
+        is_on_fn=lambda device: not device.config.water_contact,
         entity_category=EntityCategory.DIAGNOSTIC,
         supported_fn=lambda coordinator: coordinator.local_connection_configured,
     ),
@@ -42,8 +42,8 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
         key="brew_active",
         translation_key="brew_active",
         device_class=BinarySensorDeviceClass.RUNNING,
-        is_on_fn=lambda lm: bool(lm.current_status.get("brew_active")),
-        available_fn=lambda lm: lm.websocket_connected,
+        is_on_fn=lambda device: device.config.brew_active,
+        available_fn=lambda device: device.websocket_connected,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
@@ -72,4 +72,4 @@ class LaMarzoccoBinarySensorEntity(LaMarzoccoEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        return self.entity_description.is_on_fn(self.coordinator.lm)
+        return self.entity_description.is_on_fn(self.coordinator.device)

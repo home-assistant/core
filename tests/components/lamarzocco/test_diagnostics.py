@@ -1,5 +1,4 @@
 """Tests for the diagnostics data provided by the La Marzocco integration."""
-
 from syrupy import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
