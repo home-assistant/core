@@ -77,11 +77,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.debug("(%s) New BLE device found", service_info.address)
         device.set_ble_device(service_info.device, rssi=service_info.advertisement.rssi)
 
-    async_register_callback(
-        hass,
-        async_update_ble_device,
-        BluetoothCallbackMatcher(address=entry.data[CONF_ADDRESS]),
-        BluetoothScanningMode.ACTIVE,
+    entry.async_on_unload(
+        async_register_callback(
+            hass,
+            async_update_ble_device,
+            BluetoothCallbackMatcher(address=entry.data[CONF_ADDRESS]),
+            BluetoothScanningMode.ACTIVE,
+        )
     )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = device
