@@ -5,7 +5,7 @@ import voluptuous as vol
 from homeassistant.components import lovelace
 from homeassistant.components.lovelace import dashboard
 from homeassistant.const import CONF_ICON, CONF_URL
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.storage import Store
@@ -48,8 +48,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the iFrame frontend panels."""
     async_create_issue(
         hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
+        DOMAIN,
+        "deprecated_yaml",
         breaks_in_ha_version="2024.10.0",
         is_fixable=False,
         is_persistent=False,
