@@ -93,7 +93,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             return await self.async_step_confirm()
 
         scanner_count = bluetooth.async_scanner_count(self.hass, connectable=True)
-        if scanner_count == 0:
+        if not scanner_count:
             _LOGGER.error("No bluetooth adapter found")
             return self.async_abort(reason=EXCEPTION_MAP[NoBluetoothAdapter])
 
@@ -147,7 +147,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             raise InvalidMACCode
 
         scanner_count = bluetooth.async_scanner_count(self.hass, connectable=True)
-        if scanner_count == 0:
+        if not scanner_count:
             _LOGGER.error("No bluetooth adapter found")
             raise NoBluetoothAdapter
 
