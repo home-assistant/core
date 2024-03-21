@@ -33,21 +33,9 @@ class AxisConnectivity:
         self.available = True
 
     @callback
-    def connection_status_cb(self, status: Signal) -> None:
-        """Handle signals of device connection status.
-
-        This is called on every RTSP keep-alive message.
-        Only signal state change if state change is true.
-        """
-
-        if self.available != (status == Signal.PLAYING):
-            self.available = not self.available
-            async_dispatcher_send(self.hass, self.signal_reachable)
-
-    @callback
     def setup(self) -> None:
         """Set up the device events."""
-        self.api.stream.connection_status_callback.append(self.connection_status_cb)
+        self.api.stream.connection_status_callback.append(self._connection_status_cb)
         self.api.enable_events()
         self.api.stream.start()
 
@@ -77,12 +65,12 @@ class AxisConnectivity:
         if status.status.state == ClientState.ACTIVE:
             self.config_entry.async_on_unload(
                 await mqtt.async_subscribe(
-                    hass, f"{status.config.device_topic_prefix}/#", self.mqtt_message
+                    hass, f"{status.config.device_topic_prefix}/#", self._mqtt_message
                 )
             )
 
     @callback
-    def mqtt_message(self, message: ReceiveMessage) -> None:
+    def _mqtt_message(self, message: ReceiveMessage) -> None:
         """Receive Axis MQTT message."""
         self._disconnect_from_stream()
 
@@ -91,3 +79,15 @@ class AxisConnectivity:
 
         event = mqtt_json_to_event(message.payload)
         self.api.event.handler(event)
+
+    @callback
+    def _connection_status_cb(self, status: Signal) -> None:
+        """Handle signals of device connection status.
+
+        This is called on every RTSP keep-alive message.
+        Only signal state change if state change is true.
+        """
+
+        if self.available != (status == Signal.PLAYING):
+            self.available = not self.available
+            async_dispatcher_send(self.hass, self.signal_reachable)
