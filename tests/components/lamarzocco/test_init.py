@@ -74,6 +74,13 @@ async def test_bluetooth_is_set_from_discovery(
     mock_lamarzocco: MagicMock,
 ) -> None:
     """Assert we're not searching for a new BT device when we already found one previously."""
+
+    # remove the bluetooth configuration from entry
+    data = mock_config_entry.data.copy()
+    del data[CONF_NAME]
+    del data[CONF_MAC]
+    hass.config_entries.async_update_entry(mock_config_entry, data=data)
+
     service_info = get_bluetooth_service_info(
         mock_lamarzocco.model_name, mock_lamarzocco.serial_number
     )

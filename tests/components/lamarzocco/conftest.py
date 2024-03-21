@@ -7,7 +7,7 @@ from lmcloud.const import LaMarzoccoModel
 import pytest
 
 from homeassistant.components.lamarzocco.const import CONF_MACHINE, DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from . import USER_INPUT, async_init_integration
@@ -28,7 +28,12 @@ def mock_config_entry(
         title="My LaMarzocco",
         domain=DOMAIN,
         data=USER_INPUT
-        | {CONF_MACHINE: mock_lamarzocco.serial_number, CONF_HOST: "host"},
+        | {
+            CONF_MACHINE: mock_lamarzocco.serial_number,
+            CONF_HOST: "host",
+            CONF_NAME: "name",
+            CONF_MAC: "mac",
+        },
         unique_id=mock_lamarzocco.serial_number,
     )
     entry.add_to_hass(hass)
@@ -71,12 +76,15 @@ def mock_lamarzocco(
         serial_number = "LM01234"
         true_model_name = "Linea Mini"
 
-    with patch(
-        "homeassistant.components.lamarzocco.coordinator.LaMarzoccoClient",
-        autospec=True,
-    ) as lamarzocco_mock, patch(
-        "homeassistant.components.lamarzocco.config_flow.LaMarzoccoClient",
-        new=lamarzocco_mock,
+    with (
+        patch(
+            "homeassistant.components.lamarzocco.coordinator.LaMarzoccoClient",
+            autospec=True,
+        ) as lamarzocco_mock,
+        patch(
+            "homeassistant.components.lamarzocco.config_flow.LaMarzoccoClient",
+            new=lamarzocco_mock,
+        ),
     ):
         lamarzocco = lamarzocco_mock.return_value
 

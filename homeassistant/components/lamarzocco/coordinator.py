@@ -102,22 +102,23 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
                 machine = self.config_entry.data[CONF_MACHINE]
                 for discovery_info in async_discovered_service_info(self.hass):
                     if (
-                        not (name := discovery_info.name)
-                        or not name.startswith(NAME_PREFIXES)
-                        or name.split("_")[1] != machine
+                        (name := discovery_info.name)
+                        and name.startswith(NAME_PREFIXES)
+                        and name.split("_")[1] == machine
                     ):
-                        continue
-                    _LOGGER.debug("Found Bluetooth device, configuring with Bluetooth")
-                    # found a device, add MAC address to config entry
-                    self.hass.config_entries.async_update_entry(
-                        self.config_entry,
-                        data={
-                            **self.config_entry.data,
-                            CONF_MAC: discovery_info.address,
-                            CONF_NAME: discovery_info.name,
-                        },
-                    )
-                    break
+                        _LOGGER.debug(
+                            "Found Bluetooth device, configuring with Bluetooth"
+                        )
+                        # found a device, add MAC address to config entry
+                        self.hass.config_entries.async_update_entry(
+                            self.config_entry,
+                            data={
+                                **self.config_entry.data,
+                                CONF_MAC: discovery_info.address,
+                                CONF_NAME: discovery_info.name,
+                            },
+                        )
+                        break
 
             if bluetooth_configured():
                 # config entry contains BT config
