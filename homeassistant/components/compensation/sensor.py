@@ -1,4 +1,5 @@
 """Support for compensation sensor."""
+
 from __future__ import annotations
 
 import logging
@@ -17,13 +18,13 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     EventStateChangedData,
     async_track_state_change_event,
 )
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CONF_COMPENSATION,
@@ -128,7 +129,7 @@ class CompensationSensor(SensorEntity):
 
     @callback
     def _async_compensation_sensor_state_listener(
-        self, event: EventType[EventStateChangedData]
+        self, event: Event[EventStateChangedData]
     ) -> None:
         """Handle sensor state changes."""
         new_state: State | None

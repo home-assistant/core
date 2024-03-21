@@ -1,4 +1,5 @@
 """Support for inkbird ble sensors."""
+
 from __future__ import annotations
 
 from inkbird_ble import DeviceClass, DeviceKey, SensorUpdate, Units

@@ -1,4 +1,5 @@
 """Test the BraviaTV diagnostics."""
+
 from unittest.mock import patch
 
 from syrupy import SnapshotAssertion

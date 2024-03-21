@@ -1,4 +1,5 @@
 """Device tracker for MyBMW vehicles."""
+
 from __future__ import annotations
 
 import logging

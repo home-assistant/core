@@ -1,4 +1,5 @@
 """Support for AlarmDecoder sensors (Shows Panel Display)."""
+
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

@@ -1,4 +1,5 @@
 """The tests for the Rfxtrx component."""
+
 from __future__ import annotations
 
 from unittest.mock import ANY, call

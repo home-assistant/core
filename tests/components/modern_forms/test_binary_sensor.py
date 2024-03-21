@@ -1,7 +1,7 @@
 """Tests for the Modern Forms sensor platform."""
+
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.modern_forms.const import DOMAIN
-from homeassistant.const import ATTR_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -37,11 +37,9 @@ async def test_binary_sensors(
     # Light timer remaining time
     state = hass.states.get("binary_sensor.modernformsfan_light_sleep_timer_active")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:av-timer"
     assert state.state == "off"
 
     # Fan timer remaining time
     state = hass.states.get("binary_sensor.modernformsfan_fan_sleep_timer_active")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:av-timer"
     assert state.state == "off"

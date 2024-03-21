@@ -1,4 +1,5 @@
 """Test Trace websocket API."""
+
 import asyncio
 from collections import defaultdict
 import json

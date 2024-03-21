@@ -1,4 +1,5 @@
 """Test the DSMR config flow."""
+
 from itertools import chain, repeat
 import os
 from typing import Any

@@ -1,4 +1,5 @@
 """Support for the Brother service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -35,18 +36,11 @@ UNIT_PAGES = "p"
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class BrotherSensorRequiredKeysMixin:
-    """Class for Brother entity required keys."""
+@dataclass(frozen=True, kw_only=True)
+class BrotherSensorEntityDescription(SensorEntityDescription):
+    """A class that describes sensor entities."""
 
     value: Callable[[BrotherSensors], StateType | datetime]
-
-
-@dataclass(frozen=True)
-class BrotherSensorEntityDescription(
-    SensorEntityDescription, BrotherSensorRequiredKeysMixin
-):
-    """A class that describes sensor entities."""
 
 
 SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
@@ -345,12 +339,11 @@ async def async_setup_entry(
         )
         entity_registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
-    sensors = []
-
-    for description in SENSOR_TYPES:
-        if description.value(coordinator.data) is not None:
-            sensors.append(BrotherPrinterSensor(coordinator, description))
-    async_add_entities(sensors, False)
+    async_add_entities(
+        BrotherPrinterSensor(coordinator, description)
+        for description in SENSOR_TYPES
+        if description.value(coordinator.data) is not None
+    )
 
 
 class BrotherPrinterSensor(

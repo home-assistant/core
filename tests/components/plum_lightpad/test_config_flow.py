@@ -1,4 +1,5 @@
 """Test the Plum Lightpad config flow."""
+
 from unittest.mock import patch
 
 from requests.exceptions import ConnectTimeout

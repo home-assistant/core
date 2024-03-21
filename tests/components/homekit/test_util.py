@@ -1,4 +1,5 @@
 """Test HomeKit util module."""
+
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest

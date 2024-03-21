@@ -1,4 +1,5 @@
 """Axis light platform tests."""
+
 from unittest.mock import patch
 
 from axis.vapix.models.api import CONTEXT

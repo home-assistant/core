@@ -1,4 +1,5 @@
 """Test the Insteon Scenes APIs."""
+
 import json
 import os
 from unittest.mock import AsyncMock, patch

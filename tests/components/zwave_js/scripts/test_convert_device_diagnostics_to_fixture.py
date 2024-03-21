@@ -1,4 +1,5 @@
 """Test convert_device_diagnostics_to_fixture script."""
+
 import copy
 import json
 from pathlib import Path

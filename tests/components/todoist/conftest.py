@@ -1,4 +1,5 @@
 """Common fixtures for the todoist tests."""
+
 from collections.abc import Generator
 from http import HTTPStatus
 from unittest.mock import AsyncMock, patch

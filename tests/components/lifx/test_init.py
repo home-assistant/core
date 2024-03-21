@@ -1,4 +1,5 @@
 """Tests for the lifx component."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -63,15 +64,15 @@ async def test_configuring_lifx_causes_discovery(hass: HomeAssistant) -> None:
         assert start_calls == 1
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert start_calls == 2
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=15))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert start_calls == 3
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=30))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert start_calls == 4
 
 
@@ -138,7 +139,7 @@ async def test_dns_error_at_startup(hass: HomeAssistant) -> None:
 
         async def async_setup(self):
             """Mock setup."""
-            raise socket.gaierror()
+            raise socket.gaierror
 
         def async_stop(self):
             """Mock teardown."""

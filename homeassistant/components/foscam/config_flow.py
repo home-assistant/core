@@ -1,4 +1,5 @@
 """Config flow for foscam integration."""
+
 from libpyfoscam import FoscamCamera
 from libpyfoscam.foscam import (
     ERROR_FOSCAM_AUTH,

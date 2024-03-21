@@ -1,4 +1,5 @@
 """Test the Wolf SmartSet Service config flow."""
+
 from unittest.mock import patch
 
 from httpcore import ConnectError

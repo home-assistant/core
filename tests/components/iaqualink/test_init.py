@@ -1,4 +1,5 @@
 """Tests for iAqualink integration."""
+
 import logging
 from unittest.mock import AsyncMock, patch
 

@@ -1,4 +1,5 @@
 """Tests for the insecure example auth provider."""
+
 from unittest.mock import AsyncMock
 import uuid
 

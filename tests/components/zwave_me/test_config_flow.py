@@ -1,4 +1,5 @@
 """Test the zwave_me config flow."""
+
 from ipaddress import ip_address
 from unittest.mock import patch
 

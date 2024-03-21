@@ -1,4 +1,5 @@
 """Tests for the Cert Expiry sensors."""
+
 from datetime import timedelta
 import socket
 import ssl

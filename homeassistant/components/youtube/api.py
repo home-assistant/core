@@ -1,4 +1,5 @@
 """API for YouTube bound to Home Assistant OAuth."""
+
 from youtubeaio.types import AuthScope
 from youtubeaio.youtube import YouTube
 

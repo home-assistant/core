@@ -1,4 +1,5 @@
 """Config flow for the Amber Electric integration."""
+
 from __future__ import annotations
 
 import amberelectric

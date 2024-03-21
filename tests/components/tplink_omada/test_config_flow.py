@@ -1,4 +1,5 @@
 """Test the TP-Link Omada config flows."""
+
 from unittest.mock import patch
 
 from tplink_omada_client import OmadaSite

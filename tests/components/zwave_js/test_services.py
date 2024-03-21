@@ -1,4 +1,5 @@
 """Test the Z-Wave JS services."""
+
 from unittest.mock import MagicMock, patch
 
 import pytest

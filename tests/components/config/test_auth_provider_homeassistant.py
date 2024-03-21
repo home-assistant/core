@@ -1,4 +1,5 @@
 """Test config entries API."""
+
 from typing import Any
 
 import pytest

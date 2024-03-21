@@ -1,4 +1,5 @@
 """The Bosch Smart Home Controller integration."""
+
 import logging
 
 from boschshcpy import SHCSession

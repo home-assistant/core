@@ -1,4 +1,5 @@
 """The Netio switch component."""
+
 from __future__ import annotations
 
 from collections import namedtuple

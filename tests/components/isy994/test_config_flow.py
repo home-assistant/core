@@ -1,4 +1,5 @@
 """Test the Universal Devices ISY/IoX config flow."""
+
 import re
 from unittest.mock import patch
 

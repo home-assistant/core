@@ -1,4 +1,5 @@
 """Define fixtures for Elexa Guardian tests."""
+
 from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, patch

@@ -1,4 +1,5 @@
 """Config flow for Nmap Tracker integration."""
+
 from __future__ import annotations
 
 from ipaddress import ip_address, ip_network, summarize_address_range

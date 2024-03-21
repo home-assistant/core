@@ -1,4 +1,5 @@
 """Test VoIP protocol."""
+
 import asyncio
 import io
 import time

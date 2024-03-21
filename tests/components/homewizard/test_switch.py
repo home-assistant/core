@@ -1,4 +1,5 @@
 """Test the switch entity for HomeWizard."""
+
 from unittest.mock import MagicMock
 
 from homewizard_energy import UnsupportedError
@@ -192,7 +193,7 @@ async def test_switch_entities(
 
 
 @pytest.mark.parametrize("device_fixture", ["HWE-SKT"])
-@pytest.mark.parametrize("exception", [RequestError, DisabledError, UnsupportedError])
+@pytest.mark.parametrize("exception", [RequestError, UnsupportedError])
 @pytest.mark.parametrize(
     ("entity_id", "method"),
     [

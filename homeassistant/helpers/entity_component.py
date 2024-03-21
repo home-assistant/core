@@ -1,4 +1,5 @@
 """Helpers for components that manage entities."""
+
 from __future__ import annotations
 
 import asyncio
@@ -22,6 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     Event,
     HassJob,
+    HassJobType,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -118,7 +120,9 @@ class EntityComponent(Generic[_EntityT]):
         Note: this is only required if the integration never calls
         `setup` or `async_setup`.
         """
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, self._async_shutdown, run_immediately=True
+        )
 
     def setup(self, config: ConfigType) -> None:
         """Set up a full entity component.
@@ -278,6 +282,7 @@ class EntityComponent(Generic[_EntityT]):
             ),
             schema,
             supports_response,
+            job_type=HassJobType.Coroutinefunction,
         )
 
     async def async_setup_platform(

@@ -1,4 +1,5 @@
 """Configuration for HEOS tests."""
+
 from __future__ import annotations
 
 from collections.abc import Sequence

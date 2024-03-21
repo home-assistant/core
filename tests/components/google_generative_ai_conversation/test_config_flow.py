@@ -1,4 +1,5 @@
 """Test the Google Generative AI Conversation config flow."""
+
 from unittest.mock import patch
 
 from google.api_core.exceptions import ClientError

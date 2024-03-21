@@ -1,4 +1,5 @@
 """Test init of Nut integration."""
+
 from unittest.mock import patch
 
 from homeassistant.components.nut.const import DOMAIN

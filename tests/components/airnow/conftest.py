@@ -1,4 +1,5 @@
 """Define fixtures for AirNow tests."""
+
 import json
 from unittest.mock import AsyncMock, patch
 

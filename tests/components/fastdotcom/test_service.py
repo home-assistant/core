@@ -1,4 +1,5 @@
 """Test Fastdotcom service."""
+
 from unittest.mock import patch
 
 import pytest

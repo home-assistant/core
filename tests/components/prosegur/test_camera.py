@@ -1,4 +1,5 @@
 """The camera tests for the prosegur platform."""
+
 import logging
 from unittest.mock import AsyncMock
 

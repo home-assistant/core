@@ -1,4 +1,5 @@
 """Test the tplink config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from kasa import TimeoutException
@@ -1113,7 +1114,6 @@ async def test_reauth_update_other_flows(
     mock_config_entry: MockConfigEntry,
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
-    # mock_init,
 ) -> None:
     """Test reauth updates other reauth flows."""
     mock_config_entry2 = MockConfigEntry(
@@ -1138,10 +1138,10 @@ async def test_reauth_update_other_flows(
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 2
-    result = flows[0]
+    flows_by_entry_id = {flow["context"]["entry_id"]: flow for flow in flows}
+    result = flows_by_entry_id[mock_config_entry.entry_id]
     assert result["step_id"] == "reauth_confirm"
     assert mock_config_entry.data[CONF_DEVICE_CONFIG] == DEVICE_CONFIG_DICT_LEGACY
-
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={

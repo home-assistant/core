@@ -1,4 +1,5 @@
 """Test the P1 Monitor config flow."""
+
 from unittest.mock import patch
 
 from p1monitor import P1MonitorError

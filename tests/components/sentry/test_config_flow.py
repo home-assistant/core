@@ -1,4 +1,5 @@
 """Test the sentry config flow."""
+
 import logging
 from unittest.mock import patch
 

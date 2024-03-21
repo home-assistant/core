@@ -1,4 +1,5 @@
 """Support for Risco alarm zones."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping

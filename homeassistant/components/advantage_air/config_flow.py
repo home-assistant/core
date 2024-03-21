@@ -1,4 +1,5 @@
 """Config Flow for Advantage Air integration."""
+
 from __future__ import annotations
 
 from typing import Any

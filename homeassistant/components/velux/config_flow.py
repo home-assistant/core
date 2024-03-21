@@ -1,4 +1,5 @@
 """Config flow for Velux integration."""
+
 from typing import Any
 
 from pyvlx import PyVLX, PyVLXException
