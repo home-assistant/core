@@ -73,11 +73,19 @@
           "enabled": "[%key:common::state::enabled%]",
           "disabled": "[%key:common::state::disabled%]"
         }
+      },
+      "water_meter_reading": {
+        "name": "Water meter reading"
       }
     },
     "number": {
       "config_volume": {
         "name": "Volume"
+      }
+    },
+    "valve": {
+      "meter_valve_state": {
+        "name": "Valve state"
       }
     }
   },

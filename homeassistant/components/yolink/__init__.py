@@ -46,6 +46,7 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
+    Platform.VALVE,
 ]
 
 
