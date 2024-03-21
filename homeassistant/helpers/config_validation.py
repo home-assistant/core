@@ -161,15 +161,15 @@ def path(value: Any) -> str:
 # https://github.com/alecthomas/voluptuous/issues/115#issuecomment-144464666
 def has_at_least_one_key(*keys: Any) -> Callable[[dict], dict]:
     """Validate that at least one key exists."""
+    key_set = set(keys)
 
     def validate(obj: dict) -> dict:
         """Test keys exist in dict."""
         if not isinstance(obj, dict):
             raise vol.Invalid("expected dictionary")
 
-        for k in obj:
-            if k in keys:
-                return obj
+        if not key_set.isdisjoint(obj):
+            return obj
         expected = ", ".join(str(k) for k in keys)
         raise vol.Invalid(f"must contain at least one of {expected}.")
 
@@ -1250,6 +1250,9 @@ TARGET_SERVICE_FIELDS = {
 }
 
 
+_HAS_ENTITY_SERVICE_FIELD = has_at_least_one_key(*ENTITY_SERVICE_FIELDS)
+
+
 def _make_entity_service_schema(schema: dict, extra: int) -> vol.Schema:
     """Create an entity service schema."""
     return vol.Schema(
@@ -1263,7 +1266,7 @@ def _make_entity_service_schema(schema: dict, extra: int) -> vol.Schema:
                 },
                 extra=extra,
             ),
-            has_at_least_one_key(*ENTITY_SERVICE_FIELDS),
+            _HAS_ENTITY_SERVICE_FIELD,
         )
     )
 
