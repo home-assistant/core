@@ -222,11 +222,14 @@ async def _async_events_consumer(
     event_processor: EventProcessor,
 ) -> None:
     """Stream events from the queue."""
+    subscriptions_setup_complete_timestamp = (
+        subscriptions_setup_complete_time.timestamp()
+    )
     while True:
         events: list[Event] = [await stream_queue.get()]
         # If the event is older than the last db
         # event we already sent it so we skip it.
-        if events[0].time_fired <= subscriptions_setup_complete_time:
+        if events[0].time_fired_timestamp <= subscriptions_setup_complete_timestamp:
             continue
         # We sleep for the EVENT_COALESCE_TIME so
         # we can group events together to minimize
@@ -423,7 +426,10 @@ async def ws_event_stream(
         hass,
         connection,
         msg_id,
-        last_event_time or start_time,
+        # Add one microsecond so we are outside the window of
+        # the last event we got from the database since otherwise
+        # we could fetch the same event twice
+        (last_event_time or start_time) + timedelta(microseconds=1),
         subscriptions_setup_complete_time,
         messages.event_message,
         event_processor,

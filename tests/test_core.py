@@ -34,6 +34,7 @@ from homeassistant.const import (
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
     EVENT_STATE_CHANGED,
+    EVENT_STATE_REPORTED,
     MATCH_ALL,
     __version__,
 )
@@ -57,6 +58,7 @@ from homeassistant.exceptions import (
     ServiceNotFound,
 )
 from homeassistant.helpers.json import json_dumps
+from homeassistant.setup import async_setup_component
 from homeassistant.util.async_ import create_eager_task
 import homeassistant.util.dt as dt_util
 from homeassistant.util.read_only_dict import ReadOnlyDict
@@ -836,18 +838,23 @@ def test_event_eq() -> None:
     data = {"some": "attr"}
     context = ha.Context()
     event1, event2 = (
-        ha.Event("some_type", data, time_fired=now, context=context) for _ in range(2)
+        ha.Event(
+            "some_type", data, time_fired_timestamp=now.timestamp(), context=context
+        )
+        for _ in range(2)
     )
 
     assert event1.as_dict() == event2.as_dict()
 
 
-def test_event_time_fired_timestamp() -> None:
-    """Test time_fired_timestamp."""
+def test_event_time() -> None:
+    """Test time_fired and time_fired_timestamp."""
     now = dt_util.utcnow()
-    event = ha.Event("some_type", {"some": "attr"}, time_fired=now)
+    event = ha.Event(
+        "some_type", {"some": "attr"}, time_fired_timestamp=now.timestamp()
+    )
     assert event.time_fired_timestamp == now.timestamp()
-    assert event.time_fired_timestamp == now.timestamp()
+    assert event.time_fired == now
 
 
 def test_event_json_fragment() -> None:
@@ -856,7 +863,10 @@ def test_event_json_fragment() -> None:
     data = {"some": "attr"}
     context = ha.Context()
     event1, event2 = (
-        ha.Event("some_type", data, time_fired=now, context=context) for _ in range(2)
+        ha.Event(
+            "some_type", data, time_fired_timestamp=now.timestamp(), context=context
+        )
+        for _ in range(2)
     )
 
     # We are testing that the JSON fragments are the same when as_dict is called
@@ -898,7 +908,7 @@ def test_event_as_dict() -> None:
     now = dt_util.utcnow()
     data = {"some": "attr"}
 
-    event = ha.Event(event_type, data, ha.EventOrigin.local, now)
+    event = ha.Event(event_type, data, ha.EventOrigin.local, now.timestamp())
     expected = {
         "event_type": event_type,
         "data": data,
@@ -922,8 +932,9 @@ def test_state_as_dict() -> None:
         "happy.happy",
         "on",
         {"pig": "dog"},
-        last_updated=last_time,
         last_changed=last_time,
+        last_reported=last_time,
+        last_updated=last_time,
     )
     expected = {
         "context": {
@@ -934,6 +945,7 @@ def test_state_as_dict() -> None:
         "entity_id": "happy.happy",
         "attributes": {"pig": "dog"},
         "last_changed": last_time.isoformat(),
+        "last_reported": last_time.isoformat(),
         "last_updated": last_time.isoformat(),
         "state": "on",
     }
@@ -954,13 +966,15 @@ def test_state_as_dict_json() -> None:
         "happy.happy",
         "on",
         {"pig": "dog"},
-        last_updated=last_time,
-        last_changed=last_time,
         context=ha.Context(id="01H0D6K3RFJAYAV2093ZW30PCW"),
+        last_changed=last_time,
+        last_reported=last_time,
+        last_updated=last_time,
     )
     expected = (
         b'{"entity_id":"happy.happy","state":"on","attributes":{"pig":"dog"},'
-        b'"last_changed":"1984-12-08T12:00:00","last_updated":"1984-12-08T12:00:00",'
+        b'"last_changed":"1984-12-08T12:00:00","last_reported":"1984-12-08T12:00:00",'
+        b'"last_updated":"1984-12-08T12:00:00",'
         b'"context":{"id":"01H0D6K3RFJAYAV2093ZW30PCW","parent_id":null,"user_id":null}}'
     )
     as_dict_json_1 = state.as_dict_json
@@ -978,9 +992,10 @@ def test_state_json_fragment() -> None:
             "happy.happy",
             "on",
             {"pig": "dog"},
-            last_updated=last_time,
-            last_changed=last_time,
             context=ha.Context(id="01H0D6K3RFJAYAV2093ZW30PCW"),
+            last_changed=last_time,
+            last_reported=last_time,
+            last_updated=last_time,
         )
         for _ in range(2)
     )
@@ -1108,9 +1123,9 @@ async def test_eventbus_filtered_listener(hass: HomeAssistant) -> None:
         calls.append(event)
 
     @ha.callback
-    def filter(event):
+    def filter(event_data):
         """Mock filter."""
-        return not event.data["filtered"]
+        return not event_data["filtered"]
 
     unsub = hass.bus.async_listen("test", listener, event_filter=filter)
 
@@ -1300,9 +1315,26 @@ async def test_eventbus_max_length_exceeded(hass: HomeAssistant) -> None:
         "this_event_exceeds_the_max_character_length_even_with_the_new_limit"
     )
 
+    # Without cached translations the translation key is returned
     with pytest.raises(MaxLengthExceeded) as exc_info:
         hass.bus.async_fire(long_evt_name)
 
+    assert str(exc_info.value) == "max_length_exceeded"
+    assert exc_info.value.property_name == "event_type"
+    assert exc_info.value.max_length == 64
+    assert exc_info.value.value == long_evt_name
+
+    # Fetch translations
+    await async_setup_component(hass, "homeassistant", {})
+
+    # With cached translations the formatted message is returned
+    with pytest.raises(MaxLengthExceeded) as exc_info:
+        hass.bus.async_fire(long_evt_name)
+
+    assert (
+        str(exc_info.value)
+        == f"Value {long_evt_name} for property event_type has a maximum length of 64 characters"
+    )
     assert exc_info.value.property_name == "event_type"
     assert exc_info.value.max_length == 64
     assert exc_info.value.value == long_evt_name
@@ -1378,7 +1410,7 @@ def test_state_repr() -> None:
                 "happy.happy",
                 "on",
                 {"brightness": 144},
-                datetime(1984, 12, 8, 12, 0, 0),
+                last_changed=datetime(1984, 12, 8, 12, 0, 0),
             )
         )
         == "<state happy.happy=on; brightness=144 @ 1984-12-08T12:00:00+00:00>"
@@ -1644,8 +1676,18 @@ async def test_serviceregistry_service_that_not_exists(hass: HomeAssistant) -> N
     await hass.async_block_till_done()
     assert len(calls_remove) == 0
 
-    with pytest.raises(ServiceNotFound):
+    with pytest.raises(ServiceNotFound) as exc:
         await hass.services.async_call("test_do_not", "exist", {})
+    assert exc.value.translation_domain == "homeassistant"
+    assert exc.value.translation_key == "service_not_found"
+    assert exc.value.translation_placeholders == {
+        "domain": "test_do_not",
+        "service": "exist",
+    }
+    assert exc.value.domain == "test_do_not"
+    assert exc.value.service == "exist"
+
+    assert str(exc.value) == "Service test_do_not.exist not found."
 
 
 async def test_serviceregistry_async_service_raise_exception(
@@ -2767,11 +2809,14 @@ def test_state_timestamps() -> None:
         "on",
         {"brightness": 100},
         last_changed=now,
+        last_reported=now,
         last_updated=now,
         context=ha.Context(id="1234"),
     )
     assert state.last_changed_timestamp == now.timestamp()
     assert state.last_changed_timestamp == now.timestamp()
+    assert state.last_reported_timestamp == now.timestamp()
+    assert state.last_reported_timestamp == now.timestamp()
     assert state.last_updated_timestamp == now.timestamp()
     assert state.last_updated_timestamp == now.timestamp()
 
@@ -3152,3 +3197,90 @@ async def test_async_add_job_deprecated(
         "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
         " for replacement options"
     ) in caplog.text
+
+
+async def test_eventbus_lazy_object_creation(hass: HomeAssistant) -> None:
+    """Test we don't create unneeded objects when firing events."""
+    calls = []
+
+    @ha.callback
+    def listener(event):
+        """Mock listener."""
+        calls.append(event)
+
+    @ha.callback
+    def filter(event_data):
+        """Mock filter."""
+        return not event_data["filtered"]
+
+    unsub = hass.bus.async_listen("test_1", listener, event_filter=filter)
+
+    # Test lazy creation of Event objects
+    with patch("homeassistant.core.Event") as mock_event:
+        # Fire an event which is filtered out by its listener
+        hass.bus.async_fire("test_1", {"filtered": True})
+        await hass.async_block_till_done()
+        mock_event.assert_not_called()
+        assert len(calls) == 0
+
+        # Fire an event which has no listener
+        hass.bus.async_fire("test_2")
+        await hass.async_block_till_done()
+        mock_event.assert_not_called()
+        assert len(calls) == 0
+
+        # Fire an event which is not filtered out by its listener
+        hass.bus.async_fire("test_1", {"filtered": False})
+        await hass.async_block_till_done()
+        mock_event.assert_called_once()
+        assert len(calls) == 1
+
+    calls = []
+    # Test lazy creation of Context objects
+    with patch("homeassistant.core.Context") as mock_context:
+        # Fire an event which is filtered out by its listener
+        hass.bus.async_fire("test_1", {"filtered": True})
+        await hass.async_block_till_done()
+        mock_context.assert_not_called()
+        assert len(calls) == 0
+
+        # Fire an event which has no listener
+        hass.bus.async_fire("test_2")
+        await hass.async_block_till_done()
+        mock_context.assert_not_called()
+        assert len(calls) == 0
+
+        # Fire an event which is not filtered out by its listener
+        hass.bus.async_fire("test_1", {"filtered": False})
+        await hass.async_block_till_done()
+        mock_context.assert_called_once()
+        assert len(calls) == 1
+
+    unsub()
+
+
+async def test_statemachine_report_state(hass: HomeAssistant) -> None:
+    """Test report state event."""
+    hass.states.async_set("light.bowl", "on", {})
+    state_changed_events = async_capture_events(hass, EVENT_STATE_CHANGED)
+    state_reported_events = async_capture_events(hass, EVENT_STATE_REPORTED)
+
+    hass.states.async_set("light.bowl", "on")
+    await hass.async_block_till_done()
+    assert len(state_changed_events) == 0
+    assert len(state_reported_events) == 1
+
+    hass.states.async_set("light.bowl", "on", None, True)
+    await hass.async_block_till_done()
+    assert len(state_changed_events) == 1
+    assert len(state_reported_events) == 2
+
+    hass.states.async_set("light.bowl", "off")
+    await hass.async_block_till_done()
+    assert len(state_changed_events) == 2
+    assert len(state_reported_events) == 3
+
+    hass.states.async_remove("light.bowl")
+    await hass.async_block_till_done()
+    assert len(state_changed_events) == 3
+    assert len(state_reported_events) == 4
