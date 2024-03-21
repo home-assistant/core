@@ -767,11 +767,14 @@ async def test_homekit_start(
         "pyhap.accessory_driver.AccessoryDriver.async_start"
     ) as hk_driver_start, patch(
         "pyhap.accessory_driver.AccessoryDriver.load"
-    ) as load_mock, patch(f"{PATH_HOMEKIT}.os.path.exists", return_value=True):
+    ) as load_mock, patch(
+        "pyhap.accessory_driver.AccessoryDriver.persist"
+    ) as persist_mock, patch(f"{PATH_HOMEKIT}.os.path.exists", return_value=True):
         await homekit.async_stop()
         await homekit.async_start()
 
     assert load_mock.called
+    assert not persist_mock.called
     device = device_registry.async_get_device(
         identifiers={(DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER)}
     )
