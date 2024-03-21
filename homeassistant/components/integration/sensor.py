@@ -344,7 +344,6 @@ class IntegrationSensor(RestoreSensor):
             "area = %s, area_scaled = %s new state = %s", area, area_scaled, self._state
         )
         self._last_valid_state = self._state
-        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -421,6 +420,7 @@ class IntegrationSensor(RestoreSensor):
         )
 
         self._update_integral(area)
+        self.async_write_ha_state()
 
     @property
     def native_value(self) -> Decimal | None:
