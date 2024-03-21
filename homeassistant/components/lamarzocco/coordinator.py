@@ -28,6 +28,9 @@ SCAN_INTERVAL = timedelta(seconds=30)
 _LOGGER = logging.getLogger(__name__)
 
 
+NAME_PREFIXES = tuple(BT_MODEL_NAMES)
+
+
 class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to handle fetching data from the La Marzocco API centrally."""
 
@@ -96,23 +99,25 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
                 ) and self.config_entry.data.get(CONF_NAME, "")
 
             if not bluetooth_configured():
+                machine = self.config_entry.data[CONF_MACHINE]
                 for discovery_info in async_discovered_service_info(self.hass):
-                    name = str(discovery_info.name)
-                    if (name.startswith(tuple(BT_MODEL_NAMES))) and (
-                        name.split("_")[1] == self.config_entry.data[CONF_MACHINE]
+                    if (
+                        not (name := discovery_info.name)
+                        or not name.startswith(NAME_PREFIXES)
+                        or name.split("_")[1] != machine
                     ):
-                        _LOGGER.debug(
-                            "Found Bluetooth device, configuring with Bluetooth"
-                        )
-                        # found a device, add MAC address to config entry
-                        new_data = self.config_entry.data.copy()
-                        new_data[CONF_MAC] = discovery_info.address
-                        new_data[CONF_NAME] = discovery_info.name
-                        self.hass.config_entries.async_update_entry(
-                            self.config_entry,
-                            data=new_data,
-                        )
-                        break
+                        continue
+                    _LOGGER.debug("Found Bluetooth device, configuring with Bluetooth")
+                    # found a device, add MAC address to config entry
+                    self.hass.config_entries.async_update_entry(
+                        self.config_entry,
+                        data={
+                            **self.config_entry.data,
+                            CONF_MAC: discovery_info.address,
+                            CONF_NAME: discovery_info.name,
+                        },
+                    )
+                    break
 
             if bluetooth_configured():
                 # config entry contains BT config
