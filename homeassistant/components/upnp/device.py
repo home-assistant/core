@@ -38,7 +38,7 @@ def get_preferred_location(locations: set[str]) -> str:
     """Get the preferred location (an IPv4 location) from a set of locations."""
     # Prefer IPv4 over IPv6.
     for location in locations:
-        if location.startswith("http://[") or location.startswith("https://["):
+        if location.startswith(("http://[", "https://[")):
             continue
 
         return location

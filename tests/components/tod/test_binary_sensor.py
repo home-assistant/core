@@ -823,7 +823,7 @@ async def test_dst6(
 
 
 @pytest.mark.freeze_time("2019-01-10 18:43:00")
-@pytest.mark.parametrize("hass_time_zone", ("UTC",))
+@pytest.mark.parametrize("hass_time_zone", ["UTC"])
 async def test_simple_before_after_does_not_loop_utc_not_in_range(
     hass: HomeAssistant,
 ) -> None:
@@ -849,7 +849,7 @@ async def test_simple_before_after_does_not_loop_utc_not_in_range(
 
 
 @pytest.mark.freeze_time("2019-01-10 22:43:00")
-@pytest.mark.parametrize("hass_time_zone", ("UTC",))
+@pytest.mark.parametrize("hass_time_zone", ["UTC"])
 async def test_simple_before_after_does_not_loop_utc_in_range(
     hass: HomeAssistant,
 ) -> None:
@@ -875,7 +875,7 @@ async def test_simple_before_after_does_not_loop_utc_in_range(
 
 
 @pytest.mark.freeze_time("2019-01-11 06:00:00")
-@pytest.mark.parametrize("hass_time_zone", ("UTC",))
+@pytest.mark.parametrize("hass_time_zone", ["UTC"])
 async def test_simple_before_after_does_not_loop_utc_fire_at_before(
     hass: HomeAssistant,
 ) -> None:
@@ -901,7 +901,7 @@ async def test_simple_before_after_does_not_loop_utc_fire_at_before(
 
 
 @pytest.mark.freeze_time("2019-01-10 22:00:00")
-@pytest.mark.parametrize("hass_time_zone", ("UTC",))
+@pytest.mark.parametrize("hass_time_zone", ["UTC"])
 async def test_simple_before_after_does_not_loop_utc_fire_at_after(
     hass: HomeAssistant,
 ) -> None:
@@ -927,7 +927,7 @@ async def test_simple_before_after_does_not_loop_utc_fire_at_after(
 
 
 @pytest.mark.freeze_time("2019-01-10 22:00:00")
-@pytest.mark.parametrize("hass_time_zone", ("UTC",))
+@pytest.mark.parametrize("hass_time_zone", ["UTC"])
 async def test_simple_before_after_does_not_loop_utc_both_before_now(
     hass: HomeAssistant,
 ) -> None:
@@ -953,7 +953,7 @@ async def test_simple_before_after_does_not_loop_utc_both_before_now(
 
 
 @pytest.mark.freeze_time("2019-01-10 17:43:00+01:00")
-@pytest.mark.parametrize("hass_time_zone", ("Europe/Berlin",))
+@pytest.mark.parametrize("hass_time_zone", ["Europe/Berlin"])
 async def test_simple_before_after_does_not_loop_berlin_not_in_range(
     hass: HomeAssistant,
 ) -> None:
@@ -979,7 +979,7 @@ async def test_simple_before_after_does_not_loop_berlin_not_in_range(
 
 
 @pytest.mark.freeze_time("2019-01-11 00:43:00+01:00")
-@pytest.mark.parametrize("hass_time_zone", ("Europe/Berlin",))
+@pytest.mark.parametrize("hass_time_zone", ["Europe/Berlin"])
 async def test_simple_before_after_does_not_loop_berlin_in_range(
     hass: HomeAssistant,
 ) -> None:

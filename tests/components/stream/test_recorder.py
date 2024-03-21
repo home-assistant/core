@@ -109,7 +109,7 @@ async def test_record_path_not_allowed(hass: HomeAssistant, h264_video) -> None:
 
 def add_parts_to_segment(segment, source):
     """Add relevant part data to segment for testing recorder."""
-    moof_locs = list(find_box(source.getbuffer(), b"moof")) + [len(source.getbuffer())]
+    moof_locs = [*find_box(source.getbuffer(), b"moof"), len(source.getbuffer())]
     segment.init = source.getbuffer()[: moof_locs[0]].tobytes()
     segment.parts = [
         Part(
@@ -237,6 +237,7 @@ async def test_record_stream_audio(
         # Fire the IdleTimer
         future = dt_util.utcnow() + timedelta(seconds=30)
         async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
 
         await make_recording
 

@@ -1,5 +1,13 @@
 {
   "entity": {
+    "binary_sensor": {
+      "leaving_dock": {
+        "default": "mdi:debug-step-out"
+      },
+      "returning_to_dock": {
+        "default": "mdi:debug-step-into"
+      }
+    },
     "sensor": {
       "number_of_charging_cycles": {
         "default": "mdi:battery-sync-outline"

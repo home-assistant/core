@@ -298,6 +298,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_apparent_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '74.052',
   })
@@ -382,6 +383,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_current',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.273',
   })
@@ -466,6 +468,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '255.551',
   })
@@ -550,6 +553,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2.705',
   })
@@ -634,6 +638,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_frequency',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50',
   })
@@ -721,6 +726,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-1058.296',
   })
@@ -805,6 +811,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_power_factor',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '61.1',
   })
@@ -889,6 +896,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_reactive_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-58.612',
   })
@@ -973,6 +981,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '228.472',
   })
@@ -1052,6 +1061,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_ssid',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'My Wi-Fi',
   })
@@ -1135,6 +1145,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_strength',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '92',
   })
@@ -1219,6 +1230,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_apparent_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '7112.293',
   })
@@ -1303,6 +1315,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_apparent_power_phase_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -1387,6 +1400,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_apparent_power_phase_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3548.879',
   })
@@ -1471,6 +1485,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_apparent_power_phase_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3563.414',
   })
@@ -1555,6 +1570,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_current',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30.999',
   })
@@ -1639,6 +1655,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_current_phase_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -1723,6 +1740,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_current_phase_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '15.521',
   })
@@ -1807,6 +1825,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_current_phase_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '15.477',
   })
@@ -1891,6 +1910,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.523',
   })
@@ -1975,6 +1995,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.101',
   })
@@ -2059,6 +2080,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_frequency',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '49.926',
   })
@@ -2146,6 +2168,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-900.194',
   })
@@ -2230,6 +2253,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_power_factor_phase_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
@@ -2314,6 +2338,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_power_factor_phase_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '99.9',
   })
@@ -2398,6 +2423,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_power_factor_phase_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '99.7',
   })
@@ -2485,6 +2511,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-1058.296',
   })
@@ -2572,6 +2599,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '158.102',
   })
@@ -2659,6 +2687,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -2743,6 +2772,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_reactive_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-429.025',
   })
@@ -2827,6 +2857,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_reactive_power_phase_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -2911,6 +2942,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_reactive_power_phase_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-166.675',
   })
@@ -2995,6 +3027,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_reactive_power_phase_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-262.35',
   })
@@ -3079,6 +3112,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_phase_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '230.751',
   })
@@ -3163,6 +3197,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_phase_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '228.391',
   })
@@ -3247,6 +3282,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_phase_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '229.612',
   })
@@ -3326,6 +3362,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_ssid',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'My Wi-Fi',
   })
@@ -3409,6 +3446,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_strength',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '92',
   })
@@ -4627,6 +4665,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_average_demand',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '123.0',
   })
@@ -4711,6 +4750,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_current_phase_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-4',
   })
@@ -4795,6 +4835,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_current_phase_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
@@ -4879,6 +4920,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_current_phase_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -4958,6 +5000,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_dsmr_version',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50',
   })
@@ -5042,6 +5085,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '13086.777',
   })
@@ -5126,6 +5170,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export_tariff_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4321.333',
   })
@@ -5210,6 +5255,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export_tariff_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '8765.444',
   })
@@ -5294,6 +5340,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export_tariff_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '8765.444',
   })
@@ -5378,6 +5425,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export_tariff_4',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '8765.444',
   })
@@ -5462,6 +5510,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '13779.338',
   })
@@ -5546,6 +5595,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import_tariff_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10830.511',
   })
@@ -5630,6 +5680,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import_tariff_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2948.827',
   })
@@ -5714,6 +5765,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import_tariff_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2948.827',
   })
@@ -5798,6 +5850,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import_tariff_4',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2948.827',
   })
@@ -5882,6 +5935,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_frequency',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50',
   })
@@ -6036,6 +6090,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_long_power_failures_detected',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5',
   })
@@ -6117,6 +6172,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_peak_demand_current_month',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1111.0',
   })
@@ -6204,6 +6260,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-123',
   })
@@ -6283,6 +6340,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_power_failures_detected',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4',
   })
@@ -6370,6 +6428,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-123',
   })
@@ -6457,6 +6516,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '456',
   })
@@ -6544,6 +6604,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '123.456',
   })
@@ -6623,6 +6684,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_smart_meter_identifier',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '00112233445566778899AABBCCDDEEFF',
   })
@@ -6702,6 +6764,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_smart_meter_model',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'ISKRA  2M550T-101',
   })
@@ -6795,6 +6858,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_tariff',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
@@ -7759,6 +7823,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_total_water_usage',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1234.567',
   })
@@ -7843,6 +7908,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_phase_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '230.111',
   })
@@ -7927,6 +7993,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_phase_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '230.222',
   })
@@ -8011,6 +8078,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_phase_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '230.333',
   })
@@ -8090,6 +8158,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_sags_detected_phase_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
   })
@@ -8169,6 +8238,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_sags_detected_phase_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
@@ -8248,6 +8318,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_sags_detected_phase_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3',
   })
@@ -8327,6 +8398,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_swells_detected_phase_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4',
   })
@@ -8406,6 +8478,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_swells_detected_phase_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5',
   })
@@ -8485,6 +8558,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_swells_detected_phase_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '6',
   })
@@ -8568,6 +8642,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_water_usage',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '12.345',
   })
@@ -8647,6 +8722,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_ssid',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'My Wi-Fi',
   })
@@ -8730,6 +8806,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_strength',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
@@ -8882,6 +8959,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.gas_meter_gas',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '111.111',
   })
@@ -9110,6 +9188,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.heat_meter_energy',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '444.444',
   })
@@ -9337,6 +9416,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.inlet_heat_meter_none',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '555.555',
   })
@@ -9640,6 +9720,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.warm_water_meter_water',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '333.333',
   })
@@ -9868,6 +9949,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.water_meter_water',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '222.222',
   })
@@ -10997,6 +11079,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_average_demand',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -11081,6 +11164,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_current_phase_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -11165,6 +11249,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_current_phase_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -11249,6 +11334,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_current_phase_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -11333,6 +11419,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -11417,6 +11504,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export_tariff_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -11501,6 +11589,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export_tariff_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -11585,6 +11674,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export_tariff_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -11669,6 +11759,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export_tariff_4',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -11753,6 +11844,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -11837,6 +11929,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import_tariff_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -11921,6 +12014,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import_tariff_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -12005,6 +12099,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import_tariff_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -12089,6 +12184,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import_tariff_4',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -12173,6 +12269,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_frequency',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -12252,6 +12349,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_long_power_failures_detected',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -12416,6 +12514,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -12495,6 +12594,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_power_failures_detected',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -12582,6 +12682,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -12669,6 +12770,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -12756,6 +12858,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -13720,6 +13823,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_total_water_usage',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -13804,6 +13908,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_phase_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -13888,6 +13993,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_phase_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -13972,6 +14078,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_phase_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -14051,6 +14158,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_sags_detected_phase_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -14130,6 +14238,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_sags_detected_phase_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -14209,6 +14318,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_sags_detected_phase_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -14288,6 +14398,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_swells_detected_phase_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -14367,6 +14478,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_swells_detected_phase_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -14446,6 +14558,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_swells_detected_phase_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -14529,6 +14642,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_water_usage',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -14779,6 +14893,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -14863,6 +14978,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63.651',
   })
@@ -14950,6 +15066,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1457.277',
   })
@@ -15037,6 +15154,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1457.277',
   })
@@ -15276,6 +15394,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_ssid',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'My Wi-Fi',
   })
@@ -15359,6 +15478,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_strength',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '94',
   })
@@ -15522,6 +15642,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_total_water_usage',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '17.014',
   })
@@ -15605,6 +15726,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_water_usage',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -15684,6 +15806,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_ssid',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'My Wi-Fi',
   })
@@ -15767,6 +15890,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_strength',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '84',
   })
@@ -16498,6 +16622,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_apparent_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '74.052',
   })
@@ -16582,6 +16707,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_current',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.273',
   })
@@ -16666,6 +16792,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '255.551',
   })
@@ -16750,6 +16877,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2.705',
   })
@@ -16834,6 +16962,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_frequency',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50',
   })
@@ -16921,6 +17050,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-1058.296',
   })
@@ -17005,6 +17135,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_power_factor',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '61.1',
   })
@@ -17172,6 +17303,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_reactive_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-58.612',
   })
@@ -17416,6 +17548,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '228.472',
   })
@@ -17495,6 +17628,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_ssid',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'My Wi-Fi',
   })
@@ -17578,6 +17712,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_strength',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '92',
   })
@@ -19517,6 +19652,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_apparent_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '7112.293',
   })
@@ -19601,6 +19737,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_apparent_power_phase_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -19685,6 +19822,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_apparent_power_phase_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3548.879',
   })
@@ -19769,6 +19907,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_apparent_power_phase_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3563.414',
   })
@@ -19853,6 +19992,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_current',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30.999',
   })
@@ -19937,6 +20077,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_current_phase_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -20021,6 +20162,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_current_phase_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '15.521',
   })
@@ -20105,6 +20247,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_current_phase_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '15.477',
   })
@@ -20189,6 +20332,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.523',
   })
@@ -20273,6 +20417,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.101',
   })
@@ -20357,6 +20502,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_frequency',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '49.926',
   })
@@ -20444,6 +20590,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-900.194',
   })
@@ -20528,6 +20675,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_power_factor_phase_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
@@ -20612,6 +20760,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_power_factor_phase_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '99.9',
   })
@@ -20696,6 +20845,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_power_factor_phase_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '99.7',
   })
@@ -20783,6 +20933,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-1058.296',
   })
@@ -20870,6 +21021,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '158.102',
   })
@@ -20957,6 +21109,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -21041,6 +21194,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_reactive_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-429.025',
   })
@@ -21125,6 +21279,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_reactive_power_phase_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -21209,6 +21364,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_reactive_power_phase_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-166.675',
   })
@@ -21293,6 +21449,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_reactive_power_phase_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-262.35',
   })
@@ -21537,6 +21694,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_phase_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '230.751',
   })
@@ -21621,6 +21779,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_phase_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '228.391',
   })
@@ -21705,6 +21864,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_phase_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '229.612',
   })
@@ -21784,6 +21944,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_ssid',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'My Wi-Fi',
   })
@@ -21867,6 +22028,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_strength',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '92',
   })

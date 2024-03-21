@@ -27,12 +27,12 @@ async def async_setup_entry(
     hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up cover(s) for Velux platform."""
-    entities = []
     module = hass.data[DOMAIN][config.entry_id]
-    for node in module.pyvlx.nodes:
-        if isinstance(node, OpeningDevice):
-            entities.append(VeluxCover(node))
-    async_add_entities(entities)
+    async_add_entities(
+        VeluxCover(node)
+        for node in module.pyvlx.nodes
+        if isinstance(node, OpeningDevice)
+    )
 
 
 class VeluxCover(VeluxEntity, CoverEntity):

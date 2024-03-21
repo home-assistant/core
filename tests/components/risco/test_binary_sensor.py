@@ -134,16 +134,17 @@ async def _check_local_state(
 
 
 @pytest.fixture
-def _mock_zone_handler():
+def mock_zone_handler():
+    """Create a mock for add_zone_handler."""
     with patch("homeassistant.components.risco.RiscoLocal.add_zone_handler") as mock:
         yield mock
 
 
 async def test_local_states(
-    hass: HomeAssistant, two_zone_local, _mock_zone_handler, setup_risco_local
+    hass: HomeAssistant, two_zone_local, mock_zone_handler, setup_risco_local
 ) -> None:
     """Test the various zone states."""
-    callback = _mock_zone_handler.call_args.args[0]
+    callback = mock_zone_handler.call_args.args[0]
 
     assert callback is not None
 
@@ -162,10 +163,10 @@ async def test_local_states(
 
 
 async def test_alarmed_local_states(
-    hass: HomeAssistant, two_zone_local, _mock_zone_handler, setup_risco_local
+    hass: HomeAssistant, two_zone_local, mock_zone_handler, setup_risco_local
 ) -> None:
     """Test the various zone alarmed states."""
-    callback = _mock_zone_handler.call_args.args[0]
+    callback = mock_zone_handler.call_args.args[0]
 
     assert callback is not None
 
@@ -184,10 +185,10 @@ async def test_alarmed_local_states(
 
 
 async def test_armed_local_states(
-    hass: HomeAssistant, two_zone_local, _mock_zone_handler, setup_risco_local
+    hass: HomeAssistant, two_zone_local, mock_zone_handler, setup_risco_local
 ) -> None:
     """Test the various zone armed states."""
-    callback = _mock_zone_handler.call_args.args[0]
+    callback = mock_zone_handler.call_args.args[0]
 
     assert callback is not None
 

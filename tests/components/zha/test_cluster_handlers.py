@@ -148,7 +148,6 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
         (zigpy.zcl.clusters.general.AnalogInput.cluster_id, 1, {"present_value"}),
         (zigpy.zcl.clusters.general.AnalogOutput.cluster_id, 1, {"present_value"}),
         (zigpy.zcl.clusters.general.AnalogValue.cluster_id, 1, {"present_value"}),
-        (zigpy.zcl.clusters.general.AnalogOutput.cluster_id, 1, {"present_value"}),
         (zigpy.zcl.clusters.general.BinaryOutput.cluster_id, 1, {"present_value"}),
         (zigpy.zcl.clusters.general.BinaryValue.cluster_id, 1, {"present_value"}),
         (zigpy.zcl.clusters.general.MultistateInput.cluster_id, 1, {"present_value"}),

@@ -70,6 +70,7 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
+        exists_fn=lambda data: data.statistics.total_charging_time is not None,
         value_fn=lambda data: data.statistics.total_charging_time,
     ),
     AutomowerSensorEntityDescription(
@@ -80,6 +81,7 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
+        exists_fn=lambda data: data.statistics.total_cutting_time is not None,
         value_fn=lambda data: data.statistics.total_cutting_time,
     ),
     AutomowerSensorEntityDescription(
@@ -90,6 +92,7 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
+        exists_fn=lambda data: data.statistics.total_running_time is not None,
         value_fn=lambda data: data.statistics.total_running_time,
     ),
     AutomowerSensorEntityDescription(
@@ -100,6 +103,7 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
+        exists_fn=lambda data: data.statistics.total_searching_time is not None,
         value_fn=lambda data: data.statistics.total_searching_time,
     ),
     AutomowerSensorEntityDescription(
@@ -107,6 +111,7 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         translation_key="number_of_charging_cycles",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL,
+        exists_fn=lambda data: data.statistics.number_of_charging_cycles is not None,
         value_fn=lambda data: data.statistics.number_of_charging_cycles,
     ),
     AutomowerSensorEntityDescription(
@@ -114,6 +119,7 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         translation_key="number_of_collisions",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL,
+        exists_fn=lambda data: data.statistics.number_of_collisions is not None,
         value_fn=lambda data: data.statistics.number_of_collisions,
     ),
     AutomowerSensorEntityDescription(
@@ -124,6 +130,7 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.METERS,
         suggested_unit_of_measurement=UnitOfLength.KILOMETERS,
+        exists_fn=lambda data: data.statistics.total_drive_distance is not None,
         value_fn=lambda data: data.statistics.total_drive_distance,
     ),
     AutomowerSensorEntityDescription(
