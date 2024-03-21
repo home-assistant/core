@@ -80,9 +80,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             except NoDevicesFound:
                 return self.async_abort(reason=EXCEPTION_MAP[NoDevicesFound])
             except tuple(EXCEPTION_MAP.keys()) as e:
-                errors = {
-                    "base": EXCEPTION_MAP.get(type(e), str(type(e)))
-                }
+                errors = {"base": EXCEPTION_MAP.get(type(e), str(type(e)))}
                 return self.async_show_form(
                     step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
                 )
