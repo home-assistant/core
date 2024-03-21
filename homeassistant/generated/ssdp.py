@@ -198,6 +198,11 @@ SSDP = {
             "deviceType": "urn:schemas-upnp-org:device:LaMetric:1",
         },
     ],
+    "linkplay": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+        },
+    ],
     "nanoleaf": [
         {
             "st": "Nanoleaf_aurora:light",

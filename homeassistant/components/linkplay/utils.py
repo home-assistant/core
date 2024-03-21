@@ -1,0 +1,49 @@
+"""Utilities for the LinkPlay component."""
+
+from typing import Final
+
+from linkplay.bridge import LinkPlayBridge, LinkPlayMultiroom
+from linkplay.controller import LinkPlayController
+
+from homeassistant.core import HomeAssistant
+
+from .const import CONTROLLER, DOMAIN
+
+MANUFACTURER_ARTSOUND: Final[str] = "ArtSound"
+MANUFACTURER_GENERIC: Final[str] = "Generic"
+MODELS_ARTSOUND_SMART_ZONE4: Final[str] = "Smart Zone 4 AMP"
+MODELS_ARTSOUND_SMART_HYDE: Final[str] = "Smart Hyde"
+MODELS_GENERIC: Final[str] = "Generic"
+
+
+def get_info_from_project(project: str) -> tuple[str, str]:
+    """Get manufacturer and model info based on given project."""
+    match project:
+        case "SMART_ZONE4_AMP":
+            return MANUFACTURER_ARTSOUND, MODELS_ARTSOUND_SMART_ZONE4
+        case "SMART_HYDE":
+            return MANUFACTURER_ARTSOUND, MODELS_ARTSOUND_SMART_HYDE
+        case _:
+            return MANUFACTURER_GENERIC, MODELS_GENERIC
+
+
+def get_controller(hass: HomeAssistant) -> LinkPlayController:
+    """Get the LinkPlay controller from hass data."""
+    return hass.data[DOMAIN][CONTROLLER]
+
+
+def get_active_multiroom(
+    hass: HomeAssistant, bridge: LinkPlayBridge
+) -> LinkPlayMultiroom | None:
+    """Get the active multiroom for given bridge."""
+    controller = get_controller(hass)
+
+    for multiroom in controller.multirooms:
+        if multiroom.leader.device.uuid == bridge.device.uuid:
+            return multiroom
+
+        for follower in multiroom.followers:
+            if follower.device.uuid == bridge.device.uuid:
+                return multiroom
+
+    return None

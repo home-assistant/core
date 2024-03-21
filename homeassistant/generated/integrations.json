@@ -437,6 +437,17 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "artsound": {
+      "name": "ArtSound",
+      "integrations": {
+        "linkplay": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "LinkPlay"
+        }
+      }
+    },
     "aruba": {
       "name": "Aruba",
       "integrations": {
