@@ -45,7 +45,6 @@ async def async_setup_entry(
                 swing_mode=None,
                 hvac_mode=HVACMode.HEAT,
                 hvac_action=HVACAction.HEATING,
-                aux=None,
                 target_temp_high=None,
                 target_temp_low=None,
                 hvac_modes=[HVACMode.HEAT, HVACMode.OFF],
@@ -63,7 +62,6 @@ async def async_setup_entry(
                 swing_mode="off",
                 hvac_mode=HVACMode.COOL,
                 hvac_action=HVACAction.COOLING,
-                aux=False,
                 target_temp_high=None,
                 target_temp_low=None,
                 hvac_modes=[cls for cls in HVACMode if cls != HVACMode.HEAT_COOL],
@@ -82,7 +80,6 @@ async def async_setup_entry(
                 swing_mode="auto",
                 hvac_mode=HVACMode.HEAT_COOL,
                 hvac_action=None,
-                aux=None,
                 target_temp_high=24,
                 target_temp_low=21,
                 hvac_modes=[cls for cls in HVACMode if cls != HVACMode.HEAT],
@@ -114,7 +111,6 @@ class DemoClimate(ClimateEntity):
         swing_mode: str | None,
         hvac_mode: HVACMode,
         hvac_action: HVACAction | None,
-        aux: bool | None,
         target_temp_high: float | None,
         target_temp_low: float | None,
         hvac_modes: list[HVACMode],
@@ -133,8 +129,6 @@ class DemoClimate(ClimateEntity):
             self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
         if swing_mode is not None:
             self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
-        if aux is not None:
-            self._attr_supported_features |= ClimateEntityFeature.AUX_HEAT
         if HVACMode.HEAT_COOL in hvac_modes or HVACMode.AUTO in hvac_modes:
             self._attr_supported_features |= (
                 ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
@@ -152,7 +146,6 @@ class DemoClimate(ClimateEntity):
         self._current_fan_mode = fan_mode
         self._hvac_action = hvac_action
         self._hvac_mode = hvac_mode
-        self._aux = aux
         self._current_swing_mode = swing_mode
         self._fan_modes = ["on_low", "on_high", "auto_low", "auto_high", "off"]
         self._hvac_modes = hvac_modes
@@ -230,11 +223,6 @@ class DemoClimate(ClimateEntity):
         return self._preset_modes
 
     @property
-    def is_aux_heat(self) -> bool | None:
-        """Return true if aux heat is on."""
-        return self._aux
-
-    @property
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
         return self._current_fan_mode
@@ -291,14 +279,4 @@ class DemoClimate(ClimateEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Update preset_mode on."""
         self._preset = preset_mode
-        self.async_write_ha_state()
-
-    async def async_turn_aux_heat_on(self) -> None:
-        """Turn auxiliary heater on."""
-        self._aux = True
-        self.async_write_ha_state()
-
-    async def async_turn_aux_heat_off(self) -> None:
-        """Turn auxiliary heater off."""
-        self._aux = False
         self.async_write_ha_state()
