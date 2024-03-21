@@ -38,7 +38,6 @@ from .const import (
     KEY_CUSTOM_SLOPE,
     KEY_DEVICE_ID,
     KEY_DURATION,
-    KEY_DURATION_MINUTES,
     KEY_ENABLED,
     KEY_ID,
     KEY_IMAGE_URL,
@@ -412,8 +411,8 @@ class RachioZone(RachioSwitch):
         self.turn_off()
 
         # Start this zone
-        if KEY_DURATION_MINUTES in kwargs:
-            manual_run_time = timedelta(minutes=kwargs[KEY_DURATION_MINUTES])
+        if ATTR_DURATION in kwargs:
+            manual_run_time = timedelta(minutes=kwargs[ATTR_DURATION])
         else:
             manual_run_time = timedelta(
                 minutes=self._person.config_entry.options.get(
@@ -583,8 +582,8 @@ class RachioValve(CoordinatorEntity[RachioUpdateCoordinator], SwitchEntity):
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on this valve."""
-        if KEY_DURATION_MINUTES in kwargs:
-            manual_run_time = timedelta(minutes=kwargs[KEY_DURATION_MINUTES])
+        if ATTR_DURATION in kwargs:
+            manual_run_time = timedelta(minutes=kwargs[ATTR_DURATION])
         else:
             manual_run_time = timedelta(
                 minutes=self._person.config_entry.options.get(
