@@ -23,7 +23,7 @@ from tests.common import (
     async_mock_service,
     mock_restore_cache,
 )
-from tests.fixtures.pytest.light import MockLight, SetupLightPlatformCallable
+from tests.components.light.common import MockLight, SetupLightPlatformCallable
 
 
 @pytest.fixture(autouse=True)
@@ -142,7 +142,7 @@ async def test_flux_when_switch_is_off(
     mock_light_entities: list[MockLight],
 ) -> None:
     """Test the flux switch when it is off."""
-    setup_light_platform()
+    setup_light_platform(hass, mock_light_entities)
 
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -195,7 +195,7 @@ async def test_flux_before_sunrise(
     mock_light_entities: list[MockLight],
 ) -> None:
     """Test the flux switch before sunrise."""
-    setup_light_platform()
+    setup_light_platform(hass, mock_light_entities)
 
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -256,7 +256,7 @@ async def test_flux_before_sunrise_known_location(
     mock_light_entities: list[MockLight],
 ) -> None:
     """Test the flux switch before sunrise."""
-    setup_light_platform()
+    setup_light_platform(hass, mock_light_entities)
 
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -316,7 +316,7 @@ async def test_flux_after_sunrise_before_sunset(
     mock_light_entities: list[MockLight],
 ) -> None:
     """Test the flux switch after sunrise and before sunset."""
-    setup_light_platform()
+    setup_light_platform(hass, mock_light_entities)
 
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -376,7 +376,7 @@ async def test_flux_after_sunset_before_stop(
     mock_light_entities: list[MockLight],
 ) -> None:
     """Test the flux switch after sunset and before stop."""
-    setup_light_platform()
+    setup_light_platform(hass, mock_light_entities)
 
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -437,7 +437,7 @@ async def test_flux_after_stop_before_sunrise(
     mock_light_entities: list[MockLight],
 ) -> None:
     """Test the flux switch after stop and before sunrise."""
-    setup_light_platform()
+    setup_light_platform(hass, mock_light_entities)
 
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -497,7 +497,7 @@ async def test_flux_with_custom_start_stop_times(
     mock_light_entities: list[MockLight],
 ) -> None:
     """Test the flux with custom start and stop times."""
-    setup_light_platform()
+    setup_light_platform(hass, mock_light_entities)
 
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -562,7 +562,7 @@ async def test_flux_before_sunrise_stop_next_day(
 
     This test has the stop_time on the next day (after midnight).
     """
-    setup_light_platform()
+    setup_light_platform(hass, mock_light_entities)
 
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -626,7 +626,7 @@ async def test_flux_after_sunrise_before_sunset_stop_next_day(
 
     This test has the stop_time on the next day (after midnight).
     """
-    setup_light_platform()
+    setup_light_platform(hass, mock_light_entities)
 
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -692,7 +692,7 @@ async def test_flux_after_sunset_before_midnight_stop_next_day(
 
     This test has the stop_time on the next day (after midnight).
     """
-    setup_light_platform()
+    setup_light_platform(hass, mock_light_entities)
 
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -756,7 +756,7 @@ async def test_flux_after_sunset_after_midnight_stop_next_day(
 
     This test has the stop_time on the next day (after midnight).
     """
-    setup_light_platform()
+    setup_light_platform(hass, mock_light_entities)
 
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -820,7 +820,7 @@ async def test_flux_after_stop_before_sunrise_stop_next_day(
 
     This test has the stop_time on the next day (after midnight).
     """
-    setup_light_platform()
+    setup_light_platform(hass, mock_light_entities)
 
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -881,7 +881,7 @@ async def test_flux_with_custom_colortemps(
     mock_light_entities: list[MockLight],
 ) -> None:
     """Test the flux with custom start and stop colortemps."""
-    setup_light_platform()
+    setup_light_platform(hass, mock_light_entities)
 
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -944,7 +944,7 @@ async def test_flux_with_custom_brightness(
     mock_light_entities: list[MockLight],
 ) -> None:
     """Test the flux with custom start and stop colortemps."""
-    setup_light_platform()
+    setup_light_platform(hass, mock_light_entities)
 
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -1006,7 +1006,7 @@ async def test_flux_with_multiple_lights(
     mock_light_entities: list[MockLight],
 ) -> None:
     """Test the flux switch with multiple light entities."""
-    setup_light_platform()
+    setup_light_platform(hass, mock_light_entities)
 
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -1089,7 +1089,7 @@ async def test_flux_with_mired(
     mock_light_entities: list[MockLight],
 ) -> None:
     """Test the flux switch´s mode mired."""
-    setup_light_platform()
+    setup_light_platform(hass, mock_light_entities)
 
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -1148,7 +1148,7 @@ async def test_flux_with_rgb(
     mock_light_entities: list[MockLight],
 ) -> None:
     """Test the flux switch´s mode rgb."""
-    setup_light_platform()
+    setup_light_platform(hass, mock_light_entities)
 
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
