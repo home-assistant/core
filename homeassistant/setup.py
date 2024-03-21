@@ -740,18 +740,24 @@ def async_start_setup(
     finally:
         time_taken = time.monotonic() - started
         del setup_started[current]
-        _setup_times(hass)[integration][group][phase] = time_taken
+        setup_times = _setup_times(hass)
+        group_setup_times = setup_times[integration][group]
+        group_setup_times[phase] = time_taken
         if group is None:
             _LOGGER.info(
                 "Setup of domain %s took %.2f seconds", integration, time_taken
             )
-        else:
+        elif _LOGGER.isEnabledFor(logging.DEBUG):
+            wait_time = sum(value for value in group_setup_times.values() if value < 0)
+            calculated_time = time_taken + wait_time
             _LOGGER.debug(
-                "Phase %s for %s (group=%s) took %.2f seconds",
+                "Phase %s for %s (group=%s) took %.2fs (elapsed=%.2fs) (wait_time=%.2fs)",
                 phase,
                 integration,
                 group,
+                calculated_time,
                 time_taken,
+                -wait_time,
             )
 
 
