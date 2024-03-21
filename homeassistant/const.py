@@ -306,6 +306,7 @@ EVENT_LOGGING_CHANGED: Final = "logging_changed"
 EVENT_SERVICE_REGISTERED: Final = "service_registered"
 EVENT_SERVICE_REMOVED: Final = "service_removed"
 EVENT_STATE_CHANGED: Final = "state_changed"
+EVENT_STATE_REPORTED: Final = "state_reported"
 EVENT_THEMES_UPDATED: Final = "themes_updated"
 EVENT_PANELS_UPDATED: Final = "panels_updated"
 EVENT_LOVELACE_UPDATED: Final = "lovelace_updated"
@@ -512,6 +513,9 @@ ATTR_DEVICE_ID: Final = "device_id"
 
 # Contains one string or a list of strings, each being an floor id
 ATTR_FLOOR_ID: Final = "floor_id"
+
+# Contains one string or a list of strings, each being an label id
+ATTR_LABEL_ID: Final = "label_id"
 
 # String with a friendly name for the entity
 ATTR_FRIENDLY_NAME: Final = "friendly_name"

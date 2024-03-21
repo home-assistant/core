@@ -1092,6 +1092,7 @@ async def test_zeroconf_sleeping_device_not_triggers_refresh(
     await hass.async_block_till_done()
 
     mock_rpc_device.mock_update()
+    await hass.async_block_till_done()
 
     assert "online, resuming setup" in caplog.text
 

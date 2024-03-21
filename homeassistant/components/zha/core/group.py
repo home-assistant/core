@@ -131,7 +131,7 @@ class ZHAGroupMember(LogMixin):
     def log(self, level: int, msg: str, *args: Any, **kwargs) -> None:
         """Log a message."""
         msg = f"[%s](%s): {msg}"
-        args = (f"0x{self._zha_group.group_id:04x}", self.endpoint_id) + args
+        args = (f"0x{self._zha_group.group_id:04x}", self.endpoint_id, *args)
         _LOGGER.log(level, msg, *args, **kwargs)
 
 
@@ -242,5 +242,5 @@ class ZHAGroup(LogMixin):
     def log(self, level: int, msg: str, *args: Any, **kwargs) -> None:
         """Log a message."""
         msg = f"[%s](%s): {msg}"
-        args = (self.name, self.group_id) + args
+        args = (self.name, self.group_id, *args)
         _LOGGER.log(level, msg, *args, **kwargs)

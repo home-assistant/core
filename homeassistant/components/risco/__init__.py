@@ -89,7 +89,7 @@ async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
     try:
         await risco.connect()
     except CannotConnectError as error:
-        raise ConfigEntryNotReady() from error
+        raise ConfigEntryNotReady from error
     except UnauthorizedError:
         _LOGGER.exception("Failed to login to Risco cloud")
         return False

@@ -45,7 +45,7 @@ PlexAPI==4.15.10
 ProgettiHWSW==0.1.3
 
 # homeassistant.components.cast
-PyChromecast==14.0.0
+PyChromecast==14.0.1
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
@@ -61,7 +61,7 @@ PyMetEireann==2021.8.0
 
 # homeassistant.components.met
 # homeassistant.components.norway_air
-PyMetno==0.11.0
+PyMetno==0.12.0
 
 # homeassistant.components.keymitt_ble
 PyMicroBot==0.0.17
@@ -221,7 +221,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==23.1.1
+aioesphomeapi==23.2.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -320,7 +320,7 @@ aiopyarr==23.4.0
 aioqsw==0.3.5
 
 # homeassistant.components.rainforest_raven
-aioraven==0.5.1
+aioraven==0.5.2
 
 # homeassistant.components.recollect_waste
 aiorecollect==2023.09.0
@@ -338,7 +338,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==8.1.1
+aioshelly==8.2.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -419,7 +419,7 @@ anthemav==1.4.1
 apple_weatherkit==1.1.2
 
 # homeassistant.components.apprise
-apprise==1.7.2
+apprise==1.7.4
 
 # homeassistant.components.aprs
 aprslib==0.7.0
@@ -451,7 +451,7 @@ auroranoaa==0.0.3
 aurorapy==0.2.7
 
 # homeassistant.components.axis
-axis==55
+axis==56
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
@@ -487,7 +487,7 @@ blebox-uniapi==2.2.2
 blinkpy==0.22.6
 
 # homeassistant.components.blue_current
-bluecurrent-api==1.0.6
+bluecurrent-api==1.2.2
 
 # homeassistant.components.bluemaestro
 bluemaestro-ble==0.2.3
@@ -526,7 +526,7 @@ brottsplatskartan==1.0.5
 brunt==1.2.0
 
 # homeassistant.components.bthome
-bthome-ble==3.8.0
+bthome-ble==3.8.1
 
 # homeassistant.components.buienradar
 buienradar==1.0.5
@@ -905,7 +905,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.google
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
-ical==7.0.1
+ical==7.0.3
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -1127,7 +1127,7 @@ nsw-fuel-api-client==1.1.0
 nuheat==1.0.1
 
 # homeassistant.components.numato
-numato-gpio==0.12.0
+numato-gpio==0.13.0
 
 # homeassistant.components.compensation
 # homeassistant.components.iqvia
@@ -1224,7 +1224,7 @@ poolsense==0.0.8
 praw==7.5.0
 
 # homeassistant.components.islamic_prayer_times
-prayer-times-calculator==0.0.10
+prayer-times-calculator==0.0.12
 
 # homeassistant.components.prometheus
 prometheus-client==0.17.1
@@ -1527,7 +1527,7 @@ pymeteoclimatic==0.1.0
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.6.5
+pymodbus==3.6.6
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -1803,7 +1803,7 @@ pytrydan==0.4.0
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.23.3
+pyunifiprotect==5.0.2
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -1898,6 +1898,9 @@ roombapy==1.6.13
 # homeassistant.components.roon
 roonapi==0.1.6
 
+# homeassistant.components.rova
+rova==0.4.1
+
 # homeassistant.components.rpi_power
 rpi-bad-power==0.1.0
 
@@ -1963,7 +1966,7 @@ smart-meter-texas==0.4.7
 smhi-pkg==1.0.16
 
 # homeassistant.components.snapcast
-snapcast==2.3.3
+snapcast==2.3.6
 
 # homeassistant.components.sonos
 soco==0.30.2
@@ -2032,7 +2035,7 @@ subarulink==0.7.9
 sunwatcher==0.2.1
 
 # homeassistant.components.sunweg
-sunweg==2.1.0
+sunweg==2.1.1
 
 # homeassistant.components.surepetcare
 surepy==0.9.0
@@ -2188,7 +2191,7 @@ webmin-xmlrpc==0.0.2
 webrtc-noise-gain==1.2.3
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.18.4
+whirlpool-sixth-sense==0.18.6
 
 # homeassistant.components.whois
 whois==0.9.27
@@ -2209,7 +2212,7 @@ wyoming==1.5.3
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.27.0
+xiaomi-ble==0.27.1
 
 # homeassistant.components.knx
 xknx==2.12.2

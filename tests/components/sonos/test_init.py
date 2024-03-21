@@ -158,7 +158,7 @@ async def test_async_poll_manual_hosts_warnings(
 class _MockSoCoOsError(MockSoCo):
     @property
     def visible_zones(self):
-        raise OSError()
+        raise OSError
 
 
 class _MockSoCoVisibleZones(MockSoCo):

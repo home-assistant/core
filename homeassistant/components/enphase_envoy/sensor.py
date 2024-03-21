@@ -151,7 +151,7 @@ PRODUCTION_PHASE_SENSORS = {
         )
         for sensor in list(PRODUCTION_SENSORS)
     ]
-    for phase in range(0, 3)
+    for phase in range(3)
 }
 
 
@@ -221,7 +221,7 @@ CONSUMPTION_PHASE_SENSORS = {
         )
         for sensor in list(CONSUMPTION_SENSORS)
     ]
-    for phase in range(0, 3)
+    for phase in range(3)
 }
 
 
@@ -326,7 +326,7 @@ CT_NET_CONSUMPTION_PHASE_SENSORS = {
         )
         for sensor in list(CT_NET_CONSUMPTION_SENSORS)
     ]
-    for phase in range(0, 3)
+    for phase in range(3)
 }
 
 CT_PRODUCTION_SENSORS = (
@@ -361,7 +361,7 @@ CT_PRODUCTION_PHASE_SENSORS = {
         )
         for sensor in list(CT_PRODUCTION_SENSORS)
     ]
-    for phase in range(0, 3)
+    for phase in range(3)
 }
 
 

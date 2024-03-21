@@ -870,7 +870,7 @@ class LogRelayHandler(logging.Handler):
     def emit(self, record: LogRecord) -> None:
         """Relay log message via dispatcher."""
         entry = LogEntry(
-            record, self.paths_re, figure_out_source=record.levelno >= logging.WARN
+            record, self.paths_re, figure_out_source=record.levelno >= logging.WARNING
         )
         async_dispatcher_send(
             self.hass,

@@ -83,7 +83,7 @@ class AirQualityEntity(Entity):
     @property
     def particulate_matter_2_5(self) -> StateType:
         """Return the particulate matter 2.5 level."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     def particulate_matter_10(self) -> StateType:
