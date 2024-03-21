@@ -431,7 +431,7 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
         "connectable": True,
         "domain": "motionblinds_ble",
-        "local_name": "MOTION_****",
+        "local_name": "MOTION_*",
     },
     {
         "domain": "oralb",
