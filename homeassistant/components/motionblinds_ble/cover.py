@@ -158,8 +158,6 @@ class PositionBlind(MotionblindsBLECoverEntity):
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the blind to a specific position."""
-        if kwargs.get(ATTR_POSITION) is None:
-            return
         new_position: int = 100 - int(kwargs[ATTR_POSITION])
 
         _LOGGER.debug(
@@ -196,8 +194,6 @@ class TiltBlind(MotionblindsBLECoverEntity):
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Tilt the blind to a specific position."""
-        if kwargs.get(ATTR_TILT_POSITION) is None:
-            return
         new_tilt: int = 100 - int(kwargs[ATTR_TILT_POSITION])
 
         _LOGGER.debug(
