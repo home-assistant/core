@@ -52,6 +52,7 @@
     'context': <ANY>,
     'entity_id': 'event.ozmo_950_last_job',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2024-03-20T00:00:00.000+00:00',
   })
