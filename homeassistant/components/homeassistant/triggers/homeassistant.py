@@ -3,12 +3,7 @@
 import voluptuous as vol
 
 from homeassistant.const import CONF_EVENT, CONF_PLATFORM
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    DOMAIN as CONF_CORE,
-    HassJob,
-    HomeAssistant,
-)
+from homeassistant.core import CALLBACK_TYPE, DOMAIN, HassJob, HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
@@ -18,7 +13,7 @@ EVENT_SHUTDOWN = "shutdown"
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_PLATFORM): CONF_CORE,
+        vol.Required(CONF_PLATFORM): DOMAIN,
         vol.Required(CONF_EVENT): vol.Any(EVENT_START, EVENT_SHUTDOWN),
     }
 )
@@ -41,7 +36,7 @@ async def async_attach_trigger(
             {
                 "trigger": {
                     **trigger_data,
-                    "platform": CONF_CORE,
+                    "platform": DOMAIN,
                     "event": event,
                     "description": "Home Assistant stopping",
                 }
@@ -56,7 +51,7 @@ async def async_attach_trigger(
             {
                 "trigger": {
                     **trigger_data,
-                    "platform": CONF_CORE,
+                    "platform": DOMAIN,
                     "event": event,
                     "description": "Home Assistant starting",
                 }
