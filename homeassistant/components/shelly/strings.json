@@ -10,7 +10,7 @@
         },
         "data_description": {
           "host": "The hostname or IP address of the Shelly device to connect to.",
-          "port": "The TCP port of the Shelly device (Gen2+) to connect to."
+          "port": "The TCP port of the Shelly device to connect to (Gen2+)."
         }
       },
       "credentials": {
