@@ -5,7 +5,7 @@
         "data": {
           "url": "[%key:common::config_flow::data::url%]",
           "model": "Model name",
-          "prompt": "Prompt Template",
+          "prompt": "Prompt template",
           "model_options": "Model options",
           "max_history": "Max history messages"
         }
@@ -22,7 +22,7 @@
         "data": {
           "url": "[%key:common::config_flow::data::url%]",
           "model": "Model name",
-          "prompt": "Prompt Template",
+          "prompt": "Prompt template",
           "model_options": "Model options",
           "max_history": "Max history messages"
         }
