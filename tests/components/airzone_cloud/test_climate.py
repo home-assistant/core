@@ -73,14 +73,14 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     assert state.state == HVACMode.COOL
     assert ATTR_CURRENT_HUMIDITY not in state.attributes
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 20.0
-    assert state.attributes[ATTR_FAN_MODE] == FAN_MEDIUM
+    assert state.attributes[ATTR_FAN_MODE] == "60%"
     assert state.attributes[ATTR_FAN_MODES] == [
         FAN_AUTO,
-        FAN_LOW,
+        "20%",
         "40%",
-        FAN_MEDIUM,
+        "60%",
         "80%",
-        FAN_HIGH,
+        "100%",
     ]
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.COOLING
     assert state.attributes[ATTR_HVAC_MODES] == [

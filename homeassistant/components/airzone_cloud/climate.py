@@ -339,11 +339,6 @@ class AirzoneAidooClimate(AirzoneAidooEntity, AirzoneDeviceClimate):
                 if speed != 0:
                     fan_speeds[speed] = f"{int(round((speed * 100) / max_speed, 0))}%"
 
-            # Replace standard speeds for exposing via HomeKit
-            fan_speeds[1] = FAN_LOW
-            fan_speeds[int(round((max_speed + 1) / 2, 0))] = FAN_MEDIUM
-            fan_speeds[max_speed] = FAN_HIGH
-
         if 0 in azd_speeds:
             fan_speeds = FAN_SPEED_AUTO | fan_speeds
 
