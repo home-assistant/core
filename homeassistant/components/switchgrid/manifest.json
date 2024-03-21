@@ -1,0 +1,9 @@
+{
+  "domain": "switchgrid",
+  "name": "Switchgrid",
+  "codeowners": ["@licarth"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/switchgrid",
+  "iot_class": "cloud_polling",
+  "requirements": ["switchgrid_python_client==0.1.4"]
+}
