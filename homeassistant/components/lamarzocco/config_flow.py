@@ -249,7 +249,7 @@ class LmOptionsFlowHandler(OptionsFlowWithConfigEntry):
             {
                 vol.Optional(
                     CONF_USE_BLUETOOTH,
-                    default=self.config_entry.data.get(CONF_USE_BLUETOOTH, True),
+                    default=self.config_entry.options.get(CONF_USE_BLUETOOTH, True),
                 ): cv.boolean,
             }
         )

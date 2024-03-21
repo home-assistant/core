@@ -91,7 +91,7 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
             )
 
         # initialize Bluetooth
-        if self.config_entry.data.get(CONF_USE_BLUETOOTH, True):
+        if self.config_entry.options.get(CONF_USE_BLUETOOTH, True):
 
             def bluetooth_configured() -> bool:
                 return self.config_entry.data.get(
