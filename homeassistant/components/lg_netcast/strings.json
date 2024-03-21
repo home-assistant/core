@@ -28,6 +28,12 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
+  "issues": {
+    "deprecated_yaml_cannot_connect": {
+      "title": "The {integration_title} is not online for YAML migration to complete",
+      "description": "Migrating {integration_title} from YAML cannot complete until the TV is online.\n\nPlease turn on your TV for migration to complete."
+    }
+  },
   "device_automation": {
     "trigger_type": {
       "lg_netcast.turn_on": "Device is requested to turn on"

@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pylgnetcast import LG_COMMAND, LgNetCastClient, LgNetCastError
 from requests import RequestException
@@ -110,7 +109,7 @@ class LgTVDevice(MediaPlayerEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, client, name, model, *, unique_id=None):
+    def __init__(self, client, name, model, unique_id):
         """Initialize the LG TV device."""
         self._client = client
         self._muted = False
@@ -121,25 +120,28 @@ class LgTVDevice(MediaPlayerEntity):
         self._program_name = ""
         self._sources = {}
         self._source_names = []
-        if unique_id is not None:
-            self._attr_unique_id = unique_id
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, unique_id)},
-                manufacturer=ATTR_MANUFACTURER,
-                name=name,
-                model=model,
-            )
+        self._attr_unique_id = unique_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            manufacturer=ATTR_MANUFACTURER,
+            name=name,
+            model=model,
+        )
 
     async def async_added_to_hass(self) -> None:
-        """Connect and subscribe to dispatacher signals and state updates."""
+        """Connect and subscribe to dispatcher signals and state updates."""
         await super().async_added_to_hass()
 
-        if (entry := self.registry_entry) and entry.device_id:
-            self.async_on_remove(
-                self._turn_on.async_register(
-                    self.hass, async_get_turn_on_trigger(entry.device_id)
-                )
+        entry = self.registry_entry
+
+        if TYPE_CHECKING:
+            assert entry is not None and entry.device_id is not None
+
+        self.async_on_remove(
+            self._turn_on.async_register(
+                self.hass, async_get_turn_on_trigger(entry.device_id)
             )
+        )
 
     def send_command(self, command):
         """Send remote control commands to the TV."""
@@ -252,12 +254,9 @@ class LgTVDevice(MediaPlayerEntity):
         """Turn off media player."""
         self.send_command(LG_COMMAND.POWER)
 
-    def turn_on(self) -> None:
+    async def async_turn_on(self) -> None:
         """Turn on the media player."""
-        asyncio.run_coroutine_threadsafe(
-            self._turn_on.async_run(self.hass, self._context),
-            self.hass.loop,
-        ).result()
+        await self._turn_on.async_run(self.hass, self._context)
 
     def volume_up(self) -> None:
         """Volume up the media player."""
