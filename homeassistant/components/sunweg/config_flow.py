@@ -6,7 +6,7 @@ from sunweg.api import APIHelper, SunWegApiError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_UNIQUE_ID, CONF_USERNAME
 from homeassistant.core import callback
 
 from .const import CONF_PLANT_ID, DOMAIN
@@ -39,7 +39,9 @@ class SunWEGConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id=step_id, data_schema=data_schema, errors=errors
         )
 
-    def _set_auth_data(self, username: str, password: str) -> None:
+    def _set_auth_data(
+        self, step: str, username: str, password: str
+    ) -> ConfigFlowResult | None:
         """Set username and password."""
         if self.api:
             # Set username and password
@@ -49,6 +51,14 @@ class SunWEGConfigFlow(ConfigFlow, domain=DOMAIN):
             # Initialise the library with the username & password
             self.api = APIHelper(username, password)
 
+        try:
+            if not self.api.authenticate():
+                return self._async_show_user_form(step, {"base": "invalid_auth"})
+        except SunWegApiError:
+            return self._async_show_user_form(step, {"base": "timeout_connect"})
+
+        return None
+
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle the start of the config flow."""
         if not user_input:
@@ -56,14 +66,15 @@ class SunWEGConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Store authentication info
         self.data = user_input
-        self._set_auth_data(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
-        try:
-            if not await self.hass.async_add_executor_job(self.api.authenticate):
-                return self._async_show_user_form("user", {"base": "invalid_auth"})
-        except SunWegApiError:
-            return self._async_show_user_form("user", {"base": "timeout_connect"})
 
-        return await self.async_step_plant()
+        conf_result = await self.hass.async_add_executor_job(
+            self._set_auth_data,
+            "user",
+            user_input[CONF_USERNAME],
+            user_input[CONF_PASSWORD],
+        )
+
+        return await self.async_step_plant() if conf_result is None else conf_result
 
     async def async_step_plant(self, user_input=None) -> ConfigFlowResult:
         """Handle adding a "plant" to Home Assistant."""
@@ -103,14 +114,16 @@ class SunWEGConfigFlow(ConfigFlow, domain=DOMAIN):
             return self._async_show_user_form("reauth_confirm")
 
         self.data.update(user_input)
-        self._set_auth_data(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
+        conf_result = await self.hass.async_add_executor_job(
+            self._set_auth_data,
+            "reauth_confirm",
+            user_input[CONF_USERNAME],
+            user_input[CONF_PASSWORD],
+        )
+        if conf_result is not None:
+            return conf_result
 
-        if not await self.hass.async_add_executor_job(self.api.authenticate):
-            return self._async_show_user_form(
-                "reauth_confirm", {"base": "invalid_auth"}
-            )
-
-        entry = await self.async_set_unique_id(self.data[CONF_PLANT_ID])
+        entry = await self.async_set_unique_id(self.context[CONF_UNIQUE_ID])
         if entry is not None:
             data: Mapping[str, Any] = self.data
             self.hass.config_entries.async_update_entry(entry, data=data)

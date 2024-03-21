@@ -6,7 +6,7 @@ from sunweg.api import APIHelper, SunWegApiError
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.sunweg.const import CONF_PLANT_ID, DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_UNIQUE_ID, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from .common import SUNWEG_MOCK_ENTRY, SUNWEG_USER_INPUT
@@ -70,7 +70,10 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH},
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            CONF_UNIQUE_ID: mock_entry.unique_id,
+        },
         data=mock_entry.data,
     )
 
@@ -86,6 +89,18 @@ async def test_reauth(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": "invalid_auth"}
+
+    with patch.object(
+        APIHelper, "authenticate", side_effect=SunWegApiError("Internal Server Error")
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=SUNWEG_USER_INPUT,
+        )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": "timeout_connect"}
 
     with patch.object(APIHelper, "authenticate", return_value=True):
         result = await hass.config_entries.flow.async_configure(
