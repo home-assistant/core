@@ -1,4 +1,5 @@
 """Support for reading vehicle status from MyBMW portal."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

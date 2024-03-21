@@ -1,4 +1,5 @@
 """Tests for the Cert Expiry config flow."""
+
 import socket
 import ssl
 from unittest.mock import patch

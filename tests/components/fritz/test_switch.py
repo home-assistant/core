@@ -1,4 +1,5 @@
 """Tests for Fritz!Tools switch platform."""
+
 from __future__ import annotations
 
 import pytest

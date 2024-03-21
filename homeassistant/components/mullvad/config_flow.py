@@ -1,4 +1,5 @@
 """Config flow for Mullvad VPN integration."""
+
 from mullvad_api import MullvadAPI, MullvadAPIError
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult

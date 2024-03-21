@@ -1,4 +1,5 @@
 """NextBus sensor."""
+
 from __future__ import annotations
 
 from itertools import chain
@@ -105,7 +106,7 @@ class NextBusDepartureSensor(
     """
 
     _attr_device_class = SensorDeviceClass.TIMESTAMP
-    _attr_icon = "mdi:bus"
+    _attr_translation_key = "nextbus"
 
     def __init__(
         self,

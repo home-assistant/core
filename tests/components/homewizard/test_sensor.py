@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from homewizard_energy.errors import DisabledError, RequestError
+from homewizard_energy.errors import RequestError
 from homewizard_energy.models import Data
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -375,7 +375,7 @@ async def test_disabled_by_default_sensors(
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
-@pytest.mark.parametrize("exception", [RequestError, DisabledError])
+@pytest.mark.parametrize("exception", [RequestError])
 async def test_sensors_unreachable(
     hass: HomeAssistant,
     mock_homewizardenergy: MagicMock,

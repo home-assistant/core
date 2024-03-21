@@ -1,4 +1,5 @@
 """Homekit Controller entities."""
+
 from __future__ import annotations
 
 import contextlib

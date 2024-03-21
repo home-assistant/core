@@ -1,4 +1,5 @@
 """Test buttons."""
+
 from unittest.mock import patch
 
 import pytest

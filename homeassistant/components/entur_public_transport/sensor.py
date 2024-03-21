@@ -1,4 +1,5 @@
 """Real-time information about public transport departures in Norway."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta

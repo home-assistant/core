@@ -1,4 +1,5 @@
 """Support for Verisure devices."""
+
 from __future__ import annotations
 
 from contextlib import suppress

@@ -1,4 +1,5 @@
 """Axis conftest."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -9,7 +10,7 @@ from axis.rtsp import Signal, State
 import pytest
 import respx
 
-from homeassistant.components.axis.const import CONF_EVENTS, DOMAIN as AXIS_DOMAIN
+from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODEL,
@@ -93,7 +94,7 @@ def config_fixture():
 @pytest.fixture(name="options")
 def options_fixture(request):
     """Define a config entry options fixture."""
-    return {CONF_EVENTS: True}
+    return {}
 
 
 # Axis API fixtures

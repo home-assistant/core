@@ -1,4 +1,5 @@
 """Tests for the Oncue integration."""
+
 from contextlib import contextmanager
 from unittest.mock import patch
 

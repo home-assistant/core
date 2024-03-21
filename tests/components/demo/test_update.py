@@ -1,4 +1,5 @@
 """The tests for the demo update platform."""
+
 from unittest.mock import patch
 
 import pytest

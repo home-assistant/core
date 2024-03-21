@@ -1,4 +1,5 @@
 """Integrates Native Apps to Home Assistant."""
+
 from contextlib import suppress
 from typing import Any
 

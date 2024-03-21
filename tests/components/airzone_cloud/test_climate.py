@@ -1,4 +1,5 @@
 """The climate tests for the Airzone Cloud platform."""
+
 from unittest.mock import patch
 
 from aioairzone_cloud.const import API_DEFAULT_TEMP_STEP

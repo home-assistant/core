@@ -1,4 +1,5 @@
 """The tests for the Datadog component."""
+
 from unittest import mock
 from unittest.mock import patch
 

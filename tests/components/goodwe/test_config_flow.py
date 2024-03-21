@@ -1,4 +1,5 @@
 """Test the Goodwe config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from goodwe import InverterError

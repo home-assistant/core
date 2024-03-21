@@ -6,6 +6,7 @@ tests use a fixture that mocks out events returned by the calendar entity,
 and create events using a relative time offset and then advance the clock
 forward exercising the triggers.
 """
+
 from __future__ import annotations
 
 from collections.abc import AsyncIterator, Callable, Generator

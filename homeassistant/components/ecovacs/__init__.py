@@ -1,4 +1,5 @@
 """Support for Ecovacs Deebot vacuums."""
+
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry

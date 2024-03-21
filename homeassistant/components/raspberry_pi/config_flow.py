@@ -1,4 +1,5 @@
 """Config flow for the Raspberry Pi integration."""
+
 from __future__ import annotations
 
 from typing import Any

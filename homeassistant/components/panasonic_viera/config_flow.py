@@ -1,4 +1,5 @@
 """Config flow for Panasonic Viera TV integration."""
+
 from functools import partial
 import logging
 from urllib.error import URLError

@@ -1,4 +1,5 @@
 """The tests for the TCP binary sensor platform."""
+
 from datetime import timedelta
 from unittest.mock import call, patch
 

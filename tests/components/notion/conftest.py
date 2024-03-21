@@ -1,4 +1,5 @@
 """Define fixtures for Notion tests."""
+
 from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, Mock, patch
@@ -9,8 +10,8 @@ from aionotion.sensor.models import Sensor
 from aionotion.user.models import UserPreferences
 import pytest
 
-from homeassistant.components.notion import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.components.notion import CONF_REFRESH_TOKEN, CONF_USER_UUID, DOMAIN
+from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
@@ -81,7 +82,8 @@ def config_fixture():
     """Define a config entry data fixture."""
     return {
         CONF_USERNAME: TEST_USERNAME,
-        CONF_PASSWORD: TEST_PASSWORD,
+        CONF_USER_UUID: TEST_USER_UUID,
+        CONF_REFRESH_TOKEN: TEST_REFRESH_TOKEN,
     }
 
 

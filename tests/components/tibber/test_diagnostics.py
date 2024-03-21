@@ -1,4 +1,5 @@
 """Test the Netatmo diagnostics."""
+
 from unittest.mock import patch
 
 from homeassistant.components.recorder import Recorder

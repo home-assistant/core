@@ -1,4 +1,5 @@
 """Utilities for Risco tests."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 TEST_SITE_UUID = "test-site-uuid"

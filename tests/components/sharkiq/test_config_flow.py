@@ -1,4 +1,5 @@
 """Test the Shark IQ config flow."""
+
 from unittest.mock import patch
 
 import aiohttp

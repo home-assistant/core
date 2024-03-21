@@ -1,4 +1,5 @@
 """Tests for the floor registry."""
+
 import re
 from typing import Any
 

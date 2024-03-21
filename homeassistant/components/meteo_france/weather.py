@@ -1,4 +1,5 @@
 """Support for Meteo-France weather service."""
+
 import logging
 import time
 

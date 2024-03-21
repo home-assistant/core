@@ -1,4 +1,5 @@
 """Fixtures for Risco tests."""
+
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
@@ -167,16 +168,6 @@ def connect_with_error(exception):
     with patch(
         "homeassistant.components.risco.RiscoLocal.connect",
         side_effect=exception,
-    ):
-        yield
-
-
-@pytest.fixture
-def connect_with_single_error(exception):
-    """Fixture to simulate error on connect."""
-    with patch(
-        "homeassistant.components.risco.RiscoLocal.connect",
-        side_effect=[exception, None],
     ):
         yield
 

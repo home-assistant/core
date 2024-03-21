@@ -1,4 +1,5 @@
 """Config flow for Elk-M1 Control integration."""
+
 from __future__ import annotations
 
 import logging
@@ -77,7 +78,7 @@ async def validate_input(data: dict[str, str], mac: str | None) -> dict[str, str
 
     prefix = data[CONF_PREFIX]
     url = _make_url_from_data(data)
-    requires_password = url.startswith("elks://") or url.startswith("elksv1_2")
+    requires_password = url.startswith(("elks://", "elksv1_2"))
 
     if requires_password and (not userid or not password):
         raise InvalidAuth

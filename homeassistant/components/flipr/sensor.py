@@ -1,4 +1,5 @@
 """Sensor platform for the Flipr's pool_sensor."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import (

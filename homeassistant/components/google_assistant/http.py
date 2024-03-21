@@ -1,4 +1,5 @@
 """Support for Google Actions Smart Home Control."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -12,7 +13,7 @@ from aiohttp.web import Request, Response
 import jwt
 
 from homeassistant.components import webhook
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -380,7 +381,7 @@ class GoogleAssistantView(HomeAssistantView):
         """Handle Google Assistant requests."""
         message: dict = await request.json()
         result = await async_handle_message(
-            request.app["hass"],
+            request.app[KEY_HASS],
             self.config,
             request["hass_user"].id,
             request["hass_user"].id,

@@ -1,4 +1,5 @@
 """Tests for the Kodi integration."""
+
 from unittest.mock import patch
 
 from homeassistant.components.kodi.const import CONF_WS_PORT, DOMAIN

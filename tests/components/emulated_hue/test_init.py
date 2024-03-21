@@ -1,4 +1,5 @@
 """Test the Emulated Hue component."""
+
 from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
@@ -12,7 +13,7 @@ from homeassistant.components.emulated_hue.config import (
     Config,
 )
 from homeassistant.components.emulated_hue.upnp import UPNPResponderProtocol
-from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import utcnow
@@ -145,7 +146,7 @@ async def test_setup_works(hass: HomeAssistant) -> None:
             spec=UPNPResponderProtocol
         )
         assert await async_setup_component(hass, "emulated_hue", {})
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert len(mock_create_upnp_datagram_endpoint.mock_calls) == 1

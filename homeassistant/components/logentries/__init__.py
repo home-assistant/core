@@ -1,4 +1,5 @@
 """Support for sending data to Logentries webhook endpoint."""
+
 import json
 import logging
 

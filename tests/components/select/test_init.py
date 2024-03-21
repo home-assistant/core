@@ -1,4 +1,5 @@
 """The tests for the Select component."""
+
 from unittest.mock import MagicMock
 
 import pytest

@@ -1,4 +1,5 @@
 """Tests for the cloud binary sensor."""
+
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 

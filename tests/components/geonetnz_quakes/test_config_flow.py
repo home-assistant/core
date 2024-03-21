@@ -1,4 +1,5 @@
 """Define tests for the GeoNet NZ Quakes config flow."""
+
 from datetime import timedelta
 from unittest.mock import patch
 

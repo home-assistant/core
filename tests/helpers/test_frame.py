@@ -7,6 +7,8 @@ import pytest
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import frame
 
+from tests.common import extract_stack_to_frame
+
 
 async def test_extract_frame_integration(
     caplog: pytest.LogCaptureFixture, mock_integration_frame: Mock
@@ -15,11 +17,19 @@ async def test_extract_frame_integration(
     integration_frame = frame.get_integration_frame()
     assert integration_frame == frame.IntegrationFrame(
         custom_integration=False,
-        frame=mock_integration_frame,
+        _frame=mock_integration_frame,
         integration="hue",
         module=None,
         relative_filename="homeassistant/components/hue/light.py",
     )
+
+
+async def test_get_integration_logger(
+    caplog: pytest.LogCaptureFixture, mock_integration_frame: Mock
+) -> None:
+    """Test extracting the current frame to get the logger."""
+    logger = frame.get_integration_logger(__name__)
+    assert logger.name == "homeassistant.components.hue"
 
 
 async def test_extract_frame_resolve_module(
@@ -32,11 +42,22 @@ async def test_extract_frame_resolve_module(
 
     assert integration_frame == frame.IntegrationFrame(
         custom_integration=True,
-        frame=ANY,
+        _frame=ANY,
         integration="test_integration_frame",
         module="custom_components.test_integration_frame",
         relative_filename="custom_components/test_integration_frame/__init__.py",
     )
+
+
+async def test_get_integration_logger_resolve_module(
+    hass: HomeAssistant, enable_custom_integrations
+) -> None:
+    """Test getting the logger from integration context."""
+    from custom_components.test_integration_frame import call_get_integration_logger
+
+    logger = call_get_integration_logger(__name__)
+
+    assert logger.name == "custom_components.test_integration_frame"
 
 
 async def test_extract_frame_integration_with_excluded_integration(
@@ -49,25 +70,27 @@ async def test_extract_frame_integration_with_excluded_integration(
         line="self.light.is_on",
     )
     with patch(
-        "homeassistant.helpers.frame.extract_stack",
-        return_value=[
-            Mock(
-                filename="/home/dev/homeassistant/core.py",
-                lineno="23",
-                line="do_something()",
-            ),
-            correct_frame,
-            Mock(
-                filename="/home/dev/homeassistant/components/zeroconf/usage.py",
-                lineno="23",
-                line="self.light.is_on",
-            ),
-            Mock(
-                filename="/home/dev/mdns/lights.py",
-                lineno="2",
-                line="something()",
-            ),
-        ],
+        "homeassistant.helpers.frame.get_current_frame",
+        return_value=extract_stack_to_frame(
+            [
+                Mock(
+                    filename="/home/dev/homeassistant/core.py",
+                    lineno="23",
+                    line="do_something()",
+                ),
+                correct_frame,
+                Mock(
+                    filename="/home/dev/homeassistant/components/zeroconf/usage.py",
+                    lineno="23",
+                    line="self.light.is_on",
+                ),
+                Mock(
+                    filename="/home/dev/mdns/lights.py",
+                    lineno="2",
+                    line="something()",
+                ),
+            ]
+        ),
     ):
         integration_frame = frame.get_integration_frame(
             exclude_integrations={"zeroconf"}
@@ -75,7 +98,7 @@ async def test_extract_frame_integration_with_excluded_integration(
 
     assert integration_frame == frame.IntegrationFrame(
         custom_integration=False,
-        frame=correct_frame,
+        _frame=correct_frame,
         integration="mdns",
         module=None,
         relative_filename="homeassistant/components/mdns/light.py",
@@ -85,21 +108,49 @@ async def test_extract_frame_integration_with_excluded_integration(
 async def test_extract_frame_no_integration(caplog: pytest.LogCaptureFixture) -> None:
     """Test extracting the current frame without integration context."""
     with patch(
-        "homeassistant.helpers.frame.extract_stack",
-        return_value=[
-            Mock(
-                filename="/home/paulus/homeassistant/core.py",
-                lineno="23",
-                line="do_something()",
-            ),
-            Mock(
-                filename="/home/paulus/aiohue/lights.py",
-                lineno="2",
-                line="something()",
-            ),
-        ],
+        "homeassistant.helpers.frame.get_current_frame",
+        return_value=extract_stack_to_frame(
+            [
+                Mock(
+                    filename="/home/paulus/homeassistant/core.py",
+                    lineno="23",
+                    line="do_something()",
+                ),
+                Mock(
+                    filename="/home/paulus/aiohue/lights.py",
+                    lineno="2",
+                    line="something()",
+                ),
+            ]
+        ),
     ), pytest.raises(frame.MissingIntegrationFrame):
         frame.get_integration_frame()
+
+
+async def test_get_integration_logger_no_integration(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test getting fallback logger without integration context."""
+    with patch(
+        "homeassistant.helpers.frame.get_current_frame",
+        return_value=extract_stack_to_frame(
+            [
+                Mock(
+                    filename="/home/paulus/homeassistant/core.py",
+                    lineno="23",
+                    line="do_something()",
+                ),
+                Mock(
+                    filename="/home/paulus/aiohue/lights.py",
+                    lineno="2",
+                    line="something()",
+                ),
+            ]
+        ),
+    ):
+        logger = frame.get_integration_logger(__name__)
+
+    assert logger.name == __name__
 
 
 @patch.object(frame, "_REPORTED_INTEGRATIONS", set())

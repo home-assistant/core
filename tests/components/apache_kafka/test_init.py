@@ -1,4 +1,5 @@
 """The tests for the Apache Kafka component."""
+
 from __future__ import annotations
 
 from asyncio import AbstractEventLoop

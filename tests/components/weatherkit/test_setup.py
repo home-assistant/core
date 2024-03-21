@@ -1,4 +1,5 @@
 """Test the WeatherKit setup process."""
+
 from unittest.mock import patch
 
 from apple_weatherkit.client import (

@@ -1,4 +1,5 @@
 """Test the Kodi config flow."""
+
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest

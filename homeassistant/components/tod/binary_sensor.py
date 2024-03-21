@@ -1,4 +1,5 @@
 """Support for representing current time of the day as binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

@@ -1,4 +1,5 @@
 """Tests for the mobile app integration."""
+
 from collections.abc import Awaitable, Callable
 from typing import Any
 from unittest.mock import Mock, patch
@@ -119,7 +120,7 @@ async def test_create_cloud_hook_on_setup(
     await _test_create_cloud_hook(hass, hass_admin_user, {}, True, additional_steps)
 
 
-@pytest.mark.parametrize("exception", (CloudNotAvailable, ValueError))
+@pytest.mark.parametrize("exception", [CloudNotAvailable, ValueError])
 async def test_remove_cloudhook(
     hass: HomeAssistant,
     hass_admin_user: MockUser,

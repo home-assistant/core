@@ -1,4 +1,5 @@
 """Test the zwave_me removal of stale devices."""
+
 from unittest.mock import patch
 import uuid
 

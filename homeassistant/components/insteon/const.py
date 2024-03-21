@@ -1,4 +1,5 @@
 """Constants used by insteon component."""
+
 import re
 
 from pyinsteon.groups import (

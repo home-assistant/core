@@ -1,4 +1,5 @@
 """The tests for the mochad switch platform."""
+
 import unittest.mock as mock
 
 import pytest

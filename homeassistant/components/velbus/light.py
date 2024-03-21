@@ -1,4 +1,5 @@
 """Support for Velbus light."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -37,11 +38,10 @@ async def async_setup_entry(
     """Set up Velbus switch based on config_entry."""
     await hass.data[DOMAIN][entry.entry_id]["tsk"]
     cntrl = hass.data[DOMAIN][entry.entry_id]["cntrl"]
-    entities: list[Entity] = []
-    for channel in cntrl.get_all("light"):
-        entities.append(VelbusLight(channel))
-    for channel in cntrl.get_all("led"):
-        entities.append(VelbusButtonLight(channel))
+    entities: list[Entity] = [
+        VelbusLight(channel) for channel in cntrl.get_all("light")
+    ]
+    entities.extend(VelbusButtonLight(channel) for channel in cntrl.get_all("led"))
     async_add_entities(entities)
 
 

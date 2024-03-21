@@ -1,4 +1,5 @@
 """The tests for the Switch component."""
+
 import pytest
 
 from homeassistant import core

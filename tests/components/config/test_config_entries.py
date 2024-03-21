@@ -1,4 +1,5 @@
 """Test config entries API."""
+
 from collections import OrderedDict
 from http import HTTPStatus
 from unittest.mock import ANY, AsyncMock, patch
@@ -328,11 +329,11 @@ async def test_reload_entry_in_setup_retry(
 
 @pytest.mark.parametrize(
     ("type_filter", "result"),
-    (
+    [
         (None, {"hello", "another", "world"}),
         ("integration", {"hello", "another"}),
         ("helper", {"world"}),
-    ),
+    ],
 )
 async def test_available_flows(
     hass: HomeAssistant, client, type_filter, result

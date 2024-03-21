@@ -1,4 +1,5 @@
 """Test the Xiaomi config flow."""
+
 from unittest.mock import patch
 
 from xiaomi_ble import XiaomiBluetoothDeviceData as DeviceData

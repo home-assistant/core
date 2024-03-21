@@ -1,4 +1,5 @@
 """Tests for the OpenAI integration."""
+
 from unittest.mock import AsyncMock, patch
 
 from httpx import Response

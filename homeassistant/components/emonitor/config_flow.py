@@ -1,4 +1,5 @@
 """Config flow for SiteSage Emonitor integration."""
+
 import logging
 
 from aioemonitor import Emonitor

@@ -1,4 +1,5 @@
 """SFR Box sensor platform."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -26,18 +27,11 @@ from .models import DomainData
 _T = TypeVar("_T")
 
 
-@dataclass(frozen=True)
-class SFRBoxBinarySensorMixin(Generic[_T]):
-    """Mixin for SFR Box sensors."""
+@dataclass(frozen=True, kw_only=True)
+class SFRBoxBinarySensorEntityDescription(BinarySensorEntityDescription, Generic[_T]):
+    """Description for SFR Box binary sensors."""
 
     value_fn: Callable[[_T], bool | None]
-
-
-@dataclass(frozen=True)
-class SFRBoxBinarySensorEntityDescription(
-    BinarySensorEntityDescription, SFRBoxBinarySensorMixin[_T]
-):
-    """Description for SFR Box binary sensors."""
 
 
 DSL_SENSOR_TYPES: tuple[SFRBoxBinarySensorEntityDescription[DslInfo], ...] = (

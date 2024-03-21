@@ -1,4 +1,5 @@
 """Define tests for the AccuWeather config flow."""
+
 from unittest.mock import PropertyMock, patch
 
 from accuweather import ApiError, InvalidApiKeyError, RequestsExceededError

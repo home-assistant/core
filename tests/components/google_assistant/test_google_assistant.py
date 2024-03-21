@@ -1,4 +1,5 @@
 """The tests for the Google Assistant component."""
+
 from http import HTTPStatus
 import json
 from unittest.mock import patch

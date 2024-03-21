@@ -1,4 +1,5 @@
 """Asyncio utilities."""
+
 from __future__ import annotations
 
 from asyncio import AbstractEventLoop, Future, Semaphore, Task, gather, get_running_loop
@@ -9,7 +10,6 @@ import functools
 import logging
 import sys
 import threading
-from traceback import extract_stack
 from typing import Any, ParamSpec, TypeVar, TypeVarTuple
 
 from homeassistant.exceptions import HomeAssistantError
@@ -116,14 +116,6 @@ def check_loop(
     The default advisory message is 'Use `await hass.async_add_executor_job()'
     Set `advise_msg` to an alternate message if the solution differs.
     """
-    # pylint: disable=import-outside-toplevel
-    from homeassistant.core import HomeAssistant, async_get_hass
-    from homeassistant.helpers.frame import (
-        MissingIntegrationFrame,
-        get_integration_frame,
-    )
-    from homeassistant.loader import async_suggest_report_issue
-
     try:
         get_running_loop()
         in_loop = True
@@ -133,18 +125,32 @@ def check_loop(
     if not in_loop:
         return
 
+    # Import only after we know we are running in the event loop
+    # so threads do not have to pay the late import cost.
+    # pylint: disable=import-outside-toplevel
+    from homeassistant.core import HomeAssistant, async_get_hass
+    from homeassistant.helpers.frame import (
+        MissingIntegrationFrame,
+        get_current_frame,
+        get_integration_frame,
+    )
+    from homeassistant.loader import async_suggest_report_issue
+
     found_frame = None
 
-    stack = extract_stack()
-
-    if (
-        func.__name__ == "sleep"
-        and len(stack) >= 3
-        and stack[-3].filename.endswith("pydevd.py")
-    ):
-        # Don't report `time.sleep` injected by the debugger (pydevd.py)
-        # stack[-1] is us, stack[-2] is protected_loop_func, stack[-3] is the offender
-        return
+    if func.__name__ == "sleep":
+        #
+        # Avoid extracting the stack unless we need to since it
+        # will have to access the linecache which can do blocking
+        # I/O and we are trying to avoid blocking calls.
+        #
+        # frame[1] is us
+        # frame[2] is protected_loop_func
+        # frame[3] is the offender
+        with suppress(ValueError):
+            offender_frame = get_current_frame(3)
+            if offender_frame.f_code.co_filename.endswith("pydevd.py"):
+                return
 
     try:
         integration_frame = get_integration_frame()
@@ -167,7 +173,6 @@ def check_loop(
         module=integration_frame.module,
     )
 
-    found_frame = integration_frame.frame
     _LOGGER.warning(
         (
             "Detected blocking call to %s inside the event loop by %sintegration '%s' "
@@ -177,8 +182,8 @@ def check_loop(
         "custom " if integration_frame.custom_integration else "",
         integration_frame.integration,
         integration_frame.relative_filename,
-        found_frame.lineno,
-        (found_frame.line or "?").strip(),
+        integration_frame.line_number,
+        integration_frame.line,
         report_issue,
     )
 
@@ -186,8 +191,8 @@ def check_loop(
         raise RuntimeError(
             "Blocking calls must be done in the executor or a separate thread;"
             f" {advise_msg or 'Use `await hass.async_add_executor_job()`'}; at"
-            f" {integration_frame.relative_filename}, line {found_frame.lineno}:"
-            f" {(found_frame.line or '?').strip()}"
+            f" {integration_frame.relative_filename}, line {integration_frame.line_number}:"
+            f" {integration_frame.line}"
         )
 
 

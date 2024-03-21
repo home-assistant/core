@@ -1,4 +1,5 @@
 """Config flow for the Total Connect component."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping

@@ -1,4 +1,5 @@
 """Test the Kuler Sky config flow."""
+
 from unittest.mock import MagicMock, patch
 
 import pykulersky

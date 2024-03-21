@@ -1,4 +1,5 @@
 """Tests for the Home Assistant Websocket API."""
+
 from unittest.mock import Mock, patch
 
 from aiohttp import WSMsgType
