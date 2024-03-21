@@ -100,9 +100,7 @@ class _IntegrationMethod(ABC):
         return _Left()
 
     @abstractmethod
-    def validate_states(
-        self, hass: HomeAssistant, left: State | None, right: State | None
-    ) -> bool:
+    def validate_states(self, left: State | None, right: State | None) -> bool:
         """Check state requirements for integration."""
 
     @abstractmethod
@@ -123,12 +121,8 @@ class _Trapezoidal(_IntegrationMethod):
     ) -> Decimal:
         return Decimal(elapsed_time) * (Decimal(left.state) + Decimal(right.state)) / 2
 
-    def validate_states(
-        self, hass: HomeAssistant, left: State | None, right: State | None
-    ) -> bool:
-        return condition.async_numeric_state(
-            hass, left
-        ) and condition.async_numeric_state(hass, right)
+    def validate_states(self, left: State | None, right: State | None) -> bool:
+        return _is_numeric_state(left) and _is_numeric_state(right)
 
 
 class _Left(_IntegrationMethod):
@@ -137,10 +131,8 @@ class _Left(_IntegrationMethod):
     ) -> Decimal:
         return self.calculate_area_with_one_state(elapsed_time, left)
 
-    def validate_states(
-        self, hass: HomeAssistant, left: State | None, right: State | None
-    ) -> bool:
-        return condition.async_numeric_state(hass, left)
+    def validate_states(self, left: State | None, right: State | None) -> bool:
+        return _is_numeric_state(left)
 
 
 class _Right(_IntegrationMethod):
@@ -149,10 +141,19 @@ class _Right(_IntegrationMethod):
     ) -> Decimal:
         return self.calculate_area_with_one_state(elapsed_time, right)
 
-    def validate_states(
-        self, hass: HomeAssistant, left: State | None, right: State | None
-    ) -> bool:
-        return condition.async_numeric_state(hass, right)
+    def validate_states(self, left: State | None, right: State | None) -> bool:
+        return _is_numeric_state(right)
+
+
+def _is_numeric_state(state: State | None) -> bool:
+    if state is None:
+        return False
+
+    try:
+        float(state.state)
+        return True
+    except (ValueError, TypeError):
+        return False
 
 
 @dataclass
@@ -413,7 +414,7 @@ class IntegrationSensor(RestoreSensor):
         self._attr_available = True
         self._derive_and_set_attributes_from_state(new_state)
 
-        if not self._method.validate_states(self.hass, old_state, new_state):
+        if not self._method.validate_states(old_state, new_state):
             self.async_write_ha_state()
             return
 
