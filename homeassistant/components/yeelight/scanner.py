@@ -101,9 +101,7 @@ class YeelightScanner:
                 result,
             )
             failed_listeners.append(self._listeners[idx])
-            future = self._connected_futures[idx]
-            if not future.done():
-                future.set_result(None)
+            _async_connected(self._connected_futures[idx])
 
         for listener in failed_listeners:
             self._listeners.remove(listener)
