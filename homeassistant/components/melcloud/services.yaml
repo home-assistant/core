@@ -21,3 +21,33 @@ set_vane_vertical:
       example: "auto"
       selector:
         text:
+
+set_zone_1_target_heat_temperature:
+  target:
+    entity:
+      integration: melcloud
+      domain: water_heater
+  fields:
+    temperature:
+      required: true
+      example: 20
+      selector:
+        number:
+          min: 20
+          max: 30
+          step: 1
+
+set_zone_1_target_heat_flow_temperature:
+  target:
+    entity:
+      integration: melcloud
+      domain: water_heater
+  fields:
+    temperature:
+      required: true
+      example: 20
+      selector:
+        number:
+          min: 25
+          max: 60
+          step: 1

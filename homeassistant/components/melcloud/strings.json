@@ -48,6 +48,26 @@
           "description": "Vertical vane position. Possible options can be found in the vane_vertical_positions state attribute."
         }
       }
+    },
+    "set_zone_1_target_heat_temperature": {
+      "name": "Set zone 1 target heat temperature",
+      "description": "Sets zone 1 target heat temperature.",
+      "fields": {
+        "temperature": {
+          "name": "Temperature",
+          "description": "Target heat temperature"
+        }
+      }
+    },
+    "set_zone_1_target_heat_flow_temperature": {
+      "name": "Set zone 1 target heat flow temperature",
+      "description": "Sets zone 1 target heat flow temperature.",
+      "fields": {
+        "temperature": {
+          "name": "Temperature",
+          "description": "Target heat flow temperature"
+        }
+      }
     }
   },
   "issues": {
