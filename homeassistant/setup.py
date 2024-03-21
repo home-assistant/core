@@ -741,7 +741,9 @@ def async_start_setup(
         time_taken = time.monotonic() - started
         del setup_started[current]
         group_setup_times = _setup_times(hass)[integration][group]
-        group_setup_times[phase] += time_taken
+        # We may see the phase multiple times if there are multiple
+        # platforms, but we only care about the longest time.
+        group_setup_times[phase] = max(group_setup_times[phase], time_taken)
         if group is None:
             _LOGGER.info(
                 "Setup of domain %s took %.2f seconds", integration, time_taken
