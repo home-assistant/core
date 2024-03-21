@@ -10,7 +10,6 @@ import contextvars
 from enum import StrEnum
 import logging.handlers
 import time
-from timeit import default_timer as timer
 from types import ModuleType
 from typing import Any, Final, TypedDict
 
@@ -351,7 +350,6 @@ async def _async_setup_component(  # noqa: C901
             },
         )
 
-    start = timer()
     _LOGGER.info("Setting up %s", domain)
     integration_set = {domain}
 
@@ -412,11 +410,8 @@ async def _async_setup_component(  # noqa: C901
             async_notify_setup_error(hass, domain, integration.documentation)
             return False
         finally:
-            end = timer()
             if warn_task:
                 warn_task.cancel()
-        _LOGGER.info("Setup of domain %s took %.1f seconds", domain, end - start)
-
         if result is False:
             log_error("Integration failed to initialize.")
             return False
@@ -746,6 +741,18 @@ def async_start_setup(
         time_taken = time.monotonic() - started
         del setup_started[current]
         _setup_times(hass)[integration][group][phase] = time_taken
+        if group is None:
+            _LOGGER.info(
+                "Setup of domain %s took %.2f seconds", integration, time_taken
+            )
+        else:
+            _LOGGER.debug(
+                "Phase %s for %s (group=%s) took %.2f seconds",
+                phase,
+                integration,
+                group,
+                time_taken,
+            )
 
 
 @callback
