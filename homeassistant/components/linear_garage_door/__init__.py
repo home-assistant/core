@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .coordinator import LinearUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.COVER]
+PLATFORMS: list[Platform] = [Platform.COVER, Platform.LIGHT]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
