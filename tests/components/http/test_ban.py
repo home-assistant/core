@@ -16,6 +16,7 @@ from homeassistant.components.http.ban import (
     IP_BANS_FILE,
     KEY_BAN_MANAGER,
     KEY_FAILED_LOGIN_ATTEMPTS,
+    IpBanManager,
     process_success_login,
     setup_bans,
 )
