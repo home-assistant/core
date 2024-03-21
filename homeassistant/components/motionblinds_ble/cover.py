@@ -92,13 +92,13 @@ class MotionblindsBLECoverEntity(MotionblindsBLEEntity, CoverEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register device callbacks."""
-        self._device.register_running_callback(self.async_update_running)
-        self._device.register_position_callback(self.async_update_position)
+        self.device.register_running_callback(self.async_update_running)
+        self.device.register_position_callback(self.async_update_position)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop moving the blind."""
-        _LOGGER.debug("(%s) Stopping", self.config_entry.data[CONF_MAC_CODE])
-        await self._device.stop()
+        _LOGGER.debug("(%s) Stopping", self.entry.data[CONF_MAC_CODE])
+        await self.device.stop()
 
     @callback
     def async_update_running(
@@ -148,13 +148,13 @@ class PositionBlind(MotionblindsBLECoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the blind."""
-        _LOGGER.debug("(%s) Opening", self.config_entry.data[CONF_MAC_CODE])
-        await self._device.open()
+        _LOGGER.debug("(%s) Opening", self.entry.data[CONF_MAC_CODE])
+        await self.device.open()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the blind."""
-        _LOGGER.debug("(%s) Closing", self.config_entry.data[CONF_MAC_CODE])
-        await self._device.close()
+        _LOGGER.debug("(%s) Closing", self.entry.data[CONF_MAC_CODE])
+        await self.device.close()
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the blind to a specific position."""
@@ -162,10 +162,10 @@ class PositionBlind(MotionblindsBLECoverEntity):
 
         _LOGGER.debug(
             "(%s) Setting position to %i",
-            self.config_entry.data[CONF_MAC_CODE],
+            self.entry.data[CONF_MAC_CODE],
             new_position,
         )
-        await self._device.position(new_position)
+        await self.device.position(new_position)
 
 
 class TiltBlind(MotionblindsBLECoverEntity):
@@ -180,13 +180,13 @@ class TiltBlind(MotionblindsBLECoverEntity):
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Tilt the blind open."""
-        _LOGGER.debug("(%s) Tilt opening", self.config_entry.data[CONF_MAC_CODE])
-        await self._device.open_tilt()
+        _LOGGER.debug("(%s) Tilt opening", self.entry.data[CONF_MAC_CODE])
+        await self.device.open_tilt()
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Tilt the blind closed."""
-        _LOGGER.debug("(%s) Tilt closing", self.config_entry.data[CONF_MAC_CODE])
-        await self._device.close_tilt()
+        _LOGGER.debug("(%s) Tilt closing", self.entry.data[CONF_MAC_CODE])
+        await self.device.close_tilt()
 
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop tilting the blind."""
@@ -198,10 +198,10 @@ class TiltBlind(MotionblindsBLECoverEntity):
 
         _LOGGER.debug(
             "(%s) Setting tilt position to %i",
-            self.config_entry.data[CONF_MAC_CODE],
+            self.entry.data[CONF_MAC_CODE],
             new_tilt,
         )
-        await self._device.tilt(round(180 * new_tilt / 100))
+        await self.device.tilt(round(180 * new_tilt / 100))
 
 
 class PositionTiltBlind(PositionBlind, TiltBlind):
