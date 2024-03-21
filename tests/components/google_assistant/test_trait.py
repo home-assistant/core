@@ -3306,11 +3306,11 @@ async def test_openclose_cover_valve_no_position(
 
 @pytest.mark.parametrize(
     "device_class",
-    (
+    [
         cover.CoverDeviceClass.DOOR,
         cover.CoverDeviceClass.GARAGE,
         cover.CoverDeviceClass.GATE,
-    ),
+    ],
 )
 async def test_openclose_cover_secure(hass: HomeAssistant, device_class) -> None:
     """Test OpenClose trait support for cover domain."""
@@ -3372,13 +3372,13 @@ async def test_openclose_cover_secure(hass: HomeAssistant, device_class) -> None
 
 @pytest.mark.parametrize(
     "device_class",
-    (
+    [
         binary_sensor.BinarySensorDeviceClass.DOOR,
         binary_sensor.BinarySensorDeviceClass.GARAGE_DOOR,
         binary_sensor.BinarySensorDeviceClass.LOCK,
         binary_sensor.BinarySensorDeviceClass.OPENING,
         binary_sensor.BinarySensorDeviceClass.WINDOW,
-    ),
+    ],
 )
 async def test_openclose_binary_sensor(hass: HomeAssistant, device_class) -> None:
     """Test OpenClose trait support for binary_sensor domain."""
@@ -3816,7 +3816,7 @@ async def test_transport_control(
 
 @pytest.mark.parametrize(
     "state",
-    (
+    [
         STATE_OFF,
         STATE_IDLE,
         STATE_PLAYING,
@@ -3825,7 +3825,7 @@ async def test_transport_control(
         STATE_STANDBY,
         STATE_UNAVAILABLE,
         STATE_UNKNOWN,
-    ),
+    ],
 )
 async def test_media_state(hass: HomeAssistant, state) -> None:
     """Test the MediaStateTrait."""

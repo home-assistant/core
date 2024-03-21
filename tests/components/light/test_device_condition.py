@@ -22,6 +22,7 @@ from tests.common import (
     async_get_device_automations,
     async_mock_service,
 )
+from tests.fixtures.pytest.light import SetupLightPlatformCallable
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -69,12 +70,12 @@ async def test_get_conditions(
 
 @pytest.mark.parametrize(
     ("hidden_by", "entity_category"),
-    (
+    [
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
-    ),
+    ],
 )
 async def test_get_conditions_hidden_auxiliary(
     hass: HomeAssistant,
@@ -323,7 +324,7 @@ async def test_if_fires_on_for_condition(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls,
-    enable_custom_integrations: None,
+    setup_light_platform: SetupLightPlatformCallable,
 ) -> None:
     """Test for firing if condition is on with delay."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -342,13 +343,9 @@ async def test_if_fires_on_for_condition(
     point2 = point1 + timedelta(seconds=10)
     point3 = point2 + timedelta(seconds=10)
 
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-
-    platform.init()
+    setup_light_platform()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
-
-    ent1, ent2, ent3 = platform.ENTITIES
 
     with freeze_time(point1) as freezer:
         assert await async_setup_component(

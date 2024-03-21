@@ -12,6 +12,7 @@
     'context': <ANY>,
     'entity_id': 'number.device_status_light_brightness',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100.0',
   })
