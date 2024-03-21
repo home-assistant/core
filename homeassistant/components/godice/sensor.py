@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_DEVICE, DOMAIN
+from .const import DATA_DICE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,11 +45,10 @@ async def async_setup_entry(
 ) -> None:
     """Setups Dice sensors."""
     data = hass.data[DOMAIN][config_entry.entry_id]
-    device = data[DATA_DEVICE]
-    device_name = config_entry.data[const.CONF_NAME]
+    dice = data[DATA_DICE]
     device_info = DeviceInfo(
-        identifiers={(DOMAIN, device_name)},
-        name=device_name,
+        identifiers={(DOMAIN, config_entry.data[const.CONF_ADDRESS])},
+        name=config_entry.data[const.CONF_NAME],
         manufacturer="Particula",
         model="GoDice",
     )
@@ -62,7 +61,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            entity_class(device_info, entity_description, device)
+            entity_class(device_info, entity_description, dice)
             for entity_class, entity_description in sensor_create_data
         ]
     )
@@ -80,11 +79,11 @@ class BaseSensor(SensorEntity):
         self,
         device_info: DeviceInfo,
         entity_description: SensorEntityDescription,
-        device: godice.Dice,
+        dice: godice.Dice,
     ) -> None:
         """Set default values."""
         self.entity_description = entity_description
-        self.dice = device
+        self.dice = dice
         self._attr_device_info = device_info
         self._attr_unique_id = (
             f"{device_info[const.CONF_NAME]}_{self.entity_description.key}"

@@ -13,7 +13,7 @@ from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DATA_DEVICE, DATA_DISCONNECTED_BY_REQUEST_FLAG, DOMAIN
+from .const import DATA_DICE, DATA_DISCONNECTED_BY_REQUEST_FLAG, DOMAIN
 
 PLATFORMS = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
@@ -48,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady("Device not found") from err
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        DATA_DEVICE: dice,
+        DATA_DICE: dice,
         DATA_DISCONNECTED_BY_REQUEST_FLAG: False,
     }
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -62,7 +62,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     # prevent disconnect callback from integration reloading when disconnected by a user
     hass.data[DOMAIN][entry.entry_id][DATA_DISCONNECTED_BY_REQUEST_FLAG] = True
-    device = hass.data[DOMAIN][entry.entry_id][DATA_DEVICE]
-    await device.disconnect()
+    dice = hass.data[DOMAIN][entry.entry_id][DATA_DICE]
+    await dice.disconnect()
     hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
