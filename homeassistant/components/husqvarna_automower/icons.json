@@ -8,6 +8,11 @@
         "default": "mdi:debug-step-into"
       }
     },
+    "select": {
+      "headlight_mode": {
+        "default": "mdi:car-light-high"
+      }
+    },
     "sensor": {
       "number_of_charging_cycles": {
         "default": "mdi:battery-sync-outline"
