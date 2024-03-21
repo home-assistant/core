@@ -1,9 +1,7 @@
 """Proxmox parent entity class."""
 
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.components.proxmoxve.coordinator import ProxmoxDataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 
 class ProxmoxEntity(CoordinatorEntity):
@@ -11,7 +9,7 @@ class ProxmoxEntity(CoordinatorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: ProxmoxDataUpdateCoordinator,
         unique_id: str,
         name: str,
         icon: str,
