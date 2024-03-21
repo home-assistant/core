@@ -120,10 +120,10 @@ class GenericSensor(MotionblindsBLEEntity, SensorEntity):
         entity_description: GenericSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        _LOGGER.info(
+        _LOGGER.debug(
             "(%s) Setting up %s sensor entity",
-            entity_description.key.replace("_", " "),
             entry.data[CONF_MAC_CODE],
+            entity_description.key.replace("_", " "),
         )
         super().__init__(
             device, entry, entity_description, unique_id_suffix=entity_description.key
