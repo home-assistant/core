@@ -27,7 +27,7 @@ from .entity import MotionblindsBLEEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MotionCoverEntityDescription(CoverEntityDescription):
     """Entity description of a cover entity with default values."""
 
