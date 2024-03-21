@@ -1,6 +1,5 @@
 """Support for Lutron Caseta shades."""
 
-import logging
 from typing import Any
 
 from homeassistant.components.cover import (
@@ -19,18 +18,8 @@ from . import LutronCasetaDeviceUpdatableEntity
 from .const import DOMAIN as CASETA_DOMAIN
 from .models import LutronCasetaData
 
-_LOGGER = logging.getLogger(__name__)
 
-
-class LutronCasetaCoverBase(LutronCasetaDeviceUpdatableEntity, CoverEntity):
-    """Representation of a Lutron cover base class."""
-
-    async def async_stop_cover(self, **kwargs: Any) -> None:
-        """Stop the cover."""
-        await self._smartbridge.stop_cover(self.device_id)
-
-
-class LutronCasetaShade(LutronCasetaCoverBase):
+class LutronCasetaShade(LutronCasetaDeviceUpdatableEntity, CoverEntity):
     """Representation of a Lutron shade with open/close functionality."""
 
     _attr_supported_features = (
@@ -57,6 +46,10 @@ class LutronCasetaShade(LutronCasetaCoverBase):
         await self.async_update()
         self.async_write_ha_state()
 
+    async def async_stop_cover(self, **kwargs: Any) -> None:
+        """Stop the cover."""
+        await self._smartbridge.stop_cover(self.device_id)
+
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self._smartbridge.raise_cover(self.device_id)
@@ -65,18 +58,15 @@ class LutronCasetaShade(LutronCasetaCoverBase):
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the shade to a specific position."""
-        if ATTR_POSITION in kwargs:
-            position = kwargs[ATTR_POSITION]
-            await self._smartbridge.set_value(self.device_id, position)
+        await self._smartbridge.set_value(self.device_id, kwargs[ATTR_POSITION])
 
 
-class LutronCasetaTiltOnlyBlind(LutronCasetaCoverBase):
+class LutronCasetaTiltOnlyBlind(LutronCasetaDeviceUpdatableEntity, CoverEntity):
     """Representation of a Lutron tilt only blind."""
 
     _attr_supported_features = (
         CoverEntityFeature.OPEN_TILT
         | CoverEntityFeature.CLOSE_TILT
-        | CoverEntityFeature.STOP_TILT
         | CoverEntityFeature.SET_TILT_POSITION
         | CoverEntityFeature.OPEN_TILT
     )
@@ -84,31 +74,29 @@ class LutronCasetaTiltOnlyBlind(LutronCasetaCoverBase):
 
     @property
     def is_closed(self) -> bool:
-        """Return if the cover is closed."""
+        """Return if the blind is closed, either at position 0 or 100."""
         return self._device["tilt"] == 0 or self._device["tilt"] == 100
 
     @property
     def current_cover_tilt_position(self) -> int:
-        """Return the current position of cover."""
+        """Return the current tilt position of blind."""
         return self._device["tilt"]
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
-        """Close the cover."""
+        """Close the blind."""
         await self._smartbridge.set_tilt(self.device_id, 0)
         await self.async_update()
         self.async_write_ha_state()
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
-        """Open the cover."""
+        """Open the blind."""
         await self._smartbridge.set_tilt(self.device_id, 50)
         await self.async_update()
         self.async_write_ha_state()
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
-        """Move the shade to a specific position."""
-        if ATTR_TILT_POSITION in kwargs:
-            position = kwargs[ATTR_TILT_POSITION]
-            await self._smartbridge.set_tilt(self.device_id, position)
+        """Move the blind to a specific tilt."""
+        self._smartbridge.set_tilt(self.device_id, kwargs[ATTR_TILT_POSITION])
 
 
 PYLUTRON_TYPE_TO_CLASSES = {
