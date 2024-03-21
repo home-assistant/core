@@ -388,14 +388,12 @@ class IntegrationSensor(RestoreSensor):
             async_track_state_change_event(
                 self.hass,
                 [self._sensor_source_id],
-                self._integrate_on_state_change_callback,
+                self._handle_state_change,
             )
         )
 
     @callback
-    def _integrate_on_state_change_callback(
-        self, event: Event[EventStateChangedData]
-    ) -> None:
+    def _handle_state_change(self, event: Event[EventStateChangedData]) -> None:
         old_state = event.data["old_state"]
         new_state = event.data["new_state"]
 
