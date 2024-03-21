@@ -6,14 +6,15 @@ CONF_MODEL = "model"
 CONF_MODEL_OPTIONS = "model_options"
 CONF_PROMPT = "prompt"
 DEFAULT_PROMPT = """{%- set used_domains = set([
-  "light",
-  "cover",
-  "weather",
-  "climate",
-  "switch",
-  "sensor",
   "binary_sensor",
-  "media_player",
+  "climate",
+  "cover",
+  "fan",
+  "light",
+  "lock",
+  "sensor",
+  "switch",
+  "weather",
 ]) %}
 {%- set used_attributes = set([
   "temperature",
@@ -25,9 +26,6 @@ DEFAULT_PROMPT = """{%- set used_domains = set([
   "device_class",
   "current_position",
   "percentage",
-  "media_artist",
-  "media_album_name",
-  "media_title",
 ]) %}
 
 This smart home is controlled by Home Assistant.
