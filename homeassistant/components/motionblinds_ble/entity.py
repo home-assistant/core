@@ -32,11 +32,10 @@ class MotionblindsBLEEntity(Entity):
         unique_id_suffix: str | None = None,
     ) -> None:
         """Initialize the entity."""
-        self._attr_unique_id: str = (
-            entry.data[CONF_ADDRESS]
-            if unique_id_suffix is None
-            else f"{entry.data[CONF_ADDRESS]}_{unique_id_suffix}"
-        )
+        if unique_id_suffix is None:
+            self._attr_unique_id = entry.data[CONF_ADDRESS]
+        else:
+            self._attr_unique_id = f"{entry.data[CONF_ADDRESS]}_{unique_id_suffix}"
         self.device = device
         self.entry = entry
         self.entity_description = entity_description
