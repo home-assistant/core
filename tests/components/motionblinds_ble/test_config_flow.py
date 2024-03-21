@@ -133,7 +133,7 @@ async def test_config_flow_manual_error_no_bluetooth_adapter(
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == const.ERROR_NO_BLUETOOTH_ADAPTER
 
     # Try discovery with zero Bluetooth adapters
@@ -152,7 +152,7 @@ async def test_config_flow_manual_error_no_bluetooth_adapter(
             result["flow_id"],
             {const.CONF_MAC_CODE: TEST_MAC},
         )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == const.ERROR_NO_BLUETOOTH_ADAPTER
 
 
@@ -223,7 +223,7 @@ async def test_config_flow_manual_error_no_devices_found(
         result["flow_id"],
         {const.CONF_MAC_CODE: TEST_MAC},
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == const.ERROR_NO_DEVICES_FOUND
 
 
