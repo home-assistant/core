@@ -84,9 +84,7 @@ HDD_SENSORS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value=lambda api, idx: api.hdd_storage(idx),
-        supported=lambda api, idx: (
-            api.supported(None, "hdd") and api.hdd_type(idx) == "HDD"
-        ),
+        supported=lambda api, idx: api.supported(None, "hdd"),
     ),
 )
 
