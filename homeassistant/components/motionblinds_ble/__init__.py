@@ -5,7 +5,7 @@ from __future__ import annotations
 from functools import partial
 import logging
 
-from motionblindsble.const import MotionBlindType, MotionConnectionType
+from motionblindsble.const import MotionBlindType
 from motionblindsble.crypt import MotionCrypt
 from motionblindsble.device import MotionDevice
 
@@ -93,11 +93,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = device
 
-    # Register OptionsFlow update listener and apply options
+    # Register OptionsFlow update listener
     entry.async_on_unload(entry.add_update_listener(update_listener))
-    await apply_options(hass, entry)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Apply options
+    await hass.async_create_background_task(
+        name=device.ble_device.address, target=apply_options(hass, entry)
+    )
 
     _LOGGER.debug("(%s) Finished setting up device", entry.data[CONF_MAC_CODE])
 
@@ -118,24 +122,6 @@ async def apply_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
     device: MotionDevice = hass.data[DOMAIN][entry.entry_id]
     disconnect_time: float | None = entry.options.get(OPTION_DISCONNECT_TIME, None)
     permanent_connection: bool = entry.options.get(OPTION_PERMANENT_CONNECTION, False)
-
-    def reconnect_on_disconnect(
-        connection_type: MotionConnectionType,
-    ) -> None:
-        """Reconnect after a disconnect."""
-        if connection_type is MotionConnectionType.DISCONNECTED:
-            _LOGGER.debug(
-                "(%s) Device disconnected, automatically connecting again",
-                entry.data[CONF_MAC_CODE],
-            )
-            entry.async_create_background_task(
-                hass=hass, target=device.connect(), name=device.ble_device.address
-            )
-
-    device.remove_connection_callback(reconnect_on_disconnect.__name__)
-    if permanent_connection:
-        device.register_connection_callback(reconnect_on_disconnect)
-        reconnect_on_disconnect(MotionConnectionType.DISCONNECTED)
 
     device.set_custom_disconnect_time(disconnect_time)
     await device.set_permanent_connection(permanent_connection)
