@@ -66,7 +66,9 @@ async def async_setup_entry(
 
     blind_class = BLIND_TYPE_TO_CLASS[entry.data[CONF_BLIND_TYPE].upper()]
     device = hass.data[DOMAIN][entry.entry_id]
-    entity_description = BLIND_TYPE_TO_ENTITY_DESCRIPTION[entry.data[CONF_BLIND_TYPE].upper()]
+    entity_description = BLIND_TYPE_TO_ENTITY_DESCRIPTION[
+        entry.data[CONF_BLIND_TYPE].upper()
+    ]
     entity = blind_class(device, entry, entity_description)
 
     async_add_entities([entity])
