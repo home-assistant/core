@@ -36,22 +36,7 @@ PARALLEL_UPDATES = 0
 class CommandButtonEntityDescription(ButtonEntityDescription):
     """Entity description of a button entity that executes a command upon being pressed."""
 
-    command_callback: Callable[[MotionDevice], Coroutine[Any, Any, None]] | None = None
-
-
-async def command_connect(device: MotionDevice) -> None:
-    """Connect when the connect button is pressed."""
-    await device.connect()
-
-
-async def command_disconnect(device: MotionDevice) -> None:
-    """Disconnect when the disconnect button is pressed."""
-    await device.disconnect()
-
-
-async def command_favorite(device: MotionDevice) -> None:
-    """Go to the favorite position when the favorite button is pressed."""
-    await device.favorite()
+    command: Callable[[MotionDevice], Coroutine[Any, Any, None]] | None = None
 
 
 BUTTON_TYPES: dict[str, CommandButtonEntityDescription] = {
@@ -61,7 +46,7 @@ BUTTON_TYPES: dict[str, CommandButtonEntityDescription] = {
         icon=ICON_CONNECT,
         entity_category=EntityCategory.CONFIG,
         has_entity_name=True,
-        command_callback=command_connect,
+        command=lambda device: device.connect(),
     ),
     ATTR_DISCONNECT: CommandButtonEntityDescription(
         key=ATTR_DISCONNECT,
@@ -69,7 +54,7 @@ BUTTON_TYPES: dict[str, CommandButtonEntityDescription] = {
         icon=ICON_DISCONNECT,
         entity_category=EntityCategory.CONFIG,
         has_entity_name=True,
-        command_callback=command_disconnect,
+        command=lambda device: device.disconnect(),
     ),
     ATTR_FAVORITE: CommandButtonEntityDescription(
         key=ATTR_FAVORITE,
@@ -77,7 +62,7 @@ BUTTON_TYPES: dict[str, CommandButtonEntityDescription] = {
         icon=ICON_FAVORITE,
         entity_category=EntityCategory.CONFIG,
         has_entity_name=True,
-        command_callback=command_favorite,
+        command=lambda device: device.favorite(),
     ),
 }
 
@@ -120,5 +105,5 @@ class GenericCommandButton(MotionblindsBLEEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Handle the button press."""
-        if callable(self.entity_description.command_callback):
-            await self.entity_description.command_callback(self._device)
+        if callable(self.entity_description.command):
+            await self.entity_description.command(self._device)
