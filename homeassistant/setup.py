@@ -751,7 +751,7 @@ def async_start_setup(
             wait_time = sum(value for value in group_setup_times.values() if value < 0)
             calculated_time = time_taken + wait_time
             _LOGGER.debug(
-                "Phase %s for %s (group=%s) took %.2fs (elapsed=%.2fs) (wait_time=%.2fs)",
+                "Phase %s for %s (%s) took %.2fs (elapsed=%.2fs) (wait_time=%.2fs)",
                 phase,
                 integration,
                 group,
