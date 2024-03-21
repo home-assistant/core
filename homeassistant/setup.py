@@ -740,8 +740,7 @@ def async_start_setup(
     finally:
         time_taken = time.monotonic() - started
         del setup_started[current]
-        setup_times = _setup_times(hass)
-        group_setup_times = setup_times[integration][group]
+        group_setup_times = _setup_times(hass)[integration][group]
         group_setup_times[phase] = time_taken
         if group is None:
             _LOGGER.info(
