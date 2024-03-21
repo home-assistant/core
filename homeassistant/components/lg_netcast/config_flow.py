@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import contextlib
-from datetime import datetime
-from typing import Any
+from datetime import datetime, timedelta
+from typing import TYPE_CHECKING, Any
 
 from pylgnetcast import AccessTokenError, LgNetCastClient, SessionIdError
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_HOST,
@@ -17,20 +18,15 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.core import CALLBACK_TYPE, DOMAIN as HOMEASSISTANT_DOMAIN, callback
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util.network import is_host_valid
 
-from .const import (
-    ATTR_FRIENDLY_NAME,
-    ATTR_MODEL_NAME,
-    ATTR_UUID,
-    DEFAULT_NAME,
-    DISPLAY_ACCESS_TOKEN_INTERVAL,
-    DOMAIN,
-)
+from .const import DEFAULT_NAME, DOMAIN
 from .helpers import LGNetCastDetailDiscoveryError, async_discover_netcast_details
+
+DISPLAY_ACCESS_TOKEN_INTERVAL = timedelta(seconds=1)
 
 
 class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
@@ -53,7 +49,7 @@ class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
 
@@ -71,7 +67,7 @@ class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
+    async def async_step_import(self, config: dict[str, Any]) -> ConfigFlowResult:
         """Import configuration from yaml."""
         self.device_config = {
             CONF_HOST: config[CONF_HOST],
@@ -118,7 +114,9 @@ class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_discover_client(self):
         """Handle Discovery step."""
         self.create_client()
-        assert self.client is not None
+
+        if TYPE_CHECKING:
+            assert self.client is not None
 
         if self.device_config.get(CONF_ID):
             return
@@ -128,18 +126,18 @@ class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
         except LGNetCastDetailDiscoveryError as err:
             raise AbortFlow("cannot_connect") from err
 
-        if (unique_id := details[ATTR_UUID]) is None:
+        if (unique_id := details["uuid"]) is None:
             raise AbortFlow("invalid_host")
 
         self.device_config[CONF_ID] = unique_id
-        self.device_config[CONF_MODEL] = details[ATTR_MODEL_NAME]
+        self.device_config[CONF_MODEL] = details["model_name"]
 
         if CONF_NAME not in self.device_config:
-            self.device_config[CONF_NAME] = details[ATTR_FRIENDLY_NAME] or DEFAULT_NAME
+            self.device_config[CONF_NAME] = details["friendly_name"] or DEFAULT_NAME
 
     async def async_step_authorize(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle Authorize step."""
         errors: dict[str, str] = {}
         self.async_stop_display_access_token()
@@ -184,7 +182,6 @@ class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    @callback
     async def async_display_access_token(self, _: datetime | None = None):
         """Display access token on screen."""
         assert self.client is not None
@@ -204,7 +201,7 @@ class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
             self._track_interval()
             self._track_interval = None
 
-    async def async_create_device(self) -> FlowResult:
+    async def async_create_device(self) -> ConfigFlowResult:
         """Create LG Netcast TV Device from config."""
         assert self.client
 
