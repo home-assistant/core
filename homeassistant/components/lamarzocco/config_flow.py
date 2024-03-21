@@ -238,18 +238,13 @@ class LmOptionsFlowHandler(OptionsFlowWithConfigEntry):
     ) -> ConfigFlowResult:
         """Manage the options for the custom component."""
         if user_input:
-            self.hass.config_entries.async_update_entry(
-                self.config_entry,
-                data=self.config_entry.data | user_input,
-                options=self.options,
-            )
             return self.async_create_entry(title="", data=user_input)
 
         options_schema = vol.Schema(
             {
                 vol.Optional(
                     CONF_USE_BLUETOOTH,
-                    default=self.config_entry.options.get(CONF_USE_BLUETOOTH, True),
+                    default=self.options.get(CONF_USE_BLUETOOTH, True),
                 ): cv.boolean,
             }
         )
