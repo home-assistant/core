@@ -28,6 +28,7 @@ from homeassistant.helpers.selector import (
     ObjectSelector,
     TemplateSelector,
     TextSelector,
+    TextSelectorConfig,
     TextSelectorType,
 )
 
@@ -44,9 +45,12 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_URL): TextSelector({"type": TextSelectorType.URL}),
+        vol.Required(CONF_URL): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.URL)
+        ),
         vol.Required(CONF_MODEL): cv.string,
         vol.Required(
             CONF_PROMPT, description={"suggested_value": DEFAULT_PROMPT}

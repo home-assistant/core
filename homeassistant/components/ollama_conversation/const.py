@@ -5,27 +5,75 @@ DOMAIN = "ollama_conversation"
 CONF_MODEL = "model"
 CONF_MODEL_OPTIONS = "model_options"
 CONF_PROMPT = "prompt"
-DEFAULT_PROMPT = """This smart home is controlled by Home Assistant.
+DEFAULT_PROMPT = """{%- set used_domains = set([
+  "light",
+  "cover",
+  "weather",
+  "climate",
+  "switch",
+  "sensor",
+  "binary_sensor",
+  "media_player",
+]) %}
+{%- set used_attributes = set([
+  "temperature",
+  "current_temperature",
+  "temperature_unit",
+  "brightness",
+  "humidity",
+  "unit_of_measurement",
+  "device_class",
+  "current_position",
+  "percentage",
+  "media_artist",
+  "media_album_name",
+  "media_title",
+]) %}
+
+This smart home is controlled by Home Assistant.
+The current time is {{ now().strftime("%X") }}.
+Today's date is {{ now().strftime("%x") }}.
 
 An overview of the areas and the devices in this smart home:
-{%- for area in areas() %}
-  {%- set area_info = namespace(printed=false) %}
-  {%- for device in area_devices(area) -%}
-    {%- if not device_attr(device, "disabled_by") and not device_attr(device, "entry_type") and device_attr(device, "name") %}
-      {%- if not area_info.printed %}
+```yaml
+{%- for entity in exposed_entities: %}
+{%- if entity.domain not in used_domains: %}
+  {%- continue %}
+{%- endif %}
 
-{{ area_name(area) }}:
-        {%- set area_info.printed = true %}
-      {%- endif %}
-- {{ device_attr(device, "name") }}{% if device_attr(device, "model") and (device_attr(device, "model") | string) not in (device_attr(device, "name") | string) %} ({{ device_attr(device, "model") }}){% endif %}
-    {%- endif %}
-  {%- endfor %}
+- domain: {{ entity.domain }}
+{%- if entity.names | length == 1: %}
+  name: {{ entity.names[0] }}
+{%- else: %}
+  names:
+{%- for name in entity.names: %}
+  - {{ name }}
 {%- endfor %}
+{%- endif %}
+{%- if entity.area_names | length == 1: %}
+  area: {{ entity.area_names[0] }}
+{%- elif entity.area_names: %}
+  areas:
+{%- for area_name in entity.area_names: %}
+  - {{ area_name }}
+{%- endfor %}
+{%- endif %}
+  state: {{ entity.state.state }}
+  {%- set attributes_key_printed = False %}
+{%- for attr_name, attr_value in entity.state.attributes.items(): %}
+    {%- if attr_name in used_attributes: %}
+    {%- if not attributes_key_printed: %}
+  attributes:
+    {%- set attributes_key_printed = True %}
+    {%- endif %}
+    {{ attr_name }}: {{ attr_value }}
+    {%- endif %}
+{%- endfor %}
+{%- endfor %}
+```
 
-Answer the user's questions about the world truthfully.
-
-If the user wants to control a device, reject the request and suggest using the Home Assistant app.
-"""
+Answer the user's questions using the information about this smart home.
+Keep your answers brief and do not apologize."""
 
 KEEP_ALIVE_FOREVER = -1
 DEFAULT_TIMEOUT = 5.0  # seconds

@@ -11,11 +11,19 @@ import httpx
 import ollama
 
 from homeassistant.components import conversation
+from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, TemplateError
-from homeassistant.helpers import config_validation as cv, intent, template
+from homeassistant.helpers import (
+    area_registry as ar,
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+    intent,
+    template,
+)
 from homeassistant.util import ulid
 
 from .const import (
@@ -29,7 +37,7 @@ from .const import (
     MAX_HISTORY_NO_LIMIT,
     MAX_HISTORY_SECONDS,
 )
-from .models import MessageHistory, MessageRole
+from .models import ExposedEntity, MessageHistory, MessageRole
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,22 +101,6 @@ class OllamaAgent(conversation.AbstractConversationAgent):
 
         client = self.hass.data[DOMAIN][self.entry.entry_id]
         conversation_id = user_input.conversation_id or ulid.ulid_now()
-        raw_prompt = settings[CONF_PROMPT]
-
-        # Render prompt and error out early if there's a problem
-        try:
-            prompt = self._async_generate_prompt(raw_prompt)
-        except TemplateError as err:
-            _LOGGER.error("Error rendering prompt: %s", err)
-            intent_response = intent.IntentResponse(language=user_input.language)
-            intent_response.async_set_error(
-                intent.IntentResponseErrorCode.UNKNOWN,
-                f"Sorry, I had a problem with my template: {err}",
-            )
-            return conversation.ConversationResult(
-                response=intent_response, conversation_id=conversation_id
-            )
-
         model = settings[CONF_MODEL]
         model_options = settings.get(CONF_MODEL_OPTIONS, {})
 
@@ -117,6 +109,23 @@ class OllamaAgent(conversation.AbstractConversationAgent):
         message_history = self._history.get(conversation_id)
         if message_history is None:
             # New history
+            #
+            # Render prompt and error out early if there's a problem
+            raw_prompt = settings[CONF_PROMPT]
+            try:
+                prompt = self._generate_prompt(raw_prompt)
+                _LOGGER.debug("Prompt: %s", prompt)
+            except TemplateError as err:
+                _LOGGER.error("Error rendering prompt: %s", err)
+                intent_response = intent.IntentResponse(language=user_input.language)
+                intent_response.async_set_error(
+                    intent.IntentResponseErrorCode.UNKNOWN,
+                    f"Sorry, I had a problem with my template: {err}",
+                )
+                return conversation.ConversationResult(
+                    response=intent_response, conversation_id=conversation_id
+                )
+
             message_history = MessageHistory(
                 timestamp=time.monotonic(),
                 messages=[
@@ -198,11 +207,61 @@ class OllamaAgent(conversation.AbstractConversationAgent):
                 message_history.messages[0]
             ] + message_history.messages[drop_index:]
 
-    def _async_generate_prompt(self, raw_prompt: str) -> str:
+    def _generate_prompt(self, raw_prompt: str) -> str:
         """Generate a prompt for the user."""
         return template.Template(raw_prompt, self.hass).async_render(
             {
                 "ha_name": self.hass.config.location_name,
+                "ha_language": self.hass.config.language,
+                "exposed_entities": self._get_exposed_entities(),
             },
             parse_result=False,
         )
+
+    def _get_exposed_entities(self) -> list[ExposedEntity]:
+        """Get state list of exposed entities."""
+        area_registry = ar.async_get(self.hass)
+        entity_registry = er.async_get(self.hass)
+        device_registry = dr.async_get(self.hass)
+
+        exposed_entities = []
+        exposed_states = [
+            state
+            for state in self.hass.states.async_all()
+            if async_should_expose(self.hass, conversation.DOMAIN, state.entity_id)
+        ]
+
+        for state in exposed_states:
+            entity = entity_registry.async_get(state.entity_id)
+            names = [state.name]
+            area_names = []
+
+            if entity is not None:
+                # Add aliases
+                names.extend(entity.aliases)
+                if entity.area_id and (
+                    area := area_registry.async_get_area(entity.area_id)
+                ):
+                    # Entity is in area
+                    area_names.append(area.name)
+                    area_names.extend(area.aliases)
+                elif entity.device_id and (
+                    device := device_registry.async_get(entity.device_id)
+                ):
+                    # Check device area
+                    if device.area_id and (
+                        area := area_registry.async_get_area(device.area_id)
+                    ):
+                        area_names.append(area.name)
+                        area_names.extend(area.aliases)
+
+            exposed_entities.append(
+                ExposedEntity(
+                    entity_id=state.entity_id,
+                    state=state,
+                    names=names,
+                    area_names=area_names,
+                )
+            )
+
+        return exposed_entities
