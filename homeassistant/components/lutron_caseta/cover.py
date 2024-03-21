@@ -30,7 +30,7 @@ class LutronCasetaCoverBase(LutronCasetaDeviceUpdatableEntity, CoverEntity):
         await self._smartbridge.stop_cover(self.device_id)
 
 
-class LutronCasetaCover(LutronCasetaCoverBase):
+class LutronCasetaShade(LutronCasetaCoverBase):
     """Representation of a Lutron shade with open/close functionality."""
 
     _attr_supported_features = (
@@ -113,14 +113,14 @@ class LutronCasetaTiltOnlyBlind(LutronCasetaCoverBase):
 
 PYLUTRON_TYPE_TO_CLASSES = {
     "SerenaTiltOnlyWoodBlind": LutronCasetaTiltOnlyBlind,
-    "SerenaHoneycombShade": LutronCasetaCover,
-    "SerenaRollerShade": LutronCasetaCover,
-    "TriathlonHoneycombShade": LutronCasetaCover,
-    "TriathlonRollerShade": LutronCasetaCover,
-    "QsWirelessShade": LutronCasetaCover,
-    "QsWirelessHorizontalSheerBlind": LutronCasetaCover,
-    "Shade": LutronCasetaCover,
-    "PalladiomWireFreeShade": LutronCasetaCover,
+    "SerenaHoneycombShade": LutronCasetaShade,
+    "SerenaRollerShade": LutronCasetaShade,
+    "TriathlonHoneycombShade": LutronCasetaShade,
+    "TriathlonRollerShade": LutronCasetaShade,
+    "QsWirelessShade": LutronCasetaShade,
+    "QsWirelessHorizontalSheerBlind": LutronCasetaShade,
+    "Shade": LutronCasetaShade,
+    "PalladiomWireFreeShade": LutronCasetaShade,
 }
 
 
@@ -139,7 +139,7 @@ async def async_setup_entry(
     cover_devices = bridge.get_devices_by_domain(DOMAIN)
     async_add_entities(
         # default to standard LutronCasetaCover type if the pylutron type is not yet mapped
-        PYLUTRON_TYPE_TO_CLASSES.get(cover_device["type"], LutronCasetaCover)(
+        PYLUTRON_TYPE_TO_CLASSES.get(cover_device["type"], LutronCasetaShade)(
             cover_device, data
         )
         for cover_device in cover_devices
