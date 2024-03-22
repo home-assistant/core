@@ -245,6 +245,24 @@ async def fetch_blueprint_from_website_url(
     return ImportedBlueprint(suggested_filename, raw_yaml, blueprint)
 
 
+async def fetch_blueprint_from_generic_url(
+    hass: HomeAssistant, url: str
+) -> ImportedBlueprint:
+    """Get a blueprint from a generic website."""
+    session = aiohttp_client.async_get_clientsession(hass)
+
+    resp = await session.get(url, raise_for_status=True)
+    raw_yaml = await resp.text()
+    data = yaml.parse_yaml(raw_yaml)
+
+    assert isinstance(data, dict)
+    blueprint = Blueprint(data)
+
+    parsed_import_url = yarl.URL(url)
+    suggested_filename = f"generic/{parsed_import_url.parts[-1][:-5]}"
+    return ImportedBlueprint(suggested_filename, raw_yaml, blueprint)
+
+
 async def fetch_blueprint_from_url(hass: HomeAssistant, url: str) -> ImportedBlueprint:
     """Get a blueprint from a url."""
     for func in (
@@ -252,6 +270,7 @@ async def fetch_blueprint_from_url(hass: HomeAssistant, url: str) -> ImportedBlu
         fetch_blueprint_from_github_url,
         fetch_blueprint_from_github_gist_url,
         fetch_blueprint_from_website_url,
+        fetch_blueprint_from_generic_url,
     ):
         with suppress(UnsupportedUrl):
             imported_bp = await func(hass, url)
