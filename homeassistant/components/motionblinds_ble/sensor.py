@@ -133,10 +133,10 @@ class BatterySensor(MotionblindsBLESensorEntity):
     async def async_added_to_hass(self) -> None:
         """Register device callbacks."""
         await super().async_added_to_hass()
-        self.device.register_battery_callback(self.async_update_battery_percentage)
+        self.device.register_battery_callback(self.async_update_battery)
 
     @callback
-    def async_update_battery_percentage(self, battery_percentage: int | None) -> None:
+    def async_update_battery(self, battery_percentage: int | None) -> None:
         """Update the battery sensor value and icon."""
         if battery_percentage is None:
             # Battery percentage is unknown
