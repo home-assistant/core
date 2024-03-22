@@ -649,7 +649,7 @@ class SetupPhases(StrEnum):
     ex async_setup_platform or setup_platform or
     a legacy platform like device_tracker.legacy
     """
-    CONFIG_ENTRY_LATE_PLATFORM_SETUP = "config_entry_late_platform_setup"
+    CONFIG_ENTRY_PLATFORM_SETUP = "config_entry_late_platform_setup"
     """Set up of a platform in a config entry after the config entry is setup.
 
     This is only for platforms that are not awaited in async_setup_entry.
@@ -666,7 +666,7 @@ class SetupPhases(StrEnum):
 # process so we do not want to subtract out the time
 # we waited for them to finish since nothing is waiting
 # for them to finish.
-LATE_PHASES = {SetupPhases.CONFIG_ENTRY_LATE_PLATFORM_SETUP}
+LATE_PHASES = {SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP}
 
 
 @contextlib.contextmanager
