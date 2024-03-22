@@ -56,7 +56,6 @@ SENSOR_TYPES: dict[str, MotionblindsBLESensorEntityDescription] = {
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        has_entity_name=True,
         native_value=None,
     ),
     ATTR_CONNECTION: MotionblindsBLESensorEntityDescription(
@@ -66,7 +65,6 @@ SENSOR_TYPES: dict[str, MotionblindsBLESensorEntityDescription] = {
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=[connection_type.value for connection_type in MotionConnectionType],
-        has_entity_name=True,
         native_value=MotionConnectionType.DISCONNECTED.value,
     ),
     ATTR_CALIBRATION: MotionblindsBLESensorEntityDescription(
@@ -75,7 +73,6 @@ SENSOR_TYPES: dict[str, MotionblindsBLESensorEntityDescription] = {
         icon=ICON_CALIBRATION,
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        has_entity_name=True,
         native_value=None,
     ),
     ATTR_SIGNAL_STRENGTH: MotionblindsBLESensorEntityDescription(
@@ -84,7 +81,6 @@ SENSOR_TYPES: dict[str, MotionblindsBLESensorEntityDescription] = {
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement="dBm",
-        has_entity_name=True,
         native_value=None,
     ),
 }
