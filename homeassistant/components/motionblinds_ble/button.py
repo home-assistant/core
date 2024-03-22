@@ -73,31 +73,28 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            GenericCommandButton(device, entry, entity_description)
+            CommandButton(
+                device,
+                entry,
+                entity_description,
+                unique_id_suffix=entity_description.key,
+            )
             for entity_description in BUTTON_TYPES.values()
         ]
     )
 
 
-class GenericCommandButton(MotionblindsBLEEntity, ButtonEntity):
+class CommandButton(MotionblindsBLEEntity, ButtonEntity):
     """Representation of a command button entity."""
 
     entity_description: CommandButtonEntityDescription
 
-    def __init__(
-        self,
-        device: MotionDevice,
-        entry: ConfigEntry,
-        entity_description: CommandButtonEntityDescription,
-    ) -> None:
-        """Initialize the command button."""
+    async def async_added_to_hass(self) -> None:
+        """Log button entity information."""
         _LOGGER.info(
             "(%s) Setting up %s button entity",
-            entry.data[CONF_MAC_CODE],
-            entity_description.key,
-        )
-        super().__init__(
-            device, entry, entity_description, unique_id_suffix=entity_description.key
+            self.entry.data[CONF_MAC_CODE],
+            self.entity_description.key,
         )
 
     async def async_press(self) -> None:
