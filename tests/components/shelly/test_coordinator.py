@@ -290,20 +290,28 @@ async def test_block_rest_update_connection_error(
 
 
 async def test_block_sleeping_device_no_periodic_updates(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_block_device: Mock
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block sleeping device no periodic updates."""
     entity_id = f"{SENSOR_DOMAIN}.test_name_temperature"
-    await init_integration(hass, 1, sleep_period=1000)
+    monkeypatch.setitem(
+        mock_block_device.settings,
+        "sleep_mode",
+        {"period": 60, "unit": "m"},
+    )
+    await init_integration(hass, 1, sleep_period=3600)
 
     # Make device online
-    mock_block_device.mock_update()
+    mock_block_device.mock_online()
     await hass.async_block_till_done()
 
     assert get_entity_state(hass, entity_id) == "22.1"
 
     # Move time to generate polling
-    freezer.tick(timedelta(seconds=UPDATE_PERIOD_MULTIPLIER * 1000))
+    freezer.tick(timedelta(seconds=UPDATE_PERIOD_MULTIPLIER * 3600))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -352,7 +360,7 @@ async def test_block_button_click_event(
     entry = await init_integration(hass, 1, model=MODEL_BUTTON1, sleep_period=1000)
 
     # Make device online
-    mock_block_device.mock_update()
+    mock_block_device.mock_online()
     await hass.async_block_till_done()
 
     dev_reg = async_get_dev_reg(hass)
@@ -529,6 +537,7 @@ async def test_rpc_update_entry_sleep_period(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC update entry sleep period."""
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 600)
     entry = await init_integration(hass, 2, sleep_period=600)
     register_entity(
         hass,
@@ -539,7 +548,7 @@ async def test_rpc_update_entry_sleep_period(
     )
 
     # Make device online
-    mock_rpc_device.mock_update()
+    mock_rpc_device.mock_online()
     await hass.async_block_till_done()
 
     assert entry.data["sleep_period"] == 600
@@ -554,10 +563,14 @@ async def test_rpc_update_entry_sleep_period(
 
 
 async def test_rpc_sleeping_device_no_periodic_updates(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_rpc_device: Mock
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC sleeping device no periodic updates."""
     entity_id = f"{SENSOR_DOMAIN}.test_name_temperature"
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
     entry = await init_integration(hass, 2, sleep_period=1000)
     register_entity(
         hass,
@@ -568,7 +581,7 @@ async def test_rpc_sleeping_device_no_periodic_updates(
     )
 
     # Make device online
-    mock_rpc_device.mock_update()
+    mock_rpc_device.mock_online()
     await hass.async_block_till_done()
 
     assert get_entity_state(hass, entity_id) == "22.9"
@@ -753,11 +766,12 @@ async def test_rpc_update_entry_fw_ver(
     hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test RPC update entry firmware version."""
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 600)
     entry = await init_integration(hass, 2, sleep_period=600)
     dev_reg = async_get_dev_reg(hass)
 
     # Make device online
-    mock_rpc_device.mock_update()
+    mock_rpc_device.mock_online()
     await hass.async_block_till_done()
 
     assert entry.unique_id

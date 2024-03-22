@@ -15,7 +15,12 @@ from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCal
 from aioshelly.rpc_device import RpcDevice, RpcUpdateType
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import ATTR_DEVICE_ID, CONF_HOST, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    CONF_HOST,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.debounce import Debouncer
@@ -59,6 +64,7 @@ from .const import (
 )
 from .utils import (
     async_shutdown_device,
+    get_block_device_sleep_period,
     get_device_entry_gen,
     get_http_port,
     get_rpc_device_wakeup_period,
@@ -73,7 +79,6 @@ class ShellyEntryData:
     """Class for sharing data within a given config entry."""
 
     block: ShellyBlockCoordinator | None = None
-    device: BlockDevice | RpcDevice | None = None
     rest: ShellyRestCoordinator | None = None
     rpc: ShellyRpcCoordinator | None = None
     rpc_poll: ShellyRpcPollingCoordinator | None = None
@@ -98,6 +103,7 @@ class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
         self.entry = entry
         self.device = device
         self.device_id: str | None = None
+        self.finish_setup_platforms: list[Platform] | None = None
         device_name = device.name if device.initialized else entry.title
         interval_td = timedelta(seconds=update_interval)
         super().__init__(hass, LOGGER, name=device_name, update_interval=interval_td)
@@ -145,6 +151,42 @@ class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
             configuration_url=f"http://{self.entry.data[CONF_HOST]}:{get_http_port(self.entry.data)}",
         )
         self.device_id = device_entry.id
+
+    async def _async_device_connect(self) -> None:
+        """Connect to a Shelly Block device."""
+        LOGGER.debug("Connecting to Shelly Device - %s", self.name)
+        try:
+            await self.device.initialize()
+            update_device_fw_info(self.hass, self.device, self.entry)
+        except DeviceConnectionError as err:
+            raise UpdateFailed(f"Device disconnected: {repr(err)}") from err
+        except InvalidAuthError:
+            self.entry.async_start_reauth(self.hass)
+        else:
+            if not self.finish_setup_platforms:
+                return
+
+            LOGGER.debug("Device %s is online, resuming setup", self.entry.title)
+            platforms = self.finish_setup_platforms
+            self.finish_setup_platforms = None
+
+            data = {**self.entry.data}
+
+            # Update sleep_period
+            if isinstance(self.device, RpcDevice):
+                data[CONF_SLEEP_PERIOD] = get_rpc_device_wakeup_period(
+                    self.device.status
+                )
+            elif isinstance(self.device, BlockDevice):
+                data[CONF_SLEEP_PERIOD] = get_block_device_sleep_period(
+                    self.device.settings
+                )
+            self.hass.config_entries.async_update_entry(self.entry, data=data)
+
+            # Resume platform setup
+            await self.hass.config_entries.async_forward_entry_setups(
+                self.entry, platforms
+            )
 
     async def _async_reload_entry(self) -> None:
         """Reload entry."""
@@ -316,14 +358,16 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         self, device_: BlockDevice, update_type: BlockUpdateType
     ) -> None:
         """Handle device update."""
-        if update_type == BlockUpdateType.COAP_PERIODIC:
+        if update_type is BlockUpdateType.ONLINE:
+            self.hass.async_create_task(self._async_device_connect(), eager_start=True)
+        elif update_type is BlockUpdateType.COAP_PERIODIC:
             self._push_update_failures = 0
             ir.async_delete_issue(
                 self.hass,
                 DOMAIN,
                 PUSH_UPDATE_ISSUE_ID.format(unique=self.mac),
             )
-        elif update_type == BlockUpdateType.COAP_REPLY:
+        elif update_type is BlockUpdateType.COAP_REPLY:
             self._push_update_failures += 1
             if self._push_update_failures == MAX_PUSH_UPDATE_FAILURES:
                 LOGGER.debug(
@@ -542,14 +586,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         if self.device.connected:
             return
 
-        LOGGER.debug("Reconnecting to Shelly RPC Device - %s", self.name)
-        try:
-            await self.device.initialize()
-            update_device_fw_info(self.hass, self.device, self.entry)
-        except DeviceConnectionError as err:
-            raise UpdateFailed(f"Device disconnected: {repr(err)}") from err
-        except InvalidAuthError:
-            await self.async_shutdown_device_and_start_reauth()
+        await self._async_device_connect()
 
     async def _async_disconnected(self) -> None:
         """Handle device disconnected."""
@@ -616,7 +653,9 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self, device_: RpcDevice, update_type: RpcUpdateType
     ) -> None:
         """Handle device update."""
-        if update_type is RpcUpdateType.INITIALIZED:
+        if update_type is RpcUpdateType.ONLINE:
+            self.hass.async_create_task(self._async_device_connect(), eager_start=True)
+        elif update_type is RpcUpdateType.INITIALIZED:
             self.hass.async_create_task(self._async_connected(), eager_start=True)
             self.async_set_updated_data(None)
         elif update_type is RpcUpdateType.DISCONNECTED:
