@@ -513,6 +513,9 @@ aurorapy==0.2.7
 # homeassistant.components.axis
 axis==58
 
+# homeassistant.components.fujitsu_hvac
+ayla-iot-unofficial==1.3.1
+
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
 
