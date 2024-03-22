@@ -17,6 +17,10 @@ from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 
 from .common import (
     MockConfigEntry,
@@ -847,6 +851,61 @@ async def test_async_start_setup_config_entry(
         "entry_id2": {
             setup.SetupPhases.CONFIG_ENTRY_SETUP: ANY,
             setup.SetupPhases.WAIT_BASE_PLATFORM_SETUP: ANY,
+        },
+    }
+
+
+async def test_async_start_setup_config_entry_late_platform(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test setup started tracks config entry time with a late platform load."""
+    hass.set_state(CoreState.not_running)
+    setup_started: dict[tuple[str, str | None], float]
+    setup_started = hass.data.setdefault(setup.DATA_SETUP_STARTED, {})
+    setup_time = setup._setup_times(hass)
+
+    with setup.async_start_setup(
+        hass, integration="august", phase=setup.SetupPhases.SETUP
+    ):
+        freezer.tick(10)
+        assert isinstance(setup_started[("august", None)], float)
+
+    with setup.async_start_setup(
+        hass,
+        integration="august",
+        group="entry_id",
+        phase=setup.SetupPhases.CONFIG_ENTRY_SETUP,
+    ):
+        assert isinstance(setup_started[("august", "entry_id")], float)
+
+        @callback
+        def async_late_platform_load():
+            with setup.async_pause_setup(hass, setup.SetupPhases.WAIT_IMPORT_PLATFORMS):
+                freezer.tick(100)
+            with setup.async_start_setup(
+                hass,
+                integration="august",
+                group="entry_id",
+                phase=setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP,
+            ):
+                freezer.tick(20)
+                assert isinstance(setup_started[("august", "entry_id")], float)
+
+        disconnect = async_dispatcher_connect(
+            hass, "late_platform_load_test", async_late_platform_load
+        )
+
+    # Dispatch a late platform load
+    async_dispatcher_send(hass, "late_platform_load_test")
+    disconnect()
+
+    # CONFIG_ENTRY_PLATFORM_SETUP is late dispatched, so it should be tracked
+    # but any waiting time should not be because it's blocking the setup
+    assert setup_time["august"] == {
+        None: {setup.SetupPhases.SETUP: 10.0},
+        "entry_id": {
+            setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP: 20.0,
+            setup.SetupPhases.CONFIG_ENTRY_SETUP: 0.0,
         },
     }
 
