@@ -685,7 +685,7 @@ def async_pause_setup(
         yield
     finally:
         integration, group, running_phase = running
-        if running not in _setup_running(hass):
+        if (integration, group) not in _setup_started(hass):
             # If there is a pause inside of task that runs from the
             # the context manager will finish while waiting for the
             # task to finish so we do not want to subtract out the time
