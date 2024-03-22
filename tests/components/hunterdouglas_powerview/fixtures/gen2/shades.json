@@ -67,7 +67,7 @@
         "posKind1": 1,
         "position1": 0,
         "posKind2": 3,
-        "position3": 0
+        "position2": 0
       },
       "name_unicode": "Family Centre",
       "shade_api_class": "ShadeBottomUpTiltOnClosed180"
@@ -102,7 +102,7 @@
         "posKind1": 1,
         "position1": 0,
         "posKind2": 3,
-        "position3": 0
+        "position2": 0
       },
       "name_unicode": "Family Right",
       "shade_api_class": "ShadeBottomUpTiltOnClosed90"
@@ -137,7 +137,7 @@
         "posKind1": 1,
         "position1": 0,
         "posKind2": 3,
-        "position3": 0
+        "position2": 0
       },
       "name_unicode": "Bed 2",
       "shade_api_class": "ShadeBottomUpTiltAnywhere"

@@ -47,7 +47,7 @@ def hass_mock_forward_entry_setup(hass):
 async def test_device_setup(
     hass: HomeAssistant,
     forward_entry_setups,
-    config,
+    config_entry_data,
     setup_config_entry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
@@ -63,9 +63,9 @@ async def test_device_setup(
     platforms = set(forward_entry_setups.mock_calls[0][1][1])
     assert platforms == {"binary_sensor", "camera", "light", "switch"}
 
-    assert hub.config.host == config[CONF_HOST]
-    assert hub.config.model == config[CONF_MODEL]
-    assert hub.config.name == config[CONF_NAME]
+    assert hub.config.host == config_entry_data[CONF_HOST]
+    assert hub.config.model == config_entry_data[CONF_MODEL]
+    assert hub.config.name == config_entry_data[CONF_NAME]
     assert hub.unique_id == FORMATTED_MAC
 
     device_entry = device_registry.async_get_device(
@@ -206,11 +206,11 @@ async def test_device_unknown_error(
     assert hass.data[AXIS_DOMAIN] == {}
 
 
-async def test_shutdown(config) -> None:
+async def test_shutdown(config_entry_data) -> None:
     """Successful shutdown."""
     hass = Mock()
     entry = Mock()
-    entry.data = config
+    entry.data = config_entry_data
 
     mock_api = Mock()
     mock_api.vapix.serial_number = FORMATTED_MAC
@@ -221,25 +221,27 @@ async def test_shutdown(config) -> None:
     assert len(axis_device.api.stream.stop.mock_calls) == 1
 
 
-async def test_get_device_fails(hass: HomeAssistant, config) -> None:
+async def test_get_device_fails(hass: HomeAssistant, config_entry_data) -> None:
     """Device unauthorized yields authentication required error."""
     with patch(
         "axis.vapix.vapix.Vapix.initialize", side_effect=axislib.Unauthorized
     ), pytest.raises(axis.errors.AuthenticationRequired):
-        await axis.hub.get_axis_api(hass, config)
+        await axis.hub.get_axis_api(hass, config_entry_data)
 
 
-async def test_get_device_device_unavailable(hass: HomeAssistant, config) -> None:
+async def test_get_device_device_unavailable(
+    hass: HomeAssistant, config_entry_data
+) -> None:
     """Device unavailable yields cannot connect error."""
     with patch(
         "axis.vapix.vapix.Vapix.request", side_effect=axislib.RequestError
     ), pytest.raises(axis.errors.CannotConnect):
-        await axis.hub.get_axis_api(hass, config)
+        await axis.hub.get_axis_api(hass, config_entry_data)
 
 
-async def test_get_device_unknown_error(hass: HomeAssistant, config) -> None:
+async def test_get_device_unknown_error(hass: HomeAssistant, config_entry_data) -> None:
     """Device yield unknown error."""
     with patch(
         "axis.vapix.vapix.Vapix.request", side_effect=axislib.AxisException
     ), pytest.raises(axis.errors.AuthenticationRequired):
-        await axis.hub.get_axis_api(hass, config)
+        await axis.hub.get_axis_api(hass, config_entry_data)
