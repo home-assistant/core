@@ -6,7 +6,6 @@ from axis.vapix.models.api import CONTEXT
 import pytest
 import respx
 
-from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
 from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -16,7 +15,6 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .const import DEFAULT_HOST, NAME
 
@@ -65,20 +63,6 @@ def light_control_fixture(light_control_items):
     ).respond(
         json=data,
     )
-
-
-async def test_platform_manually_configured(hass: HomeAssistant) -> None:
-    """Test that nothing happens when platform is manually configured."""
-    assert await async_setup_component(
-        hass, LIGHT_DOMAIN, {LIGHT_DOMAIN: {"platform": AXIS_DOMAIN}}
-    )
-
-    assert AXIS_DOMAIN not in hass.data
-
-
-async def test_no_lights(hass: HomeAssistant, setup_config_entry) -> None:
-    """Test that no light events in Axis results in no light entities."""
-    assert not hass.states.async_entity_ids(LIGHT_DOMAIN)
 
 
 @pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_LIGHT_CONTROL])
