@@ -69,10 +69,11 @@ class HomeAssistantError(Exception):
             self._message = (
                 f"Parent class {self.__class__.__name__} is missing __str__ method"
             )
-            # If the there is an other super class involved,
-            # we want to call its __str__ method.
-            # If the super().__str__ method is missing in the base_class
-            # the call will be recursive and we return our initialized default.
+            # If a sub class inherits another super class, like ExceptionGroup,
+            # we want to call its __str__ method. If the __str__ method is missing
+            # in the sub class, the call to super().__str__() will be recursive
+            # and we return our initialized default message
+            # that indicates a __str__ method is missing in the super class.
             self._message = super().__str__()
             return self._message
 
