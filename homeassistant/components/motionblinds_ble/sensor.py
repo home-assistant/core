@@ -98,7 +98,7 @@ async def async_setup_entry(
         ConnectionSensor(device, entry, SENSOR_TYPES[ATTR_CONNECTION]),
         SignalStrengthSensor(device, entry, SENSOR_TYPES[ATTR_SIGNAL_STRENGTH]),
     ]
-    if device.blind_type in [MotionBlindType.CURTAIN, MotionBlindType.VERTICAL]:
+    if device.blind_type in {MotionBlindType.CURTAIN, MotionBlindType.VERTICAL}:
         entities.append(
             CalibrationSensor(device, entry, SENSOR_TYPES[ATTR_CALIBRATION])
         )
