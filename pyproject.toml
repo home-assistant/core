@@ -456,9 +456,9 @@ filterwarnings = [
     # https://github.com/michaeldavie/env_canada/blob/v0.6.1/env_canada/ec_cache.py
     "ignore:Inheritance class CacheClientSession from ClientSession is discouraged:DeprecationWarning:env_canada.ec_cache",
     # https://github.com/allenporter/ical/pull/215
-    # https://github.com/allenporter/ical/blob/6.1.1/ical/util.py#L20-L22
+    # https://github.com/allenporter/ical/blob/7.0.3/ical/util.py#L20-L22
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:ical.util",
-    # https://github.com/bachya/regenmaschine/blob/2024.01.0/regenmaschine/client.py#L51
+    # https://github.com/bachya/regenmaschine/blob/2024.03.0/regenmaschine/client.py#L52
     "ignore:ssl.TLSVersion.SSLv3 is deprecated:DeprecationWarning:regenmaschine.client",
 
     # -- Setuptools DeprecationWarnings
@@ -469,14 +469,10 @@ filterwarnings = [
     # -- tracked upstream / open PRs
     # https://github.com/certbot/certbot/issues/9828 - v2.8.0
     "ignore:X509Extension support in pyOpenSSL is deprecated. You should use the APIs in cryptography:DeprecationWarning:acme.crypto_util",
-    # https://github.com/tschamm/boschshcpy/pull/39 - v0.2.88
-    "ignore:pkg_resources is deprecated as an API:DeprecationWarning:boschshcpy.api",
     # https://github.com/influxdata/influxdb-client-python/issues/603 - v1.37.0
     "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:influxdb_client.client.write.point",
     # https://github.com/beetbox/mediafile/issues/67 - v0.12.0
     "ignore:'imghdr' is deprecated and slated for removal in Python 3.13:DeprecationWarning:mediafile",
-    # https://github.com/PythonCharmers/python-future/issues/488 - v0.18.3
-    "ignore:the imp module is deprecated in favour of importlib and slated for removal in Python 3.12:DeprecationWarning:future.standard_library",
     # https://github.com/foxel/python_ndms2_client/issues/6 - v0.1.3
     # https://github.com/foxel/python_ndms2_client/pull/8
     "ignore:'telnetlib' is deprecated and slated for removal in Python 3.13:DeprecationWarning:ndms2_client.connection",
@@ -485,14 +481,14 @@ filterwarnings = [
     "ignore:The --rsyncdir command line argument and rsyncdirs config variable are deprecated:DeprecationWarning:xdist.plugin",
 
     # -- fixed, waiting for release / update
-    # https://github.com/mkmer/AIOAladdinConnect/commit/8851fff4473d80d70ac518db2533f0fbef63b69c - >0.1.58
+    # https://github.com/mkmer/AIOAladdinConnect/commit/8851fff4473d80d70ac518db2533f0fbef63b69c - >=0.2.0
     "ignore:module 'sre_constants' is deprecated:DeprecationWarning:AIOAladdinConnect",
     # https://github.com/ludeeus/aiogithubapi/pull/208 - >=23.9.0
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:aiogithubapi.namespaces.events",
     # https://github.com/bachya/aiopurpleair/pull/200 - >=2023.10.0
     "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:aiopurpleair.helpers.validators",
-    # https://github.com/kiorky/croniter/pull/52 - >=2.0.0
-    "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:croniter.croniter",
+    # https://github.com/tschamm/boschshcpy/pull/39 - >=0.2.89
+    "ignore:pkg_resources is deprecated as an API:DeprecationWarning:boschshcpy.api",
     # https://github.com/fwestenberg/devialet/pull/6 - >1.4.5
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:devialet.devialet_api",
     # https://github.com/jaraco/jaraco.abode/commit/9e3e789efc96cddcaa15f920686bbeb79a7469e0 - update jaraco.abode to >=5.1.0
@@ -504,12 +500,12 @@ filterwarnings = [
     "ignore:ssl.PROTOCOL_TLS is deprecated:DeprecationWarning:paho.mqtt.client",
     # https://github.com/bachya/pytile/pull/280 - >=2023.10.0
     "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:pytile.tile",
-    # https://github.com/rytilahti/python-miio/pull/1809 - >0.5.12
+    # https://github.com/rytilahti/python-miio/pull/1809 - >=0.6.0.dev0
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:miio.protocol",
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:miio.miioprotocol",
     # https://github.com/hunterjm/python-onvif-zeep-async/pull/51 - >3.1.12
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:onvif.client",
-    # https://github.com/xeniter/romy/pull/1 - >0.0.7
+    # https://github.com/xeniter/romy/pull/1 - >=0.0.8
     "ignore:with timeout\\(\\) is deprecated, use async with timeout\\(\\) instead:DeprecationWarning:romy.utils",
     # https://github.com/grahamwetzler/smart-meter-texas/pull/143 - >0.5.3
     "ignore:ssl.OP_NO_SSL\\*/ssl.OP_NO_TLS\\* options are deprecated:DeprecationWarning:smart_meter_texas",
@@ -533,7 +529,7 @@ filterwarnings = [
     "ignore:setDaemon\\(\\) is deprecated, set the daemon attribute instead:DeprecationWarning:pylutron",
     # Wrong stacklevel
     # https://bugs.launchpad.net/beautifulsoup/+bug/2034451
-    "ignore:It looks like you're parsing an XML document using an HTML parser:UserWarning:bs4.builder",
+    "ignore:It looks like you're parsing an XML document using an HTML parser:UserWarning:html.parser",
     # New in aiohttp - v3.9.0
     "ignore:It is recommended to use web.AppKey instances for keys:UserWarning:(homeassistant|tests|aiohttp_cors)",
 
@@ -545,8 +541,6 @@ filterwarnings = [
     # https://pypi.org/project/directv/ - v0.4.0 - 2020-09-12
     "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:directv.directv",
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:directv.models",
-    # https://pypi.org/project/emulated-roku/ - v0.2.1 - 2020-01-23 (archived)
-    "ignore:loop argument is deprecated:DeprecationWarning:emulated_roku",
     # https://pypi.org/project/foobot_async/ - v1.0.0 - 2020-11-24
     "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:foobot_async",
     # https://pypi.org/project/influxdb/ - v5.3.1 - 2020-11-11 (archived)
