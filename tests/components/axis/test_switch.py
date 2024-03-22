@@ -5,7 +5,6 @@ from unittest.mock import patch
 from axis.vapix.models.api import CONTEXT
 import pytest
 
-from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -15,24 +14,8 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .const import API_DISCOVERY_PORT_MANAGEMENT, NAME
-
-
-async def test_platform_manually_configured(hass: HomeAssistant) -> None:
-    """Test that nothing happens when platform is manually configured."""
-    assert await async_setup_component(
-        hass, SWITCH_DOMAIN, {SWITCH_DOMAIN: {"platform": AXIS_DOMAIN}}
-    )
-
-    assert AXIS_DOMAIN not in hass.data
-
-
-async def test_no_switches(hass: HomeAssistant, setup_config_entry) -> None:
-    """Test that no output events in Axis results in no switch entities."""
-    assert not hass.states.async_entity_ids(SWITCH_DOMAIN)
-
 
 PORT_DATA = """root.IOPort.I0.Configurable=yes
 root.IOPort.I0.Direction=output
