@@ -780,6 +780,7 @@ omit =
     homeassistant/components/microbees/button.py
     homeassistant/components/microbees/const.py
     homeassistant/components/microbees/coordinator.py
+    homeassistant/components/microbees/cover.py
     homeassistant/components/microbees/entity.py
     homeassistant/components/microbees/light.py
     homeassistant/components/microbees/sensor.py
