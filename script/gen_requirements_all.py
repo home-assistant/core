@@ -29,7 +29,6 @@ COMMENT_REQUIREMENTS = (
     "decora-wifi",
     "evdev",
     "face-recognition",
-    "opencv-python-headless",
     "pybluez",
     "pycocotools",
     "pycups",
@@ -347,8 +346,7 @@ def generate_requirements_list(reqs: dict[str, list[str]]) -> str:
     """Generate a pip file based on requirements."""
     output = []
     for pkg, requirements in sorted(reqs.items(), key=itemgetter(0)):
-        for req in sorted(requirements):
-            output.append(f"\n# {req}")
+        output.extend(f"\n# {req}" for req in sorted(requirements))
 
         if comment_requirement(pkg):
             output.append(f"\n# {pkg}\n")
@@ -435,15 +433,17 @@ def gather_constraints() -> str:
     return (
         GENERATED_MESSAGE
         + "\n".join(
-            sorted(
-                {
-                    *core_requirements(),
-                    *gather_recursive_requirements("default_config"),
-                    *gather_recursive_requirements("mqtt"),
-                },
-                key=str.lower,
-            )
-            + [""]
+            [
+                *sorted(
+                    {
+                        *core_requirements(),
+                        *gather_recursive_requirements("default_config"),
+                        *gather_recursive_requirements("mqtt"),
+                    },
+                    key=str.lower,
+                ),
+                "",
+            ]
         )
         + CONSTRAINT_BASE
     )

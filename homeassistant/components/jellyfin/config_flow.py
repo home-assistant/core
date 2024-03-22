@@ -51,9 +51,6 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a user defined configuration."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         errors: dict[str, str] = {}
 
         if user_input is not None:

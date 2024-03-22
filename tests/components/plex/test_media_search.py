@@ -247,7 +247,7 @@ async def test_media_lookups(
             },
             True,
         )
-        search.assert_called_with(**{"title": "Movie 1", "libtype": None})
+        search.assert_called_with(title="Movie 1", libtype=None)
 
     with pytest.raises(MediaNotFound) as excinfo:
         payload = '{"title": "Movie 1"}'

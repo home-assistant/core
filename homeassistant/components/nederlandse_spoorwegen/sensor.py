@@ -64,7 +64,7 @@ def setup_platform(
         requests.exceptions.HTTPError,
     ) as error:
         _LOGGER.error("Could not connect to the internet: %s", error)
-        raise PlatformNotReady() from error
+        raise PlatformNotReady from error
     except RequestParametersError as error:
         _LOGGER.error("Could not fetch stations, please check configuration: %s", error)
         return

@@ -4,8 +4,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from ring_doorbell import RingStickUpCam
-from ring_doorbell.generic import RingGeneric
+from ring_doorbell import RingGeneric, RingStickUpCam
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry

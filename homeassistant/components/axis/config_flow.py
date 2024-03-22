@@ -25,6 +25,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_PROTOCOL,
     CONF_USERNAME,
 )
 from homeassistant.core import callback
@@ -42,7 +43,9 @@ from .errors import AuthenticationRequired, CannotConnect
 from .hub import AxisHub, get_axis_api
 
 AXIS_OUI = {"00:40:8c", "ac:cc:8e", "b8:a4:4f"}
-DEFAULT_PORT = 80
+DEFAULT_PORT = 443
+DEFAULT_PROTOCOL = "https"
+PROTOCOL_CHOICES = ["https", "http"]
 
 
 class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
@@ -74,11 +77,19 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
             try:
                 api = await get_axis_api(self.hass, MappingProxyType(user_input))
 
+            except AuthenticationRequired:
+                errors["base"] = "invalid_auth"
+
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+
+            else:
                 serial = api.vapix.serial_number
                 await self.async_set_unique_id(format_mac(serial))
 
                 self._abort_if_unique_id_configured(
                     updates={
+                        CONF_PROTOCOL: user_input[CONF_PROTOCOL],
                         CONF_HOST: user_input[CONF_HOST],
                         CONF_PORT: user_input[CONF_PORT],
                         CONF_USERNAME: user_input[CONF_USERNAME],
@@ -87,6 +98,7 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
                 )
 
                 self.config = {
+                    CONF_PROTOCOL: user_input[CONF_PROTOCOL],
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_PORT: user_input[CONF_PORT],
                     CONF_USERNAME: user_input[CONF_USERNAME],
@@ -96,13 +108,8 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
 
                 return await self._create_entry(serial)
 
-            except AuthenticationRequired:
-                errors["base"] = "invalid_auth"
-
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-
         data = self.discovery_schema or {
+            vol.Required(CONF_PROTOCOL): vol.In(PROTOCOL_CHOICES),
             vol.Required(CONF_HOST): str,
             vol.Required(CONF_USERNAME): str,
             vol.Required(CONF_PASSWORD): str,
@@ -149,6 +156,9 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
         }
 
         self.discovery_schema = {
+            vol.Required(
+                CONF_PROTOCOL, default=entry_data.get(CONF_PROTOCOL, DEFAULT_PROTOCOL)
+            ): str,
             vol.Required(CONF_HOST, default=entry_data[CONF_HOST]): str,
             vol.Required(CONF_USERNAME, default=entry_data[CONF_USERNAME]): str,
             vol.Required(CONF_PASSWORD): str,
@@ -166,7 +176,7 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
                 CONF_HOST: discovery_info.ip,
                 CONF_MAC: format_mac(discovery_info.macaddress),
                 CONF_NAME: discovery_info.hostname,
-                CONF_PORT: DEFAULT_PORT,
+                CONF_PORT: 80,
             }
         )
 
@@ -210,10 +220,7 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
         await self.async_set_unique_id(discovery_info[CONF_MAC])
 
         self._abort_if_unique_id_configured(
-            updates={
-                CONF_HOST: discovery_info[CONF_HOST],
-                CONF_PORT: discovery_info[CONF_PORT],
-            }
+            updates={CONF_HOST: discovery_info[CONF_HOST]}
         )
 
         self.context.update(
@@ -227,10 +234,11 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
         )
 
         self.discovery_schema = {
+            vol.Required(CONF_PROTOCOL): vol.In(PROTOCOL_CHOICES),
             vol.Required(CONF_HOST, default=discovery_info[CONF_HOST]): str,
             vol.Required(CONF_USERNAME): str,
             vol.Required(CONF_PASSWORD): str,
-            vol.Required(CONF_PORT, default=discovery_info[CONF_PORT]): int,
+            vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
         }
 
         return await self.async_step_user()

@@ -1418,9 +1418,10 @@ async def test_effects(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert hass.states.get(ENTITY_LIGHT).attributes.get(
-        "effect_list"
-    ) == YEELIGHT_COLOR_EFFECT_LIST + ["mock_effect"]
+    assert hass.states.get(ENTITY_LIGHT).attributes.get("effect_list") == [
+        *YEELIGHT_COLOR_EFFECT_LIST,
+        "mock_effect",
+    ]
 
     async def _async_test_effect(name, target=None, called=True):
         async_mocked_start_flow = AsyncMock()

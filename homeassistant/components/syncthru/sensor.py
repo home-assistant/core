@@ -22,7 +22,7 @@ COLORS = ["black", "cyan", "magenta", "yellow"]
 DRUM_COLORS = COLORS
 TONER_COLORS = COLORS
 TRAYS = range(1, 6)
-OUTPUT_TRAYS = range(0, 6)
+OUTPUT_TRAYS = range(6)
 DEFAULT_MONITORED_CONDITIONS = []
 DEFAULT_MONITORED_CONDITIONS.extend([f"toner_{key}" for key in TONER_COLORS])
 DEFAULT_MONITORED_CONDITIONS.extend([f"drum_{key}" for key in DRUM_COLORS])
