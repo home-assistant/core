@@ -12,7 +12,12 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from .const import DOMAIN
 from .coordinator import TraccarServerCoordinator
 
-TO_REDACT = {CONF_ADDRESS, CONF_LATITUDE, CONF_LONGITUDE}
+TO_REDACT = {
+    CONF_ADDRESS,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    "area",  # This is the polygon area of a geofence
+}
 
 
 async def async_get_config_entry_diagnostics(

@@ -165,9 +165,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except NotionError as err:
         raise ConfigEntryNotReady("Config entry failed to load") from err
 
-    # Always update the config entry with the latest refresh token and user UUID:
-    entry_updates["data"][CONF_REFRESH_TOKEN] = client.refresh_token
-    entry_updates["data"][CONF_USER_UUID] = client.user_uuid
+    # Update the Notion user UUID and refresh token if they've changed:
+    for key, value in (
+        (CONF_REFRESH_TOKEN, client.refresh_token),
+        (CONF_USER_UUID, client.user_uuid),
+    ):
+        if entry.data[key] == value:
+            continue
+        entry_updates["data"][key] = value
+
+    hass.config_entries.async_update_entry(entry, **entry_updates)
 
     @callback
     def async_save_refresh_token(refresh_token: str) -> None:
@@ -179,12 +186,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Create a callback to save the refresh token when it changes:
     entry.async_on_unload(client.add_refresh_token_callback(async_save_refresh_token))
-
-    # Save the client's refresh token if it's different than what we already have:
-    if (token := client.refresh_token) and token != entry.data[CONF_REFRESH_TOKEN]:
-        async_save_refresh_token(token)
-
-    hass.config_entries.async_update_entry(entry, **entry_updates)
 
     async def async_update() -> NotionData:
         """Get the latest data from the Notion API."""

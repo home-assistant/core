@@ -54,7 +54,7 @@ ProgettiHWSW==0.1.3
 # PyBluez==0.22
 
 # homeassistant.components.cast
-PyChromecast==14.0.0
+PyChromecast==14.0.1
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
@@ -206,7 +206,7 @@ aioaseko==0.0.2
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2024.3.0
+aioautomower==2024.3.3
 
 # homeassistant.components.azure_devops
 aioazuredevops==1.3.5
@@ -221,7 +221,7 @@ aiobotocore==2.9.1
 aiocomelit==0.9.0
 
 # homeassistant.components.dhcp
-aiodhcpwatcher==0.8.1
+aiodhcpwatcher==0.8.2
 
 # homeassistant.components.dhcp
 aiodiscover==1.6.1
@@ -350,7 +350,7 @@ aiopyarr==23.4.0
 aioqsw==0.3.5
 
 # homeassistant.components.rainforest_raven
-aioraven==0.5.1
+aioraven==0.5.2
 
 # homeassistant.components.recollect_waste
 aiorecollect==2023.09.0
@@ -514,7 +514,7 @@ aurorapy==0.2.7
 # avion==0.10
 
 # homeassistant.components.axis
-axis==54
+axis==57
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
@@ -669,7 +669,7 @@ connect-box==0.2.8
 construct==2.10.68
 
 # homeassistant.components.utility_meter
-croniter==1.0.6
+croniter==2.0.2
 
 # homeassistant.components.crownstone
 crownstone-cloud==1.4.9
@@ -1115,7 +1115,7 @@ ibmiotf==0.3.4
 # homeassistant.components.google
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
-ical==7.0.1
+ical==7.0.3
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -1971,7 +1971,7 @@ pymitv==1.4.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.6.5
+pymodbus==3.6.6
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -2090,7 +2090,7 @@ pyrecswitch==1.0.2
 pyrepetierng==0.1.0
 
 # homeassistant.components.risco
-pyrisco==0.5.8
+pyrisco==0.5.10
 
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.6
@@ -2155,7 +2155,7 @@ pysmartthings==0.7.8
 pysml==0.0.12
 
 # homeassistant.components.snmp
-pysnmp-lextudio==6.0.9
+pysnmp-lextudio==6.0.11
 
 # homeassistant.components.snooz
 pysnooz==0.8.6
@@ -2182,7 +2182,7 @@ pyswitchbee==1.8.0
 pytautulli==23.1.1
 
 # homeassistant.components.tedee
-pytedee-async==0.2.16
+pytedee-async==0.2.17
 
 # homeassistant.components.tfiac
 pytfiac==0.4
@@ -2340,7 +2340,7 @@ pytrydan==0.4.0
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.23.3
+pyunifiprotect==5.0.2
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
