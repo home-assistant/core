@@ -1,5 +1,5 @@
 """Test the Teslemetry sensor platform."""
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -26,7 +26,8 @@ async def test_sensors(
 ) -> None:
     """Tests that the sensor entities are correct."""
 
-    freezer.move_to("2024-01-01 00:00:00+00:00")
+    # Use local timezone
+    freezer.move_to(datetime(2024, 1, 1, 0, 0, 0))
 
     entry = await setup_platform(hass, [Platform.SENSOR])
 
