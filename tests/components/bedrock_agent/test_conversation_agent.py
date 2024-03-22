@@ -20,7 +20,8 @@ logging.basicConfig(level=logging.DEBUG)
 _LOGGER = logging.getLogger(__name__)
 
 
-@pytest.fixture(params=["anthropic.claude-v2:1", "amazon.titan-text-express-v1"])
+# @pytest.fixture(params=["anthropic.claude-v2:1", "amazon.titan-text-express-v1"]) #bedrock_agent.BedrockAgent.supported_models()
+@pytest.fixture(params=bedrock_agent.BedrockAgent.supported_models())
 def mock_config_entry(hass: HomeAssistant, request):
     """Mock a config entry."""
     entry = MockConfigEntry(

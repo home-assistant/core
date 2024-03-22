@@ -11,10 +11,8 @@ CONST_MODEL_ID: Final = "model_id"
 CONST_PROMPT_CONTEXT: Final = "prompt_context"
 CONST_MODEL_LIST: Final = [
     "amazon.titan-text-express-v1",
-    "amazon.titan-text-lite-v1",
     "anthropic.claude-v2",
     "anthropic.claude-v2:1",
-    "anthropic.claude-3-sonnet-20240229-v1:0",
     "anthropic.claude-instant-v1",
     "ai21.j2-mid-v1",
     "ai21.j2-ultra-v1",

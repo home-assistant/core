@@ -19,6 +19,7 @@ from .const import (
     CONST_KEY_ID,
     CONST_KEY_SECRET,
     CONST_MODEL_ID,
+    CONST_MODEL_LIST,
     CONST_PROMPT_CONTEXT,
     CONST_REGION,
     DOMAIN,
@@ -78,6 +79,11 @@ class BedrockAgent(conversation.AbstractConversationAgent):
         """Return a list of supported languages."""
         return MATCH_ALL
 
+    @staticmethod
+    def supported_models() -> list[str]:
+        """Return a list of supported models."""
+        return CONST_MODEL_LIST
+
     async def async_call_bedrock(self, question) -> str:
         """Return result from Amazon Bedrock."""
 
@@ -129,8 +135,6 @@ class BedrockAgent(conversation.AbstractConversationAgent):
                     "top_k": 50,
                 }
             )
-        # elif modelId == "meta.llama2-":
-        #     return "meta.llama2-"
 
         accept = "application/json"
         contentType = "application/json"
@@ -152,7 +156,10 @@ class BedrockAgent(conversation.AbstractConversationAgent):
             answer = response_body["completion"]
         elif modelId.startswith("ai21.j2"):
             answer = response_body["completions"][0]["data"]["text"]
-        elif modelId.startswith("mistral.mistral-"):
+        elif modelId in [
+            "mistral.mistral-7b-instruct-v0:2",
+            "mistral.mixtral-8x7b-instruct-v0:1",
+        ]:
             answer = response_body["outputs"][0]["text"]
         else:
             answer = "Sorry I am not able to understand my underlying model."
