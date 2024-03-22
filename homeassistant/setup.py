@@ -701,7 +701,7 @@ def async_pause_setup(
             _LOGGER.debug(
                 "%s (%s) finished while waiting for %s", integration, group, phase
             )
-            # There is not return here since we are in a finally and do not
+            # There is no return here since we are in a finally and do not
             # want to swallow exceptions
         else:
             time_taken = time.monotonic() - started
