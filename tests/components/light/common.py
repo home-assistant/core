@@ -3,6 +3,7 @@
 All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
+
 from collections.abc import Callable
 
 from homeassistant.components.light import (
