@@ -691,15 +691,15 @@ def async_pause_setup(
     finally:
         integration, group = running
         if running not in _setup_started(hass):
-            # If a task is started from inside the async_start_setup context
-            # manager we will see the current_setup_group but the context
-            # manager may have exited by that time if its running in the background
-            # and not being awaited so we also check if the integration group is
-            # still in the setup_started dict as that indicates the context manager
-            # is still running. If its not in the dict it means the context manager
-            # has exited and we should not subtract the time.
+            # Suppose a task is started from inside the `async_start_setup` context
+            # manager. In that case, we will see the `current_setup_group`, but the
+            # context manager may have exited by that time if it's running in the
+            # background and not being awaited. So we also check if the integration
+            # group is still in the `setup_started`, as that indicates whether the
+            # context manager is still running. If it's not in `setup_started`, the
+            # context manager has exited, and we should not subtract the time.
             _LOGGER.debug("%s (%s) finished while waiting", integration, group)
-            # no return here since we are in a finally and do not
+            # There is not return here since we are in a finally and do not
             # want to swallow exceptions
         else:
             time_taken = time.monotonic() - started
