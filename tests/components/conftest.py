@@ -1,17 +1,12 @@
 """Fixtures for component testing."""
 
-from collections.abc import Callable, Generator
+from collections.abc import Generator
 from typing import TYPE_CHECKING, Any
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-
-from tests.common import MockEntity, MockPlatform, mock_platform
 
 if TYPE_CHECKING:
     from tests.components.light.common import MockLight, SetupLightPlatformCallable
@@ -131,59 +126,3 @@ def setup_light_platform() -> "SetupLightPlatformCallable":
     from tests.components.light.common import setup_light_platform
 
     return setup_light_platform
-
-
-SetupEntityPlatformCallable = Callable[
-    [str, list[MockEntity], bool | None], MockPlatform
-]
-
-
-@pytest.fixture
-async def setup_test_component_platform(
-    hass: HomeAssistant,
-) -> SetupEntityPlatformCallable:
-    """Mock a test component platform for tests."""
-
-    def _setup(
-        domain: str,
-        entities: list[MockEntity],
-        from_config_entry: bool | None = None,
-    ) -> MockPlatform:
-        """Set up a test component platform."""
-
-        async def _async_setup_platform(
-            hass: HomeAssistant,
-            config: ConfigType,
-            async_add_entities: AddEntitiesCallback,
-            discovery_info: DiscoveryInfoType | None = None,
-        ) -> None:
-            """Set up a test component platform."""
-            async_add_entities(entities)
-
-        platform = MockPlatform(
-            async_setup_platform=_async_setup_platform,
-        )
-
-        # avoid loading config_entry if not needed
-        if from_config_entry:
-            from homeassistant.config_entries import ConfigEntry
-
-            async def _async_setup_entry(
-                hass: HomeAssistant,
-                entry: ConfigEntry,
-                async_add_entities: AddEntitiesCallback,
-            ) -> None:
-                """Set up a test component platform."""
-                async_add_entities(entities)
-
-            platform.async_setup_entry = _async_setup_entry
-            platform.async_setup_platform = None
-
-        mock_platform(
-            hass,
-            f"test.{domain}",
-            platform,
-        )
-        return platform
-
-    return _setup
