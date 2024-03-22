@@ -33,9 +33,9 @@ from .helpers.issue_registry import IssueSeverity, async_create_issue
 from .helpers.typing import ConfigType
 from .util.async_ import create_eager_task
 
-current_setup_group: contextvars.ContextVar[
-    tuple[str, str | None] | None
-] = contextvars.ContextVar("current_setup_group", default=None)
+current_setup_group_phase: contextvars.ContextVar[
+    tuple[str, str | None, SetupPhases] | None
+] = contextvars.ContextVar("current_setup_group_phase", default=None)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -645,7 +645,7 @@ class SetupPhases(StrEnum):
     ex async_setup_platform or setup_platform or
     a legacy platform like device_tracker.legacy
     """
-    CONFIG_ENTRY_PLATFORM_SETUP = "config_entry_platform_setup"
+    CONFIG_ENTRY_LATE_PLATFORM_SETUP = "config_entry_late_platform_setup"
     """Set up of a platform in a config entry after the config entry is setup.
 
     This is only for platforms that are not awaited in async_setup_entry.
@@ -658,6 +658,13 @@ class SetupPhases(StrEnum):
     """Wait time for the packages to import."""
 
 
+# Late phases run outside of the rest of the the setup
+# process so we do not want to subtract out the time
+# we waited for them to finish since nothing is waiting
+# for them to finish.
+LATE_PHASES = {SetupPhases.CONFIG_ENTRY_LATE_PLATFORM_SETUP}
+
+
 @contextlib.contextmanager
 def async_pause_setup(
     hass: core.HomeAssistant, phase: SetupPhases
@@ -668,7 +675,7 @@ def async_pause_setup(
     setting up the base components so we can subtract it
     from the total setup time.
     """
-    if not (running := current_setup_group.get()):
+    if not (running := current_setup_group_phase.get()) or running[2] in LATE_PHASES:
         # This means we are likely in a late platform setup
         # that is running in a task so we do not want
         # to subtract out the time later as nothing is waiting
@@ -681,7 +688,7 @@ def async_pause_setup(
         yield
     finally:
         time_taken = time.monotonic() - started
-        integration, group = running
+        integration, group, _ = running
         # Add negative time for the time we waited
         _setup_times(hass)[integration][group][phase] = -time_taken
 
@@ -723,8 +730,8 @@ def async_start_setup(
 
     setup_started: dict[tuple[str, str | None], float]
     setup_started = hass.data.setdefault(DATA_SETUP_STARTED, {})
-    current = (integration, group)
-    if current in setup_started:
+    current_group = (integration, group)
+    if current_group in setup_started:
         # We are already inside another async_start_setup, this like means we
         # are setting up a platform inside async_setup_entry so we should not
         # record this as a new setup
@@ -732,14 +739,14 @@ def async_start_setup(
         return
 
     started = time.monotonic()
-    current_setup_group.set(current)
-    setup_started[current] = started
+    current_setup_group_phase.set((integration, group, phase))
+    setup_started[current_group] = started
 
     try:
         yield
     finally:
         time_taken = time.monotonic() - started
-        del setup_started[current]
+        del setup_started[current_group]
         group_setup_times = _setup_times(hass)[integration][group]
         # We may see the phase multiple times if there are multiple
         # platforms, but we only care about the longest time.

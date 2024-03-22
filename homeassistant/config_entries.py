@@ -538,7 +538,7 @@ class ConfigEntry:
 
             setup_phase = SetupPhases.CONFIG_ENTRY_SETUP
         else:
-            setup_phase = SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP
+            setup_phase = SetupPhases.CONFIG_ENTRY_LATE_PLATFORM_SETUP
 
         error_reason = None
 

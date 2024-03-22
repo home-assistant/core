@@ -765,11 +765,11 @@ async def test_async_start_setup_config_entry(
             hass,
             integration="august",
             group="entry_id",
-            phase=setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP,
+            phase=setup.SetupPhases.CONFIG_ENTRY_LATE_PLATFORM_SETUP,
         ):
             assert isinstance(setup_started[("august", "entry_id")], float)
 
-    # CONFIG_ENTRY_PLATFORM_SETUP inside of CONFIG_ENTRY_SETUP should not be tracked
+    # CONFIG_ENTRY_LATE_PLATFORM_SETUP inside of CONFIG_ENTRY_SETUP should not be tracked
     assert setup_time["august"] == {
         None: {setup.SetupPhases.SETUP: ANY},
         "entry_id": {setup.SetupPhases.CONFIG_ENTRY_SETUP: ANY},
@@ -778,7 +778,7 @@ async def test_async_start_setup_config_entry(
         hass,
         integration="august",
         group="entry_id",
-        phase=setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP,
+        phase=setup.SetupPhases.CONFIG_ENTRY_LATE_PLATFORM_SETUP,
     ):
         assert isinstance(setup_started[("august", "entry_id")], float)
 
@@ -788,25 +788,25 @@ async def test_async_start_setup_config_entry(
         None: {setup.SetupPhases.SETUP: ANY},
         "entry_id": {
             setup.SetupPhases.CONFIG_ENTRY_SETUP: ANY,
-            setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP: ANY,
+            setup.SetupPhases.CONFIG_ENTRY_LATE_PLATFORM_SETUP: ANY,
         },
     }
 
     shorter_time = setup_time["august"]["entry_id"][
-        setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP
+        setup.SetupPhases.CONFIG_ENTRY_LATE_PLATFORM_SETUP
     ]
     # Setup another platform, but make it take longer
     with setup.async_start_setup(
         hass,
         integration="august",
         group="entry_id",
-        phase=setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP,
+        phase=setup.SetupPhases.CONFIG_ENTRY_LATE_PLATFORM_SETUP,
     ):
         freezer.tick(10)
         assert isinstance(setup_started[("august", "entry_id")], float)
 
     longer_time = setup_time["august"]["entry_id"][
-        setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP
+        setup.SetupPhases.CONFIG_ENTRY_LATE_PLATFORM_SETUP
     ]
     assert longer_time > shorter_time
     # Setup another platform, but make it take shorter
@@ -814,13 +814,15 @@ async def test_async_start_setup_config_entry(
         hass,
         integration="august",
         group="entry_id",
-        phase=setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP,
+        phase=setup.SetupPhases.CONFIG_ENTRY_LATE_PLATFORM_SETUP,
     ):
         assert isinstance(setup_started[("august", "entry_id")], float)
 
     # Ensure we keep the longest time
     assert (
-        setup_time["august"]["entry_id"][setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP]
+        setup_time["august"]["entry_id"][
+            setup.SetupPhases.CONFIG_ENTRY_LATE_PLATFORM_SETUP
+        ]
         == longer_time
     )
 
@@ -842,7 +844,7 @@ async def test_async_start_setup_config_entry(
         None: {setup.SetupPhases.SETUP: ANY},
         "entry_id": {
             setup.SetupPhases.CONFIG_ENTRY_SETUP: ANY,
-            setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP: ANY,
+            setup.SetupPhases.CONFIG_ENTRY_LATE_PLATFORM_SETUP: ANY,
         },
         "entry_id2": {
             setup.SetupPhases.CONFIG_ENTRY_SETUP: ANY,
@@ -965,7 +967,7 @@ async def test_async_get_setup_timings(hass) -> None:
                 None: {setup.SetupPhases.SETUP: 1},
                 "entry_id": {
                     setup.SetupPhases.CONFIG_ENTRY_SETUP: 1,
-                    setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP: 4,
+                    setup.SetupPhases.CONFIG_ENTRY_LATE_PLATFORM_SETUP: 4,
                 },
                 "entry_id2": {
                     setup.SetupPhases.CONFIG_ENTRY_SETUP: 7,
