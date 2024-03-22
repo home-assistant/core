@@ -17,7 +17,7 @@ from tests.common import MockConfigEntry
 async def test_form(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_ring_auth: Mock,
+    mock_ring_client: Mock,
 ) -> None:
     """Test we get the form."""
 

@@ -1,8 +1,6 @@
 """The tests for the Ring button platform."""
-from unittest.mock import patch
 
 import pytest
-import requests_mock
 import ring_doorbell
 
 from homeassistant.config_entries import SOURCE_REAUTH
@@ -14,9 +12,7 @@ from homeassistant.helpers import entity_registry as er
 from .common import setup_platform
 
 
-async def test_entity_registry(
-    hass: HomeAssistant, requests_mock: requests_mock.Mocker
-) -> None:
+async def test_entity_registry(hass: HomeAssistant, mock_ring_client) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, Platform.SIREN)
     entity_registry = er.async_get(hass)
@@ -25,9 +21,7 @@ async def test_entity_registry(
     assert entry.unique_id == "123456-siren"
 
 
-async def test_sirens_report_correctly(
-    hass: HomeAssistant, requests_mock: requests_mock.Mocker
-) -> None:
+async def test_sirens_report_correctly(hass: HomeAssistant, mock_ring_client) -> None:
     """Tests that the initial state of a device that should be on is correct."""
     await setup_platform(hass, Platform.SIREN)
 
@@ -37,16 +31,11 @@ async def test_sirens_report_correctly(
 
 
 async def test_default_ding_chime_can_be_played(
-    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+    hass: HomeAssistant, mock_ring_client, mock_ring_devices
 ) -> None:
     """Tests the play chime request is sent correctly."""
     await setup_platform(hass, Platform.SIREN)
 
-    # Mocks the response for playing a test sound
-    requests_mock.post(
-        "https://api.ring.com/clients_api/chimes/123456/play_sound",
-        text="SUCCESS",
-    )
     await hass.services.async_call(
         "siren",
         "turn_on",
@@ -56,26 +45,19 @@ async def test_default_ding_chime_can_be_played(
 
     await hass.async_block_till_done()
 
-    assert requests_mock.request_history[-1].url.startswith(
-        "https://api.ring.com/clients_api/chimes/123456/play_sound?"
-    )
-    assert "kind=ding" in requests_mock.request_history[-1].url
+    downstairs_chime_mock = mock_ring_devices["chimes"][123456]
+    downstairs_chime_mock.test_sound.assert_called_once_with(kind="ding")
 
     state = hass.states.get("siren.downstairs_siren")
     assert state.state == "unknown"
 
 
 async def test_turn_on_plays_default_chime(
-    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+    hass: HomeAssistant, mock_ring_client, mock_ring_devices
 ) -> None:
     """Tests the play chime request is sent correctly when turned on."""
     await setup_platform(hass, Platform.SIREN)
 
-    # Mocks the response for playing a test sound
-    requests_mock.post(
-        "https://api.ring.com/clients_api/chimes/123456/play_sound",
-        text="SUCCESS",
-    )
     await hass.services.async_call(
         "siren",
         "turn_on",
@@ -85,26 +67,21 @@ async def test_turn_on_plays_default_chime(
 
     await hass.async_block_till_done()
 
-    assert requests_mock.request_history[-1].url.startswith(
-        "https://api.ring.com/clients_api/chimes/123456/play_sound?"
-    )
-    assert "kind=ding" in requests_mock.request_history[-1].url
+    downstairs_chime_mock = mock_ring_devices["chimes"][123456]
+    downstairs_chime_mock.test_sound.assert_called_once_with(kind="ding")
 
     state = hass.states.get("siren.downstairs_siren")
     assert state.state == "unknown"
 
 
 async def test_explicit_ding_chime_can_be_played(
-    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+    hass: HomeAssistant,
+    mock_ring_client,
+    mock_ring_devices,
 ) -> None:
     """Tests the play chime request is sent correctly."""
     await setup_platform(hass, Platform.SIREN)
 
-    # Mocks the response for playing a test sound
-    requests_mock.post(
-        "https://api.ring.com/clients_api/chimes/123456/play_sound",
-        text="SUCCESS",
-    )
     await hass.services.async_call(
         "siren",
         "turn_on",
@@ -114,26 +91,19 @@ async def test_explicit_ding_chime_can_be_played(
 
     await hass.async_block_till_done()
 
-    assert requests_mock.request_history[-1].url.startswith(
-        "https://api.ring.com/clients_api/chimes/123456/play_sound?"
-    )
-    assert "kind=ding" in requests_mock.request_history[-1].url
+    downstairs_chime_mock = mock_ring_devices["chimes"][123456]
+    downstairs_chime_mock.test_sound.assert_called_once_with(kind="ding")
 
     state = hass.states.get("siren.downstairs_siren")
     assert state.state == "unknown"
 
 
 async def test_motion_chime_can_be_played(
-    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+    hass: HomeAssistant, mock_ring_client, mock_ring_devices
 ) -> None:
     """Tests the play chime request is sent correctly."""
     await setup_platform(hass, Platform.SIREN)
 
-    # Mocks the response for playing a test sound
-    requests_mock.post(
-        "https://api.ring.com/clients_api/chimes/123456/play_sound",
-        text="SUCCESS",
-    )
     await hass.services.async_call(
         "siren",
         "turn_on",
@@ -143,10 +113,8 @@ async def test_motion_chime_can_be_played(
 
     await hass.async_block_till_done()
 
-    assert requests_mock.request_history[-1].url.startswith(
-        "https://api.ring.com/clients_api/chimes/123456/play_sound?"
-    )
-    assert "kind=motion" in requests_mock.request_history[-1].url
+    downstairs_chime_mock = mock_ring_devices["chimes"][123456]
+    downstairs_chime_mock.test_sound.assert_called_once_with(kind="motion")
 
     state = hass.states.get("siren.downstairs_siren")
     assert state.state == "unknown"
@@ -163,7 +131,8 @@ async def test_motion_chime_can_be_played(
 )
 async def test_siren_errors_when_turned_on(
     hass: HomeAssistant,
-    requests_mock: requests_mock.Mocker,
+    mock_ring_client,
+    mock_ring_devices,
     exception_type,
     reauth_expected,
 ) -> None:
@@ -173,18 +142,18 @@ async def test_siren_errors_when_turned_on(
 
     assert not any(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
-    with patch.object(
-        ring_doorbell.RingChime, "test_sound", side_effect=exception_type
-    ) as mock_siren:
-        with pytest.raises(HomeAssistantError):
-            await hass.services.async_call(
-                "siren",
-                "turn_on",
-                {"entity_id": "siren.downstairs_siren", "tone": "motion"},
-                blocking=True,
-            )
+    downstairs_chime_mock = mock_ring_devices["chimes"][123456]
+    downstairs_chime_mock.test_sound.side_effect = exception_type
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "siren",
+            "turn_on",
+            {"entity_id": "siren.downstairs_siren", "tone": "motion"},
+            blocking=True,
+        )
         await hass.async_block_till_done()
-    assert mock_siren.call_count == 1
+    downstairs_chime_mock.test_sound.assert_called_once_with(kind="motion")
     assert (
         any(
             flow
