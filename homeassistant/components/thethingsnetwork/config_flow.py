@@ -21,10 +21,10 @@ class TTNFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize flow."""
-        self.__hostname: str = TTN_API_HOSTNAME
-        self.__app_id: str | None = None
-        self.__access_key: str | None = None
-        self.__reauth_entry: ConfigEntry | None = None
+        self._hostname: str = TTN_API_HOSTNAME
+        self._app_id: str | None = None
+        self._access_key: str | None = None
+        self._reauth_entry: ConfigEntry | None = None
 
     @property
     def schema(self) -> vol.Schema:
@@ -32,9 +32,9 @@ class TTNFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return vol.Schema(
             {
-                vol.Required(CONF_HOSTNAME, default=self.__hostname): str,
-                vol.Required(CONF_APP_ID, default=self.__app_id): str,
-                vol.Required(CONF_API_KEY, default=self.__access_key): str,
+                vol.Required(CONF_HOSTNAME, default=self._hostname): str,
+                vol.Required(CONF_APP_ID, default=self._app_id): str,
+                vol.Required(CONF_API_KEY, default=self._access_key): str,
             }
         )
 
@@ -44,16 +44,16 @@ class TTNFlowHandler(ConfigFlow, domain=DOMAIN):
         """User initiated config flow."""
         errors = {}
         if user_input is not None:
-            self.__hostname = user_input[CONF_HOSTNAME]
-            self.__app_id = user_input[CONF_APP_ID]
-            self.__access_key = user_input[CONF_API_KEY]
+            self._hostname = user_input[CONF_HOSTNAME]
+            self._app_id = user_input[CONF_APP_ID]
+            self._access_key = user_input[CONF_API_KEY]
 
-            connection_error = await self.__connection_error
+            connection_error = await self._connection_error
 
             if connection_error:
                 errors["base"] = connection_error
             else:
-                return await self.__create_or_update_entry(user_input)
+                return await self._create_or_update_entry(user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=self.schema, errors=errors
@@ -65,10 +65,10 @@ class TTNFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by a reauth event."""
         entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         assert entry is not None
-        self.__reauth_entry = entry
-        self.__hostname = entry.data[CONF_HOSTNAME]
-        self.__app_id = entry.data[CONF_APP_ID]
-        self.__access_key = entry.data[CONF_API_KEY]
+        self._reauth_entry = entry
+        self._hostname = entry.data[CONF_HOSTNAME]
+        self._app_id = entry.data[CONF_APP_ID]
+        self._access_key = entry.data[CONF_API_KEY]
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -79,39 +79,39 @@ class TTNFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="reauth_confirm",
                 data_schema=vol.Schema({}),
-                description_placeholders={"app_id": self.__app_id},
+                description_placeholders={"app_id": self._app_id},
             )
         return await self.async_step_user()
 
-    async def __create_or_update_entry(
+    async def _create_or_update_entry(
         self, data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Create or update TTN entry."""
 
-        if self.__reauth_entry:
+        if self._reauth_entry:
             return self.async_update_reload_and_abort(
-                self.__reauth_entry,
-                data=self.__reauth_entry.data | data,
+                self._reauth_entry,
+                data=self._reauth_entry.data | data,
                 reason="reauth_successful",
             )
         if not self.unique_id:
-            await self.async_set_unique_id(self.__app_id)
+            await self.async_set_unique_id(self._app_id)
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
-            title=str(self.__app_id),
+            title=str(self._app_id),
             data=data,
         )
 
     @property
-    async def __connection_error(self) -> str | None:
+    async def _connection_error(self) -> str | None:
         """Test if we can connect with the given settings."""
 
         try:
             client = TTNClient(
-                self.__hostname,
-                self.__app_id,
-                self.__access_key,
+                self._hostname,
+                self._app_id,
+                self._access_key,
                 0,
             )
             await client.fetch_data()

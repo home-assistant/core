@@ -27,7 +27,6 @@ async def async_setup_entry(
         data = coordinator.data
         new_sensors = {
             unique_id: TtnDataSensor(
-                coordinator.config_entry,
                 coordinator,
                 ttn_value,
             )
