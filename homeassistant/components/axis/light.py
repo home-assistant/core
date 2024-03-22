@@ -1,6 +1,6 @@
 """Support for Axis lights."""
 
-from collections.abc import Callable, Iterable
+from collections.abc import Iterable
 from dataclasses import dataclass
 from functools import partial
 from typing import Any
@@ -17,7 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import TOPIC_TO_EVENT_TYPE, AxisEventEntity
+from .entity import TOPIC_TO_EVENT_TYPE, AxisEventDescription, AxisEventEntity
 from .hub import AxisHub
 
 
@@ -31,15 +31,8 @@ def light_name_fn(hub: AxisHub, event: Event) -> str:
 
 
 @dataclass(frozen=True, kw_only=True)
-class AxisLightDescription(LightEntityDescription):
+class AxisLightDescription(AxisEventDescription, LightEntityDescription):
     """Axis light entity description."""
-
-    event_topic: EventTopic
-    """Event topic that provides state updates."""
-    name_fn: Callable[[AxisHub, Event], str]
-    """Function providing the corresponding name to the event ID."""
-    supported_fn: Callable[[AxisHub, Event], bool]
-    """Function validating if event is supported."""
 
 
 ENTITY_DESCRIPTIONS = (
@@ -83,6 +76,8 @@ async def async_setup_entry(
 class AxisLight(AxisEventEntity, LightEntity):
     """Representation of an Axis light."""
 
+    entity_description: AxisLightDescription
+
     _attr_should_poll = True
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
@@ -91,11 +86,9 @@ class AxisLight(AxisEventEntity, LightEntity):
         self, hub: AxisHub, description: AxisLightDescription, event: Event
     ) -> None:
         """Initialize the Axis light."""
-        super().__init__(event, hub)
-        self.entity_description = description
-        self._attr_name = description.name_fn(hub, event)
-        self._attr_is_on = event.is_tripped
+        super().__init__(hub, description, event)
 
+        self._attr_is_on = event.is_tripped
         self._light_id = f"led{event.id}"
         self.current_intensity = 0
         self.max_intensity = 0

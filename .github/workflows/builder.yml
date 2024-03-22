@@ -95,6 +95,7 @@ jobs:
       packages: write
       id-token: write
     strategy:
+      fail-fast: false
       matrix:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
@@ -343,7 +344,7 @@ jobs:
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3.4.0
         with:
-          cosign-release: "v2.0.2"
+          cosign-release: "v2.2.3"
 
       - name: Login to DockerHub
         uses: docker/login-action@v3.1.0
