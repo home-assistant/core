@@ -993,11 +993,6 @@ TYPE_TO_CLASSES = {
         PowerViewShadeDualOverlappedFront,
         PowerViewShadeDualOverlappedRear,
     ),
-    11: (
-        PowerViewShadeDualOverlappedCombined,
-        PowerViewShadeDualOverlappedFront,
-        PowerViewShadeDualOverlappedRear,
-    ),
 }
 
 
