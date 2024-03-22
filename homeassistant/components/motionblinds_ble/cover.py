@@ -63,7 +63,7 @@ BLIND_TYPE_TO_ENTITY_DESCRIPTION: dict[str, MotionblindsBLECoverEntityDescriptio
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up blind based on a config entry."""
+    """Set up cover entity based on a config entry."""
 
     blind_class: type[MotionblindsBLECoverEntity] = BLIND_TYPE_TO_CLASS[
         entry.data[CONF_BLIND_TYPE].upper()
@@ -78,7 +78,7 @@ async def async_setup_entry(
 
 
 class MotionblindsBLECoverEntity(MotionblindsBLEEntity, CoverEntity):
-    """Representation of a blind."""
+    """Representation of a cover entity."""
 
     _attr_is_closed: bool | None = None
     _attr_name = None
@@ -136,7 +136,7 @@ class MotionblindsBLECoverEntity(MotionblindsBLEEntity, CoverEntity):
 
 
 class PositionCover(MotionblindsBLECoverEntity):
-    """Representation of a blind with position capability."""
+    """Representation of a cover entity with position capability."""
 
     _attr_supported_features = (
         CoverEntityFeature.OPEN
@@ -168,7 +168,7 @@ class PositionCover(MotionblindsBLECoverEntity):
 
 
 class TiltCover(MotionblindsBLECoverEntity):
-    """Representation of a blind with tilt capability."""
+    """Representation of a cover entity with tilt capability."""
 
     _attr_supported_features = (
         CoverEntityFeature.OPEN_TILT
@@ -204,7 +204,7 @@ class TiltCover(MotionblindsBLECoverEntity):
 
 
 class PositionTiltCover(PositionCover, TiltCover):
-    """Representation of a blind with position & tilt capabilities."""
+    """Representation of a cover entity with position & tilt capabilities."""
 
     _attr_supported_features = (
         CoverEntityFeature.OPEN
