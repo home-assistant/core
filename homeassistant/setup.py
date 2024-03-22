@@ -658,17 +658,6 @@ class SetupPhases(StrEnum):
     """Wait time for the packages to import."""
 
 
-def _setup_times(
-    hass: core.HomeAssistant,
-) -> defaultdict[str, defaultdict[str | None, defaultdict[SetupPhases, float]]]:
-    """Return the setup timings default dict."""
-    if DATA_SETUP_TIME not in hass.data:
-        hass.data[DATA_SETUP_TIME] = defaultdict(
-            lambda: defaultdict(lambda: defaultdict(float))
-        )
-    return hass.data[DATA_SETUP_TIME]  # type: ignore[no-any-return]
-
-
 def _setup_started(
     hass: core.HomeAssistant,
 ) -> dict[tuple[str, str | None], float]:
@@ -723,6 +712,17 @@ def async_pause_setup(
                 group,
                 -time_taken,
             )
+
+
+def _setup_times(
+    hass: core.HomeAssistant,
+) -> defaultdict[str, defaultdict[str | None, defaultdict[SetupPhases, float]]]:
+    """Return the setup timings default dict."""
+    if DATA_SETUP_TIME not in hass.data:
+        hass.data[DATA_SETUP_TIME] = defaultdict(
+            lambda: defaultdict(lambda: defaultdict(float))
+        )
+    return hass.data[DATA_SETUP_TIME]  # type: ignore[no-any-return]
 
 
 @contextlib.contextmanager
