@@ -80,20 +80,14 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             except NoDevicesFound:
                 return self.async_abort(reason=EXCEPTION_MAP[NoDevicesFound])
             except tuple(EXCEPTION_MAP.keys()) as e:
-                errors = {
-                    "base": (
-                        EXCEPTION_MAP[type(e)]
-                        if type(e) in EXCEPTION_MAP
-                        else str(type(e))
-                    )
-                }
+                errors = {"base": EXCEPTION_MAP.get(type(e), str(type(e)))}
                 return self.async_show_form(
                     step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
                 )
             return await self.async_step_confirm()
 
         scanner_count = bluetooth.async_scanner_count(self.hass, connectable=True)
-        if scanner_count == 0:
+        if not scanner_count:
             _LOGGER.error("No bluetooth adapter found")
             return self.async_abort(reason=EXCEPTION_MAP[NoBluetoothAdapter])
 
@@ -147,7 +141,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             raise InvalidMACCode
 
         scanner_count = bluetooth.async_scanner_count(self.hass, connectable=True)
-        if scanner_count == 0:
+        if not scanner_count:
             _LOGGER.error("No bluetooth adapter found")
             raise NoBluetoothAdapter
 

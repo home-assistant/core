@@ -3,7 +3,7 @@
   "name": "Motionblinds BLE",
   "bluetooth": [
     {
-      "local_name": "MOTION_****",
+      "local_name": "MOTION_*",
       "connectable": true
     }
   ],
@@ -14,5 +14,5 @@
   "integration_type": "device",
   "iot_class": "assumed_state",
   "loggers": ["motionblindsble"],
-  "requirements": ["motionblindsble==0.0.6"]
+  "requirements": ["motionblindsble==0.0.8"]
 }

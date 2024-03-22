@@ -48,7 +48,7 @@ async def test_config_flow_manual_success(
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -56,7 +56,7 @@ async def test_config_flow_manual_success(
         result["flow_id"],
         {const.CONF_MAC_CODE: TEST_MAC},
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     result = await hass.config_entries.flow.async_configure(
@@ -83,7 +83,7 @@ async def test_config_flow_manual_error_invalid_mac(
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -92,7 +92,7 @@ async def test_config_flow_manual_error_invalid_mac(
         result["flow_id"],
         {const.CONF_MAC_CODE: "AABBCC"},  # A MAC code should be 4 characters
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": const.ERROR_INVALID_MAC_CODE}
 
@@ -101,7 +101,7 @@ async def test_config_flow_manual_error_invalid_mac(
         result["flow_id"],
         {const.CONF_MAC_CODE: TEST_MAC},
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     # Finish flow
@@ -133,14 +133,14 @@ async def test_config_flow_manual_error_no_bluetooth_adapter(
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == const.ERROR_NO_BLUETOOTH_ADAPTER
 
     # Try discovery with zero Bluetooth adapters
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -152,7 +152,7 @@ async def test_config_flow_manual_error_no_bluetooth_adapter(
             result["flow_id"],
             {const.CONF_MAC_CODE: TEST_MAC},
         )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == const.ERROR_NO_BLUETOOTH_ADAPTER
 
 
@@ -165,7 +165,7 @@ async def test_config_flow_manual_error_could_not_find_motor(
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -175,7 +175,7 @@ async def test_config_flow_manual_error_could_not_find_motor(
         result["flow_id"],
         {const.CONF_MAC_CODE: TEST_MAC},
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": const.ERROR_COULD_NOT_FIND_MOTOR}
 
@@ -185,7 +185,7 @@ async def test_config_flow_manual_error_could_not_find_motor(
         result["flow_id"],
         {const.CONF_MAC_CODE: TEST_MAC},
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     # Finish flow
@@ -213,7 +213,7 @@ async def test_config_flow_manual_error_no_devices_found(
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -223,7 +223,7 @@ async def test_config_flow_manual_error_no_devices_found(
         result["flow_id"],
         {const.CONF_MAC_CODE: TEST_MAC},
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == const.ERROR_NO_DEVICES_FOUND
 
 
@@ -237,7 +237,7 @@ async def test_config_flow_bluetooth_success(
         data=BLIND_SERVICE_INFO,
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     result = await hass.config_entries.flow.async_configure(
