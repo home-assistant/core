@@ -662,13 +662,6 @@ class SetupPhases(StrEnum):
     """Wait time for the packages to import."""
 
 
-# Late phases run outside of the rest of the the setup
-# process so we do not want to subtract out the time
-# we waited for them to finish since nothing is waiting
-# for them to finish.
-LATE_PHASES = {SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP}
-
-
 @contextlib.contextmanager
 def async_pause_setup(
     hass: core.HomeAssistant, phase: SetupPhases
@@ -679,7 +672,7 @@ def async_pause_setup(
     setting up the base components so we can subtract it
     from the total setup time.
     """
-    if not (running := current_setup_group_phase.get()) or running[2] in LATE_PHASES:
+    if not (running := current_setup_group_phase.get()):
         # This means we are likely in a late platform setup
         # that is running in a task so we do not want
         # to subtract out the time later as nothing is waiting
@@ -691,10 +684,8 @@ def async_pause_setup(
     try:
         yield
     finally:
-        setup_running: set[tuple[str, str | None, SetupPhases]]
-        setup_running = hass.data[DATA_SETUP_RUNNING]
         integration, group, running_phase = running
-        if running not in setup_running:
+        if running not in _setup_running(hass):
             # If there is a pause inside of task that runs from the
             # the context manager will finish while waiting for the
             # task to finish so we do not want to subtract out the time
@@ -733,6 +724,24 @@ def _setup_times(
     return hass.data[DATA_SETUP_TIME]  # type: ignore[no-any-return]
 
 
+def _setup_started(
+    hass: core.HomeAssistant,
+) -> dict[tuple[str, str | None], float]:
+    """Return the setup started dict."""
+    if DATA_SETUP_STARTED not in hass.data:
+        hass.data[DATA_SETUP_STARTED] = {}
+    return hass.data[DATA_SETUP_STARTED]  # type: ignore[no-any-return]
+
+
+def _setup_running(
+    hass: core.HomeAssistant,
+) -> set[tuple[str, str | None, SetupPhases]]:
+    """Return the setup running set."""
+    if DATA_SETUP_RUNNING not in hass.data:
+        hass.data[DATA_SETUP_RUNNING] = set()
+    return hass.data[DATA_SETUP_RUNNING]  # type: ignore[no-any-return]
+
+
 @contextlib.contextmanager
 def async_start_setup(
     hass: core.HomeAssistant,
@@ -757,8 +766,7 @@ def async_start_setup(
         yield
         return
 
-    setup_started: dict[tuple[str, str | None], float]
-    setup_started = hass.data.setdefault(DATA_SETUP_STARTED, {})
+    setup_started = _setup_started(hass)
     current_group = (integration, group)
     if current_group in setup_started:
         # We are already inside another async_start_setup, this like means we
@@ -767,8 +775,7 @@ def async_start_setup(
         yield
         return
 
-    setup_running: set[tuple[str, str | None, SetupPhases]]
-    setup_running = hass.data.setdefault(DATA_SETUP_RUNNING, set())
+    setup_running = _setup_running(hass)
     started = time.monotonic()
     running_group_phase = (integration, group, phase)
 
