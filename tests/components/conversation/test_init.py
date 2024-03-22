@@ -22,10 +22,10 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from ..light.common import MockLight, SetupLightPlatformCallable
 from . import expose_entity, expose_new
 
 from tests.common import MockConfigEntry, MockUser, async_mock_service
+from tests.components.light.common import MockLight, SetupLightPlatformCallable
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 AGENT_ID_OPTIONS = [None, conversation.HOME_ASSISTANT_AGENT]
