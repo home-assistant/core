@@ -32,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class CommandButtonEntityDescription(ButtonEntityDescription):
     """Entity description of a button entity with command attribute."""
 
