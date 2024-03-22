@@ -18,13 +18,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import help_test_all, import_and_test_deprecated_constant_enum
+from tests.components.cover.common import MockCover
+from tests.components.cover.conftest import SetupCoverPlatformCallable
 
 
-async def test_services(hass: HomeAssistant, enable_custom_integrations: None) -> None:
+async def test_services(
+    hass: HomeAssistant,
+    setup_cover_platform: SetupCoverPlatformCallable,
+    mock_cover_entities: list[MockCover],
+) -> None:
     """Test the provided services."""
-    platform = getattr(hass.components, "test.cover")
+    setup_cover_platform()
 
-    platform.init()
     assert await async_setup_component(
         hass, cover.DOMAIN, {cover.DOMAIN: {CONF_PLATFORM: "test"}}
     )
@@ -36,7 +41,7 @@ async def test_services(hass: HomeAssistant, enable_custom_integrations: None) -
     # ent4 = cover with all tilt functions but no position
     # ent5 = cover with all functions
     # ent6 = cover with only open/close, but also reports opening/closing
-    ent1, ent2, ent3, ent4, ent5, ent6 = platform.ENTITIES
+    ent1, ent2, ent3, ent4, ent5, ent6 = mock_cover_entities
 
     # Test init all covers should be open
     assert is_open(hass, ent1)

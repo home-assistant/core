@@ -29,6 +29,8 @@ from tests.common import (
     async_get_device_automations,
     async_mock_service,
 )
+from tests.components.cover.common import MockCover
+from tests.components.cover.conftest import SetupCoverPlatformCallable
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -175,12 +177,12 @@ async def test_get_trigger_capabilities(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    enable_custom_integrations: None,
+    setup_cover_platform: SetupCoverPlatformCallable,
+    mock_cover_entities: list[MockCover],
 ) -> None:
     """Test we get the expected capabilities from a cover trigger."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-    ent = platform.ENTITIES[0]
+    setup_cover_platform()
+    ent = mock_cover_entities[0]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -213,12 +215,12 @@ async def test_get_trigger_capabilities_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    enable_custom_integrations: None,
+    setup_cover_platform: SetupCoverPlatformCallable,
+    mock_cover_entities: list[MockCover],
 ) -> None:
     """Test we get the expected capabilities from a cover trigger."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-    ent = platform.ENTITIES[0]
+    setup_cover_platform()
+    ent = mock_cover_entities[0]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -252,12 +254,12 @@ async def test_get_trigger_capabilities_set_pos(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    enable_custom_integrations: None,
+    setup_cover_platform: SetupCoverPlatformCallable,
+    mock_cover_entities: list[MockCover],
 ) -> None:
     """Test we get the expected capabilities from a cover trigger."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-    ent = platform.ENTITIES[1]
+    setup_cover_platform()
+    ent = mock_cover_entities[1]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -317,12 +319,12 @@ async def test_get_trigger_capabilities_set_tilt_pos(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    enable_custom_integrations: None,
+    setup_cover_platform: SetupCoverPlatformCallable,
+    mock_cover_entities: list[MockCover],
 ) -> None:
     """Test we get the expected capabilities from a cover trigger."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-    ent = platform.ENTITIES[3]
+    setup_cover_platform()
+    ent = mock_cover_entities[3]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -664,12 +666,12 @@ async def test_if_fires_on_position(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls,
-    enable_custom_integrations: None,
+    setup_cover_platform: SetupCoverPlatformCallable,
+    mock_cover_entities: list[MockCover],
 ) -> None:
     """Test for position triggers."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-    ent = platform.ENTITIES[1]
+    setup_cover_platform()
+    ent = mock_cover_entities[1]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -818,12 +820,12 @@ async def test_if_fires_on_tilt_position(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls,
-    enable_custom_integrations: None,
+    setup_cover_platform: SetupCoverPlatformCallable,
+    mock_cover_entities: list[MockCover],
 ) -> None:
     """Test for tilt position triggers."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-    ent = platform.ENTITIES[1]
+    setup_cover_platform()
+    ent = mock_cover_entities[1]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
