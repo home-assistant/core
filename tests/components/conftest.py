@@ -134,16 +134,17 @@ def setup_light_platform() -> "SetupLightPlatformCallable":
 
 
 SetupEntityPlatformCallable = Callable[
-    [HomeAssistant, str, list[MockEntity], bool | None], MockPlatform
+    [str, list[MockEntity], bool | None], MockPlatform
 ]
 
 
 @pytest.fixture
-async def setup_test_component_platform() -> SetupEntityPlatformCallable:
+async def setup_test_component_platform(
+    hass: HomeAssistant,
+) -> SetupEntityPlatformCallable:
     """Mock a test component platform for tests."""
 
     def _setup(
-        hass: HomeAssistant,
         domain: str,
         entities: list[MockEntity],
         from_config_entry: bool | None = None,
