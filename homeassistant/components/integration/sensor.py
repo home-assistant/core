@@ -50,6 +50,7 @@ from .const import (
     CONF_UNIT_PREFIX,
     CONF_UNIT_TIME,
     INTEGRATION_METHODS,
+    METHOD_LEFT,
     METHOD_RIGHT,
     METHOD_TRAPEZOIDAL,
 )
@@ -93,11 +94,7 @@ PLATFORM_SCHEMA = vol.All(
 class _IntegrationMethod(ABC):
     @staticmethod
     def from_name(method_name: str) -> _IntegrationMethod:
-        if method_name == METHOD_TRAPEZOIDAL:
-            return _Trapezoidal()
-        if method_name == METHOD_RIGHT:
-            return _Right()
-        return _Left()
+        return _NAME_TO_INTEGRATION_METHOD[method_name]()
 
     @abstractmethod
     def validate_states(self, left: State, right: State) -> bool:
@@ -151,6 +148,13 @@ def _is_numeric_state(state: State) -> bool:
         return True
     except (ValueError, TypeError):
         return False
+
+
+_NAME_TO_INTEGRATION_METHOD: dict[str, type[_IntegrationMethod]] = {
+    METHOD_LEFT: _Left,
+    METHOD_RIGHT: _Right,
+    METHOD_TRAPEZOIDAL: _Trapezoidal,
+}
 
 
 @dataclass
