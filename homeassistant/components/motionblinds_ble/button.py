@@ -85,7 +85,7 @@ async def async_setup_entry(
 
 
 class MotionblindsBLEButtonEntity(MotionblindsBLEEntity, ButtonEntity):
-    """Representation of a command button entity."""
+    """Representation of a button entity."""
 
     entity_description: MotionblindsBLEButtonEntityDescription
 
