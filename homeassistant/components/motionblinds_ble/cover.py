@@ -135,7 +135,7 @@ class MotionblindsBLECoverEntity(MotionblindsBLEEntity, CoverEntity):
         self.async_write_ha_state()
 
 
-class PositionBlind(MotionblindsBLECoverEntity):
+class PositionCover(MotionblindsBLECoverEntity):
     """Representation of a blind with position capability."""
 
     _attr_supported_features = (
@@ -167,7 +167,7 @@ class PositionBlind(MotionblindsBLECoverEntity):
         await self.device.position(new_position)
 
 
-class TiltBlind(MotionblindsBLECoverEntity):
+class TiltCover(MotionblindsBLECoverEntity):
     """Representation of a blind with tilt capability."""
 
     _attr_supported_features = (
@@ -203,7 +203,7 @@ class TiltBlind(MotionblindsBLECoverEntity):
         await self.device.tilt(round(180 * new_tilt / 100))
 
 
-class PositionTiltBlind(PositionBlind, TiltBlind):
+class PositionTiltCover(PositionCover, TiltCover):
     """Representation of a blind with position & tilt capabilities."""
 
     _attr_supported_features = (
@@ -219,12 +219,12 @@ class PositionTiltBlind(PositionBlind, TiltBlind):
 
 
 BLIND_TYPE_TO_CLASS: dict[str, type[MotionblindsBLECoverEntity]] = {
-    MotionBlindType.ROLLER.name: PositionBlind,
-    MotionBlindType.HONEYCOMB.name: PositionBlind,
-    MotionBlindType.ROMAN.name: PositionBlind,
-    MotionBlindType.VENETIAN.name: PositionTiltBlind,
-    MotionBlindType.VENETIAN_TILT_ONLY.name: TiltBlind,
-    MotionBlindType.DOUBLE_ROLLER.name: PositionTiltBlind,
-    MotionBlindType.CURTAIN.name: PositionBlind,
-    MotionBlindType.VERTICAL.name: PositionTiltBlind,
+    MotionBlindType.ROLLER.name: PositionCover,
+    MotionBlindType.HONEYCOMB.name: PositionCover,
+    MotionBlindType.ROMAN.name: PositionCover,
+    MotionBlindType.VENETIAN.name: PositionTiltCover,
+    MotionBlindType.VENETIAN_TILT_ONLY.name: TiltCover,
+    MotionBlindType.DOUBLE_ROLLER.name: PositionTiltCover,
+    MotionBlindType.CURTAIN.name: PositionCover,
+    MotionBlindType.VERTICAL.name: PositionTiltCover,
 }
