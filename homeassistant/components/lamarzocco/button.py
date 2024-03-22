@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Generic
 
 from lmcloud.lm_machine import LaMarzoccoMachine
 
@@ -12,21 +12,22 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
+from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription, _DeviceT
 
 
 @dataclass(frozen=True, kw_only=True)
 class LaMarzoccoButtonEntityDescription(
     LaMarzoccoEntityDescription,
     ButtonEntityDescription,
+    Generic[_DeviceT],
 ):
     """Description of a La Marzocco button."""
 
-    press_fn: Callable[[LaMarzoccoMachine], Coroutine[Any, Any, None]]
+    press_fn: Callable[[_DeviceT], Coroutine[Any, Any, None]]
 
 
 ENTITIES: tuple[LaMarzoccoButtonEntityDescription, ...] = (
-    LaMarzoccoButtonEntityDescription(
+    LaMarzoccoButtonEntityDescription[LaMarzoccoMachine](
         key="start_backflush",
         translation_key="start_backflush",
         press_fn=lambda machine: machine.start_backflush(),

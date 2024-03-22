@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Generic
 
 from lmcloud.models import LaMarzoccoMachineConfig
 
@@ -16,21 +17,22 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
+from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription, _ConfigT
 
 
 @dataclass(frozen=True, kw_only=True)
 class LaMarzoccoBinarySensorEntityDescription(
     LaMarzoccoEntityDescription,
     BinarySensorEntityDescription,
+    Generic[_ConfigT],
 ):
     """Description of a La Marzocco binary sensor."""
 
-    is_on_fn: Callable[[LaMarzoccoMachineConfig], bool]
+    is_on_fn: Callable[[_ConfigT], bool]
 
 
 ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
-    LaMarzoccoBinarySensorEntityDescription(
+    LaMarzoccoBinarySensorEntityDescription[LaMarzoccoMachineConfig](
         key="water_tank",
         translation_key="water_tank",
         device_class=BinarySensorDeviceClass.PROBLEM,
@@ -38,7 +40,7 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         supported_fn=lambda coordinator: coordinator.local_connection_configured,
     ),
-    LaMarzoccoBinarySensorEntityDescription(
+    LaMarzoccoBinarySensorEntityDescription[LaMarzoccoMachineConfig](
         key="brew_active",
         translation_key="brew_active",
         device_class=BinarySensorDeviceClass.RUNNING,

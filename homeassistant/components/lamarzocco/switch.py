@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Generic
 
 from lmcloud.const import BoilerType
 from lmcloud.lm_machine import LaMarzoccoMachine
@@ -14,29 +14,30 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
+from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription, _ConfigT, _DeviceT
 
 
 @dataclass(frozen=True, kw_only=True)
 class LaMarzoccoSwitchEntityDescription(
     LaMarzoccoEntityDescription,
     SwitchEntityDescription,
+    Generic[_DeviceT, _ConfigT],
 ):
     """Description of a La Marzocco Switch."""
 
-    control_fn: Callable[[LaMarzoccoMachine, bool], Coroutine[Any, Any, bool]]
-    is_on_fn: Callable[[LaMarzoccoMachineConfig], bool]
+    control_fn: Callable[[_DeviceT, bool], Coroutine[Any, Any, bool]]
+    is_on_fn: Callable[[_ConfigT], bool]
 
 
 ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
-    LaMarzoccoSwitchEntityDescription(
+    LaMarzoccoSwitchEntityDescription[LaMarzoccoMachine, LaMarzoccoMachineConfig](
         key="main",
         translation_key="main",
         name=None,
         control_fn=lambda machine, state: machine.set_power(state),
         is_on_fn=lambda config: config.turned_on,
     ),
-    LaMarzoccoSwitchEntityDescription(
+    LaMarzoccoSwitchEntityDescription[LaMarzoccoMachine, LaMarzoccoMachineConfig](
         key="steam_boiler_enable",
         translation_key="steam_boiler",
         control_fn=lambda machine, state: machine.set_steam(state),

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Generic
 
 from lmcloud.const import (
     KEYS_PER_MODEL,
@@ -32,35 +32,37 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import LaMarzoccoMachineUpdateCoordinator
-from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
+from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription, _ConfigT, _DeviceT
 
 
 @dataclass(frozen=True, kw_only=True)
 class LaMarzoccoNumberEntityDescription(
     LaMarzoccoEntityDescription,
     NumberEntityDescription,
+    Generic[_DeviceT, _ConfigT],
 ):
     """Description of a La Marzocco number entity."""
 
-    native_value_fn: Callable[[LaMarzoccoMachineConfig], float | int]
-    set_value_fn: Callable[[LaMarzoccoMachine, float | int], Coroutine[Any, Any, bool]]
+    native_value_fn: Callable[[_ConfigT], float | int]
+    set_value_fn: Callable[[_DeviceT, float | int], Coroutine[Any, Any, bool]]
 
 
 @dataclass(frozen=True, kw_only=True)
 class LaMarzoccoKeyNumberEntityDescription(
     LaMarzoccoEntityDescription,
     NumberEntityDescription,
+    Generic[_DeviceT, _ConfigT],
 ):
     """Description of an La Marzocco number entity with keys."""
 
-    native_value_fn: Callable[[LaMarzoccoMachineConfig, PhysicalKey], float | int]
+    native_value_fn: Callable[[_ConfigT, PhysicalKey], float | int]
     set_value_fn: Callable[
-        [LaMarzoccoMachine, float | int, PhysicalKey], Coroutine[Any, Any, bool]
+        [_DeviceT, float | int, PhysicalKey], Coroutine[Any, Any, bool]
     ]
 
 
 ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
-    LaMarzoccoNumberEntityDescription(
+    LaMarzoccoNumberEntityDescription[LaMarzoccoMachine, LaMarzoccoMachineConfig](
         key="coffee_temp",
         translation_key="coffee_temp",
         device_class=NumberDeviceClass.TEMPERATURE,
@@ -73,7 +75,7 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
             BoilerType.COFFEE
         ].target_temperature,
     ),
-    LaMarzoccoNumberEntityDescription(
+    LaMarzoccoNumberEntityDescription[LaMarzoccoMachine, LaMarzoccoMachineConfig](
         key="steam_temp",
         translation_key="steam_temp",
         device_class=NumberDeviceClass.TEMPERATURE,
@@ -91,7 +93,7 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
             MachineModel.GS3_MP,
         ),
     ),
-    LaMarzoccoNumberEntityDescription(
+    LaMarzoccoNumberEntityDescription[LaMarzoccoMachine, LaMarzoccoMachineConfig](
         key="tea_water_duration",
         translation_key="tea_water_duration",
         device_class=NumberDeviceClass.DURATION,
@@ -111,7 +113,7 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
 
 
 KEY_ENTITIES: tuple[LaMarzoccoKeyNumberEntityDescription, ...] = (
-    LaMarzoccoKeyNumberEntityDescription(
+    LaMarzoccoKeyNumberEntityDescription[LaMarzoccoMachine, LaMarzoccoMachineConfig](
         key="prebrew_off",
         translation_key="prebrew_off",
         device_class=NumberDeviceClass.DURATION,
@@ -129,7 +131,7 @@ KEY_ENTITIES: tuple[LaMarzoccoKeyNumberEntityDescription, ...] = (
         supported_fn=lambda coordinator: coordinator.device.model
         != MachineModel.GS3_MP,
     ),
-    LaMarzoccoKeyNumberEntityDescription(
+    LaMarzoccoKeyNumberEntityDescription[LaMarzoccoMachine, LaMarzoccoMachineConfig](
         key="prebrew_on",
         translation_key="prebrew_on",
         device_class=NumberDeviceClass.DURATION,
@@ -147,7 +149,7 @@ KEY_ENTITIES: tuple[LaMarzoccoKeyNumberEntityDescription, ...] = (
         supported_fn=lambda coordinator: coordinator.device.model
         != MachineModel.GS3_MP,
     ),
-    LaMarzoccoKeyNumberEntityDescription(
+    LaMarzoccoKeyNumberEntityDescription[LaMarzoccoMachine, LaMarzoccoMachineConfig](
         key="preinfusion_off",
         translation_key="preinfusion_off",
         device_class=NumberDeviceClass.DURATION,
@@ -167,7 +169,7 @@ KEY_ENTITIES: tuple[LaMarzoccoKeyNumberEntityDescription, ...] = (
         supported_fn=lambda coordinator: coordinator.device.model
         != MachineModel.GS3_MP,
     ),
-    LaMarzoccoKeyNumberEntityDescription(
+    LaMarzoccoKeyNumberEntityDescription[LaMarzoccoMachine, LaMarzoccoMachineConfig](
         key="dose",
         translation_key="dose",
         native_unit_of_measurement="ticks",
