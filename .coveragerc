@@ -202,6 +202,7 @@ omit =
     homeassistant/components/control4/__init__.py
     homeassistant/components/control4/director_utils.py
     homeassistant/components/control4/light.py
+    homeassistant/components/control4/media_player.py
     homeassistant/components/coolmaster/coordinator.py
     homeassistant/components/cppm_tracker/device_tracker.py
     homeassistant/components/crownstone/__init__.py
@@ -775,9 +776,11 @@ omit =
     homeassistant/components/microbees/__init__.py
     homeassistant/components/microbees/api.py
     homeassistant/components/microbees/application_credentials.py
+    homeassistant/components/microbees/binary_sensor.py
     homeassistant/components/microbees/button.py
     homeassistant/components/microbees/const.py
     homeassistant/components/microbees/coordinator.py
+    homeassistant/components/microbees/cover.py
     homeassistant/components/microbees/entity.py
     homeassistant/components/microbees/light.py
     homeassistant/components/microbees/sensor.py

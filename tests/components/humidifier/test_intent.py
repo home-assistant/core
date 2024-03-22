@@ -186,7 +186,7 @@ async def test_intent_set_mode_tests_feature(hass: HomeAssistant) -> None:
     assert len(mode_calls) == 0
 
 
-@pytest.mark.parametrize("available_modes", (["home", "away"], None))
+@pytest.mark.parametrize("available_modes", [["home", "away"], None])
 async def test_intent_set_unknown_mode(
     hass: HomeAssistant, available_modes: list[str] | None
 ) -> None:

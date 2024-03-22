@@ -1065,7 +1065,11 @@ class Integration:
 
     async def async_get_platform(self, platform_name: str) -> ModuleType:
         """Return a platform for an integration."""
-        platforms = await self.async_get_platforms([platform_name])
+        # Fast path for a single platform when it is already cached.
+        # This is the common case.
+        if platform := self._cache.get(f"{self.domain}.{platform_name}"):
+            return platform  # type: ignore[return-value]
+        platforms = await self.async_get_platforms((platform_name,))
         return platforms[platform_name]
 
     async def async_get_platforms(

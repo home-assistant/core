@@ -132,13 +132,13 @@ async def test_list_devices(
 @pytest.mark.parametrize(
     ("payload_key", "payload_value"),
     [
-        ["area_id", "12345A"],
-        ["area_id", None],
-        ["disabled_by", dr.DeviceEntryDisabler.USER],
-        ["disabled_by", "user"],
-        ["disabled_by", None],
-        ["name_by_user", "Test Friendly Name"],
-        ["name_by_user", None],
+        ("area_id", "12345A"),
+        ("area_id", None),
+        ("disabled_by", dr.DeviceEntryDisabler.USER),
+        ("disabled_by", "user"),
+        ("disabled_by", None),
+        ("name_by_user", "Test Friendly Name"),
+        ("name_by_user", None),
     ],
 )
 async def test_update_device(

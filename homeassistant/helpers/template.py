@@ -83,6 +83,7 @@ from . import (
     area_registry,
     device_registry,
     entity_registry,
+    floor_registry as fr,
     issue_registry,
     location as loc_helper,
 )
@@ -130,8 +131,8 @@ _T = TypeVar("_T")
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
 
-ALL_STATES_RATE_LIMIT = timedelta(minutes=1)
-DOMAIN_STATES_RATE_LIMIT = timedelta(seconds=1)
+ALL_STATES_RATE_LIMIT = 60  # seconds
+DOMAIN_STATES_RATE_LIMIT = 1  # seconds
 
 _render_info: ContextVar[RenderInfo | None] = ContextVar("_render_info", default=None)
 
@@ -373,7 +374,7 @@ class RenderInfo:
         self.domains: collections.abc.Set[str] = set()
         self.domains_lifecycle: collections.abc.Set[str] = set()
         self.entities: collections.abc.Set[str] = set()
-        self.rate_limit: timedelta | None = None
+        self.rate_limit: float | None = None
         self.has_time = False
 
     def __repr__(self) -> str:
@@ -1042,6 +1043,12 @@ class TemplateStateBase(State):
         return self._state.last_changed
 
     @property
+    def last_reported(self) -> datetime:  # type: ignore[override]
+        """Wrap State.last_reported."""
+        self._collect_state()
+        return self._state.last_reported
+
+    @property
     def last_updated(self) -> datetime:  # type: ignore[override]
         """Wrap State.last_updated."""
         self._collect_state()
@@ -1385,6 +1392,45 @@ def issue(hass: HomeAssistant, domain: str, issue_id: str) -> dict[str, Any] | N
     if result:
         return result.to_json()
     return None
+
+
+def floors(hass: HomeAssistant) -> Iterable[str | None]:
+    """Return all floors."""
+    floor_registry = fr.async_get(hass)
+    return [floor.floor_id for floor in floor_registry.async_list_floors()]
+
+
+def floor_id(hass: HomeAssistant, lookup_value: Any) -> str | None:
+    """Get the floor ID from a floor name."""
+    floor_registry = fr.async_get(hass)
+    if floor := floor_registry.async_get_floor_by_name(str(lookup_value)):
+        return floor.floor_id
+    return None
+
+
+def floor_name(hass: HomeAssistant, lookup_value: str) -> str | None:
+    """Get the floor name from a floor id."""
+    floor_registry = fr.async_get(hass)
+    if floor := floor_registry.async_get_floor(lookup_value):
+        return floor.name
+    return None
+
+
+def floor_areas(hass: HomeAssistant, floor_id_or_name: str) -> Iterable[str]:
+    """Return area IDs for a given floor ID or name."""
+    _floor_id: str | None
+    # If floor_name returns a value, we know the input was an ID, otherwise we
+    # assume it's a name, and if it's neither, we return early
+    if floor_name(hass, floor_id_or_name) is not None:
+        _floor_id = floor_id_or_name
+    else:
+        _floor_id = floor_id(hass, floor_id_or_name)
+    if _floor_id is None:
+        return []
+
+    area_reg = area_registry.async_get(hass)
+    entries = area_registry.async_entries_for_floor(area_reg, _floor_id)
+    return [entry.id for entry in entries if entry.id]
 
 
 def areas(hass: HomeAssistant) -> Iterable[str | None]:
@@ -2668,6 +2714,18 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["area_devices"] = hassfunction(area_devices)
         self.filters["area_devices"] = self.globals["area_devices"]
 
+        self.globals["floors"] = hassfunction(floors)
+        self.filters["floors"] = self.globals["floors"]
+
+        self.globals["floor_id"] = hassfunction(floor_id)
+        self.filters["floor_id"] = self.globals["floor_id"]
+
+        self.globals["floor_name"] = hassfunction(floor_name)
+        self.filters["floor_name"] = self.globals["floor_name"]
+
+        self.globals["floor_areas"] = hassfunction(floor_areas)
+        self.filters["floor_areas"] = self.globals["floor_areas"]
+
         self.globals["integration_entities"] = hassfunction(integration_entities)
         self.filters["integration_entities"] = self.globals["integration_entities"]
 
@@ -2700,6 +2758,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "device_id",
                 "area_id",
                 "area_name",
+                "floor_id",
+                "floor_name",
                 "relative_time",
                 "today_at",
             ]
@@ -2709,6 +2769,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "device_id",
                 "area_id",
                 "area_name",
+                "floor_id",
+                "floor_name",
                 "has_value",
             ]
             hass_tests = [

@@ -68,7 +68,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _LOGGER.error("Error storing traces", exc_info=exc)
 
     # Store traces when stopping hass
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_store_traces_at_stop)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, _async_store_traces_at_stop, run_immediately=True
+    )
 
     return True
 

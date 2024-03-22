@@ -1328,24 +1328,24 @@ async def mock_modbus_read_pymodbus_fixture(
 @pytest.mark.parametrize(
     ("do_domain", "do_group", "do_type", "do_scan_interval"),
     [
-        [SENSOR_DOMAIN, CONF_SENSORS, CALL_TYPE_REGISTER_HOLDING, 10],
-        [SENSOR_DOMAIN, CONF_SENSORS, CALL_TYPE_REGISTER_INPUT, 10],
-        [BINARY_SENSOR_DOMAIN, CONF_BINARY_SENSORS, CALL_TYPE_DISCRETE, 10],
-        [BINARY_SENSOR_DOMAIN, CONF_BINARY_SENSORS, CALL_TYPE_COIL, 1],
+        (SENSOR_DOMAIN, CONF_SENSORS, CALL_TYPE_REGISTER_HOLDING, 10),
+        (SENSOR_DOMAIN, CONF_SENSORS, CALL_TYPE_REGISTER_INPUT, 10),
+        (BINARY_SENSOR_DOMAIN, CONF_BINARY_SENSORS, CALL_TYPE_DISCRETE, 10),
+        (BINARY_SENSOR_DOMAIN, CONF_BINARY_SENSORS, CALL_TYPE_COIL, 1),
     ],
 )
 @pytest.mark.parametrize(
     ("do_return", "do_exception", "do_expect_state", "do_expect_value"),
     [
-        [ReadResult([1]), None, STATE_ON, "1"],
-        [IllegalFunctionRequest(0x99), None, STATE_UNAVAILABLE, STATE_UNAVAILABLE],
-        [ExceptionResponse(0x99), None, STATE_UNAVAILABLE, STATE_UNAVAILABLE],
-        [
+        (ReadResult([1]), None, STATE_ON, "1"),
+        (IllegalFunctionRequest(0x99), None, STATE_UNAVAILABLE, STATE_UNAVAILABLE),
+        (ExceptionResponse(0x99), None, STATE_UNAVAILABLE, STATE_UNAVAILABLE),
+        (
             ReadResult([1]),
             ModbusException("fail read_"),
             STATE_UNAVAILABLE,
             STATE_UNAVAILABLE,
-        ],
+        ),
     ],
 )
 async def test_pb_read(

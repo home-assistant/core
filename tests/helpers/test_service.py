@@ -601,7 +601,7 @@ async def test_service_call_entry_id(
     assert dict(calls[0].data) == {"entity_id": ["hello.world"]}
 
 
-@pytest.mark.parametrize("target", ("all", "none"))
+@pytest.mark.parametrize("target", ["all", "none"])
 async def test_service_call_all_none(hass: HomeAssistant, target) -> None:
     """Test service call targeting all."""
     calls = async_mock_service(hass, "test_domain", "test_service")

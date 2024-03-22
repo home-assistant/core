@@ -206,7 +206,7 @@ async def test_return_response_error(hass: HomeAssistant, websocket_client) -> N
     assert msg["error"]["code"] == "unknown_error"
 
 
-@pytest.mark.parametrize("command", ("call_service", "call_service_action"))
+@pytest.mark.parametrize("command", ["call_service", "call_service_action"])
 async def test_call_service_blocking(
     hass: HomeAssistant, websocket_client: MockHAClientWebSocket, command
 ) -> None:
@@ -2512,7 +2512,7 @@ async def test_integration_setup_info(
 
 @pytest.mark.parametrize(
     ("key", "config"),
-    (
+    [
         ("trigger", {"platform": "event", "event_type": "hello"}),
         ("trigger", [{"platform": "event", "event_type": "hello"}]),
         (
@@ -2525,7 +2525,7 @@ async def test_integration_setup_info(
         ),
         ("action", {"service": "domain_test.test_service"}),
         ("action", [{"service": "domain_test.test_service"}]),
-    ),
+    ],
 )
 async def test_validate_config_works(
     websocket_client: MockHAClientWebSocket, key, config
@@ -2542,7 +2542,7 @@ async def test_validate_config_works(
 
 @pytest.mark.parametrize(
     ("key", "config", "error"),
-    (
+    [
         (
             "trigger",
             {"platform": "non_existing", "event_type": "hello"},
@@ -2566,7 +2566,7 @@ async def test_validate_config_works(
             {"non_existing": "domain_test.test_service"},
             "Unable to determine action @ data[0]",
         ),
-    ),
+    ],
 )
 async def test_validate_config_invalid(
     websocket_client: MockHAClientWebSocket, key, config, error
