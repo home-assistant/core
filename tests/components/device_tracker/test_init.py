@@ -117,11 +117,21 @@ async def test_reading_yaml_config(
     await hass.async_add_executor_job(
         legacy.update_config, yaml_devices, dev_id, device
     )
-    assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)
-    config = (await legacy.async_load_config(yaml_devices, hass, device.consider_home))[
-        0
-    ]
-    await hass.async_block_till_done()
+    loaded_config = None
+    original_async_load_config = legacy.async_load_config
+
+    async def capture_load_config(*args, **kwargs):
+        nonlocal loaded_config
+        loaded_config = await original_async_load_config(*args, **kwargs)
+        return loaded_config
+
+    with patch(
+        "homeassistant.components.device_tracker.legacy.async_load_config",
+        capture_load_config,
+    ):
+        assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)
+        await hass.async_block_till_done()
+    config = loaded_config[0]
     assert device.dev_id == config.dev_id
     assert device.track == config.track
     assert device.mac == config.mac
