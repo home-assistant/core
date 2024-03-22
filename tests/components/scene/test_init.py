@@ -19,14 +19,19 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import loader as yaml_loader
 
 from tests.common import async_mock_service, mock_restore_cache
+from tests.components.light.common import MockLight, SetupLightPlatformCallable
 
 
 @pytest.fixture(autouse=True)
-def entities(hass):
+def entities(
+    hass: HomeAssistant,
+    setup_light_platform: SetupLightPlatformCallable,
+    mock_light_entities: list[MockLight],
+) -> list[MockLight]:
     """Initialize the test light."""
-    platform = getattr(hass.components, "test.light")
-    platform.init()
-    return platform.ENTITIES[0:2]
+    entities = mock_light_entities[0:2]
+    setup_light_platform(hass, entities)
+    return entities
 
 
 async def test_config_yaml_alias_anchor(

@@ -615,13 +615,10 @@ async def test_availability(
 
     hass.states.async_set("sensor.input1", "off")
     await hass.async_block_till_done()
-    with patch(
-        "homeassistant.components.command_line.utils.subprocess.check_output",
-        return_value=b"0",
-    ):
-        freezer.tick(timedelta(minutes=10))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.current_version")
     assert state.state == STATE_UNAVAILABLE
