@@ -12,9 +12,9 @@ import voluptuous as vol
 
 from homeassistant import loader
 from homeassistant.config import (  # type: ignore[attr-defined]
-    CONF_CORE,
     CONF_PACKAGES,
     CORE_CONFIG_SCHEMA,
+    DOMAIN_HA,
     YAML_CONFIG_FILE,
     config_per_platform,
     extract_domain_configs,
@@ -158,10 +158,10 @@ async def async_check_ha_config_file(  # noqa: C901
         return result.add_error(f"Error loading {config_path}: {err}")
 
     # Extract and validate core [homeassistant] config
-    core_config = config.pop(CONF_CORE, {})
+    core_config = config.pop(DOMAIN_HA, {})
     try:
         core_config = CORE_CONFIG_SCHEMA(core_config)
-        result[CONF_CORE] = core_config
+        result[DOMAIN_HA] = core_config
 
         # Merge packages
         await merge_packages_config(
@@ -169,8 +169,8 @@ async def async_check_ha_config_file(  # noqa: C901
         )
     except vol.Invalid as err:
         result.add_error(
-            format_schema_error(hass, err, CONF_CORE, core_config),
-            CONF_CORE,
+            format_schema_error(hass, err, DOMAIN_HA, core_config),
+            DOMAIN_HA,
             core_config,
         )
         core_config = {}

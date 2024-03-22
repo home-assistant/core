@@ -58,7 +58,7 @@ from .const import (
     LEGACY_CONF_WHITELIST_EXTERNAL_DIRS,
     __version__,
 )
-from .core import DOMAIN as CONF_CORE, ConfigSource, HomeAssistant, callback
+from .core import DOMAIN as DOMAIN_HA, ConfigSource, HomeAssistant, callback
 from .exceptions import ConfigValidationError, HomeAssistantError
 from .generated.currencies import HISTORIC_CURRENCIES
 from .helpers import config_validation as cv, issue_registry as ir
@@ -80,7 +80,6 @@ YAML_CONFIG_FILE = "configuration.yaml"
 VERSION_FILE = ".HA_VERSION"
 CONFIG_DIR_NAME = ".homeassistant"
 DATA_CUSTOMIZE = "hass_customize"
-DOMAIN_HA = "homeassistant"
 
 AUTOMATION_CONFIG_PATH = "automations.yaml"
 SCRIPT_CONFIG_PATH = "scripts.yaml"
@@ -504,12 +503,12 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> dict:
     for invalid_domain in invalid_domains:
         config.pop(invalid_domain)
 
-    core_config = config.get(CONF_CORE, {})
+    core_config = config.get(DOMAIN_HA, {})
     try:
         await merge_packages_config(hass, config, core_config.get(CONF_PACKAGES, {}))
     except vol.Invalid as exc:
         suffix = ""
-        if annotation := find_annotation(config, [CONF_CORE, CONF_PACKAGES, *exc.path]):
+        if annotation := find_annotation(config, [DOMAIN_HA, CONF_PACKAGES, *exc.path]):
             suffix = f" at {_relpath(hass, annotation[0])}, line {annotation[1]}"
         _LOGGER.error(
             "Invalid package configuration '%s'%s: %s", CONF_PACKAGES, suffix, exc
@@ -732,7 +731,7 @@ def stringify_invalid(
         )
     else:
         message_prefix = f"Invalid config for '{domain}'"
-    if domain != CONF_CORE and link:
+    if domain != DOMAIN_HA and link:
         message_suffix = f", please check the docs at {link}"
     else:
         message_suffix = ""
@@ -815,7 +814,7 @@ def format_homeassistant_error(
     if annotation := find_annotation(config, [domain]):
         message_prefix += f" at {_relpath(hass, annotation[0])}, line {annotation[1]}"
     message = f"{message_prefix}: {str(exc) or repr(exc)}"
-    if domain != CONF_CORE and link:
+    if domain != DOMAIN_HA and link:
         message += f", please check the docs at {link}"
 
     return message
@@ -934,7 +933,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
     cust_glob = OrderedDict(config[CONF_CUSTOMIZE_GLOB])
 
     for name, pkg in config[CONF_PACKAGES].items():
-        if (pkg_cust := pkg.get(CONF_CORE)) is None:
+        if (pkg_cust := pkg.get(DOMAIN_HA)) is None:
             continue
 
         try:
@@ -958,7 +957,7 @@ def _log_pkg_error(
 ) -> None:
     """Log an error while merging packages."""
     message_prefix = f"Setup of package '{package}'"
-    if annotation := find_annotation(config, [CONF_CORE, CONF_PACKAGES, package]):
+    if annotation := find_annotation(config, [DOMAIN_HA, CONF_PACKAGES, package]):
         message_prefix += f" at {_relpath(hass, annotation[0])}, line {annotation[1]}"
 
     _LOGGER.error("%s failed: %s", message_prefix, message)
@@ -1073,7 +1072,7 @@ async def merge_packages_config(
             continue
 
         for comp_name, comp_conf in pack_conf.items():
-            if comp_name == CONF_CORE:
+            if comp_name == DOMAIN_HA:
                 continue
             try:
                 domain = cv.domain_key(comp_name)
@@ -1306,7 +1305,7 @@ def async_drop_config_annotations(
 
     # Don't drop annotations from the homeassistant integration because it may
     # have configuration for other integrations as packages.
-    if integration.domain in config and integration.domain != CONF_CORE:
+    if integration.domain in config and integration.domain != DOMAIN_HA:
         drop_config_annotations_rec(config[integration.domain])
     return config
 
