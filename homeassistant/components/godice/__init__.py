@@ -13,7 +13,7 @@ from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DATA_DICE, DATA_DISCONNECTED_BY_REQUEST_FLAG, DOMAIN
+from .const import CONF_SHELL, DATA_DICE, DATA_DISCONNECTED_BY_REQUEST_FLAG, DOMAIN
 
 PLATFORMS = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         client = bleak.BleakClient(
             ble_device, timeout=20, disconnected_callback=on_disconnect_callback
         )
-        dice = godice.create(client, godice.Shell.D6)
+        dice = godice.create(client, godice.Shell[entry.data[CONF_SHELL]])
         await dice.connect()
         await dice.pulse_led(
             pulse_count=2, on_time_ms=50, off_time_ms=20, rgb_tuple=(0, 255, 0)

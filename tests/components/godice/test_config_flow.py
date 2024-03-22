@@ -21,7 +21,7 @@ async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
     assert config_flow["step_id"] == "discovery_confirm"
     with patch("homeassistant.components.godice.async_setup_entry", return_value=True):
         config_entry = await hass.config_entries.flow.async_configure(
-            config_flow["flow_id"], user_input={}
+            config_flow["flow_id"], user_input={"shell": "D6"}
         )
     assert config_entry["type"] == FlowResultType.CREATE_ENTRY
     assert config_entry["title"] == GODICE_DEVICE_SERVICE_INFO.name
@@ -29,6 +29,7 @@ async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
     assert config_entry["data"] == {
         "name": GODICE_DEVICE_SERVICE_INFO.name,
         "address": GODICE_DEVICE_SERVICE_INFO.address,
+        "shell": "D6",
     }
 
 

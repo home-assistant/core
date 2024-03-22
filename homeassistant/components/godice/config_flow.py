@@ -2,11 +2,26 @@
 
 from __future__ import annotations
 
+from godice import Shell
+import voluptuous as vol
+
 from homeassistant.components.bluetooth import BluetoothServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS, CONF_NAME
+from homeassistant.helpers import selector
 
-from .const import DOMAIN
+from .const import CONF_SHELL, DOMAIN
+
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_SHELL): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=[v.name for v in Shell],
+                mode=selector.SelectSelectorMode.DROPDOWN,
+            )
+        ),
+    }
+)
 
 
 class GoDiceConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -38,6 +53,7 @@ class GoDiceConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={
                     CONF_NAME: self._discovery_info.name,
                     CONF_ADDRESS: self._discovery_info.address,
+                    CONF_SHELL: user_input[CONF_SHELL],
                 },
             )
 
@@ -45,6 +61,7 @@ class GoDiceConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {CONF_NAME: self._discovery_info.name}
         return self.async_show_form(
             step_id="discovery_confirm",
+            data_schema=DATA_SCHEMA,
             description_placeholders={
                 CONF_NAME: self._discovery_info.name,
                 CONF_ADDRESS: self._discovery_info.address,

@@ -40,6 +40,7 @@ async def test_sensor_reading(hass: HomeAssistant, fake_dice) -> None:
         data={
             "name": GODICE_DEVICE_SERVICE_INFO.name,
             "address": GODICE_DEVICE_SERVICE_INFO.address,
+            "shell": godice.Shell.D6.name,
         },
     )
     config_entry.add_to_hass(hass)
@@ -130,6 +131,7 @@ async def test_reloading_on_connection_lost(hass: HomeAssistant, fake_dice) -> N
         data={
             "name": GODICE_DEVICE_SERVICE_INFO.name,
             "address": GODICE_DEVICE_SERVICE_INFO.address,
+            "shell": godice.Shell.D6.name,
         },
     )
     config_entry.add_to_hass(hass)

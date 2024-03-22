@@ -5,7 +5,13 @@
         "description": "[%key:common::config_flow::description::confirm_setup%]"
       },
       "discovery_confirm": {
-        "description": "Setup {name} - {address} ? The device will blink once connected"
+        "description": "Setup {name} - {address} ? The device will blink once connected",
+        "data": {
+          "shell": "Shell"
+        },
+        "data_description": {
+          "shell": "Shell the GoDice is wrapped into. Choose D6 if no shell applied"
+        }
       }
     },
     "abort": {
