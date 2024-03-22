@@ -50,7 +50,6 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
     Right now this module does not expose any, but the intent component breaks
     without it.
     """
-    pass  # pylint: disable=unnecessary-pass
 
 
 class UnknownRequest(HomeAssistantError):

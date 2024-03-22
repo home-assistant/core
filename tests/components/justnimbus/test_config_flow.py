@@ -28,7 +28,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("side_effect", "errors"),
-    (
+    [
         (
             InvalidClientID(client_id="test_id"),
             {"base": "invalid_auth"},
@@ -41,7 +41,7 @@ async def test_form(hass: HomeAssistant) -> None:
             RuntimeError,
             {"base": "unknown"},
         ),
-    ),
+    ],
 )
 async def test_form_errors(
     hass: HomeAssistant,

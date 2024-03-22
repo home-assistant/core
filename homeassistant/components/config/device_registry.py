@@ -69,6 +69,7 @@ def websocket_list_devices(
         # We only allow setting disabled_by user via API.
         # No Enum support like this in voluptuous, use .value
         vol.Optional("disabled_by"): vol.Any(DeviceEntryDisabler.USER.value, None),
+        vol.Optional("labels"): [str],
         vol.Optional("name_by_user"): vol.Any(str, None),
     }
 )
@@ -86,6 +87,10 @@ def websocket_update_device(
 
     if msg.get("disabled_by") is not None:
         msg["disabled_by"] = DeviceEntryDisabler(msg["disabled_by"])
+
+    if "labels" in msg:
+        # Convert labels to a set
+        msg["labels"] = set(msg["labels"])
 
     entry = cast(DeviceEntry, registry.async_update_device(**msg))
 

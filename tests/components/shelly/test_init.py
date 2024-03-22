@@ -4,6 +4,8 @@ from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, Mock, call, patch
 
 from aioshelly.block_device import COAP
+from aioshelly.common import ConnectionOptions
+from aioshelly.const import MODEL_PLUS_2PM
 from aioshelly.exceptions import (
     DeviceConnectionError,
     FirmwareUnsupported,
@@ -16,13 +18,14 @@ from homeassistant.components.shelly.const import (
     BLOCK_EXPECTED_SLEEP_PERIOD,
     BLOCK_WRONG_SLEEP_PERIOD,
     CONF_BLE_SCANNER_MODE,
+    CONF_GEN,
     CONF_SLEEP_PERIOD,
     DOMAIN,
     MODELS_WITH_WRONG_SLEEP_PERIOD,
     BLEScannerMode,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import CONF_HOST, CONF_PORT, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
@@ -390,6 +393,49 @@ async def test_entry_missing_gen(hass: HomeAssistant, mock_block_device: Mock) -
 
     assert entry.state is ConfigEntryState.LOADED
     assert hass.states.get("switch.test_name_channel_1").state is STATE_ON
+
+
+async def test_entry_missing_port(hass: HomeAssistant) -> None:
+    """Test successful Gen2 device init when port is missing in entry data."""
+    data = {
+        CONF_HOST: "192.168.1.37",
+        CONF_SLEEP_PERIOD: 0,
+        "model": MODEL_PLUS_2PM,
+        CONF_GEN: 2,
+    }
+    entry = MockConfigEntry(domain=DOMAIN, data=data, unique_id=MOCK_MAC)
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.shelly.RpcDevice.create", return_value=Mock()
+    ) as rpc_device_mock:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert rpc_device_mock.call_args[0][2] == ConnectionOptions(
+            ip_address="192.168.1.37", device_mac="123456789ABC", port=80
+        )
+
+
+async def test_rpc_entry_custom_port(hass: HomeAssistant) -> None:
+    """Test successful Gen2 device init using custom port."""
+    data = {
+        CONF_HOST: "192.168.1.37",
+        CONF_SLEEP_PERIOD: 0,
+        "model": MODEL_PLUS_2PM,
+        CONF_GEN: 2,
+        CONF_PORT: 8001,
+    }
+    entry = MockConfigEntry(domain=DOMAIN, data=data, unique_id=MOCK_MAC)
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.shelly.RpcDevice.create", return_value=Mock()
+    ) as rpc_device_mock:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert rpc_device_mock.call_args[0][2] == ConnectionOptions(
+            ip_address="192.168.1.37", device_mac="123456789ABC", port=8001
+        )
 
 
 @pytest.mark.parametrize(("model"), MODELS_WITH_WRONG_SLEEP_PERIOD)

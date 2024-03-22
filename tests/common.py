@@ -59,6 +59,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import (
     area_registry as ar,
+    category_registry as cr,
     device_registry as dr,
     entity,
     entity_platform,
@@ -334,6 +335,7 @@ async def async_test_home_assistant(
             "homeassistant.helpers.restore_state.start.async_at_start",
         ):
             await ar.async_load(hass)
+            await cr.async_load(hass)
             await dr.async_load(hass)
             await er.async_load(hass)
             await fr.async_load(hass)

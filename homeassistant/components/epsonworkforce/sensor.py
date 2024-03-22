@@ -81,7 +81,7 @@ def setup_platform(
 
     api = EpsonPrinterAPI(host)
     if not api.available:
-        raise PlatformNotReady()
+        raise PlatformNotReady
 
     sensors = [
         EpsonPrinterCartridge(api, description)

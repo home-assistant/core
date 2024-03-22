@@ -52,6 +52,7 @@
     'context': <ANY>,
     'entity_id': 'fan.centralized_ventilation_controler',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })

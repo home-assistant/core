@@ -17,7 +17,7 @@ from tests.common import MockConfigEntry
 
 @pytest.mark.parametrize(
     ("host", "expected_title"),
-    (("192.618.178.1", "192.618.178.1"),),
+    [("192.618.178.1", "192.618.178.1")],
 )
 @pytest.mark.usefixtures("patch_setup")
 async def test_form(hass: HomeAssistant, host, expected_title) -> None:
@@ -49,7 +49,7 @@ async def test_form(hass: HomeAssistant, host, expected_title) -> None:
 
 @pytest.mark.parametrize(
     ("host", "count", "expected_title"),
-    (("192.618.178.1", 10, "192.618.178.1"),),
+    [("192.618.178.1", 10, "192.618.178.1")],
 )
 @pytest.mark.usefixtures("patch_setup")
 async def test_options(hass: HomeAssistant, host, count, expected_title) -> None:

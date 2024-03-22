@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import MyUplinkDataCoordinator
 from .const import DOMAIN
 from .entity import MyUplinkEntity
-from .helpers import find_matching_platform
+from .helpers import find_matching_platform, skip_entity
 
 CATEGORY_BASED_DESCRIPTIONS: dict[str, dict[str, SwitchEntityDescription]] = {
     "NIBEF": {
@@ -58,6 +58,8 @@ async def async_setup_entry(
     # Setup device point switches
     for device_id, point_data in coordinator.data.points.items():
         for point_id, device_point in point_data.items():
+            if skip_entity(device_point.category, device_point):
+                continue
             if find_matching_platform(device_point) == Platform.SWITCH:
                 description = get_description(device_point)
 

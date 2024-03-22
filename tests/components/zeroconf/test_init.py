@@ -15,6 +15,7 @@ from zeroconf.asyncio import AsyncServiceInfo
 from homeassistant.components import zeroconf
 from homeassistant.const import (
     EVENT_COMPONENT_LOADED,
+    EVENT_HOMEASSISTANT_CLOSE,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
@@ -934,6 +935,11 @@ async def test_get_instance(hass: HomeAssistant, mock_async_zeroconf: None) -> N
         await hass.components.zeroconf.async_get_async_instance() is mock_async_zeroconf
     )
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert len(mock_async_zeroconf.ha_async_close.mock_calls) == 0
+    # Only shutdown at the close event so integrations have time
+    # to send out their goodbyes
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
     await hass.async_block_till_done()
     assert len(mock_async_zeroconf.ha_async_close.mock_calls) == 1
 

@@ -2392,7 +2392,7 @@ async def test_device_capture_queue_full(
 
         def put_nowait(self, item):
             if item is not None:
-                raise asyncio.QueueFull()
+                raise asyncio.QueueFull
 
             super().put_nowait(item)
 

@@ -95,7 +95,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
 
     @property
     def is_running(self) -> bool:
-        """True if the the UDP server is started and hasn't been asked to stop."""
+        """True if the UDP server is started and hasn't been asked to stop."""
         return self.started and (not self.stop_requested)
 
     async def start_server(self) -> int:

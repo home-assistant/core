@@ -43,7 +43,7 @@ async def test_sensors(
 
 @pytest.mark.parametrize(
     "entity_id",
-    ("binary_sensor.technove_station_static_ip",),
+    ["binary_sensor.technove_station_static_ip"],
 )
 @pytest.mark.usefixtures("init_integration")
 async def test_disabled_by_default_binary_sensors(

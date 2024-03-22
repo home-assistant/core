@@ -7,12 +7,14 @@ from getpass import getuser
 import logging
 import os
 import platform
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import __version__ as current_version
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import bind_hass
 from homeassistant.util.package import is_docker_env, is_virtual_env
+
+from .importlib import async_import_module
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,8 +34,14 @@ cached_get_user = cache(getuser)
 async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
     """Return info about the system."""
     # Local import to avoid circular dependencies
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components import hassio
+    # We use the import helper because hassio
+    # may not be loaded yet and we don't want to
+    # do blocking I/O in the event loop to import it.
+    if TYPE_CHECKING:
+        # pylint: disable-next=import-outside-toplevel
+        from homeassistant.components import hassio
+    else:
+        hassio = await async_import_module(hass, "homeassistant.components.hassio")
 
     is_hassio = hassio.is_hassio(hass)
 

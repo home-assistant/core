@@ -172,7 +172,7 @@ class EcobeeWeather(WeatherEntity):
 
         forecasts: list[Forecast] = []
         date = dt_util.utcnow()
-        for day in range(0, 5):
+        for day in range(5):
             forecast = _process_forecast(self.weather["forecasts"][day])
             if forecast is None:
                 continue

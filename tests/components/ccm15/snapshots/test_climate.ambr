@@ -141,6 +141,7 @@
     'context': <ANY>,
     'entity_id': 'climate.midea_0',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -179,6 +180,7 @@
     'context': <ANY>,
     'entity_id': 'climate.midea_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'cool',
   })
@@ -320,6 +322,7 @@
     'context': <ANY>,
     'entity_id': 'climate.midea_0',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -353,6 +356,7 @@
     'context': <ANY>,
     'entity_id': 'climate.midea_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })

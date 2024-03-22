@@ -41,7 +41,7 @@ class MockConnection(Connection):
     async def read_coil(self, coil: Coil, timeout: float = 0) -> CoilData:
         """Read of coils."""
         if (data := self.coils.get(coil.address, None)) is None:
-            raise ReadException()
+            raise ReadException
         return CoilData(coil, data)
 
     async def write_coil(self, coil_data: CoilData, timeout: float = 10.0) -> None:

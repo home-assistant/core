@@ -124,8 +124,10 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                     **self.config_entry.data,
                     CONF_TRACKED_ENTITIES: [
                         tracked_entity
-                        for tracked_entity in self.tracked_entities
-                        + [new_tracked_entity_id]
+                        for tracked_entity in (
+                            *self.tracked_entities,
+                            new_tracked_entity_id,
+                        )
                         if tracked_entity != old_tracked_entity_id
                     ],
                 },

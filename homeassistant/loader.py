@@ -961,7 +961,10 @@ class Integration:
 
         # Some integrations fail on import because they call functions incorrectly.
         # So we do it before validating config to catch these errors.
-        load_executor = self.import_executor and self.pkg_path not in sys.modules
+        load_executor = self.import_executor and (
+            self.pkg_path not in sys.modules
+            or (self.config_flow and f"{self.pkg_path}.config_flow" not in sys.modules)
+        )
         if not load_executor:
             comp = self._get_component()
             if debug:
@@ -1048,12 +1051,6 @@ class Integration:
 
         if preload_platforms:
             for platform_name in self.platforms_exists(self._platforms_to_preload):
-                if (
-                    platform_name == "config_flow"
-                    and not async_config_flow_needs_preload(cache[domain])
-                ):
-                    continue
-
                 with suppress(ImportError):
                     self.get_platform(platform_name)
 
@@ -1068,7 +1065,11 @@ class Integration:
 
     async def async_get_platform(self, platform_name: str) -> ModuleType:
         """Return a platform for an integration."""
-        platforms = await self.async_get_platforms([platform_name])
+        # Fast path for a single platform when it is already cached.
+        # This is the common case.
+        if platform := self._cache.get(f"{self.domain}.{platform_name}"):
+            return platform  # type: ignore[return-value]
+        platforms = await self.async_get_platforms((platform_name,))
         return platforms[platform_name]
 
     async def async_get_platforms(
@@ -1174,6 +1175,13 @@ class Integration:
         if full_name in self._missing_platforms_cache:
             raise self._missing_platforms_cache[full_name]
         return None
+
+    def platforms_are_loaded(self, platform_names: Iterable[str]) -> bool:
+        """Check if a platforms are loaded for an integration."""
+        return all(
+            f"{self.domain}.{platform_name}" in self._cache
+            for platform_name in platform_names
+        )
 
     def get_platform_cached(self, platform_name: str) -> ModuleType | None:
         """Return a platform for an integration from cache."""
@@ -1302,7 +1310,7 @@ def async_get_loaded_integration(hass: HomeAssistant, domain: str) -> Integratio
         cache = cast(dict[str, Integration | asyncio.Future[None]], cache)
     int_or_fut = cache.get(domain, _UNDEF)
     # Integration is never subclassed, so we can check for type
-    if type(int_or_fut) is Integration:  # noqa: E721
+    if type(int_or_fut) is Integration:
         return int_or_fut
     raise IntegrationNotLoaded(domain)
 
@@ -1329,7 +1337,7 @@ async def async_get_integrations(
     for domain in domains:
         int_or_fut = cache.get(domain, _UNDEF)
         # Integration is never subclassed, so we can check for type
-        if type(int_or_fut) is Integration:  # noqa: E721
+        if type(int_or_fut) is Integration:
             results[domain] = int_or_fut
         elif int_or_fut is not _UNDEF:
             in_progress[domain] = cast(asyncio.Future[None], int_or_fut)
@@ -1687,15 +1695,3 @@ def async_suggest_report_issue(
         )
 
     return f"create a bug report at {issue_tracker}"
-
-
-@callback
-def async_config_flow_needs_preload(component: ComponentProtocol) -> bool:
-    """Test if a config_flow for a component needs to be preloaded.
-
-    Currently we need to preload a the config flow if the integration
-    has a config flow and the component has an async_migrate_entry method
-    because it means that config_entries will always have to load
-    it to check if it needs to be migrated.
-    """
-    return hasattr(component, "async_migrate_entry")

@@ -1327,12 +1327,12 @@ async def test_tags_with_wave() -> None:
 )
 @pytest.mark.parametrize(
     ("engine", "language", "options", "cache", "result_query"),
-    (
+    [
         (None, None, None, None, ""),
         (None, "de_DE", None, None, "language=de_DE"),
         (None, "de_DE", {"voice": "henk"}, None, "language=de_DE&voice=henk"),
         (None, "de_DE", None, True, "cache=true&language=de_DE"),
-    ),
+    ],
 )
 async def test_generate_media_source_id(
     hass: HomeAssistant,
@@ -1367,11 +1367,11 @@ async def test_generate_media_source_id(
 )
 @pytest.mark.parametrize(
     ("engine", "language", "options"),
-    (
+    [
         ("not-loaded-engine", None, None),
         (None, "unsupported-language", None),
         (None, None, {"option": "not-supported"}),
-    ),
+    ],
 )
 async def test_generate_media_source_id_invalid_options(
     hass: HomeAssistant,

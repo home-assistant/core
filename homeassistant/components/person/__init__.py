@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 import logging
 from typing import Any, Self
 
@@ -134,7 +134,7 @@ async def async_add_user_device_tracker(
 
         await coll.async_update_item(
             person[CONF_ID],
-            {CONF_DEVICE_TRACKERS: device_trackers + [device_tracker_entity_id]},
+            {CONF_DEVICE_TRACKERS: [*device_trackers, device_tracker_entity_id]},
         )
         break
 
@@ -248,11 +248,11 @@ class PersonStorageCollection(collection.DictStorageCollection):
         )
 
     @callback
-    def _entity_registry_filter(self, event: Event) -> bool:
+    def _entity_registry_filter(self, event_data: Mapping[str, Any]) -> bool:
         """Filter entity registry events."""
         return (
-            event.data["action"] == "remove"
-            and split_entity_id(event.data[ATTR_ENTITY_ID])[0] == "device_tracker"
+            event_data["action"] == "remove"
+            and split_entity_id(event_data[ATTR_ENTITY_ID])[0] == "device_tracker"
         )
 
     async def _entity_registry_updated(self, event: Event) -> None:

@@ -48,3 +48,18 @@ def assert_entities(
         assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
         assert (state := hass.states.get(entity_entry.entity_id))
         assert state == snapshot(name=f"{entity_entry.entity_id}-state")
+
+
+def assert_entities_alt(
+    hass: HomeAssistant,
+    entry_id: str,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that all entities match their alt snapshot."""
+    entity_entries = er.async_entries_for_config_entry(entity_registry, entry_id)
+
+    assert entity_entries
+    for entity_entry in entity_entries:
+        assert (state := hass.states.get(entity_entry.entity_id))
+        assert state == snapshot(name=f"{entity_entry.entity_id}-statealt")

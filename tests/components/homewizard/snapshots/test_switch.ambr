@@ -7,6 +7,7 @@
     'context': <ANY>,
     'entity_id': 'switch.device_cloud_connection',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -86,6 +87,7 @@
     'context': <ANY>,
     'entity_id': 'switch.device_cloud_connection',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -166,6 +168,7 @@
     'context': <ANY>,
     'entity_id': 'switch.device',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -245,6 +248,7 @@
     'context': <ANY>,
     'entity_id': 'switch.device_cloud_connection',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -324,6 +328,7 @@
     'context': <ANY>,
     'entity_id': 'switch.device_switch_lock',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -403,6 +408,7 @@
     'context': <ANY>,
     'entity_id': 'switch.device_cloud_connection',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -482,6 +488,7 @@
     'context': <ANY>,
     'entity_id': 'switch.device_cloud_connection',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })

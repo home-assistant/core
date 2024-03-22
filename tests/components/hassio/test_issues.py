@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-import asyncio
+from datetime import timedelta
 from http import HTTPStatus
 import os
 from typing import Any
 from unittest.mock import ANY, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
@@ -536,6 +537,7 @@ async def test_supervisor_issues_initial_failure(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test issues manager retries after initial update failure."""
     responses = [
@@ -590,6 +592,7 @@ async def test_supervisor_issues_initial_failure(
 
     with patch("homeassistant.components.hassio.issues.REQUEST_REFRESH_DELAY", new=0.1):
         result = await async_setup_component(hass, "hassio", {})
+        await hass.async_block_till_done()
         assert result
 
         client = await hass_ws_client(hass)
@@ -599,7 +602,8 @@ async def test_supervisor_issues_initial_failure(
         assert msg["success"]
         assert len(msg["result"]["issues"]) == 0
 
-        await asyncio.sleep(0.1)
+        freezer.tick(timedelta(milliseconds=200))
+        await hass.async_block_till_done()
         await client.send_json({"id": 2, "type": "repairs/list_issues"})
         msg = await client.receive_json()
         assert msg["success"]

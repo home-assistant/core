@@ -9,7 +9,6 @@ from functools import lru_cache, partial
 import logging
 import time
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar, cast
-from urllib.parse import urlparse
 
 import attr
 from yarl import URL
@@ -212,22 +211,22 @@ def _validate_device_info(
     return device_info_type
 
 
+_cached_parse_url = lru_cache(maxsize=512)(URL)
+"""Parse a URL and cache the result."""
+
+
 def _validate_configuration_url(value: Any) -> str | None:
     """Validate and convert configuration_url."""
     if value is None:
         return None
-    if (
-        isinstance(value, URL)
-        and (value.scheme not in CONFIGURATION_URL_SCHEMES or not value.host)
-    ) or (
-        (parsed_url := urlparse(str(value)))
-        and (
-            parsed_url.scheme not in CONFIGURATION_URL_SCHEMES
-            or not parsed_url.hostname
-        )
-    ):
+
+    url_as_str = str(value)
+    url = value if type(value) is URL else _cached_parse_url(url_as_str)
+
+    if url.scheme not in CONFIGURATION_URL_SCHEMES or not url.host:
         raise ValueError(f"invalid configuration_url '{value}'")
-    return str(value)
+
+    return url_as_str
 
 
 @attr.s(frozen=True)
@@ -276,6 +275,7 @@ class DeviceEntry:
             "hw_version": self.hw_version,
             "id": self.id,
             "identifiers": list(self.identifiers),
+            "labels": list(self.labels),
             "manufacturer": self.manufacturer,
             "model": self.model,
             "name_by_user": self.name_by_user,
@@ -755,7 +755,7 @@ class DeviceRegistry(BaseRegistry):
         config_entries = old.config_entries
 
         if merge_identifiers is not UNDEFINED and new_identifiers is not UNDEFINED:
-            raise HomeAssistantError()
+            raise HomeAssistantError
 
         if isinstance(disabled_by, str) and not isinstance(
             disabled_by, DeviceEntryDisabler
@@ -1144,10 +1144,10 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
 
     @callback
     def _label_removed_from_registry_filter(
-        event: lr.EventLabelRegistryUpdated,
+        event_data: lr.EventLabelRegistryUpdatedData,
     ) -> bool:
         """Filter all except for the remove action from label registry events."""
-        return event.data["action"] == "remove"
+        return event_data["action"] == "remove"
 
     @callback
     def _handle_label_registry_update(event: lr.EventLabelRegistryUpdated) -> None:
@@ -1158,6 +1158,7 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
         event_type=lr.EVENT_LABEL_REGISTRY_UPDATED,
         event_filter=_label_removed_from_registry_filter,
         listener=_handle_label_registry_update,
+        run_immediately=True,
     )
 
     @callback
@@ -1176,12 +1177,12 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
         debounced_cleanup.async_schedule_call()
 
     @callback
-    def entity_registry_changed_filter(event: Event) -> bool:
+    def entity_registry_changed_filter(event_data: Mapping[str, Any]) -> bool:
         """Handle entity updated or removed filter."""
         if (
-            event.data["action"] == "update"
-            and "device_id" not in event.data["changes"]
-        ) or event.data["action"] == "create":
+            event_data["action"] == "update"
+            and "device_id" not in event_data["changes"]
+        ) or event_data["action"] == "create":
             return False
 
         return True
@@ -1191,6 +1192,7 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
             entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
             _async_entity_registry_changed,
             event_filter=entity_registry_changed_filter,
+            run_immediately=True,
         )
         return
 
@@ -1200,10 +1202,13 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
             entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
             _async_entity_registry_changed,
             event_filter=entity_registry_changed_filter,
+            run_immediately=True,
         )
         await debounced_cleanup.async_call()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, startup_clean)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STARTED, startup_clean, run_immediately=True
+    )
 
     @callback
     def _on_homeassistant_stop(event: Event) -> None:

@@ -90,7 +90,7 @@ def bump_version(version, bump_type):
         to_change["dev"] = ("dev", dt_util.utcnow().strftime("%Y%m%d"))
 
     else:
-        assert False, f"Unsupported type: {bump_type}"
+        raise ValueError(f"Unsupported type: {bump_type}")
 
     temp = Version("0")
     temp._version = version._version._replace(**to_change)

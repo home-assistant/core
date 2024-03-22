@@ -31,7 +31,7 @@ BINARY_SENSOR_TYPES: tuple[RingBinarySensorEntityDescription, ...] = (
     RingBinarySensorEntityDescription(
         key="ding",
         translation_key="ding",
-        category=["doorbots", "authorized_doorbots"],
+        category=["doorbots", "authorized_doorbots", "other"],
         device_class=BinarySensorDeviceClass.OCCUPANCY,
     ),
     RingBinarySensorEntityDescription(
@@ -56,7 +56,7 @@ async def async_setup_entry(
 
     entities = [
         RingBinarySensor(ring, device, notifications_coordinator, description)
-        for device_type in ("doorbots", "authorized_doorbots", "stickup_cams")
+        for device_type in ("doorbots", "authorized_doorbots", "stickup_cams", "other")
         for description in BINARY_SENSOR_TYPES
         if device_type in description.category
         for device in devices[device_type]

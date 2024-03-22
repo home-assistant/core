@@ -112,7 +112,7 @@ def icon_schema(integration_type: str, no_entity_platform: bool) -> vol.Schema:
     return schema
 
 
-def validate_icon_file(config: Config, integration: Integration) -> None:  # noqa: C901
+def validate_icon_file(config: Config, integration: Integration) -> None:
     """Validate icon file for integration."""
     icons_file = integration.path / "icons.json"
     if not icons_file.is_file():

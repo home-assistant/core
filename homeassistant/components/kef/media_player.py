@@ -270,7 +270,7 @@ class KefMediaPlayer(MediaPlayerEntity):
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
         if not self._supports_on:
-            raise NotImplementedError()
+            raise NotImplementedError
         await self._speaker.turn_on()
 
     async def async_volume_up(self) -> None:

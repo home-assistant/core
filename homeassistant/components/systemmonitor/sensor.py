@@ -494,7 +494,7 @@ async def async_setup_platform(
     )
 
 
-async def async_setup_entry(  # noqa: C901
+async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up System Montor sensors based on a config entry."""
@@ -776,6 +776,7 @@ class SystemMonitorSensor(CoordinatorEntity[SystemMonitorCoordinator], SensorEnt
         self.argument = argument
         self.value: int | None = None
         self.update_time: float | None = None
+        self._attr_native_value = self.entity_description.value_fn(self)
 
     async def async_added_to_hass(self) -> None:
         """When added to hass."""
@@ -791,16 +792,19 @@ class SystemMonitorSensor(CoordinatorEntity[SystemMonitorCoordinator], SensorEnt
         ].remove(self.entity_id)
         return await super().async_will_remove_from_hass()
 
-    @property
-    def native_value(self) -> StateType | datetime:
-        """Return the state."""
-        return self.entity_description.value_fn(self)
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        # Set the native value here so we can use it in available property
+        # without having to recalculate it
+        self._attr_native_value = self.entity_description.value_fn(self)
+        super()._handle_coordinator_update()
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
         if self.entity_description.none_is_unavailable:
-            return bool(
+            return (
                 self.coordinator.last_update_success is True
                 and self.native_value is not None
             )

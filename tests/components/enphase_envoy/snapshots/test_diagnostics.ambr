@@ -61,6 +61,8 @@
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': None,
@@ -111,6 +113,8 @@
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': None,
@@ -159,6 +163,8 @@
               ]),
               'area_id': None,
               'capabilities': None,
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': None,
@@ -207,6 +213,8 @@
               'area_id': None,
               'capabilities': dict({
                 'state_class': 'total_increasing',
+              }),
+              'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
@@ -258,6 +266,8 @@
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': None,
@@ -308,6 +318,8 @@
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': None,
@@ -356,6 +368,8 @@
               ]),
               'area_id': None,
               'capabilities': None,
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': None,
@@ -404,6 +418,8 @@
               'area_id': None,
               'capabilities': dict({
                 'state_class': 'total_increasing',
+              }),
+              'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
@@ -455,6 +471,8 @@
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': None,
@@ -505,6 +523,8 @@
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': None,
@@ -553,6 +573,8 @@
               ]),
               'area_id': None,
               'capabilities': None,
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': None,
@@ -601,6 +623,8 @@
               'area_id': None,
               'capabilities': dict({
                 'state_class': 'total_increasing',
+              }),
+              'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
@@ -652,6 +676,8 @@
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': None,
@@ -702,6 +728,8 @@
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': None,
@@ -750,6 +778,8 @@
               ]),
               'area_id': None,
               'capabilities': None,
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': None,
@@ -798,6 +828,8 @@
               'area_id': None,
               'capabilities': dict({
                 'state_class': 'total_increasing',
+              }),
+              'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
@@ -849,6 +881,8 @@
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': None,
@@ -899,6 +933,8 @@
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': None,
@@ -947,6 +983,8 @@
               ]),
               'area_id': None,
               'capabilities': None,
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': None,
@@ -995,6 +1033,8 @@
               'area_id': None,
               'capabilities': dict({
                 'state_class': 'total_increasing',
+              }),
+              'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
@@ -1046,6 +1086,8 @@
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': None,
@@ -1096,6 +1138,8 @@
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': None,
@@ -1144,6 +1188,8 @@
               ]),
               'area_id': None,
               'capabilities': None,
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': None,
@@ -1192,6 +1238,8 @@
               'area_id': None,
               'capabilities': dict({
                 'state_class': 'total_increasing',
+              }),
+              'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
@@ -1243,6 +1291,8 @@
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': None,
@@ -1293,6 +1343,8 @@
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': None,
@@ -1341,6 +1393,8 @@
               ]),
               'area_id': None,
               'capabilities': None,
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': None,
@@ -1389,6 +1443,8 @@
               'area_id': None,
               'capabilities': dict({
                 'state_class': 'total_increasing',
+              }),
+              'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
@@ -1440,6 +1496,8 @@
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': None,
@@ -1490,6 +1548,8 @@
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': None,
@@ -1538,6 +1598,8 @@
               ]),
               'area_id': None,
               'capabilities': None,
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': None,
@@ -1586,6 +1648,8 @@
               'area_id': None,
               'capabilities': dict({
                 'state_class': 'total_increasing',
+              }),
+              'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
@@ -1637,6 +1701,8 @@
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': None,
@@ -1686,6 +1752,8 @@
               'area_id': None,
               'capabilities': dict({
                 'state_class': 'total_increasing',
+              }),
+              'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
@@ -1737,6 +1805,8 @@
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': None,
@@ -1787,6 +1857,8 @@
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': 'integration',
@@ -1820,6 +1892,8 @@
               'area_id': None,
               'capabilities': dict({
                 'state_class': 'measurement',
+              }),
+              'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
@@ -1862,6 +1936,8 @@
                   'check-wiring',
                 ]),
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': 'integration',
@@ -1894,6 +1970,8 @@
               ]),
               'area_id': None,
               'capabilities': None,
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': 'integration',
@@ -1927,6 +2005,8 @@
               'area_id': None,
               'capabilities': dict({
                 'state_class': 'total_increasing',
+              }),
+              'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
@@ -1965,6 +2045,8 @@
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': 'integration',
@@ -2001,6 +2083,8 @@
               'area_id': None,
               'capabilities': dict({
                 'state_class': 'measurement',
+              }),
+              'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
@@ -2039,6 +2123,8 @@
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': 'integration',
@@ -2072,6 +2158,8 @@
               'area_id': None,
               'capabilities': dict({
                 'state_class': 'measurement',
+              }),
+              'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
@@ -2114,6 +2202,8 @@
                   'check-wiring',
                 ]),
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': 'integration',
@@ -2146,6 +2236,8 @@
               ]),
               'area_id': None,
               'capabilities': None,
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': 'integration',
@@ -2179,6 +2271,8 @@
               'area_id': None,
               'capabilities': dict({
                 'state_class': 'total_increasing',
+              }),
+              'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
@@ -2217,6 +2311,8 @@
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': 'integration',
@@ -2253,6 +2349,8 @@
               'area_id': None,
               'capabilities': dict({
                 'state_class': 'measurement',
+              }),
+              'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
@@ -2291,6 +2389,8 @@
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': 'integration',
@@ -2324,6 +2424,8 @@
               'area_id': None,
               'capabilities': dict({
                 'state_class': 'measurement',
+              }),
+              'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
@@ -2366,6 +2468,8 @@
                   'check-wiring',
                 ]),
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': 'integration',
@@ -2398,6 +2502,8 @@
               ]),
               'area_id': None,
               'capabilities': None,
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': 'integration',
@@ -2431,6 +2537,8 @@
               'area_id': None,
               'capabilities': dict({
                 'state_class': 'total_increasing',
+              }),
+              'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
@@ -2469,6 +2577,8 @@
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': 'integration',
@@ -2505,6 +2615,8 @@
               'area_id': None,
               'capabilities': dict({
                 'state_class': 'measurement',
+              }),
+              'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
@@ -2543,6 +2655,8 @@
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': 'integration',
@@ -2576,6 +2690,8 @@
               'area_id': None,
               'capabilities': dict({
                 'state_class': 'measurement',
+              }),
+              'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
@@ -2618,6 +2734,8 @@
                   'check-wiring',
                 ]),
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': 'integration',
@@ -2650,6 +2768,8 @@
               ]),
               'area_id': None,
               'capabilities': None,
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': 'integration',
@@ -2688,6 +2808,8 @@
                   'check-wiring',
                 ]),
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': 'integration',
@@ -2720,6 +2842,8 @@
               ]),
               'area_id': None,
               'capabilities': None,
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': 'integration',
@@ -2758,6 +2882,8 @@
                   'check-wiring',
                 ]),
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': 'integration',
@@ -2790,6 +2916,8 @@
               ]),
               'area_id': None,
               'capabilities': None,
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': 'integration',
@@ -2828,6 +2956,8 @@
                   'check-wiring',
                 ]),
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': 'integration',
@@ -2860,6 +2990,8 @@
               ]),
               'area_id': None,
               'capabilities': None,
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': 'integration',
@@ -2898,6 +3030,8 @@
                   'check-wiring',
                 ]),
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': 'integration',
@@ -2930,6 +3064,8 @@
               ]),
               'area_id': None,
               'capabilities': None,
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': 'integration',
@@ -2996,6 +3132,8 @@
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': None,
@@ -3038,6 +3176,8 @@
               ]),
               'area_id': None,
               'capabilities': None,
+              'categories': dict({
+              }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
               'disabled_by': 'integration',

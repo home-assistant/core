@@ -366,7 +366,7 @@ class BluesoundPlayer(MediaPlayerEntity):
                     data = None
             elif response.status == 595:
                 _LOGGER.info("Status 595 returned, treating as timeout")
-                raise BluesoundPlayer._TimeoutException()
+                raise BluesoundPlayer._TimeoutException
             else:
                 _LOGGER.error("Error %s on %s", response.status, url)
                 return None
@@ -432,7 +432,7 @@ class BluesoundPlayer(MediaPlayerEntity):
                 self.async_write_ha_state()
             elif response.status == 595:
                 _LOGGER.info("Status 595 returned, treating as timeout")
-                raise BluesoundPlayer._TimeoutException()
+                raise BluesoundPlayer._TimeoutException
             else:
                 _LOGGER.error(
                     "Error %s on %s. Trying one more time", response.status, url

@@ -625,7 +625,7 @@ class GoogleEntity:
         if (config_aliases := entity_config.get(CONF_ALIASES, [])) or (
             entity_entry and entity_entry.aliases
         ):
-            device["name"]["nicknames"] = [name] + config_aliases
+            device["name"]["nicknames"] = [name, *config_aliases]
             if entity_entry:
                 device["name"]["nicknames"].extend(entity_entry.aliases)
 

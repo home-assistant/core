@@ -76,6 +76,22 @@ async def test_sunwegdata_update_success(plant_fixture) -> None:
     assert len(data.data.inverters) == 1
 
 
+async def test_sunwegdata_update_success_alternative(plant_fixture_alternative) -> None:
+    """Test SunWEGData success on update."""
+    api = MagicMock()
+    api.plant = MagicMock(return_value=plant_fixture_alternative)
+    api.complete_inverter = MagicMock()
+    data = SunWEGData(api, 0)
+    data.update()
+    assert data.data.id == plant_fixture_alternative.id
+    assert data.data.name == plant_fixture_alternative.name
+    assert data.data.kwh_per_kwp == plant_fixture_alternative.kwh_per_kwp
+    assert data.data.last_update == plant_fixture_alternative.last_update
+    assert data.data.performance_rate == plant_fixture_alternative.performance_rate
+    assert data.data.saving == plant_fixture_alternative.saving
+    assert len(data.data.inverters) == 1
+
+
 async def test_sunwegdata_get_api_value_none(plant_fixture) -> None:
     """Test SunWEGData none return on get_api_value."""
     api = MagicMock()

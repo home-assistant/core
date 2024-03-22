@@ -541,7 +541,7 @@ async def test_camera_image_raises_exception(
         endpoint = kwargs["endpoint"].split("/")[-1]
 
         if "snapshot_720.jpg" in endpoint:
-            raise pyatmo.ApiError()
+            raise pyatmo.ApiError
 
         return await fake_post_request(*args, **kwargs)
 

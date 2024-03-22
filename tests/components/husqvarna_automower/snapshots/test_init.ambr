@@ -3,7 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'garden',
     'config_entries': <ANY>,
-    'configuration_url': 'https://developer.husqvarnagroup.cloud/applications/433e5fdf-5129-452c-xxxx-fadce3213042',
+    'configuration_url': None,
     'connections': set({
     }),
     'disabled_by': None,
