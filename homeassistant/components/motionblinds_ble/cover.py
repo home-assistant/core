@@ -83,7 +83,7 @@ class MotionblindsBLECoverEntity(MotionblindsBLEEntity, CoverEntity):
     async def async_added_to_hass(self) -> None:
         """Register device callbacks."""
         _LOGGER.debug(
-            "(%s) Created %s cover entity (%s)",
+            "(%s) Added %s cover entity (%s)",
             self.entry.data[CONF_MAC_CODE],
             MotionBlindType[self.entry.data[CONF_BLIND_TYPE].upper()].value.lower(),
             BLIND_TYPE_TO_CLASS[self.entry.data[CONF_BLIND_TYPE].upper()].__name__,
