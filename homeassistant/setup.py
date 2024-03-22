@@ -677,7 +677,9 @@ def async_pause_setup(
     setting up the base components so we can subtract it
     from the total setup time.
     """
-    if not (running := current_setup_group.get()):
+    if not (running := current_setup_group.get()) or running not in _setup_started(
+        hass
+    ):
         # This means we are likely in a late platform setup
         # that is running in a task so we do not want
         # to subtract out the time later as nothing is waiting
@@ -690,30 +692,16 @@ def async_pause_setup(
         yield
     finally:
         integration, group = running
-        if running not in _setup_started(hass):
-            # Suppose a task is started from inside the `async_start_setup` context
-            # manager. In that case, we will see the `current_setup_group`, but the
-            # context manager may have exited by that time if it's running in the
-            # background and not being awaited. So we also check if the integration
-            # group is still in the `setup_started`, as that indicates whether the
-            # inner code is still running. If it's not in `setup_started`, the
-            # context manager has exited, and we should not subtract the time.
-            _LOGGER.debug(
-                "%s (%s) finished while waiting for %s", integration, group, phase
-            )
-            # There is no return here since we are in a finally and do not
-            # want to swallow exceptions
-        else:
-            time_taken = time.monotonic() - started
-            # Add negative time for the time we waited
-            _setup_times(hass)[integration][group][phase] = -time_taken
-            _LOGGER.debug(
-                "Adding wait for %s for %s (%s) of %.2f",
-                phase,
-                integration,
-                group,
-                time_taken,
-            )
+        time_taken = time.monotonic() - started
+        # Add negative time for the time we waited
+        _setup_times(hass)[integration][group][phase] = -time_taken
+        _LOGGER.debug(
+            "Adding wait for %s for %s (%s) of %.2f",
+            phase,
+            integration,
+            group,
+            time_taken,
+        )
 
 
 def _setup_times(
