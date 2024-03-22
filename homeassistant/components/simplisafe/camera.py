@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime
 import os
-from typing import Any
+from typing import Any, cast
 
 from simplipy.device import DeviceTypes, DeviceV3
 from simplipy.device.camera import CameraTypes
@@ -60,23 +60,18 @@ async def async_setup_entry(
     """Set up SimpliSafe cameras based on a config entry."""
     simplisafe = hass.data[DOMAIN][entry.entry_id]
 
-    cameras: list[SimplisafeOutdoorCamera] = []
+    cameras: list[SimplisafeMotionCamera] = []
 
     for system in simplisafe.systems.values():
         if system.version == 2:
             LOGGER.info("Skipping camera setup for V2 system: %s", system.system_id)
             continue
 
-        for camera in system.cameras.values():
-            if camera.camera_type == CameraTypes.OUTDOOR_CAMERA:
-                cameras.append(
-                    SimplisafeOutdoorCamera(
-                        hass,
-                        simplisafe,
-                        system,
-                        camera,
-                    )
-                )
+        cameras = [
+            SimplisafeMotionCamera(hass, simplisafe, system, camera)
+            for camera in system.cameras.values()
+            if camera.camera_type == CameraTypes.OUTDOOR_CAMERA
+        ]
 
     async_add_entities(cameras)
 
@@ -114,7 +109,7 @@ class SimplisafeMotionCamera(SimpliSafeEntity, Camera):
     @property
     def name(self) -> str | None:
         """Return a good name for this camera."""
-        return self._device.name
+        return cast(str, self._device.name)
 
     @callback
     def async_unload(self) -> None:
@@ -214,7 +209,6 @@ class SimplisafeMotionCamera(SimpliSafeEntity, Camera):
             return
 
         if event.media_urls is None:
-            LOGGER.error("MISSING MEDIA URLS!")
             return
 
         self._attr_image_last_updated = event.timestamp
