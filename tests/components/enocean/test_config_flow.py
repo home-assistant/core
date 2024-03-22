@@ -1,4 +1,5 @@
 """Tests for EnOcean config flow."""
+
 from unittest.mock import Mock, patch
 
 from homeassistant import config_entries, data_entry_flow

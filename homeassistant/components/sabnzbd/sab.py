@@ -1,4 +1,5 @@
 """Support for the Sabnzbd service."""
+
 from pysabnzbd import SabnzbdApi, SabnzbdApiException
 
 from homeassistant.const import CONF_API_KEY, CONF_URL

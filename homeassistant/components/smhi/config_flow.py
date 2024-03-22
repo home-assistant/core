@@ -1,4 +1,5 @@
 """Config flow to configure SMHI component."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,10 +7,9 @@ from typing import Any
 from smhi.smhi_lib import Smhi, SmhiForecastException
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.selector import LocationSelector
 
@@ -30,14 +30,14 @@ async def async_check_location(
     return True
 
 
-class SmhiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class SmhiFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for SMHI component."""
 
     VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
 
         errors: dict[str, str] = {}

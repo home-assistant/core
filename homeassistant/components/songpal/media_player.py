@@ -1,4 +1,5 @@
 """Support for Songpal-enabled (Sony) media devices."""
+
 from __future__ import annotations
 
 import asyncio
@@ -72,7 +73,7 @@ async def async_setup_entry(
             10
         ):  # set timeout to avoid blocking the setup process
             await device.get_supported_methods()
-    except (SongpalException, asyncio.TimeoutError) as ex:
+    except (SongpalException, TimeoutError) as ex:
         _LOGGER.warning("[%s(%s)] Unable to connect", name, endpoint)
         _LOGGER.debug("Unable to get methods from songpal: %s", ex)
         raise PlatformNotReady from ex

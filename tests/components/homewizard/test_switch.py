@@ -1,4 +1,5 @@
 """Test the switch entity for HomeWizard."""
+
 from unittest.mock import MagicMock
 
 from homewizard_energy import UnsupportedError
@@ -58,6 +59,20 @@ pytestmark = [
                 "switch.device_switch_lock",
             ],
         ),
+        (
+            "HWE-KWH1",
+            [
+                "switch.device",
+                "switch.device_switch_lock",
+            ],
+        ),
+        (
+            "HWE-KWH3",
+            [
+                "switch.device",
+                "switch.device_switch_lock",
+            ],
+        ),
     ],
 )
 async def test_entities_not_created_for_device(
@@ -77,6 +92,8 @@ async def test_entities_not_created_for_device(
         ("HWE-SKT", "switch.device_cloud_connection", "system_set", "cloud_enabled"),
         ("SDM230", "switch.device_cloud_connection", "system_set", "cloud_enabled"),
         ("SDM630", "switch.device_cloud_connection", "system_set", "cloud_enabled"),
+        ("HWE-KWH1", "switch.device_cloud_connection", "system_set", "cloud_enabled"),
+        ("HWE-KWH3", "switch.device_cloud_connection", "system_set", "cloud_enabled"),
     ],
 )
 async def test_switch_entities(
@@ -176,7 +193,7 @@ async def test_switch_entities(
 
 
 @pytest.mark.parametrize("device_fixture", ["HWE-SKT"])
-@pytest.mark.parametrize("exception", [RequestError, DisabledError, UnsupportedError])
+@pytest.mark.parametrize("exception", [RequestError, UnsupportedError])
 @pytest.mark.parametrize(
     ("entity_id", "method"),
     [

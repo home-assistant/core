@@ -1,4 +1,5 @@
 """Tests for the kraken sensor platform."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -162,7 +163,6 @@ async def test_sensors_available_after_restart(
             manufacturer="Kraken.com",
             entry_type=dr.DeviceEntryType.SERVICE,
         )
-        entry.add_to_hass(hass)
 
         await hass.config_entries.async_setup(entry.entry_id)
 

@@ -1,4 +1,5 @@
 """Test the Elk-M1 Control config flow."""
+
 from dataclasses import asdict
 from unittest.mock import patch
 
@@ -11,6 +12,7 @@ from homeassistant.components.elkm1.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
 
 from . import (
     ELK_DISCOVERY,
@@ -25,7 +27,9 @@ from . import (
 
 from tests.common import MockConfigEntry
 
-DHCP_DISCOVERY = dhcp.DhcpServiceInfo(MOCK_IP_ADDRESS, "", MOCK_MAC)
+DHCP_DISCOVERY = dhcp.DhcpServiceInfo(
+    MOCK_IP_ADDRESS, "", dr.format_mac(MOCK_MAC).replace(":", "")
+)
 ELK_DISCOVERY_INFO = asdict(ELK_DISCOVERY)
 ELK_DISCOVERY_INFO_NON_STANDARD_PORT = asdict(ELK_DISCOVERY_NON_STANDARD_PORT)
 

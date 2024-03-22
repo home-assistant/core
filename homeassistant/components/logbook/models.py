@@ -1,7 +1,8 @@
 """Event parser and human readable log generator."""
+
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
 
@@ -16,7 +17,6 @@ from homeassistant.components.recorder.models import (
 )
 from homeassistant.const import ATTR_ICON, EVENT_STATE_CHANGED
 from homeassistant.core import Context, Event, State, callback
-import homeassistant.util.dt as dt_util
 from homeassistant.util.json import json_loads
 from homeassistant.util.ulid import ulid_to_bytes
 
@@ -51,7 +51,7 @@ class LazyEventPartialState:
         self._event_data_cache = event_data_cache
         # We need to explicitly check for the row is EventAsRow as the unhappy path
         # to fetch row.data for Row is very expensive
-        if type(row) is EventAsRow:  # noqa: E721
+        if type(row) is EventAsRow:
             # If its an EventAsRow we can avoid the whole
             # json decode process as we already have the data
             self.data = row.data
@@ -104,7 +104,7 @@ class LazyEventPartialState:
 class EventAsRow:
     """Convert an event to a row."""
 
-    data: dict[str, Any]
+    data: Mapping[str, Any]
     context: Context
     context_id_bin: bytes
     time_fired_ts: float
@@ -131,7 +131,7 @@ def async_event_to_row(event: Event) -> EventAsRow:
             context_id_bin=ulid_to_bytes(context.id),
             context_user_id_bin=uuid_hex_to_bytes_or_none(context.user_id),
             context_parent_id_bin=ulid_to_bytes_or_none(context.parent_id),
-            time_fired_ts=dt_util.utc_to_timestamp(event.time_fired),
+            time_fired_ts=event.time_fired_timestamp,
             row_id=hash(event),
         )
     # States are prefiltered so we never get states
@@ -147,7 +147,7 @@ def async_event_to_row(event: Event) -> EventAsRow:
         context_id_bin=ulid_to_bytes(context.id),
         context_user_id_bin=uuid_hex_to_bytes_or_none(context.user_id),
         context_parent_id_bin=ulid_to_bytes_or_none(context.parent_id),
-        time_fired_ts=dt_util.utc_to_timestamp(new_state.last_updated),
+        time_fired_ts=new_state.last_updated_timestamp,
         row_id=hash(event),
         icon=new_state.attributes.get(ATTR_ICON),
     )

@@ -1,4 +1,5 @@
 """Bluetooth support for esphome."""
+
 from __future__ import annotations
 
 from functools import partial
@@ -21,7 +22,8 @@ def _async_unload(unload_callbacks: list[CALLBACK_TYPE]) -> None:
         callback()
 
 
-async def async_connect_scanner(
+@hass_callback
+def async_connect_scanner(
     hass: HomeAssistant,
     entry_data: RuntimeEntryData,
     cli: APIClient,
@@ -29,7 +31,7 @@ async def async_connect_scanner(
     cache: ESPHomeBluetoothCache,
 ) -> CALLBACK_TYPE:
     """Connect scanner."""
-    client_data = await connect_scanner(cli, device_info, cache, entry_data.available)
+    client_data = connect_scanner(cli, device_info, cache, entry_data.available)
     entry_data.bluetooth_device = client_data.bluetooth_device
     client_data.disconnect_callbacks = entry_data.disconnect_callbacks
     scanner = client_data.scanner

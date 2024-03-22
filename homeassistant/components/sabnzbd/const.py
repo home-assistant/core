@@ -1,4 +1,5 @@
 """Constants for the Sabnzbd component."""
+
 from datetime import timedelta
 
 DOMAIN = "sabnzbd"

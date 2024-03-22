@@ -1,4 +1,5 @@
 """Cover entity platform for Tailwind."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -70,19 +71,16 @@ class TailwindDoorCoverEntity(TailwindDoorEntity, CoverEntity):
             )
         except TailwindDoorDisabledError as exc:
             raise HomeAssistantError(
-                str(exc),
                 translation_domain=DOMAIN,
                 translation_key="door_disabled",
             ) from exc
         except TailwindDoorLockedOutError as exc:
             raise HomeAssistantError(
-                str(exc),
                 translation_domain=DOMAIN,
                 translation_key="door_locked_out",
             ) from exc
         except TailwindError as exc:
             raise HomeAssistantError(
-                str(exc),
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
             ) from exc
@@ -105,21 +103,19 @@ class TailwindDoorCoverEntity(TailwindDoorEntity, CoverEntity):
             )
         except TailwindDoorDisabledError as exc:
             raise HomeAssistantError(
-                str(exc),
                 translation_domain=DOMAIN,
                 translation_key="door_disabled",
             ) from exc
         except TailwindDoorLockedOutError as exc:
             raise HomeAssistantError(
-                str(exc),
                 translation_domain=DOMAIN,
                 translation_key="door_locked_out",
             ) from exc
         except TailwindError as exc:
             raise HomeAssistantError(
-                str(exc),
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
             ) from exc
-        self._attr_is_closing = False
+        finally:
+            self._attr_is_closing = False
         await self.coordinator.async_request_refresh()

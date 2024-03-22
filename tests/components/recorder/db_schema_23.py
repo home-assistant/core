@@ -5,6 +5,7 @@ used by Home Assistant Core 2021.11.0, which adds the name column
 to statistics_meta.
 It is used to test the schema migration logic.
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta

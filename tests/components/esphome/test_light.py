@@ -1,6 +1,5 @@
 """Test ESPHome lights."""
 
-
 from unittest.mock import call
 
 from aioesphomeapi import (
@@ -1865,7 +1864,7 @@ async def test_light_no_color_modes(
     state = hass.states.get("light.test_mylight")
     assert state is not None
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.UNKNOWN]
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
 
     await hass.services.async_call(
         LIGHT_DOMAIN,

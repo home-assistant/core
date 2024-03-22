@@ -1,4 +1,5 @@
 """Test Renault diagnostics."""
+
 import pytest
 
 from homeassistant.components.diagnostics import REDACTED

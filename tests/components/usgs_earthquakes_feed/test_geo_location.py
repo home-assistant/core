@@ -1,4 +1,5 @@
 """The tests for the USGS Earthquake Hazards Program Feed platform."""
+
 import datetime
 from unittest.mock import ANY, MagicMock, call, patch
 

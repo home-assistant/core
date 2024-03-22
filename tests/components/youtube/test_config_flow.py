@@ -1,4 +1,5 @@
 """Test the YouTube config flow."""
+
 from unittest.mock import patch
 
 import pytest

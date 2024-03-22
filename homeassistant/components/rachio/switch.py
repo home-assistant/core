@@ -1,4 +1,5 @@
 """Integration with the Rachio Iro sprinkler system controller."""
+
 from abc import abstractmethod
 from contextlib import suppress
 from datetime import timedelta
@@ -168,10 +169,13 @@ def _create_entities(hass: HomeAssistant, config_entry: ConfigEntry) -> list[Ent
         schedules = controller.list_schedules()
         flex_schedules = controller.list_flex_schedules()
         current_schedule = controller.current_schedule
-        for zone in zones:
-            entities.append(RachioZone(person, controller, zone, current_schedule))
-        for sched in schedules + flex_schedules:
-            entities.append(RachioSchedule(person, controller, sched, current_schedule))
+        entities.extend(
+            RachioZone(person, controller, zone, current_schedule) for zone in zones
+        )
+        entities.extend(
+            RachioSchedule(person, controller, schedule, current_schedule)
+            for schedule in schedules + flex_schedules
+        )
     return entities
 
 
@@ -198,7 +202,6 @@ class RachioStandbySwitch(RachioSwitch):
 
     _attr_has_entity_name = True
     _attr_translation_key = "standby"
-    _attr_icon = "mdi:power"
 
     @property
     def unique_id(self) -> str:
@@ -242,7 +245,6 @@ class RachioRainDelay(RachioSwitch):
 
     _attr_has_entity_name = True
     _attr_translation_key = "rain_delay"
-    _attr_icon = "mdi:camera-timer"
 
     def __init__(self, controller):
         """Set up a Rachio rain delay switch."""

@@ -1,4 +1,5 @@
 """Define tests for the SimpliSafe config flow."""
+
 import logging
 from unittest.mock import patch
 

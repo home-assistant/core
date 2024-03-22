@@ -1,4 +1,5 @@
 """Test the UPB Control config flow."""
+
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from homeassistant import config_entries

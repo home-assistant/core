@@ -1,4 +1,5 @@
 """Support for Aurora ABB PowerOne Solar Photovoltaic (PV) inverter."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -15,6 +16,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_SERIAL_NUMBER,
     EntityCategory,
     UnitOfEnergy,
     UnitOfPower,
@@ -31,7 +33,6 @@ from .const import (
     ATTR_DEVICE_NAME,
     ATTR_FIRMWARE,
     ATTR_MODEL,
-    ATTR_SERIAL_NUMBER,
     DEFAULT_DEVICE_NAME,
     DOMAIN,
     MANUFACTURER,
@@ -78,13 +79,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up aurora_abb_powerone sensor based on a config entry."""
-    entities = []
 
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     data = config_entry.data
 
-    for sens in SENSOR_TYPES:
-        entities.append(AuroraSensor(coordinator, data, sens))
+    entities = [AuroraSensor(coordinator, data, sens) for sens in SENSOR_TYPES]
 
     _LOGGER.debug("async_setup_entry adding %d entities", len(entities))
     async_add_entities(entities, True)

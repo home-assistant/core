@@ -1,4 +1,5 @@
 """Test zha siren."""
+
 from datetime import timedelta
 from unittest.mock import ANY, call, patch
 

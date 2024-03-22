@@ -1,4 +1,5 @@
 """The switch tests for the nexia platform."""
+
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 

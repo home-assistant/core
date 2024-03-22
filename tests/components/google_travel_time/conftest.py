@@ -1,4 +1,5 @@
 """Fixtures for Google Time Travel tests."""
+
 from unittest.mock import patch
 
 from googlemaps.exceptions import ApiError, Timeout, TransportError

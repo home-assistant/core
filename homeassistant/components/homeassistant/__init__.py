@@ -1,4 +1,5 @@
 """Integration providing core pieces of infrastructure."""
+
 import asyncio
 from collections.abc import Callable, Coroutine
 import itertools as it
@@ -34,6 +35,11 @@ from homeassistant.helpers.service import (
 from homeassistant.helpers.template import async_load_custom_templates
 from homeassistant.helpers.typing import ConfigType
 
+# The scene integration will do a late import of scene
+# so we want to make sure its loaded with the component
+# so its already in memory when its imported so the import
+# does not do blocking I/O in the event loop.
+from . import scene as scene_pre_import  # noqa: F401
 from .const import (
     DATA_EXPOSED_ENTITIES,
     DATA_STOP_HANDLER,
@@ -94,8 +100,8 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
             sorted(all_referenced), lambda item: ha.split_entity_id(item)[0]
         )
 
-        tasks = []
-        unsupported_entities = set()
+        tasks: list[Coroutine[Any, Any, ha.ServiceResponse]] = []
+        unsupported_entities: set[str] = set()
 
         for domain, ent_ids in by_domain:
             # This leads to endless loop.
@@ -298,7 +304,7 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
 
     async def async_handle_reload_config_entry(call: ha.ServiceCall) -> None:
         """Service handler for reloading a config entry."""
-        reload_entries = set()
+        reload_entries: set[str] = set()
         if ATTR_ENTRY_ID in call.data:
             reload_entries.add(call.data[ATTR_ENTRY_ID])
         reload_entries.update(await async_extract_config_entry_ids(hass, call))
@@ -344,7 +350,7 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
                 f"configuration is not valid: {errors}"
             )
 
-        services = hass.services.async_services()
+        services = hass.services.async_services_internal()
         tasks = [
             hass.services.async_call(
                 domain, SERVICE_RELOAD, context=call.context, blocking=True
@@ -376,7 +382,7 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
     return True
 
 
-async def _async_stop(hass: ha.HomeAssistant, restart: bool):
+async def _async_stop(hass: ha.HomeAssistant, restart: bool) -> None:
     """Stop home assistant."""
     exit_code = RESTART_EXIT_CODE if restart else 0
     # Track trask in hass.data. No need to cleanup, we're stopping.

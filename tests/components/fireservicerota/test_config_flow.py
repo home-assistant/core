@@ -1,4 +1,5 @@
 """Test the FireServiceRota config flow."""
+
 from unittest.mock import patch
 
 from pyfireservicerota import InvalidAuthError

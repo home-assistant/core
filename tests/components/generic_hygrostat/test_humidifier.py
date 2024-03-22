@@ -1,4 +1,5 @@
 """The tests for the generic_hygrostat."""
+
 import datetime
 
 from freezegun import freeze_time
@@ -466,6 +467,35 @@ async def test_sensor_bad_value(hass: HomeAssistant, setup_comp_2) -> None:
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY).state == STATE_UNAVAILABLE
+
+
+async def test_sensor_bad_value_twice(
+    hass: HomeAssistant, setup_comp_2, caplog
+) -> None:
+    """Test sensor that the second bad value is not logged as warning."""
+    assert hass.states.get(ENTITY).state == STATE_ON
+
+    _setup_sensor(hass, "forty")
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY).state == STATE_UNAVAILABLE
+    assert [
+        rec.levelname
+        for rec in caplog.records
+        if "Unable to update from sensor" in rec.message
+    ] == ["WARNING"]
+
+    caplog.clear()
+
+    _setup_sensor(hass, "fifty")
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY).state == STATE_UNAVAILABLE
+    assert [
+        rec.levelname
+        for rec in caplog.records
+        if "Unable to update from sensor" in rec.message
+    ] == ["DEBUG"]
 
 
 async def test_set_target_humidity_humidifier_on(
@@ -1376,7 +1406,7 @@ async def test_restore_state(hass: HomeAssistant) -> None:
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass,
@@ -1414,7 +1444,7 @@ async def test_restore_state_target_humidity(hass: HomeAssistant) -> None:
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass,
@@ -1457,7 +1487,7 @@ async def test_restore_state_and_return_to_normal(hass: HomeAssistant) -> None:
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass,
@@ -1512,7 +1542,7 @@ async def test_no_restore_state(hass: HomeAssistant) -> None:
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass,

@@ -1,4 +1,5 @@
 """Utilities for Plugwise."""
+
 from collections.abc import Awaitable, Callable, Coroutine
 from typing import Any, Concatenate, ParamSpec, TypeVar
 

@@ -25,6 +25,7 @@ async def test_diagnostics(
             {
                 "auto_shutdown": "02:00:00",
                 "device_id": REDACTED,
+                "device_key": REDACTED,
                 "device_state": {
                     "__type": "<enum 'DeviceState'>",
                     "repr": "<DeviceState.ON: ('01', 'on')>",

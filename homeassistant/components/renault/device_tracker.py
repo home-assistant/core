@@ -1,4 +1,5 @@
 """Support for Renault device trackers."""
+
 from __future__ import annotations
 
 from renault_api.kamereon.models import KamereonVehicleLocationData
@@ -54,7 +55,6 @@ DEVICE_TRACKER_TYPES: tuple[RenaultDataEntityDescription, ...] = (
     RenaultDataEntityDescription(
         key="location",
         coordinator="location",
-        icon="mdi:car",
         translation_key="location",
     ),
 )

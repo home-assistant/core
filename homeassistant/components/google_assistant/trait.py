@@ -1,4 +1,5 @@
 """Implement the Google Smart Home traits."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -482,6 +483,11 @@ class OnOffTrait(_Trait):
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
         if domain == water_heater.DOMAIN and features & WaterHeaterEntityFeature.ON_OFF:
+            return True
+
+        if domain == climate.DOMAIN and features & (
+            ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+        ):
             return True
 
         return domain in (
@@ -1152,12 +1158,12 @@ class TemperatureSettingTrait(_Trait):
         modes = []
         attrs = self.state.attributes
 
-        for mode in attrs.get(climate.ATTR_HVAC_MODES, []):
+        for mode in attrs.get(climate.ATTR_HVAC_MODES) or []:
             google_mode = self.hvac_to_google.get(mode)
             if google_mode and google_mode not in modes:
                 modes.append(google_mode)
 
-        for preset in attrs.get(climate.ATTR_PRESET_MODES, []):
+        for preset in attrs.get(climate.ATTR_PRESET_MODES) or []:
             google_mode = self.preset_to_google.get(preset)
             if google_mode and google_mode not in modes:
                 modes.append(google_mode)
@@ -1937,9 +1943,7 @@ class ModesTrait(_Trait):
         elif self.state.domain == media_player.DOMAIN:
             if media_player.ATTR_SOUND_MODE_LIST in attrs:
                 mode_settings["sound mode"] = attrs.get(media_player.ATTR_SOUND_MODE)
-        elif self.state.domain == input_select.DOMAIN:
-            mode_settings["option"] = self.state.state
-        elif self.state.domain == select.DOMAIN:
+        elif self.state.domain in (input_select.DOMAIN, select.DOMAIN):
             mode_settings["option"] = self.state.state
         elif self.state.domain == humidifier.DOMAIN:
             if ATTR_MODE in attrs:
@@ -2094,9 +2098,10 @@ class InputSelectorTrait(_Trait):
     def sync_attributes(self):
         """Return mode attributes for a sync request."""
         attrs = self.state.attributes
+        sourcelist: list[str] = attrs.get(media_player.ATTR_INPUT_SOURCE_LIST) or []
         inputs = [
             {"key": source, "names": [{"name_synonym": [source], "lang": "en"}]}
-            for source in attrs.get(media_player.ATTR_INPUT_SOURCE_LIST, [])
+            for source in sourcelist
         ]
 
         payload = {"availableInputs": inputs, "orderedInputs": True}
@@ -2702,10 +2707,9 @@ class SensorStateTrait(_Trait):
     name = TRAIT_SENSOR_STATE
     commands: list[str] = []
 
-    def _air_quality_description_for_aqi(self, aqi):
-        if aqi is None or aqi.isnumeric() is False:
+    def _air_quality_description_for_aqi(self, aqi: float | None) -> str:
+        if aqi is None or aqi < 0:
             return "unknown"
-        aqi = int(aqi)
         if aqi <= 50:
             return "healthy"
         if aqi <= 100:
@@ -2760,11 +2764,17 @@ class SensorStateTrait(_Trait):
         if device_class is None or data is None:
             return {}
 
-        sensor_data = {"name": data[0], "rawValue": self.state.state}
+        try:
+            value = float(self.state.state)
+        except ValueError:
+            value = None
+        if self.state.state == STATE_UNKNOWN:
+            value = None
+        sensor_data = {"name": data[0], "rawValue": value}
 
         if device_class == sensor.SensorDeviceClass.AQI:
             sensor_data["currentSensorState"] = self._air_quality_description_for_aqi(
-                self.state.state
+                value
             )
 
         return {"currentSensorStateData": [sensor_data]}

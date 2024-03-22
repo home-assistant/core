@@ -1,4 +1,5 @@
 """Test the QNAP config flow."""
+
 from unittest.mock import MagicMock
 
 import pytest

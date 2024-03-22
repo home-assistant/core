@@ -1,4 +1,7 @@
 """The Risco integration."""
+
+from __future__ import annotations
+
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import timedelta
@@ -35,12 +38,10 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    CONF_COMMUNICATION_DELAY,
     DATA_COORDINATOR,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     EVENTS_COORDINATOR,
-    MAX_COMMUNICATION_DELAY,
     TYPE_LOCAL,
 )
 
@@ -83,31 +84,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     data = entry.data
-    comm_delay = initial_delay = data.get(CONF_COMMUNICATION_DELAY, 0)
+    risco = RiscoLocal(data[CONF_HOST], data[CONF_PORT], data[CONF_PIN])
 
-    while True:
-        risco = RiscoLocal(
-            data[CONF_HOST],
-            data[CONF_PORT],
-            data[CONF_PIN],
-            communication_delay=comm_delay,
-        )
-        try:
-            await risco.connect()
-        except CannotConnectError as error:
-            if comm_delay >= MAX_COMMUNICATION_DELAY:
-                raise ConfigEntryNotReady() from error
-            comm_delay += 1
-        except UnauthorizedError:
-            _LOGGER.exception("Failed to login to Risco cloud")
-            return False
-        else:
-            break
-
-    if comm_delay > initial_delay:
-        new_data = data.copy()
-        new_data[CONF_COMMUNICATION_DELAY] = comm_delay
-        hass.config_entries.async_update_entry(entry, data=new_data)
+    try:
+        await risco.connect()
+    except CannotConnectError as error:
+        raise ConfigEntryNotReady from error
+    except UnauthorizedError:
+        _LOGGER.exception("Failed to login to Risco cloud")
+        return False
 
     async def _error(error: Exception) -> None:
         _LOGGER.error("Error in Risco library: %s", error)
@@ -195,7 +180,7 @@ async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-class RiscoDataUpdateCoordinator(DataUpdateCoordinator[Alarm]):
+class RiscoDataUpdateCoordinator(DataUpdateCoordinator[Alarm]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching risco data."""
 
     def __init__(
@@ -219,7 +204,7 @@ class RiscoDataUpdateCoordinator(DataUpdateCoordinator[Alarm]):
             raise UpdateFailed(error) from error
 
 
-class RiscoEventsDataUpdateCoordinator(DataUpdateCoordinator[list[Event]]):
+class RiscoEventsDataUpdateCoordinator(DataUpdateCoordinator[list[Event]]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching risco data."""
 
     def __init__(

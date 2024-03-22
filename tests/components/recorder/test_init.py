@@ -1,4 +1,5 @@
 """The tests for the Recorder component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -73,6 +74,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, CoreState, Event, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, recorder as recorder_helper
+from homeassistant.helpers.issue_registry import async_get as async_get_issue_registry
 from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads
@@ -137,10 +139,10 @@ async def test_shutdown_before_startup_finishes(
         recorder.CONF_DB_URL: recorder_db_url,
         recorder.CONF_COMMIT_INTERVAL: 1,
     }
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     recorder_helper.async_initialize_recorder(hass)
-    hass.create_task(async_setup_recorder_instance(hass, config))
+    hass.async_create_task(async_setup_recorder_instance(hass, config))
     await recorder_helper.async_wait_recorder(hass)
     instance = get_instance(hass)
 
@@ -168,9 +170,9 @@ async def test_canceled_before_startup_finishes(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test recorder shuts down when its startup future is canceled out from under it."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     recorder_helper.async_initialize_recorder(hass)
-    hass.create_task(async_setup_recorder_instance(hass))
+    hass.async_create_task(async_setup_recorder_instance(hass))
     await recorder_helper.async_wait_recorder(hass)
 
     instance = get_instance(hass)
@@ -192,7 +194,7 @@ async def test_shutdown_closes_connections(
 ) -> None:
     """Test shutdown closes connections."""
 
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     instance = get_instance(hass)
     await instance.async_db_ready
@@ -219,10 +221,10 @@ async def test_state_gets_saved_when_set_before_start_event(
 ) -> None:
     """Test we can record an event when starting with not running."""
 
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     recorder_helper.async_initialize_recorder(hass)
-    hass.create_task(async_setup_recorder_instance(hass))
+    hass.async_create_task(async_setup_recorder_instance(hass))
     await recorder_helper.async_wait_recorder(hass)
 
     entity_id = "test.recorder"
@@ -272,11 +274,11 @@ async def test_saving_state(recorder_mock: Recorder, hass: HomeAssistant) -> Non
 
 @pytest.mark.parametrize(
     ("dialect_name", "expected_attributes"),
-    (
+    [
         (SupportedDialect.MYSQL, {"test_attr": 5, "test_attr_10": "silly\0stuff"}),
         (SupportedDialect.POSTGRESQL, {"test_attr": 5, "test_attr_10": "silly"}),
         (SupportedDialect.SQLITE, {"test_attr": 5, "test_attr_10": "silly\0stuff"}),
-    ),
+    ],
 )
 async def test_saving_state_with_nul(
     recorder_mock: Recorder, hass: HomeAssistant, dialect_name, expected_attributes
@@ -541,7 +543,7 @@ def test_saving_state_with_commit_interval_zero(
 ) -> None:
     """Test saving a state with a commit interval of zero."""
     hass = hass_recorder({"commit_interval": 0})
-    get_instance(hass).commit_interval == 0
+    assert get_instance(hass).commit_interval == 0
 
     entity_id = "test.recorder"
     state = "restoring_from_db"
@@ -1300,22 +1302,22 @@ def test_compile_missing_statistics(
     test_db_file = test_dir.joinpath("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
-    hass = get_test_home_assistant()
-    recorder_helper.async_initialize_recorder(hass)
-    setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
-    hass.start()
-    wait_recording_done(hass)
-    wait_recording_done(hass)
+    with get_test_home_assistant() as hass:
+        recorder_helper.async_initialize_recorder(hass)
+        setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
+        hass.start()
+        wait_recording_done(hass)
+        wait_recording_done(hass)
 
-    with session_scope(hass=hass, read_only=True) as session:
-        statistics_runs = list(session.query(StatisticsRuns))
-        assert len(statistics_runs) == 1
-        last_run = process_timestamp(statistics_runs[0].start)
-        assert last_run == now - timedelta(minutes=5)
+        with session_scope(hass=hass, read_only=True) as session:
+            statistics_runs = list(session.query(StatisticsRuns))
+            assert len(statistics_runs) == 1
+            last_run = process_timestamp(statistics_runs[0].start)
+            assert last_run == now - timedelta(minutes=5)
 
-    wait_recording_done(hass)
-    wait_recording_done(hass)
-    hass.stop()
+        wait_recording_done(hass)
+        wait_recording_done(hass)
+        hass.stop()
 
     # Start Home Assistant one hour later
     stats_5min = []
@@ -1331,32 +1333,33 @@ def test_compile_missing_statistics(
         stats_hourly.append(event)
 
     freezer.tick(timedelta(hours=1))
-    hass = get_test_home_assistant()
-    hass.bus.listen(
-        EVENT_RECORDER_5MIN_STATISTICS_GENERATED, async_5min_stats_updated_listener
-    )
-    hass.bus.listen(
-        EVENT_RECORDER_HOURLY_STATISTICS_GENERATED, async_hourly_stats_updated_listener
-    )
+    with get_test_home_assistant() as hass:
+        hass.bus.listen(
+            EVENT_RECORDER_5MIN_STATISTICS_GENERATED, async_5min_stats_updated_listener
+        )
+        hass.bus.listen(
+            EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,
+            async_hourly_stats_updated_listener,
+        )
 
-    recorder_helper.async_initialize_recorder(hass)
-    setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
-    hass.start()
-    wait_recording_done(hass)
-    wait_recording_done(hass)
+        recorder_helper.async_initialize_recorder(hass)
+        setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
+        hass.start()
+        wait_recording_done(hass)
+        wait_recording_done(hass)
 
-    with session_scope(hass=hass, read_only=True) as session:
-        statistics_runs = list(session.query(StatisticsRuns))
-        assert len(statistics_runs) == 13  # 12 5-minute runs
-        last_run = process_timestamp(statistics_runs[1].start)
-        assert last_run == now
+        with session_scope(hass=hass, read_only=True) as session:
+            statistics_runs = list(session.query(StatisticsRuns))
+            assert len(statistics_runs) == 13  # 12 5-minute runs
+            last_run = process_timestamp(statistics_runs[1].start)
+            assert last_run == now
 
-    assert len(stats_5min) == 1
-    assert len(stats_hourly) == 1
+        assert len(stats_5min) == 1
+        assert len(stats_hourly) == 1
 
-    wait_recording_done(hass)
-    wait_recording_done(hass)
-    hass.stop()
+        wait_recording_done(hass)
+        wait_recording_done(hass)
+        hass.stop()
 
 
 def test_saving_sets_old_state(hass_recorder: Callable[..., HomeAssistant]) -> None:
@@ -1561,43 +1564,43 @@ def test_service_disable_run_information_recorded(tmp_path: Path) -> None:
     test_db_file = test_dir.joinpath("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
-    hass = get_test_home_assistant()
-    recorder_helper.async_initialize_recorder(hass)
-    setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
-    hass.start()
-    wait_recording_done(hass)
+    with get_test_home_assistant() as hass:
+        recorder_helper.async_initialize_recorder(hass)
+        setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
+        hass.start()
+        wait_recording_done(hass)
 
-    with session_scope(hass=hass, read_only=True) as session:
-        db_run_info = list(session.query(RecorderRuns))
-        assert len(db_run_info) == 1
-        assert db_run_info[0].start is not None
-        assert db_run_info[0].end is None
+        with session_scope(hass=hass, read_only=True) as session:
+            db_run_info = list(session.query(RecorderRuns))
+            assert len(db_run_info) == 1
+            assert db_run_info[0].start is not None
+            assert db_run_info[0].end is None
 
-    hass.services.call(
-        DOMAIN,
-        SERVICE_DISABLE,
-        {},
-        blocking=True,
-    )
+        hass.services.call(
+            DOMAIN,
+            SERVICE_DISABLE,
+            {},
+            blocking=True,
+        )
 
-    wait_recording_done(hass)
-    hass.stop()
+        wait_recording_done(hass)
+        hass.stop()
 
-    hass = get_test_home_assistant()
-    recorder_helper.async_initialize_recorder(hass)
-    setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
-    hass.start()
-    wait_recording_done(hass)
+    with get_test_home_assistant() as hass:
+        recorder_helper.async_initialize_recorder(hass)
+        setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
+        hass.start()
+        wait_recording_done(hass)
 
-    with session_scope(hass=hass, read_only=True) as session:
-        db_run_info = list(session.query(RecorderRuns))
-        assert len(db_run_info) == 2
-        assert db_run_info[0].start is not None
-        assert db_run_info[0].end is not None
-        assert db_run_info[1].start is not None
-        assert db_run_info[1].end is None
+        with session_scope(hass=hass, read_only=True) as session:
+            db_run_info = list(session.query(RecorderRuns))
+            assert len(db_run_info) == 2
+            assert db_run_info[0].start is not None
+            assert db_run_info[0].end is not None
+            assert db_run_info[1].start is not None
+            assert db_run_info[1].end is None
 
-    hass.stop()
+        hass.stop()
 
 
 class CannotSerializeMe:
@@ -1766,7 +1769,7 @@ async def test_database_lock_and_unlock(
     task = asyncio.create_task(async_wait_recording_done(hass))
 
     # Recording can't be finished while lock is held
-    with pytest.raises(asyncio.TimeoutError):
+    with pytest.raises(TimeoutError):
         await asyncio.wait_for(asyncio.shield(task), timeout=0.25)
         db_events = await hass.async_add_executor_job(_get_db_events)
         assert len(db_events) == 0
@@ -1831,6 +1834,15 @@ async def test_database_lock_and_overflow(
 
         assert "Database queue backlog reached more than" in caplog.text
         assert not instance.unlock_database()
+
+    registry = async_get_issue_registry(hass)
+    issue = registry.async_get_issue(DOMAIN, "backup_failed_out_of_resources")
+    assert issue is not None
+    assert "start_time" in issue.translation_placeholders
+    start_time = issue.translation_placeholders["start_time"]
+    assert start_time is not None
+    # Should be in H:M:S format
+    assert start_time.count(":") == 2
 
 
 async def test_database_lock_and_overflow_checks_available_memory(
@@ -1909,6 +1921,15 @@ async def test_database_lock_and_overflow_checks_available_memory(
 
         db_events = await instance.async_add_executor_job(_get_db_events)
         assert len(db_events) >= 2
+
+    registry = async_get_issue_registry(hass)
+    issue = registry.async_get_issue(DOMAIN, "backup_failed_out_of_resources")
+    assert issue is not None
+    assert "start_time" in issue.translation_placeholders
+    start_time = issue.translation_placeholders["start_time"]
+    assert start_time is not None
+    # Should be in H:M:S format
+    assert start_time.count(":") == 2
 
 
 async def test_database_lock_timeout(
@@ -2095,14 +2116,14 @@ async def test_async_block_till_done(
 
 @pytest.mark.parametrize(
     ("db_url", "echo"),
-    (
+    [
         ("sqlite://blabla", None),
         ("mariadb://blabla", False),
         ("mysql://blabla", False),
         ("mariadb+pymysql://blabla", False),
         ("mysql+pymysql://blabla", False),
         ("postgresql://blabla", False),
-    ),
+    ],
 )
 async def test_disable_echo(
     hass: HomeAssistant, db_url, echo, caplog: pytest.LogCaptureFixture
@@ -2127,7 +2148,7 @@ async def test_disable_echo(
 
 @pytest.mark.parametrize(
     ("config_url", "expected_connect_args"),
-    (
+    [
         (
             "mariadb://user:password@SERVER_IP/DB_NAME",
             {"charset": "utf8mb4"},
@@ -2160,7 +2181,7 @@ async def test_disable_echo(
             "sqlite://blabla",
             {},
         ),
-    ),
+    ],
 )
 async def test_mysql_missing_utf8mb4(
     hass: HomeAssistant, config_url, expected_connect_args
@@ -2188,11 +2209,11 @@ async def test_mysql_missing_utf8mb4(
 
 @pytest.mark.parametrize(
     "config_url",
-    (
+    [
         "mysql://user:password@SERVER_IP/DB_NAME",
         "mysql://user:password@SERVER_IP/DB_NAME?charset=utf8mb4",
         "mysql://user:password@SERVER_IP/DB_NAME?blah=bleh&charset=other",
-    ),
+    ],
 )
 async def test_connect_args_priority(hass: HomeAssistant, config_url) -> None:
     """Test connect_args has priority over URL query."""
@@ -2207,6 +2228,10 @@ async def test_connect_args_priority(hass: HomeAssistant, config_url) -> None:
 
         def __init__(*args, **kwargs):
             ...
+
+        @property
+        def is_async(self):
+            return False
 
         def connect(self, *args, **params):
             nonlocal connect_params
@@ -2465,3 +2490,73 @@ async def test_events_are_recorded_until_final_write(
     await hass.async_block_till_done()
 
     assert not instance.engine
+
+
+async def test_commit_before_commits_pending_writes(
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
+    recorder_db_url: str,
+    tmp_path: Path,
+) -> None:
+    """Test commit_before with a non-zero commit interval.
+
+    All of our test run with a commit interval of 0 by
+    default, so we need to test this with a non-zero commit
+    """
+    config = {
+        recorder.CONF_DB_URL: recorder_db_url,
+        recorder.CONF_COMMIT_INTERVAL: 60,
+    }
+
+    recorder_helper.async_initialize_recorder(hass)
+    hass.async_create_task(async_setup_recorder_instance(hass, config))
+    await recorder_helper.async_wait_recorder(hass)
+    instance = get_instance(hass)
+    assert instance.commit_interval == 60
+    verify_states_in_queue_future = hass.loop.create_future()
+    verify_session_commit_future = hass.loop.create_future()
+
+    class VerifyCommitBeforeTask(recorder.tasks.RecorderTask):
+        """Task to verify that commit before ran.
+
+        If commit_before is true, we should have no pending writes.
+        """
+
+        commit_before = True
+
+        def run(self, instance: Recorder) -> None:
+            if not instance._event_session_has_pending_writes:
+                hass.loop.call_soon_threadsafe(
+                    verify_session_commit_future.set_result, None
+                )
+                return
+            hass.loop.call_soon_threadsafe(
+                verify_session_commit_future.set_exception,
+                RuntimeError("Session still has pending write"),
+            )
+
+    class VerifyStatesInQueueTask(recorder.tasks.RecorderTask):
+        """Task to verify that states are in the queue."""
+
+        commit_before = False
+
+        def run(self, instance: Recorder) -> None:
+            if instance._event_session_has_pending_writes:
+                hass.loop.call_soon_threadsafe(
+                    verify_states_in_queue_future.set_result, None
+                )
+                return
+            hass.loop.call_soon_threadsafe(
+                verify_states_in_queue_future.set_exception,
+                RuntimeError("Session has no pending write"),
+            )
+
+    # First insert an event
+    instance.queue_task(Event("fake_event"))
+    # Next verify that the event session has pending writes
+    instance.queue_task(VerifyStatesInQueueTask())
+    # Finally, verify that the session was committed
+    instance.queue_task(VerifyCommitBeforeTask())
+
+    await verify_states_in_queue_future
+    await verify_session_commit_future

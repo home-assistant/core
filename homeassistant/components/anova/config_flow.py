@@ -1,12 +1,12 @@
 """Config flow for Anova."""
+
 from __future__ import annotations
 
 from anova_wifi import AnovaApi, InvalidLogin, NoDevicesFound
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICES, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -20,7 +20,7 @@ class AnovaConfligFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors: dict[str, str] = {}
         if user_input is not None:

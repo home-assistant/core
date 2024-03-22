@@ -1,4 +1,5 @@
 """Diagnostics support for august."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -24,6 +25,7 @@ TO_REDACT = {
     "remoteOperateSecret",
     "users",
     "zWaveDSK",
+    "contentToken",
 }
 
 

@@ -1,4 +1,5 @@
 """Fixtures for the AVM Fritz!Box integration."""
+
 from unittest.mock import Mock, patch
 
 import pytest

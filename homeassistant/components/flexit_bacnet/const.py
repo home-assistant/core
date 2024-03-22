@@ -1,4 +1,5 @@
 """Constants for the Flexit Nordic (BACnet) integration."""
+
 from flexit_bacnet import (
     VENTILATION_MODE_AWAY,
     VENTILATION_MODE_HIGH,
@@ -14,6 +15,9 @@ from homeassistant.components.climate import (
 )
 
 DOMAIN = "flexit_bacnet"
+
+MAX_TEMP = 30
+MIN_TEMP = 10
 
 VENTILATION_TO_PRESET_MODE_MAP = {
     VENTILATION_MODE_STOP: PRESET_NONE,

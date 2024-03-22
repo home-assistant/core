@@ -1,4 +1,5 @@
 """The tests for the rest.notify platform."""
+
 from unittest.mock import patch
 
 import respx

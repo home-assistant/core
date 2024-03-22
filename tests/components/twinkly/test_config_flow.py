@@ -1,4 +1,5 @@
 """Tests for the config_flow of the twinly component."""
+
 from unittest.mock import patch
 
 from homeassistant import config_entries
@@ -76,7 +77,7 @@ async def test_dhcp_can_confirm(hass: HomeAssistant) -> None:
             data=dhcp.DhcpServiceInfo(
                 hostname="Twinkly_XYZ",
                 ip="1.2.3.4",
-                macaddress="aa:bb:cc:dd:ee:ff",
+                macaddress="aabbccddeeff",
             ),
         )
         await hass.async_block_till_done()
@@ -97,7 +98,7 @@ async def test_dhcp_success(hass: HomeAssistant) -> None:
             data=dhcp.DhcpServiceInfo(
                 hostname="Twinkly_XYZ",
                 ip="1.2.3.4",
-                macaddress="aa:bb:cc:dd:ee:ff",
+                macaddress="aabbccddeeff",
             ),
         )
         await hass.async_block_till_done()
@@ -142,7 +143,7 @@ async def test_dhcp_already_exists(hass: HomeAssistant) -> None:
             data=dhcp.DhcpServiceInfo(
                 hostname="Twinkly_XYZ",
                 ip="1.2.3.4",
-                macaddress="aa:bb:cc:dd:ee:ff",
+                macaddress="aabbccddeeff",
             ),
         )
         await hass.async_block_till_done()

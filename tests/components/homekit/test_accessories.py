@@ -2,6 +2,7 @@
 
 This includes tests for all mock object types.
 """
+
 from unittest.mock import Mock, patch
 
 import pytest
@@ -63,7 +64,7 @@ async def test_accessory_cancels_track_state_change_on_stop(
     with patch(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ):
-        await acc.run()
+        acc.run()
     assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS][entity_id]) == 1
     await acc.stop()
     assert entity_id not in hass.data[TRACK_STATE_CHANGE_CALLBACKS]
@@ -178,7 +179,7 @@ async def test_home_accessory(hass: HomeAssistant, hk_driver) -> None:
     with patch(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ) as mock_async_update_state:
-        await acc.run()
+        acc.run()
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
         mock_async_update_state.assert_called_with(state)
@@ -276,7 +277,7 @@ async def test_battery_service(
     with patch(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ) as mock_async_update_state:
-        await acc.run()
+        acc.run()
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
         mock_async_update_state.assert_called_with(state)
@@ -332,7 +333,7 @@ async def test_battery_service(
     with patch(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ) as mock_async_update_state:
-        await acc.run()
+        acc.run()
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
         mock_async_update_state.assert_called_with(state)
@@ -375,7 +376,7 @@ async def test_linked_battery_sensor(
     with patch(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ) as mock_async_update_state:
-        await acc.run()
+        acc.run()
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
         mock_async_update_state.assert_called_with(state)
@@ -420,7 +421,7 @@ async def test_linked_battery_sensor(
     with patch(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ) as mock_async_update_state:
-        await acc.run()
+        acc.run()
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
         mock_async_update_state.assert_called_with(state)
@@ -464,7 +465,7 @@ async def test_linked_battery_charging_sensor(
     with patch(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ) as mock_async_update_state:
-        await acc.run()
+        acc.run()
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
         mock_async_update_state.assert_called_with(state)
@@ -476,7 +477,7 @@ async def test_linked_battery_charging_sensor(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ) as mock_async_update_state:
         hass.states.async_set(linked_battery_charging_sensor, STATE_OFF, None)
-        await acc.run()
+        acc.run()
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
         mock_async_update_state.assert_called_with(state)
@@ -486,7 +487,7 @@ async def test_linked_battery_charging_sensor(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ) as mock_async_update_state:
         hass.states.async_set(linked_battery_charging_sensor, STATE_ON, None)
-        await acc.run()
+        acc.run()
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
         mock_async_update_state.assert_called_with(state)
@@ -496,7 +497,7 @@ async def test_linked_battery_charging_sensor(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ) as mock_async_update_state:
         hass.states.async_remove(linked_battery_charging_sensor)
-        await acc.run()
+        acc.run()
         await hass.async_block_till_done()
     assert acc._char_charging.value == 1
 
@@ -529,7 +530,7 @@ async def test_linked_battery_sensor_and_linked_battery_charging_sensor(
     with patch(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ) as mock_async_update_state:
-        await acc.run()
+        acc.run()
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
         mock_async_update_state.assert_called_with(state)
@@ -575,7 +576,7 @@ async def test_missing_linked_battery_charging_sensor(
     with patch(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ):
-        await acc.run()
+        acc.run()
         await hass.async_block_till_done()
 
     # Make sure we don't throw if the entity_id
@@ -584,7 +585,7 @@ async def test_missing_linked_battery_charging_sensor(
     with patch(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ):
-        await acc.run()
+        acc.run()
         await hass.async_block_till_done()
 
 
@@ -610,7 +611,7 @@ async def test_missing_linked_battery_sensor(
     with patch(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ) as mock_async_update_state:
-        await acc.run()
+        acc.run()
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
         mock_async_update_state.assert_called_with(state)
@@ -624,7 +625,7 @@ async def test_missing_linked_battery_sensor(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ) as mock_async_update_state:
         hass.states.async_remove(entity_id)
-        await acc.run()
+        acc.run()
         await hass.async_block_till_done()
 
     assert not acc.linked_battery_sensor
@@ -647,7 +648,7 @@ async def test_battery_appears_after_startup(
     with patch(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ) as mock_async_update_state:
-        await acc.run()
+        acc.run()
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
         mock_async_update_state.assert_called_with(state)

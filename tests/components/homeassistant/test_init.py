@@ -1,4 +1,5 @@
 """The tests for Core components."""
+
 import asyncio
 import unittest
 from unittest.mock import Mock, patch
@@ -119,21 +120,27 @@ class TestComponentsCore(unittest.TestCase):
 
     def setUp(self):
         """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
+        self._manager = get_test_home_assistant()
+        self.hass = self._manager.__enter__()
         assert asyncio.run_coroutine_threadsafe(
             async_setup_component(self.hass, "homeassistant", {}), self.hass.loop
         ).result()
 
         self.hass.states.set("light.Bowl", STATE_ON)
         self.hass.states.set("light.Ceiling", STATE_OFF)
-        self.addCleanup(self.hass.stop)
+
+    def tearDown(self) -> None:
+        """Tear down hass object."""
+        self.hass.stop()
+        self._manager.__exit__(None, None, None)
 
     def test_is_on(self):
         """Test is_on method."""
-        assert comps.is_on(self.hass, "light.Bowl")
-        assert not comps.is_on(self.hass, "light.Ceiling")
-        assert comps.is_on(self.hass)
-        assert not comps.is_on(self.hass, "non_existing.entity")
+        with pytest.raises(
+            RuntimeError,
+            match="Detected code that uses homeassistant.components.is_on. This is deprecated and will stop working",
+        ):
+            assert comps.is_on(self.hass, "light.Bowl")
 
     def test_turn_on_without_entities(self):
         """Test turn_on method without entities."""
@@ -256,7 +263,7 @@ async def test_turn_on_skips_domains_without_service(
         "turn_on",
         {"entity_id": ["light.test", "sensor.bla", "binary_sensor.blub", "light.bla"]},
     )
-    service = hass.services._services["homeassistant"]["turn_on"]
+    service = hass.services.async_services_for_domain("homeassistant")["turn_on"]
 
     with patch(
         "homeassistant.core.ServiceRegistry.async_call",

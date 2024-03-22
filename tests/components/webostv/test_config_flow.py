@@ -1,4 +1,5 @@
 """Test the WebOS Tv config flow."""
+
 import dataclasses
 from unittest.mock import Mock
 

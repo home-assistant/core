@@ -1,5 +1,5 @@
 """Test the imap config flow."""
-import asyncio
+
 import ssl
 from unittest.mock import AsyncMock, patch
 
@@ -117,7 +117,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("exc", "error"),
     [
-        (asyncio.TimeoutError, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
         (AioImapException(""), "cannot_connect"),
         (ssl.SSLError, "ssl_error"),
     ],
@@ -239,6 +239,7 @@ async def test_reauth_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
                 CONF_PASSWORD: "test-password",
             },
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
@@ -305,7 +306,7 @@ async def test_reauth_failed_conn_error(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.imap.config_flow.connect_to_server",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -464,7 +465,7 @@ async def test_advanced_options_form(
                 # Check if entry was updated
                 for key, value in new_config.items():
                     assert entry.data[key] == value
-    except vol.MultipleInvalid:
+    except vol.Invalid:
         # Check if form was expected with these options
         assert assert_result == data_entry_flow.FlowResultType.FORM
 
@@ -519,7 +520,7 @@ async def test_config_flow_from_with_advanced_settings(
 
     with patch(
         "homeassistant.components.imap.config_flow.connect_to_server",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], config

@@ -1,4 +1,5 @@
 """Config flow for Kuler Sky."""
+
 import logging
 
 import pykulersky

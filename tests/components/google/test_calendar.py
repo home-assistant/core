@@ -1,4 +1,5 @@
 """The tests for the google calendar platform."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -571,7 +572,6 @@ async def test_scan_calendar_error(
     config_entry,
 ) -> None:
     """Test that the calendar update handles a server error."""
-    config_entry.add_to_hass(hass)
     mock_calendars_list({}, exc=ClientError())
     assert await component_setup()
 

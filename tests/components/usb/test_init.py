@@ -1,4 +1,5 @@
 """Tests for the USB Discovery integration."""
+
 import os
 import sys
 from unittest.mock import MagicMock, Mock, call, patch, sentinel
@@ -84,7 +85,7 @@ async def test_observer_discovery(
 
     def _create_mock_monitor_observer(monitor, callback, name):
         nonlocal mock_observer
-        hass.async_create_task(_mock_monitor_observer_callback(callback))
+        hass.create_task(_mock_monitor_observer_callback(callback))
         mock_observer = MagicMock()
         return mock_observer
 
@@ -106,7 +107,7 @@ async def test_observer_discovery(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
 
-    assert mock_observer.mock_calls == [call.start(), call.stop()]
+    assert mock_observer.mock_calls == [call.start(), call.__bool__(), call.stop()]
 
 
 @pytest.mark.skipif(

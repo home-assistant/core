@@ -1,11 +1,16 @@
 """Test Alexa capabilities."""
+
 from typing import Any
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.alexa import smart_home
-from homeassistant.components.climate import ATTR_CURRENT_TEMPERATURE, HVACMode
+from homeassistant.components.climate import (
+    ATTR_CURRENT_TEMPERATURE,
+    ClimateEntityFeature,
+    HVACMode,
+)
 from homeassistant.components.lock import STATE_JAMMED, STATE_LOCKING, STATE_UNLOCKING
 from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.components.valve import ValveEntityFeature
@@ -921,6 +926,52 @@ async def test_report_climate_state(hass: HomeAssistant) -> None:
     msg = await reported_properties(hass, "climate.unsupported", True)
     assert msg["event"]["header"]["name"] == "ErrorResponse"
     assert msg["event"]["payload"]["type"] == "INTERNAL_ERROR"
+
+
+async def test_report_on_off_climate_state(hass: HomeAssistant) -> None:
+    """Test ThermostatController with on/off features reports state correctly."""
+    on_off_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_ON
+        | ClimateEntityFeature.TURN_OFF
+    )
+    for auto_modes in (HVACMode.HEAT,):
+        hass.states.async_set(
+            "climate.onoff",
+            auto_modes,
+            {
+                "friendly_name": "Climate Downstairs",
+                "supported_features": on_off_features,
+                ATTR_CURRENT_TEMPERATURE: 34,
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+            },
+        )
+        properties = await reported_properties(hass, "climate.onoff")
+        properties.assert_equal("Alexa.ThermostatController", "thermostatMode", "HEAT")
+        properties.assert_equal(
+            "Alexa.TemperatureSensor",
+            "temperature",
+            {"value": 34.0, "scale": "CELSIUS"},
+        )
+
+    for off_modes in [HVACMode.OFF]:
+        hass.states.async_set(
+            "climate.onoff",
+            off_modes,
+            {
+                "friendly_name": "Climate Downstairs",
+                "supported_features": on_off_features,
+                ATTR_CURRENT_TEMPERATURE: 34,
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+            },
+        )
+        properties = await reported_properties(hass, "climate.onoff")
+        properties.assert_equal("Alexa.ThermostatController", "thermostatMode", "OFF")
+        properties.assert_equal(
+            "Alexa.TemperatureSensor",
+            "temperature",
+            {"value": 34.0, "scale": "CELSIUS"},
+        )
 
 
 async def test_report_water_heater_state(hass: HomeAssistant) -> None:

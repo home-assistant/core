@@ -1,4 +1,5 @@
 """Tests for the nexia integration."""
+
 from unittest.mock import patch
 import uuid
 

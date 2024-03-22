@@ -1,4 +1,5 @@
 """Tests for the Econet component."""
+
 from unittest.mock import patch
 
 from pyeconet.api import EcoNetApiInterface

@@ -1,4 +1,5 @@
 """Entity classes for the AEMET OpenData integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -8,7 +9,7 @@ from aemet_opendata.helpers import dict_nested_value
 from homeassistant.components.weather import Forecast
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .weather_update_coordinator import WeatherUpdateCoordinator
+from .coordinator import WeatherUpdateCoordinator
 
 
 class AemetEntity(CoordinatorEntity[WeatherUpdateCoordinator]):

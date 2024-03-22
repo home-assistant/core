@@ -1,4 +1,5 @@
 """The tests for the Conversation component."""
+
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch
@@ -501,8 +502,8 @@ async def test_http_processing_intent_conversion_not_expose_new(
 
 
 @pytest.mark.parametrize("agent_id", AGENT_ID_OPTIONS)
-@pytest.mark.parametrize("sentence", ("turn on kitchen", "turn kitchen on"))
-@pytest.mark.parametrize("conversation_id", ("my_new_conversation", None))
+@pytest.mark.parametrize("sentence", ["turn on kitchen", "turn kitchen on"])
+@pytest.mark.parametrize("conversation_id", ["my_new_conversation", None])
 async def test_turn_on_intent(
     hass: HomeAssistant, init_components, conversation_id, sentence, agent_id, snapshot
 ) -> None:
@@ -534,9 +535,12 @@ async def test_turn_on_intent(
 
 async def test_service_fails(hass: HomeAssistant, init_components) -> None:
     """Test calling the turn on intent."""
-    with pytest.raises(HomeAssistantError), patch(
-        "homeassistant.components.conversation.async_converse",
-        side_effect=intent.IntentHandleError,
+    with (
+        pytest.raises(HomeAssistantError),
+        patch(
+            "homeassistant.components.conversation.async_converse",
+            side_effect=intent.IntentHandleError,
+        ),
     ):
         await hass.services.async_call(
             "conversation",
@@ -546,7 +550,7 @@ async def test_service_fails(hass: HomeAssistant, init_components) -> None:
         )
 
 
-@pytest.mark.parametrize("sentence", ("turn off kitchen", "turn kitchen off"))
+@pytest.mark.parametrize("sentence", ["turn off kitchen", "turn kitchen off"])
 async def test_turn_off_intent(hass: HomeAssistant, init_components, sentence) -> None:
     """Test calling the turn on intent."""
     hass.states.async_set("light.kitchen", "on")
@@ -581,6 +585,7 @@ async def test_http_api_no_match(
 
     assert data == snapshot
     assert data["response"]["response_type"] == "error"
+    assert data["response"]["data"]["code"] == "no_intent_match"
 
 
 async def test_http_api_handle_failure(
@@ -596,7 +601,7 @@ async def test_http_api_handle_failure(
 
     # Raise an error during intent handling
     def async_handle_error(*args, **kwargs):
-        raise intent.IntentHandleError()
+        raise intent.IntentHandleError
 
     with patch("homeassistant.helpers.intent.async_handle", new=async_handle_error):
         resp = await client.post(
@@ -624,7 +629,7 @@ async def test_http_api_unexpected_failure(
 
     # Raise an "unexpected" error during intent handling
     def async_handle_error(*args, **kwargs):
-        raise intent.IntentUnexpectedError()
+        raise intent.IntentUnexpectedError
 
     with patch("homeassistant.helpers.intent.async_handle", new=async_handle_error):
         resp = await client.post(
@@ -732,12 +737,13 @@ async def test_ws_api(
     assert await async_setup_component(hass, "conversation", {})
     client = await hass_ws_client(hass)
 
-    await client.send_json({"id": 5, "type": "conversation/process", **payload})
+    await client.send_json_auto_id({"type": "conversation/process", **payload})
 
     msg = await client.receive_json()
 
     assert msg["success"]
     assert msg["result"] == snapshot
+    assert msg["result"]["response"]["data"]["code"] == "no_intent_match"
 
 
 @pytest.mark.parametrize("agent_id", AGENT_ID_OPTIONS)
@@ -755,18 +761,14 @@ async def test_ws_prepare(
 
     client = await hass_ws_client(hass)
 
-    msg = {
-        "id": 5,
-        "type": "conversation/prepare",
-    }
+    msg = {"type": "conversation/prepare"}
     if agent_id is not None:
         msg["agent_id"] = agent_id
-    await client.send_json(msg)
+    await client.send_json_auto_id(msg)
 
     msg = await client.receive_json()
 
     assert msg["success"]
-    assert msg["id"] == 5
 
     # Intents should now be load
     assert agent._lang_intents.get(hass.config.language)
@@ -911,32 +913,6 @@ async def test_language_region(hass: HomeAssistant, init_components) -> None:
     assert call.domain == LIGHT_DOMAIN
     assert call.service == "turn_on"
     assert call.data == {"entity_id": ["light.kitchen"]}
-
-
-async def test_reload_on_new_component(hass: HomeAssistant) -> None:
-    """Test intents being reloaded when a new component is loaded."""
-    language = hass.config.language
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
-
-    # Load intents
-    agent = await conversation._get_agent_manager(hass).async_get_agent()
-    assert isinstance(agent, conversation.DefaultAgent)
-    await agent.async_prepare()
-
-    lang_intents = agent._lang_intents.get(language)
-    assert lang_intents is not None
-    loaded_components = set(lang_intents.loaded_components)
-
-    # Load another component
-    assert await async_setup_component(hass, "light", {})
-
-    # Intents should reload
-    await agent.async_prepare()
-    lang_intents = agent._lang_intents.get(language)
-    assert lang_intents is not None
-
-    assert {"light"} == (lang_intents.loaded_components - loaded_components)
 
 
 async def test_non_default_response(hass: HomeAssistant, init_components) -> None:
@@ -1206,7 +1182,7 @@ async def test_ws_hass_agent_debug(
                 "turn my cool light off",
                 "turn on all lights in the kitchen",
                 "how many lights are on in the kitchen?",
-                "this will not match anything",  # null in results
+                "this will not match anything",  # None in results
             ],
         }
     )
@@ -1216,6 +1192,188 @@ async def test_ws_hass_agent_debug(
     assert msg["success"]
     assert msg["result"] == snapshot
 
+    # Last sentence should be a failed match
+    assert msg["result"]["results"][-1] is None
+
     # Light state should not have been changed
     assert len(on_calls) == 0
     assert len(off_calls) == 0
+
+
+async def test_ws_hass_agent_debug_null_result(
+    hass: HomeAssistant,
+    init_components,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test homeassistant agent debug websocket command with a null result."""
+    client = await hass_ws_client(hass)
+
+    async def async_recognize(self, user_input, *args, **kwargs):
+        if user_input.text == "bad sentence":
+            return None
+
+        return await self.async_recognize(user_input, *args, **kwargs)
+
+    with patch(
+        "homeassistant.components.conversation.default_agent.DefaultAgent.async_recognize",
+        async_recognize,
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "conversation/agent/homeassistant/debug",
+                "sentences": [
+                    "bad sentence",
+                ],
+            }
+        )
+
+        msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == snapshot
+    assert msg["result"]["results"] == [None]
+
+
+async def test_ws_hass_agent_debug_out_of_range(
+    hass: HomeAssistant,
+    init_components,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test homeassistant agent debug websocket command with an out of range entity."""
+    test_light = entity_registry.async_get_or_create("light", "demo", "1234")
+    hass.states.async_set(
+        test_light.entity_id, "off", attributes={ATTR_FRIENDLY_NAME: "test light"}
+    )
+
+    client = await hass_ws_client(hass)
+
+    # Brightness is in range (0-100)
+    await client.send_json_auto_id(
+        {
+            "type": "conversation/agent/homeassistant/debug",
+            "sentences": [
+                "set test light brightness to 100%",
+            ],
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == snapshot
+
+    results = msg["result"]["results"]
+    assert len(results) == 1
+    assert results[0]["match"]
+
+    # Brightness is out of range
+    await client.send_json_auto_id(
+        {
+            "type": "conversation/agent/homeassistant/debug",
+            "sentences": [
+                "set test light brightness to 1001%",
+            ],
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == snapshot
+
+    results = msg["result"]["results"]
+    assert len(results) == 1
+    assert not results[0]["match"]
+
+    # Name matched, but brightness didn't
+    assert results[0]["slots"] == {"name": "test light"}
+    assert results[0]["unmatched_slots"] == {"brightness": 1001}
+
+
+async def test_ws_hass_agent_debug_custom_sentence(
+    hass: HomeAssistant,
+    init_components,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test homeassistant agent debug websocket command with a custom sentence."""
+    # Expecting testing_config/custom_sentences/en/beer.yaml
+    intent.async_register(hass, OrderBeerIntentHandler())
+
+    client = await hass_ws_client(hass)
+
+    # Brightness is in range (0-100)
+    await client.send_json_auto_id(
+        {
+            "type": "conversation/agent/homeassistant/debug",
+            "sentences": [
+                "I'd like to order a lager, please.",
+            ],
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == snapshot
+
+    debug_results = msg["result"].get("results", [])
+    assert len(debug_results) == 1
+    assert debug_results[0].get("match")
+    assert debug_results[0].get("source") == "custom"
+    assert debug_results[0].get("file") == "en/beer.yaml"
+
+
+async def test_ws_hass_agent_debug_sentence_trigger(
+    hass: HomeAssistant,
+    init_components,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test homeassistant agent debug websocket command with a sentence trigger."""
+    calls = async_mock_service(hass, "test", "automation")
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "platform": "conversation",
+                    "command": ["hello", "hello[ world]"],
+                },
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"data": "{{ trigger }}"},
+                },
+            }
+        },
+    )
+
+    client = await hass_ws_client(hass)
+
+    # Use trigger sentence
+    await client.send_json_auto_id(
+        {
+            "type": "conversation/agent/homeassistant/debug",
+            "sentences": ["hello world"],
+        }
+    )
+    await hass.async_block_till_done()
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == snapshot
+
+    debug_results = msg["result"].get("results", [])
+    assert len(debug_results) == 1
+    assert debug_results[0].get("match")
+    assert debug_results[0].get("source") == "trigger"
+    assert debug_results[0].get("sentence_template") == "hello[ world]"
+
+    # Trigger should not have been executed
+    assert len(calls) == 0

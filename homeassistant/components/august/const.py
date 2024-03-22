@@ -50,9 +50,9 @@ LOGIN_METHODS = ["phone", "email"]
 DEFAULT_LOGIN_METHOD = "email"
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CAMERA,
-    Platform.BINARY_SENSOR,
     Platform.LOCK,
     Platform.SENSOR,
 ]

@@ -1,4 +1,5 @@
 """Tests for the devolo Home Network device tracker."""
+
 from unittest.mock import AsyncMock
 
 from devolo_plc_api.exceptions.device import DeviceUnavailable

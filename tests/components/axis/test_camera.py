@@ -1,5 +1,4 @@
 """Axis camera platform tests."""
-from unittest.mock import patch
 
 import pytest
 
@@ -13,7 +12,7 @@ from homeassistant.const import STATE_IDLE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .const import NAME
+from .const import MAC, NAME
 
 
 async def test_platform_manually_configured(hass: HomeAssistant) -> None:
@@ -72,9 +71,19 @@ async def test_camera_with_stream_profile(
     )
 
 
+property_data = f"""root.Properties.API.HTTP.Version=3
+root.Properties.API.Metadata.Metadata=yes
+root.Properties.API.Metadata.Version=1.0
+root.Properties.EmbeddedDevelopment.Version=2.16
+root.Properties.Firmware.BuildDate=Feb 15 2019 09:42
+root.Properties.Firmware.BuildNumber=26
+root.Properties.Firmware.Version=9.10.1
+root.Properties.System.SerialNumber={MAC}
+"""
+
+
+@pytest.mark.parametrize("param_properties_payload", [property_data])
 async def test_camera_disabled(hass: HomeAssistant, prepare_config_entry) -> None:
     """Test that Axis camera platform is loaded properly but does not create camera entity."""
-    with patch("axis.vapix.vapix.Params.image_format", new=None):
-        await prepare_config_entry()
-
+    await prepare_config_entry()
     assert len(hass.states.async_entity_ids(CAMERA_DOMAIN)) == 0

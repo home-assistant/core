@@ -1,6 +1,5 @@
 """The tests for the REST binary sensor platform."""
 
-import asyncio
 from http import HTTPStatus
 import ssl
 from unittest.mock import MagicMock, patch
@@ -107,7 +106,7 @@ async def test_setup_fail_on_ssl_erros(
 @respx.mock
 async def test_setup_timeout(hass: HomeAssistant) -> None:
     """Test setup when connection timeout occurs."""
-    respx.get("http://localhost").mock(side_effect=asyncio.TimeoutError())
+    respx.get("http://localhost").mock(side_effect=TimeoutError())
     assert await async_setup_component(
         hass,
         BINARY_SENSOR_DOMAIN,

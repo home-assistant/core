@@ -1,5 +1,5 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
-import asyncio
+
 from dataclasses import dataclass
 
 import aiosomecomfort
@@ -8,14 +8,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import (
+    async_create_clientsession,
+    async_get_clientsession,
+)
 
 from .const import (
     _LOGGER,
     CONF_COOL_AWAY_TEMPERATURE,
-    CONF_DEV_ID,
     CONF_HEAT_AWAY_TEMPERATURE,
-    CONF_LOC_ID,
     DOMAIN,
 )
 
@@ -50,9 +51,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     username = config_entry.data[CONF_USERNAME]
     password = config_entry.data[CONF_PASSWORD]
 
-    client = aiosomecomfort.AIOSomeComfort(
-        username, password, session=async_get_clientsession(hass)
-    )
+    if len(hass.config_entries.async_entries(DOMAIN)) > 1:
+        session = async_create_clientsession(hass)
+    else:
+        session = async_get_clientsession(hass)
+
+    client = aiosomecomfort.AIOSomeComfort(username, password, session=session)
     try:
         await client.login()
         await client.discover()
@@ -64,29 +68,22 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         aiosomecomfort.device.ConnectionError,
         aiosomecomfort.device.ConnectionTimeout,
         aiosomecomfort.device.SomeComfortError,
-        asyncio.TimeoutError,
+        TimeoutError,
     ) as ex:
         raise ConfigEntryNotReady(
             "Failed to initialize the Honeywell client: Connection error"
         ) from ex
 
-    loc_id = config_entry.data.get(CONF_LOC_ID)
-    dev_id = config_entry.data.get(CONF_DEV_ID)
-
     devices = {}
     for location in client.locations_by_id.values():
-        if not loc_id or location.locationid == loc_id:
-            for device in location.devices_by_id.values():
-                if not dev_id or device.deviceid == dev_id:
-                    devices[device.deviceid] = device
+        for device in location.devices_by_id.values():
+            devices[device.deviceid] = device
 
     if len(devices) == 0:
         _LOGGER.debug("No devices found")
         return False
-
     data = HoneywellData(config_entry.entry_id, client, devices)
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config_entry.entry_id] = data
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = data
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
@@ -105,7 +102,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         config_entry, PLATFORMS
     )
     if unload_ok:
-        hass.data.pop(DOMAIN)
+        hass.data[DOMAIN].pop(config_entry.entry_id)
     return unload_ok
 
 

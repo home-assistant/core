@@ -1,4 +1,6 @@
 """Test config utils."""
+
+import asyncio
 from collections import OrderedDict
 import contextlib
 import copy
@@ -14,6 +16,7 @@ import voluptuous as vol
 from voluptuous import Invalid, MultipleInvalid
 import yaml
 
+from homeassistant import config, loader
 import homeassistant.config as config_util
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -862,7 +865,7 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("minor_version", "users", "user_data", "default_language"),
-    (
+    [
         (2, (), {}, "en"),
         (2, ({"is_owner": True},), {}, "en"),
         (
@@ -891,7 +894,7 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
             {"user1": {"language": {"language": "sv"}}},
             "en",
         ),
-    ),
+    ],
 )
 async def test_language_default(
     hass: HomeAssistant,
@@ -1430,7 +1433,8 @@ async def test_component_config_exceptions(
     # Config validator
     test_integration = Mock(
         domain="test_domain",
-        get_platform=Mock(
+        async_get_component=AsyncMock(),
+        async_get_platform=AsyncMock(
             return_value=Mock(
                 async_validate_config=AsyncMock(side_effect=ValueError("broken"))
             )
@@ -1455,14 +1459,14 @@ async def test_component_config_exceptions(
 
     test_integration = Mock(
         domain="test_domain",
-        get_platform=Mock(
+        async_get_platform=AsyncMock(
             return_value=Mock(
                 async_validate_config=AsyncMock(
                     side_effect=HomeAssistantError("broken")
                 )
             )
         ),
-        get_component=Mock(return_value=Mock(spec=["PLATFORM_SCHEMA_BASE"])),
+        async_get_component=AsyncMock(return_value=Mock(spec=["PLATFORM_SCHEMA_BASE"])),
     )
     caplog.clear()
     assert (
@@ -1482,8 +1486,8 @@ async def test_component_config_exceptions(
     caplog.clear()
     test_integration = Mock(
         domain="test_domain",
-        get_platform=Mock(return_value=None),
-        get_component=Mock(
+        async_get_platform=AsyncMock(return_value=None),
+        async_get_component=AsyncMock(
             return_value=Mock(CONFIG_SCHEMA=Mock(side_effect=ValueError("broken")))
         ),
     )
@@ -1511,8 +1515,8 @@ async def test_component_config_exceptions(
     caplog.clear()
     test_integration = Mock(
         domain="test_domain",
-        get_platform=Mock(return_value=None),
-        get_component=Mock(
+        async_get_platform=AsyncMock(return_value=None),
+        async_get_component=AsyncMock(
             return_value=Mock(
                 spec=["PLATFORM_SCHEMA_BASE"],
                 PLATFORM_SCHEMA_BASE=Mock(side_effect=ValueError("broken")),
@@ -1551,13 +1555,13 @@ async def test_component_config_exceptions(
     caplog.clear()
     test_integration = Mock(
         domain="test_domain",
-        get_platform=Mock(return_value=None),
-        get_component=Mock(return_value=Mock(spec=["PLATFORM_SCHEMA_BASE"])),
+        async_get_platform=AsyncMock(return_value=None),
+        async_get_component=AsyncMock(return_value=Mock(spec=["PLATFORM_SCHEMA_BASE"])),
     )
     with patch(
         "homeassistant.config.async_get_integration_with_requirements",
         return_value=Mock(  # integration that owns platform
-            get_platform=Mock(
+            async_get_platform=AsyncMock(
                 return_value=Mock(  # platform
                     PLATFORM_SCHEMA=Mock(side_effect=ValueError("broken"))
                 )
@@ -1640,12 +1644,12 @@ async def test_component_config_exceptions(
             "for test_domain component with PLATFORM_SCHEMA"
         ) in caplog.text
 
-    # get_platform("domain") raising on ImportError
+    # async_get_platform("domain") raising on ImportError
     caplog.clear()
     test_integration = Mock(
         domain="test_domain",
-        get_platform=Mock(return_value=None),
-        get_component=Mock(return_value=Mock(spec=["PLATFORM_SCHEMA_BASE"])),
+        async_get_platform=AsyncMock(return_value=None),
+        async_get_component=AsyncMock(return_value=Mock(spec=["PLATFORM_SCHEMA_BASE"])),
     )
     import_error = ImportError(
         ("ModuleNotFoundError: No module named 'not_installed_something'"),
@@ -1654,7 +1658,7 @@ async def test_component_config_exceptions(
     with patch(
         "homeassistant.config.async_get_integration_with_requirements",
         return_value=Mock(  # integration that owns platform
-            get_platform=Mock(side_effect=import_error)
+            async_get_platform=AsyncMock(side_effect=import_error)
         ),
     ):
         assert await config_util.async_process_component_and_handle_errors(
@@ -1688,12 +1692,13 @@ async def test_component_config_exceptions(
             "No module named 'not_installed_something'"
         ) in str(ex.value)
 
-    # get_platform("config") raising
+    # async_get_platform("config") raising
     caplog.clear()
     test_integration = Mock(
         pkg_path="homeassistant.components.test_domain",
         domain="test_domain",
-        get_platform=Mock(
+        async_get_component=AsyncMock(),
+        async_get_platform=AsyncMock(
             side_effect=ImportError(
                 ("ModuleNotFoundError: No module named 'not_installed_something'"),
                 name="not_installed_something",
@@ -1729,12 +1734,12 @@ async def test_component_config_exceptions(
         "No module named 'not_installed_something'" in str(ex.value)
     )
 
-    # get_component raising
+    # async_get_component raising
     caplog.clear()
     test_integration = Mock(
         pkg_path="homeassistant.components.test_domain",
         domain="test_domain",
-        get_component=Mock(
+        async_get_component=AsyncMock(
             side_effect=FileNotFoundError("No such file or directory: b'liblibc.a'")
         ),
     )
@@ -1966,7 +1971,7 @@ async def test_core_store_historic_currency(
     assert issue
     assert issue.translation_placeholders == {"currency": "LTT"}
 
-    await hass.config.async_update(**{"currency": "EUR"})
+    await hass.config.async_update(currency="EUR")
     issue = issue_registry.async_get_issue("homeassistant", issue_id)
     assert not issue
 
@@ -2022,7 +2027,7 @@ async def test_core_store_no_country(
     issue = issue_registry.async_get_issue("homeassistant", issue_id)
     assert issue
 
-    await hass.config.async_update(**{"country": "SE"})
+    await hass.config.async_update(country="SE")
     issue = issue_registry.async_get_issue("homeassistant", issue_id)
     assert not issue
 
@@ -2233,6 +2238,79 @@ async def test_yaml_error(
     assert error_records == snapshot
 
 
+@pytest.mark.parametrize(
+    "config_dir",
+    [
+        "packages_dict",
+        "packages_slug",
+        "packages_include_dir_named_dict",
+        "packages_include_dir_named_slug",
+    ],
+)
+async def test_individual_packages_schema_validation_errors(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    config_dir: str,
+    mock_iot_domain_integration: Integration,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Tests syntactic errors in individual packages."""
+
+    base_path = os.path.dirname(__file__)
+    hass.config.config_dir = os.path.join(
+        base_path, "fixtures", "core", "config", "package_schema_validation", config_dir
+    )
+
+    config = await config_util.async_hass_config_yaml(hass)
+
+    error_records = [
+        record.message
+        for record in caplog.get_records("call")
+        if record.levelno == logging.ERROR
+    ]
+    assert error_records == snapshot
+
+    assert len(config["iot_domain"]) == 1
+
+
+@pytest.mark.parametrize(
+    "config_dir",
+    [
+        "packages_is_a_list",
+        "packages_is_a_value",
+        "packages_is_null",
+    ],
+)
+async def test_packages_schema_validation_error(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    config_dir: str,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Ensure that global package schema validation errors are logged."""
+
+    base_path = os.path.dirname(__file__)
+    hass.config.config_dir = os.path.join(
+        base_path,
+        "fixtures",
+        "core",
+        "config",
+        "package_schema_errors",
+        config_dir,
+    )
+
+    config = await config_util.async_hass_config_yaml(hass)
+
+    error_records = [
+        record.message
+        for record in caplog.get_records("call")
+        if record.levelno == logging.ERROR
+    ]
+    assert error_records == snapshot
+
+    assert len(config[config_util.CONF_CORE][config_util.CONF_PACKAGES]) == 0
+
+
 def test_extract_domain_configs() -> None:
     """Test the extraction of domain configuration."""
     config = {
@@ -2264,3 +2342,112 @@ def test_config_per_platform() -> None:
         (None, 1),
         ("hello 2", config["zone Hallo"][1]),
     ] == list(config_util.config_per_platform(config, "zone"))
+
+
+def test_extract_platform_integrations() -> None:
+    """Test extract_platform_integrations."""
+    config = OrderedDict(
+        [
+            (b"zone", {"platform": "not str"}),
+            ("zone", {"platform": "hello"}),
+            ("switch", {"platform": ["un", "hash", "able"]}),
+            ("zonex", []),
+            ("zoney", ""),
+            ("notzone", {"platform": "nothello"}),
+            ("zoner", None),
+            ("zone Hallo", [1, {"platform": "hello 2"}]),
+            ("zone 100", None),
+            ("i n v a-@@", None),
+            ("i n v a-@@", {"platform": "hello"}),
+            ("zoneq", "pig"),
+            ("zoneempty", {"platform": ""}),
+        ]
+    )
+    assert config_util.extract_platform_integrations(config, {"zone"}) == {
+        "zone": {"hello", "hello 2"}
+    }
+    assert config_util.extract_platform_integrations(config, {"switch"}) == {}
+    assert config_util.extract_platform_integrations(config, {"zonex"}) == {}
+    assert config_util.extract_platform_integrations(config, {"zoney"}) == {}
+    assert config_util.extract_platform_integrations(
+        config, {"zone", "not_valid", "notzone"}
+    ) == {"zone": {"hello 2", "hello"}, "notzone": {"nothello"}}
+    assert config_util.extract_platform_integrations(config, {"zoneq"}) == {}
+    assert config_util.extract_platform_integrations(config, {"zoneempty"}) == {}
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_loading_platforms_gathers(hass: HomeAssistant) -> None:
+    """Test loading platform integrations gathers."""
+
+    mock_integration(
+        hass,
+        MockModule(
+            domain="platform_int",
+        ),
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="platform_int2",
+        ),
+    )
+
+    # Its important that we do not mock the platforms with mock_platform
+    # as the loader is smart enough to know they are already loaded and
+    # will not create an executor job to load them. We are testing in
+    # what order the executor jobs happen here as we want to make
+    # sure the platform integrations are at the front of the line
+    light_integration = await loader.async_get_integration(hass, "light")
+    sensor_integration = await loader.async_get_integration(hass, "sensor")
+
+    order: list[tuple[str, str]] = []
+
+    def _load_platform(self, platform: str) -> MockModule:
+        order.append((self.domain, platform))
+        return MockModule()
+
+    # We need to patch what runs in the executor so we are counting
+    # the order that jobs are scheduled in th executor
+    with patch(
+        "homeassistant.loader.Integration._load_platform",
+        _load_platform,
+    ):
+        light_task = hass.async_create_task(
+            config.async_process_component_config(
+                hass,
+                {
+                    "light": [
+                        {"platform": "platform_int"},
+                        {"platform": "platform_int2"},
+                    ]
+                },
+                light_integration,
+            ),
+            eager_start=True,
+        )
+        sensor_task = hass.async_create_task(
+            config.async_process_component_config(
+                hass,
+                {
+                    "sensor": [
+                        {"platform": "platform_int"},
+                        {"platform": "platform_int2"},
+                    ]
+                },
+                sensor_integration,
+            ),
+            eager_start=True,
+        )
+
+        await asyncio.gather(light_task, sensor_task)
+
+    # Should be called in order so that
+    # all the light platforms are imported
+    # before the sensor platforms
+    assert order == [
+        ("platform_int", "light"),
+        ("platform_int2", "light"),
+        ("platform_int", "sensor"),
+        ("platform_int2", "sensor"),
+    ]

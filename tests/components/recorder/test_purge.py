@@ -1,4 +1,5 @@
 """Test data purging."""
+
 from datetime import datetime, timedelta
 import json
 import sqlite3
@@ -380,7 +381,7 @@ async def test_purge_old_statistics_runs(
         assert statistics_runs.count() == 1
 
 
-@pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
+@pytest.mark.parametrize("use_sqlite", [True, False], indirect=True)
 async def test_purge_method(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
@@ -505,7 +506,7 @@ async def test_purge_method(
     )
 
 
-@pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
+@pytest.mark.parametrize("use_sqlite", [True, False], indirect=True)
 async def test_purge_edge_case(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
@@ -748,7 +749,7 @@ async def test_purge_cutoff_date(
         assert state_attributes.count() == 0
 
 
-@pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
+@pytest.mark.parametrize("use_sqlite", [True, False], indirect=True)
 async def test_purge_filtered_states(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
@@ -943,7 +944,7 @@ async def test_purge_filtered_states(
         assert session.query(StateAttributes).count() == 0
 
 
-@pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
+@pytest.mark.parametrize("use_sqlite", [True, False], indirect=True)
 async def test_purge_filtered_states_to_empty(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
@@ -997,7 +998,7 @@ async def test_purge_filtered_states_to_empty(
     await async_wait_purge_done(hass)
 
 
-@pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
+@pytest.mark.parametrize("use_sqlite", [True, False], indirect=True)
 async def test_purge_without_state_attributes_filtered_states_to_empty(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
@@ -1424,6 +1425,18 @@ async def test_purge_entities(
         )
         assert states_sensor_kept.count() == 10
 
+        # sensor.keep should remain in the StatesMeta table
+        states_meta_remain = session.query(StatesMeta).filter(
+            StatesMeta.entity_id == "sensor.keep"
+        )
+        assert states_meta_remain.count() == 1
+
+        # sensor.purge_entity should be removed from the StatesMeta table
+        states_meta_remain = session.query(StatesMeta).filter(
+            StatesMeta.entity_id == "sensor.purge_entity"
+        )
+        assert states_meta_remain.count() == 0
+
     _add_purge_records(hass)
 
     # Confirm calling service without arguments matches all records (default filter behavior)
@@ -1436,6 +1449,10 @@ async def test_purge_entities(
     with session_scope(hass=hass, read_only=True) as session:
         states = session.query(States)
         assert states.count() == 0
+
+        # The states_meta table should be empty
+        states_meta_remain = session.query(StatesMeta)
+        assert states_meta_remain.count() == 0
 
 
 async def _add_test_states(hass: HomeAssistant, wait_recording_done: bool = True):

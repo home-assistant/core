@@ -1,4 +1,5 @@
 """Provide pre-made queries on top of the recorder component."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Iterator, MutableMapping
@@ -757,7 +758,7 @@ def _sorted_states_to_dict(
         _utc_from_timestamp = dt_util.utc_from_timestamp
         ent_results.extend(
             {
-                attr_state: (prev_state := state),  # noqa: F841
+                attr_state: (prev_state := state),
                 attr_time: _utc_from_timestamp(row[last_updated_ts_idx]).isoformat(),
             }
             for row in group

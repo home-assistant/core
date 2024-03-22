@@ -1,4 +1,5 @@
 """Test that we can upload images."""
+
 import pathlib
 import tempfile
 from unittest.mock import patch
