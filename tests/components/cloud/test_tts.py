@@ -538,7 +538,7 @@ async def test_deprecated_voice(
     )
     assert issue is not None
     assert issue.breaks_in_ha_version == "2024.8.0"
-    assert issue.is_fixable is True
+    assert issue.is_fixable is False
     assert issue.is_persistent is True
     assert issue.severity == IssueSeverity.WARNING
     assert issue.translation_key == "deprecated_voice"
@@ -641,7 +641,7 @@ async def test_deprecated_gender(
     issue = issue_registry.async_get_issue("cloud", "deprecated_gender")
     assert issue is not None
     assert issue.breaks_in_ha_version == "2024.10.0"
-    assert issue.is_fixable is True
+    assert issue.is_fixable is False
     assert issue.is_persistent is True
     assert issue.severity == IssueSeverity.WARNING
     assert issue.translation_key == "deprecated_gender"

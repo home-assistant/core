@@ -118,6 +118,8 @@ async def async_create_fix_flow(
     hass: HomeAssistant,
     issue_id: str,
     data: dict[str, str | int | float | None] | None,
-) -> RepairsFlow:
+) -> RepairsFlow | None:
     """Create flow."""
-    return LegacySubscriptionRepairFlow()
+    if issue_id == "legacy_subscription":
+        return LegacySubscriptionRepairFlow()
+    return None
