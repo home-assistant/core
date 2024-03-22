@@ -1,0 +1,20 @@
+{
+  "connected": true,
+  "temperatureF": 99,
+  "setpointF": 98,
+  "lights": "off",
+  "spaboy_connected": true,
+  "spaboy_producing": false,
+  "ph": 7.67,
+  "ph_status": "OK",
+  "orp": 640,
+  "orp_status": "OK",
+  "blower1": "on",
+  "pump1": "low",
+  "pump2": "off",
+  "filter_status": "Purge",
+  "filtration_duration": 1,
+  "filtration_frequency": 4,
+  "filter_suspension": "off",
+  "errors": []
+}
