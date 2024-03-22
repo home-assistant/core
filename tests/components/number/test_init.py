@@ -51,8 +51,8 @@ from tests.common import (
     mock_integration,
     mock_platform,
     mock_restore_cache_with_extra_data,
+    setup_test_component_platform,
 )
-from tests.components.conftest import SetupEntityPlatformCallable
 from tests.components.number import common
 
 TEST_DOMAIN = "test"
@@ -336,7 +336,6 @@ async def test_sync_set_value(hass: HomeAssistant) -> None:
 
 async def test_set_value(
     hass: HomeAssistant,
-    setup_test_component_platform: SetupEntityPlatformCallable,
     mock_number_entities: list[MockNumberEntity],
 ) -> None:
     """Test we can only set valid values."""
@@ -455,7 +454,6 @@ async def test_set_value(
 )
 async def test_temperature_conversion(
     hass: HomeAssistant,
-    setup_test_component_platform: SetupEntityPlatformCallable,
     unit_system,
     native_unit,
     state_unit,
@@ -545,7 +543,6 @@ RESTORE_DATA = {
 async def test_restore_number_save_state(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
-    setup_test_component_platform: SetupEntityPlatformCallable,
 ) -> None:
     """Test RestoreNumber."""
     entity0 = common.MockRestoreNumber(
@@ -613,7 +610,6 @@ async def test_restore_number_save_state(
 async def test_restore_number_restore_state(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
-    setup_test_component_platform: SetupEntityPlatformCallable,
     native_max_value,
     native_min_value,
     native_step,
@@ -701,7 +697,6 @@ async def test_restore_number_restore_state(
 )
 async def test_custom_unit(
     hass: HomeAssistant,
-    setup_test_component_platform: SetupEntityPlatformCallable,
     device_class,
     native_unit,
     custom_unit,
@@ -778,7 +773,6 @@ async def test_custom_unit(
 )
 async def test_custom_unit_change(
     hass: HomeAssistant,
-    setup_test_component_platform: SetupEntityPlatformCallable,
     native_unit,
     custom_unit,
     used_custom_unit,
