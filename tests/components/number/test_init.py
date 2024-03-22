@@ -52,6 +52,8 @@ from tests.common import (
     mock_platform,
     mock_restore_cache_with_extra_data,
 )
+from tests.components.conftest import SetupEntityPlatformCallable
+from tests.components.number import common
 
 TEST_DOMAIN = "test"
 
@@ -332,10 +334,13 @@ async def test_sync_set_value(hass: HomeAssistant) -> None:
     assert number.set_value.call_args[0][0] == 42
 
 
-async def test_set_value(hass: HomeAssistant, enable_custom_integrations: None) -> None:
+async def test_set_value(
+    hass: HomeAssistant,
+    setup_test_component_platform: SetupEntityPlatformCallable,
+    mock_number_entities: list[MockNumberEntity],
+) -> None:
     """Test we can only set valid values."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
+    setup_test_component_platform(hass, DOMAIN, mock_number_entities)
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
@@ -450,7 +455,7 @@ async def test_set_value(hass: HomeAssistant, enable_custom_integrations: None) 
 )
 async def test_temperature_conversion(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
+    setup_test_component_platform: SetupEntityPlatformCallable,
     unit_system,
     native_unit,
     state_unit,
@@ -467,21 +472,17 @@ async def test_temperature_conversion(
 ) -> None:
     """Test temperature conversion."""
     hass.config.units = unit_system
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init(empty=True)
-    platform.ENTITIES.append(
-        platform.MockNumberEntity(
-            name="Test",
-            native_max_value=native_max_value,
-            native_min_value=native_min_value,
-            native_step=native_step,
-            native_unit_of_measurement=native_unit,
-            native_value=initial_native_value,
-            device_class=NumberDeviceClass.TEMPERATURE,
-        )
+    entity0 = common.MockNumberEntity(
+        name="Test",
+        native_max_value=native_max_value,
+        native_min_value=native_min_value,
+        native_step=native_step,
+        native_unit_of_measurement=native_unit,
+        native_value=initial_native_value,
+        device_class=NumberDeviceClass.TEMPERATURE,
     )
+    setup_test_component_platform(hass, DOMAIN, [entity0])
 
-    entity0 = platform.ENTITIES[0]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -544,24 +545,20 @@ RESTORE_DATA = {
 async def test_restore_number_save_state(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
-    enable_custom_integrations: None,
+    setup_test_component_platform: SetupEntityPlatformCallable,
 ) -> None:
     """Test RestoreNumber."""
-    platform = getattr(hass.components, "test.number")
-    platform.init(empty=True)
-    platform.ENTITIES.append(
-        platform.MockRestoreNumber(
-            name="Test",
-            native_max_value=200.0,
-            native_min_value=-10.0,
-            native_step=2.0,
-            native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
-            native_value=123.0,
-            device_class=NumberDeviceClass.TEMPERATURE,
-        )
+    entity0 = common.MockRestoreNumber(
+        name="Test",
+        native_max_value=200.0,
+        native_min_value=-10.0,
+        native_step=2.0,
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        native_value=123.0,
+        device_class=NumberDeviceClass.TEMPERATURE,
     )
+    setup_test_component_platform(hass, DOMAIN, [entity0])
 
-    entity0 = platform.ENTITIES[0]
     assert await async_setup_component(hass, "number", {"number": {"platform": "test"}})
     await hass.async_block_till_done()
 
@@ -615,8 +612,8 @@ async def test_restore_number_save_state(
 )
 async def test_restore_number_restore_state(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
     hass_storage: dict[str, Any],
+    setup_test_component_platform: SetupEntityPlatformCallable,
     native_max_value,
     native_min_value,
     native_step,
@@ -629,17 +626,13 @@ async def test_restore_number_restore_state(
     """Test RestoreNumber."""
     mock_restore_cache_with_extra_data(hass, ((State("number.test", ""), extra_data),))
 
-    platform = getattr(hass.components, "test.number")
-    platform.init(empty=True)
-    platform.ENTITIES.append(
-        platform.MockRestoreNumber(
-            device_class=device_class,
-            name="Test",
-            native_value=None,
-        )
+    entity0 = common.MockRestoreNumber(
+        device_class=device_class,
+        name="Test",
+        native_value=None,
     )
+    setup_test_component_platform(hass, DOMAIN, [entity0])
 
-    entity0 = platform.ENTITIES[0]
     assert await async_setup_component(hass, "number", {"number": {"platform": "test"}})
     await hass.async_block_till_done()
 
@@ -708,7 +701,7 @@ async def test_restore_number_restore_state(
 )
 async def test_custom_unit(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
+    setup_test_component_platform: SetupEntityPlatformCallable,
     device_class,
     native_unit,
     custom_unit,
@@ -725,19 +718,15 @@ async def test_custom_unit(
     )
     await hass.async_block_till_done()
 
-    platform = getattr(hass.components, "test.number")
-    platform.init(empty=True)
-    platform.ENTITIES.append(
-        platform.MockNumberEntity(
-            name="Test",
-            native_value=native_value,
-            native_unit_of_measurement=native_unit,
-            device_class=device_class,
-            unique_id="very_unique",
-        )
+    entity0 = common.MockNumberEntity(
+        name="Test",
+        native_value=native_value,
+        native_unit_of_measurement=native_unit,
+        device_class=device_class,
+        unique_id="very_unique",
     )
+    setup_test_component_platform(hass, DOMAIN, [entity0])
 
-    entity0 = platform.ENTITIES[0]
     assert await async_setup_component(hass, "number", {"number": {"platform": "test"}})
     await hass.async_block_till_done()
 
@@ -789,7 +778,7 @@ async def test_custom_unit(
 )
 async def test_custom_unit_change(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
+    setup_test_component_platform: SetupEntityPlatformCallable,
     native_unit,
     custom_unit,
     used_custom_unit,
@@ -800,19 +789,15 @@ async def test_custom_unit_change(
 ) -> None:
     """Test custom unit changes are picked up."""
     entity_registry = er.async_get(hass)
-    platform = getattr(hass.components, "test.number")
-    platform.init(empty=True)
-    platform.ENTITIES.append(
-        platform.MockNumberEntity(
-            name="Test",
-            native_value=native_value,
-            native_unit_of_measurement=native_unit,
-            device_class=NumberDeviceClass.TEMPERATURE,
-            unique_id="very_unique",
-        )
+    entity0 = common.MockNumberEntity(
+        name="Test",
+        native_value=native_value,
+        native_unit_of_measurement=native_unit,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        unique_id="very_unique",
     )
+    setup_test_component_platform(hass, DOMAIN, [entity0])
 
-    entity0 = platform.ENTITIES[0]
     assert await async_setup_component(hass, "number", {"number": {"platform": "test"}})
     await hass.async_block_till_done()
 
