@@ -109,7 +109,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             )
 
             last_stat = await get_instance(self.hass).async_add_executor_job(
-                get_last_statistics, self.hass, 1, consumption_statistic_id, True, set()
+                get_last_statistics, self.hass, 1, cost_statistic_id, True, set()
             )
             if not last_stat:
                 _LOGGER.debug("Updating statistic for the first time")
