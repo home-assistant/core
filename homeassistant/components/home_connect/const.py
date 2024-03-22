@@ -34,6 +34,14 @@ BSH_DOOR_STATE_CLOSED = "BSH.Common.EnumType.DoorState.Closed"
 BSH_DOOR_STATE_LOCKED = "BSH.Common.EnumType.DoorState.Locked"
 BSH_DOOR_STATE_OPEN = "BSH.Common.EnumType.DoorState.Open"
 
+REFRIGERATOR_DOOR_STATE = "Refrigeration.Common.Status.Door.Refrigerator"
+REFRIGERATOR_DOOR_STATE_CLOSED = "Refrigeration.Common.EnumType.Door.States.Closed"
+REFRIGERATOR_DOOR_STATE_OPEN = "Refrigeration.Common.EnumType.Door.States.Open"
+
+FREEZER_DOOR_STATE = "Refrigeration.Common.Status.Door.Freezer"
+FREEZER_DOOR_STATE_CLOSED = "Refrigeration.Common.EnumType.Door.States.Closed"
+FREEZER_DOOR_STATE_OPEN = "Refrigeration.Common.EnumType.Door.States.Open"
+
 BSH_PAUSE = "BSH.Common.Command.PauseProgram"
 BSH_RESUME = "BSH.Common.Command.ResumeProgram"
 
@@ -56,3 +64,21 @@ ATTR_SENSOR_TYPE = "sensor_type"
 ATTR_SIGN = "sign"
 ATTR_UNIT = "unit"
 ATTR_VALUE = "value"
+
+# https://api-docs.home-connect.com/settings
+SETTINGS_NAMES = {
+    "Refrigeration.FridgeFreezer.Setting.SuperModeFreezer": "Super Mode Freezer",
+    "Refrigeration.Common.Setting.FreshMode": "Fresh Mode",
+    "Refrigeration.FridgeFreezer.Setting.SuperModeRefrigerator": "Super Mode Refrigerator",
+    "Refrigeration.Common.Setting.VacationMode": "Vacation Mode",
+    "Refrigeration.Common.Setting.EcoMode": "Eco Mode",
+    "Refrigeration.Common.Setting.Dispenser.Enabled": "Dispenser Enabled",
+    "Refrigeration.Common.Setting.SabbathMode": "Sabbath Mode",
+    "BSH.Common.Setting.ChildLock": "Child Lock",
+    "Refrigeration.Common.Setting.Light.Internal.Power": "Internal Cooling Light Power",
+    "Refrigeration.Common.Setting.Light.External.Power": "External Cooling Light Power",
+    "ConsumerProducts.CoffeeMaker.Setting.CupWarmer": "Cup Warmer",
+    "Refrigeration.Common.Setting.Door.AssistantFridge Refrigeration.Common.Setting.Door.AssistantFreezer": "Door Assistant",
+    "Cooking.Common.Setting.Lighting": "Functional Light",
+    "BSH.Common.Setting.AmbientLightEnabled": "Ambient Light",
+}

@@ -17,6 +17,12 @@ from .const import (
     BSH_REMOTE_CONTROL_ACTIVATION_STATE,
     BSH_REMOTE_START_ALLOWANCE_STATE,
     DOMAIN,
+    FREEZER_DOOR_STATE,
+    FREEZER_DOOR_STATE_CLOSED,
+    FREEZER_DOOR_STATE_OPEN,
+    REFRIGERATOR_DOOR_STATE,
+    REFRIGERATOR_DOOR_STATE_CLOSED,
+    REFRIGERATOR_DOOR_STATE_OPEN,
 )
 from .entity import HomeConnectEntity
 
@@ -54,6 +60,14 @@ class HomeConnectBinarySensor(HomeConnectEntity, BinarySensorEntity):
             self._update_key = BSH_DOOR_STATE
             self._false_value_list = (BSH_DOOR_STATE_CLOSED, BSH_DOOR_STATE_LOCKED)
             self._true_value_list = [BSH_DOOR_STATE_OPEN]
+        elif self._type == "freezer_door":
+            self._update_key = FREEZER_DOOR_STATE
+            self._false_value_list = [FREEZER_DOOR_STATE_CLOSED]
+            self._true_value_list = [FREEZER_DOOR_STATE_OPEN]
+        elif self._type == "refrigerator_door":
+            self._update_key = REFRIGERATOR_DOOR_STATE
+            self._false_value_list = [REFRIGERATOR_DOOR_STATE_CLOSED]
+            self._true_value_list = [REFRIGERATOR_DOOR_STATE_OPEN]
         elif self._type == "remote_control":
             self._update_key = BSH_REMOTE_CONTROL_ACTIVATION_STATE
             self._false_value_list = [False]
