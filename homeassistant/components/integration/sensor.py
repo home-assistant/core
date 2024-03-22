@@ -312,20 +312,23 @@ class IntegrationSensor(RestoreSensor):
         self._last_valid_state: Decimal | None = None
         self._attr_device_info = device_info
 
-    def _unit(self, source_unit: str) -> str:
-        """Derive unit from the source sensor, SI prefix and time unit."""
+    def _integrate_unit_over_time(self, source_unit: str) -> str:
         unit_time = self._unit_time_str
         if source_unit.endswith(f"/{unit_time}"):
             integral_unit = source_unit[0 : (-(1 + len(unit_time)))]
         else:
             integral_unit = f"{source_unit}{unit_time}"
 
-        return self._unit_template.format(integral_unit)
+        return integral_unit
 
     def _derive_and_set_attributes_from_state(self, source_state: State) -> None:
-        unit = source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        if unit is not None:
-            self._unit_of_measurement = self._unit(unit)
+        source_unit = source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        if (
+            source_unit is not None
+        ):  # If the source has no defined unit we cannot derive a unit for the integral
+            self._unit_of_measurement = self._unit_template.format(
+                self._integrate_unit_over_time(source_unit)
+            )
 
         if (
             self.device_class is None
