@@ -21,9 +21,8 @@ class TTNFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize flow."""
-        self._hostname: str = TTN_API_HOSTNAME
-        self._app_id: str | None = None
-        self._access_key: str | None = None
+        self._user_input: Mapping[str, Any] = {}
+        self._user_input[CONF_HOSTNAME] = TTN_API_HOSTNAME
         self._reauth_entry: ConfigEntry | None = None
 
     @property
@@ -32,9 +31,15 @@ class TTNFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return vol.Schema(
             {
-                vol.Required(CONF_HOSTNAME, default=self._hostname): str,
-                vol.Required(CONF_APP_ID, default=self._app_id): str,
-                vol.Required(CONF_API_KEY, default=self._access_key): str,
+                vol.Required(
+                    CONF_HOSTNAME, default=self._user_input[CONF_HOSTNAME]
+                ): str,
+                vol.Required(
+                    CONF_APP_ID, default=self._user_input.get(CONF_APP_ID)
+                ): str,
+                vol.Required(
+                    CONF_API_KEY, default=self._user_input.get(CONF_API_KEY)
+                ): str,
             }
         )
 
@@ -44,9 +49,7 @@ class TTNFlowHandler(ConfigFlow, domain=DOMAIN):
         """User initiated config flow."""
         errors = {}
         if user_input is not None:
-            self._hostname = user_input[CONF_HOSTNAME]
-            self._app_id = user_input[CONF_APP_ID]
-            self._access_key = user_input[CONF_API_KEY]
+            self._user_input = user_input
 
             connection_error = await self._connection_error
 
@@ -63,12 +66,12 @@ class TTNFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle a flow initialized by a reauth event."""
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert entry is not None
-        self._reauth_entry = entry
-        self._hostname = entry.data[CONF_HOSTNAME]
-        self._app_id = entry.data[CONF_APP_ID]
-        self._access_key = entry.data[CONF_API_KEY]
+
+        self._user_input = user_input
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -79,7 +82,7 @@ class TTNFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="reauth_confirm",
                 data_schema=vol.Schema({}),
-                description_placeholders={"app_id": self._app_id},
+                description_placeholders={"app_id": self._user_input[CONF_APP_ID]},
             )
         return await self.async_step_user()
 
@@ -95,11 +98,11 @@ class TTNFlowHandler(ConfigFlow, domain=DOMAIN):
                 reason="reauth_successful",
             )
         if not self.unique_id:
-            await self.async_set_unique_id(self._app_id)
+            await self.async_set_unique_id(data[CONF_APP_ID])
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
-            title=str(self._app_id),
+            title=str(data[CONF_APP_ID]),
             data=data,
         )
 
@@ -109,9 +112,9 @@ class TTNFlowHandler(ConfigFlow, domain=DOMAIN):
 
         try:
             client = TTNClient(
-                self._hostname,
-                self._app_id,
-                self._access_key,
+                self._user_input[CONF_HOSTNAME],
+                self._user_input[CONF_APP_ID],
+                self._user_input[CONF_API_KEY],
                 0,
             )
             await client.fetch_data()
