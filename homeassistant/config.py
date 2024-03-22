@@ -80,6 +80,7 @@ YAML_CONFIG_FILE = "configuration.yaml"
 VERSION_FILE = ".HA_VERSION"
 CONFIG_DIR_NAME = ".homeassistant"
 DATA_CUSTOMIZE = "hass_customize"
+DOMAIN_HA = "homeassistant"
 
 AUTOMATION_CONFIG_PATH = "automations.yaml"
 SCRIPT_CONFIG_PATH = "scripts.yaml"
@@ -247,12 +248,12 @@ CUSTOMIZE_CONFIG_SCHEMA = vol.Schema(
 
 def _raise_issue_if_historic_currency(hass: HomeAssistant, currency: str) -> None:
     if currency not in HISTORIC_CURRENCIES:
-        ir.async_delete_issue(hass, CONF_CORE, "historic_currency")
+        ir.async_delete_issue(hass, DOMAIN_HA, "historic_currency")
         return
 
     ir.async_create_issue(
         hass,
-        CONF_CORE,
+        DOMAIN_HA,
         "historic_currency",
         is_fixable=False,
         learn_more_url="homeassistant://config/general",
@@ -264,12 +265,12 @@ def _raise_issue_if_historic_currency(hass: HomeAssistant, currency: str) -> Non
 
 def _raise_issue_if_no_country(hass: HomeAssistant, country: str | None) -> None:
     if country is not None:
-        ir.async_delete_issue(hass, CONF_CORE, "country_not_configured")
+        ir.async_delete_issue(hass, DOMAIN_HA, "country_not_configured")
         return
 
     ir.async_create_issue(
         hass,
-        CONF_CORE,
+        DOMAIN_HA,
         "country_not_configured",
         is_fixable=False,
         learn_more_url="homeassistant://config/general",
@@ -288,7 +289,7 @@ def _raise_issue_if_legacy_templates(
     if legacy_templates:
         ir.async_create_issue(
             hass,
-            CONF_CORE,
+            DOMAIN_HA,
             "legacy_templates_true",
             is_fixable=False,
             breaks_in_ha_version="2024.7.0",
@@ -297,12 +298,12 @@ def _raise_issue_if_legacy_templates(
         )
         return
 
-    ir.async_delete_issue(hass, CONF_CORE, "legacy_templates_true")
+    ir.async_delete_issue(hass, DOMAIN_HA, "legacy_templates_true")
 
     if legacy_templates is False:
         ir.async_create_issue(
             hass,
-            CONF_CORE,
+            DOMAIN_HA,
             "legacy_templates_false",
             is_fixable=False,
             breaks_in_ha_version="2024.7.0",
@@ -310,7 +311,7 @@ def _raise_issue_if_legacy_templates(
             translation_key="legacy_templates_false",
         )
     else:
-        ir.async_delete_issue(hass, CONF_CORE, "legacy_templates_false")
+        ir.async_delete_issue(hass, DOMAIN_HA, "legacy_templates_false")
 
 
 def _validate_currency(data: Any) -> Any:
