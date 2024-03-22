@@ -164,7 +164,7 @@ async def test_block_sleeping_sensor(
     assert hass.states.get(entity_id) is None
 
     # Make device online
-    mock_block_device.mock_update()
+    mock_block_device.mock_online()
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "22.1"
@@ -206,7 +206,7 @@ async def test_block_restored_sleeping_sensor(
 
     # Make device online
     monkeypatch.setattr(mock_block_device, "initialized", True)
-    mock_block_device.mock_update()
+    mock_block_device.mock_online()
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "22.1"
@@ -232,7 +232,7 @@ async def test_block_restored_sleeping_sensor_no_last_state(
 
     # Make device online
     monkeypatch.setattr(mock_block_device, "initialized", True)
-    mock_block_device.mock_update()
+    mock_block_device.mock_online()
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "22.1"
@@ -305,7 +305,7 @@ async def test_block_not_matched_restored_sleeping_sensor(
         mock_block_device.blocks[SENSOR_BLOCK_ID], "description", "other_desc"
     )
     monkeypatch.setattr(mock_block_device, "initialized", True)
-    mock_block_device.mock_update()
+    mock_block_device.mock_online()
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "20.4"
@@ -448,6 +448,7 @@ async def test_rpc_sleeping_sensor(
 ) -> None:
     """Test RPC online sleeping sensor."""
     entity_id = f"{SENSOR_DOMAIN}.test_name_temperature"
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
     entry = await init_integration(hass, 2, sleep_period=1000)
 
     # Sensor should be created when device is online
@@ -462,7 +463,7 @@ async def test_rpc_sleeping_sensor(
     )
 
     # Make device online
-    mock_rpc_device.mock_update()
+    mock_rpc_device.mock_online()
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "22.9"
@@ -501,6 +502,10 @@ async def test_rpc_restored_sleeping_sensor(
 
     # Make device online
     monkeypatch.setattr(mock_rpc_device, "initialized", True)
+    mock_rpc_device.mock_online()
+    await hass.async_block_till_done()
+
+    # Mock update
     mock_rpc_device.mock_update()
     await hass.async_block_till_done()
 
@@ -533,6 +538,10 @@ async def test_rpc_restored_sleeping_sensor_no_last_state(
 
     # Make device online
     monkeypatch.setattr(mock_rpc_device, "initialized", True)
+    mock_rpc_device.mock_online()
+    await hass.async_block_till_done()
+
+    # Mock update
     mock_rpc_device.mock_update()
     await hass.async_block_till_done()
 
@@ -583,19 +592,21 @@ async def test_rpc_sleeping_update_entity_service(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test RPC sleeping device when the update_entity service is used."""
     await async_setup_component(hass, "homeassistant", {})
 
     entity_id = f"{SENSOR_DOMAIN}.test_name_temperature"
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
     await init_integration(hass, 2, sleep_period=1000)
 
     # Entity should be created when device is online
     assert hass.states.get(entity_id) is None
 
     # Make device online
-    mock_rpc_device.mock_update()
+    mock_rpc_device.mock_online()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -627,19 +638,25 @@ async def test_block_sleeping_update_entity_service(
     hass: HomeAssistant,
     mock_block_device: Mock,
     entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test block sleeping device when the update_entity service is used."""
     await async_setup_component(hass, "homeassistant", {})
 
     entity_id = f"{SENSOR_DOMAIN}.test_name_temperature"
-    await init_integration(hass, 1, sleep_period=1000)
+    monkeypatch.setitem(
+        mock_block_device.settings,
+        "sleep_mode",
+        {"period": 60, "unit": "m"},
+    )
+    await init_integration(hass, 1, sleep_period=3600)
 
     # Sensor should be created when device is online
     assert hass.states.get(entity_id) is None
 
     # Make device online
-    mock_block_device.mock_update()
+    mock_block_device.mock_online()
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "22.1"

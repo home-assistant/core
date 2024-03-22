@@ -217,12 +217,13 @@ async def test_device_auth_error(
     assert flow["context"].get("entry_id") == entry.entry_id
 
 
-@pytest.mark.parametrize(("entry_sleep", "device_sleep"), [(None, 0), (1000, 1000)])
+@pytest.mark.parametrize(("entry_sleep", "device_sleep"), [(None, 0), (3600, 3600)])
 async def test_sleeping_block_device_online(
     hass: HomeAssistant,
     entry_sleep: int | None,
     device_sleep: int,
     mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
     device_reg: DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -234,10 +235,17 @@ async def test_sleeping_block_device_online(
         connections={(CONNECTION_NETWORK_MAC, format_mac(MOCK_MAC))},
     )
 
+    monkeypatch.setitem(
+        mock_block_device.settings,
+        "sleep_mode",
+        {"period": int(device_sleep / 60), "unit": "m"},
+    )
     entry = await init_integration(hass, 1, sleep_period=entry_sleep)
     assert "will resume when device is online" in caplog.text
 
-    mock_block_device.mock_update()
+    mock_block_device.mock_online()
+    await hass.async_block_till_done()
+
     assert "online, resuming setup" in caplog.text
     assert entry.data["sleep_period"] == device_sleep
 
@@ -248,13 +256,17 @@ async def test_sleeping_rpc_device_online(
     entry_sleep: int | None,
     device_sleep: int,
     mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test sleeping RPC device online."""
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", device_sleep)
     entry = await init_integration(hass, 2, sleep_period=entry_sleep)
     assert "will resume when device is online" in caplog.text
 
-    mock_rpc_device.mock_update()
+    mock_rpc_device.mock_online()
+    await hass.async_block_till_done()
+
     assert "online, resuming setup" in caplog.text
     assert entry.data["sleep_period"] == device_sleep
 
@@ -270,7 +282,9 @@ async def test_sleeping_rpc_device_online_new_firmware(
     assert "will resume when device is online" in caplog.text
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "sys", "wakeup_period", 1500)
-    mock_rpc_device.mock_update()
+    mock_rpc_device.mock_online()
+    await hass.async_block_till_done()
+
     assert "online, resuming setup" in caplog.text
     assert entry.data["sleep_period"] == 1500
 
@@ -413,9 +427,12 @@ async def test_entry_missing_port(hass: HomeAssistant) -> None:
     }
     entry = MockConfigEntry(domain=DOMAIN, data=data, unique_id=MOCK_MAC)
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.shelly.RpcDevice.create", return_value=Mock()
-    ) as rpc_device_mock:
+    with (
+        patch("homeassistant.components.shelly.RpcDevice.initialize"),
+        patch(
+            "homeassistant.components.shelly.RpcDevice.create", return_value=Mock()
+        ) as rpc_device_mock,
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -435,9 +452,12 @@ async def test_rpc_entry_custom_port(hass: HomeAssistant) -> None:
     }
     entry = MockConfigEntry(domain=DOMAIN, data=data, unique_id=MOCK_MAC)
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.shelly.RpcDevice.create", return_value=Mock()
-    ) as rpc_device_mock:
+    with (
+        patch("homeassistant.components.shelly.RpcDevice.initialize"),
+        patch(
+            "homeassistant.components.shelly.RpcDevice.create", return_value=Mock()
+        ) as rpc_device_mock,
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 

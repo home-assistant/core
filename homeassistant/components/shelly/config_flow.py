@@ -103,6 +103,7 @@ async def validate_input(
             ws_context,
             options,
         )
+        await rpc_device.initialize()
         await rpc_device.shutdown()
 
         sleep_period = get_rpc_device_wakeup_period(rpc_device.status)
@@ -121,6 +122,7 @@ async def validate_input(
         coap_context,
         options,
     )
+    await block_device.initialize()
     block_device.shutdown()
     return {
         "title": block_device.name,

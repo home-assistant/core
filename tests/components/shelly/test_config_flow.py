@@ -1154,6 +1154,7 @@ async def test_zeroconf_sleeping_device_not_triggers_refresh(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test zeroconf discovery does not triggers refresh for sleeping device."""
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
     entry = MockConfigEntry(
         domain="shelly",
         unique_id="AABBCCDDEEFF",
@@ -1163,10 +1164,11 @@ async def test_zeroconf_sleeping_device_not_triggers_refresh(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_rpc_device.mock_update()
+    mock_rpc_device.mock_online()
     await hass.async_block_till_done()
 
     assert "online, resuming setup" in caplog.text
+    assert len(mock_rpc_device.initialize.mock_calls) == 1
 
     with patch(
         "homeassistant.components.shelly.config_flow.get_info",
@@ -1186,7 +1188,7 @@ async def test_zeroconf_sleeping_device_not_triggers_refresh(
         hass, dt_util.utcnow() + timedelta(seconds=ENTRY_RELOAD_COOLDOWN)
     )
     await hass.async_block_till_done()
-    assert len(mock_rpc_device.initialize.mock_calls) == 0
+    assert len(mock_rpc_device.initialize.mock_calls) == 1
     assert "device did not update" not in caplog.text
 
 
