@@ -45,7 +45,6 @@ BUTTON_TYPES: dict[str, CommandButtonEntityDescription] = {
         translation_key=ATTR_CONNECT,
         icon=ICON_CONNECT,
         entity_category=EntityCategory.CONFIG,
-        has_entity_name=True,
         command=lambda device: device.connect(),
     ),
     ATTR_DISCONNECT: CommandButtonEntityDescription(
@@ -53,7 +52,6 @@ BUTTON_TYPES: dict[str, CommandButtonEntityDescription] = {
         translation_key=ATTR_DISCONNECT,
         icon=ICON_DISCONNECT,
         entity_category=EntityCategory.CONFIG,
-        has_entity_name=True,
         command=lambda device: device.disconnect(),
     ),
     ATTR_FAVORITE: CommandButtonEntityDescription(
@@ -61,7 +59,6 @@ BUTTON_TYPES: dict[str, CommandButtonEntityDescription] = {
         translation_key=ATTR_FAVORITE,
         icon=ICON_FAVORITE,
         entity_category=EntityCategory.CONFIG,
-        has_entity_name=True,
         command=lambda device: device.favorite(),
     ),
 }
