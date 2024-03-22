@@ -161,10 +161,11 @@ class BatterySensor(GenericSensor):
             battery_icon_prefix = (
                 "mdi:battery-charging" if is_charging else "mdi:battery"
             )
+            battery_percentage_multiple_ten = ceil(battery_percentage / 10) * 10
+
             self._attr_native_value = (
                 str(battery_percentage) if battery_percentage is not None else None
             )
-            battery_percentage_multiple_ten = ceil(battery_percentage / 10) * 10
             self._attr_icon = (
                 "mdi:battery"
                 if battery_percentage_multiple_ten == 100 and not is_charging
@@ -173,10 +174,6 @@ class BatterySensor(GenericSensor):
                     if battery_percentage <= 5 and not is_charging
                     else f"{battery_icon_prefix}-{battery_percentage_multiple_ten}"
                 )
-            )
-
-            self._attr_native_value = (
-                str(battery_percentage) if battery_percentage is not None else None
             )
         self.async_write_ha_state()
 
