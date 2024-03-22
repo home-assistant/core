@@ -146,7 +146,7 @@ class BatterySensor(GenericSensor):
 
     @callback
     def async_update_battery_percentage(self, battery_percentage: int | None) -> None:
-        """Update the battery percentage sensor value."""
+        """Update the battery percentage sensor value and icon."""
         if battery_percentage is None:
             # Battery percentage is unknown
             self._attr_native_value = None
@@ -158,23 +158,24 @@ class BatterySensor(GenericSensor):
         else:
             is_charging = bool(battery_percentage & 0x80)
             battery_percentage = battery_percentage & 0x7F
-            battery_icon_prefix = (
-                "mdi:battery-charging" if is_charging else "mdi:battery"
-            )
             battery_percentage_multiple_ten = ceil(battery_percentage / 10) * 10
 
             self._attr_native_value = (
                 str(battery_percentage) if battery_percentage is not None else None
             )
-            self._attr_icon = (
-                "mdi:battery"
-                if battery_percentage_multiple_ten == 100 and not is_charging
-                else (
-                    "mdi:battery-alert-variant-outline"
-                    if battery_percentage <= 5 and not is_charging
-                    else f"{battery_icon_prefix}-{battery_percentage_multiple_ten}"
+            if battery_percentage_multiple_ten == 100 and not is_charging:
+                # Full battery icon if battery > 95% and not charging
+                self._attr_icon = "mdi:battery"
+            elif battery_percentage <= 5 and not is_charging:
+                # Empty battery icon with alert if battery <= 5% and not charging
+                self._attr_icon = "mdi:battery-alert-variant-outline"
+            else:
+                battery_icon_prefix = (
+                    "mdi:battery-charging" if is_charging else "mdi:battery"
                 )
-            )
+                self._attr_icon = (
+                    f"{battery_icon_prefix}-{battery_percentage_multiple_ten}"
+                )
         self.async_write_ha_state()
 
 
