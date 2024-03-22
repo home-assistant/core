@@ -3,10 +3,12 @@
 import voluptuous as vol
 
 from homeassistant.const import CONF_EVENT, CONF_PLATFORM
-from homeassistant.core import CALLBACK_TYPE, DOMAIN, HassJob, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
+
+from ..const import DOMAIN
 
 EVENT_START = "start"
 EVENT_SHUTDOWN = "shutdown"
