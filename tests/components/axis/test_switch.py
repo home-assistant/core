@@ -1,11 +1,13 @@
 """Axis switch platform tests."""
 
+from collections.abc import Callable
 from unittest.mock import patch
 
 from axis.vapix.models.api import CONTEXT
 import pytest
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -30,7 +32,9 @@ root.IOPort.I1.Output.Active=open
 
 @pytest.mark.parametrize("param_ports_payload", [PORT_DATA])
 async def test_switches_with_port_cgi(
-    hass: HomeAssistant, setup_config_entry, mock_rtsp_event
+    hass: HomeAssistant,
+    setup_config_entry: ConfigEntry,
+    mock_rtsp_event: Callable[[str, str, str, str, str, str], None],
 ) -> None:
     """Test that switches are loaded properly using port.cgi."""
     mock_rtsp_event(
@@ -113,7 +117,9 @@ PORT_MANAGEMENT_RESPONSE = {
 @pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_PORT_MANAGEMENT])
 @pytest.mark.parametrize("port_management_payload", [PORT_MANAGEMENT_RESPONSE])
 async def test_switches_with_port_management(
-    hass: HomeAssistant, setup_config_entry, mock_rtsp_event
+    hass: HomeAssistant,
+    setup_config_entry: ConfigEntry,
+    mock_rtsp_event: Callable[[str, str, str, str, str, str], None],
 ) -> None:
     """Test that switches are loaded properly using port management."""
     mock_rtsp_event(
