@@ -35,16 +35,18 @@ from tests.common import async_fire_mqtt_message
 from tests.typing import MqttMockHAClient
 
 
-@pytest.fixture(name="forward_entry_setup")
+@pytest.fixture(name="forward_entry_setups")
 def hass_mock_forward_entry_setup(hass):
-    """Mock async_forward_entry_setup."""
-    with patch.object(hass.config_entries, "async_forward_entry_setup") as forward_mock:
+    """Mock async_forward_entry_setups."""
+    with patch.object(
+        hass.config_entries, "async_forward_entry_setups"
+    ) as forward_mock:
         yield forward_mock
 
 
 async def test_device_setup(
     hass: HomeAssistant,
-    forward_entry_setup,
+    forward_entry_setups,
     config,
     setup_config_entry,
     device_registry: dr.DeviceRegistry,
@@ -57,11 +59,9 @@ async def test_device_setup(
     assert hub.api.vapix.product_type == "Network Camera"
     assert hub.api.vapix.serial_number == "00408C123456"
 
-    assert len(forward_entry_setup.mock_calls) == 4
-    assert forward_entry_setup.mock_calls[0][1][1] == "binary_sensor"
-    assert forward_entry_setup.mock_calls[1][1][1] == "camera"
-    assert forward_entry_setup.mock_calls[2][1][1] == "light"
-    assert forward_entry_setup.mock_calls[3][1][1] == "switch"
+    assert len(forward_entry_setups.mock_calls) == 1
+    platforms = set(forward_entry_setups.mock_calls[0][1][1])
+    assert platforms == {"binary_sensor", "camera", "light", "switch"}
 
     assert hub.config.host == config[CONF_HOST]
     assert hub.config.model == config[CONF_MODEL]
