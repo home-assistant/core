@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Optional
 
 from ttn_client import TTNSensorValue
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -15,7 +14,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 if TYPE_CHECKING:
     from .coordinator import TTNCoordinator
 
-from .const import CONF_APP_ID, DOMAIN, ENTRY_DATA_ENTITIES
+from .const import CONF_APP_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,22 +29,17 @@ class TTNEntity(CoordinatorEntity["TTNCoordinator"], Entity, ABC):
 
     def __init__(
         self,
-        entry: "ConfigEntry",
         coordinator: "TTNCoordinator",
         ttn_value: TTNSensorValue,
     ) -> None:
         """Initialize a The Things Network Data Storage sensor."""
 
-        self.__entry = entry
+        self._entry = coordinator.config_entry
         self._ttn_value = ttn_value
-        self.__name = f"{self.device_name} {self.field_id}"
+        self._name = f"{self.device_name} {self.field_id}"
 
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator, context=self.unique_id)
-
-        self._entities = coordinator.hass.data[DOMAIN][entry.entry_id].setdefault(
-            ENTRY_DATA_ENTITIES, {}
-        )
 
     # ---------------
     # Coordinator method
@@ -80,7 +74,7 @@ class TTNEntity(CoordinatorEntity["TTNCoordinator"], Entity, ABC):
     @property
     def name(self) -> Optional[str]:
         """Return the name of the entity."""
-        return self.__name
+        return self._name
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -88,12 +82,12 @@ class TTNEntity(CoordinatorEntity["TTNCoordinator"], Entity, ABC):
 
         Implemented by platform classes.
         """
-
+        assert self._entry
         return DeviceInfo(
             {
                 "identifiers": {
                     # Serial numbers are unique identifiers within a specific domain
-                    (self.__entry.data[CONF_APP_ID], self.device_id)
+                    (self._entry.data[CONF_APP_ID], self.device_id)
                 },
                 "name": self.device_name,
                 # TBD - add more info in the TTN upstream message such as signal strength, transmission time, etc

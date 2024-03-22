@@ -38,7 +38,7 @@ class TTNCoordinator(DataUpdateCoordinator[TTNClient.DATA_TYPE]):
             ),
         )
 
-        self.__client = TTNClient(
+        self._client = TTNClient(
             entry.data[CONF_HOSTNAME],
             entry.data[CONF_APP_ID],
             entry.data[CONF_API_KEY],
@@ -55,7 +55,7 @@ class TTNCoordinator(DataUpdateCoordinator[TTNClient.DATA_TYPE]):
         try:
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
-            measurements = await self.__client.fetch_data()
+            measurements = await self._client.fetch_data()
             _LOGGER.debug("fetched data: %s", measurements)
 
             # Return measurements
