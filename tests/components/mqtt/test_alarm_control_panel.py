@@ -1,5 +1,6 @@
 """The tests the MQTT alarm control panel component."""
 
+from contextlib import AbstractContextManager, contextmanager
 import copy
 import json
 from typing import Any
@@ -143,6 +144,12 @@ DEFAULT_CONFIG_REMOTE_CODE_TEXT = {
         }
     }
 }
+
+
+@contextmanager
+def does_not_raise():
+    """Do not raise error."""
+    yield
 
 
 @pytest.mark.parametrize(
@@ -353,20 +360,40 @@ async def test_publish_mqtt_no_code(
 
 
 @pytest.mark.parametrize(
-    ("hass_config", "service", "payload", "can_raise"),
+    ("hass_config", "service", "payload", "raises"),
     [
-        (DEFAULT_CONFIG_CODE, SERVICE_ALARM_ARM_HOME, "ARM_HOME", True),
-        (DEFAULT_CONFIG_CODE, SERVICE_ALARM_ARM_AWAY, "ARM_AWAY", True),
-        (DEFAULT_CONFIG_CODE, SERVICE_ALARM_ARM_NIGHT, "ARM_NIGHT", True),
-        (DEFAULT_CONFIG_CODE, SERVICE_ALARM_ARM_VACATION, "ARM_VACATION", True),
+        (
+            DEFAULT_CONFIG_CODE,
+            SERVICE_ALARM_ARM_HOME,
+            "ARM_HOME",
+            pytest.raises(ServiceValidationError),
+        ),
+        (
+            DEFAULT_CONFIG_CODE,
+            SERVICE_ALARM_ARM_AWAY,
+            "ARM_AWAY",
+            pytest.raises(ServiceValidationError),
+        ),
+        (
+            DEFAULT_CONFIG_CODE,
+            SERVICE_ALARM_ARM_NIGHT,
+            "ARM_NIGHT",
+            pytest.raises(ServiceValidationError),
+        ),
+        (
+            DEFAULT_CONFIG_CODE,
+            SERVICE_ALARM_ARM_VACATION,
+            "ARM_VACATION",
+            pytest.raises(ServiceValidationError),
+        ),
         (
             DEFAULT_CONFIG_CODE,
             SERVICE_ALARM_ARM_CUSTOM_BYPASS,
             "ARM_CUSTOM_BYPASS",
-            True,
+            pytest.raises(ServiceValidationError),
         ),
-        (DEFAULT_CONFIG_CODE, SERVICE_ALARM_DISARM, "DISARM", False),
-        (DEFAULT_CONFIG_CODE, SERVICE_ALARM_TRIGGER, "TRIGGER", False),
+        (DEFAULT_CONFIG_CODE, SERVICE_ALARM_DISARM, "DISARM", does_not_raise()),
+        (DEFAULT_CONFIG_CODE, SERVICE_ALARM_TRIGGER, "TRIGGER", does_not_raise()),
     ],
 )
 async def test_publish_mqtt_with_code(
@@ -374,22 +401,14 @@ async def test_publish_mqtt_with_code(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     service: str,
     payload: str,
-    can_raise: bool,
+    raises: AbstractContextManager,
 ) -> None:
     """Test publishing of MQTT messages when code is configured."""
     mqtt_mock = await mqtt_mock_entry()
     call_count = mqtt_mock.async_publish.call_count
 
     # No code provided, should not publish
-    if can_raise:
-        with pytest.raises(ServiceValidationError):
-            await hass.services.async_call(
-                alarm_control_panel.DOMAIN,
-                service,
-                {ATTR_ENTITY_ID: "alarm_control_panel.test"},
-                blocking=True,
-            )
-    else:
+    with raises:
         await hass.services.async_call(
             alarm_control_panel.DOMAIN,
             service,
@@ -418,20 +437,45 @@ async def test_publish_mqtt_with_code(
 
 
 @pytest.mark.parametrize(
-    ("hass_config", "service", "payload", "can_raise"),
+    ("hass_config", "service", "payload", "raises"),
     [
-        (DEFAULT_CONFIG_REMOTE_CODE, SERVICE_ALARM_ARM_HOME, "ARM_HOME", True),
-        (DEFAULT_CONFIG_REMOTE_CODE, SERVICE_ALARM_ARM_AWAY, "ARM_AWAY", True),
-        (DEFAULT_CONFIG_REMOTE_CODE, SERVICE_ALARM_ARM_NIGHT, "ARM_NIGHT", True),
-        (DEFAULT_CONFIG_REMOTE_CODE, SERVICE_ALARM_ARM_VACATION, "ARM_VACATION", True),
+        (
+            DEFAULT_CONFIG_REMOTE_CODE,
+            SERVICE_ALARM_ARM_HOME,
+            "ARM_HOME",
+            pytest.raises(ServiceValidationError),
+        ),
+        (
+            DEFAULT_CONFIG_REMOTE_CODE,
+            SERVICE_ALARM_ARM_AWAY,
+            "ARM_AWAY",
+            pytest.raises(ServiceValidationError),
+        ),
+        (
+            DEFAULT_CONFIG_REMOTE_CODE,
+            SERVICE_ALARM_ARM_NIGHT,
+            "ARM_NIGHT",
+            pytest.raises(ServiceValidationError),
+        ),
+        (
+            DEFAULT_CONFIG_REMOTE_CODE,
+            SERVICE_ALARM_ARM_VACATION,
+            "ARM_VACATION",
+            pytest.raises(ServiceValidationError),
+        ),
         (
             DEFAULT_CONFIG_REMOTE_CODE,
             SERVICE_ALARM_ARM_CUSTOM_BYPASS,
             "ARM_CUSTOM_BYPASS",
-            True,
+            pytest.raises(ServiceValidationError),
         ),
-        (DEFAULT_CONFIG_REMOTE_CODE, SERVICE_ALARM_DISARM, "DISARM", False),
-        (DEFAULT_CONFIG_REMOTE_CODE, SERVICE_ALARM_TRIGGER, "TRIGGER", False),
+        (DEFAULT_CONFIG_REMOTE_CODE, SERVICE_ALARM_DISARM, "DISARM", does_not_raise()),
+        (
+            DEFAULT_CONFIG_REMOTE_CODE,
+            SERVICE_ALARM_TRIGGER,
+            "TRIGGER",
+            does_not_raise(),
+        ),
     ],
 )
 async def test_publish_mqtt_with_remote_code(
@@ -439,22 +483,14 @@ async def test_publish_mqtt_with_remote_code(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     service: str,
     payload: str,
-    can_raise: bool,
+    raises: AbstractContextManager,
 ) -> None:
     """Test publishing of MQTT messages when remode code is configured."""
     mqtt_mock = await mqtt_mock_entry()
     call_count = mqtt_mock.async_publish.call_count
 
     # No code provided, should not publish
-    if can_raise:
-        with pytest.raises(ServiceValidationError):
-            await hass.services.async_call(
-                alarm_control_panel.DOMAIN,
-                service,
-                {ATTR_ENTITY_ID: "alarm_control_panel.test"},
-                blocking=True,
-            )
-    else:
+    with raises:
         await hass.services.async_call(
             alarm_control_panel.DOMAIN,
             service,
@@ -474,25 +510,50 @@ async def test_publish_mqtt_with_remote_code(
 
 
 @pytest.mark.parametrize(
-    ("hass_config", "service", "payload", "can_raise"),
+    ("hass_config", "service", "payload", "raises"),
     [
-        (DEFAULT_CONFIG_REMOTE_CODE_TEXT, SERVICE_ALARM_ARM_HOME, "ARM_HOME", True),
-        (DEFAULT_CONFIG_REMOTE_CODE_TEXT, SERVICE_ALARM_ARM_AWAY, "ARM_AWAY", True),
-        (DEFAULT_CONFIG_REMOTE_CODE_TEXT, SERVICE_ALARM_ARM_NIGHT, "ARM_NIGHT", True),
+        (
+            DEFAULT_CONFIG_REMOTE_CODE_TEXT,
+            SERVICE_ALARM_ARM_HOME,
+            "ARM_HOME",
+            pytest.raises(ServiceValidationError),
+        ),
+        (
+            DEFAULT_CONFIG_REMOTE_CODE_TEXT,
+            SERVICE_ALARM_ARM_AWAY,
+            "ARM_AWAY",
+            pytest.raises(ServiceValidationError),
+        ),
+        (
+            DEFAULT_CONFIG_REMOTE_CODE_TEXT,
+            SERVICE_ALARM_ARM_NIGHT,
+            "ARM_NIGHT",
+            pytest.raises(ServiceValidationError),
+        ),
         (
             DEFAULT_CONFIG_REMOTE_CODE_TEXT,
             SERVICE_ALARM_ARM_VACATION,
             "ARM_VACATION",
-            True,
+            pytest.raises(ServiceValidationError),
         ),
         (
             DEFAULT_CONFIG_REMOTE_CODE_TEXT,
             SERVICE_ALARM_ARM_CUSTOM_BYPASS,
             "ARM_CUSTOM_BYPASS",
-            True,
+            pytest.raises(ServiceValidationError),
         ),
-        (DEFAULT_CONFIG_REMOTE_CODE_TEXT, SERVICE_ALARM_DISARM, "DISARM", False),
-        (DEFAULT_CONFIG_REMOTE_CODE_TEXT, SERVICE_ALARM_TRIGGER, "TRIGGER", False),
+        (
+            DEFAULT_CONFIG_REMOTE_CODE_TEXT,
+            SERVICE_ALARM_DISARM,
+            "DISARM",
+            does_not_raise(),
+        ),
+        (
+            DEFAULT_CONFIG_REMOTE_CODE_TEXT,
+            SERVICE_ALARM_TRIGGER,
+            "TRIGGER",
+            does_not_raise(),
+        ),
     ],
 )
 async def test_publish_mqtt_with_remote_code_text(
@@ -500,22 +561,14 @@ async def test_publish_mqtt_with_remote_code_text(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     service: str,
     payload: str,
-    can_raise: bool,
+    raises: AbstractContextManager,
 ) -> None:
     """Test publishing of MQTT messages when remote text code is configured."""
     mqtt_mock = await mqtt_mock_entry()
     call_count = mqtt_mock.async_publish.call_count
 
     # No code provided, should not publish
-    if can_raise:
-        with pytest.raises(ServiceValidationError):
-            await hass.services.async_call(
-                alarm_control_panel.DOMAIN,
-                service,
-                {ATTR_ENTITY_ID: "alarm_control_panel.test"},
-                blocking=True,
-            )
-    else:
+    with raises:
         await hass.services.async_call(
             alarm_control_panel.DOMAIN,
             service,
