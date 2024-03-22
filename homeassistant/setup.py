@@ -691,8 +691,8 @@ def async_pause_setup(
     try:
         yield
     finally:
-        integration, group = running
         time_taken = time.monotonic() - started
+        integration, group = running
         # Add negative time for the time we waited
         _setup_times(hass)[integration][group][phase] = -time_taken
         _LOGGER.debug(
