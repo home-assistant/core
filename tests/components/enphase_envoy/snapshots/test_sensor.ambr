@@ -2572,6 +2572,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_current_net_power_consumption',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.101',
   })
@@ -2597,6 +2598,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_current_power_consumption',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.234',
   })
@@ -2613,6 +2615,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_current_power_consumption_l1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.324',
   })
@@ -2629,6 +2632,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_current_power_consumption_l2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2.324',
   })
@@ -2645,6 +2649,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_current_power_consumption_l3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3.324',
   })
@@ -2661,6 +2666,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_current_power_production',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.234',
   })
@@ -2677,6 +2683,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_current_power_production_l1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.234',
   })
@@ -2693,6 +2700,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_current_power_production_l2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2.234',
   })
@@ -2709,6 +2717,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_current_power_production_l3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3.234',
   })
@@ -2724,6 +2733,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_energy_consumption_last_seven_days',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.234',
   })
@@ -2739,6 +2749,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_energy_consumption_last_seven_days_l1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.321',
   })
@@ -2754,6 +2765,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_energy_consumption_last_seven_days_l2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2.321',
   })
@@ -2769,6 +2781,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_energy_consumption_last_seven_days_l3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3.321',
   })
@@ -2785,6 +2798,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_energy_consumption_today',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.234',
   })
@@ -2801,6 +2815,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_energy_consumption_today_l1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.323',
   })
@@ -2817,6 +2832,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_energy_consumption_today_l2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2.323',
   })
@@ -2833,6 +2849,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_energy_consumption_today_l3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3.323',
   })
@@ -2848,6 +2865,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_energy_production_last_seven_days',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.234',
   })
@@ -2863,6 +2881,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_energy_production_last_seven_days_l1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.231',
   })
@@ -2878,6 +2897,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_energy_production_last_seven_days_l2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2.231',
   })
@@ -2893,6 +2913,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_energy_production_last_seven_days_l3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3.231',
   })
@@ -2909,6 +2930,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_energy_production_today',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.234',
   })
@@ -2925,6 +2947,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_energy_production_today_l1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.233',
   })
@@ -2941,6 +2964,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_energy_production_today_l2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2.233',
   })
@@ -2957,6 +2981,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_energy_production_today_l3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3.233',
   })
@@ -2985,6 +3010,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_lifetime_energy_consumption',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.001234',
   })
@@ -3001,6 +3027,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_lifetime_energy_consumption_l1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.001322',
   })
@@ -3017,6 +3044,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_lifetime_energy_consumption_l2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.002322',
   })
@@ -3033,6 +3061,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_lifetime_energy_consumption_l3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.003322',
   })
@@ -3049,6 +3078,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_lifetime_energy_production',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.001234',
   })
@@ -3065,6 +3095,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_lifetime_energy_production_l1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.001232',
   })
@@ -3081,6 +3112,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_lifetime_energy_production_l2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.002232',
   })
@@ -3097,6 +3129,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_lifetime_energy_production_l3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.003232',
   })
@@ -3113,6 +3146,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_lifetime_net_energy_consumption',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.021234',
   })
@@ -3138,6 +3172,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_lifetime_net_energy_production',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.022345',
   })
@@ -3226,6 +3261,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.inverter_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
   })

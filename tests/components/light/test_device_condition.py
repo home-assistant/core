@@ -22,7 +22,7 @@ from tests.common import (
     async_get_device_automations,
     async_mock_service,
 )
-from tests.fixtures.pytest.light import SetupLightPlatformCallable
+from tests.components.light.common import MockLight, SetupLightPlatformCallable
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -325,6 +325,7 @@ async def test_if_fires_on_for_condition(
     entity_registry: er.EntityRegistry,
     calls,
     setup_light_platform: SetupLightPlatformCallable,
+    mock_light_entities: list[MockLight],
 ) -> None:
     """Test for firing if condition is on with delay."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -343,7 +344,7 @@ async def test_if_fires_on_for_condition(
     point2 = point1 + timedelta(seconds=10)
     point3 = point2 + timedelta(seconds=10)
 
-    setup_light_platform()
+    setup_light_platform(hass, mock_light_entities)
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 

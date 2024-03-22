@@ -193,6 +193,7 @@ class WemoDispatcher:
 
         platforms = set(WEMO_MODEL_DISPATCH.get(wemo.model_name, [Platform.SWITCH]))
         platforms.add(Platform.SENSOR)
+        platforms_to_load: list[Platform] = []
         for platform in platforms:
             # Three cases:
             # - Platform is loaded, dispatch discovery
@@ -205,11 +206,14 @@ class WemoDispatcher:
                 self._dispatch_backlog[platform].append(coordinator)
             else:
                 self._dispatch_backlog[platform] = [coordinator]
-                hass.async_create_task(
-                    hass.config_entries.async_forward_entry_setup(
-                        self._config_entry, platform
-                    )
+                platforms_to_load.append(platform)
+
+        if platforms_to_load:
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setups(
+                    self._config_entry, platforms_to_load
                 )
+            )
 
         self._added_serial_numbers.add(wemo.serial_number)
         self._failed_serial_numbers.discard(wemo.serial_number)

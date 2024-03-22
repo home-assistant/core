@@ -603,9 +603,9 @@ def _async_when_setup(
         await when_setup()
 
     @callback
-    def _async_is_component_filter(event: Event[EventComponentLoaded]) -> bool:
+    def _async_is_component_filter(event_data: EventComponentLoaded) -> bool:
         """Check if the event is for the component."""
-        return event.data[ATTR_COMPONENT] == component
+        return event_data[ATTR_COMPONENT] == component
 
     listeners.append(
         hass.bus.async_listen(

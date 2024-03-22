@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Generator, Iterable
 from datetime import datetime, timedelta
+from functools import partial
 import logging
 from typing import Any, cast
 
@@ -280,11 +281,7 @@ class ProtectData:
                 self._hass, self._async_poll, self._update_interval
             )
         self._subscriptions.setdefault(mac, []).append(update_callback)
-
-        def _unsubscribe() -> None:
-            self.async_unsubscribe_device_id(mac, update_callback)
-
-        return _unsubscribe
+        return partial(self.async_unsubscribe_device_id, mac, update_callback)
 
     @callback
     def async_unsubscribe_device_id(
@@ -301,12 +298,10 @@ class ProtectData:
     @callback
     def _async_signal_device_update(self, device: ProtectDeviceType) -> None:
         """Call the callbacks for a device_id."""
-
-        if not self._subscriptions.get(device.mac):
+        if not (subscriptions := self._subscriptions.get(device.mac)):
             return
-
         _LOGGER.debug("Updating device: %s (%s)", device.name, device.mac)
-        for update_callback in self._subscriptions[device.mac]:
+        for update_callback in subscriptions:
             update_callback(device)
 
 

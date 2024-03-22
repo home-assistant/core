@@ -69,6 +69,7 @@
     'context': <ANY>,
     'entity_id': 'climate.test_climate',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })

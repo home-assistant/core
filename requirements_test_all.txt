@@ -320,7 +320,7 @@ aiopyarr==23.4.0
 aioqsw==0.3.5
 
 # homeassistant.components.rainforest_raven
-aioraven==0.5.1
+aioraven==0.5.2
 
 # homeassistant.components.recollect_waste
 aiorecollect==2023.09.0
@@ -338,7 +338,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==8.1.1
+aioshelly==8.2.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -451,7 +451,7 @@ auroranoaa==0.0.3
 aurorapy==0.2.7
 
 # homeassistant.components.axis
-axis==56
+axis==57
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
@@ -487,7 +487,7 @@ blebox-uniapi==2.2.2
 blinkpy==0.22.6
 
 # homeassistant.components.blue_current
-bluecurrent-api==1.0.6
+bluecurrent-api==1.2.2
 
 # homeassistant.components.bluemaestro
 bluemaestro-ble==0.2.3
@@ -1124,7 +1124,7 @@ nsw-fuel-api-client==1.1.0
 nuheat==1.0.1
 
 # homeassistant.components.numato
-numato-gpio==0.12.0
+numato-gpio==0.13.0
 
 # homeassistant.components.compensation
 # homeassistant.components.iqvia
@@ -1221,7 +1221,7 @@ poolsense==0.0.8
 praw==7.5.0
 
 # homeassistant.components.islamic_prayer_times
-prayer-times-calculator==0.0.10
+prayer-times-calculator==0.0.12
 
 # homeassistant.components.prometheus
 prometheus-client==0.17.1
@@ -1386,7 +1386,7 @@ pyeconet==0.1.22
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.19.2
+pyenphase==1.20.0
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -1696,7 +1696,7 @@ pyswitchbee==1.8.0
 pytautulli==23.1.1
 
 # homeassistant.components.tedee
-pytedee-async==0.2.16
+pytedee-async==0.2.17
 
 # homeassistant.components.motionmount
 python-MotionMount==0.3.1

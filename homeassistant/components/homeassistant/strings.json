@@ -174,6 +174,9 @@
     "integration_config_error": {
       "message": "Failed to process config for integration {domain} due to multiple ({errors}) errors. Check the logs for more information."
     },
+    "max_length_exceeded": {
+      "message": "Value {value} for property {property_name} has a maximum length of {max_length} characters."
+    },
     "platform_component_load_err": {
       "message": "Platform error: {domain} - {error}. Check the logs for more information."
     },

@@ -321,7 +321,7 @@ class Events(Base):
                 EventOrigin(self.origin)
                 if self.origin
                 else EVENT_ORIGIN_ORDER[self.origin_idx or 0],
-                dt_util.utc_from_timestamp(self.time_fired_ts or 0),
+                self.time_fired_ts or 0,
                 context=context,
             )
         except JSON_DECODE_EXCEPTIONS:
@@ -536,8 +536,9 @@ class States(Base):
             # Join the state_attributes table on attributes_id to get the attributes
             # for newer states
             attrs,
-            last_changed,
-            last_updated,
+            last_changed=last_changed,
+            last_reported=last_updated,  # Recorder does not yet record last_reported
+            last_updated=last_updated,
             context=context,
             validate_entity_id=validate_entity_id,
         )

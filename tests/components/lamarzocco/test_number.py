@@ -53,7 +53,9 @@ async def test_coffee_boiler(
     )
 
     assert len(mock_lamarzocco.set_coffee_temp.mock_calls) == 1
-    mock_lamarzocco.set_coffee_temp.assert_called_once_with(temperature=95)
+    mock_lamarzocco.set_coffee_temp.assert_called_once_with(
+        temperature=95, ble_device=None
+    )
 
 
 @pytest.mark.parametrize(
@@ -62,7 +64,12 @@ async def test_coffee_boiler(
 @pytest.mark.parametrize(
     ("entity_name", "value", "func_name", "kwargs"),
     [
-        ("steam_target_temperature", 131, "set_steam_temp", {"temperature": 131}),
+        (
+            "steam_target_temperature",
+            131,
+            "set_steam_temp",
+            {"temperature": 131, "ble_device": None},
+        ),
         ("tea_water_duration", 15, "set_dose_hot_water", {"value": 15}),
     ],
 )

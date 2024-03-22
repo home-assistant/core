@@ -22,7 +22,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.color as color_util
 
 from tests.common import MockEntityPlatform, MockUser, async_mock_service
-from tests.fixtures.pytest.light import MockLight, SetupLightPlatformCallable
+from tests.components.light.common import MockLight, SetupLightPlatformCallable
 
 orig_Profiles = light.Profiles
 
@@ -114,7 +114,7 @@ async def test_services(
     mock_light_entities: list[MockLight],
 ) -> None:
     """Test the provided services."""
-    setup_light_platform()
+    setup_light_platform(hass, mock_light_entities)
 
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -515,7 +515,7 @@ async def test_light_profiles(
     mock_light_entities: list[MockLight],
 ) -> None:
     """Test light profiles."""
-    setup_light_platform()
+    setup_light_platform(hass, mock_light_entities)
 
     profile_mock_data = {
         "test": (0.4, 0.6, 100, 0),
@@ -564,7 +564,7 @@ async def test_default_profiles_group(
     mock_light_entities: list[MockLight],
 ) -> None:
     """Test default turn-on light profile for all lights."""
-    setup_light_platform()
+    setup_light_platform(hass, mock_light_entities)
 
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -790,7 +790,7 @@ async def test_default_profiles_light(
     mock_light_entities: list[MockLight],
 ) -> None:
     """Test default turn-on light profile for a specific light."""
-    setup_light_platform()
+    setup_light_platform(hass, mock_light_entities)
 
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -857,9 +857,10 @@ async def test_light_context(
     hass: HomeAssistant,
     hass_admin_user: MockUser,
     setup_light_platform: SetupLightPlatformCallable,
+    mock_light_entities: list[MockLight],
 ) -> None:
     """Test that light context works."""
-    setup_light_platform()
+    setup_light_platform(hass, mock_light_entities)
 
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -885,9 +886,10 @@ async def test_light_turn_on_auth(
     hass: HomeAssistant,
     hass_read_only_user: MockUser,
     setup_light_platform: SetupLightPlatformCallable,
+    mock_light_entities: list[MockLight],
 ) -> None:
     """Test that light context works."""
-    setup_light_platform()
+    setup_light_platform(hass, mock_light_entities)
 
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -916,7 +918,7 @@ async def test_light_brightness_step(
         MockLight("Test_1", STATE_ON),
     ]
 
-    setup_light_platform(entities)
+    setup_light_platform(hass, entities)
 
     entity0 = entities[0]
     entity0.supported_features = light.SUPPORT_BRIGHTNESS
@@ -987,7 +989,7 @@ async def test_light_brightness_pct_conversion(
     mock_light_entities: list[MockLight],
 ) -> None:
     """Test that light brightness percent conversion."""
-    setup_light_platform()
+    setup_light_platform(hass, mock_light_entities)
 
     entity = mock_light_entities[0]
     entity.supported_features = light.SUPPORT_BRIGHTNESS
@@ -1183,7 +1185,7 @@ async def test_light_backwards_compatibility_supported_color_modes(
     entity4.supported_color_modes = None
     entity4.color_mode = None
 
-    setup_light_platform(entities)
+    setup_light_platform(hass, entities)
 
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -1272,7 +1274,7 @@ async def test_light_backwards_compatibility_color_mode(
     entity4.hs_color = (240, 100)
     entity4.color_temp_kelvin = 10000
 
-    setup_light_platform(entities)
+    setup_light_platform(hass, entities)
 
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -1312,7 +1314,7 @@ async def test_light_service_call_rgbw(
     entity0 = MockLight("Test_rgbw", STATE_ON)
     entity0.supported_color_modes = {light.ColorMode.RGBW}
 
-    setup_light_platform([entity0])
+    setup_light_platform(hass, [entity0])
 
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -1345,7 +1347,7 @@ async def test_light_state_off(
         MockLight("Test_ct", STATE_OFF),
         MockLight("Test_rgbw", STATE_OFF),
     ]
-    setup_light_platform(entities)
+    setup_light_platform(hass, entities)
 
     entity0 = entities[0]
     entity0.supported_color_modes = {light.ColorMode.ONOFF}
@@ -1413,7 +1415,7 @@ async def test_light_state_rgbw(
 ) -> None:
     """Test rgbw color conversion in state updates."""
     entity0 = MockLight("Test_rgbw", STATE_ON)
-    setup_light_platform([entity0])
+    setup_light_platform(hass, [entity0])
 
     entity0.brightness = 255
     entity0.supported_color_modes = {light.ColorMode.RGBW}
@@ -1446,7 +1448,7 @@ async def test_light_state_rgbww(
 ) -> None:
     """Test rgbww color conversion in state updates."""
     entity0 = MockLight("Test_rgbww", STATE_ON)
-    setup_light_platform([entity0])
+    setup_light_platform(hass, [entity0])
 
     entity0.supported_color_modes = {light.ColorMode.RGBWW}
     entity0.color_mode = light.ColorMode.RGBWW
@@ -1488,7 +1490,7 @@ async def test_light_service_call_color_conversion(
         MockLight("Test_rgbww", STATE_ON),
         MockLight("Test_temperature", STATE_ON),
     ]
-    setup_light_platform(entities)
+    setup_light_platform(hass, entities)
 
     entity0 = entities[0]
     entity0.supported_color_modes = {light.ColorMode.HS}
@@ -1932,7 +1934,7 @@ async def test_light_service_call_color_conversion_named_tuple(
         MockLight("Test_rgbw", STATE_ON),
         MockLight("Test_rgbww", STATE_ON),
     ]
-    setup_light_platform(entities)
+    setup_light_platform(hass, entities)
 
     entity0 = entities[0]
     entity0.supported_color_modes = {light.ColorMode.HS}
@@ -2008,7 +2010,7 @@ async def test_light_service_call_color_temp_emulation(
         MockLight("Test_hs", STATE_ON),
         MockLight("Test_hs_white", STATE_ON),
     ]
-    setup_light_platform(entities)
+    setup_light_platform(hass, entities)
 
     entity0 = entities[0]
     entity0.supported_color_modes = {light.ColorMode.COLOR_TEMP, light.ColorMode.HS}
@@ -2067,7 +2069,7 @@ async def test_light_service_call_color_temp_conversion(
         MockLight("Test_rgbww_ct", STATE_ON),
         MockLight("Test_rgbww", STATE_ON),
     ]
-    setup_light_platform(entities)
+    setup_light_platform(hass, entities)
 
     entity0 = entities[0]
     entity0.supported_color_modes = {
@@ -2200,7 +2202,7 @@ async def test_light_mired_color_temp_conversion(
         MockLight("Test_rgbww_ct", STATE_ON),
         MockLight("Test_rgbww", STATE_ON),
     ]
-    setup_light_platform(entities)
+    setup_light_platform(hass, entities)
 
     entity0 = entities[0]
     entity0.supported_color_modes = {
@@ -2246,7 +2248,7 @@ async def test_light_service_call_white_mode(
     """Test color_mode white in service calls."""
     entity0 = MockLight("Test_white", STATE_ON)
     entity0.supported_color_modes = {light.ColorMode.HS, light.ColorMode.WHITE}
-    setup_light_platform([entity0])
+    setup_light_platform(hass, [entity0])
 
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -2351,7 +2353,7 @@ async def test_light_state_color_conversion(
         MockLight("Test_xy", STATE_ON),
         MockLight("Test_legacy", STATE_ON),
     ]
-    setup_light_platform(entities)
+    setup_light_platform(hass, entities)
 
     entity0 = entities[0]
     entity0.supported_color_modes = {light.ColorMode.HS}
@@ -2416,7 +2418,7 @@ async def test_services_filter_parameters(
     mock_light_entities: list[MockLight],
 ) -> None:
     """Test turn_on and turn_off filters unsupported parameters."""
-    setup_light_platform()
+    setup_light_platform(hass, mock_light_entities)
 
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}

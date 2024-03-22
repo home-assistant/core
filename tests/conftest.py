@@ -114,10 +114,6 @@ asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 # Disable fixtures overriding our beautiful policy
 asyncio.set_event_loop_policy = lambda policy: None
 
-pytest_plugins = [
-    "tests.fixtures.pytest.light",
-]
-
 
 def pytest_addoption(parser: pytest.Parser) -> None:
     """Register custom pytest options."""

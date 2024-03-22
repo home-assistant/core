@@ -974,7 +974,7 @@ async def test_self_referencing_entity_picture_loop(
     assert len(hass.states.async_all()) == 1
     next_time = dt_util.utcnow() + timedelta(seconds=1.2)
     with patch(
-        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+        "homeassistant.helpers.ratelimit.time.time", return_value=next_time.timestamp()
     ):
         async_fire_time_changed(hass, next_time)
         await hass.async_block_till_done()
