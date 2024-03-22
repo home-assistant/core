@@ -27,27 +27,27 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
-class MotionCoverEntityDescription(CoverEntityDescription):
+class MotionblindsBLECoverEntityDescription(CoverEntityDescription):
     """Entity description of a cover entity with default values."""
 
     key: str = CoverDeviceClass.BLIND.value
     translation_key: str = CoverDeviceClass.BLIND.value
 
 
-SHADE_ENTITY_DESCRIPTION = MotionCoverEntityDescription(
+SHADE_ENTITY_DESCRIPTION = MotionblindsBLECoverEntityDescription(
     device_class=CoverDeviceClass.SHADE
 )
-BLIND_ENTITY_DESCRIPTION = MotionCoverEntityDescription(
+BLIND_ENTITY_DESCRIPTION = MotionblindsBLECoverEntityDescription(
     device_class=CoverDeviceClass.BLIND
 )
-CURTAIN_ENTITY_DESCRIPTION = MotionCoverEntityDescription(
+CURTAIN_ENTITY_DESCRIPTION = MotionblindsBLECoverEntityDescription(
     device_class=CoverDeviceClass.CURTAIN
 )
-VERTICAL_ENTITY_DESCRIPTION = MotionCoverEntityDescription(
+VERTICAL_ENTITY_DESCRIPTION = MotionblindsBLECoverEntityDescription(
     device_class=CoverDeviceClass.CURTAIN, icon=ICON_VERTICAL_BLIND
 )
 
-BLIND_TYPE_TO_ENTITY_DESCRIPTION: dict[str, MotionCoverEntityDescription] = {
+BLIND_TYPE_TO_ENTITY_DESCRIPTION: dict[str, MotionblindsBLECoverEntityDescription] = {
     MotionBlindType.HONEYCOMB.name: SHADE_ENTITY_DESCRIPTION,
     MotionBlindType.ROMAN.name: SHADE_ENTITY_DESCRIPTION,
     MotionBlindType.ROLLER.name: SHADE_ENTITY_DESCRIPTION,
