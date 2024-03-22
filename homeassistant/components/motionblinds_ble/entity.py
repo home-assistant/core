@@ -1,4 +1,4 @@
-"""Base entity for the Motionblinds BLE integration."""
+"""Base entities for the Motionblinds BLE integration."""
 
 import logging
 
