@@ -62,10 +62,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     hass,
                     DOMAIN,
                     f"not_allowed_path_{path}",
-                    breaks_in_ha_version="2024.7.0",
                     is_fixable=False,
                     is_persistent=False,
-                    severity=IssueSeverity.WARNING,
+                    severity=IssueSeverity.ERROR,
                     translation_key="not_allowed_path",
                     translation_placeholders={"path": path},
                 )
@@ -86,6 +85,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     patterns: list[str] = entry.options[CONF_PATTERNS]
     if not hass.config.is_allowed_path(path):
         _LOGGER.error("Folder %s is not valid or allowed", path)
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"setup_not_allowed_path_{path}",
+            is_fixable=False,
+            is_persistent=False,
+            severity=IssueSeverity.ERROR,
+            translation_key="setup_not_allowed_path",
+            translation_placeholders={"path": path},
+            learn_more_url="https://www.home-assistant.io/docs/configuration/basic/#allowlist_external_dirs",
+        )
         return False
     await hass.async_add_executor_job(Watcher, path, patterns, hass)
     return True
