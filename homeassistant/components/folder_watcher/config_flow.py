@@ -8,8 +8,8 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -107,7 +107,9 @@ class FolderWatcherConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
         return f"Folder Watcher {options[CONF_FOLDER]}"
 
     @callback
-    def async_create_entry(self, data: Mapping[str, Any], **kwargs: Any) -> FlowResult:
+    def async_create_entry(
+        self, data: Mapping[str, Any], **kwargs: Any
+    ) -> ConfigFlowResult:
         """Finish config flow and create a config entry."""
         self._async_abort_entries_match({CONF_FOLDER: data[CONF_FOLDER]})
         return super().async_create_entry(data, **kwargs)
