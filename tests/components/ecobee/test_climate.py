@@ -1,4 +1,5 @@
 """The test for the Ecobee thermostat module."""
+
 import copy
 from http import HTTPStatus
 from unittest import mock

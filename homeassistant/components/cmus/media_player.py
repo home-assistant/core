@@ -1,4 +1,5 @@
 """Support for interacting with and controlling the cmus music player."""
+
 from __future__ import annotations
 
 import logging

@@ -1,4 +1,5 @@
 """Support for Renault button entities."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -15,19 +16,11 @@ from .entity import RenaultEntity
 from .renault_hub import RenaultHub
 
 
-@dataclass(frozen=True)
-class RenaultButtonRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    async_press: Callable[[RenaultButtonEntity], Coroutine[Any, Any, Any]]
-
-
-@dataclass(frozen=True)
-class RenaultButtonEntityDescription(
-    ButtonEntityDescription, RenaultButtonRequiredKeysMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class RenaultButtonEntityDescription(ButtonEntityDescription):
     """Class describing Renault button entities."""
 
+    async_press: Callable[[RenaultButtonEntity], Coroutine[Any, Any, Any]]
     requires_electricity: bool = False
 
 

@@ -1,4 +1,5 @@
 """The tests for the utility_meter sensor platform."""
+
 from datetime import timedelta
 
 from freezegun import freeze_time
@@ -60,7 +61,7 @@ def set_utc(hass: HomeAssistant):
 
 @pytest.mark.parametrize(
     ("yaml_config", "config_entry_config"),
-    (
+    [
         (
             {
                 "utility_meter": {
@@ -85,7 +86,7 @@ def set_utc(hass: HomeAssistant):
                 "tariffs": ["onpeak", "midpeak", "offpeak"],
             },
         ),
-    ),
+    ],
 )
 async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> None:
     """Test utility sensor state."""
@@ -234,7 +235,7 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
 
 @pytest.mark.parametrize(
     ("yaml_config", "config_entry_config"),
-    (
+    [
         (
             {
                 "utility_meter": {
@@ -260,7 +261,7 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
                 "always_available": True,
             },
         ),
-    ),
+    ],
 )
 async def test_state_always_available(
     hass: HomeAssistant, yaml_config, config_entry_config
@@ -334,7 +335,7 @@ async def test_state_always_available(
 
 @pytest.mark.parametrize(
     "yaml_config",
-    (
+    [
         (
             {
                 "utility_meter": {
@@ -346,7 +347,7 @@ async def test_state_always_available(
             },
             None,
         ),
-    ),
+    ],
 )
 async def test_not_unique_tariffs(hass: HomeAssistant, yaml_config) -> None:
     """Test utility sensor state initializtion."""
@@ -355,7 +356,7 @@ async def test_not_unique_tariffs(hass: HomeAssistant, yaml_config) -> None:
 
 @pytest.mark.parametrize(
     ("yaml_config", "config_entry_config"),
-    (
+    [
         (
             {
                 "utility_meter": {
@@ -380,7 +381,7 @@ async def test_not_unique_tariffs(hass: HomeAssistant, yaml_config) -> None:
                 "tariffs": ["onpeak", "midpeak", "offpeak"],
             },
         ),
-    ),
+    ],
 )
 async def test_init(hass: HomeAssistant, yaml_config, config_entry_config) -> None:
     """Test utility sensor state initializtion."""
@@ -455,7 +456,7 @@ async def test_unique_id(
 
 @pytest.mark.parametrize(
     ("yaml_config", "entity_id", "name"),
-    (
+    [
         (
             {
                 "utility_meter": {
@@ -492,7 +493,7 @@ async def test_unique_id(
             "sensor.energy_bill",
             "energy_bill",
         ),
-    ),
+    ],
 )
 async def test_entity_name(hass: HomeAssistant, yaml_config, entity_id, name) -> None:
     """Test utility sensor state initializtion."""
@@ -510,7 +511,7 @@ async def test_entity_name(hass: HomeAssistant, yaml_config, entity_id, name) ->
 
 @pytest.mark.parametrize(
     ("yaml_config", "config_entry_configs"),
-    (
+    [
         (
             {
                 "utility_meter": {
@@ -550,7 +551,7 @@ async def test_entity_name(hass: HomeAssistant, yaml_config, entity_id, name) ->
                 },
             ],
         ),
-    ),
+    ],
 )
 async def test_device_class(
     hass: HomeAssistant, yaml_config, config_entry_configs
@@ -603,7 +604,7 @@ async def test_device_class(
 
 @pytest.mark.parametrize(
     ("yaml_config", "config_entry_config"),
-    (
+    [
         (
             {
                 "utility_meter": {
@@ -628,7 +629,7 @@ async def test_device_class(
                 "tariffs": ["onpeak", "midpeak", "offpeak", "superpeak"],
             },
         ),
-    ),
+    ],
 )
 async def test_restore_state(
     hass: HomeAssistant, yaml_config, config_entry_config
@@ -774,7 +775,7 @@ async def test_restore_state(
 
 @pytest.mark.parametrize(
     ("yaml_config", "config_entry_config"),
-    (
+    [
         (
             {
                 "utility_meter": {
@@ -798,7 +799,7 @@ async def test_restore_state(
                 "tariffs": [],
             },
         ),
-    ),
+    ],
 )
 async def test_service_reset_no_tariffs(
     hass: HomeAssistant, yaml_config, config_entry_config
@@ -865,7 +866,7 @@ async def test_service_reset_no_tariffs(
 
 @pytest.mark.parametrize(
     ("yaml_config", "config_entry_config"),
-    (
+    [
         (
             {
                 "utility_meter": {
@@ -890,7 +891,7 @@ async def test_service_reset_no_tariffs(
                 "tariffs": [],
             },
         ),
-    ),
+    ],
 )
 async def test_net_consumption(
     hass: HomeAssistant, yaml_config, config_entry_config
@@ -937,7 +938,7 @@ async def test_net_consumption(
 
 @pytest.mark.parametrize(
     ("yaml_config", "config_entry_config"),
-    (
+    [
         (
             {
                 "utility_meter": {
@@ -961,7 +962,7 @@ async def test_net_consumption(
                 "tariffs": [],
             },
         ),
-    ),
+    ],
 )
 async def test_non_net_consumption(
     hass: HomeAssistant,
@@ -1022,7 +1023,7 @@ async def test_non_net_consumption(
 
 @pytest.mark.parametrize(
     ("yaml_config", "config_entry_config"),
-    (
+    [
         (
             {
                 "utility_meter": {
@@ -1047,7 +1048,7 @@ async def test_non_net_consumption(
                 "tariffs": [],
             },
         ),
-    ),
+    ],
 )
 async def test_delta_values(
     hass: HomeAssistant,
@@ -1134,7 +1135,7 @@ async def test_delta_values(
 
 @pytest.mark.parametrize(
     ("yaml_config", "config_entry_config"),
-    (
+    [
         (
             {
                 "utility_meter": {
@@ -1159,7 +1160,7 @@ async def test_delta_values(
                 "tariffs": [],
             },
         ),
-    ),
+    ],
 )
 async def test_non_periodically_resetting(
     hass: HomeAssistant, yaml_config, config_entry_config
@@ -1266,7 +1267,7 @@ async def test_non_periodically_resetting(
 
 @pytest.mark.parametrize(
     ("yaml_config", "config_entry_config"),
-    (
+    [
         (
             {
                 "utility_meter": {
@@ -1292,7 +1293,7 @@ async def test_non_periodically_resetting(
                 "tariffs": ["low", "high"],
             },
         ),
-    ),
+    ],
 )
 async def test_non_periodically_resetting_meter_with_tariffs(
     hass: HomeAssistant, yaml_config, config_entry_config

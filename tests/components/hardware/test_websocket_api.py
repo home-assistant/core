@@ -1,4 +1,5 @@
 """Test the hardware websocket API."""
+
 from collections import namedtuple
 import datetime
 from unittest.mock import patch

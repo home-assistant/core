@@ -1,4 +1,5 @@
 """The tests for the sun automation."""
+
 from datetime import datetime
 
 from freezegun import freeze_time

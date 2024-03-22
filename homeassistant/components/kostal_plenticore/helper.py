@@ -1,4 +1,5 @@
 """Code to handle the Plenticore API."""
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -100,8 +101,10 @@ class Plenticore:
             manufacturer="Kostal",
             model=f"{prod1} {prod2}",
             name=settings["scb:network"][hostname_id],
-            sw_version=f'IOC: {device_local["Properties:VersionIOC"]}'
-            + f' MC: {device_local["Properties:VersionMC"]}',
+            sw_version=(
+                f'IOC: {device_local["Properties:VersionIOC"]}'
+                f' MC: {device_local["Properties:VersionMC"]}'
+            ),
         )
 
         return True

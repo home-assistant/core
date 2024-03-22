@@ -1,4 +1,5 @@
 """Test the Open Thread Border Router config flow."""
+
 import asyncio
 from http import HTTPStatus
 from typing import Any

@@ -1,4 +1,5 @@
 """Test requirements module."""
+
 import asyncio
 import logging
 import os

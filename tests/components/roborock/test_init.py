@@ -1,4 +1,5 @@
 """Test for Roborock init."""
+
 from unittest.mock import patch
 
 from roborock import RoborockException, RoborockInvalidCredentials

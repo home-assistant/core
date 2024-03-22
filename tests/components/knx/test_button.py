@@ -1,4 +1,5 @@
 """Test KNX button."""
+
 from datetime import timedelta
 import logging
 

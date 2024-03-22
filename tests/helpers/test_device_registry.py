@@ -1,4 +1,5 @@
 """Tests for the Device Registry."""
+
 from collections.abc import Iterable
 from contextlib import AbstractContextManager, nullcontext
 import time
@@ -2303,7 +2304,7 @@ async def test_entries_for_label(
         "placeholders",
         "expected_device_name",
     ),
-    (
+    [
         (None, None, None, "Device Bla"),
         (
             "test_device",
@@ -2333,7 +2334,7 @@ async def test_entries_for_label(
             {"placeholder": "special"},
             "English dev special",
         ),
-    ),
+    ],
 )
 async def test_device_name_translation_placeholders(
     hass: HomeAssistant,
@@ -2380,7 +2381,7 @@ async def test_device_name_translation_placeholders(
         "expectation",
         "expected_error",
     ),
-    (
+    [
         (
             "test_device",
             {
@@ -2425,7 +2426,7 @@ async def test_device_name_translation_placeholders(
                 "not match the name '{placeholder} English dev'"
             ),
         ),
-    ),
+    ],
 )
 async def test_device_name_translation_placeholders_errors(
     hass: HomeAssistant,

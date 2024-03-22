@@ -1,4 +1,5 @@
 """Common fixtures for the Lutron Homeworks Series 4 and 8 tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -6,10 +7,14 @@ import pytest
 
 from homeassistant.components.homeworks.const import (
     CONF_ADDR,
+    CONF_BUTTONS,
     CONF_CONTROLLER_ID,
     CONF_DIMMERS,
     CONF_KEYPADS,
+    CONF_LED,
+    CONF_NUMBER,
     CONF_RATE,
+    CONF_RELEASE_DELAY,
     DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
@@ -39,6 +44,26 @@ def mock_config_entry() -> MockConfigEntry:
                 {
                     CONF_ADDR: "[02:08:02:01]",
                     CONF_NAME: "Foyer Keypad",
+                    CONF_BUTTONS: [
+                        {
+                            CONF_NAME: "Morning",
+                            CONF_NUMBER: 1,
+                            CONF_LED: True,
+                            CONF_RELEASE_DELAY: None,
+                        },
+                        {
+                            CONF_NAME: "Relax",
+                            CONF_NUMBER: 2,
+                            CONF_LED: True,
+                            CONF_RELEASE_DELAY: None,
+                        },
+                        {
+                            CONF_NAME: "Dim up",
+                            CONF_NUMBER: 3,
+                            CONF_LED: False,
+                            CONF_RELEASE_DELAY: 0.2,
+                        },
+                    ],
                 }
             ],
         },

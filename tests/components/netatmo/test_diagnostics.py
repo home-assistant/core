@@ -1,4 +1,5 @@
 """Test the Netatmo diagnostics."""
+
 from unittest.mock import AsyncMock, patch
 
 from syrupy import SnapshotAssertion

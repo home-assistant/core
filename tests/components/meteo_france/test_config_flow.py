@@ -1,4 +1,5 @@
 """Tests for the Meteo-France config flow."""
+
 from unittest.mock import patch
 
 from meteofrance_api.model import Place

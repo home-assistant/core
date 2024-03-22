@@ -1,4 +1,5 @@
 """Common fixtures for the Ecovacs tests."""
+
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch

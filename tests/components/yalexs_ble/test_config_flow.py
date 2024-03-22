@@ -1,4 +1,5 @@
 """Test the Yale Access Bluetooth config flow."""
+
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 

@@ -1,4 +1,5 @@
 """Config Flow for the zamg integration."""
+
 from __future__ import annotations
 
 from typing import Any

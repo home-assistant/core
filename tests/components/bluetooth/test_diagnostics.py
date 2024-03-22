@@ -1,4 +1,5 @@
 """Test bluetooth diagnostics."""
+
 from unittest.mock import ANY, MagicMock, patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice

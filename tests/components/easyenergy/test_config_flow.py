@@ -1,4 +1,5 @@
 """Test the easyEnergy config flow."""
+
 from unittest.mock import MagicMock
 
 from homeassistant.components.easyenergy.const import DOMAIN

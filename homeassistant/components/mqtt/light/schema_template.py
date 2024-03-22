@@ -1,4 +1,5 @@
 """Support for MQTT Template lights."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

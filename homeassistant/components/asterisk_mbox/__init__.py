@@ -1,4 +1,5 @@
 """Support for Asterisk Voicemail interface."""
+
 import logging
 from typing import Any, cast
 

@@ -1,4 +1,5 @@
 """Test the tplink config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from kasa import TimeoutException

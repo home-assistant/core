@@ -1,4 +1,5 @@
 """The tests for the timer component."""
+
 from datetime import timedelta
 import logging
 from unittest.mock import patch

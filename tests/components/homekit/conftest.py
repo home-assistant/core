@@ -1,4 +1,5 @@
 """HomeKit session fixtures."""
+
 from contextlib import suppress
 import os
 from unittest.mock import patch

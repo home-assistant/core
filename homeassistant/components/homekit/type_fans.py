@@ -1,4 +1,5 @@
 """Class to hold all fan accessories."""
+
 import logging
 from typing import Any
 

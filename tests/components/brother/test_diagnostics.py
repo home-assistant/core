@@ -1,4 +1,5 @@
 """Test Brother diagnostics."""
+
 from datetime import datetime
 import json
 from unittest.mock import Mock, patch

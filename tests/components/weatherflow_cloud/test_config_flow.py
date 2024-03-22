@@ -1,4 +1,5 @@
 """Test the WeatherflowCloud config flow."""
+
 import pytest
 
 from homeassistant import config_entries

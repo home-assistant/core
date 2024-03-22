@@ -1,4 +1,5 @@
 """The tests for the hassio update entities."""
+
 from datetime import timedelta
 import os
 from unittest.mock import patch

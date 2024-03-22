@@ -1,4 +1,5 @@
 """Shared class to maintain Plex server instances."""
+
 from __future__ import annotations
 
 import logging

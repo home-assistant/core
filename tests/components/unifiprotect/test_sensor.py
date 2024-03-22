@@ -1,4 +1,5 @@
 """Test the UniFi Protect sensor platform."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta

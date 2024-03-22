@@ -1,4 +1,5 @@
 """Tests for Minio Hass related code."""
+
 import asyncio
 import json
 from unittest.mock import MagicMock, call, patch

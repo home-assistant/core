@@ -1,4 +1,5 @@
 """Tests for wiz integration."""
+
 import datetime
 from unittest.mock import AsyncMock, patch
 

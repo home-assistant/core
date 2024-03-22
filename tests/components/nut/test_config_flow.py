@@ -1,4 +1,5 @@
 """Test the Network UPS Tools (NUT) config flow."""
+
 from ipaddress import ip_address
 from unittest.mock import patch
 

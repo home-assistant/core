@@ -1,4 +1,5 @@
 """Setup mocks for the Plugwise integration tests."""
+
 from __future__ import annotations
 
 from collections.abc import Generator

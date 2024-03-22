@@ -1,4 +1,5 @@
 """Support for Agent DVR Alarm Control Panels."""
+
 from __future__ import annotations
 
 from homeassistant.components.alarm_control_panel import (

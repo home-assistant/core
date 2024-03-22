@@ -1,4 +1,5 @@
 """Lutron Homeworks Series 4 and 8 config flow."""
+
 from __future__ import annotations
 
 from functools import partial
@@ -8,6 +9,8 @@ from typing import Any
 from pyhomeworks.pyhomeworks import Homeworks
 import voluptuous as vol
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
@@ -37,11 +40,16 @@ from homeassistant.util import slugify
 from . import DEFAULT_FADE_RATE, calculate_unique_id
 from .const import (
     CONF_ADDR,
+    CONF_BUTTONS,
     CONF_CONTROLLER_ID,
     CONF_DIMMERS,
     CONF_INDEX,
     CONF_KEYPADS,
+    CONF_LED,
+    CONF_NUMBER,
     CONF_RATE,
+    CONF_RELEASE_DELAY,
+    DEFAULT_BUTTON_NAME,
     DEFAULT_KEYPAD_NAME,
     DEFAULT_LIGHT_NAME,
     DOMAIN,
@@ -68,6 +76,19 @@ LIGHT_EDIT = {
             mode=selector.NumberSelectorMode.SLIDER,
             step=0.1,
         )
+    ),
+}
+
+BUTTON_EDIT = {
+    vol.Optional(CONF_LED, default=False): selector.BooleanSelector(),
+    vol.Optional(CONF_RELEASE_DELAY, default=0): selector.NumberSelector(
+        selector.NumberSelectorConfig(
+            min=0,
+            max=5,
+            step=0.01,
+            mode=selector.NumberSelectorMode.BOX,
+            unit_of_measurement="s",
+        ),
     ),
 }
 
@@ -160,6 +181,31 @@ def _validate_address(handler: SchemaCommonFlowHandler, addr: str) -> None:
                 raise SchemaFlowError("duplicated_addr")
 
 
+def _validate_button_number(handler: SchemaCommonFlowHandler, number: int) -> None:
+    """Validate button number."""
+    keypad = handler.flow_state["_idx"]
+    buttons: list[dict[str, Any]] = handler.options[CONF_KEYPADS][keypad][CONF_BUTTONS]
+
+    for button in buttons:
+        if button[CONF_NUMBER] == number:
+            raise SchemaFlowError("duplicated_number")
+
+
+async def validate_add_button(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    """Validate button input."""
+    user_input[CONF_NUMBER] = int(user_input[CONF_NUMBER])
+    _validate_button_number(handler, user_input[CONF_NUMBER])
+
+    # Standard behavior is to merge the result with the options.
+    # In this case, we want to add a sub-item so we update the options directly.
+    keypad = handler.flow_state["_idx"]
+    buttons: list[dict[str, Any]] = handler.options[CONF_KEYPADS][keypad][CONF_BUTTONS]
+    buttons.append(user_input)
+    return {}
+
+
 async def validate_add_keypad(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
@@ -169,7 +215,7 @@ async def validate_add_keypad(
     # Standard behavior is to merge the result with the options.
     # In this case, we want to add a sub-item so we update the options directly.
     items = handler.options[CONF_KEYPADS]
-    items.append(user_input)
+    items.append(user_input | {CONF_BUTTONS: []})
     return {}
 
 
@@ -186,6 +232,37 @@ async def validate_add_light(
     return {}
 
 
+async def get_select_button_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+    """Return schema for selecting a button."""
+    keypad = handler.flow_state["_idx"]
+    buttons: list[dict[str, Any]] = handler.options[CONF_KEYPADS][keypad][CONF_BUTTONS]
+
+    return vol.Schema(
+        {
+            vol.Required(CONF_INDEX): vol.In(
+                {
+                    str(index): f"{config[CONF_NAME]} ({config[CONF_NUMBER]})"
+                    for index, config in enumerate(buttons)
+                },
+            )
+        }
+    )
+
+
+async def get_select_keypad_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+    """Return schema for selecting a keypad."""
+    return vol.Schema(
+        {
+            vol.Required(CONF_INDEX): vol.In(
+                {
+                    str(index): f"{config[CONF_NAME]} ({config[CONF_ADDR]})"
+                    for index, config in enumerate(handler.options[CONF_KEYPADS])
+                },
+            )
+        }
+    )
+
+
 async def get_select_light_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     """Return schema for selecting a light."""
     return vol.Schema(
@@ -200,6 +277,14 @@ async def get_select_light_schema(handler: SchemaCommonFlowHandler) -> vol.Schem
     )
 
 
+async def validate_select_button(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    """Store button index in flow state."""
+    handler.flow_state["_button_idx"] = int(user_input[CONF_INDEX])
+    return {}
+
+
 async def validate_select_keypad_light(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
@@ -208,12 +293,34 @@ async def validate_select_keypad_light(
     return {}
 
 
+async def get_edit_button_suggested_values(
+    handler: SchemaCommonFlowHandler,
+) -> dict[str, Any]:
+    """Return suggested values for button editing."""
+    keypad_idx: int = handler.flow_state["_idx"]
+    button_idx: int = handler.flow_state["_button_idx"]
+    return dict(handler.options[CONF_KEYPADS][keypad_idx][CONF_BUTTONS][button_idx])
+
+
 async def get_edit_light_suggested_values(
     handler: SchemaCommonFlowHandler,
 ) -> dict[str, Any]:
     """Return suggested values for light editing."""
     idx: int = handler.flow_state["_idx"]
     return dict(handler.options[CONF_DIMMERS][idx])
+
+
+async def validate_button_edit(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    """Update edited keypad or light."""
+    # Standard behavior is to merge the result with the options.
+    # In this case, we want to add a sub-item so we update the options directly.
+    keypad_idx: int = handler.flow_state["_idx"]
+    button_idx: int = handler.flow_state["_button_idx"]
+    buttons: list[dict] = handler.options[CONF_KEYPADS][keypad_idx][CONF_BUTTONS]
+    buttons[button_idx].update(user_input)
+    return {}
 
 
 async def validate_light_edit(
@@ -225,6 +332,22 @@ async def validate_light_edit(
     idx: int = handler.flow_state["_idx"]
     handler.options[CONF_DIMMERS][idx].update(user_input)
     return {}
+
+
+async def get_remove_button_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+    """Return schema for button removal."""
+    keypad_idx: int = handler.flow_state["_idx"]
+    buttons: list[dict] = handler.options[CONF_KEYPADS][keypad_idx][CONF_BUTTONS]
+    return vol.Schema(
+        {
+            vol.Required(CONF_INDEX): cv.multi_select(
+                {
+                    str(index): f"{config[CONF_NAME]} ({config[CONF_NUMBER]})"
+                    for index, config in enumerate(buttons)
+                },
+            )
+        }
+    )
 
 
 async def get_remove_keypad_light_schema(
@@ -241,6 +364,38 @@ async def get_remove_keypad_light_schema(
             )
         }
     )
+
+
+async def validate_remove_button(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    """Validate remove keypad or light."""
+    removed_indexes: set[str] = set(user_input[CONF_INDEX])
+
+    # Standard behavior is to merge the result with the options.
+    # In this case, we want to remove sub-items so we update the options directly.
+    entity_registry = er.async_get(handler.parent_handler.hass)
+    keypad_idx: int = handler.flow_state["_idx"]
+    keypad: dict = handler.options[CONF_KEYPADS][keypad_idx]
+    items: list[dict[str, Any]] = []
+    item: dict[str, Any]
+    for index, item in enumerate(keypad[CONF_BUTTONS]):
+        if str(index) not in removed_indexes:
+            items.append(item)
+        button_number = keypad[CONF_BUTTONS][index][CONF_NUMBER]
+        for domain in (BINARY_SENSOR_DOMAIN, BUTTON_DOMAIN):
+            if entity_id := entity_registry.async_get_entity_id(
+                domain,
+                DOMAIN,
+                calculate_unique_id(
+                    handler.options[CONF_CONTROLLER_ID],
+                    keypad[CONF_ADDR],
+                    button_number,
+                ),
+            ):
+                entity_registry.async_remove(entity_id)
+    keypad[CONF_BUTTONS] = items
+    return {}
 
 
 async def validate_remove_keypad_light(
@@ -279,6 +434,7 @@ DATA_SCHEMA_ADD_CONTROLLER = vol.Schema(
         **CONTROLLER_EDIT,
     }
 )
+DATA_SCHEMA_EDIT_CONTROLLER = vol.Schema(CONTROLLER_EDIT)
 DATA_SCHEMA_ADD_LIGHT = vol.Schema(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_LIGHT_NAME): TextSelector(),
@@ -292,12 +448,28 @@ DATA_SCHEMA_ADD_KEYPAD = vol.Schema(
         vol.Required(CONF_ADDR): TextSelector(),
     }
 )
+DATA_SCHEMA_ADD_BUTTON = vol.Schema(
+    {
+        vol.Optional(CONF_NAME, default=DEFAULT_BUTTON_NAME): TextSelector(),
+        vol.Required(CONF_NUMBER): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=1,
+                max=24,
+                step=1,
+                mode=selector.NumberSelectorMode.BOX,
+            ),
+        ),
+        **BUTTON_EDIT,
+    }
+)
+DATA_SCHEMA_EDIT_BUTTON = vol.Schema(BUTTON_EDIT)
 DATA_SCHEMA_EDIT_LIGHT = vol.Schema(LIGHT_EDIT)
 
 OPTIONS_FLOW = {
     "init": SchemaFlowMenuStep(
         [
             "add_keypad",
+            "select_edit_keypad",
             "remove_keypad",
             "add_light",
             "select_edit_light",
@@ -308,6 +480,40 @@ OPTIONS_FLOW = {
         DATA_SCHEMA_ADD_KEYPAD,
         suggested_values=None,
         validate_user_input=validate_add_keypad,
+    ),
+    "select_edit_keypad": SchemaFlowFormStep(
+        get_select_keypad_schema,
+        suggested_values=None,
+        validate_user_input=validate_select_keypad_light,
+        next_step="edit_keypad",
+    ),
+    "edit_keypad": SchemaFlowMenuStep(
+        [
+            "add_button",
+            "select_edit_button",
+            "remove_button",
+        ]
+    ),
+    "add_button": SchemaFlowFormStep(
+        DATA_SCHEMA_ADD_BUTTON,
+        suggested_values=None,
+        validate_user_input=validate_add_button,
+    ),
+    "select_edit_button": SchemaFlowFormStep(
+        get_select_button_schema,
+        suggested_values=None,
+        validate_user_input=validate_select_button,
+        next_step="edit_button",
+    ),
+    "edit_button": SchemaFlowFormStep(
+        DATA_SCHEMA_EDIT_BUTTON,
+        suggested_values=get_edit_button_suggested_values,
+        validate_user_input=validate_button_edit,
+    ),
+    "remove_button": SchemaFlowFormStep(
+        get_remove_button_schema,
+        suggested_values=None,
+        validate_user_input=validate_remove_button,
     ),
     "remove_keypad": SchemaFlowFormStep(
         partial(get_remove_keypad_light_schema, key=CONF_KEYPADS),
@@ -359,6 +565,15 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_KEYPADS: [
                 {
                     CONF_ADDR: keypad[CONF_ADDR],
+                    CONF_BUTTONS: [
+                        {
+                            CONF_LED: button[CONF_LED],
+                            CONF_NAME: button[CONF_NAME],
+                            CONF_NUMBER: button[CONF_NUMBER],
+                            CONF_RELEASE_DELAY: button[CONF_RELEASE_DELAY],
+                        }
+                        for button in keypad[CONF_BUTTONS]
+                    ],
                     CONF_NAME: keypad[CONF_NAME],
                 }
                 for keypad in config[CONF_KEYPADS]
@@ -433,6 +648,66 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_show_form(step_id="import_finish", data_schema=vol.Schema({}))
+
+    async def _validate_edit_controller(
+        self, user_input: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Validate controller setup."""
+        user_input[CONF_PORT] = int(user_input[CONF_PORT])
+
+        our_entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        assert our_entry
+        other_entries = self._async_current_entries()
+        for entry in other_entries:
+            if entry.entry_id == our_entry.entry_id:
+                continue
+            if (
+                user_input[CONF_HOST] == entry.options[CONF_HOST]
+                and user_input[CONF_PORT] == entry.options[CONF_PORT]
+            ):
+                raise SchemaFlowError("duplicated_host_port")
+
+        await _try_connection(user_input)
+        return user_input
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfigure flow."""
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        assert entry
+
+        errors = {}
+        suggested_values = {
+            CONF_HOST: entry.options[CONF_HOST],
+            CONF_PORT: entry.options[CONF_PORT],
+        }
+
+        if user_input:
+            suggested_values = {
+                CONF_HOST: user_input[CONF_HOST],
+                CONF_PORT: user_input[CONF_PORT],
+            }
+            try:
+                await self._validate_edit_controller(user_input)
+            except SchemaFlowError as err:
+                errors["base"] = str(err)
+            else:
+                new_options = entry.options | {
+                    CONF_HOST: user_input[CONF_HOST],
+                    CONF_PORT: user_input[CONF_PORT],
+                }
+                return self.async_update_reload_and_abort(
+                    entry, options=new_options, reason="reconfigure_successful"
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                DATA_SCHEMA_EDIT_CONTROLLER, suggested_values
+            ),
+            errors=errors,
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

@@ -1,4 +1,5 @@
 """Test the Somfy MyLink config flow."""
+
 from unittest.mock import patch
 
 import pytest

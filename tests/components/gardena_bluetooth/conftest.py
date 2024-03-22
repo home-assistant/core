@@ -1,4 +1,5 @@
 """Common fixtures for the Gardena Bluetooth tests."""
+
 from collections.abc import Awaitable, Callable, Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch

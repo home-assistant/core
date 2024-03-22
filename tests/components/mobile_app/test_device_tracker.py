@@ -1,4 +1,5 @@
 """Test mobile app device tracker."""
+
 from http import HTTPStatus
 
 from homeassistant.core import HomeAssistant

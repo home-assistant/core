@@ -1,4 +1,5 @@
 """Config flow for Antifurto365 iAlarm integration."""
+
 import logging
 
 from pyialarm import IAlarm

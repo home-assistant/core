@@ -1,4 +1,5 @@
 """Support for Enphase Envoy solar energy monitor."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -58,18 +59,11 @@ INVERTERS_KEY = "inverters"
 LAST_REPORTED_KEY = "last_reported"
 
 
-@dataclass(frozen=True)
-class EnvoyInverterRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EnvoyInverterSensorEntityDescription(SensorEntityDescription):
+    """Describes an Envoy inverter sensor entity."""
 
     value_fn: Callable[[EnvoyInverter], datetime.datetime | float]
-
-
-@dataclass(frozen=True)
-class EnvoyInverterSensorEntityDescription(
-    SensorEntityDescription, EnvoyInverterRequiredKeysMixin
-):
-    """Describes an Envoy inverter sensor entity."""
 
 
 INVERTER_SENSORS = (
@@ -91,19 +85,12 @@ INVERTER_SENSORS = (
 )
 
 
-@dataclass(frozen=True)
-class EnvoyProductionRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EnvoyProductionSensorEntityDescription(SensorEntityDescription):
+    """Describes an Envoy production sensor entity."""
 
     value_fn: Callable[[EnvoySystemProduction], int]
     on_phase: str | None
-
-
-@dataclass(frozen=True)
-class EnvoyProductionSensorEntityDescription(
-    SensorEntityDescription, EnvoyProductionRequiredKeysMixin
-):
-    """Describes an Envoy production sensor entity."""
 
 
 PRODUCTION_SENSORS = (
@@ -164,23 +151,16 @@ PRODUCTION_PHASE_SENSORS = {
         )
         for sensor in list(PRODUCTION_SENSORS)
     ]
-    for phase in range(0, 3)
+    for phase in range(3)
 }
 
 
-@dataclass(frozen=True)
-class EnvoyConsumptionRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EnvoyConsumptionSensorEntityDescription(SensorEntityDescription):
+    """Describes an Envoy consumption sensor entity."""
 
     value_fn: Callable[[EnvoySystemConsumption], int]
     on_phase: str | None
-
-
-@dataclass(frozen=True)
-class EnvoyConsumptionSensorEntityDescription(
-    SensorEntityDescription, EnvoyConsumptionRequiredKeysMixin
-):
-    """Describes an Envoy consumption sensor entity."""
 
 
 CONSUMPTION_SENSORS = (
@@ -241,24 +221,19 @@ CONSUMPTION_PHASE_SENSORS = {
         )
         for sensor in list(CONSUMPTION_SENSORS)
     ]
-    for phase in range(0, 3)
+    for phase in range(3)
 }
 
 
-@dataclass(frozen=True)
-class EnvoyCTRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EnvoyCTSensorEntityDescription(SensorEntityDescription):
+    """Describes an Envoy CT sensor entity."""
 
     value_fn: Callable[
         [EnvoyMeterData],
         int | float | str | CtType | CtMeterStatus | CtStatusFlags | CtState | None,
     ]
     on_phase: str | None
-
-
-@dataclass(frozen=True)
-class EnvoyCTSensorEntityDescription(SensorEntityDescription, EnvoyCTRequiredKeysMixin):
-    """Describes an Envoy CT sensor entity."""
 
 
 CT_NET_CONSUMPTION_SENSORS = (
@@ -351,7 +326,7 @@ CT_NET_CONSUMPTION_PHASE_SENSORS = {
         )
         for sensor in list(CT_NET_CONSUMPTION_SENSORS)
     ]
-    for phase in range(0, 3)
+    for phase in range(3)
 }
 
 CT_PRODUCTION_SENSORS = (
@@ -386,36 +361,108 @@ CT_PRODUCTION_PHASE_SENSORS = {
         )
         for sensor in list(CT_PRODUCTION_SENSORS)
     ]
-    for phase in range(0, 3)
+    for phase in range(3)
+}
+
+CT_STORAGE_SENSORS = (
+    EnvoyCTSensorEntityDescription(
+        key="lifetime_battery_discharged",
+        translation_key="lifetime_battery_discharged",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+        suggested_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
+        suggested_display_precision=3,
+        value_fn=lambda ct: ct.energy_delivered,
+        on_phase=None,
+    ),
+    EnvoyCTSensorEntityDescription(
+        key="lifetime_battery_charged",
+        translation_key="lifetime_battery_charged",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+        suggested_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
+        suggested_display_precision=3,
+        value_fn=lambda ct: ct.energy_received,
+        on_phase=None,
+    ),
+    EnvoyCTSensorEntityDescription(
+        key="battery_discharge",
+        translation_key="battery_discharge",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
+        suggested_display_precision=3,
+        value_fn=lambda ct: ct.active_power,
+        on_phase=None,
+    ),
+    EnvoyCTSensorEntityDescription(
+        key="storage_voltage",
+        translation_key="storage_ct_voltage",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        suggested_display_precision=1,
+        entity_registry_enabled_default=False,
+        value_fn=lambda ct: ct.voltage,
+        on_phase=None,
+    ),
+    EnvoyCTSensorEntityDescription(
+        key="storage_ct_metering_status",
+        translation_key="storage_ct_metering_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(CtMeterStatus),
+        entity_registry_enabled_default=False,
+        value_fn=lambda ct: ct.metering_status,
+        on_phase=None,
+    ),
+    EnvoyCTSensorEntityDescription(
+        key="storage_ct_status_flags",
+        translation_key="storage_ct_status_flags",
+        state_class=None,
+        entity_registry_enabled_default=False,
+        value_fn=lambda ct: 0 if ct.status_flags is None else len(ct.status_flags),
+        on_phase=None,
+    ),
+)
+
+
+CT_STORAGE_PHASE_SENSORS = {
+    (on_phase := PHASENAMES[phase]): [
+        replace(
+            sensor,
+            key=f"{sensor.key}_l{phase + 1}",
+            translation_key=f"{sensor.translation_key}_phase",
+            entity_registry_enabled_default=False,
+            on_phase=on_phase,
+            translation_placeholders={"phase_name": f"l{phase + 1}"},
+        )
+        for sensor in list(CT_STORAGE_SENSORS)
+    ]
+    for phase in range(3)
 }
 
 
-@dataclass(frozen=True)
-class EnvoyEnchargeRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EnvoyEnchargeSensorEntityDescription(SensorEntityDescription):
+    """Describes an Envoy Encharge sensor entity."""
 
     value_fn: Callable[[EnvoyEncharge], datetime.datetime | int | float]
-
-
-@dataclass(frozen=True)
-class EnvoyEnchargeSensorEntityDescription(
-    SensorEntityDescription, EnvoyEnchargeRequiredKeysMixin
-):
-    """Describes an Envoy Encharge sensor entity."""
 
 
 @dataclass(frozen=True)
 class EnvoyEnchargePowerRequiredKeysMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[EnvoyEnchargePower], int | float]
 
-
-@dataclass(frozen=True)
-class EnvoyEnchargePowerSensorEntityDescription(
-    SensorEntityDescription, EnvoyEnchargePowerRequiredKeysMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class EnvoyEnchargePowerSensorEntityDescription(SensorEntityDescription):
     """Describes an Envoy Encharge sensor entity."""
+
+    value_fn: Callable[[EnvoyEnchargePower], int | float]
 
 
 ENCHARGE_INVENTORY_SENSORS = (
@@ -455,18 +502,11 @@ ENCHARGE_POWER_SENSORS = (
 )
 
 
-@dataclass(frozen=True)
-class EnvoyEnpowerRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EnvoyEnpowerSensorEntityDescription(SensorEntityDescription):
+    """Describes an Envoy Encharge sensor entity."""
 
     value_fn: Callable[[EnvoyEnpower], datetime.datetime | int | float]
-
-
-@dataclass(frozen=True)
-class EnvoyEnpowerSensorEntityDescription(
-    SensorEntityDescription, EnvoyEnpowerRequiredKeysMixin
-):
-    """Describes an Envoy Encharge sensor entity."""
 
 
 ENPOWER_SENSORS = (
@@ -489,14 +529,12 @@ ENPOWER_SENSORS = (
 class EnvoyEnchargeAggregateRequiredKeysMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[EnvoyEnchargeAggregate], int]
 
-
-@dataclass(frozen=True)
-class EnvoyEnchargeAggregateSensorEntityDescription(
-    SensorEntityDescription, EnvoyEnchargeAggregateRequiredKeysMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class EnvoyEnchargeAggregateSensorEntityDescription(SensorEntityDescription):
     """Describes an Envoy Encharge sensor entity."""
+
+    value_fn: Callable[[EnvoyEnchargeAggregate], int]
 
 
 ENCHARGE_AGGREGATE_SENSORS = (
@@ -602,6 +640,21 @@ async def async_setup_entry(
             for use_phase, phase in phase_data.items()
             for description in CT_PRODUCTION_PHASE_SENSORS[use_phase]
             if phase.measurement_type == CtType.PRODUCTION
+        )
+    # Add storage CT entities
+    if ctmeter := envoy_data.ctmeter_storage:
+        entities.extend(
+            EnvoyStorageCTEntity(coordinator, description)
+            for description in CT_STORAGE_SENSORS
+            if ctmeter.measurement_type == CtType.STORAGE
+        )
+    # For each storage ct phase reported add storage ct entities
+    if phase_data := envoy_data.ctmeter_storage_phases:
+        entities.extend(
+            EnvoyStorageCTPhaseEntity(coordinator, description)
+            for use_phase, phase in phase_data.items()
+            for description in CT_STORAGE_PHASE_SENSORS[use_phase]
+            if phase.measurement_type == CtType.STORAGE
         )
 
     if envoy_data.inverters:
@@ -795,6 +848,40 @@ class EnvoyProductionCTPhaseEntity(EnvoySystemSensorEntity):
         if TYPE_CHECKING:
             assert self.entity_description.on_phase
         if (ctmeter := self.data.ctmeter_production_phases) is None:
+            return None
+        return self.entity_description.value_fn(
+            ctmeter[self.entity_description.on_phase]
+        )
+
+
+class EnvoyStorageCTEntity(EnvoySystemSensorEntity):
+    """Envoy net storage CT entity."""
+
+    entity_description: EnvoyCTSensorEntityDescription
+
+    @property
+    def native_value(
+        self,
+    ) -> int | float | str | CtType | CtMeterStatus | CtStatusFlags | None:
+        """Return the state of the CT sensor."""
+        if (ctmeter := self.data.ctmeter_storage) is None:
+            return None
+        return self.entity_description.value_fn(ctmeter)
+
+
+class EnvoyStorageCTPhaseEntity(EnvoySystemSensorEntity):
+    """Envoy net storage CT phase entity."""
+
+    entity_description: EnvoyCTSensorEntityDescription
+
+    @property
+    def native_value(
+        self,
+    ) -> int | float | str | CtType | CtMeterStatus | CtStatusFlags | None:
+        """Return the state of the CT phase sensor."""
+        if TYPE_CHECKING:
+            assert self.entity_description.on_phase
+        if (ctmeter := self.data.ctmeter_storage_phases) is None:
             return None
         return self.entity_description.value_fn(
             ctmeter[self.entity_description.on_phase]

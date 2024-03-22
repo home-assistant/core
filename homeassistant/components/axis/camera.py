@@ -1,4 +1,5 @@
 """Support for Axis camera streaming."""
+
 from urllib.parse import urlencode
 
 from homeassistant.components.camera import CameraEntityFeature
@@ -50,8 +51,8 @@ class AxisCamera(AxisEntity, MjpegCamera):
 
         MjpegCamera.__init__(
             self,
-            username=hub.username,
-            password=hub.password,
+            username=hub.config.username,
+            password=hub.config.password,
             mjpeg_url=self.mjpeg_source,
             still_image_url=self.image_source,
             authentication=HTTP_DIGEST_AUTHENTICATION,
@@ -75,27 +76,27 @@ class AxisCamera(AxisEntity, MjpegCamera):
         """
         image_options = self.generate_options(skip_stream_profile=True)
         self._still_image_url = (
-            f"http://{self.hub.host}:{self.hub.port}/axis-cgi"
+            f"http://{self.hub.config.host}:{self.hub.config.port}/axis-cgi"
             f"/jpg/image.cgi{image_options}"
         )
 
         mjpeg_options = self.generate_options()
         self._mjpeg_url = (
-            f"http://{self.hub.host}:{self.hub.port}/axis-cgi"
+            f"http://{self.hub.config.host}:{self.hub.config.port}/axis-cgi"
             f"/mjpg/video.cgi{mjpeg_options}"
         )
 
         stream_options = self.generate_options(add_video_codec_h264=True)
         self._stream_source = (
-            f"rtsp://{self.hub.username}:{self.hub.password}"
-            f"@{self.hub.host}/axis-media/media.amp{stream_options}"
+            f"rtsp://{self.hub.config.username}:{self.hub.config.password}"
+            f"@{self.hub.config.host}/axis-media/media.amp{stream_options}"
         )
 
         self.hub.additional_diagnostics["camera_sources"] = {
             "Image": self._still_image_url,
             "MJPEG": self._mjpeg_url,
             "Stream": (
-                f"rtsp://user:pass@{self.hub.host}/axis-media"
+                f"rtsp://user:pass@{self.hub.config.host}/axis-media"
                 f"/media.amp{stream_options}"
             ),
         }
@@ -125,12 +126,12 @@ class AxisCamera(AxisEntity, MjpegCamera):
 
         if (
             not skip_stream_profile
-            and self.hub.option_stream_profile != DEFAULT_STREAM_PROFILE
+            and self.hub.config.stream_profile != DEFAULT_STREAM_PROFILE
         ):
-            options_dict["streamprofile"] = self.hub.option_stream_profile
+            options_dict["streamprofile"] = self.hub.config.stream_profile
 
-        if self.hub.option_video_source != DEFAULT_VIDEO_SOURCE:
-            options_dict["camera"] = self.hub.option_video_source
+        if self.hub.config.video_source != DEFAULT_VIDEO_SOURCE:
+            options_dict["camera"] = self.hub.config.video_source
 
         if not options_dict:
             return ""

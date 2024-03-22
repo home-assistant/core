@@ -1,4 +1,5 @@
 """All constants related to the ZHA component."""
+
 from __future__ import annotations
 
 import enum

@@ -1,4 +1,5 @@
 """Slack platform for sensor component."""
+
 from __future__ import annotations
 
 from slack import WebClient

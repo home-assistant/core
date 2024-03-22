@@ -1,4 +1,5 @@
 """View to accept incoming websocket connection."""
+
 from __future__ import annotations
 
 import asyncio
@@ -11,7 +12,7 @@ from typing import TYPE_CHECKING, Any, Final
 
 from aiohttp import WSMsgType, web
 
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -49,7 +50,7 @@ class WebsocketAPIView(HomeAssistantView):
 
     async def get(self, request: web.Request) -> web.WebSocketResponse:
         """Handle an incoming websocket connection."""
-        return await WebSocketHandler(request.app["hass"], request).async_handle()
+        return await WebSocketHandler(request.app[KEY_HASS], request).async_handle()
 
 
 class WebSocketAdapter(logging.LoggerAdapter):
@@ -291,7 +292,7 @@ class WebSocketHandler:
         self._handle_task = asyncio.current_task()
 
         unsub_stop = hass.bus.async_listen(
-            EVENT_HOMEASSISTANT_STOP, self._async_handle_hass_stop
+            EVENT_HOMEASSISTANT_STOP, self._async_handle_hass_stop, run_immediately=True
         )
 
         writer = wsock._writer  # pylint: disable=protected-access

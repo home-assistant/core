@@ -1,4 +1,5 @@
 """Config flow for syncthing integration."""
+
 import aiosyncthing
 import voluptuous as vol
 

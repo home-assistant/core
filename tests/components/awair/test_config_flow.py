@@ -1,4 +1,5 @@
 """Define tests for the Awair config flow."""
+
 from typing import Any
 from unittest.mock import Mock, patch
 

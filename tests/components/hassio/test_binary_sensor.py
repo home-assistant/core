@@ -1,4 +1,5 @@
 """The tests for the hassio binary sensors."""
+
 import os
 from unittest.mock import patch
 

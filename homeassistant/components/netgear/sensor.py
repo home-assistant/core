@@ -1,4 +1,5 @@
 """Support for Netgear routers."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -279,30 +280,16 @@ async def async_setup_entry(
     coordinator_utilization = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR_UTIL]
     coordinator_link = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR_LINK]
 
-    # Router entities
-    router_entities = []
-
-    for description in SENSOR_TRAFFIC_TYPES:
-        router_entities.append(
-            NetgearRouterSensorEntity(coordinator_traffic, router, description)
+    async_add_entities(
+        NetgearRouterSensorEntity(coordinator, router, description)
+        for (coordinator, descriptions) in (
+            (coordinator_traffic, SENSOR_TRAFFIC_TYPES),
+            (coordinator_speed, SENSOR_SPEED_TYPES),
+            (coordinator_utilization, SENSOR_UTILIZATION),
+            (coordinator_link, SENSOR_LINK_TYPES),
         )
-
-    for description in SENSOR_SPEED_TYPES:
-        router_entities.append(
-            NetgearRouterSensorEntity(coordinator_speed, router, description)
-        )
-
-    for description in SENSOR_UTILIZATION:
-        router_entities.append(
-            NetgearRouterSensorEntity(coordinator_utilization, router, description)
-        )
-
-    for description in SENSOR_LINK_TYPES:
-        router_entities.append(
-            NetgearRouterSensorEntity(coordinator_link, router, description)
-        )
-
-    async_add_entities(router_entities)
+        for description in descriptions
+    )
 
     # Entities per network device
     tracked = set()
@@ -316,17 +303,15 @@ async def async_setup_entry(
         if not coordinator.data:
             return
 
-        new_entities = []
+        new_entities: list[NetgearSensorEntity] = []
 
         for mac, device in router.devices.items():
             if mac in tracked:
                 continue
 
             new_entities.extend(
-                [
-                    NetgearSensorEntity(coordinator, router, device, attribute)
-                    for attribute in sensors
-                ]
+                NetgearSensorEntity(coordinator, router, device, attribute)
+                for attribute in sensors
             )
             tracked.add(mac)
 

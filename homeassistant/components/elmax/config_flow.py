@@ -1,4 +1,5 @@
 """Config flow for elmax-cloud integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -423,7 +424,7 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
                     if p.hash == self._entry.data[CONF_ELMAX_PANEL_ID]
                 ]
                 if len(panels) < 1:
-                    raise NoOnlinePanelsError()
+                    raise NoOnlinePanelsError
 
                 # Verify the pin is still valid.
                 await client.get_panel_status(

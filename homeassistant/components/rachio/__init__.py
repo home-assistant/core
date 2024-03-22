@@ -1,4 +1,5 @@
 """Integration with the Rachio Iro sprinkler system controller."""
+
 import logging
 import secrets
 

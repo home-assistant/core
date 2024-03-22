@@ -1,4 +1,5 @@
 """Provide a base class for registries that use a normalized name index."""
+
 from collections import UserDict
 from collections.abc import ValuesView
 from dataclasses import dataclass

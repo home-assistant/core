@@ -1,4 +1,5 @@
 """Test the config flow for the Insteon integration."""
+
 from unittest.mock import patch
 
 import pytest

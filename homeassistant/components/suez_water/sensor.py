@@ -1,4 +1,5 @@
 """Sensor for Suez Water Consumption data."""
+
 from __future__ import annotations
 
 from datetime import timedelta

@@ -1,4 +1,5 @@
 """Support for Tasmota switches."""
+
 from typing import Any
 
 from hatasmota import relay as tasmota_relay

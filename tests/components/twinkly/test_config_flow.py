@@ -1,4 +1,5 @@
 """Tests for the config_flow of the twinly component."""
+
 from unittest.mock import patch
 
 from homeassistant import config_entries

@@ -1,4 +1,5 @@
 """Config flow for Plex."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -14,7 +15,7 @@ import requests.exceptions
 import voluptuous as vol
 
 from homeassistant.components import http
-from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.config_entries import (
     SOURCE_INTEGRATION_DISCOVERY,
@@ -443,7 +444,7 @@ class PlexAuthorizationCallbackView(HomeAssistantView):
 
     async def get(self, request):
         """Receive authorization confirmation."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
         await hass.config_entries.flow.async_configure(
             flow_id=request.query["flow_id"], user_input=None
         )

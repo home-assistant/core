@@ -1,4 +1,5 @@
 """Define tests for the NextDNS config flow."""
+
 from unittest.mock import patch
 
 from nextdns import ApiError, InvalidApiKeyError

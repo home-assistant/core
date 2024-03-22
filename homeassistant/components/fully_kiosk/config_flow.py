@@ -1,4 +1,5 @@
 """Config flow for Fully Kiosk Browser integration."""
+
 from __future__ import annotations
 
 import asyncio

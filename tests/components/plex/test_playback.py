@@ -1,4 +1,5 @@
 """Tests for Plex player playback methods/services."""
+
 from http import HTTPStatus
 from unittest.mock import Mock, patch
 

@@ -1,4 +1,5 @@
 """Fixtures for Waze Travel Time tests."""
+
 from unittest.mock import patch
 
 import pytest
