@@ -12,7 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription, _DeviceT
+from .coordinator import _DeviceT
+from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 
 
 @dataclass(frozen=True, kw_only=True)

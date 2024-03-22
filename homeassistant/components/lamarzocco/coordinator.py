@@ -5,13 +5,14 @@ from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
 from time import time
-from typing import Any, Generic
+from typing import Any, Generic, TypeVar
 
 from lmcloud.client_bluetooth import LaMarzoccoBluetoothClient
 from lmcloud.client_cloud import LaMarzoccoCloudClient
 from lmcloud.client_local import LaMarzoccoLocalClient
 from lmcloud.const import BT_MODEL_PREFIXES
 from lmcloud.exceptions import AuthFail, RequestNotSuccessful
+from lmcloud.lm_device import LaMarzoccoDevice
 from lmcloud.lm_machine import LaMarzoccoMachine
 
 from homeassistant.components.bluetooth import async_discovered_service_info
@@ -31,13 +32,14 @@ from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_USE_BLUETOOTH, DOMAIN
-from .entity import _DeviceT
 
 SCAN_INTERVAL = timedelta(seconds=30)
 FIRMWARE_UPDATE_INTERVAL = 3600
 STATISTICS_UPDATE_INTERVAL = 300
 
 _LOGGER = logging.getLogger(__name__)
+
+_DeviceT = TypeVar("_DeviceT", bound=LaMarzoccoDevice)
 
 
 class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None], Generic[_DeviceT]):

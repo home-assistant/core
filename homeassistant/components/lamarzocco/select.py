@@ -14,7 +14,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription, _ConfigT, _DeviceT
+from .coordinator import _DeviceT
+from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription, _ConfigT
 
 PBREWBREW_MODE_HA_TO_LM = {
     "disabled": PrebrewMode.DISABLED,

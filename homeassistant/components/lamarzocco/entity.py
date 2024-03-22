@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from typing import Generic, TypeVar
 
 from lmcloud.const import FirmwareType
-from lmcloud.lm_device import LaMarzoccoDevice
 from lmcloud.models import LaMarzoccoDeviceConfig
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -13,11 +12,10 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import LaMarzoccoUpdateCoordinator
+from .coordinator import LaMarzoccoUpdateCoordinator, _DeviceT
 
 _ConfigT = TypeVar("_ConfigT", bound=LaMarzoccoDeviceConfig)
 _CoordinatorT = TypeVar("_CoordinatorT", bound=LaMarzoccoUpdateCoordinator)
-_DeviceT = TypeVar("_DeviceT", bound=LaMarzoccoDevice)
 
 
 @dataclass(frozen=True, kw_only=True)
