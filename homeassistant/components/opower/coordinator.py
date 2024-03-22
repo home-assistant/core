@@ -134,9 +134,12 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                     None,
                     {"sum"},
                 )
-                cost_sum = cast(float, stats[cost_statistic_id][0]["sum"])
+                if cost_statistic_id in stats and stats[cost_statistic_id]:
+                    cost_sum = cast(float, stats[cost_statistic_id][0]["sum"])
+                else:
+                    cost_sum = 0
                 consumption_sum = cast(float, stats[consumption_statistic_id][0]["sum"])
-                last_stats_time = stats[cost_statistic_id][0]["start"]
+                last_stats_time = stats[consumption_statistic_id][0]["start"]
 
             cost_statistics = []
             consumption_statistics = []
