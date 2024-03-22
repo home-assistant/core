@@ -64,6 +64,10 @@ DATA_SETUP_DONE = "setup_done"
 # to setup a component started.
 DATA_SETUP_STARTED = "setup_started"
 
+# DATA_SETUP_RUNNING is a set [tuple[str, str | None, SetupPhase]] of integration, group, phase
+# to indicate a phase is currently running
+DATA_SETUP_RUNNING = "setup_running"
+
 # DATA_SETUP_TIME is a defaultdict[str, defaultdict[str | None, defaultdict[SetupPhases, float]]]
 # indicating how time was spent setting up a component and each group (config entry).
 DATA_SETUP_TIME = "setup_time"
@@ -684,18 +688,23 @@ def async_pause_setup(
         return
 
     started = time.monotonic()
-    integration, group, running_phase = running
     try:
         yield
     finally:
-        if not current_setup_group_phase.get():
+        setup_running: set[tuple[str, str | None, SetupPhases]]
+        setup_running = hass.data[DATA_SETUP_RUNNING]
+        integration, group, running_phase = running
+        if running not in setup_running:
             # If there is a pause inside of task that runs from the
             # the context manager will finish while waiting for the
             # task to finish so we do not want to subtract out the time
             # as it means the context var carried over but we did
             # not actually wait because it was a another task.
             _LOGGER.debug(
-                "Phase %s of %s (%s) finished while waiting", phase, integration, group
+                "Phase %s of %s (%s) finished while waiting",
+                running_phase,
+                integration,
+                group,
             )
             # no return here since we are in a finally and do not
             # want to swallow exceptions
@@ -758,16 +767,21 @@ def async_start_setup(
         yield
         return
 
+    setup_running: set[tuple[str, str | None, SetupPhases]]
+    setup_running = hass.data.setdefault(DATA_SETUP_RUNNING, set())
     started = time.monotonic()
-    current_setup_group_phase.set((integration, group, phase))
+    running_group_phase = (integration, group, phase)
+
+    current_setup_group_phase.set(running_group_phase)
     setup_started[current_group] = started
+    setup_running.add(running_group_phase)
 
     try:
         yield
     finally:
         time_taken = time.monotonic() - started
         del setup_started[current_group]
-        current_setup_group_phase.set(None)
+        setup_running.remove(running_group_phase)
         group_setup_times = _setup_times(hass)[integration][group]
         # We may see the phase multiple times if there are multiple
         # platforms, but we only care about the longest time.
