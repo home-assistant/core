@@ -50,9 +50,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hub_address, loop=hass.loop, websession=websession, api_version=api_version
     )
 
+    # default 15 second timeout for each call in upstream
     try:
         hub = Hub(pv_request)
-        await hub.query_firmware(timeout=10)
+        await hub.query_firmware()
         device_info = await async_get_device_info(hub)
     except HUB_EXCEPTIONS as err:
         raise ConfigEntryNotReady(
@@ -73,13 +74,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         rooms = Rooms(pv_request)
-        room_data: PowerviewData = await rooms.get_rooms(timeout=10)
+        room_data: PowerviewData = await rooms.get_rooms()
 
         scenes = Scenes(pv_request)
-        scene_data: PowerviewData = await scenes.get_scenes(timeout=10)
+        scene_data: PowerviewData = await scenes.get_scenes()
 
         shades = Shades(pv_request)
-        shade_data: PowerviewData = await shades.get_shades(timeout=10)
+        shade_data: PowerviewData = await shades.get_shades()
     except HUB_EXCEPTIONS as err:
         raise ConfigEntryNotReady(
             f"Connection error to PowerView hub {hub_address}: {err}"

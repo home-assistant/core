@@ -38,7 +38,7 @@ async def validate_input(hass: HomeAssistant, hub_address: str) -> dict[str, str
 
     try:
         hub = Hub(pv_request)
-        await hub.query_firmware(timeout=10)
+        await hub.query_firmware()
         device_info = await async_get_device_info(hub)
     except HUB_EXCEPTIONS as err:
         raise CannotConnect from err

@@ -36,7 +36,7 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
         """Fetch data from shade endpoint."""
 
         try:
-            shade_entries = await self.shades.get_shades(timeout=10)
+            shade_entries = await self.shades.get_shades()
         except PvApiMaintenance as error:
             # hub is undergoing maintenance, pause polling
             raise UpdateFailed(error) from error
