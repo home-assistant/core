@@ -1,4 +1,5 @@
 """Cover integration microBees."""
+
 from typing import Any
 
 from microBeesPy import Actuator
