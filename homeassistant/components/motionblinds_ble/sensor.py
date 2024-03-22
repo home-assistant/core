@@ -137,7 +137,7 @@ class BatterySensor(MotionblindsBLESensorEntity):
 
     @callback
     def async_update_battery_percentage(self, battery_percentage: int | None) -> None:
-        """Update the battery sensor percentage and icon."""
+        """Update the battery sensor value and icon."""
         if battery_percentage is None:
             # Battery percentage is unknown
             self._attr_native_value = None
