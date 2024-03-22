@@ -42,14 +42,14 @@ PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True)
-class GenericSensorEntityDescription(SensorEntityDescription):
+class MotionblindsBLESensorEntityDescription(SensorEntityDescription):
     """Entity description of a cover entity with default values."""
 
     native_value: str | None = None
 
 
-SENSOR_TYPES: dict[str, GenericSensorEntityDescription] = {
-    ATTR_BATTERY: GenericSensorEntityDescription(
+SENSOR_TYPES: dict[str, MotionblindsBLESensorEntityDescription] = {
+    ATTR_BATTERY: MotionblindsBLESensorEntityDescription(
         key=ATTR_BATTERY,
         translation_key=ATTR_BATTERY,
         native_unit_of_measurement=PERCENTAGE,
@@ -59,7 +59,7 @@ SENSOR_TYPES: dict[str, GenericSensorEntityDescription] = {
         has_entity_name=True,
         native_value=None,
     ),
-    ATTR_CONNECTION: GenericSensorEntityDescription(
+    ATTR_CONNECTION: MotionblindsBLESensorEntityDescription(
         key=ATTR_CONNECTION,
         translation_key=ATTR_CONNECTION,
         icon=ICON_CONNECTION,
@@ -69,7 +69,7 @@ SENSOR_TYPES: dict[str, GenericSensorEntityDescription] = {
         has_entity_name=True,
         native_value=MotionConnectionType.DISCONNECTED.value,
     ),
-    ATTR_CALIBRATION: GenericSensorEntityDescription(
+    ATTR_CALIBRATION: MotionblindsBLESensorEntityDescription(
         key=ATTR_CALIBRATION,
         translation_key=ATTR_CALIBRATION,
         icon=ICON_CALIBRATION,
@@ -78,7 +78,7 @@ SENSOR_TYPES: dict[str, GenericSensorEntityDescription] = {
         has_entity_name=True,
         native_value=None,
     ),
-    ATTR_SIGNAL_STRENGTH: GenericSensorEntityDescription(
+    ATTR_SIGNAL_STRENGTH: MotionblindsBLESensorEntityDescription(
         key=ATTR_SIGNAL_STRENGTH,
         translation_key=ATTR_SIGNAL_STRENGTH,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
@@ -117,7 +117,7 @@ class GenericSensor(MotionblindsBLEEntity, SensorEntity):
         self,
         device: MotionDevice,
         entry: ConfigEntry,
-        entity_description: GenericSensorEntityDescription,
+        entity_description: MotionblindsBLESensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         _LOGGER.debug(
@@ -138,11 +138,11 @@ class BatterySensor(GenericSensor):
         self,
         device: MotionDevice,
         entry: ConfigEntry,
-        entity_description: GenericSensorEntityDescription,
+        entity_description: MotionblindsBLESensorEntityDescription,
     ) -> None:
         """Initialize the battery sensor."""
         super().__init__(device, entry, entity_description)
-        self._device.register_battery_callback(self.async_update_battery_percentage)
+        self.device.register_battery_callback(self.async_update_battery_percentage)
 
     @callback
     def async_update_battery_percentage(self, battery_percentage: int | None) -> None:
@@ -188,11 +188,11 @@ class ConnectionSensor(GenericSensor):
         self,
         device: MotionDevice,
         entry: ConfigEntry,
-        entity_description: GenericSensorEntityDescription,
+        entity_description: MotionblindsBLESensorEntityDescription,
     ) -> None:
         """Initialize the connection sensor."""
         super().__init__(device, entry, entity_description)
-        self._device.register_connection_callback(self.async_update_connection)
+        self.device.register_connection_callback(self.async_update_connection)
 
     @callback
     def async_update_connection(
@@ -210,11 +210,11 @@ class CalibrationSensor(GenericSensor):
         self,
         device: MotionDevice,
         entry: ConfigEntry,
-        entity_description: GenericSensorEntityDescription,
+        entity_description: MotionblindsBLESensorEntityDescription,
     ) -> None:
         """Initialize the calibration sensor."""
         super().__init__(device, entry, entity_description)
-        self._device.register_calibration_callback(self.async_update_calibration)
+        self.device.register_calibration_callback(self.async_update_calibration)
 
     @callback
     def async_update_calibration(
@@ -234,17 +234,15 @@ class SignalStrengthSensor(GenericSensor):
         self,
         device: MotionDevice,
         entry: ConfigEntry,
-        entity_description: GenericSensorEntityDescription,
+        entity_description: MotionblindsBLESensorEntityDescription,
     ) -> None:
         """Initialize the signal strength sensor."""
         super().__init__(device, entry, entity_description)
-        self._device.register_signal_strength_callback(
-            self.async_update_signal_strength
-        )
+        self.device.register_signal_strength_callback(self.async_update_signal_strength)
 
     async def async_added_to_hass(self) -> None:
         """Run when the signal strength sensor about to be added."""
-        self.async_update_signal_strength(self._device.rssi)
+        self.async_update_signal_strength(self.device.rssi)
 
     @callback
     def async_update_signal_strength(self, signal_strength: int | None) -> None:
