@@ -7,20 +7,14 @@ from typing import Any
 from ttn_client import TTNAuthError, TTNClient
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    HANDLERS,
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-)
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 
 from .const import CONF_API_KEY, CONF_APP_ID, CONF_HOSTNAME, DOMAIN, TTN_API_HOSTNAME
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@HANDLERS.register(DOMAIN)
-class TTNFlowHandler(ConfigFlow):
+class TTNFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1

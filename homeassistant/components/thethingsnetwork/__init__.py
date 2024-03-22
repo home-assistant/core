@@ -9,7 +9,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_APP_ID, CONF_HOSTNAME, DOMAIN, PLATFORMS, TTN_API_HOSTNAME
+from .const import (
+    CONF_APP_ID,
+    CONF_HOSTNAME,
+    DOMAIN,
+    ENTRY_DATA_COORDINATOR,
+    PLATFORMS,
+    TTN_API_HOSTNAME,
+)
 from .coordinator import TTNCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,16 +60,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     # Create coordinator to fetch TTN updates
-    entry.coordinator = coordinator = TTNCoordinator(hass, entry)
+    coordinator = TTNCoordinator(hass, entry)
+    hass.data.setdefault(DOMAIN, {}).setdefault(entry.entry_id, {})[
+        ENTRY_DATA_COORDINATOR
+    ] = coordinator
 
     # Trigger the creation of entities for each supported platform
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Fetch all existing values in the TTN storage DB - NOTE: the free TTN only keeps 24 hours
     await coordinator.async_config_entry_first_refresh()
-
-    # Register callback for entry updates (when options changed in ConfigFlow)
-    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
 
@@ -79,13 +86,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Unload entities created for each supported platform
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        pass
+        del hass.data[DOMAIN][entry.entry_id]
     return True
-
-
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
-
-    _LOGGER.info("Settings changed -> reloading integration")
-    await async_unload_entry(hass, entry)
-    await async_setup_entry(hass, entry)

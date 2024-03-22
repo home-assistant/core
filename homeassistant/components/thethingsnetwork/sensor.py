@@ -1,17 +1,17 @@
 """The Things Network's integration sensors."""
+import logging
 
-from collections.abc import Callable
-
-from ttn_client import TTNBaseValue, TTNSensorValue
+from ttn_client import TTNSensorValue
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import OPTIONS_FIELD_ENTITY_TYPE_SENSOR
-from .entity import TTN_Entity
-from .entry_settings import TTN_EntrySettings
+from .const import DOMAIN, ENTRY_DATA_COORDINATOR
+from .entity import TTNEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -19,40 +19,34 @@ async def async_setup_entry(
 ) -> None:
     """Add entities for TTN."""
 
-    coordinator = TTN_EntrySettings(entry).get_coordinator()
-    coordinator.register_platform_entity_class(TtnDataSensor, async_add_entities)
+    coordinator = hass.data[DOMAIN][entry.entry_id][ENTRY_DATA_COORDINATOR]
+
+    sensors: dict[str, TtnDataSensor] = {}
+
+    def _async_measurement_listener() -> None:
+        data = coordinator.data
+        new_sensors = {
+            unique_id: TtnDataSensor(
+                coordinator.config_entry,
+                coordinator,
+                ttn_value,
+            )
+            for device_id, device_uplinks in data.items()
+            for field_id, ttn_value in device_uplinks.items()
+            for unique_id in set(TtnDataSensor.get_unique_id(device_id, field_id))
+            if unique_id not in sensors and isinstance(ttn_value, TTNSensorValue)
+        }
+        async_add_entities(new_sensors.values())
+        sensors.update(new_sensors)
+
+    coordinator.async_add_listener(_async_measurement_listener)
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_remove_entity: Callable[[str], None]
-) -> None:
-    """Handle removal of an entry."""
-
-
-class TtnDataSensor(TTN_Entity, SensorEntity):
+class TtnDataSensor(TTNEntity, SensorEntity):
     """Represents a TTN Home Assistant Sensor."""
-
-    @staticmethod
-    def manages_uplink(
-        entrySettings: TTN_EntrySettings, ttn_value: TTNBaseValue
-    ) -> bool:
-        """Check if this class maps to this ttn_value."""
-
-        entity_type = entrySettings.get_entity_type(
-            ttn_value.device_id, ttn_value.field_id
-        )
-
-        if entity_type:
-            return entity_type == OPTIONS_FIELD_ENTITY_TYPE_SENSOR
-        return isinstance(ttn_value, TTNSensorValue)
 
     @property
     def native_value(self) -> float | int | str:
         """Return the state of the entity."""
         value: float | int | str = self._ttn_value.value
         return value
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement

@@ -1,35 +1,26 @@
 """Support for The Things Network entities."""
 
-from abc import ABC, abstractmethod
+from abc import ABC
 import logging
 from typing import TYPE_CHECKING, Optional
 
-from ttn_client import TTNBaseValue, TTNSensorValue
+from ttn_client import TTNSensorValue
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 if TYPE_CHECKING:
-    from homeassistant.config_entries import ConfigEntry
-
     from .coordinator import TTNCoordinator
 
-from .const import (
-    CONF_APP_ID,
-    OPTIONS_DEVICE_NAME,
-    OPTIONS_FIELD_ICON,
-    OPTIONS_FIELD_NAME,
-    OPTIONS_FIELD_PICTURE,
-    OPTIONS_FIELD_UNIT_MEASUREMENT,
-)
-from .entry_settings import TTN_EntrySettings
+from .const import CONF_APP_ID, DOMAIN, ENTRY_DATA_ENTITIES
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class TTN_Entity(CoordinatorEntity, Entity, ABC):
+class TTNEntity(CoordinatorEntity["TTNCoordinator"], Entity, ABC):
     """Representation of a The Things Network Data Storage sensor."""
 
     @staticmethod
@@ -47,46 +38,13 @@ class TTN_Entity(CoordinatorEntity, Entity, ABC):
 
         self.__entry = entry
         self._ttn_value = ttn_value
+        self.__name = f"{self.device_name} {self.field_id}"
 
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator, context=self.unique_id)
 
-        # Values from options
-        self._unit_of_measurement = None
-        self.__icon = None
-        self.__picture = None
-
-        self.__refresh_names()
-
-    # -----------------------------------------------------------#
-    # Methods to keep list of entities
-    #
-    # NOTE: the entity_registry helper cannot be used here as it
-    # returns instances created in the past, even if they are
-    # not longer available in TTN
-    # -----------------------------------------------------------#
-
-    async def async_added_to_hass(self) -> None:
-        """Remember added entity - see exits method below."""
-
-        await super().async_added_to_hass()
-        TTN_EntrySettings(self.__entry).get_entities()[self.unique_id] = self
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Remove entity from hass."""
-
-        await super().async_will_remove_from_hass()
-        TTN_EntrySettings(self.__entry).get_entities().pop(self.unique_id)
-
-    @staticmethod
-    def exits(entry: "ConfigEntry", device_id: str, field_id: str) -> bool:
-        """Check if an entry for this device/field already exists in HASS.
-
-        It is used to avoid creating duplicates while still allowing adding new devices/fields without restarting the adapter.
-        """
-        return (
-            TTN_Entity.get_unique_id(device_id, field_id)
-            in TTN_EntrySettings(entry).get_entities()
+        self._entities = coordinator.hass.data[DOMAIN][entry.entry_id].setdefault(
+            ENTRY_DATA_ENTITIES, {}
         )
 
     # ---------------
@@ -143,16 +101,6 @@ class TTN_Entity(CoordinatorEntity, Entity, ABC):
         )
 
     @property
-    def icon(self) -> Optional[str]:
-        """Return the icon to use in the frontend, if any."""
-        return self.__icon
-
-    @property
-    def entity_picture(self) -> Optional[str]:
-        """Return the entity picture to use in the frontend, if any."""
-        return self.__picture
-
-    @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return True
@@ -173,31 +121,4 @@ class TTN_Entity(CoordinatorEntity, Entity, ABC):
     @property
     def device_name(self) -> str:
         """Return device_name."""
-        return self.__device_name
-
-    @staticmethod
-    @abstractmethod
-    def manages_uplink(
-        entrySettings: TTN_EntrySettings, ttn_value: TTNBaseValue
-    ) -> bool:
-        """Check if this class maps to this ttn_value."""
-
-    def __refresh_names(self) -> None:
-        device_name = self.device_id
-        field_name = self.field_id
-
-        # Device options
-        device_opts = TTN_EntrySettings(self.__entry).get_device_options(self.device_id)
-        device_name = device_opts.get(OPTIONS_DEVICE_NAME, device_name)
-
-        # Field options
-        field_opts = TTN_EntrySettings(self.__entry).get_field_options(
-            self.device_id, self.field_id
-        )
-        field_name = field_opts.get(OPTIONS_FIELD_NAME, field_name)
-        self._unit_of_measurement = field_opts.get(OPTIONS_FIELD_UNIT_MEASUREMENT, None)
-        self.__icon = field_opts.get(OPTIONS_FIELD_ICON, None)
-        self.__picture = field_opts.get(OPTIONS_FIELD_PICTURE, None)
-
-        self.__device_name = device_name
-        self.__name = f"{device_name} {field_name}"
+        return self.device_id
