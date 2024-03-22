@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from typing import Any
 
 from lmcloud.const import BoilerType
+from lmcloud.lm_machine import LaMarzoccoMachine
+from lmcloud.models import LaMarzoccoMachineConfig
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -12,7 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import LaMarzoccoMachineUpdateCoordinator
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 
 
@@ -23,10 +24,8 @@ class LaMarzoccoSwitchEntityDescription(
 ):
     """Description of a La Marzocco Switch."""
 
-    control_fn: Callable[
-        [LaMarzoccoMachineUpdateCoordinator, bool], Coroutine[Any, Any, bool]
-    ]
-    is_on_fn: Callable[[LaMarzoccoMachineUpdateCoordinator], bool]
+    control_fn: Callable[[LaMarzoccoMachine, bool], Coroutine[Any, Any, bool]]
+    is_on_fn: Callable[[LaMarzoccoMachineConfig], bool]
 
 
 ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
@@ -34,16 +33,14 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
         key="main",
         translation_key="main",
         name=None,
-        control_fn=lambda coordinator, state: coordinator.device.set_power(state),
-        is_on_fn=lambda coordinator: coordinator.device.config.turned_on,
+        control_fn=lambda machine, state: machine.set_power(state),
+        is_on_fn=lambda config: config.turned_on,
     ),
     LaMarzoccoSwitchEntityDescription(
         key="steam_boiler_enable",
         translation_key="steam_boiler",
-        control_fn=lambda coordinator, state: coordinator.device.set_steam(state),
-        is_on_fn=lambda coordinator: coordinator.device.config.boilers[
-            BoilerType.STEAM
-        ].enabled,
+        control_fn=lambda machine, state: machine.set_steam(state),
+        is_on_fn=lambda config: config.boilers[BoilerType.STEAM].enabled,
     ),
 )
 
@@ -70,15 +67,15 @@ class LaMarzoccoSwitchEntity(LaMarzoccoEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
-        await self.entity_description.control_fn(self.coordinator, True)
+        await self.entity_description.control_fn(self.coordinator.device, True)
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
-        await self.entity_description.control_fn(self.coordinator, False)
+        await self.entity_description.control_fn(self.coordinator.device, False)
         self.async_write_ha_state()
 
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
-        return self.entity_description.is_on_fn(self.coordinator)
+        return self.entity_description.is_on_fn(self.coordinator.device.config)

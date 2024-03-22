@@ -29,7 +29,7 @@ ENTITIES: tuple[LaMarzoccoButtonEntityDescription, ...] = (
     LaMarzoccoButtonEntityDescription(
         key="start_backflush",
         translation_key="start_backflush",
-        press_fn=lambda lm: lm.start_backflush(),
+        press_fn=lambda machine: machine.start_backflush(),
     ),
 )
 
