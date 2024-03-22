@@ -65,10 +65,15 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         """Return hvac operation ie. heat, cool, dry, off mode."""
 
         if (
-            state := self.zone_control_device.states[
-                OverkizState.IO_PASS_APC_OPERATING_MODE
-            ]
-        ) is not None and (value := state.value_as_str) is not None:
+            self.zone_control_device is not None
+            and (
+                state := self.zone_control_device.states[
+                    OverkizState.IO_PASS_APC_OPERATING_MODE
+                ]
+            )
+            is not None
+            and (value := state.value_as_str) is not None
+        ):
             return OVERKIZ_TO_HVAC_MODE[value]
         return HVACMode.OFF
 
