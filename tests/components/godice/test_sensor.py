@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import godice
-import pytest
 
 from homeassistant.components.godice.const import (
     DATA_DISCONNECTED_BY_REQUEST_FLAG,
@@ -23,28 +22,11 @@ from homeassistant.util import dt as dt_util
 
 from . import GODICE_DEVICE_SERVICE_INFO
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import async_fire_time_changed
 
 
-@pytest.fixture
-def fake_dice():
-    """Mock a real GoDice."""
-    return AsyncMock(godice.Dice)
-
-
-async def test_sensor_reading(hass: HomeAssistant, fake_dice) -> None:
+async def test_sensor_reading(hass: HomeAssistant, config_entry, fake_dice) -> None:
     """Verify data provided by GoDice is stored in HA state."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=GODICE_DEVICE_SERVICE_INFO.address,
-        data={
-            "name": GODICE_DEVICE_SERVICE_INFO.name,
-            "address": GODICE_DEVICE_SERVICE_INFO.address,
-            "shell": godice.Shell.D6.name,
-        },
-    )
-    config_entry.add_to_hass(hass)
-
     rolled_number_cb = None
 
     def store_rolled_number_cb(cb):
@@ -123,19 +105,10 @@ async def test_sensor_reading(hass: HomeAssistant, fake_dice) -> None:
     await hass.async_block_till_done()
 
 
-async def test_reloading_on_connection_lost(hass: HomeAssistant, fake_dice) -> None:
+async def test_reloading_on_connection_lost(
+    hass: HomeAssistant, config_entry, fake_dice
+) -> None:
     """Verify integration gets reloaded when connection to GoDice is lost."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=GODICE_DEVICE_SERVICE_INFO.address,
-        data={
-            "name": GODICE_DEVICE_SERVICE_INFO.name,
-            "address": GODICE_DEVICE_SERVICE_INFO.address,
-            "shell": godice.Shell.D6.name,
-        },
-    )
-    config_entry.add_to_hass(hass)
-
     with patch(
         "godice.create",
         return_value=fake_dice,
