@@ -136,37 +136,34 @@ class BatterySensor(MotionblindsBLESensorEntity):
         self.device.register_battery_callback(self.async_update_battery)
 
     @callback
-    def async_update_battery(self, battery_percentage: int | None) -> None:
+    def async_update_battery(
+        self,
+        battery_percentage: int | None,
+        is_charging: bool | None,
+        is_wired: bool | None,
+    ) -> None:
         """Update the battery sensor value and icon."""
+        self._attr_native_value = (
+            str(battery_percentage) if battery_percentage is not None else None
+        )
         if battery_percentage is None:
             # Battery percentage is unknown
-            self._attr_native_value = None
             self._attr_icon = "mdi:battery-unknown"
-        elif battery_percentage == 0xFF:
+        elif is_wired is True:
             # Motor is wired and does not have a battery
-            self._attr_native_value = "100"
             self._attr_icon = "mdi:power-plug-outline"
+        elif battery_percentage > 90 and not is_charging:
+            # Full battery icon if battery > 90% and not charging
+            self._attr_icon = "mdi:battery"
+        elif battery_percentage <= 5 and not is_charging:
+            # Empty battery icon with alert if battery <= 5% and not charging
+            self._attr_icon = "mdi:battery-alert-variant-outline"
         else:
-            is_charging = bool(battery_percentage & 0x80)
-            battery_percentage = battery_percentage & 0x7F
-            battery_percentage_multiple_ten = ceil(battery_percentage / 10) * 10
-
-            self._attr_native_value = (
-                str(battery_percentage) if battery_percentage is not None else None
+            battery_icon_prefix = (
+                "mdi:battery-charging" if is_charging else "mdi:battery"
             )
-            if battery_percentage_multiple_ten == 100 and not is_charging:
-                # Full battery icon if battery > 95% and not charging
-                self._attr_icon = "mdi:battery"
-            elif battery_percentage <= 5 and not is_charging:
-                # Empty battery icon with alert if battery <= 5% and not charging
-                self._attr_icon = "mdi:battery-alert-variant-outline"
-            else:
-                battery_icon_prefix = (
-                    "mdi:battery-charging" if is_charging else "mdi:battery"
-                )
-                self._attr_icon = (
-                    f"{battery_icon_prefix}-{battery_percentage_multiple_ten}"
-                )
+            battery_percentage_multiple_ten = ceil(battery_percentage / 10) * 10
+            self._attr_icon = f"{battery_icon_prefix}-{battery_percentage_multiple_ten}"
         self.async_write_ha_state()
 
 
