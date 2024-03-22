@@ -1858,7 +1858,7 @@ class ConfigEntries:
         await asyncio.gather(
             *(
                 create_eager_task(
-                    self.async_forward_entry_setup(entry, platform, False),
+                    self._async_forward_entry_setup(entry, platform, False),
                     name=f"config entry forward setup {entry.title} {entry.domain} {entry.entry_id} {platform}",
                 )
                 for platform in platforms
@@ -1866,7 +1866,7 @@ class ConfigEntries:
         )
 
     async def async_forward_entry_setup(
-        self, entry: ConfigEntry, domain: Platform | str, preload_platform: bool = True
+        self, entry: ConfigEntry, domain: Platform | str
     ) -> bool:
         """Forward the setup of an entry to a different component.
 
@@ -1874,6 +1874,12 @@ class ConfigEntries:
         component also has related platforms, the component will have to
         forward the entry to be setup by that component.
         """
+        return await self._async_forward_entry_setup(entry, domain, True)
+
+    async def _async_forward_entry_setup(
+        self, entry: ConfigEntry, domain: Platform | str, preload_platform: bool
+    ) -> bool:
+        """Forward the setup of an entry to a different component."""
         # Setup Component if not set up yet
         if domain not in self.hass.config.components:
             with async_pause_setup(self.hass, SetupPhases.WAIT_BASE_PLATFORM_SETUP):
