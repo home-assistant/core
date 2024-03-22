@@ -46,7 +46,7 @@ async def test_camera(hass: HomeAssistant, setup_config_entry) -> None:
     )
 
 
-@pytest.mark.parametrize("options", [{CONF_STREAM_PROFILE: "profile_1"}])
+@pytest.mark.parametrize("config_entry_options", [{CONF_STREAM_PROFILE: "profile_1"}])
 async def test_camera_with_stream_profile(
     hass: HomeAssistant, setup_config_entry
 ) -> None:
