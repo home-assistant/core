@@ -149,7 +149,7 @@ class BatterySensor(MotionblindsBLESensorEntity):
         if battery_percentage is None:
             # Battery percentage is unknown
             self._attr_icon = "mdi:battery-unknown"
-        elif is_wired is True:
+        elif is_wired:
             # Motor is wired and does not have a battery
             self._attr_icon = "mdi:power-plug-outline"
         elif battery_percentage > 90 and not is_charging:
