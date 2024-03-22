@@ -34,7 +34,7 @@ PARALLEL_UPDATES = 0
 
 @dataclass(frozen=True)
 class CommandButtonEntityDescription(ButtonEntityDescription):
-    """Entity description of a button entity that executes a command upon being pressed."""
+    """Entity description of a button entity with command attribute."""
 
     command: Callable[[MotionDevice], Coroutine[Any, Any, None]] | None = None
 
@@ -70,7 +70,7 @@ BUTTON_TYPES: dict[str, CommandButtonEntityDescription] = {
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up buttons based on a config entry."""
+    """Set up button entities based on a config entry."""
 
     device: MotionDevice = hass.data[DOMAIN][entry.entry_id]
 
@@ -83,7 +83,7 @@ async def async_setup_entry(
 
 
 class GenericCommandButton(MotionblindsBLEEntity, ButtonEntity):
-    """Representation of a command button."""
+    """Representation of a command button entity."""
 
     entity_description: CommandButtonEntityDescription
 
@@ -106,4 +106,4 @@ class GenericCommandButton(MotionblindsBLEEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Handle the button press."""
         if callable(self.entity_description.command):
-            await self.entity_description.command(self._device)
+            await self.entity_description.command(self.device)
