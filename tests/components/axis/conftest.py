@@ -117,7 +117,7 @@ def default_request_fixture(
 ) -> Callable[[str], None]:
     """Mock default Vapix requests responses."""
 
-    def __mock_default_requests(host):
+    def __mock_default_requests(host: str) -> None:
         respx_mock(base_url=f"http://{host}:80")
 
         if host != DEFAULT_HOST:
