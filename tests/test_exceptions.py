@@ -244,7 +244,7 @@ async def test_home_assistant_error_subclass(hass: HomeAssistant) -> None:
             )
         assert str(exc.value) == "Bla from cache"
 
-        # A subclass with an ExceptionGroup subclass requires a message to be passed.
+        # A subclass with an ExceptionGroup parent requires a message to be passed.
         # As we pass args, we will not generate the message.
         # The __str__ constructor defaults to that of the super class.
         with pytest.raises(HomeAssistantError) as exc:
