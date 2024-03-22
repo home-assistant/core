@@ -33,28 +33,28 @@ PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
-class CommandButtonEntityDescription(ButtonEntityDescription):
+class MotionblindsBLEButtonEntityDescription(ButtonEntityDescription):
     """Entity description of a button entity with command attribute."""
 
     command: Callable[[MotionDevice], Coroutine[Any, Any, None]] | None = None
 
 
-BUTTON_TYPES: dict[str, CommandButtonEntityDescription] = {
-    ATTR_CONNECT: CommandButtonEntityDescription(
+BUTTON_TYPES: dict[str, MotionblindsBLEButtonEntityDescription] = {
+    ATTR_CONNECT: MotionblindsBLEButtonEntityDescription(
         key=ATTR_CONNECT,
         translation_key=ATTR_CONNECT,
         icon=ICON_CONNECT,
         entity_category=EntityCategory.CONFIG,
         command=lambda device: device.connect(),
     ),
-    ATTR_DISCONNECT: CommandButtonEntityDescription(
+    ATTR_DISCONNECT: MotionblindsBLEButtonEntityDescription(
         key=ATTR_DISCONNECT,
         translation_key=ATTR_DISCONNECT,
         icon=ICON_DISCONNECT,
         entity_category=EntityCategory.CONFIG,
         command=lambda device: device.disconnect(),
     ),
-    ATTR_FAVORITE: CommandButtonEntityDescription(
+    ATTR_FAVORITE: MotionblindsBLEButtonEntityDescription(
         key=ATTR_FAVORITE,
         translation_key=ATTR_FAVORITE,
         icon=ICON_FAVORITE,
@@ -73,7 +73,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            CommandButton(
+            MotionblindsBLEButtonEntity(
                 device,
                 entry,
                 entity_description,
@@ -84,10 +84,10 @@ async def async_setup_entry(
     )
 
 
-class CommandButton(MotionblindsBLEEntity, ButtonEntity):
+class MotionblindsBLEButtonEntity(MotionblindsBLEEntity, ButtonEntity):
     """Representation of a command button entity."""
 
-    entity_description: CommandButtonEntityDescription
+    entity_description: MotionblindsBLEButtonEntityDescription
 
     async def async_added_to_hass(self) -> None:
         """Log button entity information."""
