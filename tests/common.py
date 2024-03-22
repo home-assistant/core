@@ -1649,10 +1649,13 @@ def extract_stack_to_frame(extract_stack: list[Mock]) -> FrameType:
     return top_frame
 
 
+_EntityT = TypeVar("_EntityT", bound=MockEntity | MockToggleEntity)
+
+
 def setup_test_component_platform(
     hass: HomeAssistant,
     domain: str,
-    entities: list[MockEntity],
+    entities: list[_EntityT],
     from_config_entry: bool = False,
 ) -> MockPlatform:
     """Mock a test component platform for tests."""
