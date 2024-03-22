@@ -41,7 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MotionblindsBLESensorEntityDescription(SensorEntityDescription):
     """Entity description of a sensor entity with native_value attribute."""
 
