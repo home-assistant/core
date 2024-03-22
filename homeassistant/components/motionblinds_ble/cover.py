@@ -72,7 +72,7 @@ async def async_setup_entry(
     entity_description: MotionblindsBLECoverEntityDescription = (
         BLIND_TYPE_TO_ENTITY_DESCRIPTION[entry.data[CONF_BLIND_TYPE].upper()]
     )
-    entity = blind_class(device, entry, entity_description)
+    entity: MotionblindsBLECoverEntity = blind_class(device, entry, entity_description)
 
     async_add_entities([entity])
 
