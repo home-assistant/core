@@ -750,8 +750,8 @@ def async_start_setup(
         return
 
     setup_started = _setup_started(hass)
-    current_group = (integration, group)
-    if current_group in setup_started:
+    current = (integration, group)
+    if current in setup_started:
         # We are already inside another async_start_setup, this like means we
         # are setting up a platform inside async_setup_entry so we should not
         # record this as a new setup
@@ -759,14 +759,14 @@ def async_start_setup(
         return
 
     started = time.monotonic()
-    current_setup_group.set(current_group)
-    setup_started[current_group] = started
+    current_setup_group.set(current)
+    setup_started[current] = started
 
     try:
         yield
     finally:
         time_taken = time.monotonic() - started
-        del setup_started[current_group]
+        del setup_started[current]
         group_setup_times = _setup_times(hass)[integration][group]
         # We may see the phase multiple times if there are multiple
         # platforms, but we only care about the longest time.
