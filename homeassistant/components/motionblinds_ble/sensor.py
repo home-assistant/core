@@ -110,7 +110,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class GenericSensor(MotionblindsBLEEntity, SensorEntity):
+class MotionblindsBLESensorEntity(MotionblindsBLEEntity, SensorEntity):
     """Representation of a sensor."""
 
     def __init__(
@@ -120,28 +120,26 @@ class GenericSensor(MotionblindsBLEEntity, SensorEntity):
         entity_description: MotionblindsBLESensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        _LOGGER.debug(
-            "(%s) Setting up %s sensor entity",
-            entry.data[CONF_MAC_CODE],
-            entity_description.key.replace("_", " "),
-        )
         super().__init__(
             device, entry, entity_description, unique_id_suffix=entity_description.key
         )
-        self._attr_native_value: str | None = entity_description.native_value
+        self._attr_native_value = entity_description.native_value
+
+    async def async_added_to_hass(self) -> None:
+        """Log sensor information."""
+        _LOGGER.debug(
+            "(%s) Setting up %s sensor entity",
+            self.entry.data[CONF_MAC_CODE],
+            self.entity_description.key.replace("_", " "),
+        )
 
 
-class BatterySensor(GenericSensor):
+class BatterySensor(MotionblindsBLESensorEntity):
     """Representation of a battery sensor."""
 
-    def __init__(
-        self,
-        device: MotionDevice,
-        entry: ConfigEntry,
-        entity_description: MotionblindsBLESensorEntityDescription,
-    ) -> None:
-        """Initialize the battery sensor."""
-        super().__init__(device, entry, entity_description)
+    async def async_added_to_hass(self) -> None:
+        """Register device callbacks."""
+        await super().async_added_to_hass()
         self.device.register_battery_callback(self.async_update_battery_percentage)
 
     @callback
@@ -179,17 +177,12 @@ class BatterySensor(GenericSensor):
         self.async_write_ha_state()
 
 
-class ConnectionSensor(GenericSensor):
+class ConnectionSensor(MotionblindsBLESensorEntity):
     """Representation of a connection sensor."""
 
-    def __init__(
-        self,
-        device: MotionDevice,
-        entry: ConfigEntry,
-        entity_description: MotionblindsBLESensorEntityDescription,
-    ) -> None:
-        """Initialize the connection sensor."""
-        super().__init__(device, entry, entity_description)
+    async def async_added_to_hass(self) -> None:
+        """Register device callbacks."""
+        await super().async_added_to_hass()
         self.device.register_connection_callback(self.async_update_connection)
 
     @callback
@@ -201,17 +194,12 @@ class ConnectionSensor(GenericSensor):
         self.async_write_ha_state()
 
 
-class CalibrationSensor(GenericSensor):
+class CalibrationSensor(MotionblindsBLESensorEntity):
     """Representation of a calibration sensor."""
 
-    def __init__(
-        self,
-        device: MotionDevice,
-        entry: ConfigEntry,
-        entity_description: MotionblindsBLESensorEntityDescription,
-    ) -> None:
-        """Initialize the calibration sensor."""
-        super().__init__(device, entry, entity_description)
+    async def async_added_to_hass(self) -> None:
+        """Register device callbacks."""
+        await super().async_added_to_hass()
         self.device.register_calibration_callback(self.async_update_calibration)
 
     @callback
@@ -225,21 +213,13 @@ class CalibrationSensor(GenericSensor):
         self.async_write_ha_state()
 
 
-class SignalStrengthSensor(GenericSensor):
+class SignalStrengthSensor(MotionblindsBLESensorEntity):
     """Representation of a signal strength sensor."""
 
-    def __init__(
-        self,
-        device: MotionDevice,
-        entry: ConfigEntry,
-        entity_description: MotionblindsBLESensorEntityDescription,
-    ) -> None:
-        """Initialize the signal strength sensor."""
-        super().__init__(device, entry, entity_description)
-        self.device.register_signal_strength_callback(self.async_update_signal_strength)
-
     async def async_added_to_hass(self) -> None:
-        """Run when the signal strength sensor about to be added."""
+        """Register device callbacks and update signal strength."""
+        await super().async_added_to_hass()
+        self.device.register_signal_strength_callback(self.async_update_signal_strength)
         self.async_update_signal_strength(self.device.rssi)
 
     @callback
