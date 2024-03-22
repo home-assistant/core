@@ -362,7 +362,8 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Start adding an entity to a platform."""
         super().add_to_platform_start(hass, platform, parallel_updates)
 
-        if self.__climate_legacy_aux:
+        module = type(self).__module__
+        if self.__climate_legacy_aux and "custom_components" in module:
             self._report_legacy_aux(hass)
 
         def _report_turn_on_off(feature: str, method: str) -> None:
