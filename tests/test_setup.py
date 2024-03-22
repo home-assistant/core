@@ -4,6 +4,7 @@ import asyncio
 import threading
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 import voluptuous as vol
 
@@ -739,7 +740,9 @@ async def test_async_start_setup_running(hass: HomeAssistant) -> None:
         assert not setup_started
 
 
-async def test_async_start_setup_config_entry(hass: HomeAssistant) -> None:
+async def test_async_start_setup_config_entry(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test setup started keeps track of setup times with a config entry."""
     hass.set_state(CoreState.not_running)
     setup_started: dict[tuple[str, str | None], float]
@@ -778,6 +781,7 @@ async def test_async_start_setup_config_entry(hass: HomeAssistant) -> None:
         phase=setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP,
     ):
         assert isinstance(setup_started[("august", "entry_id")], float)
+
     # Platforms outside of CONFIG_ENTRY_SETUP should be tracked
     # This simulates a late platform forward
     assert setup_time["august"] == {
@@ -787,6 +791,38 @@ async def test_async_start_setup_config_entry(hass: HomeAssistant) -> None:
             setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP: ANY,
         },
     }
+
+    shorter_time = setup_time["august"]["entry_id"][
+        setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP
+    ]
+    # Setup another platform, but make it take longer
+    with setup.async_start_setup(
+        hass,
+        integration="august",
+        group="entry_id",
+        phase=setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP,
+    ):
+        freezer.tick(10)
+        assert isinstance(setup_started[("august", "entry_id")], float)
+
+    longer_time = setup_time["august"]["entry_id"][
+        setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP
+    ]
+    assert longer_time > shorter_time
+    # Setup another platform, but make it take shorter
+    with setup.async_start_setup(
+        hass,
+        integration="august",
+        group="entry_id",
+        phase=setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP,
+    ):
+        assert isinstance(setup_started[("august", "entry_id")], float)
+
+    # Ensure we keep the longest time
+    assert (
+        setup_time["august"]["entry_id"][setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP]
+        == longer_time
+    )
 
     with setup.async_start_setup(
         hass,
