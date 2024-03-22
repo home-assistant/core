@@ -1,4 +1,5 @@
 """Config flow for Velux integration."""
+
 from typing import Any
 
 from pyvlx import PyVLX, PyVLXException
@@ -7,7 +8,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
-from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
@@ -24,7 +24,9 @@ DATA_SCHEMA = vol.Schema(
 class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for velux."""
 
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
+    async def async_step_import(
+        self, config: dict[str, Any]
+    ) -> config_entries.ConfigFlowResult:
         """Import a config entry."""
 
         def create_repair(error: str | None = None) -> None:
@@ -79,7 +81,7 @@ class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
 

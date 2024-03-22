@@ -1,4 +1,5 @@
 """Tests for the TotalConnect config flow."""
+
 from unittest.mock import patch
 
 from total_connect_client.exceptions import AuthenticationError

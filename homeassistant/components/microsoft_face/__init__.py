@@ -1,4 +1,5 @@
 """Support for Microsoft face recognition."""
+
 from __future__ import annotations
 
 import asyncio

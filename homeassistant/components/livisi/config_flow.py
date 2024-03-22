@@ -1,4 +1,5 @@
 """Config flow for Livisi Home Assistant."""
+
 from __future__ import annotations
 
 from contextlib import suppress
@@ -8,15 +9,14 @@ from aiohttp import ClientConnectorError
 from aiolivisi import AioLivisi, errors as livisi_errors
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN, LOGGER
 
 
-class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class LivisiFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Livisi Smart Home config flow."""
 
     def __init__(self) -> None:
@@ -31,7 +31,7 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=self.data_schema)
@@ -70,7 +70,7 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def create_entity(
         self, user_input: dict[str, str], controller_info: dict[str, Any]
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Create LIVISI entity."""
         if (controller_data := controller_info.get("gateway")) is None:
             controller_data = controller_info

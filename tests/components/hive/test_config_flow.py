@@ -1,4 +1,5 @@
 """Test the Hive config flow."""
+
 from unittest.mock import patch
 
 from apyhiveapi.helper import hive_exceptions

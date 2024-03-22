@@ -1,4 +1,5 @@
 """Config flow for Airtouch 5 integration."""
+
 from __future__ import annotations
 
 import logging
@@ -9,7 +10,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
@@ -25,7 +25,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] | None = None
         if user_input is not None:

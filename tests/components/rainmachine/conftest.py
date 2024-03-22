@@ -1,4 +1,5 @@
 """Define test fixtures for RainMachine."""
+
 import json
 from unittest.mock import AsyncMock, patch
 

@@ -1,4 +1,5 @@
 """Support for RFXtrx devices."""
+
 from __future__ import annotations
 
 import binascii
@@ -79,6 +80,7 @@ SERVICE_SEND_SCHEMA = vol.Schema({ATTR_EVENT: _bytearray_string})
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.COVER,
+    Platform.EVENT,
     Platform.LIGHT,
     Platform.SENSOR,
     Platform.SIREN,

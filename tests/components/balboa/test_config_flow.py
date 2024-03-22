@@ -1,4 +1,5 @@
 """Test the Balboa Spa Client config flow."""
+
 from unittest.mock import MagicMock, patch
 
 from pybalboa.exceptions import SpaConnectionError

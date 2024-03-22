@@ -1,4 +1,5 @@
 """Test the habitica config flow."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientResponseError

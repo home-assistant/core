@@ -1,4 +1,5 @@
 """Entity to track connections to websocket API."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity

@@ -1,4 +1,5 @@
 """Support for Tellstick sensors."""
+
 from __future__ import annotations
 
 from collections import namedtuple
@@ -129,8 +130,8 @@ def setup_platform(
             sensor_name = str(tellcore_sensor.id)
         else:
             proto_id = f"{tellcore_sensor.protocol}{tellcore_sensor.id}"
-            proto_model_id = "{}{}{}".format(
-                tellcore_sensor.protocol, tellcore_sensor.model, tellcore_sensor.id
+            proto_model_id = (
+                f"{tellcore_sensor.protocol}{tellcore_sensor.model}{tellcore_sensor.id}"
             )
             if tellcore_sensor.id in named_sensors:
                 sensor_name = named_sensors[tellcore_sensor.id]

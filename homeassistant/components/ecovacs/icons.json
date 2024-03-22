@@ -83,14 +83,29 @@
       "advanced_mode": {
         "default": "mdi:tune"
       },
+      "border_switch": {
+        "default": "mdi:land-fields"
+      },
       "carpet_auto_fan_boost": {
         "default": "mdi:fan-auto"
+      },
+      "child_lock": {
+        "default": "mdi:teddy-bear"
       },
       "clean_preference": {
         "default": "mdi:broom"
       },
+      "cross_map_border_warning": {
+        "default": "mdi:border-none-variant"
+      },
       "continuous_cleaning": {
         "default": "mdi:refresh-auto"
+      },
+      "move_up_warning": {
+        "default": "mdi:arrow-up-bold-box-outline"
+      },
+      "safe_protect": {
+        "default": "mdi:shield-half-full"
       },
       "true_detect": {
         "default": "mdi:laser-pointer"

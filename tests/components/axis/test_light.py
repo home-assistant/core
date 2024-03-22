@@ -1,6 +1,8 @@
 """Axis light platform tests."""
+
 from unittest.mock import patch
 
+from axis.vapix.models.api import CONTEXT
 import pytest
 import respx
 
@@ -49,10 +51,18 @@ def light_control_fixture(light_control_items):
     """Light control mock response."""
     data = {
         "apiVersion": "1.1",
+        "context": CONTEXT,
         "method": "getLightInformation",
         "data": {"items": light_control_items},
     }
-    respx.post(f"http://{DEFAULT_HOST}:80/axis-cgi/lightcontrol.cgi").respond(
+    respx.post(
+        f"http://{DEFAULT_HOST}:80/axis-cgi/lightcontrol.cgi",
+        json={
+            "apiVersion": "1.1",
+            "context": CONTEXT,
+            "method": "getLightInformation",
+        },
+    ).respond(
         json=data,
     )
 
@@ -90,24 +100,56 @@ async def test_no_light_entity_without_light_control_representation(
 
 
 @pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_LIGHT_CONTROL])
-async def test_lights(hass: HomeAssistant, setup_config_entry, mock_rtsp_event) -> None:
+async def test_lights(
+    hass: HomeAssistant,
+    respx_mock,
+    setup_config_entry,
+    mock_rtsp_event,
+    api_discovery_items,
+) -> None:
     """Test that lights are loaded properly."""
     # Add light
-    with patch(
-        "axis.vapix.interfaces.light_control.LightControl.get_current_intensity",
-        return_value={"data": {"intensity": 100}},
-    ), patch(
-        "axis.vapix.interfaces.light_control.LightControl.get_valid_intensity",
-        return_value={"data": {"ranges": [{"high": 150}]}},
-    ):
-        mock_rtsp_event(
-            topic="tns1:Device/tnsaxis:Light/Status",
-            data_type="state",
-            data_value="ON",
-            source_name="id",
-            source_idx="0",
-        )
-        await hass.async_block_till_done()
+    respx.post(
+        f"http://{DEFAULT_HOST}:80/axis-cgi/lightcontrol.cgi",
+        json={
+            "apiVersion": "1.1",
+            "context": CONTEXT,
+            "method": "getCurrentIntensity",
+            "params": {"lightID": "led0"},
+        },
+    ).respond(
+        json={
+            "apiVersion": "1.1",
+            "context": "Axis library",
+            "method": "getCurrentIntensity",
+            "data": {"intensity": 100},
+        },
+    )
+    respx.post(
+        f"http://{DEFAULT_HOST}:80/axis-cgi/lightcontrol.cgi",
+        json={
+            "apiVersion": "1.1",
+            "context": CONTEXT,
+            "method": "getValidIntensity",
+            "params": {"lightID": "led0"},
+        },
+    ).respond(
+        json={
+            "apiVersion": "1.1",
+            "context": "Axis library",
+            "method": "getValidIntensity",
+            "data": {"ranges": [{"low": 0, "high": 150}]},
+        },
+    )
+
+    mock_rtsp_event(
+        topic="tns1:Device/tnsaxis:Light/Status",
+        data_type="state",
+        data_value="ON",
+        source_name="id",
+        source_idx="0",
+    )
+    await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(LIGHT_DOMAIN)) == 1
 
@@ -118,14 +160,9 @@ async def test_lights(hass: HomeAssistant, setup_config_entry, mock_rtsp_event) 
     assert light_0.name == f"{NAME} IR Light 0"
 
     # Turn on, set brightness, light already on
-    with patch(
-        "axis.vapix.interfaces.light_control.LightControl.activate_light"
-    ) as mock_activate, patch(
-        "axis.vapix.interfaces.light_control.LightControl.set_manual_intensity"
-    ) as mock_set_intensity, patch(
-        "axis.vapix.interfaces.light_control.LightControl.get_current_intensity",
-        return_value={"data": {"intensity": 100}},
-    ):
+    with patch("axis.vapix.vapix.LightHandler.activate_light") as mock_activate, patch(
+        "axis.vapix.vapix.LightHandler.set_manual_intensity"
+    ) as mock_set_intensity:
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
@@ -136,12 +173,7 @@ async def test_lights(hass: HomeAssistant, setup_config_entry, mock_rtsp_event) 
         mock_set_intensity.assert_called_once_with("led0", 29)
 
     # Turn off
-    with patch(
-        "axis.vapix.interfaces.light_control.LightControl.deactivate_light"
-    ) as mock_deactivate, patch(
-        "axis.vapix.interfaces.light_control.LightControl.get_current_intensity",
-        return_value={"data": {"intensity": 100}},
-    ):
+    with patch("axis.vapix.vapix.LightHandler.deactivate_light") as mock_deactivate:
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
@@ -164,14 +196,9 @@ async def test_lights(hass: HomeAssistant, setup_config_entry, mock_rtsp_event) 
     assert light_0.state == STATE_OFF
 
     # Turn on, set brightness
-    with patch(
-        "axis.vapix.interfaces.light_control.LightControl.activate_light"
-    ) as mock_activate, patch(
-        "axis.vapix.interfaces.light_control.LightControl.set_manual_intensity"
-    ) as mock_set_intensity, patch(
-        "axis.vapix.interfaces.light_control.LightControl.get_current_intensity",
-        return_value={"data": {"intensity": 100}},
-    ):
+    with patch("axis.vapix.vapix.LightHandler.activate_light") as mock_activate, patch(
+        "axis.vapix.vapix.LightHandler.set_manual_intensity"
+    ) as mock_set_intensity:
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
@@ -182,12 +209,7 @@ async def test_lights(hass: HomeAssistant, setup_config_entry, mock_rtsp_event) 
         mock_set_intensity.assert_not_called()
 
     # Turn off, light already off
-    with patch(
-        "axis.vapix.interfaces.light_control.LightControl.deactivate_light"
-    ) as mock_deactivate, patch(
-        "axis.vapix.interfaces.light_control.LightControl.get_current_intensity",
-        return_value={"data": {"intensity": 100}},
-    ):
+    with patch("axis.vapix.vapix.LightHandler.deactivate_light") as mock_deactivate:
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,

@@ -1,4 +1,5 @@
 """AirTouch 5 component to control AirTouch 5 Climate Devices."""
+
 import logging
 from typing import Any
 
@@ -108,8 +109,10 @@ async def async_setup_entry(
         entities.append(Airtouch5AC(client, ac))
 
     # Add each zone
-    for zone in client.zones:
-        entities.append(Airtouch5Zone(client, zone, zone_to_ac[zone.zone_number]))
+    entities.extend(
+        Airtouch5Zone(client, zone, zone_to_ac[zone.zone_number])
+        for zone in client.zones
+    )
 
     async_add_entities(entities)
 

@@ -1,4 +1,5 @@
 """Test the air-Q config flow."""
+
 from unittest.mock import patch
 
 from aioairq import DeviceInfo, InvalidAuth

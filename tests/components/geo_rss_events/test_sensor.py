@@ -1,4 +1,5 @@
 """The test for the geo rss events sensor platform."""
+
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory

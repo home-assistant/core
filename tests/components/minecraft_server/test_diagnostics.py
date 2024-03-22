@@ -1,4 +1,5 @@
 """Tests for Minecraft Server diagnostics."""
+
 from unittest.mock import patch
 
 from mcstatus import BedrockServer, JavaServer

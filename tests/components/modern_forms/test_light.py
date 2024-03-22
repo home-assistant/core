@@ -1,4 +1,5 @@
 """Tests for the Modern Forms light platform."""
+
 from unittest.mock import patch
 
 from aiomodernforms import ModernFormsConnectionError

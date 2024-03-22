@@ -1,4 +1,5 @@
 """Test the Suez Water config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from pysuez.client import PySuezError

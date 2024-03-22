@@ -1,4 +1,5 @@
 """Support for Atlantic Electrical Heater (With Adjustable Temperature Setpoint)."""
+
 from __future__ import annotations
 
 from typing import Any

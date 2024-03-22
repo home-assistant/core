@@ -1,4 +1,5 @@
 """Bluetooth support for esphome."""
+
 from __future__ import annotations
 
 from functools import partial

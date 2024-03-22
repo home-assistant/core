@@ -1,4 +1,5 @@
 """Support for Tasmota fans."""
+
 from __future__ import annotations
 
 from typing import Any

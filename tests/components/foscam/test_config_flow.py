@@ -1,4 +1,5 @@
 """Test the Foscam config flow."""
+
 from unittest.mock import patch
 
 from libpyfoscam.foscam import (

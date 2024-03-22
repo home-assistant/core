@@ -1,4 +1,5 @@
 """Test sensor of Brother integration."""
+
 from datetime import datetime, timedelta
 import json
 from unittest.mock import Mock, patch

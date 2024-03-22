@@ -1,4 +1,5 @@
 """Test the Canary config flow."""
+
 from unittest.mock import patch
 
 from requests import ConnectTimeout, HTTPError

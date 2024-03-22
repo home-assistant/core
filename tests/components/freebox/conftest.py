@@ -1,4 +1,5 @@
 """Test helpers for Freebox."""
+
 import json
 from unittest.mock import AsyncMock, PropertyMock, patch
 

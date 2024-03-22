@@ -1,4 +1,5 @@
 """Sensors on Zigbee Home Automation networks."""
+
 from __future__ import annotations
 
 import asyncio
@@ -6,11 +7,13 @@ from dataclasses import dataclass
 from datetime import timedelta
 import enum
 import functools
+import logging
 import numbers
 import random
 from typing import TYPE_CHECKING, Any, Self
 
 from zigpy import types
+from zigpy.quirks.v2 import EntityMetadata, ZCLEnumMetadata, ZCLSensorMetadata
 from zigpy.state import Counter, State
 from zigpy.zcl.clusters.closures import WindowCovering
 from zigpy.zcl.clusters.general import Basic
@@ -68,6 +71,7 @@ from .core.const import (
     CLUSTER_HANDLER_TEMPERATURE,
     CLUSTER_HANDLER_THERMOSTAT,
     DATA_ZHA,
+    QUIRK_METADATA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
@@ -94,6 +98,8 @@ BATTERY_SIZES = {
     11: "CR1632",
     255: "Unknown",
 }
+
+_LOGGER = logging.getLogger(__name__)
 
 CLUSTER_HANDLER_ST_HUMIDITY_CLUSTER = (
     f"cluster_handler_0x{SMARTTHINGS_HUMIDITY_CLUSTER:04x}"
@@ -135,17 +141,6 @@ class Sensor(ZhaEntity, SensorEntity):
     _divisor: int = 1
     _multiplier: int | float = 1
 
-    def __init__(
-        self,
-        unique_id: str,
-        zha_device: ZHADevice,
-        cluster_handlers: list[ClusterHandler],
-        **kwargs: Any,
-    ) -> None:
-        """Init this sensor."""
-        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
-        self._cluster_handler: ClusterHandler = cluster_handlers[0]
-
     @classmethod
     def create_entity(
         cls,
@@ -159,13 +154,43 @@ class Sensor(ZhaEntity, SensorEntity):
         Return entity if it is a supported configuration, otherwise return None
         """
         cluster_handler = cluster_handlers[0]
-        if (
+        if QUIRK_METADATA not in kwargs and (
             cls._attribute_name in cluster_handler.cluster.unsupported_attributes
             or cls._attribute_name not in cluster_handler.cluster.attributes_by_name
         ):
+            _LOGGER.debug(
+                "%s is not supported - skipping %s entity creation",
+                cls._attribute_name,
+                cls.__name__,
+            )
             return None
 
         return cls(unique_id, zha_device, cluster_handlers, **kwargs)
+
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZHADevice,
+        cluster_handlers: list[ClusterHandler],
+        **kwargs: Any,
+    ) -> None:
+        """Init this sensor."""
+        self._cluster_handler: ClusterHandler = cluster_handlers[0]
+        if QUIRK_METADATA in kwargs:
+            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA])
+        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
+
+    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
+        """Init this entity from the quirks metadata."""
+        super()._init_from_quirks_metadata(entity_metadata)
+        sensor_metadata: ZCLSensorMetadata = entity_metadata.entity_metadata
+        self._attribute_name = sensor_metadata.attribute_name
+        if sensor_metadata.divisor is not None:
+            self._divisor = sensor_metadata.divisor
+        if sensor_metadata.multiplier is not None:
+            self._multiplier = sensor_metadata.multiplier
+        if sensor_metadata.unit is not None:
+            self._attr_native_unit_of_measurement = sensor_metadata.unit
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
@@ -329,6 +354,13 @@ class EnumSensor(Sensor):
 
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.ENUM
     _enum: type[enum.Enum]
+
+    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
+        """Init this entity from the quirks metadata."""
+        ZhaEntity._init_from_quirks_metadata(self, entity_metadata)  # pylint: disable=protected-access
+        sensor_metadata: ZCLEnumMetadata = entity_metadata.entity_metadata
+        self._attribute_name = sensor_metadata.attribute_name
+        self._enum = sensor_metadata.enum
 
     def formatter(self, value: int) -> str | None:
         """Use name of enum."""
@@ -1248,7 +1280,6 @@ class TimeLeft(Sensor):
     _attribute_name = "timer_time_left"
     _unique_id_suffix = "time_left"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.DURATION
-    _attr_icon = "mdi:timer"
     _attr_translation_key: str = "timer_time_left"
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
@@ -1261,7 +1292,6 @@ class IkeaDeviceRunTime(Sensor):
     _attribute_name = "device_run_time"
     _unique_id_suffix = "device_run_time"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.DURATION
-    _attr_icon = "mdi:timer"
     _attr_translation_key: str = "device_run_time"
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
     _attr_entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
@@ -1275,7 +1305,6 @@ class IkeaFilterRunTime(Sensor):
     _attribute_name = "filter_run_time"
     _unique_id_suffix = "filter_run_time"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.DURATION
-    _attr_icon = "mdi:timer"
     _attr_translation_key: str = "filter_run_time"
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
     _attr_entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
@@ -1296,7 +1325,6 @@ class AqaraPetFeederLastFeedingSource(EnumSensor):
     _attribute_name = "last_feeding_source"
     _unique_id_suffix = "last_feeding_source"
     _attr_translation_key: str = "last_feeding_source"
-    _attr_icon = "mdi:devices"
     _enum = AqaraFeedingSource
 
 
@@ -1308,7 +1336,6 @@ class AqaraPetFeederLastFeedingSize(Sensor):
     _attribute_name = "last_feeding_size"
     _unique_id_suffix = "last_feeding_size"
     _attr_translation_key: str = "last_feeding_size"
-    _attr_icon: str = "mdi:counter"
 
 
 @MULTI_MATCH(cluster_handler_names="opple_cluster", models={"aqara.feeder.acn001"})
@@ -1320,7 +1347,6 @@ class AqaraPetFeederPortionsDispensed(Sensor):
     _unique_id_suffix = "portions_dispensed"
     _attr_translation_key: str = "portions_dispensed_today"
     _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
-    _attr_icon: str = "mdi:counter"
 
 
 @MULTI_MATCH(cluster_handler_names="opple_cluster", models={"aqara.feeder.acn001"})
@@ -1333,7 +1359,6 @@ class AqaraPetFeederWeightDispensed(Sensor):
     _attr_translation_key: str = "weight_dispensed_today"
     _attr_native_unit_of_measurement = UnitOfMass.GRAMS
     _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
-    _attr_icon: str = "mdi:weight-gram"
 
 
 @MULTI_MATCH(cluster_handler_names="opple_cluster", models={"lumi.sensor_smoke.acn03"})
@@ -1346,7 +1371,6 @@ class AqaraSmokeDensityDbm(Sensor):
     _attr_translation_key: str = "smoke_density"
     _attr_native_unit_of_measurement = "dB/m"
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_icon: str = "mdi:google-circles-communities"
     _attr_suggested_display_precision: int = 3
 
 
@@ -1365,7 +1389,6 @@ class SonoffPresenceSenorIlluminationStatus(EnumSensor):
     _attribute_name = "last_illumination_state"
     _unique_id_suffix = "last_illumination"
     _attr_translation_key: str = "last_illumination_state"
-    _attr_icon: str = "mdi:theme-light-dark"
     _enum = SonoffIlluminationStates
 
 
@@ -1380,7 +1403,6 @@ class PiHeatingDemand(Sensor):
     _unique_id_suffix = "pi_heating_demand"
     _attribute_name = "pi_heating_demand"
     _attr_translation_key: str = "pi_heating_demand"
-    _attr_icon: str = "mdi:radiator"
     _attr_native_unit_of_measurement = PERCENTAGE
     _decimals = 0
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
@@ -1406,7 +1428,6 @@ class SetpointChangeSource(EnumSensor):
     _unique_id_suffix = "setpoint_change_source"
     _attribute_name = "setpoint_change_source"
     _attr_translation_key: str = "setpoint_change_source"
-    _attr_icon: str = "mdi:thermostat"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _enum = SetpointChangeSourceEnum
 

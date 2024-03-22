@@ -1,4 +1,5 @@
 """Tests for the Wemo light entity via the bridge."""
+
 from unittest.mock import create_autospec
 
 import pytest

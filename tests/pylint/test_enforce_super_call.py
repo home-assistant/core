@@ -1,4 +1,5 @@
 """Tests for pylint hass_enforce_super_call plugin."""
+
 from __future__ import annotations
 
 from types import ModuleType

@@ -1,4 +1,5 @@
 """The tests for the GDACS Feed integration."""
+
 import datetime
 from unittest.mock import patch
 

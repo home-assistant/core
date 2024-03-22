@@ -1,4 +1,5 @@
 """Common tradfri test fixtures."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Generator

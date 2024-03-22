@@ -1,160 +1,138 @@
 """UniFi Protect data migrations."""
+
 from __future__ import annotations
 
+from itertools import chain
 import logging
 
-from aiohttp.client_exceptions import ServerDisconnectedError
 from pyunifiprotect import ProtectApiClient
-from pyunifiprotect.data import NVR, Bootstrap, ProtectAdoptableDeviceModel
-from pyunifiprotect.exceptions import ClientError
+from pyunifiprotect.data import Bootstrap
+from typing_extensions import TypedDict
 
+from homeassistant.components.automation import automations_with_entity
+from homeassistant.components.script import scripts_with_entity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers.issue_registry import IssueSeverity
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
+class EntityRef(TypedDict):
+    """Entity ref parameter variable."""
+
+    id: str
+    platform: Platform
+
+
+class EntityUsage(TypedDict):
+    """Entity usages response variable."""
+
+    automations: dict[str, list[str]]
+    scripts: dict[str, list[str]]
+
+
+@callback
+def check_if_used(
+    hass: HomeAssistant, entry: ConfigEntry, entities: dict[str, EntityRef]
+) -> dict[str, EntityUsage]:
+    """Check for usages of entities and return them."""
+
+    entity_registry = er.async_get(hass)
+    refs: dict[str, EntityUsage] = {
+        ref: {"automations": {}, "scripts": {}} for ref in entities
+    }
+
+    for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
+        for ref_id, ref in entities.items():
+            if (
+                entity.domain == ref["platform"]
+                and entity.disabled_by is None
+                and ref["id"] in entity.unique_id
+            ):
+                entity_automations = automations_with_entity(hass, entity.entity_id)
+                entity_scripts = scripts_with_entity(hass, entity.entity_id)
+                if entity_automations:
+                    refs[ref_id]["automations"][entity.entity_id] = entity_automations
+                if entity_scripts:
+                    refs[ref_id]["scripts"][entity.entity_id] = entity_scripts
+
+    return refs
+
+
+@callback
+def create_repair_if_used(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    breaks_in: str,
+    entities: dict[str, EntityRef],
+) -> None:
+    """Create repairs for used entities that are deprecated."""
+
+    usages = check_if_used(hass, entry, entities)
+    for ref_id, refs in usages.items():
+        issue_id = f"deprecate_{ref_id}"
+        automations = refs["automations"]
+        scripts = refs["scripts"]
+        if automations or scripts:
+            items = sorted(
+                set(chain.from_iterable(chain(automations.values(), scripts.values())))
+            )
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                issue_id,
+                is_fixable=False,
+                breaks_in_ha_version=breaks_in,
+                severity=IssueSeverity.WARNING,
+                translation_key=issue_id,
+                translation_placeholders={
+                    "items": "* `" + "`\n* `".join(items) + "`\n"
+                },
+            )
+        else:
+            _LOGGER.debug("No found usages of %s", ref_id)
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+
 async def async_migrate_data(
-    hass: HomeAssistant, entry: ConfigEntry, protect: ProtectApiClient
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    protect: ProtectApiClient,
+    bootstrap: Bootstrap,
 ) -> None:
     """Run all valid UniFi Protect data migrations."""
 
-    _LOGGER.debug("Start Migrate: async_migrate_buttons")
-    await async_migrate_buttons(hass, entry, protect)
-    _LOGGER.debug("Completed Migrate: async_migrate_buttons")
-
-    _LOGGER.debug("Start Migrate: async_migrate_device_ids")
-    await async_migrate_device_ids(hass, entry, protect)
-    _LOGGER.debug("Completed Migrate: async_migrate_device_ids")
+    _LOGGER.debug("Start Migrate: async_deprecate_hdr_package")
+    async_deprecate_hdr_package(hass, entry)
+    _LOGGER.debug("Completed Migrate: async_deprecate_hdr_package")
 
 
-async def async_get_bootstrap(protect: ProtectApiClient) -> Bootstrap:
-    """Get UniFi Protect bootstrap or raise appropriate HA error."""
+@callback
+def async_deprecate_hdr_package(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Check for usages of hdr_mode switch and package sensor and raise repair if it is used.
 
-    try:
-        bootstrap = await protect.get_bootstrap()
-    except (TimeoutError, ClientError, ServerDisconnectedError) as err:
-        raise ConfigEntryNotReady from err
+    UniFi Protect v3.0.22 changed how HDR works so it is no longer a simple on/off toggle. There is
+    Always On, Always Off and Auto. So it has been migrated to a select. The old switch is now deprecated.
 
-    return bootstrap
+    Additionally, the Package sensor is no longer functional due to how events work so a repair to notify users.
 
-
-async def async_migrate_buttons(
-    hass: HomeAssistant, entry: ConfigEntry, protect: ProtectApiClient
-) -> None:
-    """Migrate existing Reboot button unique IDs from {device_id} to {deivce_id}_reboot.
-
-    This allows for additional types of buttons that are outside of just a reboot button.
-
-    Added in 2022.6.0.
+    Added in 2024.4.0
     """
 
-    registry = er.async_get(hass)
-    to_migrate = []
-    for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
-        if entity.domain == Platform.BUTTON and "_" not in entity.unique_id:
-            _LOGGER.debug("Button %s needs migration", entity.entity_id)
-            to_migrate.append(entity)
-
-    if len(to_migrate) == 0:
-        _LOGGER.debug("No button entities need migration")
-        return
-
-    bootstrap = await async_get_bootstrap(protect)
-    count = 0
-    for button in to_migrate:
-        device = bootstrap.get_device_from_id(button.unique_id)
-        if device is None:
-            continue
-
-        new_unique_id = f"{device.id}_reboot"
-        _LOGGER.debug(
-            "Migrating entity %s (old unique_id: %s, new unique_id: %s)",
-            button.entity_id,
-            button.unique_id,
-            new_unique_id,
-        )
-        try:
-            registry.async_update_entity(button.entity_id, new_unique_id=new_unique_id)
-        except ValueError:
-            _LOGGER.warning(
-                "Could not migrate entity %s (old unique_id: %s, new unique_id: %s)",
-                button.entity_id,
-                button.unique_id,
-                new_unique_id,
-            )
-        else:
-            count += 1
-
-    if count < len(to_migrate):
-        _LOGGER.warning("Failed to migate %s reboot buttons", len(to_migrate) - count)
-
-
-async def async_migrate_device_ids(
-    hass: HomeAssistant, entry: ConfigEntry, protect: ProtectApiClient
-) -> None:
-    """Migrate unique IDs from {device_id}_{name} format to {mac}_{name} format.
-
-    This makes devices persist better with in HA. Anything a device is unadopted/readopted or
-    the Protect instance has to rebuild the disk array, the device IDs of Protect devices
-    can change. This causes a ton of orphaned entities and loss of historical data. MAC
-    addresses are the one persistent identifier a device has that does not change.
-
-    Added in 2022.7.0.
-    """
-
-    registry = er.async_get(hass)
-    to_migrate = []
-    for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
-        parts = entity.unique_id.split("_")
-        # device ID = 24 characters, MAC = 12
-        if len(parts[0]) == 24:
-            _LOGGER.debug("Entity %s needs migration", entity.entity_id)
-            to_migrate.append(entity)
-
-    if len(to_migrate) == 0:
-        _LOGGER.debug("No entities need migration to MAC address ID")
-        return
-
-    bootstrap = await async_get_bootstrap(protect)
-    count = 0
-    for entity in to_migrate:
-        parts = entity.unique_id.split("_")
-        if parts[0] == bootstrap.nvr.id:
-            device: NVR | ProtectAdoptableDeviceModel | None = bootstrap.nvr
-        else:
-            device = bootstrap.get_device_from_id(parts[0])
-
-        if device is None:
-            continue
-
-        new_unique_id = device.mac
-        if len(parts) > 1:
-            new_unique_id = f"{device.mac}_{'_'.join(parts[1:])}"
-        _LOGGER.debug(
-            "Migrating entity %s (old unique_id: %s, new unique_id: %s)",
-            entity.entity_id,
-            entity.unique_id,
-            new_unique_id,
-        )
-        try:
-            registry.async_update_entity(entity.entity_id, new_unique_id=new_unique_id)
-        except ValueError as err:
-            _LOGGER.warning(
-                (
-                    "Could not migrate entity %s (old unique_id: %s, new unique_id:"
-                    " %s): %s"
-                ),
-                entity.entity_id,
-                entity.unique_id,
-                new_unique_id,
-                err,
-            )
-        else:
-            count += 1
-
-    if count < len(to_migrate):
-        _LOGGER.warning("Failed to migrate %s entities", len(to_migrate) - count)
+    create_repair_if_used(
+        hass,
+        entry,
+        "2024.10.0",
+        {
+            "hdr_switch": {"id": "hdr_mode", "platform": Platform.SWITCH},
+            "package_sensor": {
+                "id": "smart_obj_package",
+                "platform": Platform.BINARY_SENSOR,
+            },
+        },
+    )

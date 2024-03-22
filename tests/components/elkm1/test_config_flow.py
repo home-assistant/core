@@ -1,4 +1,5 @@
 """Test the Elk-M1 Control config flow."""
+
 from dataclasses import asdict
 from unittest.mock import patch
 

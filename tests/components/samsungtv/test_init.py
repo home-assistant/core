@@ -1,4 +1,5 @@
 """Tests for the Samsung TV Integration."""
+
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest

@@ -1,4 +1,5 @@
 """Support for Lutron shades."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -69,7 +70,7 @@ class LutronCover(LutronDevice, CoverEntity):
 
     def _request_state(self) -> None:
         """Request the state from the device."""
-        self._lutron_device.level  # pylint: disable=pointless-statement
+        _ = self._lutron_device.level
 
     def _update_attrs(self) -> None:
         """Update the state attributes."""

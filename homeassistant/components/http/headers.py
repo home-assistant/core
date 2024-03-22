@@ -1,4 +1,5 @@
 """Middleware that helps with the control of headers in our responses."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable

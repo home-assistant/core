@@ -1,7 +1,7 @@
 """Support for StarLine switch."""
+
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -14,53 +14,27 @@ from .account import StarlineAccount, StarlineDevice
 from .const import DOMAIN
 from .entity import StarlineEntity
 
-
-@dataclass(frozen=True)
-class StarlineRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    icon_on: str
-    icon_off: str
-
-
-@dataclass(frozen=True)
-class StarlineSwitchEntityDescription(
-    SwitchEntityDescription, StarlineRequiredKeysMixin
-):
-    """Describes Starline switch entity."""
-
-
-SWITCH_TYPES: tuple[StarlineSwitchEntityDescription, ...] = (
-    StarlineSwitchEntityDescription(
+SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
+    SwitchEntityDescription(
         key="ign",
         translation_key="engine",
-        icon_on="mdi:engine-outline",
-        icon_off="mdi:engine-off-outline",
     ),
-    StarlineSwitchEntityDescription(
+    SwitchEntityDescription(
         key="webasto",
         translation_key="webasto",
-        icon_on="mdi:radiator",
-        icon_off="mdi:radiator-off",
     ),
-    StarlineSwitchEntityDescription(
+    SwitchEntityDescription(
         key="out",
         translation_key="additional_channel",
-        icon_on="mdi:access-point-network",
-        icon_off="mdi:access-point-network-off",
     ),
     # Deprecated and should be removed in 2024.8
-    StarlineSwitchEntityDescription(
+    SwitchEntityDescription(
         key="poke",
         translation_key="horn",
-        icon_on="mdi:bullhorn-outline",
-        icon_off="mdi:bullhorn-outline",
     ),
-    StarlineSwitchEntityDescription(
+    SwitchEntityDescription(
         key="valet",
         translation_key="service_mode",
-        icon_on="mdi:wrench-clock",
-        icon_off="mdi:car-wrench",
     ),
 )
 
@@ -83,15 +57,13 @@ async def async_setup_entry(
 class StarlineSwitch(StarlineEntity, SwitchEntity):
     """Representation of a StarLine switch."""
 
-    entity_description: StarlineSwitchEntityDescription
-
     _attr_assumed_state = True
 
     def __init__(
         self,
         account: StarlineAccount,
         device: StarlineDevice,
-        description: StarlineSwitchEntityDescription,
+        description: SwitchEntityDescription,
     ) -> None:
         """Initialize the switch."""
         super().__init__(account, device, description.key)
@@ -108,15 +80,6 @@ class StarlineSwitch(StarlineEntity, SwitchEntity):
         if self._key == "ign":
             return self._account.engine_attrs(self._device)
         return None
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return (
-            self.entity_description.icon_on
-            if self.is_on
-            else self.entity_description.icon_off
-        )
 
     @property
     def is_on(self):

@@ -1,4 +1,5 @@
 """Test the LED BLE Bluetooth config flow."""
+
 from unittest.mock import patch
 
 from bleak import BleakError

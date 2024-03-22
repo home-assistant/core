@@ -1,4 +1,5 @@
 """Test network helper."""
+
 from unittest.mock import Mock, patch
 
 import pytest
@@ -30,16 +31,6 @@ def mock_current_request_mock():
         Mock(get=mock_current_request),
     ):
         yield mock_current_request
-
-
-@pytest.fixture
-def patch_hassio():
-    """Patch the hassio component."""
-    with patch("homeassistant.components.hassio.is_hassio", return_value=True), patch(
-        "homeassistant.components.hassio.get_host_info",
-        return_value={"hostname": "homeassistant"},
-    ):
-        yield
 
 
 async def test_get_url_internal(hass: HomeAssistant) -> None:
@@ -371,9 +362,8 @@ async def test_get_cloud_url(hass: HomeAssistant) -> None:
     assert hass.config.external_url is None
     hass.config.components.add("cloud")
 
-    with patch.object(
-        hass.components.cloud,
-        "async_remote_ui_url",
+    with patch(
+        "homeassistant.components.cloud.async_remote_ui_url",
         return_value="https://example.nabu.casa",
     ):
         assert _get_cloud_url(hass) == "https://example.nabu.casa"
@@ -396,9 +386,8 @@ async def test_get_cloud_url(hass: HomeAssistant) -> None:
         ), pytest.raises(NoURLAvailableError):
             _get_cloud_url(hass, require_current_request=True)
 
-    with patch.object(
-        hass.components.cloud,
-        "async_remote_ui_url",
+    with patch(
+        "homeassistant.components.cloud.async_remote_ui_url",
         side_effect=cloud.CloudNotAvailable,
     ), pytest.raises(NoURLAvailableError):
         _get_cloud_url(hass)
@@ -419,9 +408,8 @@ async def test_get_external_url_cloud_fallback(hass: HomeAssistant) -> None:
 
     # Add Cloud to the previous test
     hass.config.components.add("cloud")
-    with patch.object(
-        hass.components.cloud,
-        "async_remote_ui_url",
+    with patch(
+        "homeassistant.components.cloud.async_remote_ui_url",
         return_value="https://example.nabu.casa",
     ):
         assert _get_external_url(hass, allow_cloud=False) == "http://1.1.1.1:8123"
@@ -445,9 +433,8 @@ async def test_get_external_url_cloud_fallback(hass: HomeAssistant) -> None:
 
     # Add Cloud to the previous test
     hass.config.components.add("cloud")
-    with patch.object(
-        hass.components.cloud,
-        "async_remote_ui_url",
+    with patch(
+        "homeassistant.components.cloud.async_remote_ui_url",
         return_value="https://example.nabu.casa",
     ):
         assert _get_external_url(hass, allow_cloud=False) == "https://example.com"
@@ -575,8 +562,13 @@ async def test_get_request_host(hass: HomeAssistant) -> None:
         assert _get_request_host() == "example.com"
 
 
+@patch("homeassistant.components.hassio.is_hassio", Mock(return_value=True))
+@patch(
+    "homeassistant.components.hassio.get_host_info",
+    Mock(return_value={"hostname": "homeassistant"}),
+)
 async def test_get_current_request_url_with_known_host(
-    hass: HomeAssistant, current_request, patch_hassio
+    hass: HomeAssistant, current_request
 ) -> None:
     """Test getting current request URL with known hosts addresses."""
     hass.config.api = Mock(use_ssl=False, port=8123, local_ip="127.0.0.1")
@@ -629,6 +621,14 @@ async def test_get_current_request_url_with_known_host(
         get_url(hass, require_current_request=True)
 
 
+@patch(
+    "homeassistant.components.hassio.is_hassio",
+    Mock(return_value={"hostname": "homeassistant"}),
+)
+@patch(
+    "homeassistant.components.hassio.get_host_info",
+    Mock(return_value={"hostname": "hellohost"}),
+)
 async def test_is_internal_request(hass: HomeAssistant, mock_current_request) -> None:
     """Test if accessing an instance on its internal URL."""
     # Test with internal URL: http://example.local:8123
@@ -668,13 +668,9 @@ async def test_is_internal_request(hass: HomeAssistant, mock_current_request) ->
         assert is_internal_request(hass), mock_current_request.return_value.url
 
     # Test for matching against HassOS hostname
-    with patch("homeassistant.components.hassio.is_hassio", return_value=True), patch(
-        "homeassistant.components.hassio.get_host_info",
-        return_value={"hostname": "hellohost"},
-    ):
-        for allowed in ("hellohost", "hellohost.local"):
-            mock_current_request.return_value = Mock(url=f"http://{allowed}:8123")
-            assert is_internal_request(hass), mock_current_request.return_value.url
+    for allowed in ("hellohost", "hellohost.local"):
+        mock_current_request.return_value = Mock(url=f"http://{allowed}:8123")
+        assert is_internal_request(hass), mock_current_request.return_value.url
 
 
 async def test_is_hass_url(hass: HomeAssistant) -> None:
@@ -710,9 +706,8 @@ async def test_is_hass_url(hass: HomeAssistant) -> None:
     assert is_hass_url(hass, "http://example.com:443") is False
     assert is_hass_url(hass, "http://example.com") is False
 
-    with patch.object(
-        hass.components.cloud,
-        "async_remote_ui_url",
+    with patch(
+        "homeassistant.components.cloud.async_remote_ui_url",
         return_value="https://example.nabu.casa",
     ):
         assert is_hass_url(hass, "https://example.nabu.casa") is False

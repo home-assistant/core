@@ -1,4 +1,5 @@
 """Test the Hi-Link HLK-SW16 config flow."""
+
 import asyncio
 from unittest.mock import patch
 

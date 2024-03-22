@@ -1,4 +1,5 @@
 """Test the SensorPro config flow."""
+
 from unittest.mock import patch
 
 from homeassistant import config_entries

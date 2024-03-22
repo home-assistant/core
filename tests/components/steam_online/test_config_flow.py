@@ -1,4 +1,5 @@
 """Test Steam config flow."""
+
 from unittest.mock import patch
 
 import steam

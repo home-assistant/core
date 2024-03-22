@@ -1,4 +1,5 @@
 """Config flow to configure the Notion integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -8,11 +9,9 @@ from typing import Any
 from aionotion.errors import InvalidCredentialsError, NotionError
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_REFRESH_TOKEN, CONF_USER_UUID, DOMAIN, LOGGER
 from .util import async_get_client_with_credentials
@@ -64,7 +63,7 @@ async def async_validate_credentials(
     )
 
 
-class NotionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class NotionFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Notion config flow."""
 
     VERSION = 1
@@ -73,7 +72,9 @@ class NotionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self._reauth_entry: ConfigEntry | None = None
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -82,7 +83,7 @@ class NotionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle re-auth completion."""
         assert self._reauth_entry
 
@@ -121,7 +122,7 @@ class NotionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the start of the config flow."""
         if not user_input:
             return self.async_show_form(step_id="user", data_schema=AUTH_SCHEMA)

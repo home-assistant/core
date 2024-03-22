@@ -2,6 +2,7 @@
 
 The number component allows control of charging current.
 """
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -38,20 +39,13 @@ def min_charging_current_value(coordinator: WallboxCoordinator) -> float:
     return 6
 
 
-@dataclass(frozen=True)
-class WallboxNumberEntityDescriptionMixin:
-    """Load entities from different handlers."""
+@dataclass(frozen=True, kw_only=True)
+class WallboxNumberEntityDescription(NumberEntityDescription):
+    """Describes Wallbox number entity."""
 
     max_value_fn: Callable[[WallboxCoordinator], float]
     min_value_fn: Callable[[WallboxCoordinator], float]
     set_value_fn: Callable[[WallboxCoordinator], Callable[[float], Awaitable[None]]]
-
-
-@dataclass(frozen=True)
-class WallboxNumberEntityDescription(
-    NumberEntityDescription, WallboxNumberEntityDescriptionMixin
-):
-    """Describes Wallbox number entity."""
 
 
 NUMBER_TYPES: dict[str, WallboxNumberEntityDescription] = {
@@ -92,11 +86,9 @@ async def async_setup_entry(
         raise PlatformNotReady from exc
 
     async_add_entities(
-        [
-            WallboxNumber(coordinator, entry, description)
-            for ent in coordinator.data
-            if (description := NUMBER_TYPES.get(ent))
-        ]
+        WallboxNumber(coordinator, entry, description)
+        for ent in coordinator.data
+        if (description := NUMBER_TYPES.get(ent))
     )
 
 

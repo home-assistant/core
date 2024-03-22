@@ -1,4 +1,5 @@
 """Config flow for PrusaLink integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -11,10 +12,9 @@ from pyprusalink import PrusaLink
 from pyprusalink.types import InvalidAuth
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -63,7 +63,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str,
     return {"title": version["hostname"] or version["text"]}
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class PrusaLinkConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for PrusaLink."""
 
     VERSION = 1
@@ -71,7 +71,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(

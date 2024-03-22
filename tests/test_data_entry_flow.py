@@ -1,4 +1,5 @@
 """Test the flow classes."""
+
 import asyncio
 import dataclasses
 import logging
@@ -211,7 +212,6 @@ async def test_create_saves_data(manager) -> None:
     assert len(manager.mock_created_entries) == 1
 
     entry = manager.mock_created_entries[0]
-    assert entry["version"] == 5
     assert entry["handler"] == "test"
     assert entry["title"] == "Test Title"
     assert entry["data"] == "Test Data"
@@ -237,7 +237,6 @@ async def test_discovery_init_flow(manager) -> None:
     assert len(manager.mock_created_entries) == 1
 
     entry = manager.mock_created_entries[0]
-    assert entry["version"] == 5
     assert entry["handler"] == "test"
     assert entry["title"] == "hello"
     assert entry["data"] == data
@@ -909,7 +908,7 @@ async def test_abort_raises_unknown_flow_if_not_in_progress(manager) -> None:
 
 @pytest.mark.parametrize(
     "menu_options",
-    (["target1", "target2"], {"target1": "Target 1", "target2": "Target 2"}),
+    [["target1", "target2"], {"target1": "Target 1", "target2": "Target 2"}],
 )
 async def test_show_menu(hass: HomeAssistant, manager, menu_options) -> None:
     """Test show menu."""

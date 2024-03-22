@@ -1,6 +1,5 @@
 """Tests for the Bluetooth integration."""
 
-
 from collections.abc import Iterable
 from contextlib import contextmanager
 import itertools

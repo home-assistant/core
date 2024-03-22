@@ -1,4 +1,5 @@
 """Component to interface with locks that can be controlled remotely."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -40,6 +41,8 @@ from homeassistant.helpers.deprecation import (
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, StateType
+
+from . import group as group_pre_import  # noqa: F401
 
 if TYPE_CHECKING:
     from functools import cached_property
@@ -153,7 +156,6 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             if TYPE_CHECKING:
                 assert self.code_format
             raise ServiceValidationError(
-                f"The code for {self.entity_id} doesn't match pattern {self.code_format}",
                 translation_domain=DOMAIN,
                 translation_key="add_default_code",
                 translation_placeholders={
@@ -216,7 +218,7 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
@@ -229,7 +231,7 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
@@ -242,7 +244,7 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def open(self, **kwargs: Any) -> None:
         """Open the door latch."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""

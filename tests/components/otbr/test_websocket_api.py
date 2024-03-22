@@ -1,4 +1,5 @@
 """Test OTBR Websocket API."""
+
 from unittest.mock import patch
 
 import pytest

@@ -1,4 +1,5 @@
 """Support for a ScreenLogic Sensor."""
+
 from collections.abc import Callable
 from copy import copy
 import dataclasses
@@ -35,21 +36,16 @@ from .util import cleanup_excluded_entity, get_ha_unit
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclasses.dataclass(frozen=True)
-class ScreenLogicSensorMixin:
-    """Mixin for SecreenLogic sensor entity."""
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class ScreenLogicSensorDescription(
+    SensorEntityDescription, ScreenLogicEntityDescription
+):
+    """Describes a ScreenLogic sensor."""
 
     value_mod: Callable[[int | str], int | str] | None = None
 
 
-@dataclasses.dataclass(frozen=True)
-class ScreenLogicSensorDescription(
-    ScreenLogicSensorMixin, SensorEntityDescription, ScreenLogicEntityDescription
-):
-    """Describes a ScreenLogic sensor."""
-
-
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class ScreenLogicPushSensorDescription(
     ScreenLogicSensorDescription, ScreenLogicPushEntityDescription
 ):
@@ -231,20 +227,21 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    entities: list[ScreenLogicSensor] = []
     coordinator: ScreenlogicDataUpdateCoordinator = hass.data[SL_DOMAIN][
         config_entry.entry_id
     ]
     gateway = coordinator.gateway
 
-    for core_sensor_description in SUPPORTED_CORE_SENSORS:
+    entities: list[ScreenLogicSensor] = [
+        ScreenLogicPushSensor(coordinator, core_sensor_description)
+        for core_sensor_description in SUPPORTED_CORE_SENSORS
         if (
             gateway.get_data(
                 *core_sensor_description.data_root, core_sensor_description.key
             )
             is not None
-        ):
-            entities.append(ScreenLogicPushSensor(coordinator, core_sensor_description))
+        )
+    ]
 
     for pump_index, pump_data in gateway.get_data(DEVICE.PUMP).items():
         if not pump_data or not pump_data.get(VALUE.DATA):

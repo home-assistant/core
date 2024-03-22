@@ -1,4 +1,5 @@
 """Handler for Hass.io."""
+
 from __future__ import annotations
 
 import asyncio
@@ -19,8 +20,9 @@ from homeassistant.components.http import (
 )
 from homeassistant.const import SERVER_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.loader import bind_hass
 
-from .const import ATTR_DISCOVERY, DOMAIN, X_HASS_SOURCE
+from .const import ATTR_DISCOVERY, ATTR_MESSAGE, ATTR_RESULT, DOMAIN, X_HASS_SOURCE
 
 _P = ParamSpec("_P")
 
@@ -62,6 +64,7 @@ def api_data(
     return _wrapper
 
 
+@bind_hass
 async def async_get_addon_info(hass: HomeAssistant, slug: str) -> dict:
     """Return add-on info.
 
@@ -83,6 +86,7 @@ async def async_get_addon_store_info(hass: HomeAssistant, slug: str) -> dict:
     return await hassio.send_command(command, method="get")
 
 
+@bind_hass
 async def async_update_diagnostics(hass: HomeAssistant, diagnostics: bool) -> bool:
     """Update Supervisor diagnostics toggle.
 
@@ -92,6 +96,7 @@ async def async_update_diagnostics(hass: HomeAssistant, diagnostics: bool) -> bo
     return await hassio.update_diagnostics(diagnostics)
 
 
+@bind_hass
 @api_data
 async def async_install_addon(hass: HomeAssistant, slug: str) -> dict:
     """Install add-on.
@@ -103,6 +108,7 @@ async def async_install_addon(hass: HomeAssistant, slug: str) -> dict:
     return await hassio.send_command(command, timeout=None)
 
 
+@bind_hass
 @api_data
 async def async_uninstall_addon(hass: HomeAssistant, slug: str) -> dict:
     """Uninstall add-on.
@@ -114,6 +120,7 @@ async def async_uninstall_addon(hass: HomeAssistant, slug: str) -> dict:
     return await hassio.send_command(command, timeout=60)
 
 
+@bind_hass
 @api_data
 async def async_update_addon(
     hass: HomeAssistant,
@@ -133,6 +140,7 @@ async def async_update_addon(
     )
 
 
+@bind_hass
 @api_data
 async def async_start_addon(hass: HomeAssistant, slug: str) -> dict:
     """Start add-on.
@@ -144,6 +152,7 @@ async def async_start_addon(hass: HomeAssistant, slug: str) -> dict:
     return await hassio.send_command(command, timeout=60)
 
 
+@bind_hass
 @api_data
 async def async_restart_addon(hass: HomeAssistant, slug: str) -> dict:
     """Restart add-on.
@@ -155,6 +164,7 @@ async def async_restart_addon(hass: HomeAssistant, slug: str) -> dict:
     return await hassio.send_command(command, timeout=None)
 
 
+@bind_hass
 @api_data
 async def async_stop_addon(hass: HomeAssistant, slug: str) -> dict:
     """Stop add-on.
@@ -166,6 +176,7 @@ async def async_stop_addon(hass: HomeAssistant, slug: str) -> dict:
     return await hassio.send_command(command, timeout=60)
 
 
+@bind_hass
 @api_data
 async def async_set_addon_options(
     hass: HomeAssistant, slug: str, options: dict
@@ -179,6 +190,7 @@ async def async_set_addon_options(
     return await hassio.send_command(command, payload=options)
 
 
+@bind_hass
 async def async_get_addon_discovery_info(hass: HomeAssistant, slug: str) -> dict | None:
     """Return discovery data for an add-on."""
     hassio: HassIO = hass.data[DOMAIN]
@@ -187,6 +199,7 @@ async def async_get_addon_discovery_info(hass: HomeAssistant, slug: str) -> dict
     return next((addon for addon in discovered_addons if addon["addon"] == slug), None)
 
 
+@bind_hass
 @api_data
 async def async_create_backup(
     hass: HomeAssistant, payload: dict, partial: bool = False
@@ -201,6 +214,7 @@ async def async_create_backup(
     return await hassio.send_command(command, payload=payload, timeout=None)
 
 
+@bind_hass
 @api_data
 async def async_update_os(hass: HomeAssistant, version: str | None = None) -> dict:
     """Update Home Assistant Operating System.
@@ -216,6 +230,7 @@ async def async_update_os(hass: HomeAssistant, version: str | None = None) -> di
     )
 
 
+@bind_hass
 @api_data
 async def async_update_supervisor(hass: HomeAssistant) -> dict:
     """Update Home Assistant Supervisor.
@@ -227,6 +242,7 @@ async def async_update_supervisor(hass: HomeAssistant) -> dict:
     return await hassio.send_command(command, timeout=None)
 
 
+@bind_hass
 @api_data
 async def async_update_core(
     hass: HomeAssistant, version: str | None = None, backup: bool = False
@@ -244,12 +260,10 @@ async def async_update_core(
     )
 
 
+@bind_hass
 @_api_bool
 async def async_apply_suggestion(hass: HomeAssistant, suggestion_uuid: str) -> dict:
-    """Apply a suggestion from supervisor's resolution center.
-
-    The caller of the function should handle HassioAPIError.
-    """
+    """Apply a suggestion from supervisor's resolution center."""
     hassio: HassIO = hass.data[DOMAIN]
     command = f"/resolution/suggestion/{suggestion_uuid}"
     return await hassio.send_command(command, timeout=None)
@@ -557,10 +571,10 @@ class HassIO:
         # such as ../../../../etc/passwd
         if url != str(joined_url):
             _LOGGER.error("Invalid request %s", command)
-            raise HassioAPIError()
+            raise HassioAPIError
 
         try:
-            request = await self.websession.request(
+            response = await self.websession.request(
                 method,
                 joined_url,
                 json=payload,
@@ -573,14 +587,23 @@ class HassIO:
                 timeout=aiohttp.ClientTimeout(total=timeout),
             )
 
-            if request.status != HTTPStatus.OK:
-                _LOGGER.error("%s return code %d", command, request.status)
-                raise HassioAPIError()
+            if response.status != HTTPStatus.OK:
+                error = await response.json(encoding="utf-8")
+                if error.get(ATTR_RESULT) == "error":
+                    raise HassioAPIError(error.get(ATTR_MESSAGE))
+
+                _LOGGER.error(
+                    "Request to %s method %s returned with code %d",
+                    command,
+                    method,
+                    response.status,
+                )
+                raise HassioAPIError
 
             if return_text:
-                return await request.text(encoding="utf-8")
+                return await response.text(encoding="utf-8")
 
-            return await request.json(encoding="utf-8")
+            return await response.json(encoding="utf-8")
 
         except TimeoutError:
             _LOGGER.error("Timeout on %s request", command)
@@ -588,4 +611,4 @@ class HassIO:
         except aiohttp.ClientError as err:
             _LOGGER.error("Client error on %s request %s", command, err)
 
-        raise HassioAPIError()
+        raise HassioAPIError

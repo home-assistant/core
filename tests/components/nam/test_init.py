@@ -1,4 +1,5 @@
 """Test init of Nettigo Air Monitor integration."""
+
 from unittest.mock import patch
 
 from nettigo_air_monitor import ApiError, AuthFailedError

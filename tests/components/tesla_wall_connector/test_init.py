@@ -1,4 +1,5 @@
 """Test the Tesla Wall Connector config flow."""
+
 from tesla_wall_connector.exceptions import WallConnectorConnectionError
 
 from homeassistant import config_entries

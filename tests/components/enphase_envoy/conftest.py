@@ -1,4 +1,5 @@
 """Define test fixtures for Enphase Envoy."""
+
 from unittest.mock import AsyncMock, Mock, patch
 
 from pyenphase import (

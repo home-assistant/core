@@ -1,4 +1,5 @@
 """Test Enphase Envoy sensors."""
+
 from unittest.mock import patch
 
 import pytest

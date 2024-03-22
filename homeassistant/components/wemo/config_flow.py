@@ -8,9 +8,8 @@ from typing import Any, get_type_hints
 import pywemo
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, OptionsFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.config_entry_flow import DiscoveryFlowHandler
 
 from .const import DOMAIN
@@ -45,7 +44,7 @@ class WemoOptionsFlow(OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage options for the WeMo component."""
         errors: dict[str, str] | None = None
         if user_input is not None:

@@ -1,4 +1,5 @@
 """Test the Advantage Air config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from advantage_air import ApiError

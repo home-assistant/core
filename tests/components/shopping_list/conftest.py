@@ -1,4 +1,5 @@
 """Shopping list test helpers."""
+
 from unittest.mock import patch
 
 import pytest
