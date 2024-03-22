@@ -23,20 +23,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
-from .entity import AxisEventEntity
+from .entity import AxisEventDescription, AxisEventEntity
 from .hub import AxisHub
 
 
 @dataclass(frozen=True, kw_only=True)
-class AxisBinarySensorDescription(BinarySensorEntityDescription):
+class AxisBinarySensorDescription(AxisEventDescription, BinarySensorEntityDescription):
     """Axis binary sensor entity description."""
-
-    event_topic: tuple[EventTopic, ...] | EventTopic
-    """Event topic that provides state updates."""
-    name_fn: Callable[[AxisHub, Event], str] = lambda hub, event: ""
-    """Function providing the corresponding name to the event ID."""
-    supported_fn: Callable[[AxisHub, Event], bool] = lambda hub, event: True
-    """Function validating if event is supported."""
 
 
 @callback
@@ -216,15 +209,15 @@ async def async_setup_entry(
 class AxisBinarySensor(AxisEventEntity, BinarySensorEntity):
     """Representation of a binary Axis event."""
 
+    entity_description: AxisBinarySensorDescription
+
     def __init__(
         self, hub: AxisHub, description: AxisBinarySensorDescription, event: Event
     ) -> None:
         """Initialize the Axis binary sensor."""
-        super().__init__(event, hub)
-        self.entity_description = description
-        self._attr_name = description.name_fn(hub, event) or self._attr_name
+        super().__init__(hub, description, event)
+
         self._attr_is_on = event.is_tripped
-        self._attr_device_class = description.device_class  # temporary
         self.cancel_scheduled_update: Callable[[], None] | None = None
 
     @callback
