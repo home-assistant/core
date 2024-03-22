@@ -239,10 +239,6 @@
     }
   },
   "issues": {
-    "deprecated_climate_aux_url": {
-      "title": "The {platform} integration is using deprecated climate auxiliary heater",
-      "description": "The integration `{platform}` implements the `is_aux_heat` property or uses the auxiliary heater methods in a subclass of ClimateEntity.\n\nPlease create a bug report at {issue_tracker}."
-    },
     "deprecated_climate_aux_url_custom": {
       "title": "The {platform} custom integration is using deprecated climate auxiliary heater",
       "description": "The custom integration `{platform}` implements the `is_aux_heat` property or uses the auxiliary heater methods in a subclass of ClimateEntity.\n\nPlease create a bug report at {issue_tracker}.\n\nOnce an updated version of `{platform}` is available, install it and restart Home Assistant to fix this issue."

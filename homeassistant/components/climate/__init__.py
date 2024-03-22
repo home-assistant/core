@@ -453,9 +453,6 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         )
         if issue_tracker:
             translation_placeholders["issue_tracker"] = issue_tracker
-            translation_key = "deprecated_climate_aux_url"
-        if "custom_components" in type(self).__module__ and issue_tracker:
-            translation_placeholders["issue_tracker"] = issue_tracker
             translation_key = "deprecated_climate_aux_url_custom"
         ir.async_create_issue(
             self.hass,
