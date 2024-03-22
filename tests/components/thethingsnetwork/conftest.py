@@ -10,9 +10,6 @@ from homeassistant.components.thethingsnetwork.const import (
     CONF_APP_ID,
     CONF_HOSTNAME,
     DOMAIN,
-    OPTIONS_FIELD_ENTITY_TYPE,
-    OPTIONS_FIELD_ENTITY_TYPE_SENSOR,
-    OPTIONS_MENU_EDIT_FIELDS,
     TTN_API_HOSTNAME,
 )
 
@@ -72,11 +69,6 @@ CONFIG_ENTRY = MockConfigEntry(
         CONF_APP_ID: APP_ID,
         CONF_HOSTNAME: TTN_API_HOSTNAME,
         CONF_API_KEY: API_KEY,
-    },
-    options={
-        OPTIONS_MENU_EDIT_FIELDS: {
-            DEVICE_FIELD: {OPTIONS_FIELD_ENTITY_TYPE: OPTIONS_FIELD_ENTITY_TYPE_SENSOR}
-        }
     },
 )
 
