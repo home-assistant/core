@@ -910,6 +910,51 @@ async def test_async_start_setup_config_entry_late_platform(
     }
 
 
+async def test_async_start_setup_config_entry_platform_wait(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test setup started tracks wait time when a platform loads inside of config entry setup."""
+    hass.set_state(CoreState.not_running)
+    setup_started: dict[tuple[str, str | None], float]
+    setup_started = hass.data.setdefault(setup.DATA_SETUP_STARTED, {})
+    setup_time = setup._setup_times(hass)
+
+    with setup.async_start_setup(
+        hass, integration="august", phase=setup.SetupPhases.SETUP
+    ):
+        freezer.tick(10)
+        assert isinstance(setup_started[("august", None)], float)
+
+    with setup.async_start_setup(
+        hass,
+        integration="august",
+        group="entry_id",
+        phase=setup.SetupPhases.CONFIG_ENTRY_SETUP,
+    ):
+        assert isinstance(setup_started[("august", "entry_id")], float)
+
+        with setup.async_pause_setup(hass, setup.SetupPhases.WAIT_IMPORT_PLATFORMS):
+            freezer.tick(100)
+        with setup.async_start_setup(
+            hass,
+            integration="august",
+            group="entry_id",
+            phase=setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP,
+        ):
+            freezer.tick(20)
+            assert isinstance(setup_started[("august", "entry_id")], float)
+
+    # CONFIG_ENTRY_PLATFORM_SETUP is run inside of CONFIG_ENTRY_SETUP, so it should not
+    # be tracked, but any wait time should still be tracked because its blocking the setup
+    assert setup_time["august"] == {
+        None: {setup.SetupPhases.SETUP: 10.0},
+        "entry_id": {
+            setup.SetupPhases.WAIT_IMPORT_PLATFORMS: -100.0,
+            setup.SetupPhases.CONFIG_ENTRY_SETUP: 120.0,
+        },
+    }
+
+
 async def test_async_start_setup_top_level_yaml(hass: HomeAssistant) -> None:
     """Test setup started context manager keeps track of setup times with modern yaml."""
     hass.set_state(CoreState.not_running)
