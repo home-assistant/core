@@ -100,7 +100,7 @@ class _IntegrationMethod(ABC):
         return _Left()
 
     @abstractmethod
-    def validate_states(self, left: State | None, right: State | None) -> bool:
+    def validate_states(self, left: State, right: State) -> bool:
         """Check state requirements for integration."""
 
     @abstractmethod
@@ -121,7 +121,7 @@ class _Trapezoidal(_IntegrationMethod):
     ) -> Decimal:
         return Decimal(elapsed_time) * (Decimal(left.state) + Decimal(right.state)) / 2
 
-    def validate_states(self, left: State | None, right: State | None) -> bool:
+    def validate_states(self, left: State, right: State) -> bool:
         return _is_numeric_state(left) and _is_numeric_state(right)
 
 
@@ -131,7 +131,7 @@ class _Left(_IntegrationMethod):
     ) -> Decimal:
         return self.calculate_area_with_one_state(elapsed_time, left)
 
-    def validate_states(self, left: State | None, right: State | None) -> bool:
+    def validate_states(self, left: State, right: State) -> bool:
         return _is_numeric_state(left)
 
 
@@ -141,14 +141,11 @@ class _Right(_IntegrationMethod):
     ) -> Decimal:
         return self.calculate_area_with_one_state(elapsed_time, right)
 
-    def validate_states(self, left: State | None, right: State | None) -> bool:
+    def validate_states(self, left: State, right: State) -> bool:
         return _is_numeric_state(right)
 
 
-def _is_numeric_state(state: State | None) -> bool:
-    if state is None:
-        return False
-
+def _is_numeric_state(state: State) -> bool:
     try:
         float(state.state)
         return True
