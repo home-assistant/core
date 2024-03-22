@@ -16,9 +16,9 @@ SENSORS = (
     "carbon_dioxide",
     "humidity",
     "pm10",
-    "pm25",
+    "pm2_5",
     "temperature",
-    "none",
+    "tvoc",
 )
 
 
@@ -31,14 +31,14 @@ async def test_sensors(
 ) -> None:
     """Test the Arve sensors."""
 
-    sn = mock_arve.serial_number.split("-")[-1]
+    sn = mock_arve.device_sn
 
     await async_init_integration(hass, mock_config_entry)
 
     for sensor in SENSORS:
-        state = hass.state.get(f"sensor.sensor_{sn}_{sensor}")
+        state = hass.states.get(f"sensor.my_arve_{sensor}")
         assert state
-        assert state == snapshot(name=f"sensor_{sn}_{sensor}")
+        assert state == snapshot(name=f"my_arve_{sensor}")
 
         entry = entity_registry.async_get(state.entity_id)
         assert entry

@@ -4,8 +4,9 @@
       "user": {
         "description": "Set up your Arve device",
         "data": {
-          "access_token": "[%key:common::config_flow::data::access_token%]",
-          "name": "[%key:common::config_flow::data::name%]"
+          "access_token": "Arve token for HA",
+          "client_secret": "Arve customer token",
+          "name": "Device serial number"
         }
       }
     },
@@ -16,6 +17,13 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "tvoc": {
+        "name": "tvoc"
+      }
     }
   }
 }
