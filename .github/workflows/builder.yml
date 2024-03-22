@@ -95,6 +95,7 @@ jobs:
       packages: write
       id-token: write
     strategy:
+      fail-fast: false
       matrix:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
