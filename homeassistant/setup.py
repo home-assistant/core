@@ -684,21 +684,33 @@ def async_pause_setup(
         return
 
     started = time.monotonic()
+    integration, group, running_phase = running
     try:
         yield
     finally:
-        time_taken = time.monotonic() - started
-        integration, group, running_phase = running
-        # Add negative time for the time we waited
-        _setup_times(hass)[integration][group][phase] = -time_taken
-        _LOGGER.debug(
-            "Adding wait for %s for %s (%s) of %.2f (running_phase=%s)",
-            phase,
-            integration,
-            group,
-            -time_taken,
-            running_phase,
-        )
+        if not current_setup_group_phase.get():
+            # If there is a pause inside of task that runs from the
+            # the context manager will finish while waiting for the
+            # task to finish so we do not want to subtract out the time
+            # as it means the context var carried over but we did
+            # not actually wait because it was a another task.
+            _LOGGER.debug(
+                "Phase %s of %s (%s) finished while waiting", phase, integration, group
+            )
+            # no return here since we are in a finally and do not
+            # want to swallow exceptions
+        else:
+            time_taken = time.monotonic() - started
+            # Add negative time for the time we waited
+            _setup_times(hass)[integration][group][phase] = -time_taken
+            _LOGGER.debug(
+                "Adding wait for %s for %s (%s) of %.2f (running_phase=%s)",
+                phase,
+                integration,
+                group,
+                -time_taken,
+                running_phase,
+            )
 
 
 def _setup_times(
