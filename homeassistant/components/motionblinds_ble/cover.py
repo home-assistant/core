@@ -7,6 +7,7 @@ import logging
 from typing import Any
 
 from motionblindsble.const import MotionBlindType, MotionRunningType
+from motionblindsble.device import MotionDevice
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -64,11 +65,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up blind based on a config entry."""
 
-    blind_class = BLIND_TYPE_TO_CLASS[entry.data[CONF_BLIND_TYPE].upper()]
-    device = hass.data[DOMAIN][entry.entry_id]
-    entity_description = BLIND_TYPE_TO_ENTITY_DESCRIPTION[
+    blind_class: type[MotionblindsBLECoverEntity] = BLIND_TYPE_TO_CLASS[
         entry.data[CONF_BLIND_TYPE].upper()
     ]
+    device: MotionDevice = hass.data[DOMAIN][entry.entry_id]
+    entity_description: MotionblindsBLECoverEntityDescription = (
+        BLIND_TYPE_TO_ENTITY_DESCRIPTION[entry.data[CONF_BLIND_TYPE].upper()]
+    )
     entity = blind_class(device, entry, entity_description)
 
     async_add_entities([entity])
