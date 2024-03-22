@@ -271,7 +271,9 @@ async def _async_setup_legacy_integration(
         """
         cancel_update_stale()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_hass_stop)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, _on_hass_stop, run_immediately=True
+    )
 
 
 @attr.s

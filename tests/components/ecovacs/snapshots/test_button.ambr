@@ -40,6 +40,7 @@
     'context': <ANY>,
     'entity_id': 'button.ozmo_950_relocate',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2024-01-01T00:00:00+00:00',
   })
@@ -85,6 +86,7 @@
     'context': <ANY>,
     'entity_id': 'button.ozmo_950_reset_filter_lifespan',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2024-01-01T00:00:00+00:00',
   })
@@ -130,6 +132,7 @@
     'context': <ANY>,
     'entity_id': 'button.ozmo_950_reset_main_brush_lifespan',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2024-01-01T00:00:00+00:00',
   })
@@ -175,6 +178,7 @@
     'context': <ANY>,
     'entity_id': 'button.ozmo_950_reset_side_brushes_lifespan',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2024-01-01T00:00:00+00:00',
   })

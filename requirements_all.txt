@@ -54,7 +54,7 @@ ProgettiHWSW==0.1.3
 # PyBluez==0.22
 
 # homeassistant.components.cast
-PyChromecast==14.0.0
+PyChromecast==14.0.1
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
@@ -242,7 +242,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==23.1.1
+aioesphomeapi==23.2.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -347,7 +347,7 @@ aiopyarr==23.4.0
 aioqsw==0.3.5
 
 # homeassistant.components.rainforest_raven
-aioraven==0.5.1
+aioraven==0.5.2
 
 # homeassistant.components.recollect_waste
 aiorecollect==2023.09.0
@@ -365,7 +365,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==8.1.1
+aioshelly==8.2.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -511,7 +511,7 @@ aurorapy==0.2.7
 # avion==0.10
 
 # homeassistant.components.axis
-axis==56
+axis==57
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
@@ -568,7 +568,7 @@ blinkpy==0.22.6
 blockchain==1.4.4
 
 # homeassistant.components.blue_current
-bluecurrent-api==1.0.6
+bluecurrent-api==1.2.2
 
 # homeassistant.components.bluemaestro
 bluemaestro-ble==0.2.3
@@ -618,7 +618,7 @@ brunt==1.2.0
 bt-proximity==0.2.1
 
 # homeassistant.components.bthome
-bthome-ble==3.8.0
+bthome-ble==3.8.1
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
@@ -1406,7 +1406,7 @@ nsw-fuel-api-client==1.1.0
 nuheat==1.0.1
 
 # homeassistant.components.numato
-numato-gpio==0.12.0
+numato-gpio==0.13.0
 
 # homeassistant.components.compensation
 # homeassistant.components.iqvia
@@ -1553,7 +1553,7 @@ poolsense==0.0.8
 praw==7.5.0
 
 # homeassistant.components.islamic_prayer_times
-prayer-times-calculator==0.0.10
+prayer-times-calculator==0.0.12
 
 # homeassistant.components.proliphix
 proliphix==0.4.1
@@ -1787,7 +1787,7 @@ pyedimax==0.2.1
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.19.2
+pyenphase==1.20.0
 
 # homeassistant.components.envisalink
 pyenvisalink==4.6
@@ -2175,7 +2175,7 @@ pyswitchbee==1.8.0
 pytautulli==23.1.1
 
 # homeassistant.components.tedee
-pytedee-async==0.2.16
+pytedee-async==0.2.17
 
 # homeassistant.components.tfiac
 pytfiac==0.4
@@ -2841,7 +2841,7 @@ webmin-xmlrpc==0.0.2
 webrtc-noise-gain==1.2.3
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.18.4
+whirlpool-sixth-sense==0.18.6
 
 # homeassistant.components.whois
 whois==0.9.27
