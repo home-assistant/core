@@ -439,14 +439,8 @@
     },
     "artsound": {
       "name": "ArtSound",
-      "integrations": {
-        "linkplay": {
-          "integration_type": "hub",
-          "config_flow": true,
-          "iot_class": "local_polling",
-          "name": "LinkPlay"
-        }
-      }
+      "integration_type": "virtual",
+      "supported_by": "linkplay"
     },
     "aruba": {
       "name": "Aruba",
@@ -3232,6 +3226,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "linkplay": {
+      "name": "LinkPlay",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "linksys_smart": {
       "name": "Linksys Smart Wi-Fi",
