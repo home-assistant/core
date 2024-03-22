@@ -105,7 +105,7 @@ async def test_errors(
             blocking=True,
         )
     mock_on.assert_called_once()
-    assert isinstance(error.value, InvalidCommand)
+    assert str(error.value) == "Teslemetry command failed"
 
 
 async def test_asleep_or_offline(
@@ -139,7 +139,7 @@ async def test_asleep_or_offline(
             {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
-    assert error
+    assert str(error.value) == "The data request or command is unknown."
     mock_wake_up.assert_called_once()
 
     mock_wake_up.side_effect = None
@@ -157,7 +157,7 @@ async def test_asleep_or_offline(
             {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
-    assert error
+    assert str(error.value) == "Could not wake up vehicle"
     mock_wake_up.assert_called_once()
     mock_vehicle.assert_called()
 
