@@ -92,7 +92,7 @@ async def test_errors(hass: HomeAssistant) -> None:
             blocking=True,
         )
     mock_set.assert_called_once()
-    assert error.from_exception == ERROR_UNKNOWN
+    assert error.value == ERROR_UNKNOWN
 
     # Test setting cover open with unknown error
     with patch(
@@ -106,4 +106,4 @@ async def test_errors(hass: HomeAssistant) -> None:
             blocking=True,
         )
     mock_set.assert_called_once()
-    assert str(error) == TEST_RESPONSE_ERROR["reason"]
+    assert str(error.value) == TEST_RESPONSE_ERROR["reason"]

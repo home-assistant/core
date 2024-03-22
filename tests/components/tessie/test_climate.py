@@ -123,4 +123,4 @@ async def test_errors(hass: HomeAssistant) -> None:
             blocking=True,
         )
     mock_set.assert_called_once()
-    assert error.from_exception == ERROR_UNKNOWN
+    assert error.value == ERROR_UNKNOWN

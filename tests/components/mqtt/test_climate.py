@@ -1138,9 +1138,9 @@ async def test_set_preset_mode_optimistic(
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("preset_mode") == "comfort"
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as excinfo:
         await common.async_set_preset_mode(hass, "invalid", ENTITY_CLIMATE)
-    assert "'invalid' is not a valid preset mode" in caplog.text
+    assert "Preset mode invalid is not valid." in str(excinfo.value)
 
 
 @pytest.mark.parametrize(
@@ -1196,9 +1196,9 @@ async def test_set_preset_mode_explicit_optimistic(
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("preset_mode") == "comfort"
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as excinfo:
         await common.async_set_preset_mode(hass, "invalid", ENTITY_CLIMATE)
-    assert "'invalid' is not a valid preset mode" in caplog.text
+    assert "Preset mode invalid is not valid." in str(excinfo.value)
 
 
 @pytest.mark.parametrize(

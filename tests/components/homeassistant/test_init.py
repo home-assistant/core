@@ -482,7 +482,7 @@ async def test_raises_when_db_upgrade_in_progress(
             blocking=True,
         )
     assert "The system cannot" in caplog.text
-    assert "while a database upgrade in progress" in caplog.text
+    assert "while a database upgrade is in progress" in caplog.text
 
     assert mock_async_migration_in_progress.called
     caplog.clear()

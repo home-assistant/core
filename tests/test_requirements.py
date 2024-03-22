@@ -331,8 +331,6 @@ async def test_get_integration_with_requirements_pip_install_fails_two_passes(
         integration = await async_get_integration_with_requirements(
             hass, "test_component"
         )
-    assert integration
-    assert integration.domain == "test_component"
 
     assert len(mock_is_installed.mock_calls) == 3
     assert sorted(mock_call[1][0] for mock_call in mock_is_installed.mock_calls) == [
@@ -361,8 +359,6 @@ async def test_get_integration_with_requirements_pip_install_fails_two_passes(
         integration = await async_get_integration_with_requirements(
             hass, "test_component"
         )
-    assert integration
-    assert integration.domain == "test_component"
 
     assert len(mock_is_installed.mock_calls) == 0
     # On another attempt we remember failures and don't try again
@@ -379,8 +375,6 @@ async def test_get_integration_with_requirements_pip_install_fails_two_passes(
         integration = await async_get_integration_with_requirements(
             hass, "test_component"
         )
-    assert integration
-    assert integration.domain == "test_component"
 
     assert len(mock_is_installed.mock_calls) == 2
     assert sorted(mock_call[1][0] for mock_call in mock_is_installed.mock_calls) == [

@@ -47,7 +47,7 @@ async def test_hass_numato_api_wrong_port_directions(
     api = numato.NumatoAPI()
     api.setup_output(0, 5)
     api.setup_input(0, 2)
-    api.setup_input(0, 6)
+    api.setup_output(0, 6)
     with pytest.raises(NumatoGpioError):
         api.read_adc_input(0, 5)  # adc_read from output
     with pytest.raises(NumatoGpioError):

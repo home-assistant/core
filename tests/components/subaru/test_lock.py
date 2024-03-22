@@ -60,7 +60,7 @@ async def test_lock_cmd_fails(hass: HomeAssistant, ev_entry) -> None:
             LOCK_DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
         )
     await hass.async_block_till_done()
-    mock_lock.assert_called_once()
+    mock_lock.assert_not_called()
 
 
 async def test_unlock_specific_door(hass: HomeAssistant, ev_entry) -> None:

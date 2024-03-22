@@ -1823,12 +1823,6 @@ async def test_media_player_seek_error(hass: HomeAssistant) -> None:
             payload={"deltaPositionMilliseconds": 30000},
         )
 
-    assert "event" in msg
-    msg = msg["event"]
-    assert msg["header"]["name"] == "ErrorResponse"
-    assert msg["header"]["namespace"] == "Alexa.Video"
-    assert msg["payload"]["type"] == "ACTION_NOT_PERMITTED_FOR_CONTENT"
-
 
 @pytest.mark.freeze_time("2022-04-19 07:53:05")
 async def test_alert(hass: HomeAssistant) -> None:

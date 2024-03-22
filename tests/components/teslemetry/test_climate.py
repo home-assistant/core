@@ -105,7 +105,7 @@ async def test_errors(
             blocking=True,
         )
     mock_on.assert_called_once()
-    assert error.from_exception == InvalidCommand
+    assert isinstance(error.value, InvalidCommand)
 
 
 async def test_asleep_or_offline(
