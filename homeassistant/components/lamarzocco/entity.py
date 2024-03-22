@@ -15,25 +15,29 @@ from .const import DOMAIN
 from .coordinator import LaMarzoccoUpdateCoordinator, _DeviceT
 
 _ConfigT = TypeVar("_ConfigT", bound=LaMarzoccoDeviceConfig)
-_CoordinatorT = TypeVar("_CoordinatorT", bound=LaMarzoccoUpdateCoordinator)
 
 
 @dataclass(frozen=True, kw_only=True)
-class LaMarzoccoEntityDescription(EntityDescription, Generic[_DeviceT, _CoordinatorT]):
+class LaMarzoccoEntityDescription(EntityDescription, Generic[_DeviceT]):
     """Description for all LM entities."""
 
     available_fn: Callable[[_DeviceT], bool] = lambda _: True
-    supported_fn: Callable[[_CoordinatorT], bool] = lambda _: True
+    supported_fn: Callable[[LaMarzoccoUpdateCoordinator[_DeviceT]], bool] = (
+        lambda _: True
+    )
 
 
-class LaMarzoccoBaseEntity(CoordinatorEntity[_CoordinatorT], Generic[_CoordinatorT]):
+class LaMarzoccoBaseEntity(
+    CoordinatorEntity[LaMarzoccoUpdateCoordinator[_DeviceT]],
+    Generic[_DeviceT],
+):
     """Common elements for all entities."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: _CoordinatorT,
+        coordinator: LaMarzoccoUpdateCoordinator[_DeviceT],
         key: str,
     ) -> None:
         """Initialize the entity."""
@@ -50,12 +54,10 @@ class LaMarzoccoBaseEntity(CoordinatorEntity[_CoordinatorT], Generic[_Coordinato
         )
 
 
-class LaMarzoccoEntity(
-    LaMarzoccoBaseEntity[_CoordinatorT], Generic[_DeviceT, _CoordinatorT]
-):
+class LaMarzoccoEntity(LaMarzoccoBaseEntity[_DeviceT], Generic[_DeviceT]):
     """Common elements for all entities."""
 
-    entity_description: LaMarzoccoEntityDescription[_DeviceT, _CoordinatorT]
+    entity_description: LaMarzoccoEntityDescription[_DeviceT]
 
     @property
     def available(self) -> bool:
@@ -66,8 +68,8 @@ class LaMarzoccoEntity(
 
     def __init__(
         self,
-        coordinator: _CoordinatorT,
-        entity_description: LaMarzoccoEntityDescription[_DeviceT, _CoordinatorT],
+        coordinator: LaMarzoccoUpdateCoordinator[_DeviceT],
+        entity_description: LaMarzoccoEntityDescription[_DeviceT],
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator, entity_description.key)
