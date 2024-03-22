@@ -181,7 +181,7 @@ def _get_schema_version(session: Session) -> int | None:
 def get_schema_version(session_maker: Callable[[], Session]) -> int | None:
     """Get the schema version."""
     try:
-        with session_scope(session=session_maker()) as session:
+        with session_scope(session=session_maker(), read_only=True) as session:
             return _get_schema_version(session)
     except Exception as err:  # pylint: disable=broad-except
         _LOGGER.exception("Error when determining DB schema version: %s", err)
@@ -1771,9 +1771,11 @@ def _initialize_database(session: Session) -> bool:
 def initialize_database(session_maker: Callable[[], Session]) -> bool:
     """Initialize a new database."""
     try:
-        with session_scope(session=session_maker()) as session:
+        with session_scope(session=session_maker(), read_only=True) as session:
             if _get_schema_version(session) is not None:
                 return True
+
+        with session_scope(session=session_maker()) as session:
             return _initialize_database(session)
 
     except Exception as err:  # pylint: disable=broad-except
