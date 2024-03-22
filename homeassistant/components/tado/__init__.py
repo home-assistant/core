@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from PyTado.interface import Tado
 from requests import RequestException
@@ -122,7 +123,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 @callback
-def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: ConfigEntry):
+def _async_import_options_from_data_if_missing(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
     options = dict(entry.options)
     if CONF_FALLBACK not in options:
         options[CONF_FALLBACK] = entry.data.get(
@@ -160,19 +163,21 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class TadoConnector:
     """An object to store the Tado data."""
 
-    def __init__(self, hass, username, password, fallback):
+    def __init__(
+        self, hass: HomeAssistant, username: str, password: str, fallback: str
+    ) -> None:
         """Initialize Tado Connector."""
         self.hass = hass
         self._username = username
         self._password = password
         self._fallback = fallback
 
-        self.home_id = None
-        self.home_name = None
-        self.tado = None
-        self.zones = None
-        self.devices = None
-        self.data = {
+        self.home_id: str | None = None
+        self.home_name: str | None = None
+        self.tado: Tado = None
+        self.zones: dict[str, Any] | None = None
+        self.devices: dict[str, Any] | None = None
+        self.data: dict[str, dict[Any, Any]] = {
             "device": {},
             "mobile_device": {},
             "weather": {},
@@ -181,11 +186,11 @@ class TadoConnector:
         }
 
     @property
-    def fallback(self):
+    def fallback(self) -> str:
         """Return fallback flag to Smart Schedule."""
         return self._fallback
 
-    def setup(self):
+    def setup(self) -> None:
         """Connect to Tado and fetch the zones."""
         self.tado = Tado(self._username, self._password)
         # Load zones and devices
@@ -195,12 +200,12 @@ class TadoConnector:
         self.home_id = tado_home["id"]
         self.home_name = tado_home["name"]
 
-    def get_mobile_devices(self):
+    def get_mobile_devices(self) -> Any | None:
         """Return the Tado mobile devices."""
         return self.tado.get_mobile_devices()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def update(self) -> None:
         """Update the registered zones."""
         self.update_devices()
         self.update_mobile_devices()
@@ -242,7 +247,7 @@ class TadoConnector:
             SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED.format(self.home_id),
         )
 
-    def update_devices(self):
+    def update_devices(self) -> None:
         """Update the device data from Tado."""
         try:
             devices = self.tado.get_devices()
@@ -297,7 +302,7 @@ class TadoConnector:
                 ),
             )
 
-    def update_zones(self):
+    def update_zones(self) -> None:
         """Update the zone data from Tado."""
         try:
             zone_states = self.tado.get_zone_states()["zoneStates"]
@@ -308,7 +313,7 @@ class TadoConnector:
         for zone in zone_states:
             self.update_zone(int(zone))
 
-    def update_zone(self, zone_id):
+    def update_zone(self, zone_id: int) -> None:
         """Update the internal data from Tado."""
         _LOGGER.debug("Updating zone %s", zone_id)
         try:
@@ -330,7 +335,7 @@ class TadoConnector:
             SIGNAL_TADO_UPDATE_RECEIVED.format(self.home_id, "zone", zone_id),
         )
 
-    def update_home(self):
+    def update_home(self) -> None:
         """Update the home data from Tado."""
         try:
             self.data["weather"] = self.tado.get_weather()
@@ -345,23 +350,23 @@ class TadoConnector:
             )
             return
 
-    def get_capabilities(self, zone_id):
+    def get_capabilities(self, zone_id: int) -> Any | None:
         """Return the capabilities of the devices."""
         return self.tado.get_capabilities(zone_id)
 
-    def get_auto_geofencing_supported(self):
+    def get_auto_geofencing_supported(self) -> Any | bool | None:
         """Return whether the Tado Home supports auto geofencing."""
         return self.tado.get_auto_geofencing_supported()
 
-    def reset_zone_overlay(self, zone_id):
+    def reset_zone_overlay(self, zone_id: int) -> None:
         """Reset the zone back to the default operation."""
         self.tado.reset_zone_overlay(zone_id)
         self.update_zone(zone_id)
 
     def set_presence(
         self,
-        presence=PRESET_HOME,
-    ):
+        presence: str = PRESET_HOME,
+    ) -> None:
         """Set the presence to home, away or auto."""
         if presence == PRESET_AWAY:
             self.tado.set_away()
@@ -376,15 +381,15 @@ class TadoConnector:
 
     def set_zone_overlay(
         self,
-        zone_id=None,
-        overlay_mode=None,
-        temperature=None,
-        duration=None,
-        device_type="HEATING",
-        mode=None,
-        fan_speed=None,
-        swing=None,
-    ):
+        zone_id: int,
+        overlay_mode: str | None = None,
+        temperature: float | None = None,
+        duration: int | None = None,
+        device_type: str = "HEATING",
+        mode: str | None = None,
+        fan_speed: str | None = None,
+        swing: str | None = None,
+    ) -> None:
         """Set a zone overlay."""
         _LOGGER.debug(
             (
@@ -419,7 +424,9 @@ class TadoConnector:
 
         self.update_zone(zone_id)
 
-    def set_zone_off(self, zone_id, overlay_mode, device_type="HEATING"):
+    def set_zone_off(
+        self, zone_id: int, overlay_mode: str, device_type: str = "HEATING"
+    ) -> None:
         """Set a zone to off."""
         try:
             self.tado.set_zone_overlay(
@@ -430,15 +437,17 @@ class TadoConnector:
 
         self.update_zone(zone_id)
 
-    def set_temperature_offset(self, device_id, offset):
+    def set_temperature_offset(self, device_id: int, offset: float) -> None:
         """Set temperature offset of device."""
         try:
             self.tado.set_temp_offset(device_id, offset)
         except RequestException as exc:
             _LOGGER.error("Could not set temperature offset: %s", exc)
 
-    def set_meter_reading(self, reading: int) -> dict[str, str]:
+    def set_meter_reading(self, reading: int) -> Any | None:
         """Send meter reading to Tado."""
+        if self.tado is None:
+            raise HomeAssistantError("Tado object is not initialized")
         try:
             return self.tado.set_eiq_meter_readings(reading=reading)
         except RequestException as exc:
