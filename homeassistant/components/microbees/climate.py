@@ -33,9 +33,12 @@ async def async_setup_entry(
             coordinator,
             bee_id,
             bee.actuators[0].id,
-            next(filter(lambda x: x.deviceID == 762, bee.sensors)).id
-            if bee.productID == 76
-            else next(filter(lambda x: x.deviceID == 782, bee.sensors)).id,
+            next(
+                filter(
+                    lambda x: x.deviceID == (762 if bee.productID == 76 else 782),
+                    bee.sensors,
+                )
+            ).id,
         )
         for bee_id, bee in coordinator.data.bees.items()
         if bee.productID in CLIMATE_PRODUCT_IDS
