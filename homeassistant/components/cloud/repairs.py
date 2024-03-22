@@ -8,7 +8,11 @@ from typing import Any
 from hass_nabucasa import Cloud
 import voluptuous as vol
 
-from homeassistant.components.repairs import RepairsFlow, repairs_flow_manager
+from homeassistant.components.repairs import (
+    ConfirmRepairFlow,
+    RepairsFlow,
+    repairs_flow_manager,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import issue_registry as ir
@@ -118,8 +122,8 @@ async def async_create_fix_flow(
     hass: HomeAssistant,
     issue_id: str,
     data: dict[str, str | int | float | None] | None,
-) -> RepairsFlow | None:
+) -> RepairsFlow:
     """Create flow."""
     if issue_id == "legacy_subscription":
         return LegacySubscriptionRepairFlow()
-    return None
+    return ConfirmRepairFlow()
