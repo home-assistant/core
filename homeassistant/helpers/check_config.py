@@ -14,7 +14,7 @@ from homeassistant import loader
 from homeassistant.config import (  # type: ignore[attr-defined]
     CONF_PACKAGES,
     CORE_CONFIG_SCHEMA,
-    DOMAIN_HA,
+    HA_DOMAIN,
     YAML_CONFIG_FILE,
     config_per_platform,
     extract_domain_configs,
@@ -158,10 +158,10 @@ async def async_check_ha_config_file(  # noqa: C901
         return result.add_error(f"Error loading {config_path}: {err}")
 
     # Extract and validate core [homeassistant] config
-    core_config = config.pop(DOMAIN_HA, {})
+    core_config = config.pop(HA_DOMAIN, {})
     try:
         core_config = CORE_CONFIG_SCHEMA(core_config)
-        result[DOMAIN_HA] = core_config
+        result[HA_DOMAIN] = core_config
 
         # Merge packages
         await merge_packages_config(
@@ -169,8 +169,8 @@ async def async_check_ha_config_file(  # noqa: C901
         )
     except vol.Invalid as err:
         result.add_error(
-            format_schema_error(hass, err, DOMAIN_HA, core_config),
-            DOMAIN_HA,
+            format_schema_error(hass, err, HA_DOMAIN, core_config),
+            HA_DOMAIN,
             core_config,
         )
         core_config = {}
