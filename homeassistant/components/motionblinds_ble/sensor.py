@@ -119,7 +119,7 @@ class MotionblindsBLESensorEntity(MotionblindsBLEEntity, SensorEntity):
         self._attr_native_value = entity_description.native_value
 
     async def async_added_to_hass(self) -> None:
-        """Log sensor information."""
+        """Log sensor entity information."""
         _LOGGER.debug(
             "(%s) Setting up %s sensor entity",
             self.entry.data[CONF_MAC_CODE],
