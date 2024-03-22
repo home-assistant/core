@@ -37,9 +37,15 @@
         "name": "Returning to dock"
       }
     },
-    "switch": {
-      "enable_schedule": {
-        "name": "Enable schedule"
+    "select": {
+      "headlight_mode": {
+        "name": "Headlight mode",
+        "state": {
+          "always_on": "Always on",
+          "always_off": "Always off",
+          "evening_only": "Evening only",
+          "evening_and_night": "Evening and night"
+        }
       }
     },
     "sensor": {
@@ -78,6 +84,11 @@
           "home": "Home",
           "demo": "Demo"
         }
+      }
+    },
+    "switch": {
+      "enable_schedule": {
+        "name": "Enable schedule"
       }
     }
   }
