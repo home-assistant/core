@@ -134,3 +134,21 @@ set_occupancy_modes:
     follow_me:
       selector:
         boolean:
+
+set_sensors_used_in_climate:
+  target:
+    entity:
+      integration: ecobee
+      domain: climate
+  fields:
+    preset_mode:
+      example: "Home"
+      selector:
+        text:
+    sensors:
+      required: true
+      selector:
+        device:
+          multiple: true
+          filter:
+            manufacturer: ecobee

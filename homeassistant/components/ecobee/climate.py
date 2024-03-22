@@ -30,7 +30,8 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import entity_platform
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import device_registry as dr, entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -54,6 +55,8 @@ ATTR_DST_ENABLED = "dst_enabled"
 ATTR_MIC_ENABLED = "mic_enabled"
 ATTR_AUTO_AWAY = "auto_away"
 ATTR_FOLLOW_ME = "follow_me"
+ATTR_SENSOR_LIST = "sensors"
+ATTR_PRESET_MODE = "preset_mode"
 
 DEFAULT_RESUME_ALL = False
 PRESET_TEMPERATURE = "temp"
@@ -115,6 +118,7 @@ SERVICE_SET_FAN_MIN_ON_TIME = "set_fan_min_on_time"
 SERVICE_SET_DST_MODE = "set_dst_mode"
 SERVICE_SET_MIC_MODE = "set_mic_mode"
 SERVICE_SET_OCCUPANCY_MODES = "set_occupancy_modes"
+SERVICE_SET_SENSORS_USED_IN_CLIMATE = "set_sensors_used_in_climate"
 
 DTGROUP_START_INCLUSIVE_MSG = (
     f"{ATTR_START_DATE} and {ATTR_START_TIME} must be specified together"
@@ -313,6 +317,15 @@ async def async_setup_entry(
         "set_occupancy_modes",
     )
 
+    platform.async_register_entity_service(
+        SERVICE_SET_SENSORS_USED_IN_CLIMATE,
+        {
+            vol.Optional(ATTR_PRESET_MODE): cv.string,
+            vol.Required(ATTR_SENSOR_LIST): cv.ensure_list,
+        },
+        "set_sensors_used_in_climate",
+    )
+
 
 class Thermostat(ClimateEntity):
     """A thermostat class for Ecobee."""
@@ -346,7 +359,7 @@ class Thermostat(ClimateEntity):
         if len(self._attr_hvac_modes) == 2:
             self._attr_hvac_modes.insert(0, HVACMode.HEAT_COOL)
         self._attr_hvac_modes.append(HVACMode.OFF)
-
+        self._sensors = self.remote_sensors
         self._preset_modes = {
             comfort["climateRef"]: comfort["name"]
             for comfort in self.thermostat["program"]["climates"]
@@ -553,6 +566,15 @@ class Thermostat(ClimateEntity):
         """Return true if aux heater."""
         return self.settings["hvacMode"] == ECOBEE_AUX_HEAT_ONLY
 
+    @property
+    def remote_sensors(self) -> list:
+        """Return the remote sensor names of the thermostat."""
+        try:
+            sensors_info = self.thermostat["remoteSensors"]
+        except KeyError:
+            sensors_info = []
+        return [sensor["name"] for sensor in sensors_info if sensor.get("name")]
+
     def turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
         _LOGGER.debug("Setting HVAC mode to auxHeatOnly to turn on aux heat")
@@ -739,6 +761,58 @@ class Thermostat(ClimateEntity):
             self.thermostat_index, "true" if resume_all else "false"
         )
         self.update_without_throttle = True
+
+    def set_sensors_used_in_climate(
+        self, sensors: list[str], preset_mode: str | None = None
+    ) -> None:
+        """Set the sensors used on a climate for a thermostat."""
+        if preset_mode is None:
+            preset_mode = self.preset_mode
+
+        # Check if climate is an available preset option.
+        elif preset_mode not in self._preset_modes.values():
+            msg = f"Invalid climate name, available options are: {', '.join(self.preset_modes)}"
+            raise ServiceValidationError(msg)
+
+        # Get device name from device id.
+        device_registry = dr.async_get(self.hass)
+        sensor_names: list[str] = []
+        for sensor in sensors:
+            sensor_registry = device_registry.async_get(sensor)
+            if sensor_registry and sensor_registry.name:
+                sensor_names.append(sensor_registry.name)
+
+        # Ensure sensors provided are available for thermostat.
+        if not set(sensor_names).issubset(set(self._sensors)):
+            msg = f"Invalid sensor for thermostat, available options are: {', '.join(self._sensors)}"
+            raise ServiceValidationError(msg)
+
+        # Check if sensors are currently used on the climate for the thermostat.
+        current_sensors_in_climate = self._sensors_in_preset_mode(preset_mode)
+        if set(sensor_names) == set(current_sensors_in_climate):
+            msg = f"This action would not be an update, current sensors on climate ({preset_mode}) are: {', '.join(current_sensors_in_climate)}"
+            _LOGGER.debug(msg)
+            return
+
+        _LOGGER.debug(
+            "Setting sensors %s to be used on thermostat %s for program %s",
+            sensor_names,
+            self.device_info.get("name"),
+            preset_mode,
+        )
+        self.data.ecobee.update_climate_sensors(
+            self.thermostat_index, preset_mode, sensor_names
+        )
+        self.update_without_throttle = True
+
+    def _sensors_in_preset_mode(self, preset_mode: str) -> list[str]:
+        """Return current sensors used in climate."""
+        climates = self.thermostat["program"]["climates"]
+        for climate in climates:
+            if climate.get("name") == preset_mode:
+                return [sensor["name"] for sensor in climate["sensors"]]
+
+        return []
 
     def hold_preference(self):
         """Return user preference setting for hold time."""
