@@ -139,8 +139,8 @@ SetupEntityPlatformCallable = Callable[
 
 
 @pytest.fixture
-async def setup_entity_platform() -> SetupEntityPlatformCallable:
-    """Mock the entity platform for tests."""
+async def setup_test_component_platform() -> SetupEntityPlatformCallable:
+    """Mock a test component platform for tests."""
 
     def _setup(
         hass: HomeAssistant,
@@ -148,7 +148,7 @@ async def setup_entity_platform() -> SetupEntityPlatformCallable:
         entities: list[MockEntity],
         from_config_entry: bool | None = None,
     ) -> MockPlatform:
-        """Set up entity test platform."""
+        """Set up a test component platform."""
 
         async def _async_setup_platform(
             hass: HomeAssistant,
@@ -156,7 +156,7 @@ async def setup_entity_platform() -> SetupEntityPlatformCallable:
             async_add_entities: AddEntitiesCallback,
             discovery_info: DiscoveryInfoType | None = None,
         ) -> None:
-            """Set up entity test platform."""
+            """Set up a test component platform."""
             async_add_entities(entities)
 
         platform = MockPlatform(
@@ -172,7 +172,7 @@ async def setup_entity_platform() -> SetupEntityPlatformCallable:
                 entry: ConfigEntry,
                 async_add_entities: AddEntitiesCallback,
             ) -> None:
-                """Set up entity test platform."""
+                """Set up a test component platform."""
                 async_add_entities(entities)
 
             platform.async_setup_entry = _async_setup_entry
