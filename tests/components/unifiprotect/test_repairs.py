@@ -45,12 +45,14 @@ async def test_ea_warning_ignore(
     assert len(msg["result"]["issues"]) > 0
     issue = None
     for i in msg["result"]["issues"]:
-        if i["issue_id"] == "ea_warning":
+        if i["issue_id"] == "ea_channel_warning":
             issue = i
     assert issue is not None
 
     url = RepairsFlowIndexView.url
-    resp = await client.post(url, json={"handler": DOMAIN, "issue_id": "ea_warning"})
+    resp = await client.post(
+        url, json={"handler": DOMAIN, "issue_id": "ea_channel_warning"}
+    )
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
@@ -103,12 +105,14 @@ async def test_ea_warning_fix(
     assert len(msg["result"]["issues"]) > 0
     issue = None
     for i in msg["result"]["issues"]:
-        if i["issue_id"] == "ea_warning":
+        if i["issue_id"] == "ea_channel_warning":
             issue = i
     assert issue is not None
 
     url = RepairsFlowIndexView.url
-    resp = await client.post(url, json={"handler": DOMAIN, "issue_id": "ea_warning"})
+    resp = await client.post(
+        url, json={"handler": DOMAIN, "issue_id": "ea_channel_warning"}
+    )
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
@@ -121,8 +125,9 @@ async def test_ea_warning_fix(
 
     new_nvr = copy(ufp.api.bootstrap.nvr)
     new_nvr.version = Version("2.2.6")
+    new_nvr.release_channel = "release"
     mock_msg = Mock()
-    mock_msg.changed_data = {"version": "2.2.6"}
+    mock_msg.changed_data = {"version": "2.2.6", "releaseChannel": "release"}
     mock_msg.new_obj = new_nvr
 
     ufp.api.bootstrap.nvr = new_nvr

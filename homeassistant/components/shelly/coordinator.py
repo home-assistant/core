@@ -216,7 +216,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         # Check for input events and config change
         cfg_changed = 0
         for block in self.device.blocks:
-            if block.type == "device":
+            if block.type == "device" and block.cfgChanged is not None:
                 cfg_changed = block.cfgChanged
 
             # Shelly TRV sends information about changing the configuration for no
