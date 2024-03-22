@@ -43,7 +43,7 @@ PARALLEL_UPDATES = 0
 
 @dataclass(frozen=True)
 class MotionblindsBLESensorEntityDescription(SensorEntityDescription):
-    """Entity description of a cover entity with default values."""
+    """Entity description of a sensor entity with native_value attribute."""
 
     native_value: str | None = None
 
@@ -89,7 +89,7 @@ SENSOR_TYPES: dict[str, MotionblindsBLESensorEntityDescription] = {
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up battery sensors based on a config entry."""
+    """Set up sensor entities based on a config entry."""
 
     device: MotionDevice = hass.data[DOMAIN][entry.entry_id]
 
@@ -107,7 +107,7 @@ async def async_setup_entry(
 
 
 class MotionblindsBLESensorEntity(MotionblindsBLEEntity, SensorEntity):
-    """Representation of a sensor."""
+    """Representation of a sensor entity."""
 
     def __init__(
         self,
@@ -115,7 +115,7 @@ class MotionblindsBLESensorEntity(MotionblindsBLEEntity, SensorEntity):
         entry: ConfigEntry,
         entity_description: MotionblindsBLESensorEntityDescription,
     ) -> None:
-        """Initialize the sensor."""
+        """Initialize the sensor entity."""
         super().__init__(
             device, entry, entity_description, unique_id_suffix=entity_description.key
         )
@@ -131,7 +131,7 @@ class MotionblindsBLESensorEntity(MotionblindsBLEEntity, SensorEntity):
 
 
 class BatterySensor(MotionblindsBLESensorEntity):
-    """Representation of a battery sensor."""
+    """Representation of a battery sensor entity."""
 
     async def async_added_to_hass(self) -> None:
         """Register device callbacks."""
@@ -140,7 +140,7 @@ class BatterySensor(MotionblindsBLESensorEntity):
 
     @callback
     def async_update_battery_percentage(self, battery_percentage: int | None) -> None:
-        """Update the battery percentage sensor value and icon."""
+        """Update the battery sensor percentage and icon."""
         if battery_percentage is None:
             # Battery percentage is unknown
             self._attr_native_value = None
@@ -174,7 +174,7 @@ class BatterySensor(MotionblindsBLESensorEntity):
 
 
 class ConnectionSensor(MotionblindsBLESensorEntity):
-    """Representation of a connection sensor."""
+    """Representation of a connection sensor entity."""
 
     async def async_added_to_hass(self) -> None:
         """Register device callbacks."""
@@ -191,7 +191,7 @@ class ConnectionSensor(MotionblindsBLESensorEntity):
 
 
 class CalibrationSensor(MotionblindsBLESensorEntity):
-    """Representation of a calibration sensor."""
+    """Representation of a calibration sensor entity."""
 
     async def async_added_to_hass(self) -> None:
         """Register device callbacks."""
@@ -210,7 +210,7 @@ class CalibrationSensor(MotionblindsBLESensorEntity):
 
 
 class SignalStrengthSensor(MotionblindsBLESensorEntity):
-    """Representation of a signal strength sensor."""
+    """Representation of a signal strength sensor entity."""
 
     async def async_added_to_hass(self) -> None:
         """Register device callbacks and update signal strength."""
