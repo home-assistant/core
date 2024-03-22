@@ -67,6 +67,7 @@ AC_MODE_TO_STATE = {
     "heat": HVACMode.HEAT,
     "heatClean": HVACMode.HEAT,
     "fanOnly": HVACMode.FAN_ONLY,
+    "wind": HVACMode.FAN_ONLY,
 }
 STATE_TO_AC_MODE = {
     HVACMode.HEAT_COOL: "auto",
@@ -440,6 +441,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         for mode in self._device.status.supported_ac_modes:
             if (state := AC_MODE_TO_STATE.get(mode)) is not None:
                 modes.add(state)
+                STATE_TO_AC_MODE[state] = mode
             else:
                 _LOGGER.debug(
                     "Device %s (%s) returned an invalid supported AC mode: %s",
