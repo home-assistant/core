@@ -854,9 +854,9 @@ async def _async_set_up_integrations(
     if "recorder" in domains_to_setup:
         recorder.async_initialize_recorder(hass)
 
-    pre_stage_domains = tuple(
+    pre_stage_domains = [
         (name, domains_to_setup & domain_group) for name, domain_group in SETUP_ORDER
-    )
+    ]
 
     # calculate what components to setup in what stage
     stage_1_domains: set[str] = set()
