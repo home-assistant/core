@@ -747,6 +747,7 @@ def async_start_setup(
     finally:
         time_taken = time.monotonic() - started
         del setup_started[current_group]
+        current_setup_group_phase.set(None)
         group_setup_times = _setup_times(hass)[integration][group]
         # We may see the phase multiple times if there are multiple
         # platforms, but we only care about the longest time.
