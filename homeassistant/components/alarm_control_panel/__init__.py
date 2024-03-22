@@ -160,7 +160,7 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
     @final
     @callback
     def add_default_code(self, code: str | None) -> str | None:
-        """Add default lock code."""
+        """Add default arm code."""
         if not code:
             # Set code to default code
             code = self._alarm_control_panel_option_default_code
