@@ -712,7 +712,7 @@ def async_pause_setup(
                 phase,
                 integration,
                 group,
-                -time_taken,
+                time_taken,
             )
 
 
