@@ -1252,6 +1252,7 @@ def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
 
     search = list(args)
     found = {}
+    sources = entity_helper.entity_sources(hass)
     while search:
         entity = search.pop()
         if isinstance(entity, str):
@@ -1267,16 +1268,19 @@ def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
             # ignore other types
             continue
 
-        if entity_id.startswith(_GROUP_DOMAIN_PREFIX) or (
-            (source := entity_helper.entity_sources(hass).get(entity_id))
-            and source["domain"] == "group"
+        if entity_id in found:
+            continue
+
+        domain = entity.domain
+        if domain == "group" or (
+            (source := sources.get(entity_id)) and source["domain"] == "group"
         ):
             # Collect state will be called in here since it's wrapped
             if group_entities := entity.attributes.get(ATTR_ENTITY_ID):
-                search += group_entities
-        elif entity_id.startswith(_ZONE_DOMAIN_PREFIX):
+                search.extend(group_entities)
+        elif domain == "zone":
             if zone_entities := entity.attributes.get(ATTR_PERSONS):
-                search += zone_entities
+                search.extend(zone_entities)
         else:
             _collect_state(hass, entity_id)
             found[entity_id] = entity
