@@ -45,9 +45,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client = MozartClient(host=entry.data[CONF_HOST])
 
     # Check API and WebSocket connection
-    if not await client.check_device_connection():
-        await client.close_api_client()
-        raise ConfigEntryNotReady(f"Unable to connect to {entry.title}")
+    try:
+        await client.check_device_connection()
+    except ExceptionGroup as error:
+        raise ConfigEntryNotReady(f"Unable to connect to {entry.title}") from error
 
     websocket = BangOlufsenWebsocket(hass, entry, client)
 
