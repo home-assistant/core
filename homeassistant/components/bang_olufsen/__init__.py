@@ -48,6 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await client.check_device_connection(True)
     except ExceptionGroup as error:
+        await client.close_api_client()
         raise ConfigEntryNotReady(f"Unable to connect to {entry.title}") from error
 
     websocket = BangOlufsenWebsocket(hass, entry, client)
