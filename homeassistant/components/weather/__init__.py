@@ -1245,7 +1245,7 @@ async def async_get_forecast_attribute_service(
         # Cut list length according to forecast_limit
         converted_forecast_list = converted_forecast_list[:forecast_limit]
 
-    if forecast_attribute not in converted_forecast_list[0]:
+    if converted_forecast_list and forecast_attribute not in converted_forecast_list[0]:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="invalid_attribute",
