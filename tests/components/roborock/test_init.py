@@ -1,5 +1,6 @@
 """Test for Roborock init."""
 
+import os
 from unittest.mock import patch
 
 from roborock import RoborockException, RoborockInvalidCredentials
@@ -136,3 +137,47 @@ async def test_reauth_started(
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     assert flows[0]["step_id"] == "reauth_confirm"
+
+
+async def test_remove_from_hass(
+    hass: HomeAssistant,
+    bypass_api_fixture,
+    setup_entry: MockConfigEntry,
+    cleanup_map_storage: str,
+) -> None:
+    """Test that removing from hass removes any existing images."""
+
+    assert (
+        len(
+            os.listdir(
+                hass.config.path(f"{cleanup_map_storage}/{setup_entry.entry_id}")
+            )
+        )
+        != 0
+    )
+    await hass.config_entries.async_remove(setup_entry.entry_id)
+    # After removal, directory should be empty.
+    assert (
+        len(
+            os.listdir(
+                hass.config.path(f"{cleanup_map_storage}/{setup_entry.entry_id}")
+            )
+        )
+        == 0
+    )
+
+
+async def test_remove_from_hass_image_deleted(
+    hass: HomeAssistant,
+    bypass_api_fixture,
+    setup_entry: MockConfigEntry,
+    cleanup_map_storage: str,
+) -> None:
+    """Ensure code doesn't fail if user deleted an image manually."""
+    # delete a existing image.
+    maps_path = hass.config.path(f"{cleanup_map_storage}/{setup_entry.entry_id}")
+    os.remove(os.path.join(maps_path, os.listdir(maps_path)[0]))
+    assert len(os.listdir(maps_path)) == 1
+    await hass.config_entries.async_remove(setup_entry.entry_id)
+    # After removal, directory should be empty.
+    assert len(os.listdir(maps_path)) == 0

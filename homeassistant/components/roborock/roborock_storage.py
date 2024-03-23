@@ -1,15 +1,16 @@
 """Roborock storage."""
+import asyncio
 import dataclasses
 import logging
 import os
 import time
 
-from homeassistant.core import DOMAIN, HomeAssistant
+from homeassistant.core import HomeAssistant
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-MAP_PATH = f"{DOMAIN}/roborock/maps"
-STORAGE_KEY = "roborock.storage"
-STORAGE_VERSION = 1
+MAP_PATH = f"{DOMAIN}/maps"
 MAP_UPDATE_FREQUENCY = 3600  # Only save the map once every hour.
 
 
@@ -103,9 +104,8 @@ class RoborockStorage:
         else:
             self._data[map_name] = RoborockMapEntry(map_name, content, time.time())
 
-    async def async_remove_map(self, map_name: str) -> None:
-        """Remove map."""
-        filename = self._get_map_filename(map_name)
+    async def async_remove_maps(self, entry_id: str) -> None:
+        """Remove all maps associated with a config entry."""
 
         def remove_map(filename: str) -> None:
             if not os.path.exists(filename):
@@ -113,7 +113,11 @@ class RoborockStorage:
             _LOGGER.debug("Removing map from disk store: %s", filename)
             os.remove(filename)
 
-        try:
-            await self._hass.async_add_executor_job(remove_map, filename)
-        except OSError as err:
-            _LOGGER.error("Unable to remove map file: %s %s", filename, err)
+        await asyncio.gather(
+            *(
+                self._hass.async_add_executor_job(
+                    remove_map, self._get_map_filename(file)
+                )
+                for file in os.listdir(self._hass.config.path(f"{MAP_PATH}/{entry_id}"))
+            )
+        )

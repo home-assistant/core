@@ -106,5 +106,5 @@ def cleanup_map_storage(hass: HomeAssistant):
     with patch(
         "homeassistant.components.roborock.roborock_storage.MAP_PATH", new=tmp_path
     ):
-        yield
+        yield tmp_path
         shutil.rmtree(hass.config.path(tmp_path), ignore_errors=True)

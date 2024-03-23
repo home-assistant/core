@@ -78,12 +78,12 @@ async def test_floorplan_image_failed_parse(
     assert not resp.ok
 
 
-async def test_restore_image(
+async def test_load_stored_image(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     setup_entry: MockConfigEntry,
 ):
-    """Test that we correctly restore an image when it already exists."""
+    """Test that we correctly load an image from storage when it already exists."""
     img_byte_arr = io.BytesIO()
     MAP_DATA.image.data.save(img_byte_arr, format="PNG")
     img_bytes = img_byte_arr.getvalue()
@@ -91,7 +91,7 @@ async def test_restore_image(
     with patch(
         "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
     ) as parse_map:
-        # Reload the config entry so that restore data is saved and entities exist.
+        # Reload the config entry so that the map is saved in storage and entities exist.
         await hass.config_entries.async_reload(setup_entry.entry_id)
         await hass.async_block_till_done()
         # Ensure that we never tried to update the map, and only used the cached image.
