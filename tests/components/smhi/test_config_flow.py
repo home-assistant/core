@@ -178,3 +178,75 @@ async def test_form_unique_id_exist(hass: HomeAssistant) -> None:
 
     assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
+
+
+async def test_reconfigure_flow(hass: HomeAssistant) -> None:
+    """Test re-configuration flow."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home",
+        unique_id="57.2898-13.6304",
+        data={"location": {"latitude": 57.2898, "longitude": 13.6304}, "name": "Home"},
+        version=2,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": entry.entry_id,
+        },
+    )
+    assert result["type"] == FlowResultType.FORM
+
+    with patch(
+        "homeassistant.components.smhi.config_flow.Smhi.async_get_forecast",
+        side_effect=SmhiForecastException,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_LOCATION: {
+                    CONF_LATITUDE: 0.0,
+                    CONF_LONGITUDE: 0.0,
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "wrong_location"}
+
+    with patch(
+        "homeassistant.components.smhi.config_flow.Smhi.async_get_forecast",
+        return_value={"test": "something", "test2": "something else"},
+    ), patch(
+        "homeassistant.components.smhi.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_LOCATION: {
+                    CONF_LATITUDE: 58.2898,
+                    CONF_LONGITUDE: 14.6304,
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    entry = hass.config_entries.async_get_entry(entry.entry_id)
+    assert entry.title == "Home"
+    assert entry.unique_id == "58.2898-14.6304"
+    assert entry.data == {
+        "location": {
+            "latitude": 58.2898,
+            "longitude": 14.6304,
+        },
+        "name": "Home",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
