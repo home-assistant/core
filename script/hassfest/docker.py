@@ -34,11 +34,8 @@ RUN \
 
 COPY requirements_all.txt home_assistant_frontend-* home_assistant_intents-* homeassistant/
 RUN \
-    if ls homeassistant/home_assistant_frontend*.whl 1> /dev/null 2>&1; then \
-        uv pip install homeassistant/home_assistant_frontend-*.whl; \
-    fi \
-    && if ls homeassistant/home_assistant_intents*.whl 1> /dev/null 2>&1; then \
-        uv pip install homeassistant/home_assistant_intents-*.whl; \
+    if ls homeassistant/home_assistant_*.whl 1> /dev/null 2>&1; then \
+        uv pip install homeassistant/home_assistant_*.whl; \
     fi \
     && if [ "${{BUILD_ARCH}}" = "i386" ]; then \
         LD_PRELOAD="/usr/local/lib/libjemalloc.so.2" \
