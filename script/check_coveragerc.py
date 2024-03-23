@@ -12,6 +12,7 @@ import os
 import pytest
 
 COVERAGERC = ".coveragerc"
+THRESHOLD = 97.0
 TEMP_JSON = "build/_temp_coverage.json"
 
 
@@ -47,15 +48,15 @@ def main():
         with open(TEMP_JSON, encoding="UTF-8") as infile:
             data = json.load(infile)
 
-        # make a list of >97% passing files
+        # make a list of >THRESHOLD% passing files
         out_list = []
         for filename, file_data in data["files"].items():
             percent = file_data["summary"]["percent_covered"]
-            if percent > 97.0:
+            if percent > THRESHOLD:
                 out_list.append(filename)
 
         # remove those files from .coveragerc
-        print("100pc covered files:")
+        print(f">{THRESHOLD}% covered files:")
         for filename in out_list:
             print(filename)
             replace_all(COVERAGERC, f"    {filename}\n", "")
