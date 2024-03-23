@@ -58,7 +58,7 @@ from .const import (
     LEGACY_CONF_WHITELIST_EXTERNAL_DIRS,
     __version__,
 )
-from .core import DOMAIN as CONF_CORE, ConfigSource, HomeAssistant, callback
+from .core import DOMAIN as HA_DOMAIN, ConfigSource, HomeAssistant, callback
 from .exceptions import ConfigValidationError, HomeAssistantError
 from .generated.currencies import HISTORIC_CURRENCIES
 from .helpers import config_validation as cv, issue_registry as ir
@@ -247,12 +247,12 @@ CUSTOMIZE_CONFIG_SCHEMA = vol.Schema(
 
 def _raise_issue_if_historic_currency(hass: HomeAssistant, currency: str) -> None:
     if currency not in HISTORIC_CURRENCIES:
-        ir.async_delete_issue(hass, "homeassistant", "historic_currency")
+        ir.async_delete_issue(hass, HA_DOMAIN, "historic_currency")
         return
 
     ir.async_create_issue(
         hass,
-        "homeassistant",
+        HA_DOMAIN,
         "historic_currency",
         is_fixable=False,
         learn_more_url="homeassistant://config/general",
@@ -264,12 +264,12 @@ def _raise_issue_if_historic_currency(hass: HomeAssistant, currency: str) -> Non
 
 def _raise_issue_if_no_country(hass: HomeAssistant, country: str | None) -> None:
     if country is not None:
-        ir.async_delete_issue(hass, "homeassistant", "country_not_configured")
+        ir.async_delete_issue(hass, HA_DOMAIN, "country_not_configured")
         return
 
     ir.async_create_issue(
         hass,
-        "homeassistant",
+        HA_DOMAIN,
         "country_not_configured",
         is_fixable=False,
         learn_more_url="homeassistant://config/general",
@@ -288,7 +288,7 @@ def _raise_issue_if_legacy_templates(
     if legacy_templates:
         ir.async_create_issue(
             hass,
-            "homeassistant",
+            HA_DOMAIN,
             "legacy_templates_true",
             is_fixable=False,
             breaks_in_ha_version="2024.7.0",
@@ -297,12 +297,12 @@ def _raise_issue_if_legacy_templates(
         )
         return
 
-    ir.async_delete_issue(hass, "homeassistant", "legacy_templates_true")
+    ir.async_delete_issue(hass, HA_DOMAIN, "legacy_templates_true")
 
     if legacy_templates is False:
         ir.async_create_issue(
             hass,
-            "homeassistant",
+            HA_DOMAIN,
             "legacy_templates_false",
             is_fixable=False,
             breaks_in_ha_version="2024.7.0",
@@ -310,7 +310,7 @@ def _raise_issue_if_legacy_templates(
             translation_key="legacy_templates_false",
         )
     else:
-        ir.async_delete_issue(hass, "homeassistant", "legacy_templates_false")
+        ir.async_delete_issue(hass, HA_DOMAIN, "legacy_templates_false")
 
 
 def _validate_currency(data: Any) -> Any:
@@ -503,12 +503,12 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> dict:
     for invalid_domain in invalid_domains:
         config.pop(invalid_domain)
 
-    core_config = config.get(CONF_CORE, {})
+    core_config = config.get(HA_DOMAIN, {})
     try:
         await merge_packages_config(hass, config, core_config.get(CONF_PACKAGES, {}))
     except vol.Invalid as exc:
         suffix = ""
-        if annotation := find_annotation(config, [CONF_CORE, CONF_PACKAGES, *exc.path]):
+        if annotation := find_annotation(config, [HA_DOMAIN, CONF_PACKAGES, *exc.path]):
             suffix = f" at {_relpath(hass, annotation[0])}, line {annotation[1]}"
         _LOGGER.error(
             "Invalid package configuration '%s'%s: %s", CONF_PACKAGES, suffix, exc
@@ -731,7 +731,7 @@ def stringify_invalid(
         )
     else:
         message_prefix = f"Invalid config for '{domain}'"
-    if domain != CONF_CORE and link:
+    if domain != HA_DOMAIN and link:
         message_suffix = f", please check the docs at {link}"
     else:
         message_suffix = ""
@@ -814,7 +814,7 @@ def format_homeassistant_error(
     if annotation := find_annotation(config, [domain]):
         message_prefix += f" at {_relpath(hass, annotation[0])}, line {annotation[1]}"
     message = f"{message_prefix}: {str(exc) or repr(exc)}"
-    if domain != CONF_CORE and link:
+    if domain != HA_DOMAIN and link:
         message += f", please check the docs at {link}"
 
     return message
@@ -933,7 +933,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
     cust_glob = OrderedDict(config[CONF_CUSTOMIZE_GLOB])
 
     for name, pkg in config[CONF_PACKAGES].items():
-        if (pkg_cust := pkg.get(CONF_CORE)) is None:
+        if (pkg_cust := pkg.get(HA_DOMAIN)) is None:
             continue
 
         try:
@@ -957,7 +957,7 @@ def _log_pkg_error(
 ) -> None:
     """Log an error while merging packages."""
     message_prefix = f"Setup of package '{package}'"
-    if annotation := find_annotation(config, [CONF_CORE, CONF_PACKAGES, package]):
+    if annotation := find_annotation(config, [HA_DOMAIN, CONF_PACKAGES, package]):
         message_prefix += f" at {_relpath(hass, annotation[0])}, line {annotation[1]}"
 
     _LOGGER.error("%s failed: %s", message_prefix, message)
@@ -1072,7 +1072,7 @@ async def merge_packages_config(
             continue
 
         for comp_name, comp_conf in pack_conf.items():
-            if comp_name == CONF_CORE:
+            if comp_name == HA_DOMAIN:
                 continue
             try:
                 domain = cv.domain_key(comp_name)
@@ -1305,7 +1305,7 @@ def async_drop_config_annotations(
 
     # Don't drop annotations from the homeassistant integration because it may
     # have configuration for other integrations as packages.
-    if integration.domain in config and integration.domain != CONF_CORE:
+    if integration.domain in config and integration.domain != HA_DOMAIN:
         drop_config_annotations_rec(config[integration.domain])
     return config
 
