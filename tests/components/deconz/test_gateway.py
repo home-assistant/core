@@ -18,8 +18,7 @@ from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.deconz.config_flow import DECONZ_MANUFACTURERURL
 from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.errors import AuthenticationRequired, CannotConnect
-from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
-from homeassistant.components.deconz.hub import get_deconz_api
+from homeassistant.components.deconz.hub import DeconzHub, get_deconz_api
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
@@ -147,12 +146,12 @@ async def test_gateway_setup(
         return_value=True,
     ) as forward_entry_setup:
         config_entry = await setup_deconz_integration(hass, aioclient_mock)
-        gateway = get_gateway_from_config_entry(hass, config_entry)
+        gateway = DeconzHub.get_hub(hass, config_entry)
         assert gateway.bridgeid == BRIDGEID
         assert gateway.master is True
-        assert gateway.option_allow_clip_sensor is False
-        assert gateway.option_allow_deconz_groups is True
-        assert gateway.option_allow_new_devices is True
+        assert gateway.config.allow_clip_sensor is False
+        assert gateway.config.allow_deconz_groups is True
+        assert gateway.config.allow_new_devices is True
 
         assert len(gateway.deconz_ids) == 0
         assert len(hass.states.async_all()) == 0
@@ -199,7 +198,7 @@ async def test_gateway_device_configuration_url_when_addon(
         config_entry = await setup_deconz_integration(
             hass, aioclient_mock, source=SOURCE_HASSIO
         )
-        gateway = get_gateway_from_config_entry(hass, config_entry)
+        gateway = DeconzHub.get_hub(hass, config_entry)
 
     gateway_entry = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, gateway.bridgeid)}
@@ -246,7 +245,7 @@ async def test_update_address(
 ) -> None:
     """Make sure that connection status triggers a dispatcher send."""
     config_entry = await setup_deconz_integration(hass, aioclient_mock)
-    gateway = get_gateway_from_config_entry(hass, config_entry)
+    gateway = DeconzHub.get_hub(hass, config_entry)
     assert gateway.api.host == "1.2.3.4"
 
     with patch(
@@ -278,7 +277,7 @@ async def test_reset_after_successful_setup(
 ) -> None:
     """Make sure that connection status triggers a dispatcher send."""
     config_entry = await setup_deconz_integration(hass, aioclient_mock)
-    gateway = get_gateway_from_config_entry(hass, config_entry)
+    gateway = DeconzHub.get_hub(hass, config_entry)
 
     result = await gateway.async_reset()
     await hass.async_block_till_done()
@@ -288,8 +287,9 @@ async def test_reset_after_successful_setup(
 
 async def test_get_deconz_api(hass: HomeAssistant) -> None:
     """Successful call."""
+    config_entry = MockConfigEntry(domain=DECONZ_DOMAIN, data=ENTRY_CONFIG)
     with patch("pydeconz.DeconzSession.refresh_state", return_value=True):
-        assert await get_deconz_api(hass, ENTRY_CONFIG)
+        assert await get_deconz_api(hass, config_entry)
 
 
 @pytest.mark.parametrize(
@@ -305,6 +305,7 @@ async def test_get_deconz_api_fails(
     hass: HomeAssistant, side_effect, raised_exception
 ) -> None:
     """Failed call."""
+    config_entry = MockConfigEntry(domain=DECONZ_DOMAIN, data=ENTRY_CONFIG)
     with (
         patch(
             "pydeconz.DeconzSession.refresh_state",
@@ -312,4 +313,4 @@ async def test_get_deconz_api_fails(
         ),
         pytest.raises(raised_exception),
     ):
-        assert await get_deconz_api(hass, ENTRY_CONFIG)
+        assert await get_deconz_api(hass, config_entry)

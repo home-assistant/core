@@ -32,7 +32,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.generated import languages
-from homeassistant.setup import async_start_setup
+from homeassistant.setup import SetupPhases, async_start_setup
 from homeassistant.util.async_ import create_eager_task
 
 from . import (
@@ -284,7 +284,13 @@ class EntityPlatform:
                 discovery_info,
             )
 
-        await self._async_setup_platform(async_create_setup_awaitable)
+        with async_start_setup(
+            hass,
+            integration=self.platform_name,
+            group=str(id(platform_config)),
+            phase=SetupPhases.PLATFORM_SETUP,
+        ):
+            await self._async_setup_platform(async_create_setup_awaitable)
 
     @callback
     def async_shutdown(self) -> None:
@@ -341,81 +347,78 @@ class EntityPlatform:
             self.platform_name,
             SLOW_SETUP_WARNING,
         )
-        with async_start_setup(hass, [full_name]):
-            try:
-                awaitable = async_create_setup_awaitable()
-                if asyncio.iscoroutine(awaitable):
-                    awaitable = create_eager_task(awaitable)
+        try:
+            awaitable = async_create_setup_awaitable()
+            if asyncio.iscoroutine(awaitable):
+                awaitable = create_eager_task(awaitable)
 
-                async with hass.timeout.async_timeout(SLOW_SETUP_MAX_WAIT, self.domain):
-                    await asyncio.shield(awaitable)
+            async with hass.timeout.async_timeout(SLOW_SETUP_MAX_WAIT, self.domain):
+                await asyncio.shield(awaitable)
 
-                # Block till all entities are done
-                while self._tasks:
-                    # Await all tasks even if they are done
-                    # to ensure exceptions are propagated
-                    pending = self._tasks.copy()
-                    self._tasks.clear()
-                    await asyncio.gather(*pending)
+            # Block till all entities are done
+            while self._tasks:
+                # Await all tasks even if they are done
+                # to ensure exceptions are propagated
+                pending = self._tasks.copy()
+                self._tasks.clear()
+                await asyncio.gather(*pending)
 
-                hass.config.components.add(full_name)
-                self._setup_complete = True
-                return True
-            except PlatformNotReady as ex:
-                tries += 1
-                wait_time = min(tries, 6) * PLATFORM_NOT_READY_BASE_WAIT_TIME
-                message = str(ex)
-                ready_message = f"ready yet: {message}" if message else "ready yet"
-                if tries == 1:
-                    logger.warning(
-                        "Platform %s not %s; Retrying in background in %d seconds",
-                        self.platform_name,
-                        ready_message,
-                        wait_time,
-                    )
-                else:
-                    logger.debug(
-                        "Platform %s not %s; Retrying in %d seconds",
-                        self.platform_name,
-                        ready_message,
-                        wait_time,
-                    )
-
-                async def setup_again(*_args: Any) -> None:
-                    """Run setup again."""
-                    self._async_cancel_retry_setup = None
-                    await self._async_setup_platform(
-                        async_create_setup_awaitable, tries
-                    )
-
-                if hass.state is CoreState.running:
-                    self._async_cancel_retry_setup = async_call_later(
-                        hass, wait_time, setup_again
-                    )
-                else:
-                    self._async_cancel_retry_setup = hass.bus.async_listen_once(
-                        EVENT_HOMEASSISTANT_STARTED, setup_again
-                    )
-                return False
-            except TimeoutError:
-                logger.error(
-                    (
-                        "Setup of platform %s is taking longer than %s seconds."
-                        " Startup will proceed without waiting any longer."
-                    ),
+            hass.config.components.add(full_name)
+            self._setup_complete = True
+            return True
+        except PlatformNotReady as ex:
+            tries += 1
+            wait_time = min(tries, 6) * PLATFORM_NOT_READY_BASE_WAIT_TIME
+            message = str(ex)
+            ready_message = f"ready yet: {message}" if message else "ready yet"
+            if tries == 1:
+                logger.warning(
+                    "Platform %s not %s; Retrying in background in %d seconds",
                     self.platform_name,
-                    SLOW_SETUP_MAX_WAIT,
+                    ready_message,
+                    wait_time,
                 )
-                return False
-            except Exception:  # pylint: disable=broad-except
-                logger.exception(
-                    "Error while setting up %s platform for %s",
+            else:
+                logger.debug(
+                    "Platform %s not %s; Retrying in %d seconds",
                     self.platform_name,
-                    self.domain,
+                    ready_message,
+                    wait_time,
                 )
-                return False
-            finally:
-                warn_task.cancel()
+
+            async def setup_again(*_args: Any) -> None:
+                """Run setup again."""
+                self._async_cancel_retry_setup = None
+                await self._async_setup_platform(async_create_setup_awaitable, tries)
+
+            if hass.state is CoreState.running:
+                self._async_cancel_retry_setup = async_call_later(
+                    hass, wait_time, setup_again
+                )
+            else:
+                self._async_cancel_retry_setup = hass.bus.async_listen_once(
+                    EVENT_HOMEASSISTANT_STARTED, setup_again
+                )
+            return False
+        except TimeoutError:
+            logger.error(
+                (
+                    "Setup of platform %s is taking longer than %s seconds."
+                    " Startup will proceed without waiting any longer."
+                ),
+                self.platform_name,
+                SLOW_SETUP_MAX_WAIT,
+            )
+            return False
+        except Exception:  # pylint: disable=broad-except
+            logger.exception(
+                "Error while setting up %s platform for %s",
+                self.platform_name,
+                self.domain,
+            )
+            return False
+        finally:
+            warn_task.cancel()
 
     async def _async_get_translations(
         self, language: str, category: str, integration: str

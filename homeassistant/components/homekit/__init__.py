@@ -45,13 +45,11 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_NAME,
     CONF_PORT,
-    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_RELOAD,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
-    CoreState,
     HomeAssistant,
     ServiceCall,
     State,
@@ -75,6 +73,7 @@ from homeassistant.helpers.service import (
     async_extract_referenced_entity_ids,
     async_register_admin_service,
 )
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 
@@ -350,7 +349,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, homekit.async_stop)
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, homekit.async_stop, run_immediately=True
+        )
     )
 
     entry_data = HomeKitEntryData(
@@ -358,10 +359,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     hass.data[DOMAIN][entry.entry_id] = entry_data
 
-    if hass.state is CoreState.running:
+    async def _async_start_homekit(hass: HomeAssistant) -> None:
         await homekit.async_start()
-    else:
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, homekit.async_start)
+
+    entry.async_on_unload(async_at_started(hass, _async_start_homekit))
 
     return True
 
@@ -383,7 +384,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await homekit.async_stop()
 
     logged_shutdown_wait = False
-    for _ in range(0, SHUTDOWN_TIMEOUT):
+    for _ in range(SHUTDOWN_TIMEOUT):
         if async_port_is_available(entry.data[CONF_PORT]):
             break
 
@@ -549,11 +550,15 @@ class HomeKit:
         self._reset_lock = asyncio.Lock()
         self._cancel_reload_dispatcher: CALLBACK_TYPE | None = None
 
-    def setup(self, async_zeroconf_instance: AsyncZeroconf, uuid: str) -> None:
-        """Set up bridge and accessory driver."""
+    def setup(self, async_zeroconf_instance: AsyncZeroconf, uuid: str) -> bool:
+        """Set up bridge and accessory driver.
+
+        Returns True if data was loaded from disk
+
+        Returns False if the persistent data was not loaded
+        """
         assert self.iid_storage is not None
         persist_file = get_persist_fullpath_for_entry_id(self.hass, self._entry_id)
-
         self.driver = HomeDriver(
             self.hass,
             self._entry_id,
@@ -569,11 +574,13 @@ class HomeKit:
             loader=get_loader(),
             iid_storage=self.iid_storage,
         )
-
         # If we do not load the mac address will be wrong
         # as pyhap uses a random one until state is restored
         if os.path.exists(persist_file):
             self.driver.load()
+            return True
+
+        return False
 
     async def async_reset_accessories(self, entity_ids: Iterable[str]) -> None:
         """Reset the accessory to load the latest configuration."""
@@ -843,7 +850,9 @@ class HomeKit:
         # Avoid gather here since it will be I/O bound anyways
         await self.aid_storage.async_initialize()
         await self.iid_storage.async_initialize()
-        await self.hass.async_add_executor_job(self.setup, async_zc_instance, uuid)
+        loaded_from_disk = await self.hass.async_add_executor_job(
+            self.setup, async_zc_instance, uuid
+        )
         assert self.driver is not None
 
         if not await self._async_create_accessories():
@@ -851,8 +860,12 @@ class HomeKit:
         self._async_register_bridge()
         _LOGGER.debug("Driver start for %s", self._name)
         await self.driver.async_start()
-        async with self.hass.data[PERSIST_LOCK_DATA]:
-            await self.hass.async_add_executor_job(self.driver.persist)
+        if not loaded_from_disk:
+            # If the state was not loaded from disk, it means this is the
+            # first time the bridge is ever starting up. In this case, we
+            # need to make sure its persisted to disk.
+            async with self.hass.data[PERSIST_LOCK_DATA]:
+                await self.hass.async_add_executor_job(self.driver.persist)
         self.status = STATUS_RUNNING
 
         if self.driver.state.paired:
@@ -931,13 +944,15 @@ class HomeKit:
         connection: tuple[str, str],
     ) -> None:
         """Purge bridges that exist from failed pairing or manual resets."""
-        devices_to_purge = []
-        for entry in dev_reg.devices.values():
-            if self._entry_id in entry.config_entries and (
+        devices_to_purge = [
+            entry.id
+            for entry in dev_reg.devices.values()
+            if self._entry_id in entry.config_entries
+            and (
                 identifier not in entry.identifiers  # type: ignore[comparison-overlap]
                 or connection not in entry.connections
-            ):
-                devices_to_purge.append(entry.id)
+            )
+        ]
 
         for device_id in devices_to_purge:
             dev_reg.async_remove_device(device_id)
@@ -1162,7 +1177,7 @@ class HomeKitPairingQRView(HomeAssistantView):
     async def get(self, request: web.Request) -> web.Response:
         """Retrieve the pairing QRCode image."""
         if not request.query_string:
-            raise Unauthorized()
+            raise Unauthorized
         entry_id, secret = request.query_string.split("-")
         hass = request.app[KEY_HASS]
         domain_data: dict[str, HomeKitEntryData] = hass.data[DOMAIN]
@@ -1172,7 +1187,7 @@ class HomeKitPairingQRView(HomeAssistantView):
             or not entry_data.pairing_qr_secret
             or secret != entry_data.pairing_qr_secret
         ):
-            raise Unauthorized()
+            raise Unauthorized
         return web.Response(
             body=entry_data.pairing_qr,
             content_type="image/svg+xml",

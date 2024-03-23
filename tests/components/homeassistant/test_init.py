@@ -136,10 +136,11 @@ class TestComponentsCore(unittest.TestCase):
 
     def test_is_on(self):
         """Test is_on method."""
-        assert comps.is_on(self.hass, "light.Bowl")
-        assert not comps.is_on(self.hass, "light.Ceiling")
-        assert comps.is_on(self.hass)
-        assert not comps.is_on(self.hass, "non_existing.entity")
+        with pytest.raises(
+            RuntimeError,
+            match="Detected code that uses homeassistant.components.is_on. This is deprecated and will stop working",
+        ):
+            assert comps.is_on(self.hass, "light.Bowl")
 
     def test_turn_on_without_entities(self):
         """Test turn_on method without entities."""

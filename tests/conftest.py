@@ -53,6 +53,7 @@ from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import CoreState, HassJob, HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
+    category_registry as cr,
     config_entry_oauth2_flow,
     device_registry as dr,
     entity_registry as er,
@@ -103,7 +104,6 @@ from .test_util.aiohttp import (  # noqa: E402, isort:skip
     AiohttpClientMocker,
     mock_aiohttp_client,
 )
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -938,8 +938,7 @@ async def mqtt_mock(
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> AsyncGenerator[MqttMockHAClient, None]:
     """Fixture to mock MQTT component."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", []):
-        return await mqtt_mock_entry()
+    return await mqtt_mock_entry()
 
 
 @asynccontextmanager
@@ -996,7 +995,7 @@ async def _mqtt_mock_entry(
         nonlocal mock_mqtt_instance
         nonlocal real_mqtt_instance
         real_mqtt_instance = real_mqtt(*args, **kwargs)
-        spec = dir(real_mqtt_instance) + ["_mqttc"]
+        spec = [*dir(real_mqtt_instance), "_mqttc"]
         mock_mqtt_instance = MqttMockHAClient(
             return_value=real_mqtt_instance,
             spec_set=spec,
@@ -1647,6 +1646,12 @@ def mock_bluetooth(
     mock_bleak_scanner_start: MagicMock, mock_bluetooth_adapters: None
 ) -> None:
     """Mock out bluetooth from starting."""
+
+
+@pytest.fixture
+def category_registry(hass: HomeAssistant) -> cr.CategoryRegistry:
+    """Return the category registry from the current hass instance."""
+    return cr.async_get(hass)
 
 
 @pytest.fixture

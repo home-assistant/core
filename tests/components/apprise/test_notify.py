@@ -124,7 +124,7 @@ async def test_apprise_notification(hass: HomeAssistant) -> None:
         # Validate calls were made under the hood correctly
         obj.add.assert_called_once_with(config[BASE_COMPONENT]["url"])
         obj.notify.assert_called_once_with(
-            **{"body": data["message"], "title": data["title"], "tag": None}
+            body=data["message"], title=data["title"], tag=None
         )
 
 
@@ -165,7 +165,7 @@ async def test_apprise_multiple_notification(hass: HomeAssistant) -> None:
         # Validate 2 calls were made under the hood
         assert obj.add.call_count == 2
         obj.notify.assert_called_once_with(
-            **{"body": data["message"], "title": data["title"], "tag": None}
+            body=data["message"], title=data["title"], tag=None
         )
 
 
@@ -207,5 +207,5 @@ async def test_apprise_notification_with_target(
 
         # Validate calls were made under the hood correctly
         apprise_obj.notify.assert_called_once_with(
-            **{"body": data["message"], "title": data["title"], "tag": data["target"]}
+            body=data["message"], title=data["title"], tag=data["target"]
         )

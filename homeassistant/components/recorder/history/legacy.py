@@ -814,6 +814,7 @@ def _sorted_states_to_dict(
                         }
                     )
                     prev_state = state
+            continue
 
         for row in group:
             if (state := row[state_idx]) != prev_state:

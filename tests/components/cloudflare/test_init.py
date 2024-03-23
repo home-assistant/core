@@ -39,7 +39,7 @@ async def test_unload_entry(hass: HomeAssistant, cfupdate) -> None:
 
 @pytest.mark.parametrize(
     "side_effect",
-    (pycfdns.ComunicationException(),),
+    [pycfdns.ComunicationException()],
 )
 async def test_async_setup_raises_entry_not_ready(
     hass: HomeAssistant, cfupdate, side_effect

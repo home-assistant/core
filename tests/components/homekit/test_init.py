@@ -1,6 +1,6 @@
 """Test HomeKit initialization."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -31,7 +31,9 @@ async def test_humanify_homekit_changed_event(
 ) -> None:
     """Test humanifying HomeKit changed event."""
     hass.config.components.add("recorder")
-    with patch("homeassistant.components.homekit.HomeKit"):
+    with patch("homeassistant.components.homekit.HomeKit") as mock_homekit:
+        mock_homekit.return_value = homekit = Mock()
+        type(homekit).async_start = AsyncMock()
         assert await async_setup_component(hass, "homekit", {"homekit": {}})
     assert await async_setup_component(hass, "logbook", {})
     await hass.async_block_till_done()

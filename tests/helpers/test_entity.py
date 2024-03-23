@@ -934,10 +934,10 @@ async def test_entity_category_property(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("value", "expected"),
-    (
+    [
         ("config", entity.EntityCategory.CONFIG),
         ("diagnostic", entity.EntityCategory.DIAGNOSTIC),
-    ),
+    ],
 )
 def test_entity_category_schema(value, expected) -> None:
     """Test entity category schema."""
@@ -947,7 +947,7 @@ def test_entity_category_schema(value, expected) -> None:
     assert isinstance(result, entity.EntityCategory)
 
 
-@pytest.mark.parametrize("value", (None, "non_existing"))
+@pytest.mark.parametrize("value", [None, "non_existing"])
 def test_entity_category_schema_error(value) -> None:
     """Test entity category schema."""
     schema = vol.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
@@ -1008,14 +1008,14 @@ async def _test_friendly_name(
         "device_name",
         "expected_friendly_name",
     ),
-    (
+    [
         (False, "Entity Blu", "Device Bla", "Entity Blu"),
         (False, None, "Device Bla", None),
         (True, "Entity Blu", "Device Bla", "Device Bla Entity Blu"),
         (True, None, "Device Bla", "Device Bla"),
         (True, "Entity Blu", UNDEFINED, "Entity Blu"),
         (True, "Entity Blu", None, "Mock Title Entity Blu"),
-    ),
+    ],
 )
 async def test_friendly_name_attr(
     hass: HomeAssistant,
@@ -1045,14 +1045,14 @@ async def test_friendly_name_attr(
 
 @pytest.mark.parametrize(
     ("has_entity_name", "entity_name", "expected_friendly_name"),
-    (
+    [
         (False, "Entity Blu", "Entity Blu"),
         (False, None, None),
         (False, UNDEFINED, None),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
         (True, UNDEFINED, "Device Bla None"),
-    ),
+    ],
 )
 async def test_friendly_name_description(
     hass: HomeAssistant,
@@ -1082,14 +1082,14 @@ async def test_friendly_name_description(
 
 @pytest.mark.parametrize(
     ("has_entity_name", "entity_name", "expected_friendly_name"),
-    (
+    [
         (False, "Entity Blu", "Entity Blu"),
         (False, None, None),
         (False, UNDEFINED, None),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
         (True, UNDEFINED, "Device Bla English cls"),
-    ),
+    ],
 )
 async def test_friendly_name_description_device_class_name(
     hass: HomeAssistant,
@@ -1151,7 +1151,7 @@ async def test_friendly_name_description_device_class_name(
         "placeholders",
         "expected_friendly_name",
     ),
-    (
+    [
         (False, None, None, None, "Entity Blu"),
         (True, None, None, None, "Device Bla Entity Blu"),
         (
@@ -1187,7 +1187,7 @@ async def test_friendly_name_description_device_class_name(
             {"placeholder": "special"},
             "Device Bla English ent special",
         ),
-    ),
+    ],
 )
 async def test_entity_name_translation_placeholders(
     hass: HomeAssistant,
@@ -1240,7 +1240,7 @@ async def test_entity_name_translation_placeholders(
         "release_channel",
         "expected_error",
     ),
-    (
+    [
         (
             "test_entity",
             {
@@ -1280,7 +1280,7 @@ async def test_entity_name_translation_placeholders(
                 "not match the name '{placeholder} English ent'"
             ),
         ),
-    ),
+    ],
 )
 async def test_entity_name_translation_placeholder_errors(
     hass: HomeAssistant,
@@ -1346,14 +1346,14 @@ async def test_entity_name_translation_placeholder_errors(
 
 @pytest.mark.parametrize(
     ("has_entity_name", "entity_name", "expected_friendly_name"),
-    (
+    [
         (False, "Entity Blu", "Entity Blu"),
         (False, None, None),
         (False, UNDEFINED, None),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
         (True, UNDEFINED, "Device Bla None"),
-    ),
+    ],
 )
 async def test_friendly_name_property(
     hass: HomeAssistant,
@@ -1382,7 +1382,7 @@ async def test_friendly_name_property(
 
 @pytest.mark.parametrize(
     ("has_entity_name", "entity_name", "expected_friendly_name"),
-    (
+    [
         (False, "Entity Blu", "Entity Blu"),
         (False, None, None),
         (False, UNDEFINED, None),
@@ -1390,7 +1390,7 @@ async def test_friendly_name_property(
         (True, None, "Device Bla"),
         # Won't use the device class name because the entity overrides the name property
         (True, UNDEFINED, "Device Bla None"),
-    ),
+    ],
 )
 async def test_friendly_name_property_device_class_name(
     hass: HomeAssistant,
@@ -1443,10 +1443,10 @@ async def test_friendly_name_property_device_class_name(
 
 @pytest.mark.parametrize(
     ("has_entity_name", "expected_friendly_name"),
-    (
+    [
         (False, None),
         (True, "Device Bla English cls"),
-    ),
+    ],
 )
 async def test_friendly_name_device_class_name(
     hass: HomeAssistant,
@@ -1502,7 +1502,7 @@ async def test_friendly_name_device_class_name(
         "expected_friendly_name2",
         "expected_friendly_name3",
     ),
-    (
+    [
         (
             "Entity Blu",
             "Device Bla Entity Blu",
@@ -1515,7 +1515,7 @@ async def test_friendly_name_device_class_name(
             "Device Bla2",
             "New Device",
         ),
-    ),
+    ],
 )
 async def test_friendly_name_updated(
     hass: HomeAssistant,
@@ -2402,9 +2402,9 @@ async def test_cached_entity_property_class_attribute(hass: HomeAssistant) -> No
         EntityWithClassAttribute4,
     )
 
-    entities: list[tuple[entity.Entity, entity.Entity]] = []
-    for cls in classes:
-        entities.append((cls(), cls()))
+    entities: list[tuple[entity.Entity, entity.Entity]] = [
+        (cls(), cls()) for cls in classes
+    ]
 
     for ent in entities:
         assert getattr(ent[0], property) == values[0]

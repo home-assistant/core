@@ -98,7 +98,7 @@ def test_send_message_with_bad_data_throws_vol_error(
         pytest.raises(vol.Invalid) as exc,
     ):
         data = {"test": "test"}
-        signal_notification_service.send_message(MESSAGE, **{"data": data})
+        signal_notification_service.send_message(MESSAGE, data=data)
 
     assert "Sending signal message" in caplog.text
     assert "extra keys not allowed" in str(exc.value)
@@ -121,7 +121,7 @@ def test_send_message_with_attachment(
     ):
         temp_file.write("attachment_data")
         data = {"attachments": [temp_file.name]}
-        signal_notification_service.send_message(MESSAGE, **{"data": data})
+        signal_notification_service.send_message(MESSAGE, data=data)
 
     assert "Sending signal message" in caplog.text
     assert signal_requests_mock.called
@@ -140,7 +140,7 @@ def test_send_message_with_attachment_as_url(
         logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
     ):
         data = {"urls": [URL_ATTACHMENT]}
-        signal_notification_service.send_message(MESSAGE, **{"data": data})
+        signal_notification_service.send_message(MESSAGE, data=data)
 
     assert "Sending signal message" in caplog.text
     assert signal_requests_mock.called

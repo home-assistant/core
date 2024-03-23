@@ -166,7 +166,8 @@ def _set_utc_time_zone(hass):
 
 
 @pytest.fixture
-def _save_mock():
+def save_mock():
+    """Create a mock for async_save."""
     with patch(
         "homeassistant.components.risco.Store.async_save",
     ) as save_mock:
@@ -178,7 +179,7 @@ async def test_cloud_setup(
     hass: HomeAssistant,
     two_zone_cloud,
     _set_utc_time_zone,
-    _save_mock,
+    save_mock,
     setup_risco_cloud,
 ) -> None:
     """Test entity setup."""
@@ -186,7 +187,7 @@ async def test_cloud_setup(
     for id in ENTITY_IDS.values():
         assert registry.async_is_registered(id)
 
-    _save_mock.assert_awaited_once_with({LAST_EVENT_TIMESTAMP_KEY: TEST_EVENTS[0].time})
+    save_mock.assert_awaited_once_with({LAST_EVENT_TIMESTAMP_KEY: TEST_EVENTS[0].time})
     for category, entity_id in ENTITY_IDS.items():
         _check_state(hass, category, entity_id)
 

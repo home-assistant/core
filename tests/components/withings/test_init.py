@@ -16,6 +16,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import cloud
 from homeassistant.components.cloud import CloudNotAvailable
 from homeassistant.components.webhook import async_generate_url
 from homeassistant.components.withings import CONFIG_SCHEMA, async_setup
@@ -297,10 +298,7 @@ async def test_setup_with_cloudhook(
     with (
         patch("homeassistant.components.cloud.async_is_logged_in", return_value=True),
         patch("homeassistant.components.cloud.async_is_connected", return_value=True),
-        patch(
-            "homeassistant.components.cloud.async_active_subscription",
-            return_value=True,
-        ),
+        patch.object(cloud, "async_active_subscription", return_value=True),
         patch(
             "homeassistant.components.cloud.async_create_cloudhook",
             return_value="https://hooks.nabu.casa/ABCD",
@@ -314,7 +312,8 @@ async def test_setup_with_cloudhook(
         patch("homeassistant.components.withings.webhook_generate_url"),
     ):
         await setup_integration(hass, cloudhook_config_entry)
-        assert hass.components.cloud.async_active_subscription() is True
+
+        assert cloud.async_active_subscription(hass) is True
 
         assert (
             hass.config_entries.async_entries(DOMAIN)[0].data["cloudhook_url"]
@@ -344,10 +343,7 @@ async def test_removing_entry_with_cloud_unavailable(
     with (
         patch("homeassistant.components.cloud.async_is_logged_in", return_value=True),
         patch("homeassistant.components.cloud.async_is_connected", return_value=True),
-        patch(
-            "homeassistant.components.cloud.async_active_subscription",
-            return_value=True,
-        ),
+        patch.object(cloud, "async_active_subscription", return_value=True),
         patch(
             "homeassistant.components.cloud.async_create_cloudhook",
             return_value="https://hooks.nabu.casa/ABCD",
@@ -364,7 +360,8 @@ async def test_removing_entry_with_cloud_unavailable(
         ),
     ):
         await setup_integration(hass, cloudhook_config_entry)
-        assert hass.components.cloud.async_active_subscription() is True
+
+        assert cloud.async_active_subscription(hass) is True
 
         await hass.async_block_till_done()
         assert hass.config_entries.async_entries(DOMAIN)
@@ -388,11 +385,8 @@ async def test_setup_with_cloud(
 
     with (
         patch("homeassistant.components.cloud.async_is_logged_in", return_value=True),
-        patch("homeassistant.components.cloud.async_is_connected", return_value=True),
-        patch(
-            "homeassistant.components.cloud.async_active_subscription",
-            return_value=True,
-        ),
+        patch.object(cloud, "async_is_connected", return_value=True),
+        patch.object(cloud, "async_active_subscription", return_value=True),
         patch(
             "homeassistant.components.cloud.async_create_cloudhook",
             return_value="https://hooks.nabu.casa/ABCD",
@@ -408,8 +402,8 @@ async def test_setup_with_cloud(
         await setup_integration(hass, webhook_config_entry)
         await prepare_webhook_setup(hass, freezer)
 
-        assert hass.components.cloud.async_active_subscription() is True
-        assert hass.components.cloud.async_is_connected() is True
+        assert cloud.async_active_subscription(hass) is True
+        assert cloud.async_is_connected(hass) is True
         fake_create_cloudhook.assert_called_once()
         fake_delete_cloudhook.assert_called_once()
 
@@ -423,7 +417,7 @@ async def test_setup_with_cloud(
 
         for config_entry in hass.config_entries.async_entries("withings"):
             await hass.config_entries.async_remove(config_entry.entry_id)
-            fake_delete_cloudhook.call_count == 2
+            assert fake_delete_cloudhook.call_count == 2
 
         await hass.async_block_till_done()
         assert not hass.config_entries.async_entries(DOMAIN)
@@ -475,11 +469,8 @@ async def test_cloud_disconnect(
 
     with (
         patch("homeassistant.components.cloud.async_is_logged_in", return_value=True),
-        patch("homeassistant.components.cloud.async_is_connected", return_value=True),
-        patch(
-            "homeassistant.components.cloud.async_active_subscription",
-            return_value=True,
-        ),
+        patch.object(cloud, "async_is_connected", return_value=True),
+        patch.object(cloud, "async_active_subscription", return_value=True),
         patch(
             "homeassistant.components.cloud.async_create_cloudhook",
             return_value="https://hooks.nabu.casa/ABCD",
@@ -496,8 +487,9 @@ async def test_cloud_disconnect(
     ):
         await setup_integration(hass, webhook_config_entry)
         await prepare_webhook_setup(hass, freezer)
-        assert hass.components.cloud.async_active_subscription() is True
-        assert hass.components.cloud.async_is_connected() is True
+
+        assert cloud.async_active_subscription(hass) is True
+        assert cloud.async_is_connected(hass) is True
 
         await hass.async_block_till_done()
 
@@ -519,15 +511,15 @@ async def test_cloud_disconnect(
 @pytest.mark.parametrize(
     ("body", "expected_code"),
     [
-        [{"userid": 0, "appli": NotificationCategory.WEIGHT.value}, 0],  # Success
-        [{"userid": None, "appli": 1}, 0],  # Success, we ignore the user_id.
-        [{}, 12],  # No request body.
-        [{"userid": "GG"}, 20],  # appli not provided.
-        [{"userid": 0}, 20],  # appli not provided.
-        [
+        ({"userid": 0, "appli": NotificationCategory.WEIGHT.value}, 0),  # Success
+        ({"userid": None, "appli": 1}, 0),  # Success, we ignore the user_id.
+        ({}, 12),  # No request body.
+        ({"userid": "GG"}, 20),  # appli not provided.
+        ({"userid": 0}, 20),  # appli not provided.
+        (
             {"userid": 11, "appli": NotificationCategory.WEIGHT.value},
             0,
-        ],  # Success, we ignore the user_id
+        ),  # Success, we ignore the user_id
     ],
 )
 async def test_webhook_post(

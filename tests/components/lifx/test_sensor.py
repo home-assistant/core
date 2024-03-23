@@ -62,7 +62,7 @@ async def test_rssi_sensor(
 
     # Test enabling entity
     updated_entry = entity_registry.async_update_entity(
-        entry.entity_id, **{"disabled_by": None}
+        entry.entity_id, disabled_by=None
     )
 
     with (
@@ -118,7 +118,7 @@ async def test_rssi_sensor_old_firmware(
 
     # Test enabling entity
     updated_entry = entity_registry.async_update_entity(
-        entry.entity_id, **{"disabled_by": None}
+        entry.entity_id, disabled_by=None
     )
 
     with (

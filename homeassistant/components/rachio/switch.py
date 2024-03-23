@@ -169,10 +169,13 @@ def _create_entities(hass: HomeAssistant, config_entry: ConfigEntry) -> list[Ent
         schedules = controller.list_schedules()
         flex_schedules = controller.list_flex_schedules()
         current_schedule = controller.current_schedule
-        for zone in zones:
-            entities.append(RachioZone(person, controller, zone, current_schedule))
-        for sched in schedules + flex_schedules:
-            entities.append(RachioSchedule(person, controller, sched, current_schedule))
+        entities.extend(
+            RachioZone(person, controller, zone, current_schedule) for zone in zones
+        )
+        entities.extend(
+            RachioSchedule(person, controller, schedule, current_schedule)
+            for schedule in schedules + flex_schedules
+        )
     return entities
 
 

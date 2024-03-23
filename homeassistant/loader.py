@@ -109,6 +109,12 @@ CUSTOM_WARNING = (
     "cause stability problems, be sure to disable it if you "
     "experience issues with Home Assistant"
 )
+IMPORT_EVENT_LOOP_WARNING = (
+    "We found an integration %s which is configured to "
+    "to import its code in the event loop. This component might "
+    "cause stability problems, be sure to disable it if you "
+    "experience issues with Home Assistant"
+)
 
 _UNDEF = object()  # Internal; not helpers.typing.UNDEFINED due to circular dependency
 
@@ -653,6 +659,9 @@ class Integration:
                 None if is_virtual else set(os.listdir(file_path)),
             )
 
+            if not integration.import_executor:
+                _LOGGER.warning(IMPORT_EVENT_LOOP_WARNING, integration.domain)
+
             if integration.is_built_in:
                 return integration
 
@@ -821,14 +830,18 @@ class Integration:
     def import_executor(self) -> bool:
         """Import integration in the executor."""
         # If the integration does not explicitly set import_executor, we default to
-        # True if it's a built-in integration and False if it's a custom integration.
-        # In the future, we want to default to True for all integrations.
-        return self.manifest.get("import_executor", self.is_built_in)
+        # True.
+        return self.manifest.get("import_executor", True)
 
     @cached_property
     def has_translations(self) -> bool:
         """Return if the integration has translations."""
         return "translations" in self._top_level_files
+
+    @cached_property
+    def has_services(self) -> bool:
+        """Return if the integration has services."""
+        return "services.yaml" in self._top_level_files
 
     @property
     def mqtt(self) -> list[str] | None:
@@ -1052,7 +1065,11 @@ class Integration:
 
     async def async_get_platform(self, platform_name: str) -> ModuleType:
         """Return a platform for an integration."""
-        platforms = await self.async_get_platforms([platform_name])
+        # Fast path for a single platform when it is already cached.
+        # This is the common case.
+        if platform := self._cache.get(f"{self.domain}.{platform_name}"):
+            return platform  # type: ignore[return-value]
+        platforms = await self.async_get_platforms((platform_name,))
         return platforms[platform_name]
 
     async def async_get_platforms(
@@ -1158,6 +1175,13 @@ class Integration:
         if full_name in self._missing_platforms_cache:
             raise self._missing_platforms_cache[full_name]
         return None
+
+    def platforms_are_loaded(self, platform_names: Iterable[str]) -> bool:
+        """Check if a platforms are loaded for an integration."""
+        return all(
+            f"{self.domain}.{platform_name}" in self._cache
+            for platform_name in platform_names
+        )
 
     def get_platform_cached(self, platform_name: str) -> ModuleType | None:
         """Return a platform for an integration from cache."""
@@ -1286,7 +1310,7 @@ def async_get_loaded_integration(hass: HomeAssistant, domain: str) -> Integratio
         cache = cast(dict[str, Integration | asyncio.Future[None]], cache)
     int_or_fut = cache.get(domain, _UNDEF)
     # Integration is never subclassed, so we can check for type
-    if type(int_or_fut) is Integration:  # noqa: E721
+    if type(int_or_fut) is Integration:
         return int_or_fut
     raise IntegrationNotLoaded(domain)
 
@@ -1313,7 +1337,7 @@ async def async_get_integrations(
     for domain in domains:
         int_or_fut = cache.get(domain, _UNDEF)
         # Integration is never subclassed, so we can check for type
-        if type(int_or_fut) is Integration:  # noqa: E721
+        if type(int_or_fut) is Integration:
             results[domain] = int_or_fut
         elif int_or_fut is not _UNDEF:
             in_progress[domain] = cast(asyncio.Future[None], int_or_fut)

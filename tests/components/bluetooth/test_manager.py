@@ -597,7 +597,7 @@ async def test_connectable_advertisement_can_be_retrieved_with_best_path_is_non_
 ) -> None:
     """Test we can still get a connectable BLEDevice when the best path is non-connectable.
 
-    In this case the the device is closer to a non-connectable scanner, but the
+    In this case the device is closer to a non-connectable scanner, but the
     at least one connectable scanner has the device in range.
     """
 

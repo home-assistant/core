@@ -388,7 +388,7 @@ async def test_purge_old_statistics_runs(
         assert statistics_runs.count() == 1
 
 
-@pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
+@pytest.mark.parametrize("use_sqlite", [True, False], indirect=True)
 async def test_purge_method(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
@@ -513,7 +513,7 @@ async def test_purge_method(
     )
 
 
-@pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
+@pytest.mark.parametrize("use_sqlite", [True, False], indirect=True)
 async def test_purge_edge_case(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
@@ -756,7 +756,7 @@ async def test_purge_cutoff_date(
         assert state_attributes.count() == 0
 
 
-@pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
+@pytest.mark.parametrize("use_sqlite", [True, False], indirect=True)
 async def test_purge_filtered_states(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
@@ -951,7 +951,7 @@ async def test_purge_filtered_states(
         assert session.query(StateAttributes).count() == 0
 
 
-@pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
+@pytest.mark.parametrize("use_sqlite", [True, False], indirect=True)
 async def test_purge_filtered_states_to_empty(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
@@ -1005,7 +1005,7 @@ async def test_purge_filtered_states_to_empty(
     await async_wait_purge_done(hass)
 
 
-@pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
+@pytest.mark.parametrize("use_sqlite", [True, False], indirect=True)
 async def test_purge_without_state_attributes_filtered_states_to_empty(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,

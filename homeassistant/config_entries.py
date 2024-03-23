@@ -57,7 +57,14 @@ from .helpers.frame import report
 from .helpers.json import json_bytes, json_fragment
 from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
 from .loader import async_suggest_report_issue
-from .setup import DATA_SETUP_DONE, async_process_deps_reqs, async_setup_component
+from .setup import (
+    DATA_SETUP_DONE,
+    SetupPhases,
+    async_pause_setup,
+    async_process_deps_reqs,
+    async_setup_component,
+    async_start_setup,
+)
 from .util import uuid as uuid_util
 from .util.async_ import create_eager_task
 from .util.decorator import Registry
@@ -508,7 +515,7 @@ class ConfigEntry:
 
         if domain_is_integration:
             try:
-                await integration.async_get_platforms(("config_flow",))
+                await integration.async_get_platform("config_flow")
             except ImportError as err:
                 _LOGGER.error(
                     (
@@ -529,10 +536,17 @@ class ConfigEntry:
                 self._async_set_state(hass, ConfigEntryState.MIGRATION_ERROR, None)
                 return
 
+            setup_phase = SetupPhases.CONFIG_ENTRY_SETUP
+        else:
+            setup_phase = SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP
+
         error_reason = None
 
         try:
-            result = await component.async_setup_entry(hass, self)
+            with async_start_setup(
+                hass, integration=self.domain, group=self.entry_id, phase=setup_phase
+            ):
+                result = await component.async_setup_entry(hass, self)
 
             if not isinstance(result, bool):
                 _LOGGER.error(  # type: ignore[unreachable]
@@ -640,7 +654,11 @@ class ConfigEntry:
         # Check again when we fire in case shutdown
         # has started so we do not block shutdown
         if not hass.is_stopping:
-            hass.async_create_task(self.async_setup(hass), eager_start=True)
+            hass.async_create_task(
+                self.async_setup(hass),
+                f"config entry retry {self.domain} {self.title}",
+                eager_start=True,
+            )
 
     @callback
     def async_shutdown(self) -> None:
@@ -853,7 +871,7 @@ class ConfigEntry:
         if self._on_unload is not None:
             while self._on_unload:
                 if job := self._on_unload.pop()():
-                    self.async_create_task(hass, job)
+                    self.async_create_task(hass, job, eager_start=True)
 
         if not self._tasks and not self._background_tasks:
             return
@@ -1587,7 +1605,9 @@ class ConfigEntries:
             old_conf_migrate_func=_old_conf_migrator,
         )
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, self._async_shutdown, run_immediately=True
+        )
 
         if config is None:
             self._entries = ConfigEntryItems(self.hass)
@@ -1832,7 +1852,9 @@ class ConfigEntries:
     ) -> None:
         """Forward the setup of an entry to platforms."""
         integration = await loader.async_get_integration(self.hass, entry.domain)
-        await integration.async_get_platforms(platforms)
+        if not integration.platforms_are_loaded(platforms):
+            with async_pause_setup(self.hass, SetupPhases.WAIT_IMPORT_PLATFORMS):
+                await integration.async_get_platforms(platforms)
         await asyncio.gather(
             *(
                 create_eager_task(
@@ -1854,7 +1876,10 @@ class ConfigEntries:
         """
         # Setup Component if not set up yet
         if domain not in self.hass.config.components:
-            result = await async_setup_component(self.hass, domain, self._hass_config)
+            with async_pause_setup(self.hass, SetupPhases.WAIT_BASE_PLATFORM_SETUP):
+                result = await async_setup_component(
+                    self.hass, domain, self._hass_config
+                )
 
             if not result:
                 return False
@@ -2494,16 +2519,16 @@ class EntityRegistryDisabledHandler:
 
 
 @callback
-def _handle_entry_updated_filter(event: Event) -> bool:
+def _handle_entry_updated_filter(event_data: Mapping[str, Any]) -> bool:
     """Handle entity registry entry update filter.
 
     Only handle changes to "disabled_by".
     If "disabled_by" was CONFIG_ENTRY, reload is not needed.
     """
     if (
-        event.data["action"] != "update"
-        or "disabled_by" not in event.data["changes"]
-        or event.data["changes"]["disabled_by"]
+        event_data["action"] != "update"
+        or "disabled_by" not in event_data["changes"]
+        or event_data["changes"]["disabled_by"]
         is entity_registry.RegistryEntryDisabler.CONFIG_ENTRY
     ):
         return False
@@ -2542,7 +2567,7 @@ async def _load_integration(
     # Make sure requirements and dependencies of component are resolved
     await async_process_deps_reqs(hass, hass_config, integration)
     try:
-        await integration.async_get_platforms(("config_flow",))
+        await integration.async_get_platform("config_flow")
     except ImportError as err:
         _LOGGER.error(
             "Error occurred loading flow for integration %s: %s",

@@ -378,7 +378,7 @@ async def async_test_pi_heating_demand(hass, cluster, entity_id):
         "unsupported_attrs",
         "initial_sensor_state",
     ),
-    (
+    [
         (
             measurement.RelativeHumidity.cluster_id,
             "humidity",
@@ -563,7 +563,7 @@ async def async_test_pi_heating_demand(hass, cluster, entity_id):
             None,
             STATE_UNKNOWN,
         ),
-    ),
+    ],
 )
 async def test_sensor(
     hass: HomeAssistant,
@@ -808,7 +808,7 @@ async def test_electrical_measurement_init(
 
 @pytest.mark.parametrize(
     ("cluster_id", "unsupported_attributes", "entity_ids", "missing_entity_ids"),
-    (
+    [
         (
             homeautomation.ElectricalMeasurement.cluster_id,
             {"apparent_power", "rms_voltage", "rms_current"},
@@ -877,7 +877,7 @@ async def test_electrical_measurement_init(
             },
             {},
         ),
-    ),
+    ],
 )
 async def test_unsupported_attributes_sensor(
     hass: HomeAssistant,
@@ -919,7 +919,7 @@ async def test_unsupported_attributes_sensor(
 
 @pytest.mark.parametrize(
     ("raw_uom", "raw_value", "expected_state", "expected_uom"),
-    (
+    [
         (
             1,
             12320,
@@ -1004,7 +1004,7 @@ async def test_unsupported_attributes_sensor(
             "5.01",
             UnitOfVolume.LITERS,
         ),
-    ),
+    ],
 )
 async def test_se_summation_uom(
     hass: HomeAssistant,
@@ -1052,7 +1052,7 @@ async def test_se_summation_uom(
 
 @pytest.mark.parametrize(
     ("raw_measurement_type", "expected_type"),
-    (
+    [
         (1, "ACTIVE_MEASUREMENT"),
         (8, "PHASE_A_MEASUREMENT"),
         (9, "ACTIVE_MEASUREMENT, PHASE_A_MEASUREMENT"),
@@ -1063,7 +1063,7 @@ async def test_se_summation_uom(
                 " PHASE_A_MEASUREMENT"
             ),
         ),
-    ),
+    ],
 )
 async def test_elec_measurement_sensor_type(
     hass: HomeAssistant,
@@ -1127,7 +1127,7 @@ async def test_elec_measurement_sensor_polling(
 
 @pytest.mark.parametrize(
     "supported_attributes",
-    (
+    [
         set(),
         {
             "active_power",
@@ -1152,7 +1152,7 @@ async def test_elec_measurement_sensor_polling(
             "rms_voltage",
             "rms_voltage_max",
         },
-    ),
+    ],
 )
 async def test_elec_measurement_skip_unsupported_attribute(
     hass: HomeAssistant,

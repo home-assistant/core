@@ -143,7 +143,7 @@ async def test_shutdown_before_startup_finishes(
     hass.set_state(CoreState.not_running)
 
     recorder_helper.async_initialize_recorder(hass)
-    hass.create_task(async_setup_recorder_instance(hass, config))
+    hass.async_create_task(async_setup_recorder_instance(hass, config))
     await recorder_helper.async_wait_recorder(hass)
     instance = get_instance(hass)
 
@@ -173,7 +173,7 @@ async def test_canceled_before_startup_finishes(
     """Test recorder shuts down when its startup future is canceled out from under it."""
     hass.set_state(CoreState.not_running)
     recorder_helper.async_initialize_recorder(hass)
-    hass.create_task(async_setup_recorder_instance(hass))
+    hass.async_create_task(async_setup_recorder_instance(hass))
     await recorder_helper.async_wait_recorder(hass)
 
     instance = get_instance(hass)
@@ -225,7 +225,7 @@ async def test_state_gets_saved_when_set_before_start_event(
     hass.set_state(CoreState.not_running)
 
     recorder_helper.async_initialize_recorder(hass)
-    hass.create_task(async_setup_recorder_instance(hass))
+    hass.async_create_task(async_setup_recorder_instance(hass))
     await recorder_helper.async_wait_recorder(hass)
 
     entity_id = "test.recorder"
@@ -275,11 +275,11 @@ async def test_saving_state(recorder_mock: Recorder, hass: HomeAssistant) -> Non
 
 @pytest.mark.parametrize(
     ("dialect_name", "expected_attributes"),
-    (
+    [
         (SupportedDialect.MYSQL, {"test_attr": 5, "test_attr_10": "silly\0stuff"}),
         (SupportedDialect.POSTGRESQL, {"test_attr": 5, "test_attr_10": "silly"}),
         (SupportedDialect.SQLITE, {"test_attr": 5, "test_attr_10": "silly\0stuff"}),
-    ),
+    ],
 )
 async def test_saving_state_with_nul(
     recorder_mock: Recorder, hass: HomeAssistant, dialect_name, expected_attributes
@@ -554,7 +554,7 @@ def test_saving_state_with_commit_interval_zero(
 ) -> None:
     """Test saving a state with a commit interval of zero."""
     hass = hass_recorder({"commit_interval": 0})
-    get_instance(hass).commit_interval == 0
+    assert get_instance(hass).commit_interval == 0
 
     entity_id = "test.recorder"
     state = "restoring_from_db"
@@ -2153,14 +2153,14 @@ async def test_async_block_till_done(
 
 @pytest.mark.parametrize(
     ("db_url", "echo"),
-    (
+    [
         ("sqlite://blabla", None),
         ("mariadb://blabla", False),
         ("mysql://blabla", False),
         ("mariadb+pymysql://blabla", False),
         ("mysql+pymysql://blabla", False),
         ("postgresql://blabla", False),
-    ),
+    ],
 )
 async def test_disable_echo(
     hass: HomeAssistant, db_url, echo, caplog: pytest.LogCaptureFixture
@@ -2186,7 +2186,7 @@ async def test_disable_echo(
 
 @pytest.mark.parametrize(
     ("config_url", "expected_connect_args"),
-    (
+    [
         (
             "mariadb://user:password@SERVER_IP/DB_NAME",
             {"charset": "utf8mb4"},
@@ -2219,7 +2219,7 @@ async def test_disable_echo(
             "sqlite://blabla",
             {},
         ),
-    ),
+    ],
 )
 async def test_mysql_missing_utf8mb4(
     hass: HomeAssistant, config_url, expected_connect_args
@@ -2248,11 +2248,11 @@ async def test_mysql_missing_utf8mb4(
 
 @pytest.mark.parametrize(
     "config_url",
-    (
+    [
         "mysql://user:password@SERVER_IP/DB_NAME",
         "mysql://user:password@SERVER_IP/DB_NAME?charset=utf8mb4",
         "mysql://user:password@SERVER_IP/DB_NAME?blah=bleh&charset=other",
-    ),
+    ],
 )
 async def test_connect_args_priority(hass: HomeAssistant, config_url) -> None:
     """Test connect_args has priority over URL query."""
@@ -2547,7 +2547,7 @@ async def test_commit_before_commits_pending_writes(
     }
 
     recorder_helper.async_initialize_recorder(hass)
-    hass.create_task(async_setup_recorder_instance(hass, config))
+    hass.async_create_task(async_setup_recorder_instance(hass, config))
     await recorder_helper.async_wait_recorder(hass)
     instance = get_instance(hass)
     assert instance.commit_interval == 60

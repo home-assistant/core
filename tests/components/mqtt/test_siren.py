@@ -17,7 +17,6 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 
@@ -58,13 +57,6 @@ from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {siren.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
 }
-
-
-@pytest.fixture(autouse=True)
-def siren_platform_only():
-    """Only setup the siren platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SIREN]):
-        yield
 
 
 async def async_turn_on(
@@ -840,7 +832,7 @@ async def test_command_templates(
     mqtt_mock.async_publish.assert_any_call(
         "test-topic", "CMD: ON, DURATION: 22, TONE: ping, VOLUME: 0.88", 0, False
     )
-    mqtt_mock.async_publish.call_count == 1
+    assert mqtt_mock.async_publish.call_count == 1
     mqtt_mock.reset_mock()
     await async_turn_off(
         hass,
@@ -849,7 +841,7 @@ async def test_command_templates(
     mqtt_mock.async_publish.assert_any_call(
         "test-topic", "CMD: OFF, DURATION: , TONE: , VOLUME:", 0, False
     )
-    mqtt_mock.async_publish.call_count == 1
+    assert mqtt_mock.async_publish.call_count == 1
     mqtt_mock.reset_mock()
 
     await async_turn_on(
@@ -870,7 +862,7 @@ async def test_command_templates(
         entity_id="siren.milk",
     )
     mqtt_mock.async_publish.assert_any_call("test-topic", "CMD_OFF: OFF", 0, False)
-    mqtt_mock.async_publish.call_count == 1
+    assert mqtt_mock.async_publish.call_count == 2
     mqtt_mock.reset_mock()
 
 

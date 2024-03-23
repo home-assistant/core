@@ -42,7 +42,7 @@ async def setup_repairs(hass):
 
 @pytest.mark.parametrize(
     ("ha_version", "supervisor_info", "expected_alerts"),
-    (
+    [
         (
             "2022.7.0",
             {"version": "2022.11.0"},
@@ -93,7 +93,7 @@ async def setup_repairs(hass):
                 ("sochain", "sochain"),
             ],
         ),
-    ),
+    ],
 )
 async def test_alerts(
     hass: HomeAssistant,
@@ -186,7 +186,7 @@ async def test_alerts(
         "initial_alerts",
         "late_alerts",
     ),
-    (
+    [
         (
             "2022.7.0",
             {"version": "2022.11.0"},
@@ -286,7 +286,7 @@ async def test_alerts(
                 ("sochain", "sochain"),
             ],
         ),
-    ),
+    ],
 )
 async def test_alerts_refreshed_on_component_load(
     hass: HomeAssistant,
@@ -331,33 +331,33 @@ async def test_alerts_refreshed_on_component_load(
     ):
         assert await async_setup_component(hass, DOMAIN, {})
 
-    client = await hass_ws_client(hass)
+        client = await hass_ws_client(hass)
 
-    await client.send_json({"id": 1, "type": "repairs/list_issues"})
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert msg["result"] == {
-        "issues": [
-            {
-                "breaks_in_ha_version": None,
-                "created": ANY,
-                "dismissed_version": None,
-                "domain": "homeassistant_alerts",
-                "ignored": False,
-                "is_fixable": False,
-                "issue_id": f"{alert}.markdown_{integration}",
-                "issue_domain": integration,
-                "learn_more_url": None,
-                "severity": "warning",
-                "translation_key": "alert",
-                "translation_placeholders": {
-                    "title": f"Title for {alert}",
-                    "description": f"Content for {alert}",
-                },
-            }
-            for alert, integration in initial_alerts
-        ]
-    }
+        await client.send_json({"id": 1, "type": "repairs/list_issues"})
+        msg = await client.receive_json()
+        assert msg["success"]
+        assert msg["result"] == {
+            "issues": [
+                {
+                    "breaks_in_ha_version": None,
+                    "created": ANY,
+                    "dismissed_version": None,
+                    "domain": "homeassistant_alerts",
+                    "ignored": False,
+                    "is_fixable": False,
+                    "issue_id": f"{alert}.markdown_{integration}",
+                    "issue_domain": integration,
+                    "learn_more_url": None,
+                    "severity": "warning",
+                    "translation_key": "alert",
+                    "translation_placeholders": {
+                        "title": f"Title for {alert}",
+                        "description": f"Content for {alert}",
+                    },
+                }
+                for alert, integration in initial_alerts
+            ]
+        }
 
     with (
         patch(
@@ -380,38 +380,38 @@ async def test_alerts_refreshed_on_component_load(
         freezer.tick(COMPONENT_LOADED_COOLDOWN + 1)
         await hass.async_block_till_done()
 
-    client = await hass_ws_client(hass)
+        client = await hass_ws_client(hass)
 
-    await client.send_json({"id": 2, "type": "repairs/list_issues"})
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert msg["result"] == {
-        "issues": [
-            {
-                "breaks_in_ha_version": None,
-                "created": ANY,
-                "dismissed_version": None,
-                "domain": "homeassistant_alerts",
-                "ignored": False,
-                "is_fixable": False,
-                "issue_id": f"{alert}.markdown_{integration}",
-                "issue_domain": integration,
-                "learn_more_url": None,
-                "severity": "warning",
-                "translation_key": "alert",
-                "translation_placeholders": {
-                    "title": f"Title for {alert}",
-                    "description": f"Content for {alert}",
-                },
-            }
-            for alert, integration in late_alerts
-        ]
-    }
+        await client.send_json({"id": 2, "type": "repairs/list_issues"})
+        msg = await client.receive_json()
+        assert msg["success"]
+        assert msg["result"] == {
+            "issues": [
+                {
+                    "breaks_in_ha_version": None,
+                    "created": ANY,
+                    "dismissed_version": None,
+                    "domain": "homeassistant_alerts",
+                    "ignored": False,
+                    "is_fixable": False,
+                    "issue_id": f"{alert}.markdown_{integration}",
+                    "issue_domain": integration,
+                    "learn_more_url": None,
+                    "severity": "warning",
+                    "translation_key": "alert",
+                    "translation_placeholders": {
+                        "title": f"Title for {alert}",
+                        "description": f"Content for {alert}",
+                    },
+                }
+                for alert, integration in late_alerts
+            ]
+        }
 
 
 @pytest.mark.parametrize(
     ("ha_version", "fixture", "expected_alerts"),
-    (
+    [
         (
             "2022.7.0",
             "alerts_no_integrations.json",
@@ -427,7 +427,7 @@ async def test_alerts_refreshed_on_component_load(
                 ("hikvision", "hikvision"),
             ],
         ),
-    ),
+    ],
 )
 async def test_bad_alerts(
     hass: HomeAssistant,
@@ -515,7 +515,7 @@ async def test_no_alerts(
 
 @pytest.mark.parametrize(
     ("ha_version", "fixture_1", "expected_alerts_1", "fixture_2", "expected_alerts_2"),
-    (
+    [
         (
             "2022.7.0",
             "alerts_1.json",
@@ -576,7 +576,7 @@ async def test_no_alerts(
                 ("sochain", "sochain"),
             ],
         ),
-    ),
+    ],
 )
 async def test_alerts_change(
     hass: HomeAssistant,

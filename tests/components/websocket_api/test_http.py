@@ -86,7 +86,7 @@ async def test_cleanup_on_cancellation(
 
         @callback
         def _raise():
-            raise ValueError()
+            raise ValueError
 
         connection.subscriptions[msg_id] = _raise
         connection.send_result(msg_id)
@@ -104,7 +104,7 @@ async def test_cleanup_on_cancellation(
     def cancel_in_handler(
         hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
     ) -> None:
-        raise asyncio.CancelledError()
+        raise asyncio.CancelledError
 
     async_register_command(hass, cancel_in_handler)
 

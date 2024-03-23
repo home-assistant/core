@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from weatherflow4py.models.unified import WeatherFlowData
+from weatherflow4py.models.rest.unified import WeatherFlowData
 
 from homeassistant.components.weather import (
     Forecast,

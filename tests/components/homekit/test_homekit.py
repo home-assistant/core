@@ -355,7 +355,7 @@ async def test_homekit_with_single_advertise_ips(
     )
     entry.add_to_hass(hass)
     with patch(f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver) as mock_driver:
-        mock_driver.async_start = AsyncMock()
+        hk_driver.async_start = AsyncMock()
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -394,7 +394,7 @@ async def test_homekit_with_many_advertise_ips(
     )
     entry.add_to_hass(hass)
     with patch(f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver) as mock_driver:
-        mock_driver.async_start = AsyncMock()
+        hk_driver.async_start = AsyncMock()
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -773,9 +773,15 @@ async def test_homekit_start(
         patch(f"{PATH_HOMEKIT}.HomeKit.add_bridge_accessory") as mock_add_acc,
         patch(f"{PATH_HOMEKIT}.async_show_setup_message") as mock_setup_msg,
         patch("pyhap.accessory_driver.AccessoryDriver.async_start") as hk_driver_start,
+        patch("pyhap.accessory_driver.AccessoryDriver.load") as load_mock,
+        patch("pyhap.accessory_driver.AccessoryDriver.persist") as persist_mock,
+        patch(f"{PATH_HOMEKIT}.os.path.exists", return_value=True),
     ):
+        await homekit.async_stop()
         await homekit.async_start()
 
+    assert load_mock.called
+    assert not persist_mock.called
     device = device_registry.async_get_device(
         identifiers={(DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER)}
     )
@@ -1315,7 +1321,7 @@ async def test_homekit_reset_accessories_not_bridged(
         acc_mock = MagicMock()
         acc_mock.entity_id = entity_id
         acc_mock.stop = AsyncMock()
-        acc_mock.to_HAP = lambda: {}
+        acc_mock.to_HAP = dict
 
         aid = homekit.aid_storage.get_or_allocate_aid_for_entity_id(entity_id)
         homekit.bridge.accessories = {aid: acc_mock}
@@ -2097,6 +2103,7 @@ async def test_reload(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
         ),
     ):
         mock_homekit.return_value = homekit = Mock()
+        type(homekit).async_start = AsyncMock()
         assert await async_setup_component(
             hass, "homekit", {"homekit": {CONF_NAME: "reloadable", CONF_PORT: 12345}}
         )
@@ -2120,11 +2127,11 @@ async def test_reload(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
     with (
         patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path),
         patch(f"{PATH_HOMEKIT}.HomeKit") as mock_homekit2,
-        patch.object(homekit.bridge, "add_accessory"),
         patch(f"{PATH_HOMEKIT}.async_show_setup_message"),
         patch(
             f"{PATH_HOMEKIT}.get_accessory",
         ),
+        patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True),
         patch(
             "pyhap.accessory_driver.AccessoryDriver.async_start",
         ),
@@ -2134,6 +2141,7 @@ async def test_reload(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
         ),
     ):
         mock_homekit2.return_value = homekit = Mock()
+        type(homekit).async_start = AsyncMock()
         await hass.services.async_call(
             "homekit",
             SERVICE_RELOAD,
