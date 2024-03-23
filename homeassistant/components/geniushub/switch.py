@@ -8,6 +8,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -27,16 +28,10 @@ SET_SWITCH_OVERRIDE_SCHEMA = {
 }
 
 
-async def async_setup_platform(
+def _do_setup(
     hass: HomeAssistant,
-    config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Genius Hub switch entities."""
-    if discovery_info is None:
-        return
-
     broker = hass.data[DOMAIN]["broker"]
 
     async_add_entities(
@@ -44,7 +39,8 @@ async def async_setup_platform(
             GeniusSwitch(broker, z)
             for z in broker.client.zone_objs
             if z.data.get("type") == GH_ON_OFF_ZONE
-        ]
+        ],
+        update_before_add=True,
     )
 
     # Register custom services
@@ -55,6 +51,33 @@ async def async_setup_platform(
         SET_SWITCH_OVERRIDE_SCHEMA,
         "async_turn_on",
     )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Genius Hub switch entities."""
+    config = hass.data[DOMAIN][entry.entry_id]
+    # Update our config to include new repos and remove those that have been removed.
+    if entry.options:
+        config.update(entry.options)
+
+    _do_setup(hass, async_add_entities)
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the Genius Hub switch entities."""
+    if discovery_info is None:
+        return
+
+    _do_setup(hass, async_add_entities)
 
 
 class GeniusSwitch(GeniusZone, SwitchEntity):

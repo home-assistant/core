@@ -1,4 +1,39 @@
 {
+  "config": {
+    "step": {
+      "user": {
+        "title": "Genius Hub Configuration",
+        "data": {
+          "option_1_or_2": "Configuration option 1 or 2."
+        }
+      },
+      "user_v1": {
+        "title": "Genius Hub Configuration Option 1",
+        "data": {
+          "host": "The hostname/IP address of the Genius Hub.",
+          "mac": "The MAC address of the Hub’s ethernet port.",
+          "password": "Your Genius Hub password.",
+          "username": "Your Genius Hub username."
+        }
+      },
+      "user_v3": {
+        "title": "Genius Hub Configuration Option 2",
+        "data": {
+          "token": "The Hub Token of the Genius Hub.",
+          "mac": "The MAC address of the Hub’s ethernet port."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_host%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+
   "services": {
     "set_zone_mode": {
       "name": "Set zone mode",

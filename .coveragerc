@@ -472,7 +472,13 @@ omit =
     homeassistant/components/garages_amsterdam/entity.py
     homeassistant/components/garages_amsterdam/sensor.py
     homeassistant/components/gc100/*
-    homeassistant/components/geniushub/*
+    homeassistant/components/geniushub/__init__.py
+    homeassistant/components/geniushub/binary_sensor.py
+    homeassistant/components/geniushub/climate.py
+    homeassistant/components/geniushub/const.py
+    homeassistant/components/geniushub/sensor.py
+    homeassistant/components/geniushub/switch.py
+    homeassistant/components/geniushub/water_heater.py
     homeassistant/components/geocaching/__init__.py
     homeassistant/components/geocaching/coordinator.py
     homeassistant/components/geocaching/oauth.py

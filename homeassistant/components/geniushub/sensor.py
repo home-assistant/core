@@ -6,6 +6,7 @@ from datetime import timedelta
 from typing import Any
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -23,16 +24,10 @@ GH_LEVEL_MAPPING = {
 }
 
 
-async def async_setup_platform(
+def _do_setup(
     hass: HomeAssistant,
-    config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Genius Hub sensor entities."""
-    if discovery_info is None:
-        return
-
     broker = hass.data[DOMAIN]["broker"]
 
     entities: list[GeniusBattery | GeniusIssue] = [
@@ -43,6 +38,33 @@ async def async_setup_platform(
     entities.extend([GeniusIssue(broker, i) for i in list(GH_LEVEL_MAPPING)])
 
     async_add_entities(entities, update_before_add=True)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Genius Hub sensor entities."""
+    config = hass.data[DOMAIN][entry.entry_id]
+    # Update our config to include new repos and remove those that have been removed.
+    if entry.options:
+        config.update(entry.options)
+
+    _do_setup(hass, async_add_entities)
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the Genius Hub sensor entities."""
+    if discovery_info is None:
+        return
+
+    _do_setup(hass, async_add_entities)
 
 
 class GeniusBattery(GeniusDevice, SensorEntity):
