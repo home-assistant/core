@@ -119,7 +119,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 last_stats_time = None
             else:
                 cost_reads = await self._async_get_recent_cost_reads(
-                    account, last_stat[consumption_statistic_id][0]["start"]
+                    account, last_stat[cost_statistic_id][0]["start"]
                 )
                 if not cost_reads:
                     _LOGGER.debug("No recent usage/cost data. Skipping update")
