@@ -6,7 +6,7 @@ from typing import Any
 from aioambient import OpenAPI
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LOCATION,
@@ -15,7 +15,6 @@ from homeassistant.const import (
     CONF_RADIUS,
     UnitOfLength,
 )
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
     LocationSelector,
     LocationSelectorConfig,
@@ -35,7 +34,7 @@ CONF_STATION = "station"
 CONF_RADIUS_DEFAULT = 1609.34
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class AmbientNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the config flow for the Ambient Weather Network integration."""
 
     VERSION = 1
@@ -51,7 +50,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step to select the location."""
 
         errors: dict[str, str] | None = None
@@ -115,7 +114,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_station(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the second step to select the station."""
 
         if user_input:

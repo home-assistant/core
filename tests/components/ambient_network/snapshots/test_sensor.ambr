@@ -18,6 +18,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor.private': dict({
@@ -57,6 +59,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -89,6 +93,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.station_a_daily_rain',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -112,6 +117,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -141,6 +148,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.station_a_dew_point',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '27.7777777777778',
   })
@@ -164,6 +172,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -193,6 +203,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.station_a_feels_like',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '29.4444444444444',
   })
@@ -216,6 +227,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -248,6 +261,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.station_a_hourly_rain',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -271,6 +285,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -300,6 +316,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.station_a_humidity',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '60',
   })
@@ -323,6 +340,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -357,6 +376,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -393,6 +414,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -425,6 +448,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.station_a_max_daily_gust',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '36.72523008',
   })
@@ -448,6 +472,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor.private': dict({
@@ -487,6 +513,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -519,6 +547,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.station_a_relative_pressure',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1001.89694313129',
   })
@@ -542,6 +571,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -571,6 +602,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.station_a_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '28.2777777777778',
   })
@@ -594,6 +626,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -622,6 +656,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.station_a_uv_index',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -645,6 +680,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor.private': dict({
@@ -682,6 +719,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -718,6 +757,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -750,6 +791,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.station_a_wind_gust',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '14.75768448',
   })
@@ -773,6 +815,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -805,6 +849,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.station_a_wind_speed',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '14.03347968',
   })
