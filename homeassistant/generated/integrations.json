@@ -3157,6 +3157,11 @@
       "integration_type": "virtual",
       "supported_by": "netatmo"
     },
+    "leviosa_shades": {
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "leviton": {
       "name": "Leviton",
       "iot_standards": [
@@ -7169,6 +7174,7 @@
     "input_text",
     "integration",
     "islamic_prayer_times",
+    "leviosa_shades",
     "local_calendar",
     "local_ip",
     "local_todo",
