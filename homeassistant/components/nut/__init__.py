@@ -18,8 +18,9 @@ from homeassistant.const import (
     CONF_RESOURCES,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -63,6 +64,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     data = PyNUTData(host, port, alias, username, password)
 
+    entry.async_on_unload(data.async_shutdown)
+    # Note that async_listen_once is not used here because the listener
+    # could be removed after the event is fired.
+
     async def async_update_data() -> dict[str, str]:
         """Fetch data from NUT."""
         try:
@@ -81,6 +86,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()
+
+    entry.async_on_unload(
+        hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, data.async_shutdown)
+    )
     status = coordinator.data
 
     _LOGGER.debug("NUT Sensors Available: %s", status)
@@ -302,3 +311,8 @@ class PyNUTData:
         except NUTError as err:
             _LOGGER.error("Error retrieving supported commands %s", err)
             return None
+
+    @callback
+    def async_shutdown(self, _: Event | None = None) -> None:
+        """Shutdown the client connection."""
+        self._client.shutdown()
