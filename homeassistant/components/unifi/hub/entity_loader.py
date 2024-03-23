@@ -6,7 +6,6 @@ Make sure expected clients are available for platforms.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
 from datetime import timedelta
 from functools import partial
 from typing import TYPE_CHECKING
@@ -143,42 +142,36 @@ class UnifiEntityLoader:
         """Subscribe to UniFi API handlers and create entities."""
 
         @callback
-        def async_load_entities(descriptions: Iterable[UnifiEntityDescription]) -> None:
-            """Load and subscribe to UniFi endpoints."""
-
-            @callback
-            def _add_unifi_entities() -> None:
-                """Add UniFi entity."""
-                async_add_entities(
-                    unifi_platform_entity(obj_id, self.hub, description)
-                    for description in descriptions
-                    for obj_id in description.api_handler_fn(self.hub.api)
-                    if self._should_add_entity(description, obj_id)
-                )
-
-            _add_unifi_entities()
-
-            @callback
-            def _create_unifi_entity(
-                description: UnifiEntityDescription, event: ItemEvent, obj_id: str
-            ) -> None:
-                """Create new UniFi entity on event."""
-                if self._should_add_entity(description, obj_id):
-                    async_add_entities(
-                        [unifi_platform_entity(obj_id, self.hub, description)]
-                    )
-
-            for description in descriptions:
-                description.api_handler_fn(self.hub.api).subscribe(
-                    partial(_create_unifi_entity, description), ItemEvent.ADDED
-                )
-
-            self.hub.config.entry.async_on_unload(
-                async_dispatcher_connect(
-                    self.hub.hass,
-                    self.hub.signal_options_update,
-                    _add_unifi_entities,
-                )
+        def _add_unifi_entities() -> None:
+            """Add UniFi entity."""
+            async_add_entities(
+                unifi_platform_entity(obj_id, self.hub, description)
+                for description in descriptions
+                for obj_id in description.api_handler_fn(self.hub.api)
+                if self._should_add_entity(description, obj_id)
             )
 
-        async_load_entities(descriptions)
+        _add_unifi_entities()
+
+        @callback
+        def _create_unifi_entity(
+            description: UnifiEntityDescription, event: ItemEvent, obj_id: str
+        ) -> None:
+            """Create new UniFi entity on event."""
+            if self._should_add_entity(description, obj_id):
+                async_add_entities(
+                    [unifi_platform_entity(obj_id, self.hub, description)]
+                )
+
+        for description in descriptions:
+            description.api_handler_fn(self.hub.api).subscribe(
+                partial(_create_unifi_entity, description), ItemEvent.ADDED
+            )
+
+        self.hub.config.entry.async_on_unload(
+            async_dispatcher_connect(
+                self.hub.hass,
+                self.hub.signal_options_update,
+                _add_unifi_entities,
+            )
+        )

@@ -588,7 +588,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
 
         Overridden by accessory types.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @ha_callback
     def async_call_service(

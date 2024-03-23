@@ -47,7 +47,7 @@ class HarmonyActivitySelect(HarmonyEntity, SelectEntity):
     @property
     def options(self) -> list[str]:
         """Return a set of selectable options."""
-        return [TRANSLATABLE_POWER_OFF] + sorted(self._data.activity_names)
+        return [TRANSLATABLE_POWER_OFF, *sorted(self._data.activity_names)]
 
     @property
     def current_option(self) -> str | None:

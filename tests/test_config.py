@@ -1,5 +1,6 @@
 """Test config utils."""
 
+import asyncio
 from collections import OrderedDict
 import contextlib
 import copy
@@ -15,6 +16,7 @@ import voluptuous as vol
 from voluptuous import Invalid, MultipleInvalid
 import yaml
 
+from homeassistant import config, loader
 import homeassistant.config as config_util
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -1969,7 +1971,7 @@ async def test_core_store_historic_currency(
     assert issue
     assert issue.translation_placeholders == {"currency": "LTT"}
 
-    await hass.config.async_update(**{"currency": "EUR"})
+    await hass.config.async_update(currency="EUR")
     issue = issue_registry.async_get_issue("homeassistant", issue_id)
     assert not issue
 
@@ -2025,7 +2027,7 @@ async def test_core_store_no_country(
     issue = issue_registry.async_get_issue("homeassistant", issue_id)
     assert issue
 
-    await hass.config.async_update(**{"country": "SE"})
+    await hass.config.async_update(country="SE")
     issue = issue_registry.async_get_issue("homeassistant", issue_id)
     assert not issue
 
@@ -2348,6 +2350,7 @@ def test_extract_platform_integrations() -> None:
         [
             (b"zone", {"platform": "not str"}),
             ("zone", {"platform": "hello"}),
+            ("switch", {"platform": ["un", "hash", "able"]}),
             ("zonex", []),
             ("zoney", ""),
             ("notzone", {"platform": "nothello"}),
@@ -2361,13 +2364,90 @@ def test_extract_platform_integrations() -> None:
         ]
     )
     assert config_util.extract_platform_integrations(config, {"zone"}) == {
-        "hello",
-        "hello 2",
+        "zone": {"hello", "hello 2"}
     }
-    assert config_util.extract_platform_integrations(config, {"zonex"}) == set()
-    assert config_util.extract_platform_integrations(config, {"zoney"}) == set()
+    assert config_util.extract_platform_integrations(config, {"switch"}) == {}
+    assert config_util.extract_platform_integrations(config, {"zonex"}) == {}
+    assert config_util.extract_platform_integrations(config, {"zoney"}) == {}
     assert config_util.extract_platform_integrations(
         config, {"zone", "not_valid", "notzone"}
-    ) == {"hello", "hello 2", "nothello"}
-    assert config_util.extract_platform_integrations(config, {"zoneq"}) == set()
-    assert config_util.extract_platform_integrations(config, {"zoneempty"}) == set()
+    ) == {"zone": {"hello 2", "hello"}, "notzone": {"nothello"}}
+    assert config_util.extract_platform_integrations(config, {"zoneq"}) == {}
+    assert config_util.extract_platform_integrations(config, {"zoneempty"}) == {}
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_loading_platforms_gathers(hass: HomeAssistant) -> None:
+    """Test loading platform integrations gathers."""
+
+    mock_integration(
+        hass,
+        MockModule(
+            domain="platform_int",
+        ),
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="platform_int2",
+        ),
+    )
+
+    # Its important that we do not mock the platforms with mock_platform
+    # as the loader is smart enough to know they are already loaded and
+    # will not create an executor job to load them. We are testing in
+    # what order the executor jobs happen here as we want to make
+    # sure the platform integrations are at the front of the line
+    light_integration = await loader.async_get_integration(hass, "light")
+    sensor_integration = await loader.async_get_integration(hass, "sensor")
+
+    order: list[tuple[str, str]] = []
+
+    def _load_platform(self, platform: str) -> MockModule:
+        order.append((self.domain, platform))
+        return MockModule()
+
+    # We need to patch what runs in the executor so we are counting
+    # the order that jobs are scheduled in th executor
+    with patch(
+        "homeassistant.loader.Integration._load_platform",
+        _load_platform,
+    ):
+        light_task = hass.async_create_task(
+            config.async_process_component_config(
+                hass,
+                {
+                    "light": [
+                        {"platform": "platform_int"},
+                        {"platform": "platform_int2"},
+                    ]
+                },
+                light_integration,
+            ),
+            eager_start=True,
+        )
+        sensor_task = hass.async_create_task(
+            config.async_process_component_config(
+                hass,
+                {
+                    "sensor": [
+                        {"platform": "platform_int"},
+                        {"platform": "platform_int2"},
+                    ]
+                },
+                sensor_integration,
+            ),
+            eager_start=True,
+        )
+
+        await asyncio.gather(light_task, sensor_task)
+
+    # Should be called in order so that
+    # all the light platforms are imported
+    # before the sensor platforms
+    assert order == [
+        ("platform_int", "light"),
+        ("platform_int2", "light"),
+        ("platform_int", "sensor"),
+        ("platform_int2", "sensor"),
+    ]

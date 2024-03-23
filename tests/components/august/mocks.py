@@ -98,7 +98,7 @@ async def _create_august_with_devices(
     return entry
 
 
-async def _create_august_api_with_devices(  # noqa: C901
+async def _create_august_api_with_devices(
     hass,
     devices,
     api_call_side_effects=None,

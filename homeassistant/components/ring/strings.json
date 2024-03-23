@@ -37,6 +37,11 @@
         "name": "Ding"
       }
     },
+    "button": {
+      "open_door": {
+        "name": "Open door"
+      }
+    },
     "light": {
       "light": {
         "name": "[%key:component::light::title%]"
@@ -59,6 +64,15 @@
       },
       "volume": {
         "name": "Volume"
+      },
+      "doorbell_volume": {
+        "name": "Doorbell volume"
+      },
+      "mic_volume": {
+        "name": "Mic volume"
+      },
+      "voice_volume": {
+        "name": "Voice volume"
       },
       "wifi_signal_category": {
         "name": "Wi-Fi signal category"

@@ -29,6 +29,7 @@ from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
+    ATTR_FLOOR_ID,
     CONF_ABOVE,
     CONF_ALIAS,
     CONF_ATTRIBUTE,
@@ -624,7 +625,7 @@ def string(value: Any) -> str:
     # This is expected to be the most common case, so check it first.
     if (
         type(value) is str  # noqa: E721
-        or type(value) is NodeStrClass  # noqa: E721
+        or type(value) is NodeStrClass
         or isinstance(value, str)
     ):
         return value
@@ -1216,6 +1217,9 @@ ENTITY_SERVICE_FIELDS = {
     vol.Optional(ATTR_AREA_ID): vol.Any(
         ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
     ),
+    vol.Optional(ATTR_FLOOR_ID): vol.Any(
+        ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
+    ),
 }
 
 TARGET_SERVICE_FIELDS = {
@@ -1231,6 +1235,9 @@ TARGET_SERVICE_FIELDS = {
         ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
     ),
     vol.Optional(ATTR_AREA_ID): vol.Any(
+        ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
+    ),
+    vol.Optional(ATTR_FLOOR_ID): vol.Any(
         ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
     ),
 }

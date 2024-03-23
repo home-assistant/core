@@ -95,7 +95,7 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         return await self._async_step_discovery(
-            discovery_info.host, discovery_info.hostname.lower().rstrip(".local.")
+            discovery_info.host, discovery_info.hostname.lower().removesuffix(".local.")
         )
 
     async def async_step_dhcp(

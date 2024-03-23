@@ -27,7 +27,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 async def setup_automation(
     hass,
     automation_config,
-    stub_blueprint_populate,  # noqa: F811
+    stub_blueprint_populate,
 ):
     """Set up automation integration."""
     assert await async_setup_component(

@@ -242,7 +242,7 @@ async def test_statistic_during_period(
             "min": -76 + i * 2,
             "sum": i,
         }
-        for i in range(0, 39)
+        for i in range(39)
     ]
     imported_stats = []
     slice_end = 12 - offset
@@ -255,7 +255,7 @@ async def test_statistic_during_period(
             "sum": imported_stats_5min[slice_end - 1]["sum"],
         }
     )
-    for i in range(0, 2):
+    for i in range(2):
         slice_start = i * 12 + (12 - offset)
         slice_end = (i + 1) * 12 + (12 - offset)
         assert imported_stats_5min[slice_start]["start"].minute == 0
@@ -664,7 +664,7 @@ async def test_statistic_during_period_hole(
             "min": -76 + i * 2,
             "sum": i,
         }
-        for i in range(0, 6)
+        for i in range(6)
     ]
 
     imported_metadata = {

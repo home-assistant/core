@@ -3912,9 +3912,9 @@ async def test_entry_reload_concurrency(
         ),
     )
     mock_platform(hass, "comp.config_flow", None)
-    tasks = []
-    for _ in range(15):
-        tasks.append(asyncio.create_task(manager.async_reload(entry.entry_id)))
+    tasks = [
+        asyncio.create_task(manager.async_reload(entry.entry_id)) for _ in range(15)
+    ]
     await asyncio.gather(*tasks)
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert loaded == 1
@@ -4334,10 +4334,10 @@ async def test_task_tracking(hass: HomeAssistant) -> None:
     hass.loop.call_soon(event.set)
     await entry._async_process_on_unload(hass)
     assert results == [
-        "on_unload",
         "background",
         "background",
         "normal",
+        "on_unload",
     ]
 
 

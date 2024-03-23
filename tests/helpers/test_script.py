@@ -3441,7 +3441,8 @@ async def test_parallel_loop(
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
     hass.async_create_task(
-        script_obj.async_run(MappingProxyType({"what": "world"}), Context())
+        script_obj.async_run(MappingProxyType({"what": "world"}), Context()),
+        eager_start=True,
     )
     await hass.async_block_till_done()
 
@@ -3456,7 +3457,6 @@ async def test_parallel_loop(
     expected_trace = {
         "0": [{"variables": {"what": "world"}}],
         "0/parallel/0/sequence/0": [{}],
-        "0/parallel/1/sequence/0": [{}],
         "0/parallel/0/sequence/0/repeat/sequence/0": [
             {
                 "variables": {
@@ -3492,6 +3492,7 @@ async def test_parallel_loop(
                 "result": {"event": "loop1", "event_data": {"hello1": "loop1_c"}},
             },
         ],
+        "0/parallel/1/sequence/0": [{}],
         "0/parallel/1/sequence/0/repeat/sequence/0": [
             {
                 "variables": {
@@ -4118,7 +4119,9 @@ async def test_max_exceeded(
         )
     hass.states.async_set("switch.test", "on")
     for _ in range(max_runs + 1):
-        hass.async_create_task(script_obj.async_run(context=Context()))
+        hass.async_create_task(
+            script_obj.async_run(context=Context()), eager_start=True
+        )
     hass.states.async_set("switch.test", "off")
     await hass.async_block_till_done()
     if max_exceeded is None:

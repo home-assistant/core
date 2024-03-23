@@ -601,7 +601,7 @@ async def test_http_api_handle_failure(
 
     # Raise an error during intent handling
     def async_handle_error(*args, **kwargs):
-        raise intent.IntentHandleError()
+        raise intent.IntentHandleError
 
     with patch("homeassistant.helpers.intent.async_handle", new=async_handle_error):
         resp = await client.post(
@@ -629,7 +629,7 @@ async def test_http_api_unexpected_failure(
 
     # Raise an "unexpected" error during intent handling
     def async_handle_error(*args, **kwargs):
-        raise intent.IntentUnexpectedError()
+        raise intent.IntentUnexpectedError
 
     with patch("homeassistant.helpers.intent.async_handle", new=async_handle_error):
         resp = await client.post(

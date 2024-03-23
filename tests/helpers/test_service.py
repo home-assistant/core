@@ -32,6 +32,7 @@ from homeassistant.core import (
     SupportsResponse,
 )
 from homeassistant.helpers import (
+    area_registry as ar,
     device_registry as dr,
     entity_registry as er,
     service,
@@ -45,6 +46,7 @@ from tests.common import (
     MockEntity,
     MockUser,
     async_mock_service,
+    mock_area_registry,
     mock_device_registry,
     mock_registry,
 )
@@ -102,11 +104,37 @@ def mock_entities(hass: HomeAssistant) -> dict[str, MockEntity]:
 
 
 @pytest.fixture
-def area_mock(hass):
-    """Mock including area info."""
+def floor_area_mock(hass: HomeAssistant) -> None:
+    """Mock including floor and area info."""
     hass.states.async_set("light.Bowl", STATE_ON)
     hass.states.async_set("light.Ceiling", STATE_OFF)
     hass.states.async_set("light.Kitchen", STATE_OFF)
+
+    area_in_floor = ar.AreaEntry(
+        id="test-area",
+        name="Test area",
+        aliases={},
+        normalized_name="test-area",
+        floor_id="test-floor",
+        icon=None,
+        picture=None,
+    )
+    area_in_floor_a = ar.AreaEntry(
+        id="area-a",
+        name="Area A",
+        aliases={},
+        normalized_name="area-a",
+        floor_id="floor-a",
+        icon=None,
+        picture=None,
+    )
+    mock_area_registry(
+        hass,
+        {
+            area_in_floor.id: area_in_floor,
+            area_in_floor_a.id: area_in_floor_a,
+        },
+    )
 
     device_in_area = dr.DeviceEntry(area_id="test-area")
     device_no_area = dr.DeviceEntry(id="device-no-area-id")
@@ -264,7 +292,11 @@ async def test_service_call(hass: HomeAssistant) -> None:
             "effect": {"value": "{{ 'complex' }}", "simple": "simple"},
         },
         "data_template": {"list": ["{{ 'list' }}", "2"]},
-        "target": {"area_id": "test-area-id", "entity_id": "will.be_overridden"},
+        "target": {
+            "area_id": "test-area-id",
+            "entity_id": "will.be_overridden",
+            "floor_id": "test-floor-id",
+        },
     }
 
     await service.async_call_from_config(hass, config)
@@ -279,6 +311,7 @@ async def test_service_call(hass: HomeAssistant) -> None:
         "list": ["list", "2"],
         "entity_id": ["hello.world"],
         "area_id": ["test-area-id"],
+        "floor_id": ["test-floor-id"],
     }
 
     config = {
@@ -287,6 +320,7 @@ async def test_service_call(hass: HomeAssistant) -> None:
             "area_id": ["area-42", "{{ 'area-51' }}"],
             "device_id": ["abcdef", "{{ 'fedcba' }}"],
             "entity_id": ["light.static", "{{ 'light.dynamic' }}"],
+            "floor_id": ["floor-first", "{{ 'floor-second' }}"],
         },
     }
 
@@ -297,6 +331,7 @@ async def test_service_call(hass: HomeAssistant) -> None:
         "area_id": ["area-42", "area-51"],
         "device_id": ["abcdef", "fedcba"],
         "entity_id": ["light.static", "light.dynamic"],
+        "floor_id": ["floor-first", "floor-second"],
     }
 
     config = {
@@ -510,7 +545,9 @@ async def test_extract_entity_ids(hass: HomeAssistant) -> None:
     )
 
 
-async def test_extract_entity_ids_from_area(hass: HomeAssistant, area_mock) -> None:
+async def test_extract_entity_ids_from_area(
+    hass: HomeAssistant, floor_area_mock
+) -> None:
     """Test extract_entity_ids method with areas."""
     call = ServiceCall("light", "turn_on", {"area_id": "own-area"})
 
@@ -541,7 +578,9 @@ async def test_extract_entity_ids_from_area(hass: HomeAssistant, area_mock) -> N
     )
 
 
-async def test_extract_entity_ids_from_devices(hass: HomeAssistant, area_mock) -> None:
+async def test_extract_entity_ids_from_devices(
+    hass: HomeAssistant, floor_area_mock
+) -> None:
     """Test extract_entity_ids method with devices."""
     assert await service.async_extract_entity_ids(
         hass, ServiceCall("light", "turn_on", {"device_id": "device-no-area-id"})
@@ -559,6 +598,32 @@ async def test_extract_entity_ids_from_devices(hass: HomeAssistant, area_mock) -
     assert (
         await service.async_extract_entity_ids(
             hass, ServiceCall("light", "turn_on", {"device_id": "non-existing-id"})
+        )
+        == set()
+    )
+
+
+@pytest.mark.usefixtures("floor_area_mock")
+async def test_extract_entity_ids_from_floor(hass: HomeAssistant) -> None:
+    """Test extract_entity_ids method with floors."""
+    call = ServiceCall("light", "turn_on", {"floor_id": "test-floor"})
+
+    assert {
+        "light.in_area",
+        "light.assigned_to_area",
+    } == await service.async_extract_entity_ids(hass, call)
+
+    call = ServiceCall("light", "turn_on", {"floor_id": ["test-floor", "floor-a"]})
+
+    assert {
+        "light.in_area",
+        "light.assigned_to_area",
+        "light.in_area_a",
+    } == await service.async_extract_entity_ids(hass, call)
+
+    assert (
+        await service.async_extract_entity_ids(
+            hass, ServiceCall("light", "turn_on", {"floor_id": ENTITY_MATCH_NONE})
         )
         == set()
     )
@@ -1476,7 +1541,9 @@ async def test_extract_from_service_filter_out_non_existing_entities(
     ]
 
 
-async def test_extract_from_service_area_id(hass: HomeAssistant, area_mock) -> None:
+async def test_extract_from_service_area_id(
+    hass: HomeAssistant, floor_area_mock
+) -> None:
     """Test the extraction using area ID as reference."""
     entities = [
         MockEntity(name="in_area", entity_id="light.in_area"),
@@ -1522,12 +1589,14 @@ async def test_entity_service_call_warn_referenced(
             "area_id": "non-existent-area",
             "entity_id": "non.existent",
             "device_id": "non-existent-device",
+            "floor_id": "non-existent-floor",
         },
     )
     await service.entity_service_call(hass, {}, "", call)
     assert (
-        "Referenced areas non-existent-area, devices non-existent-device, "
-        "entities non.existent are missing or not currently available"
+        "Referenced floors non-existent-floor, areas non-existent-area, "
+        "devices non-existent-device, entities non.existent are missing "
+        "or not currently available"
     ) in caplog.text
 
 
@@ -1542,13 +1611,15 @@ async def test_async_extract_entities_warn_referenced(
             "area_id": "non-existent-area",
             "entity_id": "non.existent",
             "device_id": "non-existent-device",
+            "floor_id": "non-existent-floor",
         },
     )
     extracted = await service.async_extract_entities(hass, {}, call)
     assert len(extracted) == 0
     assert (
-        "Referenced areas non-existent-area, devices non-existent-device, "
-        "entities non.existent are missing or not currently available"
+        "Referenced floors non-existent-floor, areas non-existent-area, "
+        "devices non-existent-device, entities non.existent are missing "
+        "or not currently available"
     ) in caplog.text
 
 

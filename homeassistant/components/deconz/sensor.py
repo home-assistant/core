@@ -48,14 +48,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.typing import StateType
 import homeassistant.util.dt as dt_util
 
-from .const import ATTR_DARK, ATTR_ON, DOMAIN as DECONZ_DOMAIN
+from .const import ATTR_DARK, ATTR_ON
 from .deconz_device import DeconzDevice
 from .hub import DeconzHub, get_gateway_from_config_entry
-from .util import serial_from_unique_id
 
 PROVIDES_EXTRA_ATTRIBUTES = (
     "battery",
@@ -291,29 +289,6 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
 )
 
 
-@callback
-def async_update_unique_id(
-    hass: HomeAssistant, unique_id: str, description: DeconzSensorDescription
-) -> None:
-    """Update unique ID to always have a suffix.
-
-    Introduced with release 2022.9.
-    """
-    ent_reg = er.async_get(hass)
-
-    new_unique_id = f"{unique_id}-{description.key}"
-    if ent_reg.async_get_entity_id(DOMAIN, DECONZ_DOMAIN, new_unique_id):
-        return
-
-    if description.old_unique_id_suffix:
-        unique_id = (
-            f"{serial_from_unique_id(unique_id)}-{description.old_unique_id_suffix}"
-        )
-
-    if entity_id := ent_reg.async_get_entity_id(DOMAIN, DECONZ_DOMAIN, unique_id):
-        ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -357,7 +332,6 @@ async def async_setup_entry(
                     continue
                 known_device_entities[description.key].add(unique_id)
                 if no_sensor_data and description.key == "battery":
-                    async_update_unique_id(hass, sensor.unique_id, description)
                     DeconzBatteryTracker(
                         sensor_id, gateway, description, async_add_entities
                     )
@@ -366,7 +340,6 @@ async def async_setup_entry(
             if no_sensor_data:
                 continue
 
-            async_update_unique_id(hass, sensor.unique_id, description)
             entities.append(DeconzSensor(sensor, gateway, description))
 
         async_add_entities(entities)

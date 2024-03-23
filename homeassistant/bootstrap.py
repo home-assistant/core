@@ -5,9 +5,11 @@ from __future__ import annotations
 import asyncio
 import contextlib
 from datetime import timedelta
+from functools import partial
+from itertools import chain
 import logging
 import logging.handlers
-from operator import itemgetter
+from operator import contains, itemgetter
 import os
 import platform
 import sys
@@ -32,9 +34,11 @@ from .components import (
     api as api_pre_import,  # noqa: F401
     auth as auth_pre_import,  # noqa: F401
     config as config_pre_import,  # noqa: F401
+    default_config as default_config_pre_import,  # noqa: F401
     device_automation as device_automation_pre_import,  # noqa: F401
     diagnostics as diagnostics_pre_import,  # noqa: F401
     file_upload as file_upload_pre_import,  # noqa: F401
+    group as group_pre_import,  # noqa: F401
     history as history_pre_import,  # noqa: F401
     http,  # not named pre_import since it has requirements
     image_upload as image_upload_import,  # noqa: F401 - not named pre_import since it has requirements
@@ -60,6 +64,7 @@ from .const import (
 from .exceptions import HomeAssistantError
 from .helpers import (
     area_registry,
+    category_registry,
     config_validation as cv,
     device_registry,
     entity,
@@ -90,6 +95,9 @@ if TYPE_CHECKING:
     from .runner import RuntimeConfig
 
 _LOGGER = logging.getLogger(__name__)
+
+SETUP_ORDER_SORT_KEY = partial(contains, BASE_PLATFORMS)
+
 
 ERROR_LOG_FILENAME = "home-assistant.log"
 
@@ -332,7 +340,7 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
         asyncio event loop. By primeing the cache of uname we can
         avoid the blocking call in the event loop.
         """
-        platform.uname().processor  # pylint: disable=expression-not-assigned
+        _ = platform.uname().processor
 
     # Load the registries and cache the result of platform.uname().processor
     translation.async_setup(hass)
@@ -340,6 +348,7 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
     template.async_setup(hass)
     await asyncio.gather(
         create_eager_task(area_registry.async_load(hass)),
+        create_eager_task(category_registry.async_load(hass)),
         create_eager_task(device_registry.async_load(hass)),
         create_eager_task(entity_registry.async_load(hass)),
         create_eager_task(floor_registry.async_load(hass)),
@@ -660,13 +669,18 @@ async def async_setup_multi_components(
     """Set up multiple domains. Log on failure."""
     # Avoid creating tasks for domains that were setup in a previous stage
     domains_not_yet_setup = domains - hass.config.components
+    # Create setup tasks for base platforms first since everything will have
+    # to wait to be imported, and the sooner we can get the base platforms
+    # loaded the sooner we can start loading the rest of the integrations.
     futures = {
         domain: hass.async_create_task(
             async_setup_component(hass, domain, config),
             f"setup component {domain}",
             eager_start=True,
         )
-        for domain in domains_not_yet_setup
+        for domain in sorted(
+            domains_not_yet_setup, key=SETUP_ORDER_SORT_KEY, reverse=True
+        )
     }
     results = await asyncio.gather(*futures.values(), return_exceptions=True)
     for idx, domain in enumerate(futures):
@@ -683,29 +697,53 @@ async def _async_resolve_domains_to_setup(
     hass: core.HomeAssistant, config: dict[str, Any]
 ) -> tuple[set[str], dict[str, loader.Integration]]:
     """Resolve all dependencies and return list of domains to set up."""
-    base_platforms_loaded = False
     domains_to_setup = _get_domains(hass, config)
     needed_requirements: set[str] = set()
     platform_integrations = conf_util.extract_platform_integrations(
         config, BASE_PLATFORMS
     )
+    # Ensure base platforms that have platform integrations are added to
+    # to `domains_to_setup so they can be setup first instead of
+    # discovering them when later when a config entry setup task
+    # notices its needed and there is already a long line to use
+    # the import executor.
+    #
+    # For example if we have
+    # sensor:
+    #   - platform: template
+    #
+    # `template` has to be loaded to validate the config for sensor
+    # so we want to start loading `sensor` as soon as we know
+    # it will be needed. The more platforms under `sensor:`, the longer
+    # it will take to finish setup for `sensor` because each of these
+    # platforms has to be imported before we can validate the config.
+    #
+    # Thankfully we are migrating away from the platform pattern
+    # so this will be less of a problem in the future.
+    domains_to_setup.update(platform_integrations)
+
+    # Load manifests for base platforms and platform based integrations
+    # that are defined under base platforms right away since we do not require
+    # the manifest to list them as dependencies and we want to avoid the lock
+    # contention when multiple integrations try to load them at once
+    additional_manifests_to_load = {
+        *BASE_PLATFORMS,
+        *chain.from_iterable(platform_integrations.values()),
+    }
+
+    translations_to_load = {*domains_to_setup, *additional_manifests_to_load}
 
     # Resolve all dependencies so we know all integrations
-    # that will have to be loaded and start rightaway
+    # that will have to be loaded and start right-away
     integration_cache: dict[str, loader.Integration] = {}
     to_resolve: set[str] = domains_to_setup
-    while to_resolve:
+    while to_resolve or additional_manifests_to_load:
         old_to_resolve: set[str] = to_resolve
         to_resolve = set()
 
-        if not base_platforms_loaded:
-            # Load base platforms right away since
-            # we do not require the manifest to list
-            # them as dependencies and we want
-            # to avoid the lock contention when multiple
-            # integrations try to resolve them at once
-            base_platforms_loaded = True
-            to_get = {*old_to_resolve, *BASE_PLATFORMS, *platform_integrations}
+        if additional_manifests_to_load:
+            to_get = {*old_to_resolve, *additional_manifests_to_load}
+            additional_manifests_to_load.clear()
         else:
             to_get = old_to_resolve
 
@@ -718,6 +756,17 @@ async def _async_resolve_domains_to_setup(
                 continue
             integration_cache[domain] = itg
             needed_requirements.update(itg.requirements)
+
+            # Make sure manifests for dependencies are loaded in the next
+            # loop to try to group as many as manifest loads in a single
+            # call to avoid the creating one-off executor jobs later in
+            # the setup process
+            additional_manifests_to_load.update(
+                dep
+                for dep in chain(itg.dependencies, itg.after_dependencies)
+                if dep not in integration_cache
+            )
+
             if domain not in old_to_resolve:
                 continue
 
@@ -777,9 +826,7 @@ async def _async_resolve_domains_to_setup(
     # wait for the translation load lock, loading will be done by the
     # time it gets to it.
     hass.async_create_background_task(
-        translation.async_load_integrations(
-            hass, {*BASE_PLATFORMS, *platform_integrations, *domains_to_setup}
-        ),
+        translation.async_load_integrations(hass, translations_to_load),
         "load translations",
         eager_start=True,
     )

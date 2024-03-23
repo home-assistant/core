@@ -18,6 +18,7 @@ from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
+    ATTR_FLOOR_ID,
     CONF_ENTITY_ID,
     CONF_SERVICE,
     CONF_SERVICE_DATA,
@@ -53,6 +54,7 @@ from . import (
     config_validation as cv,
     device_registry,
     entity_registry,
+    floor_registry,
     template,
     translation,
 )
@@ -194,7 +196,7 @@ class ServiceParams(TypedDict):
 class ServiceTargetSelector:
     """Class to hold a target selector for a service."""
 
-    __slots__ = ("entity_ids", "device_ids", "area_ids")
+    __slots__ = ("entity_ids", "device_ids", "area_ids", "floor_ids")
 
     def __init__(self, service_call: ServiceCall) -> None:
         """Extract ids from service call data."""
@@ -202,6 +204,7 @@ class ServiceTargetSelector:
         entity_ids: str | list | None = service_call_data.get(ATTR_ENTITY_ID)
         device_ids: str | list | None = service_call_data.get(ATTR_DEVICE_ID)
         area_ids: str | list | None = service_call_data.get(ATTR_AREA_ID)
+        floor_ids: str | list | None = service_call_data.get(ATTR_FLOOR_ID)
 
         self.entity_ids = (
             set(cv.ensure_list(entity_ids)) if _has_match(entity_ids) else set()
@@ -210,11 +213,16 @@ class ServiceTargetSelector:
             set(cv.ensure_list(device_ids)) if _has_match(device_ids) else set()
         )
         self.area_ids = set(cv.ensure_list(area_ids)) if _has_match(area_ids) else set()
+        self.floor_ids = (
+            set(cv.ensure_list(floor_ids)) if _has_match(floor_ids) else set()
+        )
 
     @property
     def has_any_selector(self) -> bool:
         """Determine if any selectors are present."""
-        return bool(self.entity_ids or self.device_ids or self.area_ids)
+        return bool(
+            self.entity_ids or self.device_ids or self.area_ids or self.floor_ids
+        )
 
 
 @dataclasses.dataclass(slots=True)
@@ -224,21 +232,24 @@ class SelectedEntities:
     # Entities that were explicitly mentioned.
     referenced: set[str] = dataclasses.field(default_factory=set)
 
-    # Entities that were referenced via device/area ID.
+    # Entities that were referenced via device/area/floor ID.
     # Should not trigger a warning when they don't exist.
     indirectly_referenced: set[str] = dataclasses.field(default_factory=set)
 
     # Referenced items that could not be found.
     missing_devices: set[str] = dataclasses.field(default_factory=set)
     missing_areas: set[str] = dataclasses.field(default_factory=set)
+    missing_floors: set[str] = dataclasses.field(default_factory=set)
 
     # Referenced devices
     referenced_devices: set[str] = dataclasses.field(default_factory=set)
+    referenced_areas: set[str] = dataclasses.field(default_factory=set)
 
     def log_missing(self, missing_entities: set[str]) -> None:
         """Log about missing items."""
         parts = []
         for label, items in (
+            ("floors", self.missing_floors),
             ("areas", self.missing_areas),
             ("devices", self.missing_devices),
             ("entities", missing_entities),
@@ -472,37 +483,49 @@ def async_extract_referenced_entity_ids(
 
     selected.referenced.update(entity_ids)
 
-    if not selector.device_ids and not selector.area_ids:
+    if not selector.device_ids and not selector.area_ids and not selector.floor_ids:
         return selected
 
     ent_reg = entity_registry.async_get(hass)
     dev_reg = device_registry.async_get(hass)
     area_reg = area_registry.async_get(hass)
+    floor_reg = floor_registry.async_get(hass)
 
-    for device_id in selector.device_ids:
-        if device_id not in dev_reg.devices:
-            selected.missing_devices.add(device_id)
+    for floor_id in selector.floor_ids:
+        if floor_id not in floor_reg.floors:
+            selected.missing_floors.add(floor_id)
 
     for area_id in selector.area_ids:
         if area_id not in area_reg.areas:
             selected.missing_areas.add(area_id)
 
+    for device_id in selector.device_ids:
+        if device_id not in dev_reg.devices:
+            selected.missing_devices.add(device_id)
+
+    # Find areas for targeted floors
+    if selector.floor_ids:
+        for area_entry in area_reg.areas.values():
+            if area_entry.id and area_entry.floor_id in selector.floor_ids:
+                selected.referenced_areas.add(area_entry.id)
+
     # Find devices for targeted areas
     selected.referenced_devices.update(selector.device_ids)
 
-    if selector.area_ids:
+    selected.referenced_areas.update(selector.area_ids)
+    if selected.referenced_areas:
         for device_entry in dev_reg.devices.values():
-            if device_entry.area_id in selector.area_ids:
+            if device_entry.area_id in selected.referenced_areas:
                 selected.referenced_devices.add(device_entry.id)
 
-    if not selector.area_ids and not selected.referenced_devices:
+    if not selected.referenced_areas and not selected.referenced_devices:
         return selected
 
     entities = ent_reg.entities
     # Add indirectly referenced by area
     selected.indirectly_referenced.update(
         entry.entity_id
-        for area_id in selector.area_ids
+        for area_id in selected.referenced_areas
         # The entity's area matches a targeted area
         for entry in entities.get_entries_for_area_id(area_id)
         # Do not add entities which are hidden or which are config
@@ -633,7 +656,7 @@ async def async_get_all_descriptions(
         ints_or_excs = await async_get_integrations(hass, domains_with_missing_services)
         integrations: list[Integration] = []
         for domain, int_or_exc in ints_or_excs.items():
-            if type(int_or_exc) is Integration and int_or_exc.has_services:  # noqa: E721
+            if type(int_or_exc) is Integration and int_or_exc.has_services:
                 integrations.append(int_or_exc)
                 continue
             if TYPE_CHECKING:

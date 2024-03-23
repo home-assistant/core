@@ -684,9 +684,7 @@ async def test_get_states(
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
 
-    states = []
-    for state in hass.states.async_all():
-        states.append(state.as_dict())
+    states = [state.as_dict() for state in hass.states.async_all()]
 
     assert msg["result"] == states
 

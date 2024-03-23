@@ -71,10 +71,11 @@ def _generate_subscription_id(cloud_project_id: str) -> str:
 
 def generate_config_title(structures: Iterable[Structure]) -> str | None:
     """Pick a user friendly config title based on the Google Home name(s)."""
-    names: list[str] = []
-    for structure in structures:
-        if (trait := structure.traits.get(InfoTrait.NAME)) and trait.custom_name:
-            names.append(trait.custom_name)
+    names: list[str] = [
+        trait.custom_name
+        for structure in structures
+        if (trait := structure.traits.get(InfoTrait.NAME)) and trait.custom_name
+    ]
     if not names:
         return None
     return ", ".join(names)

@@ -266,9 +266,8 @@ async def test_setup_entry_no_options(
     domain_data_mock.async_release_event_notifier.assert_awaited_once()
     dmr_device_mock.async_unsubscribe_services.assert_awaited_once()
     assert dmr_device_mock.on_event is None
-    mock_state = hass.states.get(mock_entity_id)
-    assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_UNAVAILABLE
+    # Entity should be removed by the cleanup
+    assert hass.states.get(mock_entity_id) is None
 
 
 @pytest.mark.parametrize(
@@ -345,9 +344,8 @@ async def test_setup_entry_with_options(
     domain_data_mock.async_release_event_notifier.assert_awaited_once()
     dmr_device_mock.async_unsubscribe_services.assert_awaited_once()
     assert dmr_device_mock.on_event is None
-    mock_state = hass.states.get(mock_entity_id)
-    assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_UNAVAILABLE
+    # Entity should be removed by the cleanup
+    assert hass.states.get(mock_entity_id) is None
 
 
 async def test_setup_entry_mac_address(
@@ -1384,10 +1382,8 @@ async def test_unavailable_device(
     # Check event notifiers are not released
     domain_data_mock.async_release_event_notifier.assert_not_called()
 
-    # Confirm the entity is still unavailable
-    mock_state = hass.states.get(mock_entity_id)
-    assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_UNAVAILABLE
+    # Entity should be removed by the cleanup
+    assert hass.states.get(mock_entity_id) is None
 
 
 @pytest.mark.parametrize(
@@ -1477,9 +1473,8 @@ async def test_become_available(
     domain_data_mock.async_release_event_notifier.assert_awaited_once()
     dmr_device_mock.async_unsubscribe_services.assert_awaited_once()
     assert dmr_device_mock.on_event is None
-    mock_state = hass.states.get(mock_entity_id)
-    assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_UNAVAILABLE
+    # Entity should be removed by the cleanup
+    assert hass.states.get(mock_entity_id) is None
 
 
 @pytest.mark.parametrize(

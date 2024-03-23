@@ -32,15 +32,13 @@ def _hass_domain_validator(config: dict[str, Any]) -> dict[str, Any]:
 
 def _platform_validator(config: dict[str, Any]) -> dict[str, Any]:
     """Validate it is a valid  platform."""
+    platform_name = config[CONF_PLATFORM]
     try:
-        platform = importlib.import_module(f".{config[CONF_PLATFORM]}", __name__)
+        platform = importlib.import_module(
+            f"homeassistant.components.{platform_name}.scene"
+        )
     except ImportError:
-        try:
-            platform = importlib.import_module(
-                f"homeassistant.components.{config[CONF_PLATFORM]}.scene"
-            )
-        except ImportError:
-            raise vol.Invalid("Invalid platform specified") from None
+        raise vol.Invalid("Invalid platform specified") from None
 
     if not hasattr(platform, "PLATFORM_SCHEMA"):
         return config
@@ -127,7 +125,7 @@ class Scene(RestoreEntity):
 
     def activate(self, **kwargs: Any) -> None:
         """Activate scene. Try to get entities into requested state."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate scene. Try to get entities into requested state."""

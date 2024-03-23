@@ -564,7 +564,7 @@ async def test_setup_with_apps_include(
         hass, MOCK_TV_WITH_INCLUDE_CONFIG, CURRENT_APP_CONFIG
     ):
         attr = hass.states.get(ENTITY_ID).attributes
-        _assert_source_list_with_apps(list(INPUT_LIST_WITH_APPS + [CURRENT_APP]), attr)
+        _assert_source_list_with_apps([*INPUT_LIST_WITH_APPS, CURRENT_APP], attr)
         assert CURRENT_APP in attr[ATTR_INPUT_SOURCE_LIST]
         assert attr[ATTR_INPUT_SOURCE] == CURRENT_APP
         assert attr["app_name"] == CURRENT_APP
@@ -582,7 +582,7 @@ async def test_setup_with_apps_exclude(
         hass, MOCK_TV_WITH_EXCLUDE_CONFIG, CURRENT_APP_CONFIG
     ):
         attr = hass.states.get(ENTITY_ID).attributes
-        _assert_source_list_with_apps(list(INPUT_LIST_WITH_APPS + [CURRENT_APP]), attr)
+        _assert_source_list_with_apps([*INPUT_LIST_WITH_APPS, CURRENT_APP], attr)
         assert CURRENT_APP in attr[ATTR_INPUT_SOURCE_LIST]
         assert attr[ATTR_INPUT_SOURCE] == CURRENT_APP
         assert attr["app_name"] == CURRENT_APP

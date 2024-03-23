@@ -512,21 +512,20 @@ def _update_states_table_with_foreign_key_options(
 ) -> None:
     """Add the options to foreign key constraints."""
     inspector = sqlalchemy.inspect(engine)
-    alters = []
-    for foreign_key in inspector.get_foreign_keys(TABLE_STATES):
-        if foreign_key["name"] and (
+    alters = [
+        {
+            "old_fk": ForeignKeyConstraint((), (), name=foreign_key["name"]),
+            "columns": foreign_key["constrained_columns"],
+        }
+        for foreign_key in inspector.get_foreign_keys(TABLE_STATES)
+        if foreign_key["name"]
+        and (
             # MySQL/MariaDB will have empty options
             not foreign_key.get("options")
-            or
             # Postgres will have ondelete set to None
-            foreign_key.get("options", {}).get("ondelete") is None
-        ):
-            alters.append(
-                {
-                    "old_fk": ForeignKeyConstraint((), (), name=foreign_key["name"]),
-                    "columns": foreign_key["constrained_columns"],
-                }
-            )
+            or foreign_key.get("options", {}).get("ondelete") is None
+        )
+    ]
 
     if not alters:
         return
@@ -557,10 +556,11 @@ def _drop_foreign_key_constraints(
 ) -> None:
     """Drop foreign key constraints for a table on specific columns."""
     inspector = sqlalchemy.inspect(engine)
-    drops = []
-    for foreign_key in inspector.get_foreign_keys(table):
-        if foreign_key["name"] and foreign_key["constrained_columns"] == columns:
-            drops.append(ForeignKeyConstraint((), (), name=foreign_key["name"]))
+    drops = [
+        ForeignKeyConstraint((), (), name=foreign_key["name"])
+        for foreign_key in inspector.get_foreign_keys(table)
+        if foreign_key["name"] and foreign_key["constrained_columns"] == columns
+    ]
 
     # Bind the ForeignKeyConstraints to the table
     old_table = Table(table, MetaData(), *drops)  # noqa: F841

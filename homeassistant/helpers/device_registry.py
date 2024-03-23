@@ -31,7 +31,7 @@ from .deprecation import (
     dir_with_deprecated_constants,
 )
 from .frame import report
-from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes
+from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
 from .registry import BaseRegistry
 from .typing import UNDEFINED, UndefinedType
 
@@ -301,8 +301,35 @@ class DeviceEntry:
             )
         return None
 
+    @cached_property
+    def as_storage_fragment(self) -> json_fragment:
+        """Return a json fragment for storage."""
+        return json_fragment(
+            json_bytes(
+                {
+                    "area_id": self.area_id,
+                    "config_entries": list(self.config_entries),
+                    "configuration_url": self.configuration_url,
+                    "connections": list(self.connections),
+                    "disabled_by": self.disabled_by,
+                    "entry_type": self.entry_type,
+                    "hw_version": self.hw_version,
+                    "id": self.id,
+                    "identifiers": list(self.identifiers),
+                    "labels": list(self.labels),
+                    "manufacturer": self.manufacturer,
+                    "model": self.model,
+                    "name_by_user": self.name_by_user,
+                    "name": self.name,
+                    "serial_number": self.serial_number,
+                    "sw_version": self.sw_version,
+                    "via_device_id": self.via_device_id,
+                }
+            )
+        )
 
-@attr.s(slots=True, frozen=True)
+
+@attr.s(frozen=True)
 class DeletedDeviceEntry:
     """Deleted Device Registry Entry."""
 
@@ -326,6 +353,21 @@ class DeletedDeviceEntry:
             identifiers=self.identifiers & identifiers,  # type: ignore[arg-type]
             id=self.id,
             is_new=True,
+        )
+
+    @cached_property
+    def as_storage_fragment(self) -> json_fragment:
+        """Return a json fragment for storage."""
+        return json_fragment(
+            json_bytes(
+                {
+                    "config_entries": list(self.config_entries),
+                    "connections": list(self.connections),
+                    "identifiers": list(self.identifiers),
+                    "id": self.id,
+                    "orphaned_timestamp": self.orphaned_timestamp,
+                }
+            )
         )
 
 
@@ -713,7 +755,7 @@ class DeviceRegistry(BaseRegistry):
         config_entries = old.config_entries
 
         if merge_identifiers is not UNDEFINED and new_identifiers is not UNDEFINED:
-            raise HomeAssistantError()
+            raise HomeAssistantError
 
         if isinstance(disabled_by, str) and not isinstance(
             disabled_by, DeviceEntryDisabler
@@ -904,44 +946,14 @@ class DeviceRegistry(BaseRegistry):
         self._device_data = devices.data
 
     @callback
-    def _data_to_save(self) -> dict[str, list[dict[str, Any]]]:
+    def _data_to_save(self) -> dict[str, Any]:
         """Return data of device registry to store in a file."""
-        data: dict[str, list[dict[str, Any]]] = {}
-
-        data["devices"] = [
-            {
-                "area_id": entry.area_id,
-                "config_entries": list(entry.config_entries),
-                "configuration_url": entry.configuration_url,
-                "connections": list(entry.connections),
-                "disabled_by": entry.disabled_by,
-                "entry_type": entry.entry_type,
-                "hw_version": entry.hw_version,
-                "id": entry.id,
-                "identifiers": list(entry.identifiers),
-                "labels": list(entry.labels),
-                "manufacturer": entry.manufacturer,
-                "model": entry.model,
-                "name_by_user": entry.name_by_user,
-                "name": entry.name,
-                "serial_number": entry.serial_number,
-                "sw_version": entry.sw_version,
-                "via_device_id": entry.via_device_id,
-            }
-            for entry in self.devices.values()
-        ]
-        data["deleted_devices"] = [
-            {
-                "config_entries": list(entry.config_entries),
-                "connections": list(entry.connections),
-                "identifiers": list(entry.identifiers),
-                "id": entry.id,
-                "orphaned_timestamp": entry.orphaned_timestamp,
-            }
-            for entry in self.deleted_devices.values()
-        ]
-
-        return data
+        return {
+            "devices": [entry.as_storage_fragment for entry in self.devices.values()],
+            "deleted_devices": [
+                entry.as_storage_fragment for entry in self.deleted_devices.values()
+            ],
+        }
 
     @callback
     def async_clear_config_entry(self, config_entry_id: str) -> None:
@@ -1146,6 +1158,7 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
         event_type=lr.EVENT_LABEL_REGISTRY_UPDATED,
         event_filter=_label_removed_from_registry_filter,
         listener=_handle_label_registry_update,
+        run_immediately=True,
     )
 
     @callback
@@ -1179,6 +1192,7 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
             entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
             _async_entity_registry_changed,
             event_filter=entity_registry_changed_filter,
+            run_immediately=True,
         )
         return
 
@@ -1188,10 +1202,13 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
             entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
             _async_entity_registry_changed,
             event_filter=entity_registry_changed_filter,
+            run_immediately=True,
         )
         await debounced_cleanup.async_call()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, startup_clean)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STARTED, startup_clean, run_immediately=True
+    )
 
     @callback
     def _on_homeassistant_stop(event: Event) -> None:

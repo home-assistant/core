@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator, Sequence
+from collections.abc import Callable, Generator, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -10,8 +10,30 @@ if TYPE_CHECKING:
     from .core import Context
 
 
+_function_cache: dict[str, Callable[[str, str, dict[str, str] | None], str]] = {}
+
+
+def import_async_get_exception_message() -> (
+    Callable[[str, str, dict[str, str] | None], str]
+):
+    """Return a method that can fetch a translated exception message.
+
+    Defaults to English, requires translations to already be cached.
+    """
+
+    # pylint: disable-next=import-outside-toplevel
+    from .helpers.translation import (
+        async_get_exception_message as async_get_exception_message_import,
+    )
+
+    return async_get_exception_message_import
+
+
 class HomeAssistantError(Exception):
     """General Home Assistant exception occurred."""
+
+    _message: str | None = None
+    generate_message: bool = False
 
     def __init__(
         self,
@@ -21,10 +43,43 @@ class HomeAssistantError(Exception):
         translation_placeholders: dict[str, str] | None = None,
     ) -> None:
         """Initialize exception."""
+        if not args and translation_key and translation_domain:
+            self.generate_message = True
+            args = (translation_key,)
+
         super().__init__(*args)
         self.translation_domain = translation_domain
         self.translation_key = translation_key
         self.translation_placeholders = translation_placeholders
+
+    def __str__(self) -> str:
+        """Return exception message.
+
+        If no message was passed to `__init__`, the exception message is generated from
+        the translation_key. The message will be in English, regardless of the configured
+        language.
+        """
+
+        if self._message:
+            return self._message
+
+        if not self.generate_message:
+            self._message = super().__str__()
+            return self._message
+
+        if TYPE_CHECKING:
+            assert self.translation_key is not None
+            assert self.translation_domain is not None
+
+        if "async_get_exception_message" not in _function_cache:
+            _function_cache[
+                "async_get_exception_message"
+            ] = import_async_get_exception_message()
+
+        self._message = _function_cache["async_get_exception_message"](
+            self.translation_domain, self.translation_key, self.translation_placeholders
+        )
+        return self._message
 
 
 class ConfigValidationError(HomeAssistantError, ExceptionGroup[Exception]):
@@ -46,10 +101,6 @@ class ConfigValidationError(HomeAssistantError, ExceptionGroup[Exception]):
             translation_placeholders=translation_placeholders,
         )
         self._message = message
-
-    def __str__(self) -> str:
-        """Return exception message string."""
-        return self._message
 
 
 class ServiceValidationError(HomeAssistantError):
@@ -88,7 +139,7 @@ class ConditionError(HomeAssistantError):
 
     def output(self, indent: int) -> Generator[str, None, None]:
         """Yield an indented representation."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def __str__(self) -> str:
         """Return string representation."""

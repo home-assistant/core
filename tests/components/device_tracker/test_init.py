@@ -310,6 +310,7 @@ async def test_entity_attributes(
 
     with assert_setup_component(1, device_tracker.DOMAIN):
         assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)
+        await hass.async_block_till_done()
 
     attrs = hass.states.get(entity_id).attributes
 

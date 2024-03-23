@@ -262,3 +262,15 @@ async def turn_off_lights(hass, entity_ids):
         blocking=True,
     )
     await hass.async_block_till_done()
+
+
+async def test_invalid_platform(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test invalid platform."""
+    await async_setup_component(
+        hass, scene.DOMAIN, {scene.DOMAIN: {"platform": "does_not_exist"}}
+    )
+    await hass.async_block_till_done()
+    assert "Invalid platform specified" in caplog.text
+    assert "does_not_exist" in caplog.text

@@ -30,6 +30,7 @@ import homeassistant.util.dt as dt_util
 from tests.common import (
     MockConfigEntry,
     assert_setup_component,
+    async_capture_events,
     async_fire_time_changed,
     mock_restore_cache_with_extra_data,
 )
@@ -1849,6 +1850,7 @@ async def test_trigger_entity_restore_state(
                                 "my_variable": "{{ trigger.event.data.beer + 1 }}"
                             },
                         },
+                        {"event": "test_event2", "event_data": {"hello": "world"}},
                     ],
                     "sensor": [
                         {
@@ -1865,6 +1867,10 @@ async def test_trigger_action(
     hass: HomeAssistant, start_ha, entity_registry: er.EntityRegistry
 ) -> None:
     """Test trigger entity with an action works."""
+    event = "test_event2"
+    context = Context()
+    events = async_capture_events(hass, event)
+
     state = hass.states.get("sensor.hello_name")
     assert state is not None
     assert state.state == STATE_UNKNOWN
@@ -1876,3 +1882,6 @@ async def test_trigger_action(
     state = hass.states.get("sensor.hello_name")
     assert state.state == "3"
     assert state.context is context
+
+    assert len(events) == 1
+    assert events[0].context.parent_id == context.id

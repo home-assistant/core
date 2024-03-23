@@ -456,7 +456,7 @@ def test_rename_entity_collision(
 ) -> None:
     """Test statistics is migrated when entity_id is changed.
 
-    This test relies on the the safeguard in the statistics_meta_manager
+    This test relies on the safeguard in the statistics_meta_manager
     and should not hit the filter_unique_constraint_integrity_error safeguard.
     """
     hass = hass_recorder()

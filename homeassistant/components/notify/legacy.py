@@ -232,7 +232,7 @@ class BaseNotificationService:
 
         kwargs can contain ATTR_TITLE to specify a title.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message.

@@ -466,7 +466,7 @@ jobs:
         if: steps.cache-venv.outputs.cache-hit != 'true'
         uses: actions/cache@v4.0.1
         with:
-          path: ${{ env.UV_CACHE }}
+          path: ${{ env.UV_CACHE_DIR }}
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
             steps.generate-uv-key.outputs.key }}

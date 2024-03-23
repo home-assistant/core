@@ -7,7 +7,13 @@ from typing import Any
 import axis
 from axis.configuration import Configuration
 
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_PROTOCOL,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
 
@@ -29,6 +35,7 @@ async def get_axis_api(
             port=config[CONF_PORT],
             username=config[CONF_USERNAME],
             password=config[CONF_PASSWORD],
+            web_proto=config.get(CONF_PROTOCOL, "http"),
         )
     )
 
