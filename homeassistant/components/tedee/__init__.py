@@ -7,7 +7,7 @@ from typing import Any
 
 from aiohttp.hdrs import METH_POST
 from aiohttp.web import Request, Response
-from pytedee_async.exception import TedeeWebhookException
+from pytedee_async.exception import TedeeDataUpdateException, TedeeWebhookException
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.webhook import (
@@ -58,7 +58,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
 
     async def register_webhook() -> None:
-        webhook_url = f"{get_url(hass, allow_ip=True, allow_external=False)}{webhook_generate_path(entry.data[CONF_WEBHOOK_ID])}"
+        # first make sure we don't have leftover callbacks to the same instance
+        instance_url = get_url(hass, allow_ip=True, allow_external=False)
+        try:
+            await coordinator.tedee_client.cleanup_webhooks_by_host(instance_url)
+        except (TedeeDataUpdateException, TedeeWebhookException) as ex:
+            _LOGGER.warning("Failed to cleanup Tedee webhooks by host: %s", ex)
+        webhook_url = (
+            f"{instance_url}{webhook_generate_path(entry.data[CONF_WEBHOOK_ID])}"
+        )
         webhook_name = "Tedee"
         if entry.title != NAME:
             webhook_name = f"{NAME} {entry.title}"

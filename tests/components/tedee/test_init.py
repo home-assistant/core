@@ -120,6 +120,24 @@ async def test_webhook_registration_errors(
     assert "Failed to register Tedee webhook from bridge" in caplog.text
 
 
+async def test_webhook_registration_cleanup_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tedee: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the errors during webhook cleanup during registration."""
+    mock_tedee.cleanup_webhooks_by_host.side_effect = TedeeWebhookException("")
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    mock_tedee.cleanup_webhooks_by_host.assert_called_once()
+    assert "Failed to cleanup Tedee webhooks by host:" in caplog.text
+
+
 async def test_bridge_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
