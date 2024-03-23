@@ -8,9 +8,11 @@ from smhi.smhi_lib import SmhiForecastException
 
 from homeassistant import config_entries
 from homeassistant.components.smhi.const import DOMAIN
+from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -180,9 +182,12 @@ async def test_form_unique_id_exist(hass: HomeAssistant) -> None:
     assert result2["reason"] == "already_configured"
 
 
-async def test_reconfigure_flow(hass: HomeAssistant) -> None:
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test re-configuration flow."""
-
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Home",
@@ -191,6 +196,17 @@ async def test_reconfigure_flow(hass: HomeAssistant) -> None:
         version=2,
     )
     entry.add_to_hass(hass)
+
+    entity = entity_registry.async_get_or_create(
+        WEATHER_DOMAIN, DOMAIN, "57.2898, 13.6304"
+    )
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "57.2898, 13.6304")},
+        manufacturer="SMHI",
+        model="v2",
+        name=entry.title,
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -249,4 +265,10 @@ async def test_reconfigure_flow(hass: HomeAssistant) -> None:
         },
         "name": "Home",
     }
+    entity = entity_registry.async_get(entity.entity_id)
+    assert entity
+    assert entity.unique_id == "58.2898, 14.6304"
+    device = device_registry.async_get(device.id)
+    assert device
+    assert device.identifiers == {(DOMAIN, "58.2898, 14.6304")}
     assert len(mock_setup_entry.mock_calls) == 1
