@@ -46,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Check API and WebSocket connection
     try:
-        await client.check_device_connection()
+        await client.check_device_connection(True)
     except ExceptionGroup as error:
         raise ConfigEntryNotReady(f"Unable to connect to {entry.title}") from error
 
