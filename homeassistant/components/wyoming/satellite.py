@@ -327,11 +327,20 @@ class WyomingSatellite:
         if end_stage is None:
             raise ValueError(f"Invalid end stage: {end_stage}")
 
-        pipeline_id = pipeline_select.get_chosen_pipeline(
-            self.hass,
-            DOMAIN,
-            self.device.satellite_id,
-        )
+        pipeline_id = None
+        if run_pipeline.name is not None:
+            pipelines = assist_pipeline.async_get_pipelines(self.hass)
+            for p in pipelines:
+                if p.name == run_pipeline.name:
+                    pipeline_id = p.id
+
+        if pipeline_id is None:
+            pipeline_id = pipeline_select.get_chosen_pipeline(
+                self.hass,
+                DOMAIN,
+                self.device.satellite_id,
+            )
+
         pipeline = assist_pipeline.async_get_pipeline(self.hass, pipeline_id)
         assert pipeline is not None
 
