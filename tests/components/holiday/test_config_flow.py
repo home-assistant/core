@@ -254,6 +254,43 @@ async def test_reconfigure(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
     assert entry.data == {"country": "DE", "province": "NW"}
 
 
+async def test_reconfigure_incorrect_language(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test reconfigure flow default to English."""
+    hass.config.language = "en-XX"
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Germany, BW",
+        data={"country": "DE", "province": "BW"},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": entry.entry_id,
+        },
+    )
+    assert result["type"] == FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PROVINCE: "NW",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    entry = hass.config_entries.async_get_entry(entry.entry_id)
+    assert entry.title == "Germany, NW"
+    assert entry.data == {"country": "DE", "province": "NW"}
+
+
 async def test_reconfigure_entry_exists(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
