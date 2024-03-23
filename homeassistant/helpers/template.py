@@ -1277,10 +1277,10 @@ def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
         ):
             # Collect state will be called in here since it's wrapped
             if group_entities := entity.attributes.get(ATTR_ENTITY_ID):
-                search.extend(group_entities)
+                search += group_entities
         elif domain == "zone":
             if zone_entities := entity.attributes.get(ATTR_PERSONS):
-                search.extend(zone_entities)
+                search += zone_entities
         else:
             _collect_state(hass, entity_id)
             found[entity_id] = entity
