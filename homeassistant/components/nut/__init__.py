@@ -65,8 +65,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     data = PyNUTData(host, port, alias, username, password)
 
     entry.async_on_unload(data.async_shutdown)
-    # Note that async_listen_once is not used here because the listener
-    # could be removed after the event is fired.
 
     async def async_update_data() -> dict[str, str]:
         """Fetch data from NUT."""
@@ -87,6 +85,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()
 
+    # Note that async_listen_once is not used here because the listener
+    # could be removed after the event is fired.
     entry.async_on_unload(
         hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, data.async_shutdown)
     )
