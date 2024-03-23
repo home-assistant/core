@@ -435,7 +435,7 @@ jobs:
           validate_image "ghcr.io/home-assistant/armv7-homeassistant:${{ needs.init.outputs.version }}"
           validate_image "ghcr.io/home-assistant/aarch64-homeassistant:${{ needs.init.outputs.version }}"
 
-          if [[ "${{ matrix.registry }}" ==  "docker.io/homeassistant"]]; then
+          if [[ "${{ matrix.registry }}" ==  "docker.io/homeassistant" ]]; then
             # Upload images to dockerhub
             push_dockerhub "amd64-homeassistant" "${{ needs.init.outputs.version }}"
             push_dockerhub "i386-homeassistant" "${{ needs.init.outputs.version }}"
