@@ -87,10 +87,11 @@ class KaiterraApiData:
                         main_pollutant = POLLUTANTS.get(sensor_name)
 
                 level = None
-                for j in range(1, len(self._scale)):
-                    if aqi <= self._scale[j]:
-                        level = self._level[j - 1]
-                        break
+                if aqi:
+                    for j in range(1, len(self._scale)):
+                        if aqi <= self._scale[j]:
+                            level = self._level[j - 1]
+                            break
 
                 device["aqi"] = {"value": aqi}
                 device["aqi_level"] = {"value": level}
@@ -100,6 +101,6 @@ class KaiterraApiData:
         except IndexError as err:
             _LOGGER.error("Parsing error %s", err)
         except TypeError as err:
-            _LOGGER.debug("Type error %s", err)
+            _LOGGER.error("Type error %s", err)
 
         async_dispatcher_send(self._hass, DISPATCHER_KAITERRA)
