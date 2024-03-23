@@ -56,7 +56,7 @@ async def test_form_zeroconf(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.nut.AIONutClient",
+        "homeassistant.components.nut.AIONUTClient",
         return_value=mock_pynut,
     ), patch(
         "homeassistant.components.nut.async_setup_entry",
@@ -94,7 +94,7 @@ async def test_form_user_one_ups(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.nut.AIONutClient",
+        "homeassistant.components.nut.AIONUTClient",
         return_value=mock_pynut,
     ), patch(
         "homeassistant.components.nut.async_setup_entry",
@@ -144,7 +144,7 @@ async def test_form_user_multiple_ups(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.nut.AIONutClient",
+        "homeassistant.components.nut.AIONUTClient",
         return_value=mock_pynut,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -161,7 +161,7 @@ async def test_form_user_multiple_ups(hass: HomeAssistant) -> None:
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
 
     with patch(
-        "homeassistant.components.nut.AIONutClient",
+        "homeassistant.components.nut.AIONUTClient",
         return_value=mock_pynut,
     ), patch(
         "homeassistant.components.nut.async_setup_entry",
@@ -204,7 +204,7 @@ async def test_form_user_one_ups_with_ignored_entry(hass: HomeAssistant) -> None
     )
 
     with patch(
-        "homeassistant.components.nut.AIONutClient",
+        "homeassistant.components.nut.AIONUTClient",
         return_value=mock_pynut,
     ), patch(
         "homeassistant.components.nut.async_setup_entry",
@@ -241,7 +241,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     mock_pynut = _get_mock_nutclient()
 
     with patch(
-        "homeassistant.components.nut.AIONutClient",
+        "homeassistant.components.nut.AIONUTClient",
         return_value=mock_pynut,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -258,10 +258,10 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
     with patch(
-        "homeassistant.components.nut.AIONutClient.list_ups",
+        "homeassistant.components.nut.AIONUTClient.list_ups",
         side_effect=NUTError,
     ), patch(
-        "homeassistant.components.nut.AIONutClient.list_vars",
+        "homeassistant.components.nut.AIONUTClient.list_vars",
         side_effect=NUTError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -278,10 +278,10 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
     with patch(
-        "homeassistant.components.nut.AIONutClient.list_ups",
+        "homeassistant.components.nut.AIONUTClient.list_ups",
         return_value={"ups1"},
     ), patch(
-        "homeassistant.components.nut.AIONutClient.list_vars",
+        "homeassistant.components.nut.AIONUTClient.list_vars",
         side_effect=Exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -320,7 +320,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.nut.AIONutClient",
+        "homeassistant.components.nut.AIONUTClient",
         return_value=mock_pynut,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -358,7 +358,7 @@ async def test_abort_if_already_setup_alias(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.nut.AIONutClient",
+        "homeassistant.components.nut.AIONUTClient",
         return_value=mock_pynut,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -373,7 +373,7 @@ async def test_abort_if_already_setup_alias(hass: HomeAssistant) -> None:
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
 
     with patch(
-        "homeassistant.components.nut.AIONutClient",
+        "homeassistant.components.nut.AIONUTClient",
         return_value=mock_pynut,
     ):
         result3 = await hass.config_entries.flow.async_configure(

@@ -61,7 +61,7 @@ async def async_init_integration(
     )
 
     with patch(
-        "homeassistant.components.nut.AIONutClient",
+        "homeassistant.components.nut.AIONUTClient",
         return_value=mock_pynut,
     ):
         entry = MockConfigEntry(

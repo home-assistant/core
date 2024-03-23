@@ -27,7 +27,7 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.nut.AIONutClient",
+        "homeassistant.components.nut.AIONUTClient",
         return_value=mock_pynut,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -57,10 +57,10 @@ async def test_config_not_ready(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.nut.AIONutClient.list_ups",
+        "homeassistant.components.nut.AIONUTClient.list_ups",
         return_value={"ups1"},
     ), patch(
-        "homeassistant.components.nut.AIONutClient.list_vars",
+        "homeassistant.components.nut.AIONUTClient.list_vars",
         side_effect=NUTError,
     ):
         await hass.config_entries.async_setup(entry.entry_id)

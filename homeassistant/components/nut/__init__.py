@@ -7,7 +7,7 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
 
-from aionut import AIONutClient, NUTError
+from aionut import AIONUTClient, NUTError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -218,7 +218,7 @@ class PyNUTData:
         self._host = host
         self._alias = alias
 
-        self._client = AIONutClient(self._host, port, username, password, 5, persistent)
+        self._client = AIONUTClient(self._host, port, username, password, 5, persistent)
         self.ups_list: dict[str, str] | None = None
         self._status: dict[str, str] | None = None
         self._device_info: NUTDeviceInfo | None = None
