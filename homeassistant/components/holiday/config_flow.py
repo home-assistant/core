@@ -139,8 +139,18 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             )
 
+            try:
+                locale = Locale.parse(self.hass.config.language, sep="-")
+            except UnknownLocaleError:
+                # Default to (US) English if language not recognized by babel
+                # Mainly an issue with English flavors such as "en-GB"
+                locale = Locale("en")
+            province_str = f", {province}" if province else ""
+            name = f"{locale.territories[country]}{province_str}"
+
             return self.async_update_reload_and_abort(
                 self.config_entry,
+                title=name,
                 data=combined_input,
                 reason="reconfigure_successful",
             )
