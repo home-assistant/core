@@ -14,7 +14,6 @@ from homeassistant import loader
 from homeassistant.config import (  # type: ignore[attr-defined]
     CONF_PACKAGES,
     CORE_CONFIG_SCHEMA,
-    HA_DOMAIN,
     YAML_CONFIG_FILE,
     config_per_platform,
     extract_domain_configs,
@@ -23,7 +22,7 @@ from homeassistant.config import (  # type: ignore[attr-defined]
     load_yaml_config_file,
     merge_packages_config,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.requirements import (
     RequirementsNotFound,
