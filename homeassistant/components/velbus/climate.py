@@ -72,12 +72,10 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode:
         """Return the current hvac mode based on cool_mode message."""
-        if (mode := self._channel.get_cool_mode()) is None:
-            return
-        elif mode is True:
-            return HVACMode.COOL
-        elif mode is False:
-            return HVACMode.HEAT
+        return {
+            True: HVACMode.COOL,
+            False: HVACMode.HEAT,
+        }.get(self._channel.get_cool_mode())
 
     @api_call
     async def async_set_temperature(self, **kwargs: Any) -> None:
