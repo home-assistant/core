@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -66,11 +65,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update_data() -> dict[str, str]:
         """Fetch data from NUT."""
-        async with asyncio.timeout(10):
-            await data.async_update()
-            if not data.status:
-                raise UpdateFailed("Error fetching UPS state")
-            return data.status
+        try:
+            return await data.async_update()
+        except NUTError as err:
+            raise UpdateFailed("Error fetching UPS state: {err}") from err
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -267,27 +265,20 @@ class PyNUTData:
 
         return device_info
 
-    async def _async_get_status(self) -> dict[str, str] | None:
+    async def _async_get_status(self) -> dict[str, str]:
         """Get the ups status from NUT."""
         if self._alias is None:
             self._alias = await self._async_get_alias()
-
         if TYPE_CHECKING:
             assert self._alias is not None
+        return await self._client.list_vars(self._alias)
 
-        try:
-            status: dict[str, str] = await self._client.list_vars(self._alias)
-        except (NUTError, ConnectionResetError) as err:
-            _LOGGER.debug("Error getting NUT vars for host %s: %s", self._host, err)
-            return None
-
-        return status
-
-    async def async_update(self) -> None:
+    async def async_update(self) -> dict[str, str]:
         """Fetch the latest status from NUT."""
         self._status = await self._async_get_status()
         if self._device_info is None:
             self._device_info = self._get_device_info()
+        return self._status
 
     async def async_run_command(self, command_name: str) -> None:
         """Invoke instant command in UPS."""
