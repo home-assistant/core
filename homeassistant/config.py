@@ -1228,7 +1228,7 @@ def _get_log_message_and_stack_print_pref(
 
     # Generate the log message from the English translations
     log_message = async_get_exception_message(
-        CONF_CORE,
+        HA_DOMAIN,
         platform_exception.translation_key,
         translation_placeholders=placeholders,
     )
@@ -1341,8 +1341,7 @@ def async_handle_component_errors(
     raise ConfigValidationError(
         translation_key,
         [platform_exception.exception for platform_exception in config_exception_info],
-        translation_domain=CONF_CORE,
-        translation_key=translation_key,
+        translation_domain=HA_DOMAIN,
         translation_placeholders=placeholders,
     )
 
