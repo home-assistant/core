@@ -24,7 +24,9 @@ from homeassistant.const import (
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_STOP_COVER,
+    STATE_CLOSED,
     STATE_OPEN,
+    STATE_OPENING,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
@@ -82,6 +84,67 @@ async def test_poll_when_cover_has_command_state(
             close_fds=False,
             stdout=-1,
         )
+
+
+async def test_state_strings(hass: HomeAssistant) -> None:
+    """Test with state strings of open, closed and opening and device_class."""
+    with tempfile.TemporaryDirectory() as tempdirname:
+        path = os.path.join(tempdirname, "cover_status")
+        await setup.async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "command_line": [
+                    {
+                        "cover": {
+                            "command_state": f"cat {path}",
+                            "command_open": f"echo open > {path}",
+                            "command_close": f"echo closed > {path}",
+                            "command_stop": f"echo opening > {path}",
+                            "value_template": "{{ value }}",
+                            "name": "Test",
+                            "device_class": "garage",
+                        }
+                    }
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+        entity_state = hass.states.get("cover.test")
+        assert entity_state
+        assert entity_state.state == "unknown"
+        assert entity_state.attributes.get("device_class") == "garage"
+
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: "cover.test"},
+            blocking=True,
+        )
+        entity_state = hass.states.get("cover.test")
+        assert entity_state
+        assert entity_state.state == STATE_OPEN
+
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: "cover.test"},
+            blocking=True,
+        )
+        entity_state = hass.states.get("cover.test")
+        assert entity_state
+        assert entity_state.state == STATE_CLOSED
+
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_STOP_COVER,
+            {ATTR_ENTITY_ID: "cover.test"},
+            blocking=True,
+        )
+        entity_state = hass.states.get("cover.test")
+        assert entity_state
+        assert entity_state.state == STATE_OPENING
 
 
 async def test_state_value(hass: HomeAssistant) -> None:
