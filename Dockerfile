@@ -30,7 +30,7 @@ RUN \
         uv pip install home-assistant-frontend@$(ls homeassistant/home_assistant_frontend-*.whl); \
     fi \
     && if ls homeassistant/home_assistant_intents*.whl 1> /dev/null 2>&1; then \
-        uv pip install home_assistant_intents@$(homeassistant/home_assistant_intents-*.whl); \
+        uv pip install home_assistant_intents@$(ls homeassistant/home_assistant_intents-*.whl); \
     fi \
     && if [ "${BUILD_ARCH}" = "i386" ]; then \
         LD_PRELOAD="/usr/local/lib/libjemalloc.so.2" \
