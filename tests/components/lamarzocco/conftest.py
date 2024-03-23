@@ -130,8 +130,6 @@ def mock_lamarzocco(
         lamarzocco.firmware[FirmwareType.GATEWAY].latest_version = "v3.5-rc3"
         lamarzocco.firmware[FirmwareType.MACHINE].latest_version = "1.55"
 
-        lamarzocco.websocket_connected = True
-
         async def websocket_connect_mock(
             notify_callback: Callable | None,
         ) -> None:

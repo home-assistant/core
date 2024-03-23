@@ -1,13 +1,13 @@
 """Test initialization of lamarzocco."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from lmcloud.exceptions import AuthFail, RequestNotSuccessful
 
 from homeassistant.components.lamarzocco.config_flow import CONF_MACHINE
 from homeassistant.components.lamarzocco.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 
 from . import USER_INPUT, async_init_integration, get_bluetooth_service_info
@@ -141,7 +141,7 @@ async def test_bluetooth_is_set_from_discovery(
     )
     with (
         patch(
-            "homeassistant.components.lamarzocco.coordinator.async_discovered_service_info",
+            "homeassistant.components.lamarzocco.async_discovered_service_info",
             return_value=[service_info],
         ) as discovery,
         patch(
@@ -155,3 +155,22 @@ async def test_bluetooth_is_set_from_discovery(
     assert kwargs["bluetooth_client"] is not None
     assert mock_config_entry.data[CONF_NAME] == service_info.name
     assert mock_config_entry.data[CONF_MAC] == service_info.address
+
+
+async def test_websocket_closed_on_unload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lamarzocco: MagicMock,
+) -> None:
+    """Test the websocket is closed on unload."""
+    with patch(
+        "homeassistant.components.lamarzocco.LaMarzoccoLocalClient",
+        autospec=True,
+    ) as local_client:
+        client = local_client.return_value
+        client.websocket = AsyncMock()
+        client.websocket.connected = True
+        await async_init_integration(hass, mock_config_entry)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+        client.websocket.close.assert_called_once()

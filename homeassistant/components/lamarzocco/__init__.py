@@ -2,9 +2,13 @@
 
 import logging
 
+from lmcloud.client_bluetooth import LaMarzoccoBluetoothClient
 from lmcloud.client_cloud import LaMarzoccoCloudClient
+from lmcloud.client_local import LaMarzoccoLocalClient
+from lmcloud.const import BT_MODEL_PREFIXES
 from lmcloud.exceptions import AuthFail, RequestNotSuccessful
 
+from homeassistant.components.bluetooth import async_discovered_service_info
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -17,8 +21,9 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import DOMAIN
+from .const import CONF_USE_BLUETOOTH, DOMAIN
 from .coordinator import LaMarzoccoMachineUpdateCoordinator
 
 PLATFORMS = [
@@ -37,7 +42,65 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up La Marzocco as config entry."""
 
-    coordinator = LaMarzoccoMachineUpdateCoordinator(hass)
+    assert entry.unique_id
+    serial = entry.unique_id
+
+    cloud_client = LaMarzoccoCloudClient(
+        username=entry.data[CONF_USERNAME],
+        password=entry.data[CONF_PASSWORD],
+    )
+
+    # initialize local API
+    local_client: LaMarzoccoLocalClient | None = None
+    if (host := entry.data.get(CONF_HOST)) is not None:
+        _LOGGER.debug("Initializing local API")
+        local_client = LaMarzoccoLocalClient(
+            host=host,
+            local_bearer=entry.data[CONF_TOKEN],
+            client=get_async_client(hass),
+        )
+
+    bluetooth_client: LaMarzoccoBluetoothClient | None = None
+    # initialize Bluetooth
+    if entry.options.get(CONF_USE_BLUETOOTH, True):
+
+        def bluetooth_configured() -> bool:
+            return entry.data.get(CONF_MAC, "") and entry.data.get(CONF_NAME, "")
+
+        if not bluetooth_configured():
+            for discovery_info in async_discovered_service_info(hass):
+                if (
+                    (name := discovery_info.name)
+                    and name.startswith(BT_MODEL_PREFIXES)
+                    and name.split("_")[1] == serial
+                ):
+                    _LOGGER.debug("Found Bluetooth device, configuring with Bluetooth")
+                    # found a device, add MAC address to config entry
+                    hass.config_entries.async_update_entry(
+                        entry,
+                        data={
+                            **entry.data,
+                            CONF_MAC: discovery_info.address,
+                            CONF_NAME: discovery_info.name,
+                        },
+                    )
+                    break
+
+        if bluetooth_configured():
+            _LOGGER.debug("Initializing Bluetooth device")
+            bluetooth_client = LaMarzoccoBluetoothClient(
+                username=entry.data[CONF_USERNAME],
+                serial_number=serial,
+                token=entry.data[CONF_TOKEN],
+                address_or_ble_device=entry.data[CONF_MAC],
+            )
+
+    coordinator = LaMarzoccoMachineUpdateCoordinator(
+        hass=hass,
+        local_client=local_client,
+        cloud_client=cloud_client,
+        bluetooth_client=bluetooth_client,
+    )
 
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
