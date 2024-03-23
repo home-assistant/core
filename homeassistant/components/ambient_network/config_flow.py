@@ -45,7 +45,7 @@ class AmbientNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
         self._longitude = 0.0
         self._latitude = 0.0
         self._radius = 0.0
-        self._stations: list[dict[str, Any]] = []
+        self._stations: dict[str, dict[str, Any]] = {}
 
     async def async_step_user(
         self,
@@ -60,23 +60,26 @@ class AmbientNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
             self._radius = user_input[CONF_LOCATION][CONF_RADIUS]
 
             client: OpenAPI = OpenAPI()
-            self._stations = await client.get_devices_by_location(
-                self._latitude,
-                self._longitude,
-                radius=DistanceConverter.convert(
-                    self._radius,
-                    UnitOfLength.METERS,
-                    UnitOfLength.MILES,
-                ),
-            )
+            self._stations = {
+                x[API_STATION_MAC_ADDRESS]: x
+                for x in await client.get_devices_by_location(
+                    self._latitude,
+                    self._longitude,
+                    radius=DistanceConverter.convert(
+                        self._radius,
+                        UnitOfLength.METERS,
+                        UnitOfLength.MILES,
+                    ),
+                )
+            }
 
             # Filter out indoor stations
-            self._stations = list(
+            self._stations = dict(
                 filter(
-                    lambda station: not station.get(API_STATION_INFO, {}).get(
-                        API_STATION_INDOOR, False
-                    ),
-                    self._stations,
+                    lambda item: not item[1]
+                    .get(API_STATION_INFO, {})
+                    .get(API_STATION_INDOOR, False),
+                    self._stations.items(),
                 )
             )
 
@@ -118,11 +121,11 @@ class AmbientNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the second step to select the station."""
 
         if user_input:
-            mac_address, station_name = user_input[CONF_STATION].split(",")
+            mac_address = user_input[CONF_STATION]
             await self.async_set_unique_id(mac_address)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title=station_name,
+                title=get_station_name(self._stations.get(mac_address, {})),
                 data={
                     CONF_MAC: mac_address,
                 },
@@ -131,9 +134,12 @@ class AmbientNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
         options: list[SelectOptionDict] = [
             SelectOptionDict(
                 label=get_station_name(station),
-                value=f"{station[API_STATION_MAC_ADDRESS]},{get_station_name(station)}",
+                value=mac_address,
             )
-            for station in sorted(self._stations, key=get_station_name)
+            for mac_address, station in sorted(
+                self._stations.items(),
+                key=lambda item: get_station_name(item[1]),
+            )
         ]
 
         schema: vol.Schema = vol.Schema(

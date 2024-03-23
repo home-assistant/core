@@ -47,7 +47,7 @@ async def test_happy_path(
     stations_result = await hass.config_entries.flow.async_configure(
         user_result["flow_id"],
         {
-            "station": "AA:AA:AA:AA:AA:AA,Station A",
+            "station": "AA:AA:AA:AA:AA:AA",
         },
     )
 
