@@ -74,6 +74,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     except NUTError as err:
         raise CannotConnect(str(err)) from err
 
+    if not alias and not nut_data.ups_list:
+        raise CannotConnect("No UPSes found on the NUT server")
+
     return {"ups_list": nut_data.ups_list, "available_resources": status}
 
 
