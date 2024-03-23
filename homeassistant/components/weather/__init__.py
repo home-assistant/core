@@ -1217,9 +1217,10 @@ async def async_get_forecast_attribute_service(
     weather: WeatherEntity, service_call: ServiceCall
 ) -> ServiceResponse:
     """Get weather forecast values for specified attribute."""
-    forecast_type = service_call.data["type"]
-    forecast_attribute = service_call.data["attribute"]
-    forecast_limit = service_call.data.get("limit")
+    converted_forecast_list: list[dict[str, Any]]
+    forecast_type: str = service_call.data["type"]
+    forecast_attribute: str = service_call.data["attribute"]
+    forecast_limit: int | None = service_call.data.get("limit")
 
     supported_features = weather.supported_features or 0
     if forecast_type == "daily":
@@ -1238,13 +1239,13 @@ async def async_get_forecast_attribute_service(
         converted_forecast_list = []
     else:
         # pylint: disable-next=protected-access
-        converted_forecast_list = weather._convert_forecast(native_forecast_list)
+        converted_forecast_list = weather._convert_forecast(native_forecast_list)  # type: ignore[assignment]
 
-    if forecast_limit and forecast_limit > len(converted_forecast_list):
+    if forecast_limit and forecast_limit < len(converted_forecast_list):
         # Cut list length according to forecast_limit
         converted_forecast_list = converted_forecast_list[:forecast_limit]
 
-    if forecast_attribute not in converted_forecast_list[0]:  # type: ignore[operator]
+    if forecast_attribute not in converted_forecast_list[0]:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="invalid_attribute",
@@ -1254,8 +1255,7 @@ async def async_get_forecast_attribute_service(
         )
 
     forecast_values = [
-        forecast[forecast_attribute]  # type: ignore[index]
-        for forecast in converted_forecast_list
+        forecast[forecast_attribute] for forecast in converted_forecast_list
     ]
 
     return {
