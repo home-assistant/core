@@ -33,10 +33,7 @@ def _has_function(
     module: ast.Module, _type: ast.AsyncFunctionDef | ast.FunctionDef, name: str
 ) -> bool:
     """Test if the module defines a function."""
-    for item in module.body:
-        if type(item) == _type and item.name == name:
-            return True
-    return False
+    return any(type(item) == _type and item.name == name for item in module.body)
 
 
 def _has_import(module: ast.Module, name: str) -> bool:

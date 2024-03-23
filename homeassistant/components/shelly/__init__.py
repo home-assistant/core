@@ -7,7 +7,7 @@ from typing import Any, Final
 
 from aioshelly.block_device import BlockDevice, BlockUpdateType
 from aioshelly.common import ConnectionOptions
-from aioshelly.const import RPC_GENERATIONS
+from aioshelly.const import DEFAULT_COAP_PORT, RPC_GENERATIONS
 from aioshelly.exceptions import (
     DeviceConnectionError,
     FirmwareUnsupported,
@@ -37,7 +37,6 @@ from .const import (
     CONF_COAP_PORT,
     CONF_SLEEP_PERIOD,
     DATA_CONFIG_ENTRY,
-    DEFAULT_COAP_PORT,
     DOMAIN,
     FIRMWARE_UNSUPPORTED_ISSUE_ID,
     LOGGER,
@@ -57,6 +56,7 @@ from .utils import (
     get_block_device_sleep_period,
     get_coap_context,
     get_device_entry_gen,
+    get_http_port,
     get_rpc_device_wakeup_period,
     get_ws_context,
 )
@@ -250,6 +250,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
         entry.data.get(CONF_USERNAME),
         entry.data.get(CONF_PASSWORD),
         device_mac=entry.unique_id,
+        port=get_http_port(entry.data),
     )
 
     ws_context = await get_ws_context(hass)

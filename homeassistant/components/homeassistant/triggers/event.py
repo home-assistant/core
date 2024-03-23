@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import ItemsView
+from collections.abc import ItemsView, Mapping
 from typing import Any
 
 import voluptuous as vol
@@ -101,30 +101,18 @@ async def async_attach_trigger(
     job = HassJob(action, f"event trigger {trigger_info}")
 
     @callback
-    def filter_event(event: Event) -> bool:
+    def filter_event(event_data: Mapping[str, Any]) -> bool:
         """Filter events."""
         try:
             # Check that the event data and context match the configured
             # schema if one was provided
             if event_data_items:
                 # Fast path for simple items comparison
-                if not (event.data.items() >= event_data_items):
+                if not (event_data.items() >= event_data_items):
                     return False
             elif event_data_schema:
                 # Slow path for schema validation
-                event_data_schema(event.data)
-
-            if event_context_items:
-                # Fast path for simple items comparison
-                # This is safe because we do not mutate the event context
-                # pylint: disable-next=protected-access
-                if not (event.context._as_dict.items() >= event_context_items):
-                    return False
-            elif event_context_schema:
-                # Slow path for schema validation
-                # This is safe because we make a copy of the event context
-                # pylint: disable-next=protected-access
-                event_context_schema(dict(event.context._as_dict))
+                event_data_schema(event_data)
         except vol.Invalid:
             # If event doesn't match, skip event
             return False
@@ -133,6 +121,22 @@ async def async_attach_trigger(
     @callback
     def handle_event(event: Event) -> None:
         """Listen for events and calls the action when data matches."""
+        if event_context_items:
+            # Fast path for simple items comparison
+            # This is safe because we do not mutate the event context
+            # pylint: disable-next=protected-access
+            if not (event.context._as_dict.items() >= event_context_items):
+                return
+        elif event_context_schema:
+            try:
+                # Slow path for schema validation
+                # This is safe because we make a copy of the event context
+                # pylint: disable-next=protected-access
+                event_context_schema(dict(event.context._as_dict))
+            except vol.Invalid:
+                # If event doesn't match, skip event
+                return
+
         hass.async_run_hass_job(
             job,
             {
@@ -144,12 +148,12 @@ async def async_attach_trigger(
                 }
             },
             event.context,
-            eager_start=True,
         )
 
+    event_filter = filter_event if event_data_items or event_data_schema else None
     removes = [
         hass.bus.async_listen(
-            event_type, handle_event, event_filter=filter_event, run_immediately=True
+            event_type, handle_event, event_filter=event_filter, run_immediately=True
         )
         for event_type in event_types
     ]

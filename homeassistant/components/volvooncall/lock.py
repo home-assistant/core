@@ -28,21 +28,17 @@ async def async_setup_entry(
     @callback
     def async_discover_device(instruments: list[Instrument]) -> None:
         """Discover and add a discovered Volvo On Call lock."""
-        entities: list[VolvoLock] = []
-
-        for instrument in instruments:
-            if instrument.component == "lock":
-                entities.append(
-                    VolvoLock(
-                        coordinator,
-                        instrument.vehicle.vin,
-                        instrument.component,
-                        instrument.attr,
-                        instrument.slug_attr,
-                    )
-                )
-
-        async_add_entities(entities)
+        async_add_entities(
+            VolvoLock(
+                coordinator,
+                instrument.vehicle.vin,
+                instrument.component,
+                instrument.attr,
+                instrument.slug_attr,
+            )
+            for instrument in instruments
+            if instrument.component == "lock"
+        )
 
     async_discover_device([*volvo_data.instruments])
 

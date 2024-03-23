@@ -14,7 +14,7 @@ from homeassistant import bootstrap, loader, runner
 import homeassistant.config as config_util
 from homeassistant.config_entries import HANDLERS, ConfigEntry
 from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
-from homeassistant.core import HomeAssistant, async_get_hass, callback
+from homeassistant.core import CoreState, HomeAssistant, async_get_hass, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType
@@ -223,6 +223,93 @@ async def test_setup_after_deps_in_stage_1_ignored(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("load_registries", [False])
+async def test_setup_after_deps_manifests_are_loaded_even_if_not_setup(
+    hass: HomeAssistant,
+) -> None:
+    """Ensure we preload manifests for after deps even if they are not setup.
+
+    Its important that we preload the after dep manifests even if they are not setup
+    since we will always have to check their requirements since any integration
+    that lists an after dep may import it and we have to ensure requirements are
+    up to date before the after dep can be imported.
+    """
+    # This test relies on this
+    assert "cloud" in bootstrap.STAGE_1_INTEGRATIONS
+    order = []
+
+    def gen_domain_setup(domain):
+        async def async_setup(hass, config):
+            order.append(domain)
+            return True
+
+        return async_setup
+
+    mock_integration(
+        hass,
+        MockModule(
+            domain="normal_integration",
+            async_setup=gen_domain_setup("normal_integration"),
+            partial_manifest={"after_dependencies": ["an_after_dep"]},
+        ),
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="an_after_dep",
+            async_setup=gen_domain_setup("an_after_dep"),
+            partial_manifest={"after_dependencies": ["an_after_dep_of_after_dep"]},
+        ),
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="an_after_dep_of_after_dep",
+            async_setup=gen_domain_setup("an_after_dep_of_after_dep"),
+            partial_manifest={
+                "after_dependencies": ["an_after_dep_of_after_dep_of_after_dep"]
+            },
+        ),
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="an_after_dep_of_after_dep_of_after_dep",
+            async_setup=gen_domain_setup("an_after_dep_of_after_dep_of_after_dep"),
+        ),
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="cloud",
+            async_setup=gen_domain_setup("cloud"),
+            partial_manifest={"after_dependencies": ["normal_integration"]},
+        ),
+    )
+
+    await bootstrap._async_set_up_integrations(
+        hass, {"cloud": {}, "normal_integration": {}}
+    )
+
+    assert "normal_integration" in hass.config.components
+    assert "cloud" in hass.config.components
+    assert "an_after_dep" not in hass.config.components
+    assert "an_after_dep_of_after_dep" not in hass.config.components
+    assert "an_after_dep_of_after_dep_of_after_dep" not in hass.config.components
+    assert order == ["cloud", "normal_integration"]
+    assert loader.async_get_loaded_integration(hass, "an_after_dep") is not None
+    assert (
+        loader.async_get_loaded_integration(hass, "an_after_dep_of_after_dep")
+        is not None
+    )
+    assert (
+        loader.async_get_loaded_integration(
+            hass, "an_after_dep_of_after_dep_of_after_dep"
+        )
+        is not None
+    )
+
+
+@pytest.mark.parametrize("load_registries", [False])
 async def test_setup_frontend_before_recorder(hass: HomeAssistant) -> None:
     """Test frontend is setup before recorder."""
     order = []
@@ -272,6 +359,9 @@ async def test_setup_frontend_before_recorder(hass: HomeAssistant) -> None:
         MockModule(
             domain="recorder",
             async_setup=gen_domain_setup("recorder"),
+            partial_manifest={
+                "after_dependencies": ["http"],
+            },
         ),
     )
 
@@ -289,6 +379,8 @@ async def test_setup_frontend_before_recorder(hass: HomeAssistant) -> None:
     assert "frontend" in hass.config.components
     assert "normal_integration" in hass.config.components
     assert "recorder" in hass.config.components
+    assert "http" in hass.config.components
+
     assert order == [
         "http",
         "frontend",
@@ -782,6 +874,9 @@ async def test_empty_integrations_list_is_only_sent_at_the_end_of_bootstrap(
     hass: HomeAssistant,
 ) -> None:
     """Test empty integrations list is only sent at the end of bootstrap."""
+    # setup times only tracked when not running
+    hass.set_state(CoreState.not_running)
+
     order = []
 
     def gen_domain_setup(domain):
@@ -1031,6 +1126,7 @@ async def test_bootstrap_dependencies(
     # We patch the _import platform method to avoid loading the platform module
     # to avoid depending on non core components in the tests.
     mqtt_integration._import_platform = Mock()
+    mqtt_integration.platforms_exists = Mock(return_value=True)
 
     integrations = {
         "mqtt": {
@@ -1193,3 +1289,78 @@ async def test_cancellation_does_not_leak_upward_from_async_setup_entry(
 
     assert "test_package" in hass.config.components
     assert "test_package_raises_cancelled_error_config_entry" in hass.config.components
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_setup_does_base_platforms_first(hass: HomeAssistant) -> None:
+    """Test setup does base platforms first.
+
+    Its important that base platforms are setup before other integrations
+    in stage1/2 since they are the foundation for other integrations and
+    almost every integration has to wait for them to be setup.
+    """
+    order = []
+
+    def gen_domain_setup(domain):
+        async def async_setup(hass, config):
+            order.append(domain)
+            return True
+
+        return async_setup
+
+    mock_integration(
+        hass, MockModule(domain="sensor", async_setup=gen_domain_setup("sensor"))
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="binary_sensor", async_setup=gen_domain_setup("binary_sensor")
+        ),
+    )
+    mock_integration(
+        hass, MockModule(domain="root", async_setup=gen_domain_setup("root"))
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="first_dep",
+            async_setup=gen_domain_setup("first_dep"),
+            partial_manifest={"after_dependencies": ["root"]},
+        ),
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="second_dep",
+            async_setup=gen_domain_setup("second_dep"),
+            partial_manifest={"after_dependencies": ["first_dep"]},
+        ),
+    )
+
+    with patch(
+        "homeassistant.components.logger.async_setup", gen_domain_setup("logger")
+    ):
+        await bootstrap._async_set_up_integrations(
+            hass,
+            {
+                "root": {},
+                "first_dep": {},
+                "second_dep": {},
+                "sensor": {},
+                "logger": {},
+                "binary_sensor": {},
+            },
+        )
+
+    assert "binary_sensor" in hass.config.components
+    assert "sensor" in hass.config.components
+    assert "root" in hass.config.components
+    assert "first_dep" in hass.config.components
+    assert "second_dep" in hass.config.components
+
+    assert order[0] == "logger"
+    # base platforms (sensor/binary_sensor) should be setup before other integrations
+    # but after logger integrations. The order of base platforms is not guaranteed,
+    # only that they are setup before other integrations.
+    assert set(order[1:3]) == {"sensor", "binary_sensor"}
+    assert order[3:] == ["root", "first_dep", "second_dep"]

@@ -28,16 +28,11 @@ BOOST_MODE_DURATION_DELAY = 1
 OPERATING_MODE_DELAY = 3
 
 
-@dataclass(frozen=True)
-class OverkizNumberDescriptionMixin:
-    """Define an entity description mixin for number entities."""
+@dataclass(frozen=True, kw_only=True)
+class OverkizNumberDescription(NumberEntityDescription):
+    """Class to describe an Overkiz number."""
 
     command: str
-
-
-@dataclass(frozen=True)
-class OverkizNumberDescription(NumberEntityDescription, OverkizNumberDescriptionMixin):
-    """Class to describe an Overkiz number."""
 
     min_value_state_name: str | None = None
     max_value_state_name: str | None = None
@@ -188,15 +183,15 @@ async def async_setup_entry(
         ):
             continue
 
-        for state in device.definition.states:
-            if description := SUPPORTED_STATES.get(state.qualified_name):
-                entities.append(
-                    OverkizNumber(
-                        device.device_url,
-                        data.coordinator,
-                        description,
-                    )
-                )
+        entities.extend(
+            OverkizNumber(
+                device.device_url,
+                data.coordinator,
+                description,
+            )
+            for state in device.definition.states
+            if (description := SUPPORTED_STATES.get(state.qualified_name))
+        )
 
     async_add_entities(entities)
 

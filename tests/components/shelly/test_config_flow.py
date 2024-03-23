@@ -1,12 +1,14 @@
 """Test the Shelly config flow."""
 
 from dataclasses import replace
+from datetime import timedelta
 from ipaddress import ip_address
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
-from aioshelly.const import MODEL_1, MODEL_PLUS_2PM
+from aioshelly.const import DEFAULT_HTTP_PORT, MODEL_1, MODEL_PLUS_2PM
 from aioshelly.exceptions import (
+    CustomPortNotSupported,
     DeviceConnectionError,
     FirmwareUnsupported,
     InvalidAuthError,
@@ -21,13 +23,15 @@ from homeassistant.components.shelly.const import (
     DOMAIN,
     BLEScannerMode,
 )
+from homeassistant.components.shelly.coordinator import ENTRY_RELOAD_COOLDOWN
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from . import init_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
@@ -51,17 +55,18 @@ DISCOVERY_INFO_WITH_MAC = zeroconf.ZeroconfServiceInfo(
 
 
 @pytest.mark.parametrize(
-    ("gen", "model"),
+    ("gen", "model", "port"),
     [
-        (1, MODEL_1),
-        (2, MODEL_PLUS_2PM),
-        (3, MODEL_PLUS_2PM),
+        (1, MODEL_1, DEFAULT_HTTP_PORT),
+        (2, MODEL_PLUS_2PM, DEFAULT_HTTP_PORT),
+        (3, MODEL_PLUS_2PM, 11200),
     ],
 )
 async def test_form(
     hass: HomeAssistant,
     gen: int,
     model: str,
+    port: int,
     mock_block_device: Mock,
     mock_rpc_device: Mock,
 ) -> None:
@@ -69,12 +74,18 @@ async def test_form(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.shelly.config_flow.get_info",
-        return_value={"mac": "test-mac", "type": MODEL_1, "auth": False, "gen": gen},
+        return_value={
+            "mac": "test-mac",
+            "type": MODEL_1,
+            "auth": False,
+            "gen": gen,
+            "port": port,
+        },
     ), patch(
         "homeassistant.components.shelly.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -83,7 +94,7 @@ async def test_form(
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "1.1.1.1"},
+            {"host": "1.1.1.1", "port": port},
         )
         await hass.async_block_till_done()
 
@@ -91,12 +102,40 @@ async def test_form(
     assert result2["title"] == "Test name"
     assert result2["data"] == {
         "host": "1.1.1.1",
+        "port": port,
         "model": model,
         "sleep_period": 0,
         "gen": gen,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_gen1_custom_port(
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+) -> None:
+    """Test we get the form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={"mac": "test-mac", "type": MODEL_1, "gen": 1},
+    ), patch(
+        "aioshelly.block_device.BlockDevice.create",
+        side_effect=CustomPortNotSupported,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "1.1.1.1", "port": "1100"},
+        )
+
+        assert result2["type"] == data_entry_flow.FlowResultType.FORM
+        assert result2["errors"]["base"] == "custom_port_not_supported"
 
 
 @pytest.mark.parametrize(
@@ -165,6 +204,7 @@ async def test_form_auth(
     assert result3["title"] == "Test name"
     assert result3["data"] == {
         "host": "1.1.1.1",
+        "port": DEFAULT_HTTP_PORT,
         "model": model,
         "sleep_period": 0,
         "gen": gen,
@@ -754,6 +794,7 @@ async def test_zeroconf_require_auth(
     assert result2["title"] == "Test name"
     assert result2["data"] == {
         "host": "1.1.1.1",
+        "port": DEFAULT_HTTP_PORT,
         "model": MODEL_1,
         "sleep_period": 0,
         "gen": 1,
@@ -1030,6 +1071,9 @@ async def test_zeroconf_already_configured_triggers_refresh_mac_in_name(
 
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     mock_rpc_device.mock_disconnected()
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=ENTRY_RELOAD_COOLDOWN)
+    )
     await hass.async_block_till_done()
     assert len(mock_rpc_device.initialize.mock_calls) == 2
 
@@ -1062,6 +1106,9 @@ async def test_zeroconf_already_configured_triggers_refresh(
 
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     mock_rpc_device.mock_disconnected()
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=ENTRY_RELOAD_COOLDOWN)
+    )
     await hass.async_block_till_done()
     assert len(mock_rpc_device.initialize.mock_calls) == 2
 
@@ -1083,6 +1130,7 @@ async def test_zeroconf_sleeping_device_not_triggers_refresh(
     await hass.async_block_till_done()
 
     mock_rpc_device.mock_update()
+    await hass.async_block_till_done()
 
     assert "online, resuming setup" in caplog.text
 
@@ -1100,6 +1148,9 @@ async def test_zeroconf_sleeping_device_not_triggers_refresh(
 
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     mock_rpc_device.mock_disconnected()
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=ENTRY_RELOAD_COOLDOWN)
+    )
     await hass.async_block_till_done()
     assert len(mock_rpc_device.initialize.mock_calls) == 0
     assert "device did not update" not in caplog.text
@@ -1113,7 +1164,7 @@ async def test_sleeping_device_gen2_with_new_firmware(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -1131,6 +1182,7 @@ async def test_sleeping_device_gen2_with_new_firmware(
 
     assert result["data"] == {
         "host": "1.1.1.1",
+        "port": DEFAULT_HTTP_PORT,
         "model": MODEL_PLUS_2PM,
         "sleep_period": 666,
         "gen": 2,

@@ -401,7 +401,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
     def set_timer(
         self,
-        temperature: float | None = None,
+        temperature: float,
         time_period: int | None = None,
         requested_overlay: str | None = None,
     ):

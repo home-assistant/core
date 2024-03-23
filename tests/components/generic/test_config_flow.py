@@ -449,12 +449,42 @@ async def test_form_still_and_stream_not_provided(
 
 
 @respx.mock
-async def test_form_image_timeout(
-    hass: HomeAssistant, user_flow, mock_create_stream
+@pytest.mark.parametrize(
+    ("side_effect", "expected_message"),
+    [
+        (httpx.TimeoutException, {"still_image_url": "unable_still_load"}),
+        (
+            httpx.HTTPStatusError("", request=None, response=httpx.Response(401)),
+            {"still_image_url": "unable_still_load_auth"},
+        ),
+        (
+            httpx.HTTPStatusError("", request=None, response=httpx.Response(403)),
+            {"still_image_url": "unable_still_load_auth"},
+        ),
+        (
+            httpx.HTTPStatusError("", request=None, response=httpx.Response(404)),
+            {"still_image_url": "unable_still_load_not_found"},
+        ),
+        (
+            httpx.HTTPStatusError("", request=None, response=httpx.Response(500)),
+            {"still_image_url": "unable_still_load_server_error"},
+        ),
+        (
+            httpx.HTTPStatusError("", request=None, response=httpx.Response(503)),
+            {"still_image_url": "unable_still_load_server_error"},
+        ),
+        (  # Errors without specific handler should show the general message.
+            httpx.HTTPStatusError("", request=None, response=httpx.Response(507)),
+            {"still_image_url": "unable_still_load"},
+        ),
+    ],
+)
+async def test_form_image_http_exceptions(
+    side_effect, expected_message, hass: HomeAssistant, user_flow, mock_create_stream
 ) -> None:
-    """Test we handle invalid image timeout."""
+    """Test we handle image http exceptions."""
     respx.get("http://127.0.0.1/testurl/1").side_effect = [
-        httpx.TimeoutException,
+        side_effect,
     ]
 
     with mock_create_stream:
@@ -465,7 +495,7 @@ async def test_form_image_timeout(
     await hass.async_block_till_done()
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"still_image_url": "unable_still_load"}
+    assert result2["errors"] == expected_message
 
 
 @respx.mock
@@ -499,7 +529,7 @@ async def test_form_stream_invalidimage2(
     await hass.async_block_till_done()
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"still_image_url": "unable_still_load"}
+    assert result2["errors"] == {"still_image_url": "unable_still_load_no_image"}
 
 
 @respx.mock

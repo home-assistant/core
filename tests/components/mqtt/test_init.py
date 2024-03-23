@@ -550,8 +550,8 @@ async def test_service_call_with_template_topic_renders_invalid_topic(
             blocking=True,
         )
     assert str(exc.value) == (
-        "Unable to publish: topic template 'test/{{ '+' if True else 'topic' }}/topic' "
-        "produced an invalid topic 'test/+/topic' after rendering "
+        "Unable to publish: topic template `test/{{ '+' if True else 'topic' }}/topic` "
+        "produced an invalid topic `test/+/topic` after rendering "
         "(Wildcards cannot be used in topic names)"
     )
     assert not mqtt_mock.async_publish.called
@@ -3598,14 +3598,20 @@ async def test_disabling_and_enabling_entry(
     config_alarm_control_panel = '{"name": "test_new", "state_topic": "home/alarm", "command_topic": "home/alarm/set"}'
     config_light = '{"name": "test_new", "command_topic": "test-topic_new"}'
 
-    # Discovery of mqtt tag
-    async_fire_mqtt_message(hass, "homeassistant/tag/abc/config", config_tag)
+    with patch(
+        "homeassistant.components.mqtt.mixins.mqtt_config_entry_enabled",
+        return_value=False,
+    ):
+        # Discovery of mqtt tag
+        async_fire_mqtt_message(hass, "homeassistant/tag/abc/config", config_tag)
 
-    # Late discovery of mqtt entities
-    async_fire_mqtt_message(
-        hass, "homeassistant/alarm_control_panel/abc/config", config_alarm_control_panel
-    )
-    async_fire_mqtt_message(hass, "homeassistant/light/abc/config", config_light)
+        # Late discovery of mqtt entities
+        async_fire_mqtt_message(
+            hass,
+            "homeassistant/alarm_control_panel/abc/config",
+            config_alarm_control_panel,
+        )
+        async_fire_mqtt_message(hass, "homeassistant/light/abc/config", config_light)
 
     # Disable MQTT config entry
     await hass.config_entries.async_set_disabled_by(
@@ -4124,7 +4130,7 @@ async def test_multi_platform_discovery(
         },
     }
     for platform, config in entity_configs.items():
-        for set_number in range(0, 2):
+        for set_number in range(2):
             set_config = deepcopy(config)
             set_config["name"] = f"test_{set_number}"
             topic = f"homeassistant/{platform}/bla_{set_number}/config"
@@ -4133,7 +4139,7 @@ async def test_multi_platform_discovery(
         topic = f"homeassistant/{platform}/bla/config"
         async_fire_mqtt_message(hass, topic, json.dumps(config))
     await hass.async_block_till_done()
-    for set_number in range(0, 2):
+    for set_number in range(2):
         for platform in entity_configs:
             entity_id = f"{platform}.test_{set_number}"
             state = hass.states.get(entity_id)

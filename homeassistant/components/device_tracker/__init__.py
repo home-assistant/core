@@ -14,6 +14,7 @@ from homeassistant.helpers.deprecation import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
+from . import group as group_pre_import  # noqa: F401
 from .config_entry import (  # noqa: F401
     ScannerEntity,
     TrackerEntity,
@@ -68,16 +69,15 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the device tracker."""
-
-    # We need to add the component here break the deadlock
-    # when setting up integrations from config entries as
-    # they would otherwise wait for the device tracker to be
-    # setup and thus the config entries would not be able to
-    # setup their platforms.
-    hass.config.components.add(DOMAIN)
-
-    await async_setup_legacy_integration(hass, config)
-
+    #
+    # Legacy and platforms load in a non-awaited tracked task
+    # to ensure device tracker setup can continue and config
+    # entry integrations are not waiting for legacy device
+    # tracker platforms to be set up.
+    #
+    hass.async_create_task(
+        async_setup_legacy_integration(hass, config), eager_start=True
+    )
     return True
 
 

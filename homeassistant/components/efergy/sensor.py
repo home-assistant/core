@@ -127,15 +127,15 @@ async def async_setup_entry(
                 description,
                 entity_registry_enabled_default=len(api.sids) > 1,
             )
-            for sid in api.sids:
-                sensors.append(
-                    EfergySensor(
-                        api,
-                        description,
-                        entry.entry_id,
-                        sid=sid,
-                    )
+            sensors.extend(
+                EfergySensor(
+                    api,
+                    description,
+                    entry.entry_id,
+                    sid=sid,
                 )
+                for sid in api.sids
+            )
     async_add_entities(sensors, True)
 
 

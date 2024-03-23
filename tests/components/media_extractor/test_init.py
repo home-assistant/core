@@ -233,14 +233,13 @@ async def test_cookiefile_detection(
     if not os.path.exists(cookies_dir):
         os.makedirs(cookies_dir)
 
-    f = open(cookies_file, "w+", encoding="utf-8")
-    f.write(
-        """# Netscape HTTP Cookie File
+    with open(cookies_file, "w+", encoding="utf-8") as f:
+        f.write(
+            """# Netscape HTTP Cookie File
 
-        .youtube.com TRUE / TRUE 1701708706 GPS 1
-        """
-    )
-    f.close()
+            .youtube.com TRUE / TRUE 1701708706 GPS 1
+            """
+        )
 
     await hass.services.async_call(
         DOMAIN,

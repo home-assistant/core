@@ -326,10 +326,7 @@ def validate_media_player_features(state: State, feature_list: str) -> bool:
         # Auto detected
         return True
 
-    error_list = []
-    for feature in feature_list:
-        if feature not in supported_modes:
-            error_list.append(feature)
+    error_list = [feature for feature in feature_list if feature not in supported_modes]
 
     if error_list:
         _LOGGER.error(
