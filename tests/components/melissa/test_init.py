@@ -1,6 +1,5 @@
 """The test for the Melissa Climate component."""
 
-
 from homeassistant.core import HomeAssistant
 
 from tests.components.melissa import setup_integration

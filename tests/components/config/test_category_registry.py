@@ -1,4 +1,5 @@
 """Test category registry API."""
+
 import pytest
 
 from homeassistant.components.config import category_registry

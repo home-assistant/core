@@ -526,6 +526,8 @@ async def test_deprecated_voice(
     }
     await hass.async_block_till_done()
 
+    issue_id = f"deprecated_voice_{deprecated_voice}"
+
     assert mock_process_tts.call_count == 1
     assert mock_process_tts.call_args is not None
     assert mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
@@ -533,9 +535,7 @@ async def test_deprecated_voice(
     assert mock_process_tts.call_args.kwargs["gender"] is None
     assert mock_process_tts.call_args.kwargs["voice"] == replacement_voice
     assert mock_process_tts.call_args.kwargs["output"] == "mp3"
-    issue = issue_registry.async_get_issue(
-        "cloud", f"deprecated_voice_{deprecated_voice}"
-    )
+    issue = issue_registry.async_get_issue("cloud", issue_id)
     assert issue is not None
     assert issue.breaks_in_ha_version == "2024.8.0"
     assert issue.is_fixable is True
@@ -546,6 +546,46 @@ async def test_deprecated_voice(
         "deprecated_voice": deprecated_voice,
         "replacement_voice": replacement_voice,
     }
+
+    resp = await client.post(
+        "/api/repairs/issues/fix",
+        json={"handler": DOMAIN, "issue_id": issue.issue_id},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data["flow_id"]
+    assert data == {
+        "type": "form",
+        "flow_id": flow_id,
+        "handler": DOMAIN,
+        "step_id": "confirm",
+        "data_schema": [],
+        "errors": None,
+        "description_placeholders": {
+            "deprecated_voice": "XiaoxuanNeural",
+            "replacement_voice": "XiaozhenNeural",
+        },
+        "last_step": None,
+        "preview": None,
+    }
+
+    resp = await client.post(f"/api/repairs/issues/fix/{flow_id}")
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data["flow_id"]
+    assert data == {
+        "type": "create_entry",
+        "flow_id": flow_id,
+        "handler": DOMAIN,
+        "description": None,
+        "description_placeholders": None,
+    }
+
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
 
 
 @pytest.mark.parametrize(
@@ -631,6 +671,8 @@ async def test_deprecated_gender(
     }
     await hass.async_block_till_done()
 
+    issue_id = "deprecated_gender"
+
     assert mock_process_tts.call_count == 1
     assert mock_process_tts.call_args is not None
     assert mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
@@ -638,7 +680,7 @@ async def test_deprecated_gender(
     assert mock_process_tts.call_args.kwargs["gender"] == gender_option
     assert mock_process_tts.call_args.kwargs["voice"] == "JennyNeural"
     assert mock_process_tts.call_args.kwargs["output"] == "mp3"
-    issue = issue_registry.async_get_issue("cloud", "deprecated_gender")
+    issue = issue_registry.async_get_issue("cloud", issue_id)
     assert issue is not None
     assert issue.breaks_in_ha_version == "2024.10.0"
     assert issue.is_fixable is True
@@ -650,3 +692,44 @@ async def test_deprecated_gender(
         "deprecated_option": "gender",
         "replacement_option": "voice",
     }
+
+    resp = await client.post(
+        "/api/repairs/issues/fix",
+        json={"handler": DOMAIN, "issue_id": issue.issue_id},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data["flow_id"]
+    assert data == {
+        "type": "form",
+        "flow_id": flow_id,
+        "handler": DOMAIN,
+        "step_id": "confirm",
+        "data_schema": [],
+        "errors": None,
+        "description_placeholders": {
+            "integration_name": "Home Assistant Cloud",
+            "deprecated_option": "gender",
+            "replacement_option": "voice",
+        },
+        "last_step": None,
+        "preview": None,
+    }
+
+    resp = await client.post(f"/api/repairs/issues/fix/{flow_id}")
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data["flow_id"]
+    assert data == {
+        "type": "create_entry",
+        "flow_id": flow_id,
+        "handler": DOMAIN,
+        "description": None,
+        "description_placeholders": None,
+    }
+
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)

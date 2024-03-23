@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 
-from .util import TEST_SITE_NAME, TEST_SITE_UUID, zone_mock
+from .util import TEST_SITE_NAME, TEST_SITE_UUID, system_mock, zone_mock
 
 from tests.common import MockConfigEntry
 
@@ -63,6 +63,7 @@ def two_zone_cloud():
 def two_zone_local():
     """Fixture to mock alarm with two zones."""
     zone_mocks = {0: zone_mock(), 1: zone_mock()}
+    system = system_mock()
     with patch.object(
         zone_mocks[0], "id", new_callable=PropertyMock(return_value=0)
     ), patch.object(
@@ -83,12 +84,17 @@ def two_zone_local():
         zone_mocks[1], "bypassed", new_callable=PropertyMock(return_value=False)
     ), patch.object(
         zone_mocks[1], "armed", new_callable=PropertyMock(return_value=False)
+    ), patch.object(
+        system, "name", new_callable=PropertyMock(return_value=TEST_SITE_NAME)
     ), patch(
         "homeassistant.components.risco.RiscoLocal.partitions",
         new_callable=PropertyMock(return_value={}),
     ), patch(
         "homeassistant.components.risco.RiscoLocal.zones",
         new_callable=PropertyMock(return_value=zone_mocks),
+    ), patch(
+        "homeassistant.components.risco.RiscoLocal.system",
+        new_callable=PropertyMock(return_value=system),
     ):
         yield zone_mocks
 
