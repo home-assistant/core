@@ -1,8 +1,7 @@
 """The Aprilaire sensor component."""
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import cast
 
 from pyaprilaire.const import Attribute
 
@@ -62,13 +61,17 @@ class AprilaireSensorDescription(SensorEntityDescription):
     """Class describing Aprilaire sensor entities."""
 
     status_key: str | None
-    status_sensor_available_value: int | None
-    status_sensor_exists_values: list[int] | None
     value_key: str
-    value_fn: Callable[[Any, Any], StateType] | None
 
 
-SENSOR_TYPES: tuple[AprilaireSensorDescription, ...] = (
+@dataclass(frozen=True, kw_only=True)
+class AprilaireStatusSensorDescription(AprilaireSensorDescription):
+    """Class describing Aprilaire status sensor entities."""
+
+    status_map: dict[int, str]
+
+
+HUMIDITY_SENSORS: tuple[AprilaireSensorDescription, ...] = (
     AprilaireSensorDescription(
         key="indoor_humidity_controlling_sensor",
         translation_key="indoor_humidity_controlling_sensor",
@@ -76,10 +79,7 @@ SENSOR_TYPES: tuple[AprilaireSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         status_key=Attribute.INDOOR_HUMIDITY_CONTROLLING_SENSOR_STATUS,
-        status_sensor_available_value=0,
-        status_sensor_exists_values=[0, 1, 2],
         value_key=Attribute.INDOOR_HUMIDITY_CONTROLLING_SENSOR_VALUE,
-        value_fn=None,
     ),
     AprilaireSensorDescription(
         key="outdoor_humidity_controlling_sensor",
@@ -88,11 +88,11 @@ SENSOR_TYPES: tuple[AprilaireSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         status_key=Attribute.OUTDOOR_HUMIDITY_CONTROLLING_SENSOR_STATUS,
-        status_sensor_available_value=0,
-        status_sensor_exists_values=[0, 1, 2],
         value_key=Attribute.OUTDOOR_HUMIDITY_CONTROLLING_SENSOR_VALUE,
-        value_fn=None,
     ),
+)
+
+TEMPERATURE_SENSORS: tuple[AprilaireSensorDescription, ...] = (
     AprilaireSensorDescription(
         key="indoor_temperature_controlling_sensor",
         translation_key="indoor_temperature_controlling_sensor",
@@ -100,10 +100,7 @@ SENSOR_TYPES: tuple[AprilaireSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         status_key=Attribute.INDOOR_TEMPERATURE_CONTROLLING_SENSOR_STATUS,
-        status_sensor_available_value=0,
-        status_sensor_exists_values=[0, 1, 2],
         value_key=Attribute.INDOOR_TEMPERATURE_CONTROLLING_SENSOR_VALUE,
-        value_fn=None,
     ),
     AprilaireSensorDescription(
         key="outdoor_temperature_controlling_sensor",
@@ -112,94 +109,65 @@ SENSOR_TYPES: tuple[AprilaireSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         status_key=Attribute.OUTDOOR_TEMPERATURE_CONTROLLING_SENSOR_STATUS,
-        status_sensor_available_value=0,
-        status_sensor_exists_values=[0, 1, 2],
         value_key=Attribute.OUTDOOR_TEMPERATURE_CONTROLLING_SENSOR_VALUE,
-        value_fn=None,
     ),
-    AprilaireSensorDescription(
+)
+
+STATUS_SENSORS: tuple[AprilaireSensorDescription, ...] = (
+    AprilaireStatusSensorDescription(
         key="dehumidification_status",
         translation_key="dehumidification_status",
         device_class=SensorDeviceClass.ENUM,
-        options=list(set(DEHUMIDIFICATION_STATUS_MAP.values())),
         status_key=Attribute.DEHUMIDIFICATION_AVAILABLE,
-        status_sensor_available_value=None,
-        status_sensor_exists_values=[1],
         value_key=Attribute.DEHUMIDIFICATION_STATUS,
-        value_fn=lambda _, value: DEHUMIDIFICATION_STATUS_MAP.get(value),
+        status_map=DEHUMIDIFICATION_STATUS_MAP,
+        options=list(set(DEHUMIDIFICATION_STATUS_MAP.values())),
     ),
-    AprilaireSensorDescription(
+    AprilaireStatusSensorDescription(
         key="humidification_status",
         translation_key="humidification_status",
         device_class=SensorDeviceClass.ENUM,
-        options=list(set(HUMIDIFICATION_STATUS_MAP.values())),
         status_key=Attribute.HUMIDIFICATION_AVAILABLE,
-        status_sensor_available_value=None,
-        status_sensor_exists_values=[1, 2],
         value_key=Attribute.HUMIDIFICATION_STATUS,
-        value_fn=lambda _, value: HUMIDIFICATION_STATUS_MAP.get(value),
+        status_map=HUMIDIFICATION_STATUS_MAP,
+        options=list(set(HUMIDIFICATION_STATUS_MAP.values())),
     ),
-    AprilaireSensorDescription(
+    AprilaireStatusSensorDescription(
         key="ventilation_status",
         translation_key="ventilation_status",
         device_class=SensorDeviceClass.ENUM,
-        options=list(set(VENTILATION_STATUS_MAP.values())),
         status_key=Attribute.VENTILATION_AVAILABLE,
-        status_sensor_available_value=None,
-        status_sensor_exists_values=[1],
         value_key=Attribute.VENTILATION_STATUS,
-        value_fn=lambda _, value: VENTILATION_STATUS_MAP.get(value),
+        status_map=VENTILATION_STATUS_MAP,
+        options=list(set(VENTILATION_STATUS_MAP.values())),
     ),
-    AprilaireSensorDescription(
+    AprilaireStatusSensorDescription(
         key="air_cleaning_status",
         translation_key="air_cleaning_status",
         device_class=SensorDeviceClass.ENUM,
-        options=list(set(AIR_CLEANING_STATUS_MAP.values())),
         status_key=Attribute.AIR_CLEANING_AVAILABLE,
-        status_sensor_available_value=None,
-        status_sensor_exists_values=[1],
         value_key=Attribute.AIR_CLEANING_STATUS,
-        value_fn=lambda _, value: AIR_CLEANING_STATUS_MAP.get(value),
+        status_map=AIR_CLEANING_STATUS_MAP,
+        options=list(set(AIR_CLEANING_STATUS_MAP.values())),
     ),
-    AprilaireSensorDescription(
+    AprilaireStatusSensorDescription(
         key="fan_status",
         translation_key="fan_status",
         device_class=SensorDeviceClass.ENUM,
-        options=list(set(FAN_STATUS_MAP.values())),
         status_key=None,
-        status_sensor_available_value=None,
-        status_sensor_exists_values=[],
         value_key=Attribute.FAN_STATUS,
-        value_fn=lambda _, value: FAN_STATUS_MAP.get(value),
+        status_map=FAN_STATUS_MAP,
+        options=list(set(FAN_STATUS_MAP.values())),
     ),
 )
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up Aprilaire sensor devices."""
-
-    coordinator: AprilaireCoordinator = hass.data[DOMAIN][config_entry.unique_id]
-
-    assert config_entry.unique_id is not None
-
-    async_add_entities(
-        AprilaireSensor(coordinator, description, config_entry.unique_id)
-        for description in SENSOR_TYPES
-        if description.status_key is None
-        or description.status_sensor_exists_values is None
-        or coordinator.data.get(description.status_key)
-        in description.status_sensor_exists_values
-    )
-
-
-class AprilaireSensor(BaseAprilaireEntity, SensorEntity):
-    """Sensor entity for Aprilaire."""
+class BaseAprilaireSensor(BaseAprilaireEntity, SensorEntity):
+    """Base sensor entity for Aprilaire."""
 
     entity_description: AprilaireSensorDescription
+    status_sensor_available_value: int | None = None
+    status_sensor_exists_values: list[int] | None = None
 
     def __init__(
         self,
@@ -214,11 +182,27 @@ class AprilaireSensor(BaseAprilaireEntity, SensorEntity):
         super().__init__(coordinator, unique_id)
 
     @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
+    def exists(self) -> bool:
+        """Return True if the sensor exists."""
+
         if (
             self.entity_description.status_key is None
-            or self.entity_description.status_sensor_available_value is None
+            or self.status_sensor_exists_values is None
+        ):
+            return True
+
+        return (
+            self.coordinator.data.get(self.entity_description.status_key)
+            in self.status_sensor_exists_values
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return True if the sensor is available."""
+
+        if (
+            self.entity_description.status_key is None
+            or self.status_sensor_available_value is None
         ):
             return True
 
@@ -227,19 +211,31 @@ class AprilaireSensor(BaseAprilaireEntity, SensorEntity):
 
         return (
             self.coordinator.data.get(self.entity_description.status_key)
-            == self.entity_description.status_sensor_available_value
+            == self.status_sensor_available_value
         )
 
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        raw_value = self.coordinator.data.get(self.entity_description.value_key)
 
-        if self.entity_description.value_fn is None:
-            # Valid cast as pyaprilaire only provides str | int | float
-            return cast(StateType, raw_value)
+        # Valid cast as pyaprilaire only provides str | int | float
+        return cast(
+            StateType, self.coordinator.data.get(self.entity_description.value_key)
+        )
 
-        return self.entity_description.value_fn(self, raw_value)
+
+class AprilaireHumiditySensor(BaseAprilaireSensor):
+    """Humidity sensor entity for Aprilaire."""
+
+    status_sensor_available_value = 0
+    status_sensor_exists_values = [0, 1, 2]
+
+
+class AprilaireTemperatureSensor(BaseAprilaireSensor):
+    """Temperature sensor entity for Aprilaire."""
+
+    status_sensor_available_value = 0
+    status_sensor_exists_values = [0, 1, 2]
 
     @property
     def suggested_display_precision(self) -> int | None:
@@ -248,3 +244,66 @@ class AprilaireSensor(BaseAprilaireEntity, SensorEntity):
             return 1
 
         return 0
+
+
+class AprilaireStatusSensor(BaseAprilaireSensor):
+    """Status sensor entity for Aprilaire."""
+
+    status_sensor_exists_values = [1, 2]
+    entity_description: AprilaireStatusSensorDescription
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the value reported by the sensor mapped to the status option."""
+
+        raw_value = super().native_value
+
+        return self.entity_description.status_map.get(cast(int, raw_value))
+
+
+def get_entities(
+    entity_class: type[BaseAprilaireSensor],
+    coordinator: AprilaireCoordinator,
+    unique_id: str,
+    descriptions: tuple[AprilaireSensorDescription, ...],
+) -> list[BaseAprilaireSensor]:
+    """Get the entities for a list of sensor descriptions."""
+
+    entities = (
+        entity_class(coordinator, description, unique_id)
+        for description in descriptions
+    )
+
+    return [entity for entity in entities if entity.exists]
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up Aprilaire sensor devices."""
+
+    coordinator: AprilaireCoordinator = hass.data[DOMAIN][config_entry.unique_id]
+
+    assert config_entry.unique_id is not None
+
+    entities = (
+        get_entities(
+            AprilaireHumiditySensor,
+            coordinator,
+            config_entry.unique_id,
+            HUMIDITY_SENSORS,
+        )
+        + get_entities(
+            AprilaireTemperatureSensor,
+            coordinator,
+            config_entry.unique_id,
+            TEMPERATURE_SENSORS,
+        )
+        + get_entities(
+            AprilaireStatusSensor, coordinator, config_entry.unique_id, STATUS_SENSORS
+        )
+    )
+
+    async_add_entities(entities)
