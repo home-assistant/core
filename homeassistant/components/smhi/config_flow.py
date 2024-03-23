@@ -94,40 +94,48 @@ class SmhiFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
+        errors: dict[str, str] = {}
         assert self.config_entry
+
         if user_input is not None:
             lat: float = user_input[CONF_LOCATION][CONF_LATITUDE]
             lon: float = user_input[CONF_LOCATION][CONF_LONGITUDE]
-            unique_id = f"{lat}-{lon}"
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured()
+            if await async_check_location(self.hass, lon, lat):
+                unique_id = f"{lat}-{lon}"
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
 
-            old_lat = self.config_entry.data[CONF_LOCATION][CONF_LATITUDE]
-            old_lon = self.config_entry.data[CONF_LOCATION][CONF_LONGITUDE]
+                old_lat = self.config_entry.data[CONF_LOCATION][CONF_LATITUDE]
+                old_lon = self.config_entry.data[CONF_LOCATION][CONF_LONGITUDE]
 
-            entity_reg = er.async_get(self.hass)
-            if entity := entity_reg.async_get_entity_id(
-                WEATHER_DOMAIN, DOMAIN, f"{old_lat}, {old_lon}"
-            ):
-                entity_reg.async_update_entity(entity, new_unique_id=f"{lat}, {lon}")
+                entity_reg = er.async_get(self.hass)
+                if entity := entity_reg.async_get_entity_id(
+                    WEATHER_DOMAIN, DOMAIN, f"{old_lat}, {old_lon}"
+                ):
+                    entity_reg.async_update_entity(
+                        entity, new_unique_id=f"{lat}, {lon}"
+                    )
 
-            device_reg = dr.async_get(self.hass)
-            if device := device_reg.async_get_device(
-                identifiers={(DOMAIN, f"{old_lat}, {old_lon}")}
-            ):
-                device_reg.async_update_device(
-                    device.id, new_identifiers={(DOMAIN, f"{lat}, {lon}")}
+                device_reg = dr.async_get(self.hass)
+                if device := device_reg.async_get_device(
+                    identifiers={(DOMAIN, f"{old_lat}, {old_lon}")}
+                ):
+                    device_reg.async_update_device(
+                        device.id, new_identifiers={(DOMAIN, f"{lat}, {lon}")}
+                    )
+
+                return self.async_update_reload_and_abort(
+                    self.config_entry,
+                    unique_id=unique_id,
+                    data={**self.config_entry.data, **user_input},
+                    reason="reconfigure_successful",
                 )
-
-            return self.async_update_reload_and_abort(
-                self.config_entry,
-                unique_id=unique_id,
-                data={**self.config_entry.data, **user_input},
-                reason="reconfigure_successful",
-            )
+            errors["base"] = "wrong_location"
 
         schema = self.add_suggested_values_to_schema(
             vol.Schema({vol.Required(CONF_LOCATION): LocationSelector()}),
             self.config_entry.data,
         )
-        return self.async_show_form(step_id="reconfigure_confirm", data_schema=schema)
+        return self.async_show_form(
+            step_id="reconfigure_confirm", data_schema=schema, errors=errors
+        )
