@@ -68,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             return await data.async_update()
         except NUTError as err:
-            raise UpdateFailed("Error fetching UPS state: {err}") from err
+            raise UpdateFailed(f"Error fetching UPS state: {err}") from err
 
     coordinator = DataUpdateCoordinator(
         hass,
