@@ -260,17 +260,13 @@ class ServiceNotFound(HomeAssistantError):
     def __init__(self, domain: str, service: str) -> None:
         """Initialize error."""
         super().__init__(
-            self,
             translation_domain="homeassistant",
             translation_key="service_not_found",
             translation_placeholders={"domain": domain, "service": service},
         )
         self.domain = domain
         self.service = service
-
-    def __str__(self) -> str:
-        """Return string representation."""
-        return f"Service {self.domain}.{self.service} not found."
+        self.generate_message = True
 
 
 class MaxLengthExceeded(HomeAssistantError):
@@ -279,7 +275,6 @@ class MaxLengthExceeded(HomeAssistantError):
     def __init__(self, value: str, property_name: str, max_length: int) -> None:
         """Initialize error."""
         super().__init__(
-            self,
             translation_domain="homeassistant",
             translation_key="max_length_exceeded",
             translation_placeholders={
@@ -300,7 +295,6 @@ class DependencyError(HomeAssistantError):
     def __init__(self, failed_dependencies: list[str]) -> None:
         """Initialize error."""
         super().__init__(
-            self,
             f"Could not setup dependencies: {', '.join(failed_dependencies)}",
         )
         self.failed_dependencies = failed_dependencies
