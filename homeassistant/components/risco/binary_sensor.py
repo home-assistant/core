@@ -28,48 +28,43 @@ from .entity import RiscoCloudZoneEntity, RiscoLocalZoneEntity
 SYSTEM_ENTITY_DESCRIPTIONS = [
     BinarySensorEntityDescription(
         key="low_battery_trouble",
-        name="Low battery trouble",
-        device_class=BinarySensorDeviceClass.PROBLEM,
+        translation_key="low_battery_trouble",
+        device_class=BinarySensorDeviceClass.BATTERY,
     ),
     BinarySensorEntityDescription(
         key="ac_trouble",
-        name="A/C trouble",
+        translation_key="ac_trouble",
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     BinarySensorEntityDescription(
         key="monitoring_station_1_trouble",
-        name="Monitoring station 1 trouble",
+        translation_key="monitoring_station_1_trouble",
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     BinarySensorEntityDescription(
         key="monitoring_station_2_trouble",
-        name="Monitoring station 2 trouble",
+        translation_key="monitoring_station_2_trouble",
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     BinarySensorEntityDescription(
         key="monitoring_station_3_trouble",
-        name="Monitoring station 3 trouble",
+        translation_key="monitoring_station_3_trouble",
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     BinarySensorEntityDescription(
         key="phone_line_trouble",
-        name="Phone line trouble",
+        translation_key="phone_line_trouble",
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     BinarySensorEntityDescription(
         key="clock_trouble",
-        name="Clock trouble",
+        translation_key="clock_trouble",
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     BinarySensorEntityDescription(
         key="box_tamper",
-        name="Box tamper",
+        translation_key="box_tamper",
         device_class=BinarySensorDeviceClass.TAMPER,
-    ),
-    BinarySensorEntityDescription(
-        key="programming_mode",
-        name="Programming mode",
-        icon="mdi:home-edit",
     ),
 ]
 
@@ -204,8 +199,7 @@ class RiscoSystemBinarySensor(BinarySensorEntity):
         system: System,
         entity_description: BinarySensorEntityDescription,
     ) -> None:
-        """Init the zone."""
-        super().__init__()
+        """Init the sensor."""
         self._system = system
         self._property = entity_description.key
         self._attr_unique_id = f"{system_id}_{self._property}"

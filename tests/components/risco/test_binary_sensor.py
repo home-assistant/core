@@ -269,7 +269,6 @@ async def test_system_states(
         "phone_line_trouble",
         "clock_trouble",
         "box_tamper",
-        "programming_mode",
     ]
     for property in properties:
         await _check_system_state(hass, system_only_local, property, True, callback)
