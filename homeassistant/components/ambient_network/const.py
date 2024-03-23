@@ -1,6 +1,5 @@
 """Constants for the Ambient Weather Network integration."""
 
-from datetime import timedelta
 import logging
 
 DOMAIN = "ambient_network"
@@ -15,5 +14,3 @@ API_STATION_MAC_ADDRESS = "macAddress"
 API_STATION_TYPE = "stationtype"
 
 LOGGER = logging.getLogger(__package__)
-
-SCAN_INTERVAL = timedelta(minutes=5)

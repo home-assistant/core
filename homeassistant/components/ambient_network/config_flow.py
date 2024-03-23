@@ -51,10 +51,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
-        errors: dict[str, str] | None = None,
     ) -> FlowResult:
         """Handle the initial step to select the location."""
 
+        errors: dict[str, str] | None = None
         if user_input:
             self._latitude = user_input[CONF_LOCATION][CONF_LATITUDE]
             self._longitude = user_input[CONF_LOCATION][CONF_LONGITUDE]

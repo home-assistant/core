@@ -28,7 +28,6 @@ class AmbientNetworkEntity(CoordinatorEntity[AmbientNetworkDataUpdateCoordinator
 
         super().__init__(coordinator)
         self.entity_description = description
-        self._device_id = mac_address
         self._attr_unique_id = f"{mac_address}_{description.key}"
         self._attr_device_info = DeviceInfo(
             name=coordinator.station_name,
