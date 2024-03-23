@@ -203,21 +203,6 @@ def see(
 
 async def async_setup_integration(hass: HomeAssistant, config: ConfigType) -> None:
     """Set up the legacy integration."""
-    #
-    # The platforms load in a non-awaited tracked task
-    # to ensure device tracker setup can continue and config
-    # entry integrations are not waiting for legacy device
-    # tracker platforms to be set up.
-    #
-    hass.async_create_task(
-        _async_setup_legacy_integration(hass, config), eager_start=True
-    )
-
-
-async def _async_setup_legacy_integration(
-    hass: HomeAssistant, config: ConfigType
-) -> None:
-    """Set up the legacy integration."""
     tracker = await get_tracker(hass, config)
 
     async def async_see_service(call: ServiceCall) -> None:
