@@ -18,7 +18,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_SERIAL_NUMBER,
     EntityCategory,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
     UnitOfEnergy,
+    UnitOfFrequency,
     UnitOfPower,
     UnitOfTemperature,
 )
@@ -42,6 +45,32 @@ _LOGGER = logging.getLogger(__name__)
 ALARM_STATES = list(AuroraMapping.ALARM_STATES.values())
 
 SENSOR_TYPES = [
+    SensorEntityDescription(
+        key="grid_voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="grid_voltage",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="grid_current",
+        device_class=SensorDeviceClass.CURRENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="grid_current",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="grid_frequency",
+        device_class=SensorDeviceClass.FREQUENCY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
     SensorEntityDescription(
         key="alarm",
         device_class=SensorDeviceClass.ENUM,
