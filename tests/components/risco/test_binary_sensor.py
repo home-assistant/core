@@ -227,7 +227,8 @@ async def _check_system_state(hass, system, property, value, callback):
 
 
 @pytest.fixture
-def _mock_system_handler():
+def mock_system_handler():
+    """Create a mock for add_system_handler."""
     with patch("homeassistant.components.risco.RiscoLocal.add_system_handler") as mock:
         yield mock
 
@@ -252,10 +253,10 @@ def system_only_local():
 
 
 async def test_system_states(
-    hass: HomeAssistant, system_only_local, _mock_system_handler, setup_risco_local
+    hass: HomeAssistant, system_only_local, mock_system_handler, setup_risco_local
 ) -> None:
     """Test the various zone states."""
-    callback = _mock_system_handler.call_args.args[0]
+    callback = mock_system_handler.call_args.args[0]
 
     assert callback is not None
 
