@@ -314,6 +314,9 @@ aionanoleaf==0.2.1
 # homeassistant.components.notion
 aionotion==2024.03.0
 
+# homeassistant.components.nut
+aionut==0.1.0
+
 # homeassistant.components.oncue
 aiooncue==0.3.7
 
@@ -1986,9 +1989,6 @@ pynobo==1.6.0
 
 # homeassistant.components.nuki
 pynuki==1.6.3
-
-# homeassistant.components.nut
-pynut2==2.1.2
 
 # homeassistant.components.nws
 pynws==1.6.0

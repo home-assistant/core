@@ -68,7 +68,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     password = data.get(CONF_PASSWORD)
 
     nut_data = PyNUTData(host, port, alias, username, password)
-    await hass.async_add_executor_job(nut_data.update)
+    await nut_data.async_update()
     if not (status := nut_data.status):
         raise CannotConnect
 
