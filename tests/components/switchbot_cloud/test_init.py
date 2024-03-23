@@ -39,6 +39,12 @@ async def test_setup_entry_success(
             hubDeviceId="test-hub-id",
         ),
         Device(
+            deviceId="contact-sensor-id-1",
+            deviceName="contact-sensor-1",
+            deviceType="Contact Sensor",
+            hubDeviceId="test-hub-id",
+        ),
+        Device(
             deviceId="plug-id-1",
             deviceName="plug-name-1",
             deviceType="Plug",
@@ -51,7 +57,7 @@ async def test_setup_entry_success(
             hubDeviceId="test-hub-id",
         ),
     ]
-    mock_get_status.return_value = {"power": PowerState.ON.value}
+    mock_get_status.return_value = {"openState": "open", "power": PowerState.ON.value}
     entry = configure_integration(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
