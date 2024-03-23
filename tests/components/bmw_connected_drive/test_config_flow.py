@@ -1,4 +1,5 @@
 """Test the for the BMW Connected Drive config flow."""
+
 from copy import deepcopy
 from unittest.mock import patch
 

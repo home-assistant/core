@@ -1,4 +1,5 @@
 """Support for SwitchBot lock platform."""
+
 from typing import Any
 
 import switchbot

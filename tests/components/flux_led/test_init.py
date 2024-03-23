@@ -1,4 +1,5 @@
 """Tests for the flux_led component."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -19,7 +20,6 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     CONF_HOST,
     CONF_NAME,
-    EVENT_HOMEASSISTANT_STARTED,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
@@ -57,13 +57,10 @@ async def test_configuring_flux_led_causes_discovery(hass: HomeAssistant) -> Non
         await hass.async_block_till_done()
 
         assert len(scan.mock_calls) == 1
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-        await hass.async_block_till_done()
-        assert len(scan.mock_calls) == 2
 
         async_fire_time_changed(hass, utcnow() + flux_led.DISCOVERY_INTERVAL)
         await hass.async_block_till_done()
-        assert len(scan.mock_calls) == 3
+        assert len(scan.mock_calls) == 2
 
 
 @pytest.mark.usefixtures("mock_multiple_broadcast_addresses")
@@ -79,15 +76,11 @@ async def test_configuring_flux_led_causes_discovery_multiple_addresses(
         discover.return_value = [FLUX_DISCOVERY]
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
-
         assert len(scan.mock_calls) == 2
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-        await hass.async_block_till_done()
-        assert len(scan.mock_calls) == 4
 
         async_fire_time_changed(hass, utcnow() + flux_led.DISCOVERY_INTERVAL)
         await hass.async_block_till_done()
-        assert len(scan.mock_calls) == 6
+        assert len(scan.mock_calls) == 4
 
 
 async def test_config_entry_reload(hass: HomeAssistant) -> None:

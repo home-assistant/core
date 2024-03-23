@@ -1,4 +1,5 @@
 """The tests for the NSW Rural Fire Service Feeds platform."""
+
 import datetime
 from unittest.mock import ANY, MagicMock, call, patch
 

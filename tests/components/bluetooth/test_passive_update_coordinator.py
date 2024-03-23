@@ -1,4 +1,5 @@
 """Tests for the Bluetooth integration PassiveBluetoothDataUpdateCoordinator."""
+
 from __future__ import annotations
 
 from datetime import timedelta

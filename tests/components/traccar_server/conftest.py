@@ -1,9 +1,10 @@
 """Common fixtures for the Traccar Server tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from pytraccar import ApiClient
+from pytraccar import ApiClient, SubscriptionStatus
 
 from homeassistant.components.traccar_server.const import (
     CONF_CUSTOM_ATTRIBUTES,
@@ -39,6 +40,7 @@ def mock_traccar_api_client() -> Generator[AsyncMock, None, None]:
         new=mock_client,
     ):
         client: ApiClient = mock_client.return_value
+        client.subscription_status = SubscriptionStatus.DISCONNECTED
         client.get_devices.return_value = load_json_array_fixture(
             "traccar_server/devices.json"
         )
@@ -54,6 +56,8 @@ def mock_traccar_api_client() -> Generator[AsyncMock, None, None]:
         client.get_reports_events.return_value = load_json_array_fixture(
             "traccar_server/reports_events.json"
         )
+
+        client.subscribe = AsyncMock()
 
         yield client
 

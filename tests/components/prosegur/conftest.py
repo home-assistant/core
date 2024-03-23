@@ -1,4 +1,5 @@
 """Define test fixtures for Prosegur."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyprosegur.installation import Camera

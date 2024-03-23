@@ -1,10 +1,12 @@
 """Tests for the TP-Link component."""
+
 from __future__ import annotations
 
 import copy
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from kasa.exceptions import AuthenticationException
 import pytest
 
@@ -17,7 +19,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STARTED,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
@@ -41,28 +42,29 @@ from . import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_configuring_tplink_causes_discovery(hass: HomeAssistant) -> None:
+async def test_configuring_tplink_causes_discovery(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test that specifying empty config does discovery."""
     with patch("homeassistant.components.tplink.Discover.discover") as discover, patch(
         "homeassistant.components.tplink.Discover.discover_single"
     ):
         discover.return_value = {MagicMock(): MagicMock()}
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
+        # call_count will differ based on number of broadcast addresses
         call_count = len(discover.mock_calls)
         assert discover.mock_calls
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-        await hass.async_block_till_done()
+        freezer.tick(tplink.DISCOVERY_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert len(discover.mock_calls) == call_count * 2
 
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=15))
-        await hass.async_block_till_done()
+        freezer.tick(tplink.DISCOVERY_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert len(discover.mock_calls) == call_count * 3
-
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=30))
-        await hass.async_block_till_done()
-        assert len(discover.mock_calls) == call_count * 4
 
 
 async def test_config_entry_reload(hass: HomeAssistant) -> None:

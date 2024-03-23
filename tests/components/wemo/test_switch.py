@@ -1,4 +1,5 @@
 """Tests for the Wemo switch entity."""
+
 import pytest
 import pywemo
 

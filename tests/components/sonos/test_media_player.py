@@ -1,4 +1,5 @@
 """Tests for the Sonos Media Player platform."""
+
 from homeassistant.const import STATE_IDLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import (

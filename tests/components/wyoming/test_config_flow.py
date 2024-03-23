@@ -1,4 +1,5 @@
 """Test the Wyoming config flow."""
+
 from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, patch
 

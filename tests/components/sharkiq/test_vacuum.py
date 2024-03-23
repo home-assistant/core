@@ -1,4 +1,5 @@
 """Test the Shark IQ vacuum entity."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -246,16 +247,8 @@ async def test_clean_room_error(
 ) -> None:
     """Test clean_room errors."""
     with pytest.raises(exception):
-        if room_list:
-            data = {ATTR_ENTITY_ID: VAC_ENTITY_ID, ATTR_ROOMS: room_list}
-            await hass.services.async_call(
-                DOMAIN, SERVICE_CLEAN_ROOM, data, blocking=True
-            )
-        elif not room_list:
-            data = {ATTR_ENTITY_ID: VAC_ENTITY_ID, ATTR_ROOMS: room_list}
-            await hass.services.async_call(
-                DOMAIN, SERVICE_CLEAN_ROOM, data, blocking=True
-            )
+        data = {ATTR_ENTITY_ID: VAC_ENTITY_ID, ATTR_ROOMS: room_list}
+        await hass.services.async_call(DOMAIN, SERVICE_CLEAN_ROOM, data, blocking=True)
 
 
 async def test_locate(hass: HomeAssistant) -> None:

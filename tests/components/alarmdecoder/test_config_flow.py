@@ -1,4 +1,5 @@
 """Test the AlarmDecoder config flow."""
+
 from unittest.mock import patch
 
 from alarmdecoder.util import NoDeviceError

@@ -1,4 +1,5 @@
 """Websocket API for Z-Wave JS."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -55,8 +56,7 @@ from zwave_js_server.model.utils import (
 from zwave_js_server.util.node import async_set_config_parameter
 
 from homeassistant.components import websocket_api
-from homeassistant.components.http import require_admin
-from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
 from homeassistant.components.websocket_api import (
     ERR_INVALID_FORMAT,
     ERR_NOT_FOUND,
@@ -2196,7 +2196,7 @@ class FirmwareUploadView(HomeAssistantView):
     @require_admin
     async def post(self, request: web.Request, device_id: str) -> web.Response:
         """Handle upload."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
 
         try:
             node = async_get_node_from_device_id(hass, device_id, self._dev_reg)

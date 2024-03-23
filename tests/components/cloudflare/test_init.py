@@ -1,4 +1,5 @@
 """Test the Cloudflare integration."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -38,7 +39,7 @@ async def test_unload_entry(hass: HomeAssistant, cfupdate) -> None:
 
 @pytest.mark.parametrize(
     "side_effect",
-    (pycfdns.ComunicationException(),),
+    [pycfdns.ComunicationException()],
 )
 async def test_async_setup_raises_entry_not_ready(
     hass: HomeAssistant, cfupdate, side_effect
@@ -66,6 +67,7 @@ async def test_async_setup_raises_entry_auth_failed(
 
     instance.list_zones.side_effect = pycfdns.AuthenticationException()
     await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
@@ -207,7 +209,7 @@ async def test_integration_update_interval(
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(minutes=DEFAULT_UPDATE_INTERVAL)
         )
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert len(instance.update_dns_record.mock_calls) == 2
         assert "All target records are up to date" not in caplog.text
 
@@ -215,12 +217,12 @@ async def test_integration_update_interval(
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(minutes=DEFAULT_UPDATE_INTERVAL)
         )
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert len(instance.update_dns_record.mock_calls) == 2
 
         instance.list_dns_records.side_effect = pycfdns.ComunicationException()
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(minutes=DEFAULT_UPDATE_INTERVAL)
         )
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert len(instance.update_dns_record.mock_calls) == 2

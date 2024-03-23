@@ -1,4 +1,5 @@
 """Test the Lutron Caseta config flow."""
+
 from ipaddress import ip_address
 from pathlib import Path
 import ssl
@@ -472,7 +473,7 @@ async def test_zeroconf_not_lutron_device(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "source", (config_entries.SOURCE_ZEROCONF, config_entries.SOURCE_HOMEKIT)
+    "source", [config_entries.SOURCE_ZEROCONF, config_entries.SOURCE_HOMEKIT]
 )
 async def test_zeroconf(hass: HomeAssistant, source, tmp_path: Path) -> None:
     """Test starting a flow from discovery."""

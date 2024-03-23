@@ -1,4 +1,5 @@
 """Define tests for the Nettigo Air Monitor config flow."""
+
 from ipaddress import ip_address
 from unittest.mock import patch
 

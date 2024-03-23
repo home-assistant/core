@@ -1,4 +1,5 @@
 """Test the Hunter Douglas Powerview config flow."""
+
 from unittest.mock import MagicMock, patch
 
 import pytest

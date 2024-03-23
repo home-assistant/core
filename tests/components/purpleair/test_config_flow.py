@@ -1,4 +1,5 @@
 """Define tests for the PurpleAir config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError

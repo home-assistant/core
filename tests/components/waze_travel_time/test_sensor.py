@@ -1,4 +1,5 @@
 """Test Waze Travel Time sensors."""
+
 import pytest
 from pywaze.route_calculator import WRCError
 
@@ -74,7 +75,6 @@ async def test_sensor(hass: HomeAssistant) -> None:
         hass.states.get("sensor.waze_travel_time").attributes["unit_of_measurement"]
         == "min"
     )
-    assert hass.states.get("sensor.waze_travel_time").attributes["icon"] == "mdi:car"
 
 
 @pytest.mark.parametrize(

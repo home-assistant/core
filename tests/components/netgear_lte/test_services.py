@@ -1,4 +1,5 @@
 """Services tests for the Netgear LTE integration."""
+
 from unittest.mock import patch
 
 from homeassistant.components.netgear_lte.const import DOMAIN

@@ -1,4 +1,5 @@
 """Support for sensor value(s) stored in local files."""
+
 from __future__ import annotations
 
 import logging

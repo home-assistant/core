@@ -1,4 +1,5 @@
 """Test KNX events."""
+
 import logging
 
 import pytest

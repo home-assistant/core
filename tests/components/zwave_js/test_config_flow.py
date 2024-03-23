@@ -1,4 +1,5 @@
 """Test the Z-Wave JS config flow."""
+
 import asyncio
 from collections.abc import Generator
 from copy import copy

@@ -1,4 +1,5 @@
 """Test Alexa config."""
+
 import contextlib
 from unittest.mock import AsyncMock, Mock, patch
 

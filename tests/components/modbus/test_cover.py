@@ -1,4 +1,5 @@
 """The tests for the Modbus cover component."""
+
 from pymodbus.exceptions import ModbusException
 import pytest
 
@@ -269,7 +270,7 @@ async def test_service_cover_move(hass: HomeAssistant, mock_modbus, mock_ha) -> 
     )
     assert hass.states.get(ENTITY_ID).state == STATE_CLOSED
 
-    mock_modbus.reset()
+    await mock_modbus.reset()
     mock_modbus.read_holding_registers.side_effect = ModbusException("fail write_")
     await hass.services.async_call(
         "cover", "close_cover", {"entity_id": ENTITY_ID}, blocking=True

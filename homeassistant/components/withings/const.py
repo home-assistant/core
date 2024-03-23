@@ -1,4 +1,5 @@
 """Constants used by the Withings component."""
+
 import logging
 
 LOGGER = logging.getLogger(__package__)

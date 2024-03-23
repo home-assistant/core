@@ -1,4 +1,5 @@
 """Support for Meteo-France weather data."""
+
 from datetime import timedelta
 import logging
 

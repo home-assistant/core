@@ -1,4 +1,5 @@
 """Testing for ScreenLogic diagnostics."""
+
 from unittest.mock import DEFAULT, patch
 
 from screenlogicpy import ScreenLogicGateway

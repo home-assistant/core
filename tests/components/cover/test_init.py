@@ -1,4 +1,5 @@
 """The tests for Cover."""
+
 from enum import Enum
 
 import pytest
@@ -139,10 +140,7 @@ def is_closing(hass, ent):
 
 
 def _create_tuples(enum: Enum, constant_prefix: str) -> list[tuple[Enum, str]]:
-    result = []
-    for enum in enum:
-        result.append((enum, constant_prefix))
-    return result
+    return [(enum_field, constant_prefix) for enum_field in enum]
 
 
 def test_all() -> None:

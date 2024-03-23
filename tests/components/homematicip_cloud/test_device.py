@@ -1,4 +1,5 @@
 """Common tests for HomematicIP devices."""
+
 from unittest.mock import patch
 
 from homematicip.base.enums import EventType

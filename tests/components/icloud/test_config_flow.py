@@ -1,4 +1,5 @@
 """Tests for the iCloud config flow."""
+
 from unittest.mock import MagicMock, Mock, patch
 
 from pyicloud.exceptions import PyiCloudFailedLoginException

@@ -12,6 +12,7 @@ creates a packet sequence, with a mocked output buffer to capture the segments
 pushed to the output streams. The packet sequence can be used to exercise
 failure modes or corner cases like how out of order packets are handled.
 """
+
 import asyncio
 import fractions
 import io
@@ -459,7 +460,7 @@ async def test_skip_initial_bad_packets(hass: HomeAssistant) -> None:
     num_packets = LONGER_TEST_SEQUENCE_LENGTH
     packets = list(PacketSequence(num_packets))
     num_bad_packets = MAX_MISSING_DTS - 1
-    for i in range(0, num_bad_packets):
+    for i in range(num_bad_packets):
         packets[i].dts = None
 
     decoded_stream = await async_decode_stream(hass, packets)
@@ -489,7 +490,7 @@ async def test_too_many_initial_bad_packets_fails(hass: HomeAssistant) -> None:
     num_packets = LONGER_TEST_SEQUENCE_LENGTH
     packets = list(PacketSequence(num_packets))
     num_bad_packets = MAX_MISSING_DTS + 1
-    for i in range(0, num_bad_packets):
+    for i in range(num_bad_packets):
         packets[i].dts = None
 
     py_av = MockPyAv()

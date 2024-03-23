@@ -1,4 +1,5 @@
 """Support for Harmony Hub activities."""
+
 import logging
 from typing import Any, cast
 
@@ -6,8 +7,7 @@ from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HassJob, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
@@ -24,28 +24,22 @@ async def async_setup_entry(
 ) -> None:
     """Set up harmony activity switches."""
     data: HarmonyData = hass.data[DOMAIN][entry.entry_id][HARMONY_DATA]
-    activities = data.activities
 
-    switches = []
-    for activity in activities:
-        _LOGGER.debug("creating switch for activity: %s", activity)
-        name = f"{entry.data[CONF_NAME]} {activity['label']}"
-        switches.append(HarmonyActivitySwitch(name, activity, data))
-
-    async_add_entities(switches, True)
+    async_add_entities(
+        (HarmonyActivitySwitch(activity, data) for activity in data.activities), True
+    )
 
 
 class HarmonyActivitySwitch(HarmonyEntity, SwitchEntity):
     """Switch representation of a Harmony activity."""
 
-    def __init__(self, name: str, activity: dict, data: HarmonyData) -> None:
+    def __init__(self, activity: dict, data: HarmonyData) -> None:
         """Initialize HarmonyActivitySwitch class."""
         super().__init__(data=data)
-        self._activity_name = activity["label"]
+        self._activity_name = self._attr_name = activity["label"]
         self._activity_id = activity["id"]
         self._attr_entity_registry_enabled_default = False
         self._attr_unique_id = f"activity_{self._activity_id}"
-        self._attr_name = name
         self._attr_device_info = self._data.device_info(DOMAIN)
 
     @property
@@ -82,13 +76,14 @@ class HarmonyActivitySwitch(HarmonyEntity, SwitchEntity):
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
+        activity_update_job = HassJob(self._async_activity_update)
         self.async_on_remove(
             self._data.async_subscribe(
                 HarmonyCallback(
-                    connected=self.async_got_connected,
-                    disconnected=self.async_got_disconnected,
-                    activity_starting=self._async_activity_update,
-                    activity_started=self._async_activity_update,
+                    connected=HassJob(self.async_got_connected),
+                    disconnected=HassJob(self.async_got_disconnected),
+                    activity_starting=activity_update_job,
+                    activity_started=activity_update_job,
                     config_updated=None,
                 )
             )

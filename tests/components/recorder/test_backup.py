@@ -1,4 +1,5 @@
 """Test backup platform for the Recorder integration."""
+
 from unittest.mock import patch
 
 import pytest

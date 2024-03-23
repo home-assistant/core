@@ -1,4 +1,5 @@
 """Test the Qingping binary sensors."""
+
 from datetime import timedelta
 import time
 

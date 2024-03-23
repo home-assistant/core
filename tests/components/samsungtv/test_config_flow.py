@@ -1,4 +1,5 @@
 """Tests for Samsung TV config flow."""
+
 from copy import deepcopy
 from ipaddress import ip_address
 from unittest.mock import ANY, AsyncMock, Mock, call, patch

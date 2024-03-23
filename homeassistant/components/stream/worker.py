@@ -1,4 +1,5 @@
 """Provides the worker thread needed for processing streams."""
+
 from __future__ import annotations
 
 from collections import defaultdict, deque
@@ -160,21 +161,19 @@ class StreamMuxer:
             mode="w",
             format=SEGMENT_CONTAINER_FORMAT,
             container_options={
-                **{
-                    # Removed skip_sidx - see:
-                    # https://github.com/home-assistant/core/pull/39970
-                    # "cmaf" flag replaces several of the movflags used,
-                    # but too recent to use for now
-                    "movflags": "frag_custom+empty_moov+default_base_moof+frag_discont+negative_cts_offsets+skip_trailer+delay_moov",
-                    # Sometimes the first segment begins with negative timestamps,
-                    # and this setting just
-                    # adjusts the timestamps in the output from that segment to start
-                    # from 0. Helps from having to make some adjustments
-                    # in test_durations
-                    "avoid_negative_ts": "make_non_negative",
-                    "fragment_index": str(sequence + 1),
-                    "video_track_timescale": str(int(1 / input_vstream.time_base)),
-                },
+                # Removed skip_sidx - see:
+                # https://github.com/home-assistant/core/pull/39970
+                # "cmaf" flag replaces several of the movflags used,
+                # but too recent to use for now
+                "movflags": "frag_custom+empty_moov+default_base_moof+frag_discont+negative_cts_offsets+skip_trailer+delay_moov",
+                # Sometimes the first segment begins with negative timestamps,
+                # and this setting just
+                # adjusts the timestamps in the output from that segment to start
+                # from 0. Helps from having to make some adjustments
+                # in test_durations
+                "avoid_negative_ts": "make_non_negative",
+                "fragment_index": str(sequence + 1),
+                "video_track_timescale": str(int(1 / input_vstream.time_base)),
                 # Only do extra fragmenting if we are using ll_hls
                 # Let ffmpeg do the work using frag_duration
                 # Fragment durations may exceed the 15% allowed variance but it seems ok
@@ -421,8 +420,7 @@ class PeekIterator(Iterator):
         # Items consumed are added to a buffer for future calls to __next__
         # or peek. First iterate over the buffer from previous calls to peek.
         self._next = self._pop_buffer
-        for packet in self._buffer:
-            yield packet
+        yield from self._buffer
         for packet in self._iterator:
             self._buffer.append(packet)
             yield packet

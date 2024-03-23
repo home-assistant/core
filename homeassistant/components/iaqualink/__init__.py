@@ -1,4 +1,5 @@
 """Component to embed Aqualink devices."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
@@ -55,9 +56,7 @@ PLATFORMS = [
 ]
 
 
-async def async_setup_entry(  # noqa: C901
-    hass: HomeAssistant, entry: ConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Aqualink from a config entry."""
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
