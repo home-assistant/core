@@ -47,11 +47,11 @@ def main():
         with open(TEMP_JSON, encoding="UTF-8") as infile:
             data = json.load(infile)
 
-        # make a list of 100% passing files
+        # make a list of >97% passing files
         out_list = []
         for filename, file_data in data["files"].items():
             percent = file_data["summary"]["percent_covered"]
-            if percent == 100.0:
+            if percent > 97.0:
                 out_list.append(filename)
 
         # remove those files from .coveragerc
