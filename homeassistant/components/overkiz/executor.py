@@ -43,11 +43,7 @@ class OverkizExecutor:
 
     def linked_device(self, index: int) -> Device | None:
         """Return Overkiz device sharing the same base url."""
-
-        if (device_key := f"{self.base_device_url}#{index}") in self.coordinator.data:
-            return self.coordinator.data[device_key]
-
-        return None
+        return self.coordinator.data.get(f"{self.base_device_url}#{index}")
 
     def select_command(self, *commands: str) -> str | None:
         """Select first existing command in a list of commands."""

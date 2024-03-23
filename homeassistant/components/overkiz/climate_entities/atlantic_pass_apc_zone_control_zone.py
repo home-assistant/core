@@ -24,7 +24,7 @@ OVERKIZ_MODE_TO_PRESET_MODES: dict[str, str] = {
 
 PRESET_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_MODE_TO_PRESET_MODES.items()}
 
-TEMPERATURE_ZONECONTROL_DEVICE_INDEX = 1
+TEMPERATURE_ZONECONTROL_DEVICE_INDEX = 20
 
 
 # Those device depends on a main probe that choose the operating mode (heating, cooling, ...)
