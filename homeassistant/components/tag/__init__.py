@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 import logging
+from typing import Any, final
 import uuid
 
 import voluptuous as vol
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_NAME
-from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.core import Context, Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
@@ -140,3 +143,67 @@ async def async_scan_tag(
             {TAG_ID: tag_id, LAST_SCANNED: dt_util.utcnow()}
         )
     _LOGGER.debug("Tag: %s scanned by device: %s", tag_id, device_id)
+
+
+class TagEntity(SensorEntity):
+    """Representation of a Tag entity."""
+
+    _entity_component_unrecorded_attributes = frozenset({TAG_ID, DEVICE_ID})
+
+    _attr_state: None
+
+    __last_event_triggered: datetime | None = None
+    __last_event_device_id: str | None = None
+
+    def __init__(self, name: str, tag_id: str) -> None:
+        """Initialize the Tag entity."""
+        self._attr_name = name
+        self._tag_id = ""
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        self.hass.bus.async_listen(EVENT_TAG_SCANNED, self._trigger_tag)
+        await super().async_added_to_hass()
+
+    @final
+    def _trigger_tag(self, event: Event) -> None:
+        """Process a new event."""
+        self.__last_event_triggered = event.time_fired.isoformat(
+            timespec="milliseconds"
+        )
+        self.__last_event_device_id = event.data[DEVICE_ID]
+        if event_type not in self.event_types:
+            raise ValueError(f"Invalid event type {event_type} for {self.entity_id}")
+        self.__last_event_triggered = dt_util.utcnow()
+        self.__last_event_type = event_type
+        self.__last_event_attributes = event_attributes
+
+    @property
+    @final
+    def state(self) -> str | None:
+        """Return the entity state."""
+        if (last_event := self.__last_event_triggered) is None:
+            return None
+        return last_event
+
+    @final
+    @property
+    def state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes."""
+        return {
+            TAG_ID: self._tag_id,
+            DEVICE_ID: self.__last_event_device_id,
+        }
+
+    @final
+    async def async_internal_added_to_hass(self) -> None:
+        """Call when the event entity is added to hass."""
+        await super().async_internal_added_to_hass()
+        if (
+            (state := await self.async_get_last_state())
+            and state.state is not None
+            and (event_data := await self.async_get_last_event_data())
+        ):
+            self.__last_event_triggered = dt_util.parse_datetime(state.state)
+            self.__last_event_type = event_data.last_event_type
+            self.__last_event_attributes = event_data.last_event_attributes
