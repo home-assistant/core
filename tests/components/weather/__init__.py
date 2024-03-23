@@ -32,6 +32,33 @@ from tests.common import (
 )
 from tests.testing_config.custom_components.test import weather as WeatherPlatform
 
+DAILY_FORECAST_LIST = [
+    Forecast(datetime="2024-03-01T12:00:00.578422", native_temperature=10.0),
+    Forecast(datetime="2024-03-02T12:00:00.578422", native_temperature=11.0),
+    Forecast(datetime="2024-03-03T12:00:00.578422", native_temperature=12.0),
+    Forecast(datetime="2024-03-04T12:00:00.578422", native_temperature=13.0),
+]
+HOURLY_FORECAST_LIST = [
+    Forecast(datetime="2024-03-01T12:00:00.578422", native_temperature=10.0),
+    Forecast(datetime="2024-03-01T13:00:00.578422", native_temperature=11.0),
+    Forecast(datetime="2024-03-01T14:00:00.578422", native_temperature=12.0),
+    Forecast(datetime="2024-03-01T15:00:00.578422", native_temperature=13.0),
+]
+TWICE_DAILY_FORECAST_LIST = [
+    Forecast(
+        datetime="2024-03-01T11:00:00.578422", native_temperature=10.0, is_daytime=True
+    ),
+    Forecast(
+        datetime="2024-03-01T23:00:00.578422", native_temperature=11.0, is_daytime=False
+    ),
+    Forecast(
+        datetime="2024-03-02T11:00:00.578422", native_temperature=12.0, is_daytime=True
+    ),
+    Forecast(
+        datetime="2024-03-02T23:00:00.578422", native_temperature=13.0, is_daytime=False
+    ),
+]
+
 
 class MockWeatherTest(WeatherPlatform.MockWeather):
     """Mock weather class."""

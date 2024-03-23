@@ -69,7 +69,13 @@ from homeassistant.util.unit_conversion import (
 )
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
-from . import MockWeatherTest, create_entity
+from . import (
+    DAILY_FORECAST_LIST,
+    HOURLY_FORECAST_LIST,
+    TWICE_DAILY_FORECAST_LIST,
+    MockWeatherTest,
+    create_entity,
+)
 
 from tests.typing import WebSocketGenerator
 
@@ -1347,14 +1353,22 @@ async def test_issue_deprecated_service_weather_get_forecast(
 
 
 @pytest.mark.parametrize(
-    (
-        "forecast_type",
-        "forecast_attribute",
-    ),
+    ("forecast_type", "forecast_attribute", "forecast_list"),
     [
         (
             "daily",
             ATTR_WEATHER_TEMPERATURE,
+            DAILY_FORECAST_LIST,
+        ),
+        (
+            "hourly",
+            ATTR_WEATHER_TEMPERATURE,
+            HOURLY_FORECAST_LIST,
+        ),
+        (
+            "twice_daily",
+            ATTR_WEATHER_TEMPERATURE,
+            TWICE_DAILY_FORECAST_LIST,
         ),
     ],
 )
@@ -1363,25 +1377,31 @@ async def test_get_forecast_attribute(
     config_flow_fixture: None,
     forecast_type: str,
     forecast_attribute: str,
+    forecast_list: list[Forecast],
 ) -> None:
-    """Test get forecast service."""
+    """Test get forecast attribute service."""
 
     class MockWeatherMockForecast(MockWeatherTest):
         """Mock weather class with mocked new method and legacy forecast."""
 
-        @property
-        def forecast(self) -> list[Forecast] | None:
-            """Return the forecast."""
-            return self.forecast_list
-
         async def async_forecast_daily(self) -> list[Forecast] | None:
-            """Return the forecast_daily."""
-            return self.forecast_list
+            """Return the daily forecast."""
+            return forecast_list
+
+        async def async_forecast_hourly(self) -> list[Forecast] | None:
+            """Return the hourly forecast."""
+            return forecast_list
+
+        async def async_forecast_twice_daily(self) -> list[Forecast] | None:
+            """Return the twice daily forecast."""
+            return forecast_list
 
     kwargs = {
         "native_temperature": 38,
         "native_temperature_unit": UnitOfTemperature.CELSIUS,
-        "supported_features": WeatherEntityFeature.FORECAST_DAILY,
+        "supported_features": WeatherEntityFeature.FORECAST_DAILY
+        | WeatherEntityFeature.FORECAST_HOURLY
+        | WeatherEntityFeature.FORECAST_TWICE_DAILY,
     }
 
     entity0 = await create_entity(hass, MockWeatherMockForecast, None, **kwargs)
@@ -1397,21 +1417,17 @@ async def test_get_forecast_attribute(
         blocking=True,
         return_response=True,
     )
-    assert response == {"weather.testing": {forecast_attribute: [38.0]}}
+    assert response == {
+        "weather.testing": {forecast_attribute: [10.0, 11.0, 12.0, 13.0]}
+    }
 
 
 @pytest.mark.parametrize(
-    (
-        "forecast_type",
-        "forecast_attribute",
-        "forecast_limit",
-    ),
+    ("forecast_type", "forecast_attribute", "forecast_limit", "forecast_list"),
     [
-        (
-            "daily",
-            ATTR_WEATHER_TEMPERATURE,
-            4,
-        ),
+        ("daily", ATTR_WEATHER_TEMPERATURE, 3, DAILY_FORECAST_LIST),
+        ("hourly", ATTR_WEATHER_TEMPERATURE, 3, HOURLY_FORECAST_LIST),
+        ("twice_daily", ATTR_WEATHER_TEMPERATURE, 3, TWICE_DAILY_FORECAST_LIST),
     ],
 )
 async def test_get_forecast_attribute_limit(
@@ -1420,25 +1436,31 @@ async def test_get_forecast_attribute_limit(
     forecast_type: str,
     forecast_attribute: str,
     forecast_limit: int,
+    forecast_list: list[Forecast],
 ) -> None:
-    """Test get forecast service."""
+    """Test get forecast attribute service with limit."""
 
     class MockWeatherMockForecast(MockWeatherTest):
         """Mock weather class with mocked new method and legacy forecast."""
 
-        @property
-        def forecast(self) -> list[Forecast] | None:
-            """Return the forecast."""
-            return self.forecast_list
-
         async def async_forecast_daily(self) -> list[Forecast] | None:
-            """Return the forecast_daily."""
-            return self.forecast_list
+            """Return the daily forecast."""
+            return forecast_list
+
+        async def async_forecast_hourly(self) -> list[Forecast] | None:
+            """Return the hourly forecast."""
+            return forecast_list
+
+        async def async_forecast_twice_daily(self) -> list[Forecast] | None:
+            """Return the twice daily forecast."""
+            return forecast_list
 
     kwargs = {
         "native_temperature": 38,
         "native_temperature_unit": UnitOfTemperature.CELSIUS,
-        "supported_features": WeatherEntityFeature.FORECAST_DAILY,
+        "supported_features": WeatherEntityFeature.FORECAST_DAILY
+        | WeatherEntityFeature.FORECAST_HOURLY
+        | WeatherEntityFeature.FORECAST_TWICE_DAILY,
     }
 
     entity0 = await create_entity(hass, MockWeatherMockForecast, None, **kwargs)
@@ -1455,4 +1477,4 @@ async def test_get_forecast_attribute_limit(
         blocking=True,
         return_response=True,
     )
-    assert response == {"weather.testing": {forecast_attribute: [38.0]}}
+    assert response == {"weather.testing": {forecast_attribute: [10.0, 11.0, 12.0]}}
