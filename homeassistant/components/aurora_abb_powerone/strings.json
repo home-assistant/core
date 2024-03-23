@@ -21,6 +21,12 @@
   },
   "entity": {
     "sensor": {
+      "grid_voltage": {
+        "name": "Grid voltage"
+      },
+      "grid_current": {
+        "name": "Grid current"
+      },
       "alarm": {
         "name": "Alarm status"
       },
