@@ -131,8 +131,8 @@ _T = TypeVar("_T")
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
 
-ALL_STATES_RATE_LIMIT = timedelta(minutes=1)
-DOMAIN_STATES_RATE_LIMIT = timedelta(seconds=1)
+ALL_STATES_RATE_LIMIT = 60  # seconds
+DOMAIN_STATES_RATE_LIMIT = 1  # seconds
 
 _render_info: ContextVar[RenderInfo | None] = ContextVar("_render_info", default=None)
 
@@ -374,7 +374,7 @@ class RenderInfo:
         self.domains: collections.abc.Set[str] = set()
         self.domains_lifecycle: collections.abc.Set[str] = set()
         self.entities: collections.abc.Set[str] = set()
-        self.rate_limit: timedelta | None = None
+        self.rate_limit: float | None = None
         self.has_time = False
 
     def __repr__(self) -> str:
@@ -1041,6 +1041,12 @@ class TemplateStateBase(State):
         """Wrap State.last_changed."""
         self._collect_state()
         return self._state.last_changed
+
+    @property
+    def last_reported(self) -> datetime:  # type: ignore[override]
+        """Wrap State.last_reported."""
+        self._collect_state()
+        return self._state.last_reported
 
     @property
     def last_updated(self) -> datetime:  # type: ignore[override]

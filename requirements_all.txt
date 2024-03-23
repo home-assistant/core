@@ -333,7 +333,7 @@ aiopulse==0.4.4
 aiopurpleair==2022.12.1
 
 # homeassistant.components.hunterdouglas_powerview
-aiopvapi==3.0.2
+aiopvapi==3.1.1
 
 # homeassistant.components.pvpc_hourly_pricing
 aiopvpc==4.2.2
@@ -511,7 +511,7 @@ aurorapy==0.2.7
 # avion==0.10
 
 # homeassistant.components.axis
-axis==56
+axis==58
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
@@ -1787,7 +1787,7 @@ pyedimax==0.2.1
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.19.2
+pyenphase==1.20.0
 
 # homeassistant.components.envisalink
 pyenvisalink==4.6
@@ -2178,7 +2178,7 @@ pyswitchbee==1.8.0
 pytautulli==23.1.1
 
 # homeassistant.components.tedee
-pytedee-async==0.2.16
+pytedee-async==0.2.17
 
 # homeassistant.components.tfiac
 pytfiac==0.4
