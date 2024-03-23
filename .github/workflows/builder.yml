@@ -350,14 +350,14 @@ jobs:
           cosign-release: "v2.2.3"
 
       - name: Login to DockerHub
-        if: matrix.registry == "docker.io/homeassistant"
+        if: matrix.registry == 'docker.io/homeassistant'
         uses: docker/login-action@v3.1.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Container Registry
-        if: matrix.registry == "ghcr.io/home-assistant"
+        if: matrix.registry == 'ghcr.io/home-assistant'
         uses: docker/login-action@v3.1.0
         with:
           registry: ghcr.io
