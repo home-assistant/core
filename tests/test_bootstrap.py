@@ -379,6 +379,8 @@ async def test_setup_frontend_before_recorder(hass: HomeAssistant) -> None:
     assert "frontend" in hass.config.components
     assert "normal_integration" in hass.config.components
     assert "recorder" in hass.config.components
+    assert "http" in hass.config.components
+
     assert order == [
         "http",
         "frontend",
