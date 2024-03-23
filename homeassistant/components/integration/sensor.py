@@ -312,7 +312,17 @@ class IntegrationSensor(RestoreSensor):
         self._last_valid_state: Decimal | None = None
         self._attr_device_info = device_info
 
-    def _integrate_unit_over_time(self, source_unit: str) -> str:
+    def _multiply_unit_with_time(self, source_unit: str) -> str:
+        """Multiply source_unit with time unit of the integral.
+
+        Possibly cancelling out a time unit in the denominator of the source_unit.
+        Note that this is a heuristic string manipulation method and might not transform any source_unit in a sensible way.
+
+        Examples:
+        - Speed to distance: 'km/h' and 'h' will be transformed to 'km'
+        - Power to energy: 'W' and 'h' will be transformed to 'Wh'
+
+        """
         unit_time = self._unit_time_str
         if source_unit.endswith(f"/{unit_time}"):
             integral_unit = source_unit[0 : (-(1 + len(unit_time)))]
@@ -327,7 +337,7 @@ class IntegrationSensor(RestoreSensor):
             source_unit is not None
         ):  # If the source has no defined unit we cannot derive a unit for the integral
             self._unit_of_measurement = self._unit_template.format(
-                self._integrate_unit_over_time(source_unit)
+                self._multiply_unit_with_time(source_unit)
             )
 
         if (
