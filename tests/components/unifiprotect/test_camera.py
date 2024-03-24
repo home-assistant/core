@@ -51,7 +51,10 @@ def validate_default_camera_entity(
 
     channel = camera_obj.channels[channel_id]
 
-    entity_name = f"{camera_obj.name} {channel.name}"
+    if channel.name == "Package Camera":
+        entity_name = f"{camera_obj.name} {channel.name}"
+    else:
+        entity_name = f"{camera_obj.name} {channel.name} Resolution Channel"
     unique_id = f"{camera_obj.mac}_{channel.id}"
     entity_id = f"camera.{entity_name.replace(' ', '_').lower()}"
 
@@ -73,7 +76,7 @@ def validate_rtsps_camera_entity(
 
     channel = camera_obj.channels[channel_id]
 
-    entity_name = f"{camera_obj.name} {channel.name}"
+    entity_name = f"{camera_obj.name} {channel.name} Resolution Channel"
     unique_id = f"{camera_obj.mac}_{channel.id}"
     entity_id = f"camera.{entity_name.replace(' ', '_').lower()}"
 
@@ -95,9 +98,9 @@ def validate_rtsp_camera_entity(
 
     channel = camera_obj.channels[channel_id]
 
-    entity_name = f"{camera_obj.name} {channel.name} Insecure"
+    entity_name = f"{camera_obj.name} {channel.name} Resolution Channel (Insecure)"
     unique_id = f"{camera_obj.mac}_{channel.id}_insecure"
-    entity_id = f"camera.{entity_name.replace(' ', '_').lower()}"
+    entity_id = f"camera.{entity_name.replace(' ', '_').replace('(', '').replace(')', '').lower()}"
 
     entity_registry = er.async_get(hass)
     entity = entity_registry.async_get(entity_id)
@@ -314,7 +317,7 @@ async def test_camera_image(
 
     ufp.api.get_camera_snapshot = AsyncMock()
 
-    await async_get_image(hass, "camera.test_camera_high")
+    await async_get_image(hass, "camera.test_camera_high_resolution_channel")
     ufp.api.get_camera_snapshot.assert_called_once()
 
 
@@ -339,7 +342,7 @@ async def test_camera_generic_update(
 
     await init_entry(hass, ufp, [camera])
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
-    entity_id = "camera.test_camera_high"
+    entity_id = "camera.test_camera_high_resolution_channel"
 
     assert await async_setup_component(hass, "homeassistant", {})
 
@@ -365,7 +368,7 @@ async def test_camera_interval_update(
 
     await init_entry(hass, ufp, [camera])
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
-    entity_id = "camera.test_camera_high"
+    entity_id = "camera.test_camera_high_resolution_channel"
 
     state = hass.states.get(entity_id)
     assert state and state.state == "idle"
@@ -388,7 +391,7 @@ async def test_camera_bad_interval_update(
 
     await init_entry(hass, ufp, [camera])
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
-    entity_id = "camera.test_camera_high"
+    entity_id = "camera.test_camera_high_resolution_channel"
 
     state = hass.states.get(entity_id)
     assert state and state.state == "idle"
@@ -415,7 +418,7 @@ async def test_camera_ws_update(
 
     await init_entry(hass, ufp, [camera])
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
-    entity_id = "camera.test_camera_high"
+    entity_id = "camera.test_camera_high_resolution_channel"
 
     state = hass.states.get(entity_id)
     assert state and state.state == "idle"
@@ -450,7 +453,7 @@ async def test_camera_ws_update_offline(
 
     await init_entry(hass, ufp, [camera])
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
-    entity_id = "camera.test_camera_high"
+    entity_id = "camera.test_camera_high_resolution_channel"
 
     state = hass.states.get(entity_id)
     assert state and state.state == "idle"
@@ -492,7 +495,7 @@ async def test_camera_enable_motion(
 
     await init_entry(hass, ufp, [camera])
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
-    entity_id = "camera.test_camera_high"
+    entity_id = "camera.test_camera_high_resolution_channel"
 
     camera.__fields__["set_motion_detection"] = Mock(final=False)
     camera.set_motion_detection = AsyncMock()
@@ -514,7 +517,7 @@ async def test_camera_disable_motion(
 
     await init_entry(hass, ufp, [camera])
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
-    entity_id = "camera.test_camera_high"
+    entity_id = "camera.test_camera_high_resolution_channel"
 
     camera.__fields__["set_motion_detection"] = Mock(final=False)
     camera.set_motion_detection = AsyncMock()
