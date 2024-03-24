@@ -21,7 +21,10 @@ async def async_setup_entry(
     """Set up the Zigbee Home Automation device tracker from config entry."""
     zha_data = get_zha_data(hass)
     entities_to_create = zha_data.platforms.pop(Platform.DEVICE_TRACKER, [])
-    async_add_entities(entities_to_create)
+    entities = [
+        ZHADeviceScannerEntity(entity_data) for entity_data in entities_to_create
+    ]
+    async_add_entities(entities)
 
 
 class ZHADeviceScannerEntity(ScannerEntity, ZHAEntity):
