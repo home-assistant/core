@@ -10,7 +10,7 @@ from discovery30303 import Device30303, normalize_mac
 import voluptuous as vol
 
 from homeassistant.components import dhcp
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
@@ -72,7 +72,10 @@ class SteamistConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(mac)
         for entry in self._async_current_entries(include_ignore=False):
             if entry.unique_id == mac or entry.data[CONF_HOST] == host:
-                if async_update_entry_from_discovery(self.hass, entry, device):
+                if (
+                    async_update_entry_from_discovery(self.hass, entry, device)
+                    and entry.state is ConfigEntryState.LOADED
+                ):
                     self.hass.async_create_task(
                         self.hass.config_entries.async_reload(entry.entry_id)
                     )
