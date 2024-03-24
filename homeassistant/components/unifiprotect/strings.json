@@ -97,7 +97,7 @@
         "step": {
           "start": {
             "title": "RTSPS is disabled on camera {camera}",
-            "description": "RTSPS is disabled on the camera {camera}. RTSPS is required to be able to live stream your camera within Home Assistant. If you do not enable RTSPS, it may create an additional load on your UniFi Protect NVR as any live video players will default to rapidly pulling snapshots from the camera.\n\nPlease [enable RTSPS]({learn_more}) on the camera and then comeback and confirm this repair."
+            "description": "RTSPS is disabled on the camera {camera}. RTSPS is required to be able to live stream your camera within Home Assistant. If you do not enable RTSPS, it may create an additional load on your UniFi Protect NVR, as any live video players will default to rapidly pulling snapshots from the camera.\n\nPlease [enable RTSPS]({learn_more}) on the camera and then come back and confirm this repair."
           },
           "confirm": {
             "title": "[%key:component::unifiprotect::issues::rtsp_disabled_readonly::fix_flow::step::start::title%]",
