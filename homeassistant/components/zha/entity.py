@@ -7,9 +7,10 @@ from collections.abc import Callable
 import logging
 from typing import Any
 
+from zha.application.platforms import EntityCategory as ZHAEntityCategory
 from zha.mixins import LogMixin
 
-from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, ATTR_NAME
+from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, ATTR_NAME, EntityCategory
 from homeassistant.core import callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
@@ -47,7 +48,16 @@ class ZHAEntity(LogMixin, entity.Entity):
             hasattr(self.entity_data.entity, "_attr_entity_category")
             and self.entity_data.entity._attr_entity_category is not None
         ):
-            self._attr_entity_category = self.entity_data.entity._attr_entity_category
+            if (
+                self.entity_data.entity._attr_entity_category
+                == ZHAEntityCategory.CONFIG
+            ):
+                self._attr_entity_category = EntityCategory.CONFIG
+            elif (
+                self.entity_data.entity._attr_entity_category
+                == ZHAEntityCategory.DIAGNOSTIC
+            ):
+                self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def unique_id(self) -> str:
