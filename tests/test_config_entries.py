@@ -859,7 +859,7 @@ async def test_forward_entry_sets_up_component(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain="original")
 
     mock_original_setup_entry = AsyncMock(return_value=True)
-    mock_integration(
+    integration = mock_integration(
         hass, MockModule("original", async_setup_entry=mock_original_setup_entry)
     )
 
@@ -868,7 +868,10 @@ async def test_forward_entry_sets_up_component(hass: HomeAssistant) -> None:
         hass, MockModule("forwarded", async_setup_entry=mock_forwarded_setup_entry)
     )
 
-    await hass.config_entries.async_forward_entry_setup(entry, "forwarded")
+    with patch.object(integration, "async_get_platform") as mock_async_get_platform:
+        await hass.config_entries.async_forward_entry_setup(entry, "forwarded")
+
+    mock_async_get_platform.assert_called_once_with("forwarded")
     assert len(mock_original_setup_entry.mock_calls) == 0
     assert len(mock_forwarded_setup_entry.mock_calls) == 1
 

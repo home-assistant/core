@@ -1,4 +1,5 @@
 """Websocket API to interact with the category registry."""
+
 from typing import Any
 
 import voluptuous as vol

@@ -91,7 +91,9 @@ class ValveHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        if temperature := self.temperature_device.states[OverkizState.CORE_TEMPERATURE]:
+        if self.temperature_device is not None and (
+            temperature := self.temperature_device.states[OverkizState.CORE_TEMPERATURE]
+        ):
             return temperature.value_as_float
 
         return None

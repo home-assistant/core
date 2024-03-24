@@ -20,7 +20,13 @@ from sqlalchemy.orm.session import Session
 
 from homeassistant import core as ha
 from homeassistant.components import recorder
-from homeassistant.components.recorder import Recorder, core, get_instance, statistics
+from homeassistant.components.recorder import (
+    Recorder,
+    core,
+    get_instance,
+    migration,
+    statistics,
+)
 from homeassistant.components.recorder.db_schema import (
     Events,
     EventTypes,
@@ -417,7 +423,7 @@ def old_db_schema(schema_version_postfix: str) -> Iterator[None]:
         core, "States", old_db_schema.States
     ), patch.object(core, "Events", old_db_schema.Events), patch.object(
         core, "StateAttributes", old_db_schema.StateAttributes
-    ), patch.object(core, "EntityIDMigrationTask", core.RecorderTask), patch(
+    ), patch.object(migration.EntityIDMigration, "task", core.RecorderTask), patch(
         CREATE_ENGINE_TARGET,
         new=partial(
             create_engine_test_for_schema_version_postfix,

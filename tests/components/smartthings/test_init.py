@@ -179,11 +179,13 @@ async def test_scenes_unauthorized_loads_platforms(
     ]
     smartthings_mock.subscriptions.return_value = subscriptions
 
-    with patch.object(hass.config_entries, "async_forward_entry_setup") as forward_mock:
+    with patch.object(
+        hass.config_entries, "async_forward_entry_setups"
+    ) as forward_mock:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         # Assert platforms loaded
         await hass.async_block_till_done()
-        assert forward_mock.call_count == len(PLATFORMS)
+        forward_mock.assert_called_once_with(config_entry, PLATFORMS)
 
 
 async def test_config_entry_loads_platforms(
@@ -211,11 +213,13 @@ async def test_config_entry_loads_platforms(
     ]
     smartthings_mock.subscriptions.return_value = subscriptions
 
-    with patch.object(hass.config_entries, "async_forward_entry_setup") as forward_mock:
+    with patch.object(
+        hass.config_entries, "async_forward_entry_setups"
+    ) as forward_mock:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         # Assert platforms loaded
         await hass.async_block_till_done()
-        assert forward_mock.call_count == len(PLATFORMS)
+        forward_mock.assert_called_once_with(config_entry, PLATFORMS)
 
 
 async def test_config_entry_loads_unconnected_cloud(
@@ -243,10 +247,12 @@ async def test_config_entry_loads_unconnected_cloud(
         subscription_factory(capability) for capability in device.capabilities
     ]
     smartthings_mock.subscriptions.return_value = subscriptions
-    with patch.object(hass.config_entries, "async_forward_entry_setup") as forward_mock:
+    with patch.object(
+        hass.config_entries, "async_forward_entry_setups"
+    ) as forward_mock:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert forward_mock.call_count == len(PLATFORMS)
+        forward_mock.assert_called_once_with(config_entry, PLATFORMS)
 
 
 async def test_unload_entry(hass: HomeAssistant, config_entry) -> None:

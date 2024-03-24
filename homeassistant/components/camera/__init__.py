@@ -417,7 +417,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             stream.add_provider("hls")
             await stream.start()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, preload_stream)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STARTED, preload_stream, run_immediately=True
+    )
 
     @callback
     def update_tokens(t: datetime) -> None:
@@ -435,7 +437,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Unsubscribe track time interval timer."""
         unsub()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unsub_track_time_interval)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, unsub_track_time_interval, run_immediately=True
+    )
 
     component.async_register_entity_service(
         SERVICE_ENABLE_MOTION, {}, "async_enable_motion_detection"

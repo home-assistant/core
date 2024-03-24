@@ -27,6 +27,7 @@ from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     ATTR_FLOOR_ID,
+    ATTR_LABEL_ID,
     CONF_ALIAS,
     CONF_CHOOSE,
     CONF_CONDITION,
@@ -1382,6 +1383,13 @@ class Script:
         return self.script_mode in (SCRIPT_MODE_PARALLEL, SCRIPT_MODE_QUEUED)
 
     @cached_property
+    def referenced_labels(self) -> set[str]:
+        """Return a set of referenced labels."""
+        referenced_labels: set[str] = set()
+        Script._find_referenced_target(ATTR_LABEL_ID, referenced_labels, self.sequence)
+        return referenced_labels
+
+    @cached_property
     def referenced_floors(self) -> set[str]:
         """Return a set of referenced fooors."""
         referenced_floors: set[str] = set()
@@ -1397,7 +1405,7 @@ class Script:
 
     @staticmethod
     def _find_referenced_target(
-        target: Literal["area_id", "floor_id"],
+        target: Literal["area_id", "floor_id", "label_id"],
         referenced: set[str],
         sequence: Sequence[dict[str, Any]],
     ) -> None:

@@ -24,7 +24,7 @@ from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
 )
 from homeassistant.components.tplink.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -45,7 +45,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 async def test_light_unique_id(hass: HomeAssistant) -> None:
     """Test a light unique id."""
     already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
@@ -67,7 +67,7 @@ async def test_color_light(
 ) -> None:
     """Test a color light and that all transitions are correctly passed."""
     already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
     bulb.color_temp = None
@@ -147,7 +147,7 @@ async def test_color_light(
 async def test_color_light_no_temp(hass: HomeAssistant) -> None:
     """Test a light."""
     already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
@@ -207,7 +207,7 @@ async def test_color_temp_light(
 ) -> None:
     """Test a light."""
     already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
     bulb.is_color = is_color
@@ -286,7 +286,7 @@ async def test_color_temp_light(
 async def test_brightness_only_light(hass: HomeAssistant) -> None:
     """Test a light."""
     already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
@@ -330,7 +330,7 @@ async def test_brightness_only_light(hass: HomeAssistant) -> None:
 async def test_on_off_light(hass: HomeAssistant) -> None:
     """Test a light."""
     already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
@@ -364,7 +364,7 @@ async def test_on_off_light(hass: HomeAssistant) -> None:
 async def test_off_at_start_light(hass: HomeAssistant) -> None:
     """Test a light."""
     already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
@@ -388,7 +388,7 @@ async def test_off_at_start_light(hass: HomeAssistant) -> None:
 async def test_dimmer_turn_on_fix(hass: HomeAssistant) -> None:
     """Test a light."""
     already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
@@ -414,7 +414,7 @@ async def test_dimmer_turn_on_fix(hass: HomeAssistant) -> None:
 async def test_smart_strip_effects(hass: HomeAssistant) -> None:
     """Test smart strip effects."""
     already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
     strip = _mocked_smart_light_strip()
@@ -496,7 +496,7 @@ async def test_smart_strip_effects(hass: HomeAssistant) -> None:
 async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
     """Test smart strip custom random effects."""
     already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
     strip = _mocked_smart_light_strip()
@@ -653,7 +653,7 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
 async def test_smart_strip_custom_random_effect_at_start(hass: HomeAssistant) -> None:
     """Test smart strip custom random effects at startup."""
     already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
     strip = _mocked_smart_light_strip()
@@ -686,7 +686,7 @@ async def test_smart_strip_custom_random_effect_at_start(hass: HomeAssistant) ->
 async def test_smart_strip_custom_sequence_effect(hass: HomeAssistant) -> None:
     """Test smart strip custom sequence effects."""
     already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
     strip = _mocked_smart_light_strip()

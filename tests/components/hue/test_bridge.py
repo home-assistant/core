@@ -30,7 +30,7 @@ async def test_bridge_setup_v1(hass: HomeAssistant, mock_api_v1) -> None:
     )
 
     with patch.object(bridge, "HueBridgeV1", return_value=mock_api_v1), patch.object(
-        hass.config_entries, "async_forward_entry_setup"
+        hass.config_entries, "async_forward_entry_setups"
     ) as mock_forward:
         hue_bridge = bridge.HueBridge(hass, config_entry)
         assert await hue_bridge.async_initialize_bridge() is True
@@ -38,8 +38,8 @@ async def test_bridge_setup_v1(hass: HomeAssistant, mock_api_v1) -> None:
     assert hue_bridge.api is mock_api_v1
     assert isinstance(hue_bridge.api, HueBridgeV1)
     assert hue_bridge.api_version == 1
-    assert len(mock_forward.mock_calls) == 3
-    forward_entries = {c[1][1] for c in mock_forward.mock_calls}
+    assert len(mock_forward.mock_calls) == 1
+    forward_entries = set(mock_forward.mock_calls[0][1][1])
     assert forward_entries == {"light", "binary_sensor", "sensor"}
 
 
@@ -51,7 +51,7 @@ async def test_bridge_setup_v2(hass: HomeAssistant, mock_api_v2) -> None:
     )
 
     with patch.object(bridge, "HueBridgeV2", return_value=mock_api_v2), patch.object(
-        hass.config_entries, "async_forward_entry_setup"
+        hass.config_entries, "async_forward_entry_setups"
     ) as mock_forward:
         hue_bridge = bridge.HueBridge(hass, config_entry)
         assert await hue_bridge.async_initialize_bridge() is True
@@ -59,8 +59,8 @@ async def test_bridge_setup_v2(hass: HomeAssistant, mock_api_v2) -> None:
     assert hue_bridge.api is mock_api_v2
     assert isinstance(hue_bridge.api, HueBridgeV2)
     assert hue_bridge.api_version == 2
-    assert len(mock_forward.mock_calls) == 6
-    forward_entries = {c[1][1] for c in mock_forward.mock_calls}
+    assert len(mock_forward.mock_calls) == 1
+    forward_entries = set(mock_forward.mock_calls[0][1][1])
     assert forward_entries == {
         "light",
         "binary_sensor",
@@ -115,7 +115,7 @@ async def test_reset_unloads_entry_if_setup(hass: HomeAssistant, mock_api_v1) ->
     )
 
     with patch.object(bridge, "HueBridgeV1", return_value=mock_api_v1), patch.object(
-        hass.config_entries, "async_forward_entry_setup"
+        hass.config_entries, "async_forward_entry_setups"
     ) as mock_forward:
         hue_bridge = bridge.HueBridge(hass, config_entry)
         assert await hue_bridge.async_initialize_bridge() is True
@@ -123,7 +123,7 @@ async def test_reset_unloads_entry_if_setup(hass: HomeAssistant, mock_api_v1) ->
     await asyncio.sleep(0)
 
     assert len(hass.services.async_services()) == 0
-    assert len(mock_forward.mock_calls) == 3
+    assert len(mock_forward.mock_calls) == 1
 
     with patch.object(
         hass.config_entries, "async_forward_entry_unload", return_value=True

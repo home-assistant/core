@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Iterable, MutableMapping
 from dataclasses import dataclass
-from datetime import datetime as dt
+from datetime import datetime as dt, timedelta
 import logging
 from typing import Any, cast
 
@@ -331,11 +331,14 @@ async def _async_events_consumer(
     no_attributes: bool,
 ) -> None:
     """Stream events from the queue."""
+    subscriptions_setup_complete_timestamp = (
+        subscriptions_setup_complete_time.timestamp()
+    )
     while True:
         events: list[Event] = [await stream_queue.get()]
         # If the event is older than the last db
         # event we already sent it so we skip it.
-        if events[0].time_fired <= subscriptions_setup_complete_time:
+        if events[0].time_fired_timestamp <= subscriptions_setup_complete_timestamp:
             continue
         # We sleep for the EVENT_COALESCE_TIME so
         # we can group events together to minimize
@@ -564,7 +567,10 @@ async def ws_stream(
         hass,
         connection,
         msg_id,
-        last_event_time or start_time,
+        # Add one microsecond so we are outside the window of
+        # the last event we got from the database since otherwise
+        # we could fetch the same event twice
+        (last_event_time or start_time) + timedelta(microseconds=1),
         subscriptions_setup_complete_time,
         entity_ids,
         False,  # We don't want the start time state again

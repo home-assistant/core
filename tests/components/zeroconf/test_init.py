@@ -188,9 +188,7 @@ async def test_setup(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
 
     # Test instance is set.
     assert "zeroconf" in hass.data
-    assert (
-        await hass.components.zeroconf.async_get_async_instance() is mock_async_zeroconf
-    )
+    assert await zeroconf.async_get_async_instance(hass) is mock_async_zeroconf
 
 
 async def test_setup_with_overly_long_url_and_name(
@@ -931,9 +929,7 @@ async def test_info_from_service_can_return_ipv6(hass: HomeAssistant) -> None:
 async def test_get_instance(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
     """Test we get an instance."""
     assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
-    assert (
-        await hass.components.zeroconf.async_get_async_instance() is mock_async_zeroconf
-    )
+    assert await zeroconf.async_get_async_instance(hass) is mock_async_zeroconf
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     assert len(mock_async_zeroconf.ha_async_close.mock_calls) == 0

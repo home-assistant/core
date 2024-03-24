@@ -15,12 +15,11 @@ from .const import (
     CONF_LISTENING_PORT_DEFAULT,
     CONF_MULTICAST_ADDRESS_DEFAULT,
     CONF_TARGET_PORT_DEFAULT,
+    DISCOVERY_TIMEOUT,
     DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-DISCOVERY_TIMEOUT = 5
 
 
 async def _async_has_devices(hass: HomeAssistant) -> bool:

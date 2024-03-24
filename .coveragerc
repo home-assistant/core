@@ -776,9 +776,11 @@ omit =
     homeassistant/components/microbees/__init__.py
     homeassistant/components/microbees/api.py
     homeassistant/components/microbees/application_credentials.py
+    homeassistant/components/microbees/binary_sensor.py
     homeassistant/components/microbees/button.py
     homeassistant/components/microbees/const.py
     homeassistant/components/microbees/coordinator.py
+    homeassistant/components/microbees/cover.py
     homeassistant/components/microbees/entity.py
     homeassistant/components/microbees/light.py
     homeassistant/components/microbees/sensor.py
@@ -1060,6 +1062,7 @@ omit =
     homeassistant/components/rabbitair/fan.py
     homeassistant/components/rachio/__init__.py
     homeassistant/components/rachio/binary_sensor.py
+    homeassistant/components/rachio/coordinator.py
     homeassistant/components/rachio/device.py
     homeassistant/components/rachio/entity.py
     homeassistant/components/rachio/switch.py

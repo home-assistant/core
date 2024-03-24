@@ -492,11 +492,11 @@ def async_setup(hass: HomeAssistant) -> None:
     hass.data[TRANSLATION_FLATTEN_CACHE] = cache
 
     @callback
-    def _async_load_translations_filter(event: Event) -> bool:
+    def _async_load_translations_filter(event_data: Mapping[str, Any]) -> bool:
         """Filter out unwanted events."""
         nonlocal current_language
         if (
-            new_language := event.data.get("language")
+            new_language := event_data.get("language")
         ) and new_language != current_language:
             current_language = new_language
             return True

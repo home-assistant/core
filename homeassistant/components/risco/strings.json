@@ -72,6 +72,30 @@
       },
       "armed": {
         "name": "Armed"
+      },
+      "low_battery_trouble": {
+        "name": "Low battery trouble"
+      },
+      "ac_trouble": {
+        "name": "A/C trouble"
+      },
+      "monitoring_station_1_trouble": {
+        "name": "Monitoring station 1 trouble"
+      },
+      "monitoring_station_2_trouble": {
+        "name": "Monitoring station 2 trouble"
+      },
+      "monitoring_station_3_trouble": {
+        "name": "Monitoring station 3 trouble"
+      },
+      "phone_line_trouble": {
+        "name": "Phone line trouble"
+      },
+      "clock_trouble": {
+        "name": "Clock trouble"
+      },
+      "box_tamper": {
+        "name": "Box tamper"
       }
     },
     "switch": {

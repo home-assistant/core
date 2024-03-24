@@ -957,7 +957,7 @@ class Entity(
             _LOGGER.warning(
                 (
                     "Entity %s (%s) is using self.async_update_ha_state(), without"
-                    " enabling force_update. Instead it should use"
+                    " enabling force_refresh. Instead it should use"
                     " self.async_write_ha_state(), please %s"
                 ),
                 self.entity_id,
