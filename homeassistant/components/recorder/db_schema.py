@@ -84,6 +84,7 @@ TABLE_STATISTICS = "statistics"
 TABLE_STATISTICS_META = "statistics_meta"
 TABLE_STATISTICS_RUNS = "statistics_runs"
 TABLE_STATISTICS_SHORT_TERM = "statistics_short_term"
+TABLE_MIGRATION_CHANGES = "migration_changes"
 
 STATISTICS_TABLES = ("statistics", "statistics_short_term")
 
@@ -100,6 +101,7 @@ ALL_TABLES = [
     TABLE_EVENT_TYPES,
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
+    TABLE_MIGRATION_CHANGES,
     TABLE_STATES_META,
     TABLE_STATISTICS,
     TABLE_STATISTICS_META,
@@ -319,7 +321,7 @@ class Events(Base):
                 EventOrigin(self.origin)
                 if self.origin
                 else EVENT_ORIGIN_ORDER[self.origin_idx or 0],
-                dt_util.utc_from_timestamp(self.time_fired_ts or 0),
+                self.time_fired_ts or 0,
                 context=context,
             )
         except JSON_DECODE_EXCEPTIONS:
@@ -534,8 +536,9 @@ class States(Base):
             # Join the state_attributes table on attributes_id to get the attributes
             # for newer states
             attrs,
-            last_changed,
-            last_updated,
+            last_changed=last_changed,
+            last_reported=last_updated,  # Recorder does not yet record last_reported
+            last_updated=last_updated,
             context=context,
             validate_entity_id=validate_entity_id,
         )
@@ -769,6 +772,15 @@ class RecorderRuns(Base):
     def to_native(self, validate_entity_id: bool = True) -> Self:
         """Return self, native format is this model."""
         return self
+
+
+class MigrationChanges(Base):
+    """Representation of migration changes."""
+
+    __tablename__ = TABLE_MIGRATION_CHANGES
+
+    migration_id: Mapped[str] = mapped_column(String(255), primary_key=True)
+    version: Mapped[int] = mapped_column(SmallInteger)
 
 
 class SchemaChanges(Base):

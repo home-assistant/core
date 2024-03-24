@@ -105,20 +105,6 @@ async def test_missing_optional_config(hass: HomeAssistant, start_ha) -> None:
                 },
             }
         },
-        {
-            DOMAIN: {
-                "platform": "template",
-                "fans": {
-                    "platform": "template",
-                    "fans": {
-                        "test_fan": {
-                            "value_template": "{{ 'on' }}",
-                            "turn_on": {"service": "script.fan_on"},
-                        }
-                    },
-                },
-            }
-        },
     ],
 )
 async def test_wrong_template_config(hass: HomeAssistant, start_ha) -> None:

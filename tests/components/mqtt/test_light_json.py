@@ -983,7 +983,7 @@ async def test_controlling_the_state_with_legacy_color_handling(
     assert state.attributes.get("xy_color") is None
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
-    for _ in range(0, 2):
+    for _ in range(2):
         # Returned state after the light was turned on
         # Receiving legacy color mode: rgb.
         async_fire_mqtt_message(

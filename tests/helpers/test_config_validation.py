@@ -1397,7 +1397,7 @@ def test_key_value_schemas_with_default() -> None:
 
 @pytest.mark.parametrize(
     ("config", "error"),
-    (
+    [
         ({"delay": "{{ invalid"}, "should be format 'HH:MM'"),
         ({"wait_template": "{{ invalid"}, "invalid template"),
         ({"condition": "invalid"}, "Unexpected value for condition: 'invalid'"),
@@ -1432,7 +1432,7 @@ def test_key_value_schemas_with_default() -> None:
             },
             "not allowed to add a response to an error stop action",
         ),
-    ),
+    ],
 )
 def test_script(caplog: pytest.LogCaptureFixture, config: dict, error: str) -> None:
     """Test script validation is user friendly."""

@@ -119,10 +119,10 @@ async def test_fetch_blueprint_from_community_url(
 
 @pytest.mark.parametrize(
     "url",
-    (
+    [
         "https://raw.githubusercontent.com/balloob/home-assistant-config/main/blueprints/automation/motion_light.yaml",
         "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
-    ),
+    ],
 )
 async def test_fetch_blueprint_from_github_url(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, url: str

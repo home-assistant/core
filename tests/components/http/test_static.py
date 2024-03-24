@@ -30,11 +30,11 @@ async def mock_http_client(hass: HomeAssistant, aiohttp_client: ClientSessionGen
 
 @pytest.mark.parametrize(
     ("url", "canonical_url"),
-    (
+    [
         ("//a", "//a"),
         ("///a", "///a"),
         ("/c:\\a\\b", "/c:%5Ca%5Cb"),
-    ),
+    ],
 )
 async def test_static_path_blocks_anchors(
     hass: HomeAssistant,

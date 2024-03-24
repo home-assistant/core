@@ -14,6 +14,7 @@
     "start_multiple_zone_schedule": "mdi:play",
     "pause_watering": "mdi:pause",
     "resume_watering": "mdi:play",
-    "stop_watering": "mdi:stop"
+    "stop_watering": "mdi:stop",
+    "start_watering": "mdi:water"
   }
 }

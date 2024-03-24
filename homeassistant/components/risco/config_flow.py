@@ -206,8 +206,8 @@ class RiscoConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=info["title"],
                     data={
                         **user_input,
-                        **{CONF_TYPE: TYPE_LOCAL},
-                        **{CONF_COMMUNICATION_DELAY: info["comm_delay"]},
+                        CONF_TYPE: TYPE_LOCAL,
+                        CONF_COMMUNICATION_DELAY: info["comm_delay"],
                     },
                 )
 

@@ -56,6 +56,7 @@ async def test_device_registry_single_node_device(
     assert entry.model == "Mock Light"
     assert entry.hw_version == "v1.0"
     assert entry.sw_version == "v1.0"
+    assert entry.serial_number == "12345678"
 
 
 # This tests needs to be adjusted to remove lingering tasks
@@ -84,6 +85,7 @@ async def test_device_registry_single_node_device_alt(
 
     # test serial id NOT present as additional identifier
     assert (DOMAIN, "serial_TEST_SN") not in entry.identifiers
+    assert entry.serial_number is None
 
 
 @pytest.mark.skip("Waiting for a new test fixture")

@@ -499,7 +499,7 @@ async def app_controller(
 
 @pytest.mark.parametrize(
     ("params", "duration", "node"),
-    (
+    [
         ({}, 60, None),
         ({ATTR_DURATION: 30}, 30, None),
         (
@@ -512,7 +512,7 @@ async def app_controller(
             60,
             zigpy.types.EUI64.convert("aa:bb:cc:dd:aa:bb:cc:d1"),
         ),
-    ),
+    ],
 )
 async def test_permit_ha12(
     hass: HomeAssistant,
@@ -743,7 +743,7 @@ async def test_ws_permit_with_install_code_fail(
 
 @pytest.mark.parametrize(
     ("params", "duration", "node"),
-    (
+    [
         ({}, 60, None),
         ({ATTR_DURATION: 30}, 30, None),
         (
@@ -756,7 +756,7 @@ async def test_ws_permit_with_install_code_fail(
             60,
             zigpy.types.EUI64.convert("aa:bb:cc:dd:aa:bb:cc:d1"),
         ),
-    ),
+    ],
 )
 async def test_ws_permit_ha12(
     app_controller: ControllerApplication, zha_client, params, duration, node

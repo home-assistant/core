@@ -1,4 +1,5 @@
 """Support for showing device locations."""
+
 from homeassistant.components import onboarding
 from homeassistant.components.lovelace import _create_map_dashboard
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant

@@ -20,6 +20,7 @@ async def test_bad_config(hass: HomeAssistant) -> None:
     config = {notify.DOMAIN: {"name": "test", "platform": "file"}}
     with assert_setup_component(0) as handle_config:
         assert await async_setup_component(hass, notify.DOMAIN, config)
+        await hass.async_block_till_done()
     assert not handle_config[notify.DOMAIN]
 
 
@@ -49,6 +50,7 @@ async def test_notify_file(
                 }
             },
         )
+        await hass.async_block_till_done()
     assert handle_config[notify.DOMAIN]
 
     freezer.move_to(dt_util.utcnow())

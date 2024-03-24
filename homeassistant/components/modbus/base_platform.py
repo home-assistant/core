@@ -67,7 +67,6 @@ from .const import (
 )
 from .modbus import ModbusHub
 
-PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -185,7 +184,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         """Do swap as needed."""
         if slave_count:
             swapped = []
-            for i in range(0, self._slave_count + 1):
+            for i in range(self._slave_count + 1):
                 inx = i * self._slave_size
                 inx2 = inx + self._slave_size
                 swapped.extend(self._swap_registers(registers[inx:inx2], 0))

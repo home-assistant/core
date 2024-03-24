@@ -7,6 +7,7 @@
     'context': <ANY>,
     'entity_id': 'switch.frenck_energy_saving',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -86,6 +87,7 @@
     'context': <ANY>,
     'entity_id': 'switch.frenck_studio_mode',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })

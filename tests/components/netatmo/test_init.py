@@ -10,6 +10,7 @@ import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant import config_entries
+from homeassistant.components import cloud
 from homeassistant.components.netatmo import DOMAIN
 from homeassistant.const import CONF_WEBHOOK_ID, Platform
 from homeassistant.core import CoreState, HomeAssistant
@@ -200,10 +201,8 @@ async def test_setup_with_cloud(
 
     with patch(
         "homeassistant.components.cloud.async_is_logged_in", return_value=True
-    ), patch(
-        "homeassistant.components.cloud.async_is_connected", return_value=True
-    ), patch(
-        "homeassistant.components.cloud.async_active_subscription", return_value=True
+    ), patch.object(cloud, "async_is_connected", return_value=True), patch.object(
+        cloud, "async_active_subscription", return_value=True
     ), patch(
         "homeassistant.components.cloud.async_create_cloudhook",
         return_value="https://hooks.nabu.casa/ABCD",
@@ -222,8 +221,8 @@ async def test_setup_with_cloud(
         assert await async_setup_component(
             hass, "netatmo", {"netatmo": {"client_id": "123", "client_secret": "abc"}}
         )
-        assert hass.components.cloud.async_active_subscription() is True
-        assert hass.components.cloud.async_is_connected() is True
+        assert cloud.async_active_subscription(hass) is True
+        assert cloud.async_is_connected(hass) is True
         fake_create_cloudhook.assert_called_once()
 
         assert (
@@ -268,9 +267,7 @@ async def test_setup_with_cloudhook(hass: HomeAssistant) -> None:
         "homeassistant.components.cloud.async_is_logged_in", return_value=True
     ), patch(
         "homeassistant.components.cloud.async_is_connected", return_value=True
-    ), patch(
-        "homeassistant.components.cloud.async_active_subscription", return_value=True
-    ), patch(
+    ), patch.object(cloud, "async_active_subscription", return_value=True), patch(
         "homeassistant.components.cloud.async_create_cloudhook",
         return_value="https://hooks.nabu.casa/ABCD",
     ) as fake_create_cloudhook, patch(
@@ -288,7 +285,7 @@ async def test_setup_with_cloudhook(hass: HomeAssistant) -> None:
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
         mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
         assert await async_setup_component(hass, "netatmo", {})
-        assert hass.components.cloud.async_active_subscription() is True
+        assert cloud.async_active_subscription(hass) is True
 
         assert (
             hass.config_entries.async_entries("netatmo")[0].data["cloudhook_url"]

@@ -237,7 +237,7 @@ class TextEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def set_value(self, value: str) -> None:
         """Change the value."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_value(self, value: str) -> None:
         """Change the value."""

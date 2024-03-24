@@ -51,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
             coordinator.stop_listen()
 
-            raise ConfigEntryNotReady()
+            raise ConfigEntryNotReady
 
     await coordinator.wait_for_ready(ready_callback)
 

@@ -1,4 +1,5 @@
 """Summary data from Fyta."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

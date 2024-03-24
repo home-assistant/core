@@ -48,11 +48,11 @@ async def test_select_camera_remove(
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.SELECT, 4, 4)
+    assert_entity_counts(hass, Platform.SELECT, 5, 5)
     await remove_entities(hass, ufp, [doorbell, unadopted_camera])
     assert_entity_counts(hass, Platform.SELECT, 0, 0)
     await adopt_devices(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.SELECT, 4, 4)
+    assert_entity_counts(hass, Platform.SELECT, 5, 5)
 
 
 async def test_select_light_remove(
@@ -142,10 +142,16 @@ async def test_select_setup_camera_all(
     """Test select entity setup for camera devices (all features)."""
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SELECT, 4, 4)
+    assert_entity_counts(hass, Platform.SELECT, 5, 5)
 
     entity_registry = er.async_get(hass)
-    expected_values = ("Always", "Auto", "Default Message (Welcome)", "None")
+    expected_values = (
+        "Always",
+        "Auto",
+        "Default Message (Welcome)",
+        "None",
+        "Always Off",
+    )
 
     for index, description in enumerate(CAMERA_SELECTS):
         unique_id, entity_id = ids_from_device_description(
@@ -233,7 +239,7 @@ async def test_select_update_doorbell_settings(
     """Test select entity update (new Doorbell Message)."""
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SELECT, 4, 4)
+    assert_entity_counts(hass, Platform.SELECT, 5, 5)
 
     expected_length = len(ufp.api.bootstrap.nvr.doorbell_settings.all_messages) + 1
 
@@ -279,7 +285,7 @@ async def test_select_update_doorbell_message(
     """Test select entity update (change doorbell message)."""
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SELECT, 4, 4)
+    assert_entity_counts(hass, Platform.SELECT, 5, 5)
 
     _, entity_id = ids_from_device_description(
         Platform.SELECT, doorbell, CAMERA_SELECTS[2]
@@ -372,7 +378,7 @@ async def test_select_set_option_camera_recording(
     """Test Recording Mode select."""
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SELECT, 4, 4)
+    assert_entity_counts(hass, Platform.SELECT, 5, 5)
 
     _, entity_id = ids_from_device_description(
         Platform.SELECT, doorbell, CAMERA_SELECTS[0]
@@ -397,7 +403,7 @@ async def test_select_set_option_camera_ir(
     """Test Infrared Mode select."""
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SELECT, 4, 4)
+    assert_entity_counts(hass, Platform.SELECT, 5, 5)
 
     _, entity_id = ids_from_device_description(
         Platform.SELECT, doorbell, CAMERA_SELECTS[1]
@@ -422,7 +428,7 @@ async def test_select_set_option_camera_doorbell_custom(
     """Test Doorbell Text select (user defined message)."""
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SELECT, 4, 4)
+    assert_entity_counts(hass, Platform.SELECT, 5, 5)
 
     _, entity_id = ids_from_device_description(
         Platform.SELECT, doorbell, CAMERA_SELECTS[2]
@@ -449,7 +455,7 @@ async def test_select_set_option_camera_doorbell_unifi(
     """Test Doorbell Text select (unifi message)."""
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SELECT, 4, 4)
+    assert_entity_counts(hass, Platform.SELECT, 5, 5)
 
     _, entity_id = ids_from_device_description(
         Platform.SELECT, doorbell, CAMERA_SELECTS[2]
@@ -491,7 +497,7 @@ async def test_select_set_option_camera_doorbell_default(
     """Test Doorbell Text select (default message)."""
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SELECT, 4, 4)
+    assert_entity_counts(hass, Platform.SELECT, 5, 5)
 
     _, entity_id = ids_from_device_description(
         Platform.SELECT, doorbell, CAMERA_SELECTS[2]

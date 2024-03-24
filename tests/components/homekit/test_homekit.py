@@ -765,9 +765,16 @@ async def test_homekit_start(
         f"{PATH_HOMEKIT}.async_show_setup_message"
     ) as mock_setup_msg, patch(
         "pyhap.accessory_driver.AccessoryDriver.async_start"
-    ) as hk_driver_start:
+    ) as hk_driver_start, patch(
+        "pyhap.accessory_driver.AccessoryDriver.load"
+    ) as load_mock, patch(
+        "pyhap.accessory_driver.AccessoryDriver.persist"
+    ) as persist_mock, patch(f"{PATH_HOMEKIT}.os.path.exists", return_value=True):
+        await homekit.async_stop()
         await homekit.async_start()
 
+    assert load_mock.called
+    assert not persist_mock.called
     device = device_registry.async_get_device(
         identifiers={(DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER)}
     )
@@ -1297,7 +1304,7 @@ async def test_homekit_reset_accessories_not_bridged(
         acc_mock = MagicMock()
         acc_mock.entity_id = entity_id
         acc_mock.stop = AsyncMock()
-        acc_mock.to_HAP = lambda: {}
+        acc_mock.to_HAP = dict
 
         aid = homekit.aid_storage.get_or_allocate_aid_for_entity_id(entity_id)
         homekit.bridge.accessories = {aid: acc_mock}

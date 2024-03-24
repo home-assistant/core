@@ -51,7 +51,7 @@ async def anova_api_no_devices(
         api_mock.jwt = "my_test_jwt"
 
     async def get_devices_side_effect():
-        raise NoDevicesFound()
+        raise NoDevicesFound
 
     api_mock.authenticate.side_effect = authenticate_side_effect
     api_mock.get_devices.side_effect = get_devices_side_effect
@@ -73,7 +73,7 @@ async def anova_api_wrong_login(
     api_mock = AsyncMock()
 
     async def authenticate_side_effect():
-        raise InvalidLogin()
+        raise InvalidLogin
 
     api_mock.authenticate.side_effect = authenticate_side_effect
 

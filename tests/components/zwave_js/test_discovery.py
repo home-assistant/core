@@ -153,9 +153,7 @@ async def test_merten_507801_disabled_enitites(
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
         # Test enabling entity
-        updated_entry = registry.async_update_entity(
-            entry.entity_id, **{"disabled_by": None}
-        )
+        updated_entry = registry.async_update_entity(entry.entity_id, disabled_by=None)
         assert updated_entry != entry
         assert updated_entry.disabled is False
 

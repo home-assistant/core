@@ -105,7 +105,6 @@ from .test_util.aiohttp import (  # noqa: E402, isort:skip
     mock_aiohttp_client,
 )
 
-
 _LOGGER = logging.getLogger(__name__)
 
 logging.basicConfig(level=logging.INFO)

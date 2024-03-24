@@ -22,6 +22,7 @@ from homeassistant.setup import async_when_setup
 
 from ..const import ATTR_MANUFACTURER, DOMAIN as AXIS_DOMAIN
 from .config import AxisConfig
+from .entity_loader import AxisEntityLoader
 
 
 class AxisHub:
@@ -33,6 +34,7 @@ class AxisHub:
         """Initialize the device."""
         self.hass = hass
         self.config = AxisConfig.from_config_entry(config_entry)
+        self.entity_loader = AxisEntityLoader(self)
         self.api = api
 
         self.available = True
@@ -131,6 +133,8 @@ class AxisHub:
     @callback
     def setup(self) -> None:
         """Set up the device events."""
+        self.entity_loader.initialize_platforms()
+
         self.api.stream.connection_status_callback.append(
             self.connection_status_callback
         )

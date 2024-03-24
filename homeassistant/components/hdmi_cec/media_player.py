@@ -95,7 +95,7 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
 
     def clear_playlist(self) -> None:
         """Clear players playlist."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def turn_off(self) -> None:
         """Turn device off."""
@@ -111,7 +111,7 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Not supported."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def media_next_track(self) -> None:
         """Skip to next track."""
@@ -119,11 +119,11 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
 
     def media_seek(self, position: float) -> None:
         """Not supported."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def media_pause(self) -> None:
         """Pause playback."""
@@ -132,7 +132,7 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
 
     def select_source(self, source: str) -> None:
         """Not supported."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def media_play(self) -> None:
         """Start playback."""

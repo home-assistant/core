@@ -638,7 +638,9 @@ class EntityRegistry(BaseRegistry):
             minor_version=STORAGE_VERSION_MINOR,
         )
         self.hass.bus.async_listen(
-            EVENT_DEVICE_REGISTRY_UPDATED, self.async_device_modified
+            EVENT_DEVICE_REGISTRY_UPDATED,
+            self.async_device_modified,
+            run_immediately=True,
         )
 
     @callback
@@ -1429,10 +1431,11 @@ def _async_setup_cleanup(hass: HomeAssistant, registry: EntityRegistry) -> None:
 
     @callback
     def _removed_from_registry_filter(
-        event: lr.EventLabelRegistryUpdated | cr.EventCategoryRegistryUpdated,
+        event_data: lr.EventLabelRegistryUpdatedData
+        | cr.EventCategoryRegistryUpdatedData,
     ) -> bool:
         """Filter all except for the remove action from registry events."""
-        return event.data["action"] == "remove"
+        return event_data["action"] == "remove"
 
     @callback
     def _handle_label_registry_update(event: lr.EventLabelRegistryUpdated) -> None:
@@ -1443,6 +1446,7 @@ def _async_setup_cleanup(hass: HomeAssistant, registry: EntityRegistry) -> None:
         event_type=lr.EVENT_LABEL_REGISTRY_UPDATED,
         event_filter=_removed_from_registry_filter,
         listener=_handle_label_registry_update,
+        run_immediately=True,
     )
 
     @callback
@@ -1456,6 +1460,7 @@ def _async_setup_cleanup(hass: HomeAssistant, registry: EntityRegistry) -> None:
         event_type=cr.EVENT_CATEGORY_REGISTRY_UPDATED,
         event_filter=_removed_from_registry_filter,
         listener=_handle_category_registry_update,
+        run_immediately=True,
     )
 
     @callback
@@ -1474,7 +1479,9 @@ def _async_setup_cleanup(hass: HomeAssistant, registry: EntityRegistry) -> None:
         """Cancel cleanup."""
         cancel()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_homeassistant_stop)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, _on_homeassistant_stop, run_immediately=True
+    )
 
 
 @callback
@@ -1482,9 +1489,9 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
     """Set up the entity restore mechanism."""
 
     @callback
-    def cleanup_restored_states_filter(event: Event) -> bool:
+    def cleanup_restored_states_filter(event_data: Mapping[str, Any]) -> bool:
         """Clean up restored states filter."""
-        return bool(event.data["action"] == "remove")
+        return bool(event_data["action"] == "remove")
 
     @callback
     def cleanup_restored_states(event: Event) -> None:
@@ -1500,6 +1507,7 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
         EVENT_ENTITY_REGISTRY_UPDATED,
         cleanup_restored_states,
         event_filter=cleanup_restored_states_filter,
+        run_immediately=True,
     )
 
     if hass.is_running:
@@ -1516,7 +1524,9 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
 
             entry.write_unavailable_state(hass)
 
-    hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _write_unavailable_states)
+    hass.bus.async_listen(
+        EVENT_HOMEASSISTANT_START, _write_unavailable_states, run_immediately=True
+    )
 
 
 async def async_migrate_entries(

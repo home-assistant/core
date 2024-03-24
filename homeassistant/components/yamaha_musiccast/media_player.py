@@ -927,4 +927,4 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     @callback
     def async_schedule_check_client_list(self):
         """Schedule async_check_client_list."""
-        self.hass.create_task(self.async_check_client_list())
+        self.hass.async_create_task(self.async_check_client_list(), eager_start=True)

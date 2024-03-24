@@ -24,11 +24,11 @@ from homeassistant.components.unifi.const import (
     DEFAULT_TRACK_DEVICES,
     DEFAULT_TRACK_WIRED_CLIENTS,
     DOMAIN as UNIFI_DOMAIN,
-    PLATFORMS,
     UNIFI_WIRELESS_CLIENTS,
 )
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
 from homeassistant.components.unifi.hub import get_unifi_api
+from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -248,7 +248,7 @@ async def test_hub_setup(
 ) -> None:
     """Successful setup."""
     with patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup",
+        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
         return_value=True,
     ) as forward_entry_setup:
         config_entry = await setup_unifi_integration(
@@ -257,12 +257,18 @@ async def test_hub_setup(
         hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     entry = hub.config.entry
-    assert len(forward_entry_setup.mock_calls) == len(PLATFORMS)
-    assert forward_entry_setup.mock_calls[0][1] == (entry, BUTTON_DOMAIN)
-    assert forward_entry_setup.mock_calls[1][1] == (entry, TRACKER_DOMAIN)
-    assert forward_entry_setup.mock_calls[2][1] == (entry, IMAGE_DOMAIN)
-    assert forward_entry_setup.mock_calls[3][1] == (entry, SENSOR_DOMAIN)
-    assert forward_entry_setup.mock_calls[4][1] == (entry, SWITCH_DOMAIN)
+    assert len(forward_entry_setup.mock_calls) == 1
+    assert forward_entry_setup.mock_calls[0][1] == (
+        entry,
+        [
+            BUTTON_DOMAIN,
+            TRACKER_DOMAIN,
+            IMAGE_DOMAIN,
+            SENSOR_DOMAIN,
+            SWITCH_DOMAIN,
+            UPDATE_DOMAIN,
+        ],
+    )
 
     assert hub.config.host == ENTRY_CONFIG[CONF_HOST]
     assert hub.is_admin == (SITE[0]["role"] == "admin")

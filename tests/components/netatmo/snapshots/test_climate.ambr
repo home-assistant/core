@@ -69,6 +69,7 @@
     'context': <ANY>,
     'entity_id': 'climate.bureau',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -149,6 +150,7 @@
     'context': <ANY>,
     'entity_id': 'climate.cocina',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'auto',
   })
@@ -228,6 +230,7 @@
     'context': <ANY>,
     'entity_id': 'climate.corridor',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'auto',
   })
@@ -308,6 +311,7 @@
     'context': <ANY>,
     'entity_id': 'climate.entrada',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'auto',
   })
@@ -389,6 +393,7 @@
     'context': <ANY>,
     'entity_id': 'climate.livingroom',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'auto',
   })

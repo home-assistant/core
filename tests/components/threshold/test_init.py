@@ -9,7 +9,7 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.parametrize("platform", ("binary_sensor",))
+@pytest.mark.parametrize("platform", ["binary_sensor"])
 async def test_setup_and_remove_config_entry(
     hass: HomeAssistant,
     platform: str,

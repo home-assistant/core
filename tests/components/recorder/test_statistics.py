@@ -682,13 +682,13 @@ def test_statistics_duplicated(
         caplog.clear()
 
 
-@pytest.mark.parametrize("last_reset_str", ("2022-01-01T00:00:00+02:00", None))
+@pytest.mark.parametrize("last_reset_str", ["2022-01-01T00:00:00+02:00", None])
 @pytest.mark.parametrize(
     ("source", "statistic_id", "import_fn"),
-    (
+    [
         ("test", "test:total_energy_import", async_add_external_statistics),
         ("recorder", "sensor.total_energy_import", async_import_statistics),
-    ),
+    ],
 )
 async def test_import_statistics(
     recorder_mock: Recorder,

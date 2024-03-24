@@ -94,6 +94,12 @@ class DeconzHub:
         self.deconz_groups: set[tuple[Callable[[EventType, str], None], str]] = set()
         self.ignored_devices: set[tuple[Callable[[EventType, str], None], str]] = set()
 
+    @callback
+    @staticmethod
+    def get_hub(hass: HomeAssistant, config_entry: ConfigEntry) -> DeconzHub:
+        """Return hub with a matching config entry ID."""
+        return cast(DeconzHub, hass.data[DECONZ_DOMAIN][config_entry.entry_id])
+
     @property
     def bridgeid(self) -> str:
         """Return the unique identifier of the gateway."""
@@ -215,16 +221,16 @@ class DeconzHub:
             # A race condition can occur if multiple config entries are
             # unloaded in parallel
             return
-        gateway = get_gateway_from_config_entry(hass, config_entry)
-        previous_config = gateway.config
-        gateway.config = DeconzConfig.from_config_entry(config_entry)
-        if previous_config.host != gateway.config.host:
-            gateway.api.close()
-            gateway.api.host = gateway.config.host
-            gateway.api.start()
+        hub = DeconzHub.get_hub(hass, config_entry)
+        previous_config = hub.config
+        hub.config = DeconzConfig.from_config_entry(config_entry)
+        if previous_config.host != hub.config.host:
+            hub.api.close()
+            hub.api.host = hub.config.host
+            hub.api.start()
             return
 
-        await gateway.options_updated(previous_config)
+        await hub.options_updated(previous_config)
 
     async def options_updated(self, previous_config: DeconzConfig) -> None:
         """Manage entities affected by config entry options."""
@@ -292,11 +298,3 @@ class DeconzHub:
 
         self.deconz_ids = {}
         return True
-
-
-@callback
-def get_gateway_from_config_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry
-) -> DeconzHub:
-    """Return gateway with a matching config entry ID."""
-    return cast(DeconzHub, hass.data[DECONZ_DOMAIN][config_entry.entry_id])

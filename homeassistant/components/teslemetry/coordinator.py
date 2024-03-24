@@ -22,6 +22,7 @@ ENDPOINTS = [
     VehicleDataEndpoint.DRIVE_STATE,
     VehicleDataEndpoint.LOCATION_DATA,
     VehicleDataEndpoint.VEHICLE_STATE,
+    VehicleDataEndpoint.VEHICLE_CONFIG,
 ]
 
 

@@ -92,7 +92,7 @@ def get_codec_string(mp4_bytes: bytes) -> str:
                 stsd_box[112:116], byteorder="big"
             )
             reverse = 0
-            for i in range(0, 32):
+            for i in range(32):
                 reverse |= general_profile_compatibility & 1
                 if i == 31:
                     break

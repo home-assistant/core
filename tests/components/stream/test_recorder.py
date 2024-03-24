@@ -237,6 +237,7 @@ async def test_record_stream_audio(
         # Fire the IdleTimer
         future = dt_util.utcnow() + timedelta(seconds=30)
         async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
 
         await make_recording
 

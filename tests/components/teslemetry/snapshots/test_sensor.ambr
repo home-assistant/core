@@ -51,6 +51,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.energy_site_battery_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5.06',
   })
@@ -66,6 +67,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.energy_site_battery_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5.06',
   })
@@ -122,6 +124,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.energy_site_energy_left',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '38.8964736842105',
   })
@@ -137,6 +140,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.energy_site_energy_left',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '38.8964736842105',
   })
@@ -193,6 +197,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.energy_site_generator_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -208,6 +213,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.energy_site_generator_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -264,6 +270,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.energy_site_grid_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -279,6 +286,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.energy_site_grid_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -335,6 +343,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.energy_site_grid_services_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -350,6 +359,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.energy_site_grid_services_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -406,6 +416,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.energy_site_load_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '6.245',
   })
@@ -421,6 +432,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.energy_site_load_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '6.245',
   })
@@ -467,6 +479,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.energy_site_none',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on_grid',
   })
@@ -480,6 +493,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.energy_site_none',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on_grid',
   })
@@ -533,6 +547,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.energy_site_percentage_charged',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '95.5053740373966',
   })
@@ -548,6 +563,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.energy_site_percentage_charged',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '95.5053740373966',
   })
@@ -604,6 +620,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.energy_site_solar_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.185',
   })
@@ -619,6 +636,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.energy_site_solar_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.185',
   })
@@ -675,6 +693,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.energy_site_total_pack_energy',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40.727',
   })
@@ -690,6 +709,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.energy_site_total_pack_energy',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40.727',
   })
@@ -740,6 +760,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_battery_level',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '77',
   })
@@ -755,6 +776,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_battery_level',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '77',
   })
@@ -811,6 +833,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_battery_range',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '429.48563328',
   })
@@ -826,6 +849,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_battery_range',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '429.48563328',
   })
@@ -871,6 +895,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_charge_cable',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'IEC',
   })
@@ -883,6 +908,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_charge_cable',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'IEC',
   })
@@ -936,6 +962,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_charge_energy_added',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -951,6 +978,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_charge_energy_added',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -1004,6 +1032,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_charge_rate',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -1019,6 +1048,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_charge_rate',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -1069,6 +1099,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_charger_current',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -1084,6 +1115,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_charger_current',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -1134,6 +1166,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_charger_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -1149,6 +1182,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_charger_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -1199,6 +1233,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_charger_voltage',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
@@ -1214,6 +1249,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_charger_voltage',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
@@ -1277,6 +1313,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_charging',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'stopped',
   })
@@ -1298,6 +1335,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_charging',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'stopped',
   })
@@ -1351,6 +1389,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_distance_to_arrival',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.063555',
   })
@@ -1366,6 +1405,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_distance_to_arrival',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -1419,6 +1459,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_driver_temperature_setting',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '22',
   })
@@ -1434,6 +1475,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_driver_temperature_setting',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '22',
   })
@@ -1490,6 +1532,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_estimate_battery_range',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '442.63397376',
   })
@@ -1505,6 +1548,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_estimate_battery_range',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '442.63397376',
   })
@@ -1550,6 +1594,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_fast_charger_type',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'ACSingleWireCAN',
   })
@@ -1562,6 +1607,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_fast_charger_type',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'ACSingleWireCAN',
   })
@@ -1618,6 +1664,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_ideal_battery_range',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '429.48563328',
   })
@@ -1633,6 +1680,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_ideal_battery_range',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '429.48563328',
   })
@@ -1686,6 +1734,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_inside_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '29.8',
   })
@@ -1701,6 +1750,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_inside_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '29.8',
   })
@@ -1757,6 +1807,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_odometer',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10430.189495371',
   })
@@ -1772,6 +1823,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_odometer',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10430.189495371',
   })
@@ -1825,6 +1877,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_outside_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30',
   })
@@ -1840,6 +1893,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_outside_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30',
   })
@@ -1893,6 +1947,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_passenger_temperature_setting',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '22',
   })
@@ -1908,6 +1963,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_passenger_temperature_setting',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '22',
   })
@@ -1958,6 +2014,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-7',
   })
@@ -1973,6 +2030,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-7',
   })
@@ -2032,6 +2090,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_shift_state',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'p',
   })
@@ -2051,6 +2110,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_shift_state',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'p',
   })
@@ -2104,6 +2164,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_speed',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -2119,6 +2180,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_speed',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -2169,6 +2231,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_state_of_charge_at_arrival',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
@@ -2184,6 +2247,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_state_of_charge_at_arrival',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
@@ -2230,6 +2294,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_time_to_arrival',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2024-01-01T00:00:06+00:00',
   })
@@ -2243,6 +2308,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_time_to_arrival',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -2289,6 +2355,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_time_to_full_charge',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -2302,6 +2369,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_time_to_full_charge',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -2358,6 +2426,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_tire_pressure_front_left',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40.2479739314961',
   })
@@ -2373,6 +2442,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_tire_pressure_front_left',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40.2479739314961',
   })
@@ -2429,6 +2499,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_tire_pressure_front_right',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40.6105682912393',
   })
@@ -2444,6 +2515,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_tire_pressure_front_right',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40.6105682912393',
   })
@@ -2500,6 +2572,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_tire_pressure_rear_left',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40.2479739314961',
   })
@@ -2515,6 +2588,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_tire_pressure_rear_left',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40.2479739314961',
   })
@@ -2571,6 +2645,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_tire_pressure_rear_right',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40.2479739314961',
   })
@@ -2586,6 +2661,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_tire_pressure_rear_right',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40.2479739314961',
   })
@@ -2636,6 +2712,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_traffic_delay',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -2651,6 +2728,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_traffic_delay',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -2701,6 +2779,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_usable_battery_level',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '77',
   })
@@ -2716,6 +2795,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_usable_battery_level',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '77',
   })
@@ -2761,6 +2841,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_fault_state_code',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
@@ -2773,6 +2854,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_fault_state_code',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
@@ -2818,6 +2900,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_fault_state_code_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
@@ -2830,6 +2913,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_fault_state_code_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
@@ -2886,6 +2970,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -2901,6 +2986,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -2957,6 +3043,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_power_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -2972,6 +3059,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_power_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -3017,6 +3105,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_state_code',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
@@ -3029,6 +3118,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_state_code',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
@@ -3074,6 +3164,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_state_code_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
@@ -3086,6 +3177,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_state_code_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
@@ -3131,6 +3223,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_vehicle',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
@@ -3143,6 +3236,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_vehicle',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
@@ -3188,6 +3282,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_vehicle_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
@@ -3200,6 +3295,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_vehicle_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })

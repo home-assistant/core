@@ -196,7 +196,7 @@ class HassIOView(HomeAssistantView):
         except TimeoutError:
             _LOGGER.error("Client timeout error on API request %s", path)
 
-        raise HTTPBadGateway()
+        raise HTTPBadGateway
 
     get = _handle
     post = _handle

@@ -294,7 +294,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     handler = LogErrorHandler(
         hass, conf[CONF_MAX_ENTRIES], conf[CONF_FIRE_EVENT], paths_re
     )
-    handler.setLevel(logging.WARN)
+    handler.setLevel(logging.WARNING)
 
     hass.data[DOMAIN] = handler
 

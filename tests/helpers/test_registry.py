@@ -29,12 +29,12 @@ class SampleRegistry(BaseRegistry):
 
 @pytest.mark.parametrize(
     "long_delay_state",
-    (
+    [
         CoreState.not_running,
         CoreState.starting,
         CoreState.stopped,
         CoreState.final_write,
-    ),
+    ],
 )
 async def test_async_schedule_save(
     hass: HomeAssistant,
