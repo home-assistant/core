@@ -17,6 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfLength, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import AutomowerDataUpdateCoordinator
@@ -30,7 +31,7 @@ class AutomowerSensorEntityDescription(SensorEntityDescription):
     """Describes Automower sensor entity."""
 
     exists_fn: Callable[[MowerAttributes], bool] = lambda _: True
-    value_fn: Callable[[MowerAttributes], str]
+    value_fn: Callable[[MowerAttributes], str | int | None | datetime.datetime]
 
 
 SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
@@ -137,7 +138,7 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         key="next_start_timestamp",
         translation_key="next_start_timestamp",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: data.planner.next_start_dateteime,
+        value_fn=lambda data: dt_util.as_local(data.planner.next_start_datetime),
     ),
 )
 
