@@ -55,11 +55,9 @@ class SwissPublicTransportDataUpdateCoordinator(
         """Calculate the remaining time for the departure."""
         departure_datetime = dt_util.parse_datetime(departure)
 
-        return (
-            departure_datetime - dt_util.as_local(dt_util.utcnow())
-            if departure_datetime
-            else None
-        )
+        if departure_datetime:
+            return departure_datetime - dt_util.as_local(dt_util.utcnow())
+        return None
 
     async def _async_update_data(self) -> list[DataConnection]:
         try:
@@ -70,35 +68,28 @@ class SwissPublicTransportDataUpdateCoordinator(
             )
             raise UpdateFailed from e
 
+        connections = self._opendata.connections
+
         return [
             DataConnection(
-                departure=dt_util.parse_datetime(
-                    self._opendata.connections[i]["departure"]
-                ),
-                next_departure=dt_util.parse_datetime(
-                    self._opendata.connections[i + 1]["departure"]
-                )
-                if len(self._opendata.connections) > i + 1
-                and self._opendata.connections[i + 1] is not None
+                departure=dt_util.parse_datetime(connections[i]["departure"]),
+                next_departure=dt_util.parse_datetime(connections[i + 1]["departure"])
+                if len(connections) > i + 1 and connections[i + 1] is not None
                 else None,
                 next_on_departure=dt_util.parse_datetime(
-                    self._opendata.connections[i + 2]["departure"]
+                    connections[i + 2]["departure"]
                 )
-                if len(self._opendata.connections) > i + 2
-                and self._opendata.connections[i + 2] is not None
+                if len(connections) > i + 2 and connections[i + 2] is not None
                 else None,
-                train_number=self._opendata.connections[i]["number"],
-                platform=self._opendata.connections[i]["platform"],
-                transfers=self._opendata.connections[i]["transfers"],
-                duration=self._opendata.connections[i]["duration"],
+                train_number=connections[i]["number"],
+                platform=connections[i]["platform"],
+                transfers=connections[i]["transfers"],
+                duration=connections[i]["duration"],
                 start=self._opendata.from_name,
                 destination=self._opendata.to_name,
-                remaining_time=str(
-                    self.remaining_time(self._opendata.connections[i]["departure"])
-                ),
-                delay=self._opendata.connections[i]["delay"],
+                remaining_time=str(self.remaining_time(connections[i]["departure"])),
+                delay=connections[i]["delay"],
             )
             for i in range(SENSOR_CONNECTIONS_COUNT)
-            if len(self._opendata.connections) > i
-            and self._opendata.connections[i] is not None
+            if len(connections) > i and connections[i] is not None
         ]

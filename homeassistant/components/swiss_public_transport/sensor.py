@@ -54,7 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 class SwissPublicTransportSensorEntityDescription(SensorEntityDescription):
     """Describes swiss public transport sensor entity."""
 
-    exists_fn: Callable[[DataConnection], bool] = lambda _: True
+    exists_fn: Callable[[DataConnection], bool]
     value_fn: Callable[[DataConnection], datetime | None]
 
     index: int
@@ -159,7 +159,7 @@ class SwissPublicTransportSensor(
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{unique_id}_{self.entity_description.key}"
+        self._attr_unique_id = f"{unique_id}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
             manufacturer="Opendata.ch",
