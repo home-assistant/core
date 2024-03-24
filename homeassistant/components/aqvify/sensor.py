@@ -1,6 +1,8 @@
 """Support for Aqvify sensors."""
 from __future__ import annotations
 
+from datetime import timedelta
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -12,9 +14,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import Throttle
 
-from .const import CONF_DEVICE_KEY, DOMAIN, LOGGER, MIN_TIME_BETWEEN_UPDATES
+from .const import CONF_DEVICE_KEY, DOMAIN, LOGGER
+
+SCAN_INTERVAL = timedelta(seconds=60)
 
 
 async def async_setup_entry(
@@ -57,7 +60,6 @@ class AqvifyWaterLevelMeter(SensorEntity):
             configuration_url="https://app.aqvify.com/",
         )
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self) -> None:
         """Update sensor value."""
         LOGGER.debug("Updating %s", self.device_key)
