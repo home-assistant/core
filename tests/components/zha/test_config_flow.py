@@ -999,7 +999,7 @@ async def test_hardware_already_setup(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "data", (None, {}, {"radio_type": "best_radio"}, {"radio_type": "efr32"})
+    "data", [None, {}, {"radio_type": "best_radio"}, {"radio_type": "efr32"}]
 )
 async def test_hardware_invalid_data(hass: HomeAssistant, data) -> None:
     """Test onboarding flow -- invalid data."""

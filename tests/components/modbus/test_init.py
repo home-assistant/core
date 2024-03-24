@@ -332,11 +332,6 @@ async def test_ok_struct_validator(do_config) -> None:
         {
             CONF_NAME: TEST_ENTITY_NAME,
             CONF_DATA_TYPE: DataType.INT16,
-            CONF_SWAP: CONF_SWAP_WORD,
-        },
-        {
-            CONF_NAME: TEST_ENTITY_NAME,
-            CONF_DATA_TYPE: DataType.INT16,
             CONF_SWAP: CONF_SWAP_WORD_BYTE,
         },
     ],
@@ -985,28 +980,6 @@ async def test_no_duplicate_names(hass: HomeAssistant, do_config) -> None:
             CONF_TYPE: TCP,
             CONF_HOST: TEST_MODBUS_HOST,
             CONF_PORT: TEST_PORT_TCP,
-            CONF_SENSORS: [
-                {
-                    CONF_NAME: "dummy",
-                    CONF_ADDRESS: 9999,
-                }
-            ],
-        },
-        {
-            CONF_TYPE: TCP,
-            CONF_HOST: TEST_MODBUS_HOST,
-            CONF_PORT: TEST_PORT_TCP,
-            CONF_SENSORS: [
-                {
-                    CONF_NAME: "dummy",
-                    CONF_ADDRESS: 9999,
-                }
-            ],
-        },
-        {
-            CONF_TYPE: TCP,
-            CONF_HOST: TEST_MODBUS_HOST,
-            CONF_PORT: TEST_PORT_TCP,
             CONF_NAME: TEST_MODBUS_NAME,
             CONF_TIMEOUT: 30,
             CONF_DELAY: 10,
@@ -1355,24 +1328,24 @@ async def mock_modbus_read_pymodbus_fixture(
 @pytest.mark.parametrize(
     ("do_domain", "do_group", "do_type", "do_scan_interval"),
     [
-        [SENSOR_DOMAIN, CONF_SENSORS, CALL_TYPE_REGISTER_HOLDING, 10],
-        [SENSOR_DOMAIN, CONF_SENSORS, CALL_TYPE_REGISTER_INPUT, 10],
-        [BINARY_SENSOR_DOMAIN, CONF_BINARY_SENSORS, CALL_TYPE_DISCRETE, 10],
-        [BINARY_SENSOR_DOMAIN, CONF_BINARY_SENSORS, CALL_TYPE_COIL, 1],
+        (SENSOR_DOMAIN, CONF_SENSORS, CALL_TYPE_REGISTER_HOLDING, 10),
+        (SENSOR_DOMAIN, CONF_SENSORS, CALL_TYPE_REGISTER_INPUT, 10),
+        (BINARY_SENSOR_DOMAIN, CONF_BINARY_SENSORS, CALL_TYPE_DISCRETE, 10),
+        (BINARY_SENSOR_DOMAIN, CONF_BINARY_SENSORS, CALL_TYPE_COIL, 1),
     ],
 )
 @pytest.mark.parametrize(
     ("do_return", "do_exception", "do_expect_state", "do_expect_value"),
     [
-        [ReadResult([1]), None, STATE_ON, "1"],
-        [IllegalFunctionRequest(0x99), None, STATE_UNAVAILABLE, STATE_UNAVAILABLE],
-        [ExceptionResponse(0x99), None, STATE_UNAVAILABLE, STATE_UNAVAILABLE],
-        [
+        (ReadResult([1]), None, STATE_ON, "1"),
+        (IllegalFunctionRequest(0x99), None, STATE_UNAVAILABLE, STATE_UNAVAILABLE),
+        (ExceptionResponse(0x99), None, STATE_UNAVAILABLE, STATE_UNAVAILABLE),
+        (
             ReadResult([1]),
             ModbusException("fail read_"),
             STATE_UNAVAILABLE,
             STATE_UNAVAILABLE,
-        ],
+        ),
     ],
 )
 async def test_pb_read(
