@@ -14,8 +14,10 @@ from homeassistant.components.aurora_abb_powerone.const import (
     DOMAIN,
     SCAN_INTERVAL,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_SERIAL_NUMBER, CONF_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntryDisabler
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -30,7 +32,10 @@ TEST_CONFIG = {
 
 def _simulated_returns(index, global_measure=None):
     returns = {
+        1: 235.9476,  # voltage
+        2: 2.7894,  # current
         3: 45.678,  # power
+        4: 50.789,  # frequency
         21: 9.876,  # temperature
         5: 12345,  # energy
     }
@@ -56,7 +61,7 @@ def _mock_config_entry():
     )
 
 
-async def test_sensors(hass: HomeAssistant) -> None:
+async def test_sensors(hass: HomeAssistant, entity_registry: EntityRegistry) -> None:
     """Test data coming back from inverter."""
     mock_entry = _mock_config_entry()
 
@@ -96,6 +101,36 @@ async def test_sensors(hass: HomeAssistant) -> None:
         energy = hass.states.get("sensor.mydevicename_total_energy")
         assert energy
         assert energy.state == "12.35"
+
+        # Test the 'disabled by default' sensors.
+        sensors = [
+            ("sensor.mydevicename_grid_voltage", "235.9"),
+            ("sensor.mydevicename_grid_current", "2.8"),
+            ("sensor.mydevicename_frequency", "50.8"),
+        ]
+        for entity_id, _ in sensors:
+            assert not hass.states.get(entity_id)
+            assert (
+                entry := entity_registry.async_get(entity_id)
+            ), f"Entity registry entry for {entity_id} is missing"
+            assert entry.disabled
+            assert entry.disabled_by is RegistryEntryDisabler.INTEGRATION
+
+            # re-enable it
+            entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
+
+        # must reload the integration when enabling an entity
+        await hass.config_entries.async_unload(mock_entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_entry.state is ConfigEntryState.NOT_LOADED
+        mock_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+        for entity_id, value in sensors:
+            item = hass.states.get(entity_id)
+            assert item
+            assert item.state == value
 
 
 async def test_sensor_dark(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:

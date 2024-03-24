@@ -80,6 +80,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.lock_1a2b_battery',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '70',
   })
@@ -95,6 +96,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.lock_1a2b_pullspring_duration',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })

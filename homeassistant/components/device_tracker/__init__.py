@@ -69,7 +69,15 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the device tracker."""
-    await async_setup_legacy_integration(hass, config)
+    #
+    # Legacy and platforms load in a non-awaited tracked task
+    # to ensure device tracker setup can continue and config
+    # entry integrations are not waiting for legacy device
+    # tracker platforms to be set up.
+    #
+    hass.async_create_task(
+        async_setup_legacy_integration(hass, config), eager_start=True
+    )
     return True
 
 

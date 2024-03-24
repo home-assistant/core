@@ -141,7 +141,7 @@ class TrackTemplate:
 
     template: Template
     variables: TemplateVarsType
-    rate_limit: timedelta | None = None
+    rate_limit: float | None = None
 
 
 @dataclass(slots=True)
@@ -1077,7 +1077,7 @@ class TrackTemplateResultInfo:
     def _render_template_if_ready(
         self,
         track_template_: TrackTemplate,
-        now: datetime,
+        now: float,
         event: Event[EventStateChangedData] | None,
     ) -> bool | TrackTemplateResult:
         """Re-render the template if conditions match.
@@ -1185,7 +1185,7 @@ class TrackTemplateResultInfo:
         """
         updates: list[TrackTemplateResult] = []
         info_changed = False
-        now = event.time_fired if not replayed and event else dt_util.utcnow()
+        now = event.time_fired_timestamp if not replayed and event else time.time()
 
         block_updates = False
         super_template = self._track_templates[0] if self._has_super_template else None
@@ -1927,7 +1927,7 @@ def _rate_limit_for_event(
     event: Event[EventStateChangedData],
     info: RenderInfo,
     track_template_: TrackTemplate,
-) -> timedelta | None:
+) -> float | None:
     """Determine the rate limit for an event."""
     # Specifically referenced entities are excluded
     # from the rate limit
@@ -1937,7 +1937,7 @@ def _rate_limit_for_event(
     if track_template_.rate_limit is not None:
         return track_template_.rate_limit
 
-    rate_limit: timedelta | None = info.rate_limit
+    rate_limit: float | None = info.rate_limit
     return rate_limit
 
 
