@@ -59,8 +59,11 @@ class Sensor(ZHAEntity, SensorEntity):
             self._attr_native_unit_of_measurement = (
                 entity._attr_native_unit_of_measurement
             )
+        # TODO
+        """
         if hasattr(entity, "entity_description"):
             self.entity_description = entity.entity_description
+        """
 
     @property
     def native_value(self) -> StateType:
