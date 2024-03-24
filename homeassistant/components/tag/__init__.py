@@ -106,12 +106,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
 
-    async def tag_event_listener(
+    async def tag_change_listener(
         change_type: str, item_id: str, updated_config: dict
     ) -> None:
         """Tag event listener."""
+        # New tags
+        if change_type == collection.CHANGE_ADDED:
+            pass
+        # Changed tags
+        if change_type == collection.CHANGE_UPDATED:
+            pass
+        # Deleted tags
+        if change_type == collection.CHANGE_REMOVED:
+            pass
 
-    storage_collection.async_add_listener(tag_event_listener)
+    storage_collection.async_add_listener(tag_change_listener)
 
     load_coroutines = []
     for tags in storage_collection.async_items():
