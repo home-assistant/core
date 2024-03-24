@@ -25,12 +25,12 @@
   },
   "issues": {
     "deprecated_gender": {
-      "title": "The '{deprecated_option}' text-to-speech option is deprecated",
+      "title": "The `{deprecated_option}` text-to-speech option is deprecated",
       "fix_flow": {
         "step": {
           "confirm": {
             "title": "[%key:component::cloud::issues::deprecated_voice::title%]",
-            "description": "The '{deprecated_option}' option for text-to-speech in the {integration_name} integration is deprecated and will be removed.\nPlease update your automations and scripts to replace the '{deprecated_option}' option with an option for a supported '{replacement_option}' instead."
+            "description": "The `{deprecated_option}` option for text-to-speech in the {integration_name} integration is deprecated and will be removed.\nPlease update your automations and scripts to replace the `{deprecated_option}` option with an option for a supported `{replacement_option}` instead."
           }
         }
       }
@@ -45,7 +45,7 @@
         "step": {
           "confirm": {
             "title": "[%key:component::cloud::issues::deprecated_voice::title%]",
-            "description": "The '{deprecated_voice}' voice is deprecated and will be removed.\nPlease update your automations and scripts to replace the '{deprecated_voice}' with another voice like eg. '{replacement_voice}'."
+            "description": "The `{deprecated_voice}`voice is deprecated and will be removed.\nPlease update your automations and scripts to replace the `{deprecated_voice}` with another voice like eg. `{replacement_voice}`."
           }
         }
       }

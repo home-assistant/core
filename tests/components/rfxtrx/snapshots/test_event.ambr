@@ -34,6 +34,7 @@
     'context': <ANY>,
     'entity_id': 'event.arc_c1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
@@ -58,6 +59,7 @@
     'context': <ANY>,
     'entity_id': 'event.arc_d1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
@@ -115,6 +117,7 @@
     'context': <ANY>,
     'entity_id': 'event.x10_security_d3dc54_32',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })

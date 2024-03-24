@@ -125,6 +125,7 @@ def setup_mock_onvif_camera(
 def setup_mock_device(mock_device, capabilities=None):
     """Prepare mock ONVIFDevice."""
     mock_device.async_setup = AsyncMock(return_value=True)
+    mock_device.port = 80
     mock_device.available = True
     mock_device.name = NAME
     mock_device.info = DeviceInfo(

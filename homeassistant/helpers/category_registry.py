@@ -1,4 +1,5 @@
 """Provide a way to categorize things within a defined scope."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
