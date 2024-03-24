@@ -1,5 +1,7 @@
 """Define an object to manage fetching AirGradient data."""
 
+from datetime import timedelta
+
 from airgradient import AirGradientClient, AirGradientError
 from airgradient.models import Status
 
@@ -19,6 +21,7 @@ class AirGradientDataUpdateCoordinator(DataUpdateCoordinator[Status]):
             hass,
             logger=LOGGER,
             name=f"AirGradient {host}",
+            update_interval=timedelta(minutes=1),
         )
         session = async_get_clientsession(hass)
         self.client = AirGradientClient(host, session=session)

@@ -108,7 +108,7 @@ async def async_setup_entry(
 
 
 class AirGradientSensor(
-    SensorEntity, CoordinatorEntity[AirGradientDataUpdateCoordinator]
+    CoordinatorEntity[AirGradientDataUpdateCoordinator], SensorEntity
 ):
     """Defines an AirGradient sensor."""
 
