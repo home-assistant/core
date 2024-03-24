@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 import logging
 from typing import Any
@@ -27,7 +26,6 @@ DEFAULT_UPDATE_GROUP_FROM_CHILD_DELAY = 0.5
 class ZHAEntity(LogMixin, entity.Entity):
     """ZHA eitity."""
 
-    remove_future: asyncio.Future[Any]
     _attr_has_entity_name = True
     _attr_should_poll = False
 
@@ -58,6 +56,8 @@ class ZHAEntity(LogMixin, entity.Entity):
                 == ZHAEntityCategory.DIAGNOSTIC
             ):
                 self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        if hasattr(self.entity_data.entity, "_attr_name"):
+            self._attr_name = self.entity_data.entity._attr_name
 
     @property
     def unique_id(self) -> str:
