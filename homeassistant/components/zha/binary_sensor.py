@@ -48,4 +48,4 @@ class BinarySensor(ZHAEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return True if the switch is on based on the state machine."""
-        return self.entity_data.entity.is_on()
+        return self.entity_data.entity.is_on
