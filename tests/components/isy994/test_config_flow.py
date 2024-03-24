@@ -1,4 +1,5 @@
 """Test the Universal Devices ISY/IoX config flow."""
+
 import re
 from unittest.mock import patch
 
@@ -676,6 +677,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
                 CONF_PASSWORD: "test-password",
             },
         )
+        await hass.async_block_till_done()
 
     assert mock_setup_entry.called
     assert result4["type"] == "abort"

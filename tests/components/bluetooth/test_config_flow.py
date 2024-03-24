@@ -1,4 +1,5 @@
 """Test the bluetooth config flow."""
+
 from unittest.mock import MagicMock, patch
 
 from bluetooth_adapters import DEFAULT_ADDRESS, AdapterDetails

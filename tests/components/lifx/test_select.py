@@ -1,5 +1,8 @@
 """Tests for the lifx integration select entity."""
+
 from datetime import timedelta
+
+import pytest
 
 from homeassistant.components import lifx
 from homeassistant.components.lifx.const import DOMAIN
@@ -25,7 +28,9 @@ from . import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_theme_select(hass: HomeAssistant) -> None:
+async def test_theme_select(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test selecting a theme."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -46,7 +51,6 @@ async def test_theme_select(hass: HomeAssistant) -> None:
 
     entity_id = "select.my_bulb_theme"
 
-    entity_registry = er.async_get(hass)
     entity = entity_registry.async_get(entity_id)
     assert entity
     assert not entity.disabled
@@ -62,7 +66,9 @@ async def test_theme_select(hass: HomeAssistant) -> None:
     bulb.set_extended_color_zones.reset_mock()
 
 
-async def test_infrared_brightness(hass: HomeAssistant) -> None:
+async def test_infrared_brightness(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test getting and setting infrared brightness."""
 
     config_entry = MockConfigEntry(
@@ -82,7 +88,6 @@ async def test_infrared_brightness(hass: HomeAssistant) -> None:
     unique_id = f"{SERIAL}_infrared_brightness"
     entity_id = "select.my_bulb_infrared_brightness"
 
-    entity_registry = er.async_get(hass)
     entity = entity_registry.async_get(entity_id)
     assert entity
     assert not entity.disabled
@@ -92,6 +97,7 @@ async def test_infrared_brightness(hass: HomeAssistant) -> None:
     assert state.state == "100%"
 
 
+@pytest.mark.usefixtures("mock_discovery")
 async def test_set_infrared_brightness_25_percent(hass: HomeAssistant) -> None:
     """Test getting and setting infrared brightness."""
 
@@ -121,7 +127,7 @@ async def test_set_infrared_brightness_25_percent(hass: HomeAssistant) -> None:
     bulb.get_infrared = MockLifxCommand(bulb, infrared_brightness=16383)
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert bulb.set_infrared.calls[0][0][0] == 16383
 
@@ -131,6 +137,7 @@ async def test_set_infrared_brightness_25_percent(hass: HomeAssistant) -> None:
     bulb.set_infrared.reset_mock()
 
 
+@pytest.mark.usefixtures("mock_discovery")
 async def test_set_infrared_brightness_50_percent(hass: HomeAssistant) -> None:
     """Test getting and setting infrared brightness."""
 
@@ -160,7 +167,7 @@ async def test_set_infrared_brightness_50_percent(hass: HomeAssistant) -> None:
     bulb.get_infrared = MockLifxCommand(bulb, infrared_brightness=32767)
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert bulb.set_infrared.calls[0][0][0] == 32767
 
@@ -170,6 +177,7 @@ async def test_set_infrared_brightness_50_percent(hass: HomeAssistant) -> None:
     bulb.set_infrared.reset_mock()
 
 
+@pytest.mark.usefixtures("mock_discovery")
 async def test_set_infrared_brightness_100_percent(hass: HomeAssistant) -> None:
     """Test getting and setting infrared brightness."""
 
@@ -199,7 +207,7 @@ async def test_set_infrared_brightness_100_percent(hass: HomeAssistant) -> None:
     bulb.get_infrared = MockLifxCommand(bulb, infrared_brightness=65535)
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert bulb.set_infrared.calls[0][0][0] == 65535
 
@@ -209,6 +217,7 @@ async def test_set_infrared_brightness_100_percent(hass: HomeAssistant) -> None:
     bulb.set_infrared.reset_mock()
 
 
+@pytest.mark.usefixtures("mock_discovery")
 async def test_disable_infrared(hass: HomeAssistant) -> None:
     """Test getting and setting infrared brightness."""
 
@@ -238,7 +247,7 @@ async def test_disable_infrared(hass: HomeAssistant) -> None:
     bulb.get_infrared = MockLifxCommand(bulb, infrared_brightness=0)
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert bulb.set_infrared.calls[0][0][0] == 0
 
@@ -248,6 +257,7 @@ async def test_disable_infrared(hass: HomeAssistant) -> None:
     bulb.set_infrared.reset_mock()
 
 
+@pytest.mark.usefixtures("mock_discovery")
 async def test_invalid_infrared_brightness(hass: HomeAssistant) -> None:
     """Test getting and setting infrared brightness."""
 
@@ -270,7 +280,7 @@ async def test_invalid_infrared_brightness(hass: HomeAssistant) -> None:
     bulb.get_infrared = MockLifxCommand(bulb, infrared_brightness=12345)
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_UNKNOWN

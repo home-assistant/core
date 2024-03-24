@@ -6,6 +6,7 @@ import logging
 from typing import cast
 
 from pyunifiprotect import ProtectApiClient
+from pyunifiprotect.data.types import FirmwareReleaseChannel
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
@@ -20,7 +21,7 @@ from .utils import async_create_api_client
 _LOGGER = logging.getLogger(__name__)
 
 
-class EAConfirm(RepairsFlow):
+class ProtectRepair(RepairsFlow):
     """Handler for an issue fixing flow."""
 
     _api: ProtectApiClient
@@ -34,13 +35,19 @@ class EAConfirm(RepairsFlow):
         super().__init__()
 
     @callback
-    def _async_get_placeholders(self) -> dict[str, str] | None:
+    def _async_get_placeholders(self) -> dict[str, str]:
         issue_registry = async_get_issue_registry(self.hass)
-        description_placeholders = None
+        description_placeholders = {}
         if issue := issue_registry.async_get_issue(self.handler, self.issue_id):
-            description_placeholders = issue.translation_placeholders
+            description_placeholders = issue.translation_placeholders or {}
+            if issue.learn_more_url:
+                description_placeholders["learn_more"] = issue.learn_more_url
 
         return description_placeholders
+
+
+class EAConfirm(ProtectRepair):
+    """Handler for an issue fixing flow."""
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -62,7 +69,7 @@ class EAConfirm(RepairsFlow):
             )
 
         nvr = await self._api.get_nvr()
-        if await nvr.get_is_prerelease():
+        if nvr.release_channel != FirmwareReleaseChannel.RELEASE:
             return await self.async_step_confirm()
         await self.hass.config_entries.async_reload(self._entry.entry_id)
         return self.async_create_entry(data={})
@@ -85,15 +92,47 @@ class EAConfirm(RepairsFlow):
         )
 
 
+class CloudAccount(ProtectRepair):
+    """Handler for an issue fixing flow."""
+
+    async def async_step_init(
+        self, user_input: dict[str, str] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Handle the first step of a fix flow."""
+
+        return await self.async_step_confirm()
+
+    async def async_step_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Handle the first step of a fix flow."""
+
+        if user_input is None:
+            placeholders = self._async_get_placeholders()
+            return self.async_show_form(
+                step_id="confirm",
+                data_schema=vol.Schema({}),
+                description_placeholders=placeholders,
+            )
+
+        self._entry.async_start_reauth(self.hass)
+        return self.async_create_entry(data={})
+
+
 async def async_create_fix_flow(
     hass: HomeAssistant,
     issue_id: str,
     data: dict[str, str | int | float | None] | None,
 ) -> RepairsFlow:
     """Create flow."""
-    if data is not None and issue_id == "ea_warning":
+    if data is not None and issue_id == "ea_channel_warning":
         entry_id = cast(str, data["entry_id"])
         if (entry := hass.config_entries.async_get_entry(entry_id)) is not None:
             api = async_create_api_client(hass, entry)
             return EAConfirm(api, entry)
+    elif data is not None and issue_id == "cloud_user":
+        entry_id = cast(str, data["entry_id"])
+        if (entry := hass.config_entries.async_get_entry(entry_id)) is not None:
+            api = async_create_api_client(hass, entry)
+            return CloudAccount(api, entry)
     return ConfirmRepairFlow()

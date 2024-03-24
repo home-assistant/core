@@ -1,4 +1,5 @@
 """Test Lovelace resources."""
+
 import copy
 from typing import Any
 from unittest.mock import patch
@@ -38,7 +39,7 @@ async def test_yaml_resources_backwards(
 ) -> None:
     """Test defining resources in YAML ll config (legacy)."""
     with patch(
-        "homeassistant.components.lovelace.dashboard.load_yaml",
+        "homeassistant.components.lovelace.dashboard.load_yaml_dict",
         return_value={"resources": RESOURCE_EXAMPLES},
     ):
         assert await async_setup_component(
@@ -185,3 +186,26 @@ async def test_storage_resources_import_invalid(
         "resources"
         in hass_storage[dashboard.CONFIG_STORAGE_KEY_DEFAULT]["data"]["config"]
     )
+
+
+async def test_storage_resources_safe_mode(
+    hass: HomeAssistant, hass_ws_client, hass_storage: dict[str, Any]
+) -> None:
+    """Test defining resources in storage config."""
+
+    resource_config = [{**item, "id": uuid.uuid4().hex} for item in RESOURCE_EXAMPLES]
+    hass_storage[resources.RESOURCE_STORAGE_KEY] = {
+        "key": resources.RESOURCE_STORAGE_KEY,
+        "version": 1,
+        "data": {"items": resource_config},
+    }
+    assert await async_setup_component(hass, "lovelace", {})
+
+    client = await hass_ws_client(hass)
+    hass.config.safe_mode = True
+
+    # Fetch data
+    await client.send_json({"id": 5, "type": "lovelace/resources"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == []

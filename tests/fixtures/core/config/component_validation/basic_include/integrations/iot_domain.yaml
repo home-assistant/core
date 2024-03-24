@@ -1,0 +1,19 @@
+# This is correct and should not generate errors
+- platform: non_adr_0007
+  option1: abc
+# This violates the iot_domain platform schema (platform missing)
+- paltfrom: non_adr_0007
+# This violates the non_adr_0007.iot_domain platform schema (option1 wrong type)
+- platform: non_adr_0007
+  option1: 123
+# This violates the non_adr_0007.iot_domain platform schema (no_such_option does not exist)
+- platform: non_adr_0007
+  no_such_option: abc
+  option1: abc
+# This violates the non_adr_0007.iot_domain platform schema:
+# - no_such_option does not exist
+# - option1 is missing
+# - option2 is wrong type
+- platform: non_adr_0007
+  no_such_option: abc
+  option2: 123

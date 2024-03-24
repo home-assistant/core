@@ -1,4 +1,5 @@
 """Test the Uonet+ Vulcan config flow."""
+
 import json
 from unittest import mock
 from unittest.mock import patch
@@ -87,8 +88,10 @@ async def test_config_flow_auth_success_with_multiple_students(
     mock_account.return_value = fake_account
     mock_student.return_value = [
         Student.load(student)
-        for student in [load_fixture("fake_student_1.json", "vulcan")]
-        + [load_fixture("fake_student_2.json", "vulcan")]
+        for student in [
+            load_fixture("fake_student_1.json", "vulcan"),
+            load_fixture("fake_student_2.json", "vulcan"),
+        ]
     ]
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -378,8 +381,9 @@ async def test_multiple_config_entries_using_saved_credentials_2(
 ) -> None:
     """Test a successful config flow for multiple config entries using saved credentials (different situation)."""
     mock_student.return_value = [
-        Student.load(load_fixture("fake_student_1.json", "vulcan"))
-    ] + [Student.load(load_fixture("fake_student_2.json", "vulcan"))]
+        Student.load(load_fixture("fake_student_1.json", "vulcan")),
+        Student.load(load_fixture("fake_student_2.json", "vulcan")),
+    ]
     MockConfigEntry(
         domain=const.DOMAIN,
         unique_id="123456",
@@ -476,8 +480,9 @@ async def test_multiple_config_entries_using_saved_credentials_4(
 ) -> None:
     """Test a successful config flow for multiple config entries using saved credentials (different situation)."""
     mock_student.return_value = [
-        Student.load(load_fixture("fake_student_1.json", "vulcan"))
-    ] + [Student.load(load_fixture("fake_student_2.json", "vulcan"))]
+        Student.load(load_fixture("fake_student_1.json", "vulcan")),
+        Student.load(load_fixture("fake_student_2.json", "vulcan")),
+    ]
     MockConfigEntry(
         entry_id="456",
         domain=const.DOMAIN,

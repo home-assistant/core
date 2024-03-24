@@ -1,5 +1,7 @@
 """Tests for the Sonos config flow."""
+
 import asyncio
+from datetime import timedelta
 import logging
 from unittest.mock import Mock, patch
 
@@ -17,8 +19,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
+import homeassistant.util.dt as dt_util
 
 from .conftest import MockSoCo, SoCoMockFactory
+
+from tests.common import async_fire_time_changed
 
 
 async def test_creating_entry_sets_up_media_player(
@@ -153,7 +158,7 @@ async def test_async_poll_manual_hosts_warnings(
 class _MockSoCoOsError(MockSoCo):
     @property
     def visible_zones(self):
-        raise OSError()
+        raise OSError
 
 
 class _MockSoCoVisibleZones(MockSoCo):
@@ -322,16 +327,19 @@ async def test_async_poll_manual_hosts_5(
         # Speed up manual discovery interval so second iteration runs sooner
         mock_discovery_interval.total_seconds = Mock(side_effect=[0.5, 60])
 
-        await _setup_hass(hass)
-
-        assert "media_player.bedroom" in entity_registry.entities
-        assert "media_player.living_room" in entity_registry.entities
-
         with caplog.at_level(logging.DEBUG):
             caplog.clear()
-            await speaker_1_activity.event.wait()
-            await speaker_2_activity.event.wait()
+
+            await _setup_hass(hass)
+
+            assert "media_player.bedroom" in entity_registry.entities
+            assert "media_player.living_room" in entity_registry.entities
+
+            async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=0.5))
             await hass.async_block_till_done()
+            await asyncio.gather(
+                *[speaker_1_activity.event.wait(), speaker_2_activity.event.wait()]
+            )
             assert speaker_1_activity.call_count == 1
             assert speaker_2_activity.call_count == 1
             assert "Activity on Living Room" in caplog.text
@@ -361,7 +369,7 @@ async def test_async_poll_manual_hosts_6(
         "homeassistant.components.sonos.DISCOVERY_INTERVAL"
     ) as mock_discovery_interval:
         # Speed up manual discovery interval so second iteration runs sooner
-        mock_discovery_interval.total_seconds = Mock(side_effect=[0.5, 60])
+        mock_discovery_interval.total_seconds = Mock(side_effect=[0.0, 60])
         await _setup_hass(hass)
 
         assert "media_player.bedroom" in entity_registry.entities
@@ -369,10 +377,6 @@ async def test_async_poll_manual_hosts_6(
 
         with caplog.at_level(logging.DEBUG):
             caplog.clear()
-            # The discovery events should not fire, wait with a timeout.
-            with pytest.raises(asyncio.TimeoutError):
-                async with asyncio.timeout(1.0):
-                    await speaker_1_activity.event.wait()
             await hass.async_block_till_done()
             assert "Activity on Living Room" not in caplog.text
             assert "Activity on Bedroom" not in caplog.text

@@ -1,4 +1,5 @@
 """Support for UV data from openuv.io."""
+
 from __future__ import annotations
 
 import asyncio
@@ -16,7 +17,7 @@ from homeassistant.const import (
     CONF_SENSORS,
     Platform,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -104,8 +105,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if version == 1:
         data.pop(CONF_BINARY_SENSORS, None)
         data.pop(CONF_SENSORS, None)
-        version = entry.version = 2
-        hass.config_entries.async_update_entry(entry, data=data)
+        version = 2
+        hass.config_entries.async_update_entry(entry, data=data, version=2)
         LOGGER.debug("Migration to version %s successful", version)
 
     return True
@@ -132,19 +133,3 @@ class OpenUvEntity(CoordinatorEntity):
             name="OpenUV",
             entry_type=DeviceEntryType.SERVICE,
         )
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Respond to a DataUpdateCoordinator update."""
-        self._update_from_latest_data()
-        self.async_write_ha_state()
-
-    @callback
-    def _update_from_latest_data(self) -> None:
-        """Update the entity from the latest data."""
-        raise NotImplementedError
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-        self._update_from_latest_data()

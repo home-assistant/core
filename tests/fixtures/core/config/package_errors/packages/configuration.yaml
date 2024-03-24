@@ -1,0 +1,24 @@
+# adr007_1 should be a dict, this will cause a package error
+adr_0007_1:
+  - host: blah.com
+
+homeassistant:
+  packages:
+    pack_1:
+      # This is correct, but root config is wrong
+      adr_0007_1:
+        port: 8080
+    pack_2:
+      # Should not be a list
+      adr_0007_2:
+        - host: blah.com
+    pack_3:
+      # Host duplicated in pack_4
+      adr_0007_3:
+        host: blah.com
+    pack_4:
+      adr_0007_3:
+        host: blah.com
+    pack_5:
+      unknown_integration:
+        host: blah.com

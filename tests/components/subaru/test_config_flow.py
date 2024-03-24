@@ -1,4 +1,5 @@
 """Tests for the Subaru component config flow."""
+
 from copy import deepcopy
 from unittest import mock
 from unittest.mock import PropertyMock, patch
@@ -130,6 +131,7 @@ async def test_user_form_pin_not_required(
         "version": 1,
         "data": deepcopy(TEST_CONFIG),
         "options": {},
+        "minor_version": 1,
     }
 
     expected["data"][CONF_PIN] = None
@@ -316,6 +318,7 @@ async def test_pin_form_success(hass: HomeAssistant, pin_form) -> None:
         "version": 1,
         "data": TEST_CONFIG,
         "options": {},
+        "minor_version": 1,
     }
     result["data"][CONF_DEVICE_ID] = TEST_DEVICE_ID
     assert result == expected

@@ -14,9 +14,7 @@ class EsphomeEnumMapper(Generic[_EnumT, _ValT]):
     def __init__(self, mapping: dict[_EnumT, _ValT]) -> None:
         """Construct a EsphomeEnumMapper."""
         # Add none mapping
-        augmented_mapping: dict[
-            _EnumT | None, _ValT | None
-        ] = mapping  # type: ignore[assignment]
+        augmented_mapping: dict[_EnumT | None, _ValT | None] = mapping  # type: ignore[assignment]
         augmented_mapping[None] = None
 
         self._mapping = augmented_mapping

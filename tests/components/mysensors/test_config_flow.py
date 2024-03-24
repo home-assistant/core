@@ -1,4 +1,5 @@
 """Test the MySensors config flow."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -9,7 +10,6 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.mysensors.const import (
     CONF_BAUD_RATE,
-    CONF_DEVICE,
     CONF_GATEWAY_TYPE,
     CONF_GATEWAY_TYPE_MQTT,
     CONF_GATEWAY_TYPE_SERIAL,
@@ -23,6 +23,7 @@ from homeassistant.components.mysensors.const import (
     DOMAIN,
     ConfGatewayType,
 )
+from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
 

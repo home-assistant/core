@@ -1,4 +1,5 @@
 """Flock platform for notify component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -58,5 +59,5 @@ class FlockNotificationService(BaseNotificationService):
                     response.status,
                     result,
                 )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.error("Timeout accessing Flock at %s", self._url)

@@ -1,4 +1,5 @@
 """Test the Fully Kiosk Browser media player."""
+
 from unittest.mock import MagicMock, Mock, patch
 
 from homeassistant.components.fully_kiosk.const import DOMAIN, MEDIA_SUPPORT_FULLYKIOSK
@@ -15,13 +16,12 @@ from tests.typing import WebSocketGenerator
 
 async def test_media_player(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     mock_fully_kiosk: MagicMock,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test standard Fully Kiosk media player."""
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
     state = hass.states.get("media_player.amazon_fire")
     assert state
 

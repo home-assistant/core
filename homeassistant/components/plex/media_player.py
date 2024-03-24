@@ -1,4 +1,5 @@
 """Support to interface with the Plex API."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -53,7 +54,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def needs_session(
-    func: Callable[Concatenate[_PlexMediaPlayerT, _P], _R]
+    func: Callable[Concatenate[_PlexMediaPlayerT, _P], _R],
 ) -> Callable[Concatenate[_PlexMediaPlayerT, _P], _R | None]:
     """Ensure session is available for certain attributes."""
 

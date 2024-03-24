@@ -1,4 +1,5 @@
 """The Nibe Heat Pump select."""
+
 from __future__ import annotations
 
 from nibe.coil import Coil, CoilData
@@ -9,7 +10,8 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN, CoilEntity, Coordinator
+from .const import DOMAIN
+from .coordinator import CoilEntity, Coordinator
 
 
 async def async_setup_entry(

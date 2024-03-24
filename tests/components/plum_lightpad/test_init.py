@@ -1,4 +1,5 @@
 """Tests for the Plum Lightpad config flow."""
+
 from unittest.mock import Mock, patch
 
 from aiohttp import ContentTypeError
@@ -17,31 +18,6 @@ async def test_async_setup_no_domain_config(hass: HomeAssistant) -> None:
 
     assert result is True
     assert DOMAIN not in hass.data
-
-
-async def test_async_setup_imports_from_config(hass: HomeAssistant) -> None:
-    """Test that specifying config will setup an entry."""
-    with patch(
-        "homeassistant.components.plum_lightpad.utils.Plum.loadCloudData"
-    ) as mock_loadCloudData, patch(
-        "homeassistant.components.plum_lightpad.async_setup_entry",
-        return_value=True,
-    ) as mock_async_setup_entry:
-        result = await async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                DOMAIN: {
-                    "username": "test-plum-username",
-                    "password": "test-plum-password",
-                }
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result is True
-    assert len(mock_loadCloudData.mock_calls) == 1
-    assert len(mock_async_setup_entry.mock_calls) == 1
 
 
 async def test_async_setup_entry_sets_up_light(hass: HomeAssistant) -> None:

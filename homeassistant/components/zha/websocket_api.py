@@ -1,4 +1,5 @@
 """Web socket API for Zigbee Home Automation devices."""
+
 from __future__ import annotations
 
 import asyncio
@@ -9,7 +10,7 @@ import voluptuous as vol
 import zigpy.backups
 from zigpy.config import CONF_DEVICE
 from zigpy.config.validators import cv_boolean
-from zigpy.types.named import EUI64
+from zigpy.types.named import EUI64, KeyData
 from zigpy.zcl.clusters.security import IasAce
 import zigpy.zdo.types as zdo_types
 
@@ -161,7 +162,9 @@ SERVICE_SCHEMAS = {
             vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
             vol.Required(ATTR_ATTRIBUTE): vol.Any(cv.positive_int, str),
             vol.Required(ATTR_VALUE): vol.Any(int, cv.boolean, cv.string),
-            vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
+            vol.Optional(ATTR_MANUFACTURER): vol.All(
+                vol.Coerce(int), vol.Range(min=-1)
+            ),
         }
     ),
     SERVICE_WARNING_DEVICE_SQUAWK: vol.Schema(
@@ -210,7 +213,9 @@ SERVICE_SCHEMAS = {
                 vol.Required(ATTR_COMMAND_TYPE): cv.string,
                 vol.Exclusive(ATTR_ARGS, "attrs_params"): _ensure_list_if_present,
                 vol.Exclusive(ATTR_PARAMS, "attrs_params"): dict,
-                vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
+                vol.Optional(ATTR_MANUFACTURER): vol.All(
+                    vol.Coerce(int), vol.Range(min=-1)
+                ),
             }
         ),
         cv.deprecated(ATTR_ARGS),
@@ -223,7 +228,9 @@ SERVICE_SCHEMAS = {
             vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
             vol.Required(ATTR_COMMAND): cv.positive_int,
             vol.Optional(ATTR_ARGS, default=[]): cv.ensure_list,
-            vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
+            vol.Optional(ATTR_MANUFACTURER): vol.All(
+                vol.Coerce(int), vol.Range(min=-1)
+            ),
         }
     ),
 }
@@ -322,19 +329,19 @@ async def websocket_permit_devices(
     connection.subscriptions[msg["id"]] = async_cleanup
     zha_gateway.async_enable_debug_mode()
     src_ieee: EUI64
-    code: bytes
+    link_key: KeyData
     if ATTR_SOURCE_IEEE in msg:
         src_ieee = msg[ATTR_SOURCE_IEEE]
-        code = msg[ATTR_INSTALL_CODE]
-        _LOGGER.debug("Allowing join for %s device with install code", src_ieee)
-        await zha_gateway.application_controller.permit_with_key(
-            time_s=duration, node=src_ieee, code=code
+        link_key = msg[ATTR_INSTALL_CODE]
+        _LOGGER.debug("Allowing join for %s device with link key", src_ieee)
+        await zha_gateway.application_controller.permit_with_link_key(
+            time_s=duration, node=src_ieee, link_key=link_key
         )
     elif ATTR_QR_CODE in msg:
-        src_ieee, code = msg[ATTR_QR_CODE]
-        _LOGGER.debug("Allowing join for %s device with install code", src_ieee)
-        await zha_gateway.application_controller.permit_with_key(
-            time_s=duration, node=src_ieee, code=code
+        src_ieee, link_key = msg[ATTR_QR_CODE]
+        _LOGGER.debug("Allowing join for %s device with link key", src_ieee)
+        await zha_gateway.application_controller.permit_with_link_key(
+            time_s=duration, node=src_ieee, link_key=link_key
         )
     else:
         await zha_gateway.application_controller.permit(time_s=duration, node=ieee)
@@ -381,30 +388,30 @@ async def websocket_get_groupable_devices(
     zha_gateway = get_zha_gateway(hass)
 
     devices = [device for device in zha_gateway.devices.values() if device.is_groupable]
-    groupable_devices = []
+    groupable_devices: list[dict[str, Any]] = []
 
     for device in devices:
         entity_refs = zha_gateway.device_registry[device.ieee]
-        for ep_id in device.async_get_groupable_endpoints():
-            groupable_devices.append(
-                {
-                    "endpoint_id": ep_id,
-                    "entities": [
-                        {
-                            "name": _get_entity_name(zha_gateway, entity_ref),
-                            "original_name": _get_entity_original_name(
-                                zha_gateway, entity_ref
-                            ),
-                        }
-                        for entity_ref in entity_refs
-                        if list(entity_ref.cluster_handlers.values())[
-                            0
-                        ].cluster.endpoint.endpoint_id
-                        == ep_id
-                    ],
-                    "device": device.zha_device_info,
-                }
-            )
+        groupable_devices.extend(
+            {
+                "endpoint_id": ep_id,
+                "entities": [
+                    {
+                        "name": _get_entity_name(zha_gateway, entity_ref),
+                        "original_name": _get_entity_original_name(
+                            zha_gateway, entity_ref
+                        ),
+                    }
+                    for entity_ref in entity_refs
+                    if list(entity_ref.cluster_handlers.values())[
+                        0
+                    ].cluster.endpoint.endpoint_id
+                    == ep_id
+                ],
+                "device": device.zha_device_info,
+            }
+            for ep_id in device.async_get_groupable_endpoints()
+        )
 
     connection.send_result(msg[ID], groupable_devices)
 
@@ -514,9 +521,9 @@ async def websocket_remove_groups(
     group_ids: list[int] = msg[GROUP_IDS]
 
     if len(group_ids) > 1:
-        tasks = []
-        for group_id in group_ids:
-            tasks.append(zha_gateway.async_remove_zigpy_group(group_id))
+        tasks = [
+            zha_gateway.async_remove_zigpy_group(group_id) for group_id in group_ids
+        ]
         await asyncio.gather(*tasks)
     else:
         await zha_gateway.async_remove_zigpy_group(group_ids[0])
@@ -819,8 +826,6 @@ async def websocket_read_zigbee_cluster_attributes(
     success = {}
     failure = {}
     if zha_device is not None:
-        if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
-            manufacturer = zha_device.manufacturer_code
         cluster = zha_device.async_get_cluster(
             endpoint_id, cluster_id, cluster_type=cluster_type
         )
@@ -1093,7 +1098,7 @@ async def websocket_update_zha_configuration(
     """Update the ZHA configuration."""
     zha_gateway = get_zha_gateway(hass)
     options = zha_gateway.config_entry.options
-    data_to_save = {**options, **{CUSTOM_CONFIGURATION: msg["data"]}}
+    data_to_save = {**options, CUSTOM_CONFIGURATION: msg["data"]}
 
     for section, schema in ZHA_CONFIG_SCHEMAS.items():
         for entry in schema.schema:
@@ -1245,21 +1250,21 @@ def async_load_api(hass: HomeAssistant) -> None:
         duration: int = service.data[ATTR_DURATION]
         ieee: EUI64 | None = service.data.get(ATTR_IEEE)
         src_ieee: EUI64
-        code: bytes
+        link_key: KeyData
         if ATTR_SOURCE_IEEE in service.data:
             src_ieee = service.data[ATTR_SOURCE_IEEE]
-            code = service.data[ATTR_INSTALL_CODE]
-            _LOGGER.info("Allowing join for %s device with install code", src_ieee)
-            await application_controller.permit_with_key(
-                time_s=duration, node=src_ieee, code=code
+            link_key = service.data[ATTR_INSTALL_CODE]
+            _LOGGER.info("Allowing join for %s device with link key", src_ieee)
+            await application_controller.permit_with_link_key(
+                time_s=duration, node=src_ieee, link_key=link_key
             )
             return
 
         if ATTR_QR_CODE in service.data:
-            src_ieee, code = service.data[ATTR_QR_CODE]
-            _LOGGER.info("Allowing join for %s device with install code", src_ieee)
-            await application_controller.permit_with_key(
-                time_s=duration, node=src_ieee, code=code
+            src_ieee, link_key = service.data[ATTR_QR_CODE]
+            _LOGGER.info("Allowing join for %s device with link key", src_ieee)
+            await application_controller.permit_with_link_key(
+                time_s=duration, node=src_ieee, link_key=link_key
             )
             return
 
@@ -1300,8 +1305,6 @@ def async_load_api(hass: HomeAssistant) -> None:
         zha_device = zha_gateway.get_device(ieee)
         response = None
         if zha_device is not None:
-            if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
-                manufacturer = zha_device.manufacturer_code
             response = await zha_device.write_zigbee_attribute(
                 endpoint_id,
                 cluster_id,

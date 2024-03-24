@@ -1,9 +1,15 @@
 """Fixtures for component testing."""
+
 from collections.abc import Generator
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+from homeassistant.const import STATE_OFF, STATE_ON
+
+if TYPE_CHECKING:
+    from tests.components.light.common import MockLight, SetupLightPlatformCallable
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -16,7 +22,7 @@ def patch_zeroconf_multiple_catcher() -> Generator[None, None, None]:
         yield
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(scope="session", autouse=True)
 def prevent_io() -> Generator[None, None, None]:
     """Fixture to prevent certain I/O from happening."""
     with patch(
@@ -91,3 +97,32 @@ def tts_mutagen_mock_fixture():
     from tests.components.tts.common import tts_mutagen_mock_fixture_helper
 
     yield from tts_mutagen_mock_fixture_helper()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def prevent_ffmpeg_subprocess() -> Generator[None, None, None]:
+    """Prevent ffmpeg from creating a subprocess."""
+    with patch(
+        "homeassistant.components.ffmpeg.FFVersion.get_version", return_value="6.0"
+    ):
+        yield
+
+
+@pytest.fixture
+def mock_light_entities() -> list["MockLight"]:
+    """Return mocked light entities."""
+    from tests.components.light.common import MockLight
+
+    return [
+        MockLight("Ceiling", STATE_ON),
+        MockLight("Ceiling", STATE_OFF),
+        MockLight(None, STATE_OFF),
+    ]
+
+
+@pytest.fixture
+def setup_light_platform() -> "SetupLightPlatformCallable":
+    """Return a callable to set up the mock light entity component."""
+    from tests.components.light.common import setup_light_platform
+
+    return setup_light_platform

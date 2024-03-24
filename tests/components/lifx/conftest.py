@@ -1,11 +1,21 @@
 """Tests for the lifx integration."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from homeassistant.components.lifx import config_flow, coordinator, util
 
+from . import _patch_discovery
+
 from tests.common import mock_device_registry, mock_registry
+
+
+@pytest.fixture
+def mock_discovery():
+    """Mock discovery."""
+    with _patch_discovery():
+        yield
 
 
 @pytest.fixture

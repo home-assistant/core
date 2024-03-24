@@ -1,4 +1,5 @@
 """Models for Aladdin connect cover platform."""
+
 from __future__ import annotations
 
 from typing import TypedDict

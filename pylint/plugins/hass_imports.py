@@ -1,4 +1,5 @@
 """Plugin for checking imports."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -385,7 +386,7 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
 }
 
 
-class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
+class HassImportsFormatChecker(BaseChecker):
     """Checker for imports."""
 
     name = "hass_imports"
@@ -415,7 +416,7 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
     }
     options = ()
 
-    def __init__(self, linter: PyLinter | None = None) -> None:
+    def __init__(self, linter: PyLinter) -> None:
         """Initialize the HassImportsFormatChecker."""
         super().__init__(linter)
         self.current_package: str | None = None

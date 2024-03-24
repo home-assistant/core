@@ -1,4 +1,5 @@
 """Setup mocks for the Plugwise integration tests."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -159,7 +160,7 @@ def mock_smile_adam_3() -> Generator[None, MagicMock, None]:
 @pytest.fixture
 def mock_smile_adam_4() -> Generator[None, MagicMock, None]:
     """Create a 4th Mock Adam environment for testing exceptions."""
-    chosen_env = "adam_jip"
+    chosen_env = "m_adam_jip"
 
     with patch(
         "homeassistant.components.plugwise.coordinator.Smile", autospec=True

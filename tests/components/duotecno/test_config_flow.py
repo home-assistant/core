@@ -1,4 +1,5 @@
 """Test the duotecno config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from duotecno.exceptions import InvalidPassword
@@ -8,6 +9,8 @@ from homeassistant import config_entries
 from homeassistant.components.duotecno.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -87,3 +90,20 @@ async def test_invalid(hass: HomeAssistant, test_side_effect, test_error):
         "port": 1234,
         "password": "test-password2",
     }
+
+
+async def test_already_setup(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+    """Test duoteco flow - already setup."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="duotecno_1234",
+        data={},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"

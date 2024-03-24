@@ -1,4 +1,5 @@
 """Test the Anthem A/V Receivers config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from anthemav.device_error import DeviceError
@@ -36,10 +37,10 @@ async def test_form_with_valid_connection(
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Anthem AV"
     assert result2["data"] == {
         "host": "1.1.1.1",
         "port": 14999,
-        "name": "Anthem AV",
         "mac": "00:00:00:00:00:01",
         "model": "MRX 520",
     }

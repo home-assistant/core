@@ -1,5 +1,4 @@
 """The Minecraft Server binary sensor platform."""
-from dataclasses import dataclass
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -14,22 +13,14 @@ from .const import DOMAIN
 from .coordinator import MinecraftServerCoordinator
 from .entity import MinecraftServerEntity
 
-ICON_STATUS = "mdi:lan"
-
 KEY_STATUS = "status"
 
 
-@dataclass
-class MinecraftServerBinarySensorEntityDescription(BinarySensorEntityDescription):
-    """Class describing Minecraft Server binary sensor entities."""
-
-
 BINARY_SENSOR_DESCRIPTIONS = [
-    MinecraftServerBinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key=KEY_STATUS,
         translation_key=KEY_STATUS,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        icon=ICON_STATUS,
     ),
 ]
 
@@ -45,7 +36,7 @@ async def async_setup_entry(
     # Add binary sensor entities.
     async_add_entities(
         [
-            MinecraftServerBinarySensorEntity(coordinator, description)
+            MinecraftServerBinarySensorEntity(coordinator, description, config_entry)
             for description in BINARY_SENSOR_DESCRIPTIONS
         ]
     )
@@ -54,17 +45,16 @@ async def async_setup_entry(
 class MinecraftServerBinarySensorEntity(MinecraftServerEntity, BinarySensorEntity):
     """Representation of a Minecraft Server binary sensor base entity."""
 
-    entity_description: MinecraftServerBinarySensorEntityDescription
-
     def __init__(
         self,
         coordinator: MinecraftServerCoordinator,
-        description: MinecraftServerBinarySensorEntityDescription,
+        description: BinarySensorEntityDescription,
+        config_entry: ConfigEntry,
     ) -> None:
         """Initialize binary sensor base entity."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, config_entry)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.unique_id}-{description.key}"
+        self._attr_unique_id = f"{config_entry.entry_id}-{description.key}"
         self._attr_is_on = False
 
     @property

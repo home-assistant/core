@@ -1,4 +1,5 @@
 """Test Home Assistant config flow for BleBox devices."""
+
 from ipaddress import ip_address
 from unittest.mock import DEFAULT, AsyncMock, PropertyMock, patch
 
@@ -151,6 +152,21 @@ async def test_flow_with_unsupported_version(
             data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
         )
         assert result["errors"] == {"base": "unsupported_version"}
+
+
+async def test_flow_with_auth_failure(hass: HomeAssistant, product_class_mock) -> None:
+    """Test that config flow works."""
+    with product_class_mock as products_class:
+        products_class.async_from_host = AsyncMock(
+            side_effect=blebox_uniapi.error.UnauthorizedRequest
+        )
+
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+        )
+        assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_async_setup(hass: HomeAssistant) -> None:

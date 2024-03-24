@@ -1,3 +1,5 @@
 """Constants for the duotecno integration."""
 
-DOMAIN = "duotecno"
+from typing import Final
+
+DOMAIN: Final = "duotecno"

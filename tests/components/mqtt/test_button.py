@@ -1,4 +1,5 @@
 """The tests for the MQTT button platform."""
+
 import copy
 from typing import Any
 from unittest.mock import patch
@@ -6,12 +7,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import button, mqtt
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from .test_common import (
@@ -47,13 +43,6 @@ from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {button.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
 }
-
-
-@pytest.fixture(autouse=True)
-def button_platform_only():
-    """Only setup the button platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BUTTON]):
-        yield
 
 
 @pytest.mark.freeze_time("2021-11-08 13:31:44+00:00")
@@ -443,7 +432,7 @@ async def test_entity_debug_info_message(
             mqtt.DOMAIN: {
                 button.DOMAIN: {
                     "name": "test",
-                    "state_topic": "test-topic",
+                    "command_topic": "test-topic",
                     "device_class": "foobarnotreal",
                 }
             }
@@ -451,11 +440,13 @@ async def test_entity_debug_info_message(
     ],
 )
 async def test_invalid_device_class(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test device_class option with invalid value."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
+    assert await mqtt_mock_entry()
+    assert "expected ButtonDeviceClass" in caplog.text
 
 
 @pytest.mark.parametrize(

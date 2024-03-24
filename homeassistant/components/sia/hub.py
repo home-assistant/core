@@ -1,4 +1,5 @@
 """The sia hub."""
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -28,7 +29,6 @@ from .utils import get_event_data_from_sia_event
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_TIMEBAND = (80, 40)
-IGNORED_TIMEBAND = (3600, 1800)
 
 
 class SIAHub:
@@ -100,7 +100,7 @@ class SIAHub:
             SIAAccount(
                 account_id=a[CONF_ACCOUNT],
                 key=a.get(CONF_ENCRYPTION_KEY),
-                allowed_timeband=IGNORED_TIMEBAND
+                allowed_timeband=None
                 if a[CONF_IGNORE_TIMESTAMPS]
                 else DEFAULT_TIMEBAND,
             )

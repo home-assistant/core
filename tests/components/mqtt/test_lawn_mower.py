@@ -1,4 +1,5 @@
 """The tests for mqtt lawn_mower component."""
+
 import copy
 import json
 from typing import Any
@@ -15,15 +16,11 @@ from homeassistant.components.lawn_mower import (
     LawnMowerEntityFeature,
 )
 from homeassistant.components.mqtt.lawn_mower import MQTT_LAWN_MOWER_ATTRIBUTES_BLOCKED
-from homeassistant.const import (
-    ATTR_ASSUMED_STATE,
-    ATTR_ENTITY_ID,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 
 from .test_common import (
+    help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
@@ -47,6 +44,7 @@ from .test_common import (
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
+    help_test_skipped_async_ha_write_state,
     help_test_unique_id,
     help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_json,
@@ -74,13 +72,6 @@ DEFAULT_CONFIG = {
         }
     }
 }
-
-
-@pytest.fixture(autouse=True)
-def lawn_mower_platform_only():
-    """Only setup the lawn_mower platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LAWN_MOWER]):
-        yield
 
 
 @pytest.mark.parametrize(
@@ -886,3 +877,67 @@ async def test_persistent_state_after_reconfig(
     # assert the state persistent
     state = hass.states.get("lawn_mower.garden")
     assert state.state == "docked"
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            lawn_mower.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "activity_state_topic": "activity-state-topic",
+                    "availability_topic": "availability-topic",
+                    "json_attributes_topic": "json-attributes-topic",
+                },
+            ),
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("topic", "payload1", "payload2"),
+    [
+        ("activity-state-topic", "mowing", "paused"),
+        ("availability-topic", "online", "offline"),
+        ("json-attributes-topic", '{"attr1": "val1"}', '{"attr1": "val2"}'),
+    ],
+)
+async def test_skipped_async_ha_write_state(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    topic: str,
+    payload1: str,
+    payload2: str,
+) -> None:
+    """Test a write state command is only called when there is change."""
+    await mqtt_mock_entry()
+    await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                lawn_mower.DOMAIN: {
+                    "name": "test",
+                    "activity_state_topic": "test-topic",
+                    "activity_value_template": "{{ value_json.some_var * 1 }}",
+                }
+            }
+        }
+    ],
+)
+async def test_value_template_fails(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the rendering of MQTT value template fails."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
+        in caplog.text
+    )

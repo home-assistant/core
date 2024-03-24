@@ -1,6 +1,8 @@
 """Test the Lovelace initialization."""
+
+from collections.abc import Generator
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -11,6 +13,19 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, async_capture_events
 from tests.typing import WebSocketGenerator
+
+
+@pytest.fixture(autouse=True)
+def mock_onboarding_done() -> Generator[MagicMock, None, None]:
+    """Mock that Home Assistant is currently onboarding.
+
+    Enabled to prevent creating default dashboards during test execution.
+    """
+    with patch(
+        "homeassistant.components.onboarding.async_is_onboarded",
+        return_value=True,
+    ) as mock_onboarding:
+        yield mock_onboarding
 
 
 async def test_lovelace_from_storage(
@@ -48,8 +63,8 @@ async def test_lovelace_from_storage(
 
     assert response["result"] == {"yo": "hello"}
 
-    # Test with safe mode
-    hass.config.safe_mode = True
+    # Test with recovery mode
+    hass.config.recovery_mode = True
     await client.send_json({"id": 8, "type": "lovelace/config"})
     response = await client.receive_json()
     assert not response["success"]
@@ -141,7 +156,7 @@ async def test_lovelace_from_yaml(
     events = async_capture_events(hass, const.EVENT_LOVELACE_UPDATED)
 
     with patch(
-        "homeassistant.components.lovelace.dashboard.load_yaml",
+        "homeassistant.components.lovelace.dashboard.load_yaml_dict",
         return_value={"hello": "yo"},
     ):
         await client.send_json({"id": 7, "type": "lovelace/config"})
@@ -154,7 +169,7 @@ async def test_lovelace_from_yaml(
 
     # Fake new data to see we fire event
     with patch(
-        "homeassistant.components.lovelace.dashboard.load_yaml",
+        "homeassistant.components.lovelace.dashboard.load_yaml_dict",
         return_value={"hello": "yo2"},
     ):
         await client.send_json({"id": 8, "type": "lovelace/config", "force": True})
@@ -166,7 +181,7 @@ async def test_lovelace_from_yaml(
     assert len(events) == 1
 
 
-@pytest.mark.parametrize("url_path", ("test-panel", "test-panel-no-sidebar"))
+@pytest.mark.parametrize("url_path", ["test-panel", "test-panel-no-sidebar"])
 async def test_dashboard_from_yaml(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, url_path
 ) -> None:
@@ -245,7 +260,7 @@ async def test_dashboard_from_yaml(
     events = async_capture_events(hass, const.EVENT_LOVELACE_UPDATED)
 
     with patch(
-        "homeassistant.components.lovelace.dashboard.load_yaml",
+        "homeassistant.components.lovelace.dashboard.load_yaml_dict",
         return_value={"hello": "yo"},
     ):
         await client.send_json(
@@ -260,7 +275,7 @@ async def test_dashboard_from_yaml(
 
     # Fake new data to see we fire event
     with patch(
-        "homeassistant.components.lovelace.dashboard.load_yaml",
+        "homeassistant.components.lovelace.dashboard.load_yaml_dict",
         return_value={"hello": "yo2"},
     ):
         await client.send_json(
@@ -276,7 +291,7 @@ async def test_dashboard_from_yaml(
 
 async def test_wrong_key_dashboard_from_yaml(hass: HomeAssistant) -> None:
     """Test we don't load lovelace dashboard without hyphen config from yaml."""
-    with assert_setup_component(0):
+    with assert_setup_component(0, "lovelace"):
         assert not await async_setup_component(
             hass,
             "lovelace",
@@ -438,61 +453,6 @@ async def test_storage_dashboards(
 
     assert "created-url-path" not in hass.data[frontend.DATA_PANELS]
     assert dashboard.CONFIG_STORAGE_KEY.format(dashboard_id) not in hass_storage
-
-
-async def test_storage_dashboard_migrate(
-    hass: HomeAssistant, hass_ws_client, hass_storage: dict[str, Any]
-) -> None:
-    """Test changing url path from storage config."""
-    hass_storage[dashboard.DASHBOARDS_STORAGE_KEY] = {
-        "key": "lovelace_dashboards",
-        "version": 1,
-        "data": {
-            "items": [
-                {
-                    "icon": "mdi:tools",
-                    "id": "tools",
-                    "mode": "storage",
-                    "require_admin": True,
-                    "show_in_sidebar": True,
-                    "title": "Tools",
-                    "url_path": "tools",
-                },
-                {
-                    "icon": "mdi:tools",
-                    "id": "tools2",
-                    "mode": "storage",
-                    "require_admin": True,
-                    "show_in_sidebar": True,
-                    "title": "Tools",
-                    "url_path": "dashboard-tools",
-                },
-            ]
-        },
-    }
-
-    assert await async_setup_component(hass, "lovelace", {})
-
-    client = await hass_ws_client(hass)
-
-    # Fetch data
-    await client.send_json({"id": 5, "type": "lovelace/dashboards/list"})
-    response = await client.receive_json()
-    assert response["success"]
-    without_hyphen, with_hyphen = response["result"]
-
-    assert without_hyphen["icon"] == "mdi:tools"
-    assert without_hyphen["id"] == "tools"
-    assert without_hyphen["mode"] == "storage"
-    assert without_hyphen["require_admin"]
-    assert without_hyphen["show_in_sidebar"]
-    assert without_hyphen["title"] == "Tools"
-    assert without_hyphen["url_path"] == "lovelace-tools"
-
-    assert (
-        with_hyphen
-        == hass_storage[dashboard.DASHBOARDS_STORAGE_KEY]["data"]["items"][1]
-    )
 
 
 async def test_websocket_list_dashboards(

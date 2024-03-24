@@ -6,6 +6,7 @@ from homeassistant.components import media_player
 from homeassistant.components.dlna_dmr.const import DOMAIN as DLNA_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -31,6 +32,10 @@ async def test_resource_lifecycle(
     )
     assert len(entries) == 1
     entity_id = entries[0].entity_id
+
+    await async_update_entity(hass, entity_id)
+    await hass.async_block_till_done()
+
     mock_state = hass.states.get(entity_id)
     assert mock_state is not None
     assert mock_state.state == media_player.STATE_IDLE

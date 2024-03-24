@@ -1,17 +1,13 @@
 """Test the NextBus config flow."""
+
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from homeassistant import config_entries, setup
-from homeassistant.components.nextbus.const import (
-    CONF_AGENCY,
-    CONF_ROUTE,
-    CONF_STOP,
-    DOMAIN,
-)
-from homeassistant.const import CONF_NAME
+from homeassistant.components.nextbus.const import CONF_AGENCY, CONF_ROUTE, DOMAIN
+from homeassistant.const import CONF_NAME, CONF_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -74,11 +70,11 @@ async def test_import_config(
 
 @pytest.mark.parametrize(
     ("override", "expected_reason"),
-    (
+    [
         ({CONF_AGENCY: "not muni"}, "invalid_agency"),
         ({CONF_ROUTE: "not F"}, "invalid_route"),
         ({CONF_STOP: "not 5650"}, "invalid_stop"),
-    ),
+    ],
 )
 async def test_import_config_invalid(
     hass: HomeAssistant,

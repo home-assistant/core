@@ -1,4 +1,5 @@
 """Configure py.test."""
+
 from unittest.mock import AsyncMock, patch
 
 import pytest

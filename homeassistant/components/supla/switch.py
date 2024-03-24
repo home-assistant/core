@@ -1,4 +1,5 @@
-"""Support for Supla switch."""
+"""Support for SUPLA switch."""
+
 from __future__ import annotations
 
 import logging
@@ -22,7 +23,7 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Supla switches."""
+    """Set up the SUPLA switches."""
     if discovery_info is None:
         return
 
@@ -44,7 +45,7 @@ async def async_setup_platform(
 
 
 class SuplaSwitchEntity(SuplaEntity, SwitchEntity):
-    """Representation of a Supla Switch."""
+    """Representation of a SUPLA Switch."""
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""

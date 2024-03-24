@@ -1,4 +1,5 @@
 """Support for a ScreenLogic light 'circuit' switch."""
+
 from dataclasses import dataclass
 import logging
 
@@ -34,7 +35,11 @@ async def async_setup_entry(
     ]
     gateway = coordinator.gateway
     for circuit_index, circuit_data in gateway.get_data(DEVICE.CIRCUIT).items():
-        if circuit_data[ATTR.FUNCTION] not in LIGHT_CIRCUIT_FUNCTIONS:
+        if (
+            not circuit_data
+            or ((circuit_function := circuit_data.get(ATTR.FUNCTION)) is None)
+            or circuit_function not in LIGHT_CIRCUIT_FUNCTIONS
+        ):
             continue
         circuit_name = circuit_data[ATTR.NAME]
         circuit_interface = INTERFACE(circuit_data[ATTR.INTERFACE])
@@ -43,9 +48,8 @@ async def async_setup_entry(
                 coordinator,
                 ScreenLogicLightDescription(
                     subscription_code=CODE.STATUS_CHANGED,
-                    data_path=(DEVICE.CIRCUIT, circuit_index),
+                    data_root=(DEVICE.CIRCUIT,),
                     key=circuit_index,
-                    name=circuit_name,
                     entity_registry_enabled_default=(
                         circuit_name not in GENERIC_CIRCUIT_NAMES
                         and circuit_interface != INTERFACE.DONT_SHOW
@@ -57,7 +61,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class ScreenLogicLightDescription(
     LightEntityDescription, ScreenLogicPushEntityDescription
 ):

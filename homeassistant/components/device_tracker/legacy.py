@@ -1,4 +1,5 @@
 """Legacy device tracker classes."""
+
 from __future__ import annotations
 
 import asyncio
@@ -12,8 +13,14 @@ import attr
 import voluptuous as vol
 
 from homeassistant import util
+from homeassistant.backports.functools import cached_property
 from homeassistant.components import zone
-from homeassistant.config import async_log_exception, load_yaml_config_file
+from homeassistant.components.zone import ENTITY_ID_HOME
+from homeassistant.config import (
+    async_log_schema_error,
+    config_per_platform,
+    load_yaml_config_file,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_GPS_ACCURACY,
@@ -32,7 +39,6 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
-    config_per_platform,
     config_validation as cv,
     discovery,
     entity_registry as er,
@@ -43,8 +49,14 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, GPSType, StateType
-from homeassistant.setup import async_prepare_setup_platform, async_start_setup
+from homeassistant.setup import (
+    SetupPhases,
+    async_notify_setup_error,
+    async_prepare_setup_platform,
+    async_start_setup,
+)
 from homeassistant.util import dt as dt_util
+from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.yaml import dump
 
 from .const import (
@@ -193,10 +205,22 @@ async def async_setup_integration(hass: HomeAssistant, config: ConfigType) -> No
     """Set up the legacy integration."""
     tracker = await get_tracker(hass, config)
 
+    async def async_see_service(call: ServiceCall) -> None:
+        """Service to see a device."""
+        # Temp workaround for iOS, introduced in 0.65
+        data = dict(call.data)
+        data.pop("hostname", None)
+        data.pop("battery_status", None)
+        await tracker.async_see(**data)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_SEE, async_see_service, SERVICE_SEE_PAYLOAD_SCHEMA
+    )
+
     legacy_platforms = await async_extract_config(hass, config)
 
     setup_tasks = [
-        asyncio.create_task(legacy_platform.async_setup_legacy(hass, tracker))
+        create_eager_task(legacy_platform.async_setup_legacy(hass, tracker))
         for legacy_platform in legacy_platforms
     ]
 
@@ -221,18 +245,6 @@ async def async_setup_integration(hass: HomeAssistant, config: ConfigType) -> No
         hass, tracker.async_update_stale, second=range(0, 60, 5)
     )
 
-    async def async_see_service(call: ServiceCall) -> None:
-        """Service to see a device."""
-        # Temp workaround for iOS, introduced in 0.65
-        data = dict(call.data)
-        data.pop("hostname", None)
-        data.pop("battery_status", None)
-        await tracker.async_see(**data)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_SEE, async_see_service, SERVICE_SEE_PAYLOAD_SCHEMA
-    )
-
     # restore
     await tracker.async_setup_tracked_device()
 
@@ -244,7 +256,9 @@ async def async_setup_integration(hass: HomeAssistant, config: ConfigType) -> No
         """
         cancel_update_stale()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_hass_stop)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, _on_hass_stop, run_immediately=True
+    )
 
 
 @attr.s
@@ -262,7 +276,7 @@ class DeviceTrackerPlatform:
     platform: ModuleType = attr.ib()
     config: dict = attr.ib()
 
-    @property
+    @cached_property
     def type(self) -> str | None:
         """Return platform type."""
         methods, platform_type = self.LEGACY_SETUP, PLATFORM_TYPE_LEGACY
@@ -279,9 +293,14 @@ class DeviceTrackerPlatform:
     ) -> None:
         """Set up a legacy platform."""
         assert self.type == PLATFORM_TYPE_LEGACY
-        full_name = f"{DOMAIN}.{self.name}"
+        full_name = f"{self.name}.{DOMAIN}"
         LOGGER.info("Setting up %s", full_name)
-        with async_start_setup(hass, [full_name]):
+        with async_start_setup(
+            hass,
+            integration=self.name,
+            group=str(id(self.config)),
+            phase=SetupPhases.PLATFORM_SETUP,
+        ):
             try:
                 scanner = None
                 setup: bool | None = None
@@ -472,7 +491,7 @@ def async_setup_scanner_platform(
                 },
             }
 
-            zone_home = hass.states.get(hass.components.zone.ENTITY_ID_HOME)
+            zone_home = hass.states.get(ENTITY_ID_HOME)
             if zone_home is not None:
                 kwargs["gps"] = [
                     zone_home.attributes[ATTR_LATITUDE],
@@ -706,21 +725,17 @@ class DeviceTracker:
 
         This method is a coroutine.
         """
-
-        async def async_init_single_device(dev: Device) -> None:
-            """Init a single device_tracker entity."""
-            await dev.async_added_to_hass()
-            dev.async_write_ha_state()
-
-        tasks: list[asyncio.Task] = []
         for device in self.devices.values():
             if device.track and not device.last_seen:
-                tasks.append(
-                    self.hass.async_create_task(async_init_single_device(device))
-                )
-
-        if tasks:
-            await asyncio.wait(tasks)
+                # async_added_to_hass is unlikely to suspend so
+                # do not gather here to avoid unnecessary overhead
+                # of creating a task per device.
+                #
+                # We used to have the overhead of potentially loading
+                # restore state for each device here, but RestoreState
+                # is always loaded ahead of time now.
+                await device.async_added_to_hass()
+                device.async_write_ha_state()
 
 
 class Device(RestoreEntity):
@@ -934,7 +949,7 @@ class DeviceScanner:
 
     def scan_devices(self) -> list[str]:
         """Scan for devices."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_scan_devices(self) -> list[str]:
         """Scan for devices."""
@@ -945,7 +960,7 @@ class DeviceScanner:
 
     def get_device_name(self, device: str) -> str | None:
         """Get the name of a device."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_get_device_name(self, device: str) -> str | None:
         """Get the name of a device."""
@@ -956,7 +971,7 @@ class DeviceScanner:
 
     def get_extra_attributes(self, device: str) -> dict:
         """Get the extra attributes of a device."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_get_extra_attributes(self, device: str) -> dict:
         """Get the extra attributes of a device."""
@@ -1005,7 +1020,8 @@ async def async_load_config(
             device = dev_schema(device)
             device["dev_id"] = cv.slugify(dev_id)
         except vol.Invalid as exp:
-            async_log_exception(exp, dev_id, devices, hass)
+            async_log_schema_error(exp, dev_id, devices, hass)
+            async_notify_setup_error(hass, DOMAIN)
         else:
             result.append(Device(hass, **device))
     return result
@@ -1025,6 +1041,19 @@ def update_config(path: str, dev_id: str, device: Device) -> None:
         }
         out.write("\n")
         out.write(dump(device_config))
+
+
+def remove_device_from_config(hass: HomeAssistant, device_id: str) -> None:
+    """Remove device from YAML configuration file."""
+    path = hass.config.path(YAML_DEVICES)
+    devices = load_yaml_config_file(path)
+    devices.pop(device_id)
+    dumped = dump(devices)
+
+    with open(path, "r+", encoding="utf8") as out:
+        out.seek(0)
+        out.truncate()
+        out.write(dumped)
 
 
 def get_gravatar_for_email(email: str) -> str:

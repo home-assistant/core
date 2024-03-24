@@ -1,4 +1,5 @@
 """The Renson integration."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -15,9 +16,12 @@ from .coordinator import RensonCoordinator
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.FAN,
     Platform.NUMBER,
     Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.TIME,
 ]
 
 

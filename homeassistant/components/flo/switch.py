@@ -1,4 +1,5 @@
 """Switch representing the shutoff valve for the Flo by Moen integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -33,11 +34,10 @@ async def async_setup_entry(
     devices: list[FloDeviceDataUpdateCoordinator] = hass.data[FLO_DOMAIN][
         config_entry.entry_id
     ]["devices"]
-    entities = []
-    for device in devices:
-        if device.device_type != "puck_oem":
-            entities.append(FloSwitch(device))
-    async_add_entities(entities)
+
+    async_add_entities(
+        [FloSwitch(device) for device in devices if device.device_type != "puck_oem"]
+    )
 
     platform = entity_platform.async_get_current_platform()
 
@@ -75,13 +75,6 @@ class FloSwitch(FloEntity, SwitchEntity):
         super().__init__("shutoff_valve", device)
         self._attr_is_on = device.last_known_valve_state == "open"
 
-    @property
-    def icon(self):
-        """Return the icon to use for the valve."""
-        if self.is_on:
-            return "mdi:valve-open"
-        return "mdi:valve-closed"
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Open the valve."""
         await self._device.api_client.device.open_valve(self._device.id)
@@ -100,9 +93,9 @@ class FloSwitch(FloEntity, SwitchEntity):
         self._attr_is_on = self._device.last_known_valve_state == "open"
         self.async_write_ha_state()
 
-    # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
+        await super().async_added_to_hass()
         self.async_on_remove(self._device.async_add_listener(self.async_update_state))
 
     async def async_set_mode_home(self):

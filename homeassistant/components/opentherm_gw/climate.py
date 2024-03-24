@@ -1,4 +1,5 @@
 """Support for OpenTherm Gateway climate devices."""
+
 from __future__ import annotations
 
 import logging
@@ -84,6 +85,7 @@ class OpenThermClimate(ClimateEntity):
     _away_state_a = False
     _away_state_b = False
     _current_operation: HVACAction | None = None
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, gw_dev, options):
         """Initialize the device."""

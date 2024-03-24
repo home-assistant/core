@@ -1,4 +1,5 @@
 """Support for ISY switches."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -31,7 +32,7 @@ from .entity import ISYAuxControlEntity, ISYNodeEntity, ISYProgramEntity
 from .models import IsyData
 
 
-@dataclass
+@dataclass(frozen=True)
 class ISYSwitchEntityDescription(SwitchEntityDescription):
     """Describes IST switch."""
 

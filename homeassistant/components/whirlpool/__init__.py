@@ -1,5 +1,5 @@
 """The Whirlpool Appliances integration."""
-import asyncio
+
 from dataclasses import dataclass
 import logging
 
@@ -14,8 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_REGIONS_MAP, DOMAIN
-from .util import get_brand_for_region
+from .const import CONF_BRAND, CONF_BRANDS_MAP, CONF_REGIONS_MAP, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,14 +27,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     session = async_get_clientsession(hass)
     region = CONF_REGIONS_MAP[entry.data.get(CONF_REGION, "EU")]
-    brand = get_brand_for_region(region)
+    brand = CONF_BRANDS_MAP[entry.data.get(CONF_BRAND, "Whirlpool")]
     backend_selector = BackendSelector(brand, region)
+
     auth = Auth(
         backend_selector, entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD], session
     )
     try:
         await auth.do_auth(store=False)
-    except (ClientError, asyncio.TimeoutError) as ex:
+    except (ClientError, TimeoutError) as ex:
         raise ConfigEntryNotReady("Cannot connect") from ex
 
     if not auth.is_access_token_valid():

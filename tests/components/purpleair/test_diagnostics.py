@@ -1,4 +1,5 @@
 """Test PurpleAir diagnostics."""
+
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.core import HomeAssistant
 
@@ -17,6 +18,7 @@ async def test_entry_diagnostics(
         "entry": {
             "entry_id": config_entry.entry_id,
             "version": 1,
+            "minor_version": 1,
             "domain": "purpleair",
             "title": REDACTED,
             "data": {

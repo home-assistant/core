@@ -1,0 +1,252 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'devices': list([
+      dict({
+        'alertSettings': dict({
+          'faultCode': dict({
+            'major': dict({
+              'email': '**REDACTED**',
+              'sms': False,
+            }),
+            'minor': dict({
+              'email': '**REDACTED**',
+              'sms': False,
+            }),
+          }),
+          'operatingSetPoint': dict({
+            'email': '**REDACTED**',
+            'sms': False,
+          }),
+          'tankTemperature': dict({
+            'highTemperature': dict({
+              'email': '**REDACTED**',
+              'sms': False,
+              'value': 160,
+            }),
+            'lowTemperature': dict({
+              'email': '**REDACTED**',
+              'sms': False,
+              'value': 120,
+            }),
+          }),
+        }),
+        'brand': 'aosmith',
+        'data': dict({
+          'activeAlerts': list([
+          ]),
+          'alertHistory': list([
+          ]),
+          'canEditTimeOfUse': False,
+          'consumerScheduleData': None,
+          'electricModeRemainingDays': 100,
+          'error': '',
+          'firmwareVersion': '2.14',
+          'heaterSsid': '**REDACTED**',
+          'hotWaterStatus': 'HIGH',
+          'isAdvancedLoadUpMore': False,
+          'isCtaUcmPresent': False,
+          'isDemandResponsePaused': False,
+          'isEnrolled': False,
+          'isLowes': False,
+          'isOnline': True,
+          'isWifi': True,
+          'lastUpdate': 1703138389000,
+          'mode': 'HEAT_PUMP',
+          'modePending': False,
+          'modes': list([
+            dict({
+              'controls': None,
+              'mode': 'HYBRID',
+            }),
+            dict({
+              'controls': None,
+              'mode': 'HEAT_PUMP',
+            }),
+            dict({
+              'controls': 'SELECT_DAYS',
+              'mode': 'ELECTRIC',
+            }),
+            dict({
+              'controls': 'SELECT_DAYS',
+              'mode': 'VACATION',
+            }),
+          ]),
+          'signalStrength': None,
+          'ssid': '**REDACTED**',
+          'temperatureSetpoint': 145,
+          'temperatureSetpointMaximum': 145,
+          'temperatureSetpointPending': False,
+          'temperatureSetpointPrevious': 145,
+          'timeOfUseData': None,
+          'vacationModeRemainingDays': 0,
+        }),
+        'deviceType': 'NEXT_GEN_HEAT_PUMP',
+        'dsn': '**REDACTED**',
+        'hardware': dict({
+          'hasBluetooth': True,
+          'interface': 'CONTROL_PANEL',
+        }),
+        'id': '**REDACTED**',
+        'install': dict({
+          'address': '**REDACTED**',
+          'city': '**REDACTED**',
+          'country': 'United States',
+          'date': '2023-09-29',
+          'email': '**REDACTED**',
+          'group': 'Residential',
+          'location': 'Basement',
+          'phone': '**REDACTED**',
+          'postalCode': '**REDACTED**',
+          'professional': False,
+          'registeredOwner': '**REDACTED**',
+          'registrationDate': '2023-12-24',
+          'state': '**REDACTED**',
+        }),
+        'isRegistered': True,
+        'junctionId': 'junctionId',
+        'lastUpdate': 1703386473737,
+        'model': 'HPTS-50 200 202172000',
+        'name': 'Water Heater',
+        'permissions': 'USER',
+        'productId': '100350404',
+        'serial': '**REDACTED**',
+        'users': list([
+          dict({
+            'contactId': '**REDACTED**',
+            'email': '**REDACTED**',
+            'firstName': '**REDACTED**',
+            'isSelf': True,
+            'lastName': '**REDACTED**',
+            'permissions': 'USER',
+          }),
+        ]),
+      }),
+    ]),
+    'energy_use_data': dict({
+      'junctionId': dict({
+        'average': 2.4744000000000006,
+        'graphData': list([
+          dict({
+            'date': '2023-11-26T04:00:00.000Z',
+            'kwh': 0.936,
+          }),
+          dict({
+            'date': '2023-11-27T04:00:00.000Z',
+            'kwh': 4.248,
+          }),
+          dict({
+            'date': '2023-11-28T04:00:00.000Z',
+            'kwh': 1.002,
+          }),
+          dict({
+            'date': '2023-11-29T04:00:00.000Z',
+            'kwh': 3.078,
+          }),
+          dict({
+            'date': '2023-11-30T04:00:00.000Z',
+            'kwh': 1.896,
+          }),
+          dict({
+            'date': '2023-12-01T04:00:00.000Z',
+            'kwh': 1.98,
+          }),
+          dict({
+            'date': '2023-12-02T04:00:00.000Z',
+            'kwh': 2.112,
+          }),
+          dict({
+            'date': '2023-12-03T04:00:00.000Z',
+            'kwh': 3.222,
+          }),
+          dict({
+            'date': '2023-12-04T04:00:00.000Z',
+            'kwh': 4.254,
+          }),
+          dict({
+            'date': '2023-12-05T04:00:00.000Z',
+            'kwh': 4.05,
+          }),
+          dict({
+            'date': '2023-12-06T04:00:00.000Z',
+            'kwh': 3.312,
+          }),
+          dict({
+            'date': '2023-12-07T04:00:00.000Z',
+            'kwh': 2.334,
+          }),
+          dict({
+            'date': '2023-12-08T04:00:00.000Z',
+            'kwh': 2.418,
+          }),
+          dict({
+            'date': '2023-12-09T04:00:00.000Z',
+            'kwh': 2.19,
+          }),
+          dict({
+            'date': '2023-12-10T04:00:00.000Z',
+            'kwh': 3.786,
+          }),
+          dict({
+            'date': '2023-12-11T04:00:00.000Z',
+            'kwh': 5.292,
+          }),
+          dict({
+            'date': '2023-12-12T04:00:00.000Z',
+            'kwh': 1.38,
+          }),
+          dict({
+            'date': '2023-12-13T04:00:00.000Z',
+            'kwh': 3.324,
+          }),
+          dict({
+            'date': '2023-12-14T04:00:00.000Z',
+            'kwh': 1.092,
+          }),
+          dict({
+            'date': '2023-12-15T04:00:00.000Z',
+            'kwh': 0.606,
+          }),
+          dict({
+            'date': '2023-12-16T04:00:00.000Z',
+            'kwh': 0,
+          }),
+          dict({
+            'date': '2023-12-17T04:00:00.000Z',
+            'kwh': 2.838,
+          }),
+          dict({
+            'date': '2023-12-18T04:00:00.000Z',
+            'kwh': 2.382,
+          }),
+          dict({
+            'date': '2023-12-19T04:00:00.000Z',
+            'kwh': 2.904,
+          }),
+          dict({
+            'date': '2023-12-20T04:00:00.000Z',
+            'kwh': 1.914,
+          }),
+          dict({
+            'date': '2023-12-21T04:00:00.000Z',
+            'kwh': 3.93,
+          }),
+          dict({
+            'date': '2023-12-22T04:00:00.000Z',
+            'kwh': 3.666,
+          }),
+          dict({
+            'date': '2023-12-23T04:00:00.000Z',
+            'kwh': 2.766,
+          }),
+          dict({
+            'date': '2023-12-24T04:00:00.000Z',
+            'kwh': 1.32,
+          }),
+        ]),
+        'lifetimeKwh': 203.259,
+        'startDate': 'Nov 26',
+      }),
+    }),
+  })
+# ---

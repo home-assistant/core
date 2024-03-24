@@ -1,4 +1,5 @@
 """Test the WiZ Platform config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 import pytest

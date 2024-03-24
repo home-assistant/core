@@ -3,6 +3,7 @@
 These are mostly used where a HomeKit accessory exposes additional non-standard
 characteristics that don't map to a Home Assistant feature.
 """
+
 from __future__ import annotations
 
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
@@ -28,25 +29,37 @@ NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
     CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: NumberEntityDescription(
         key=CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL,
         name="Spray Quantity",
-        icon="mdi:water",
+        translation_key="spray_quantity",
         entity_category=EntityCategory.CONFIG,
     ),
     CharacteristicsTypes.VENDOR_EVE_DEGREE_ELEVATION: NumberEntityDescription(
         key=CharacteristicsTypes.VENDOR_EVE_DEGREE_ELEVATION,
         name="Elevation",
-        icon="mdi:elevation-rise",
+        translation_key="elevation",
         entity_category=EntityCategory.CONFIG,
     ),
     CharacteristicsTypes.VENDOR_AQARA_GATEWAY_VOLUME: NumberEntityDescription(
         key=CharacteristicsTypes.VENDOR_AQARA_GATEWAY_VOLUME,
         name="Volume",
-        icon="mdi:volume-high",
+        translation_key="volume",
         entity_category=EntityCategory.CONFIG,
     ),
     CharacteristicsTypes.VENDOR_AQARA_E1_GATEWAY_VOLUME: NumberEntityDescription(
         key=CharacteristicsTypes.VENDOR_AQARA_E1_GATEWAY_VOLUME,
         name="Volume",
-        icon="mdi:volume-high",
+        translation_key="volume",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    CharacteristicsTypes.VENDOR_EVE_MOTION_DURATION: NumberEntityDescription(
+        key=CharacteristicsTypes.VENDOR_EVE_MOTION_DURATION,
+        name="Duration",
+        translation_key="duration",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    CharacteristicsTypes.VENDOR_EVE_MOTION_SENSITIVITY: NumberEntityDescription(
+        key=CharacteristicsTypes.VENDOR_EVE_MOTION_SENSITIVITY,
+        name="Sensitivity",
+        translation_key="sensitivity",
         entity_category=EntityCategory.CONFIG,
     ),
 }

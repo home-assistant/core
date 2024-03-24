@@ -1,4 +1,5 @@
 """The test for state automation."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -89,12 +90,13 @@ async def test_if_fires_on_entity_change(hass: HomeAssistant, calls) -> None:
     assert len(calls) == 1
 
 
-async def test_if_fires_on_entity_change_uuid(hass: HomeAssistant, calls) -> None:
+async def test_if_fires_on_entity_change_uuid(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls
+) -> None:
     """Test for firing on entity change."""
     context = Context()
 
-    registry = er.async_get(hass)
-    entry = registry.async_get_or_create(
+    entry = entity_registry.async_get_or_create(
         "test", "hue", "1234", suggested_object_id="beer"
     )
 
@@ -664,7 +666,10 @@ async def test_if_not_fires_on_entities_change_with_for_after_stop(
                     "to": "world",
                     "for": {"seconds": 5},
                 },
-                "action": {"service": "test.automation"},
+                "action": [
+                    {"delay": "0.0001"},
+                    {"service": "test.automation"},
+                ],
             }
         },
     )
@@ -1622,7 +1627,10 @@ async def test_attribute_if_not_fires_on_entities_change_with_for_after_stop(
                     "attribute": "name",
                     "for": 5,
                 },
-                "action": {"service": "test.automation"},
+                "action": [
+                    {"delay": "0.0001"},
+                    {"service": "test.automation"},
+                ],
             }
         },
     )

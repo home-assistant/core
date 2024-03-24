@@ -1,4 +1,5 @@
 """Test the IntelliFire config flow."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from intellifire4py.exceptions import LoginException
@@ -322,7 +323,7 @@ async def test_dhcp_discovery_intellifire_device(
         context={"source": config_entries.SOURCE_DHCP},
         data=dhcp.DhcpServiceInfo(
             ip="1.1.1.1",
-            macaddress="AA:BB:CC:DD:EE:FF",
+            macaddress="aabbcceeddff",
             hostname="zentrios-Test",
         ),
     )
@@ -352,7 +353,7 @@ async def test_dhcp_discovery_non_intellifire_device(
         context={"source": config_entries.SOURCE_DHCP},
         data=dhcp.DhcpServiceInfo(
             ip="1.1.1.1",
-            macaddress="AA:BB:CC:DD:EE:FF",
+            macaddress="aabbcceeddff",
             hostname="zentrios-Evil",
         ),
     )

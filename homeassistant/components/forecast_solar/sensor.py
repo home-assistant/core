@@ -1,4 +1,5 @@
 """Support for the Forecast.Solar sensor service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -27,7 +28,7 @@ from .const import DOMAIN
 from .coordinator import ForecastSolarDataUpdateCoordinator
 
 
-@dataclass
+@dataclass(frozen=True)
 class ForecastSolarSensorEntityDescription(SensorEntityDescription):
     """Describes a Forecast.Solar Sensor."""
 

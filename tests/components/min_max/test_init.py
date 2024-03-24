@@ -1,4 +1,5 @@
 """Test the Min/Max integration."""
+
 import pytest
 
 from homeassistant.components.min_max.const import DOMAIN
@@ -8,9 +9,10 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.parametrize("platform", ("sensor",))
+@pytest.mark.parametrize("platform", ["sensor"])
 async def test_setup_and_remove_config_entry(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     platform: str,
 ) -> None:
     """Test setting up and removing a config entry."""
@@ -19,7 +21,6 @@ async def test_setup_and_remove_config_entry(
 
     input_sensors = ["sensor.input_one", "sensor.input_two"]
 
-    registry = er.async_get(hass)
     min_max_entity_id = f"{platform}.my_min_max"
 
     # Setup the config entry
@@ -39,7 +40,7 @@ async def test_setup_and_remove_config_entry(
     await hass.async_block_till_done()
 
     # Check the entity is registered in the entity registry
-    assert registry.async_get(min_max_entity_id) is not None
+    assert entity_registry.async_get(min_max_entity_id) is not None
 
     # Check the platform is setup correctly
     state = hass.states.get(min_max_entity_id)
@@ -51,4 +52,4 @@ async def test_setup_and_remove_config_entry(
 
     # Check the state and entity registry entry are removed
     assert hass.states.get(min_max_entity_id) is None
-    assert registry.async_get(min_max_entity_id) is None
+    assert entity_registry.async_get(min_max_entity_id) is None

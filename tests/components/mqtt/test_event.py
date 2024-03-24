@@ -1,4 +1,5 @@
 """The tests for the MQTT event platform."""
+
 import copy
 import json
 from unittest.mock import patch
@@ -8,11 +9,12 @@ import pytest
 
 from homeassistant.components import event, mqtt
 from homeassistant.components.mqtt.event import MQTT_EVENT_ATTRIBUTES_BLOCKED
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .test_common import (
+    help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
@@ -42,6 +44,7 @@ from .test_common import (
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
+    help_test_skipped_async_ha_write_state,
     help_test_unique_id,
     help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_json,
@@ -62,13 +65,6 @@ DEFAULT_CONFIG = {
 }
 
 
-@pytest.fixture(autouse=True)
-def event_platform_only():
-    """Only setup the event platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.EVENT]):
-        yield
-
-
 @pytest.mark.freeze_time("2023-08-01 00:00:00+00:00")
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
 async def test_setting_event_value_via_mqtt_message(
@@ -84,6 +80,68 @@ async def test_setting_event_value_via_mqtt_message(
 
     assert state.state == "2023-08-01T00:00:00.000+00:00"
     assert state.attributes.get("duration") == "short"
+
+
+@pytest.mark.freeze_time("2023-08-01 00:00:00+00:00")
+@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+async def test_multiple_events_are_all_updating_the_state(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test all events are respected and trigger a state write."""
+    await mqtt_mock_entry()
+    with patch(
+        "homeassistant.components.mqtt.mixins.MqttEntity.async_write_ha_state"
+    ) as mock_async_ha_write_state:
+        async_fire_mqtt_message(
+            hass, "test-topic", '{"event_type": "press", "duration": "short" }'
+        )
+        assert len(mock_async_ha_write_state.mock_calls) == 1
+        async_fire_mqtt_message(
+            hass, "test-topic", '{"event_type": "press", "duration": "short" }'
+        )
+        assert len(mock_async_ha_write_state.mock_calls) == 2
+
+
+@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+async def test_handling_retained_event_payloads(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test if event messages with a retained flag are ignored."""
+    await mqtt_mock_entry()
+    with patch(
+        "homeassistant.components.mqtt.mixins.MqttEntity.async_write_ha_state"
+    ) as mock_async_ha_write_state:
+        async_fire_mqtt_message(
+            hass,
+            "test-topic",
+            '{"event_type": "press", "duration": "short" }',
+            retain=True,
+        )
+        assert len(mock_async_ha_write_state.mock_calls) == 0
+
+        async_fire_mqtt_message(
+            hass,
+            "test-topic",
+            '{"event_type": "press", "duration": "short" }',
+            retain=False,
+        )
+        assert len(mock_async_ha_write_state.mock_calls) == 1
+
+        async_fire_mqtt_message(
+            hass,
+            "test-topic",
+            '{"event_type": "press", "duration": "short" }',
+            retain=True,
+        )
+        assert len(mock_async_ha_write_state.mock_calls) == 1
+
+        async_fire_mqtt_message(
+            hass,
+            "test-topic",
+            '{"event_type": "press", "duration": "short" }',
+            retain=False,
+        )
+        assert len(mock_async_ha_write_state.mock_calls) == 2
 
 
 @pytest.mark.freeze_time("2023-08-01 00:00:00+00:00")
@@ -222,11 +280,13 @@ async def test_default_availability_list_payload_any(
 
 
 async def test_default_availability_list_single(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test availability list and availability_topic are mutually exclusive."""
     await help_test_default_availability_list_single(
-        hass, caplog, event.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, caplog, event.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -269,11 +329,8 @@ async def test_invalid_device_class(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test device_class option with invalid value."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
-    assert (
-        "Invalid config for [mqtt]: expected EventDeviceClass or one of" in caplog.text
-    )
+    assert await mqtt_mock_entry()
+    assert "expected EventDeviceClass or one of" in caplog.text
 
 
 async def test_setting_attribute_via_mqtt_json_message(
@@ -499,14 +556,15 @@ async def test_entity_id_update_discovery_update(
 
 
 async def test_entity_device_info_with_hub(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test MQTT event device registry integration."""
     await mqtt_mock_entry()
     other_config_entry = MockConfigEntry()
     other_config_entry.add_to_hass(hass)
-    registry = dr.async_get(hass)
-    hub = registry.async_get_or_create(
+    hub = device_registry.async_get_or_create(
         config_entry_id=other_config_entry.entry_id,
         connections=set(),
         identifiers={("mqtt", "hub-id")},
@@ -526,7 +584,7 @@ async def test_entity_device_info_with_hub(
     async_fire_mqtt_message(hass, "homeassistant/event/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device(identifiers={("mqtt", "helloworld")})
+    device = device_registry.async_get_device(identifiers={("mqtt", "helloworld")})
     assert device is not None
     assert device.via_device_id == hub.id
 
@@ -667,4 +725,102 @@ async def test_entity_name(
     config = DEFAULT_CONFIG
     await help_test_entity_name(
         hass, mqtt_mock_entry, domain, config, expected_friendly_name, device_class
+    )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            event.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "availability_topic": "availability-topic",
+                    "json_attributes_topic": "json-attributes-topic",
+                },
+            ),
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("topic", "payload1", "payload2"),
+    [
+        ("availability-topic", "online", "offline"),
+        ("json-attributes-topic", '{"attr1": "val1"}', '{"attr1": "val2"}'),
+    ],
+)
+async def test_skipped_async_ha_write_state(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    topic: str,
+    payload1: str,
+    payload2: str,
+) -> None:
+    """Test a write state command is only called when there is change."""
+    await mqtt_mock_entry()
+    await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)
+
+
+@pytest.mark.freeze_time("2023-09-01 00:00:00+00:00")
+@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+async def test_skipped_async_ha_write_state2(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a write state command is only called when there is a valid event."""
+    await mqtt_mock_entry()
+    topic = "test-topic"
+    payload1 = '{"event_type": "press"}'
+    payload2 = '{"event_type": "unknown"}'
+    with patch(
+        "homeassistant.components.mqtt.mixins.MqttEntity.async_write_ha_state"
+    ) as mock_async_ha_write_state:
+        assert len(mock_async_ha_write_state.mock_calls) == 0
+        async_fire_mqtt_message(hass, topic, payload1)
+        await hass.async_block_till_done()
+        assert len(mock_async_ha_write_state.mock_calls) == 1
+
+        freezer.move_to("2023-09-01 00:00:10+00:00")
+        async_fire_mqtt_message(hass, topic, payload1)
+        await hass.async_block_till_done()
+        assert len(mock_async_ha_write_state.mock_calls) == 2
+
+        freezer.move_to("2023-09-01 00:00:20+00:00")
+        async_fire_mqtt_message(hass, topic, payload2)
+        await hass.async_block_till_done()
+        assert len(mock_async_ha_write_state.mock_calls) == 2
+
+        freezer.move_to("2023-09-01 00:00:30+00:00")
+        async_fire_mqtt_message(hass, topic, payload2)
+        await hass.async_block_till_done()
+        assert len(mock_async_ha_write_state.mock_calls) == 2
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            event.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "value_template": "{{ value_json.some_var * 1 }}",
+                },
+            ),
+        )
+    ],
+)
+async def test_value_template_fails(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the rendering of MQTT value template fails."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
+        in caplog.text
     )

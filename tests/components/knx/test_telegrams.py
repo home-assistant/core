@@ -1,4 +1,5 @@
 """KNX Telegrams Tests."""
+
 from copy import copy
 from datetime import datetime
 from typing import Any
@@ -105,10 +106,12 @@ async def test_remove_telegam_history(
 ):
     """Test telegram history removal when configured to size 0."""
     hass_storage["knx/telegrams_history.json"] = {"version": 1, "data": MOCK_TELEGRAMS}
-    knx.mock_config_entry.data = knx.mock_config_entry.data | {
-        CONF_KNX_TELEGRAM_LOG_SIZE: 0
-    }
-    await knx.setup_integration({})
+    knx.mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        knx.mock_config_entry,
+        data=knx.mock_config_entry.data | {CONF_KNX_TELEGRAM_LOG_SIZE: 0},
+    )
+    await knx.setup_integration({}, add_entry_to_hass=False)
     # Store.async_remove() is mocked by hass_storage - check that data was removed.
     assert "knx/telegrams_history.json" not in hass_storage
     assert not hass.data[DOMAIN].telegrams.recent_telegrams

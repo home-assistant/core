@@ -1,14 +1,15 @@
 """Test Wallbox Lock component."""
+
 import json
 
 import pytest
 import requests_mock
 
 from homeassistant.components.switch import SERVICE_TURN_OFF, SERVICE_TURN_ON
-from homeassistant.components.wallbox import InvalidAuth
 from homeassistant.components.wallbox.const import CHARGER_STATUS_ID_KEY
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from . import authorisation_response, setup_integration
 from .const import MOCK_SWITCH_ENTITY_ID
@@ -120,7 +121,7 @@ async def test_wallbox_switch_class_authentication_error(
             status_code=403,
         )
 
-        with pytest.raises(InvalidAuth):
+        with pytest.raises(ConfigEntryAuthFailed):
             await hass.services.async_call(
                 "switch",
                 SERVICE_TURN_ON,
@@ -129,7 +130,7 @@ async def test_wallbox_switch_class_authentication_error(
                 },
                 blocking=True,
             )
-        with pytest.raises(InvalidAuth):
+        with pytest.raises(ConfigEntryAuthFailed):
             await hass.services.async_call(
                 "switch",
                 SERVICE_TURN_OFF,

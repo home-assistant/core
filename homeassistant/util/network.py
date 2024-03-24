@@ -1,4 +1,5 @@
 """Network utilities."""
+
 from __future__ import annotations
 
 from ipaddress import IPv4Address, IPv6Address, ip_address, ip_network
@@ -7,10 +8,12 @@ import re
 import yarl
 
 # RFC6890 - IP addresses of loopback interfaces
+IPV6_IPV4_LOOPBACK = ip_network("::ffff:127.0.0.0/104")
+
 LOOPBACK_NETWORKS = (
     ip_network("127.0.0.0/8"),
     ip_network("::1/128"),
-    ip_network("::ffff:127.0.0.0/104"),
+    IPV6_IPV4_LOOPBACK,
 )
 
 # RFC6890 - Address allocation for Private Internets
@@ -34,7 +37,7 @@ LINK_LOCAL_NETWORKS = (
 
 def is_loopback(address: IPv4Address | IPv6Address) -> bool:
     """Check if an address is a loopback address."""
-    return any(address in network for network in LOOPBACK_NETWORKS)
+    return address.is_loopback or address in IPV6_IPV4_LOOPBACK
 
 
 def is_private(address: IPv4Address | IPv6Address) -> bool:
@@ -44,7 +47,7 @@ def is_private(address: IPv4Address | IPv6Address) -> bool:
 
 def is_link_local(address: IPv4Address | IPv6Address) -> bool:
     """Check if an address is link-local (local but not necessarily unique)."""
-    return any(address in network for network in LINK_LOCAL_NETWORKS)
+    return address.is_link_local
 
 
 def is_local(address: IPv4Address | IPv6Address) -> bool:
@@ -54,7 +57,7 @@ def is_local(address: IPv4Address | IPv6Address) -> bool:
 
 def is_invalid(address: IPv4Address | IPv6Address) -> bool:
     """Check if an address is invalid."""
-    return bool(address == ip_address("0.0.0.0"))
+    return address.is_unspecified
 
 
 def is_ip_address(address: str) -> bool:

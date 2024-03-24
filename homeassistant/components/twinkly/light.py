@@ -1,7 +1,7 @@
 """The Twinkly light component."""
+
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
@@ -19,16 +19,19 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MODEL
+from homeassistant.const import (
+    ATTR_SW_VERSION,
+    CONF_HOST,
+    CONF_ID,
+    CONF_MODEL,
+    CONF_NAME,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    ATTR_VERSION,
-    CONF_HOST,
-    CONF_ID,
-    CONF_NAME,
     DATA_CLIENT,
     DATA_DEVICE_INFO,
     DEV_LED_PROFILE,
@@ -52,8 +55,9 @@ async def async_setup_entry(
 
     client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
     device_info = hass.data[DOMAIN][config_entry.entry_id][DATA_DEVICE_INFO]
+    software_version = hass.data[DOMAIN][config_entry.entry_id][ATTR_SW_VERSION]
 
-    entity = TwinklyLight(config_entry, client, device_info)
+    entity = TwinklyLight(config_entry, client, device_info, software_version)
 
     async_add_entities([entity], update_before_add=True)
 
@@ -61,13 +65,16 @@ async def async_setup_entry(
 class TwinklyLight(LightEntity):
     """Implementation of the light for the Twinkly service."""
 
-    _attr_icon = "mdi:string-lights"
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_translation_key = "light"
 
     def __init__(
         self,
         conf: ConfigEntry,
         client: Twinkly,
         device_info,
+        software_version: str | None = None,
     ) -> None:
         """Initialize a TwinklyLight entity."""
         self._attr_unique_id: str = conf.data[CONF_ID]
@@ -88,7 +95,7 @@ class TwinklyLight(LightEntity):
         # Those are saved in the config entry in order to have meaningful values even
         # if the device is currently offline.
         # They are expected to be updated using the device_info.
-        self._name = conf.data[CONF_NAME]
+        self._name = conf.data[CONF_NAME] or "Twinkly light"
         self._model = conf.data[CONF_MODEL]
 
         self._client = client
@@ -98,14 +105,9 @@ class TwinklyLight(LightEntity):
         self._attr_available = False
         self._current_movie: dict[Any, Any] = {}
         self._movies: list[Any] = []
-        self._software_version = ""
+        self._software_version = software_version
         # We guess that most devices are "new" and support effects
         self._attr_supported_features = LightEntityFeature.EFFECT
-
-    @property
-    def name(self) -> str:
-        """Name of the device."""
-        return self._name if self._name else "Twinkly light"
 
     @property
     def device_info(self) -> DeviceInfo | None:
@@ -114,7 +116,7 @@ class TwinklyLight(LightEntity):
             identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer="LEDWORKS",
             model=self._model,
-            name=self.name,
+            name=self._name,
             sw_version=self._software_version,
         )
 
@@ -128,22 +130,24 @@ class TwinklyLight(LightEntity):
     @property
     def effect_list(self) -> list[str]:
         """Return the list of saved effects."""
-        effect_list = []
-        for movie in self._movies:
-            effect_list.append(f"{movie['id']} {movie['name']}")
-        return effect_list
+        return [f"{movie['id']} {movie['name']}" for movie in self._movies]
 
     async def async_added_to_hass(self) -> None:
         """Device is added to hass."""
-        software_version = await self._client.get_firmware_version()
-        if ATTR_VERSION in software_version:
-            self._software_version = software_version[ATTR_VERSION]
-
+        if self._software_version:
             if AwesomeVersion(self._software_version) < AwesomeVersion(
                 MIN_EFFECT_VERSION
             ):
                 self._attr_supported_features = (
                     self.supported_features & ~LightEntityFeature.EFFECT
+                )
+            device_registry = dr.async_get(self.hass)
+            device_entry = device_registry.async_get_device(
+                {(DOMAIN, self._attr_unique_id)}, set()
+            )
+            if device_entry:
+                device_registry.async_update_device(
+                    device_entry.id, sw_version=self._software_version
                 )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -262,6 +266,15 @@ class TwinklyLight(LightEntity):
                     },
                 )
 
+                device_registry = dr.async_get(self.hass)
+                device_entry = device_registry.async_get_device(
+                    {(DOMAIN, self._attr_unique_id)}
+                )
+                if device_entry:
+                    device_registry.async_update_device(
+                        device_entry.id, name=self._name, model=self._model
+                    )
+
             if LightEntityFeature.EFFECT & self.supported_features:
                 await self.async_update_movies()
                 await self.async_update_current_movie()
@@ -272,7 +285,7 @@ class TwinklyLight(LightEntity):
             # We don't use the echo API to track the availability since
             # we already have to pull the device to get its state.
             self._attr_available = True
-        except (asyncio.TimeoutError, ClientError):
+        except (TimeoutError, ClientError):
             # We log this as "info" as it's pretty common that the Christmas
             # light are not reachable in July
             if self._attr_available:

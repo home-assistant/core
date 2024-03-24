@@ -1,4 +1,5 @@
 """HomeKit session fixtures."""
+
 from contextlib import suppress
 import os
 from unittest.mock import patch
@@ -31,7 +32,7 @@ def run_driver(hass, event_loop, iid_storage):
     ), patch("pyhap.accessory_driver.HAPServer"), patch(
         "pyhap.accessory_driver.AccessoryDriver.publish"
     ), patch(
-        "pyhap.accessory_driver.AccessoryDriver.persist"
+        "pyhap.accessory_driver.AccessoryDriver.persist",
     ):
         yield HomeDriver(
             hass,
@@ -53,9 +54,9 @@ def hk_driver(hass, event_loop, iid_storage):
     ), patch("pyhap.accessory_driver.HAPServer.async_stop"), patch(
         "pyhap.accessory_driver.HAPServer.async_start"
     ), patch(
-        "pyhap.accessory_driver.AccessoryDriver.publish"
+        "pyhap.accessory_driver.AccessoryDriver.publish",
     ), patch(
-        "pyhap.accessory_driver.AccessoryDriver.persist"
+        "pyhap.accessory_driver.AccessoryDriver.persist",
     ):
         yield HomeDriver(
             hass,
@@ -77,13 +78,13 @@ def mock_hap(hass, event_loop, iid_storage, mock_zeroconf):
     ), patch("pyhap.accessory_driver.HAPServer.async_stop"), patch(
         "pyhap.accessory_driver.HAPServer.async_start"
     ), patch(
-        "pyhap.accessory_driver.AccessoryDriver.publish"
+        "pyhap.accessory_driver.AccessoryDriver.publish",
     ), patch(
-        "pyhap.accessory_driver.AccessoryDriver.async_start"
+        "pyhap.accessory_driver.AccessoryDriver.async_start",
     ), patch(
-        "pyhap.accessory_driver.AccessoryDriver.async_stop"
+        "pyhap.accessory_driver.AccessoryDriver.async_stop",
     ), patch(
-        "pyhap.accessory_driver.AccessoryDriver.persist"
+        "pyhap.accessory_driver.AccessoryDriver.persist",
     ):
         yield HomeDriver(
             hass,

@@ -1,4 +1,5 @@
 """Tests for private bluetooth device config flow."""
+
 from unittest.mock import patch
 
 from homeassistant import config_entries
@@ -38,6 +39,32 @@ async def test_invalid_irk(hass: HomeAssistant, enable_bluetooth: None) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"irk": "irk:000000"}
+    )
+    assert_form_error(result, "irk", "irk_not_valid")
+
+
+async def test_invalid_irk_base64(hass: HomeAssistant, enable_bluetooth: None) -> None:
+    """Test invalid irk."""
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"irk": "Ucredacted4T8n!!ZZZ=="}
+    )
+    assert_form_error(result, "irk", "irk_not_valid")
+
+
+async def test_invalid_irk_hex(hass: HomeAssistant, enable_bluetooth: None) -> None:
+    """Test invalid irk."""
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"irk": "irk:abcdefghi"}
     )
     assert_form_error(result, "irk", "irk_not_valid")
 

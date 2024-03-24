@@ -1,4 +1,5 @@
 """Support for Xiaomi Philips Lights."""
+
 from __future__ import annotations
 
 import asyncio
@@ -33,7 +34,13 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MODEL, CONF_TOKEN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_DEVICE,
+    CONF_HOST,
+    CONF_MODEL,
+    CONF_TOKEN,
+)
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -41,7 +48,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import color, dt as dt_util
 
 from .const import (
-    CONF_DEVICE,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
     DOMAIN,

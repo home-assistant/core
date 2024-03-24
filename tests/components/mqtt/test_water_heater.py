@@ -1,4 +1,5 @@
 """The tests for the mqtt water heater component."""
+
 import copy
 import json
 from typing import Any
@@ -24,7 +25,7 @@ from homeassistant.components.water_heater import (
     STATE_PERFORMANCE,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, Platform, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.util.unit_conversion import TemperatureConverter
 
@@ -52,6 +53,7 @@ from .test_common import (
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
+    help_test_skipped_async_ha_write_state,
     help_test_unique_id,
     help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_json,
@@ -92,13 +94,6 @@ DEFAULT_CONFIG = {
         }
     }
 }
-
-
-@pytest.fixture(autouse=True)
-def water_heater_platform_only():
-    """Only setup the water heater platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.WATER_HEATER]):
-        yield
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
@@ -1219,4 +1214,76 @@ async def test_unload_entry(
     config = DEFAULT_CONFIG
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry, domain, config
+    )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            water_heater.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "availability_topic": "availability-topic",
+                    "json_attributes_topic": "json-attributes-topic",
+                    "mode_state_topic": "mode-state-topic",
+                    "current_temperature_topic": "current-temperature-topic",
+                    "temperature_state_topic": "temperature-state-topic",
+                },
+            ),
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("topic", "payload1", "payload2"),
+    [
+        ("availability-topic", "online", "offline"),
+        ("json-attributes-topic", '{"attr1": "val1"}', '{"attr1": "val2"}'),
+        ("mode-state-topic", "gas", "electric"),
+        ("current-temperature-topic", "18.0", "18.1"),
+        ("temperature-state-topic", "18", "19"),
+    ],
+)
+async def test_skipped_async_ha_write_state(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    topic: str,
+    payload1: str,
+    payload2: str,
+) -> None:
+    """Test a write state command is only called when there is change."""
+    await mqtt_mock_entry()
+    await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            water_heater.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "modes": ["auto"],
+                    "mode_state_topic": "test-topic",
+                    value_template: "{{ value_json.some_var * 1 }}",
+                },
+            ),
+        )
+        for value_template in ["value_template", "mode_state_template"]
+    ],
+    ids=["value_template", "mode_state_template"],
+)
+async def test_value_template_fails(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the rendering of MQTT value template fails."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
+        in caplog.text
     )

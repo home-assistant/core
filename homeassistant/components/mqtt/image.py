@@ -1,10 +1,10 @@
 """Support for MQTT images."""
+
 from __future__ import annotations
 
 from base64 import b64decode
 import binascii
 from collections.abc import Callable
-import functools
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -27,8 +27,17 @@ from . import subscription
 from .config import MQTT_BASE_SCHEMA
 from .const import CONF_ENCODING, CONF_QOS
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
-from .models import MessageCallbackType, MqttValueTemplate, ReceiveMessage
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_setup_entity_entry_helper,
+)
+from .models import (
+    MessageCallbackType,
+    MqttValueTemplate,
+    MqttValueTemplateException,
+    ReceiveMessage,
+)
 from .util import get_mqtt_data, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
@@ -79,21 +88,15 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT image through YAML and through MQTT discovery."""
-    setup = functools.partial(
-        _async_setup_entity, hass, async_add_entities, config_entry=config_entry
+    await async_setup_entity_entry_helper(
+        hass,
+        config_entry,
+        MqttImage,
+        image.DOMAIN,
+        async_add_entities,
+        DISCOVERY_SCHEMA,
+        PLATFORM_SCHEMA_MODERN,
     )
-    await async_setup_entry_helper(hass, image.DOMAIN, setup, DISCOVERY_SCHEMA)
-
-
-async def _async_setup_entity(
-    hass: HomeAssistant,
-    async_add_entities: AddEntitiesCallback,
-    config: ConfigType,
-    config_entry: ConfigEntry,
-    discovery_data: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the MQTT Image."""
-    async_add_entities([MqttImage(hass, config, config_entry, discovery_data)])
 
 
 class MqttImage(MqttEntity, ImageEntity):
@@ -191,10 +194,12 @@ class MqttImage(MqttEntity, ImageEntity):
         @log_messages(self.hass, self.entity_id)
         def image_from_url_request_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
-
             try:
                 url = cv.url(self._url_template(msg.payload))
                 self._attr_image_url = url
+            except MqttValueTemplateException as exc:
+                _LOGGER.warning(exc)
+                return
             except vol.Invalid:
                 _LOGGER.error(
                     "Invalid image URL '%s' received at topic %s",

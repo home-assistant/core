@@ -1,4 +1,5 @@
 """Media player support for Android TV Remote."""
+
 from __future__ import annotations
 
 import asyncio

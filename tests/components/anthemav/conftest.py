@@ -1,11 +1,12 @@
 """Fixtures for anthemav integration tests."""
+
 from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.anthemav.const import CONF_MODEL, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT
+from homeassistant.components.anthemav.const import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODEL, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -55,10 +56,10 @@ def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
+        title="Anthem AV",
         data={
             CONF_HOST: "1.1.1.1",
             CONF_PORT: 14999,
-            CONF_NAME: "Anthem AV",
             CONF_MAC: "00:00:00:00:00:01",
             CONF_MODEL: "MRX 520",
         },

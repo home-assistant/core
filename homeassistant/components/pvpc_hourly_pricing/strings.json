@@ -6,12 +6,31 @@
           "name": "Sensor Name",
           "tariff": "Applicable tariff by geographic zone",
           "power": "Contracted power (kW)",
-          "power_p3": "Contracted power for valley period P3 (kW)"
+          "power_p3": "Contracted power for valley period P3 (kW)",
+          "use_api_token": "Enable ESIOS Personal API token for private access"
+        }
+      },
+      "api_token": {
+        "title": "ESIOS API token",
+        "description": "To use the extended API you must request a personal token by mailing to {mail_to_link}.",
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        }
+      },
+      "reauth_confirm": {
+        "data": {
+          "description": "Re-authenticate with a valid token or disable it",
+          "use_api_token": "[%key:component::pvpc_hourly_pricing::config::step::user::data::use_api_token%]",
+          "api_token": "[%key:common::config_flow::data::api_token%]"
         }
       }
     },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "options": {
@@ -19,7 +38,15 @@
       "init": {
         "data": {
           "power": "[%key:component::pvpc_hourly_pricing::config::step::user::data::power%]",
-          "power_p3": "[%key:component::pvpc_hourly_pricing::config::step::user::data::power_p3%]"
+          "power_p3": "[%key:component::pvpc_hourly_pricing::config::step::user::data::power_p3%]",
+          "use_api_token": "[%key:component::pvpc_hourly_pricing::config::step::user::data::use_api_token%]"
+        }
+      },
+      "api_token": {
+        "title": "[%key:component::pvpc_hourly_pricing::config::step::api_token::title%]",
+        "description": "[%key:component::pvpc_hourly_pricing::config::step::api_token::description%]",
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]"
         }
       }
     }

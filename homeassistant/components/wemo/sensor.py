@@ -1,4 +1,5 @@
 """Support for power sensors in WeMo Insight devices."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -22,7 +23,7 @@ from .entity import WemoEntity
 from .wemo_device import DeviceCoordinator
 
 
-@dataclass
+@dataclass(frozen=True)
 class AttributeSensorDescription(SensorEntityDescription):
     """SensorEntityDescription for WeMo AttributeSensor entities."""
 

@@ -1,4 +1,5 @@
 """The water heater tests for the Airzone platform."""
+
 from unittest.mock import patch
 
 from aioairzone.const import (

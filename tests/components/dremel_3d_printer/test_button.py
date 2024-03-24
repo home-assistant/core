@@ -1,4 +1,5 @@
 """Button tests for the Dremel 3D Printer integration."""
+
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -15,11 +16,11 @@ from tests.common import MockConfigEntry
 
 @pytest.mark.parametrize(
     ("button", "function"),
-    (
+    [
         ("cancel", "stop"),
         ("pause", "pause"),
         ("resume", "resume"),
-    ),
+    ],
 )
 async def test_buttons(
     hass: HomeAssistant,

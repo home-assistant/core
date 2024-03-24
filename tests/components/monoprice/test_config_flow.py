@@ -1,4 +1,5 @@
 """Test the Monoprice 6-Zone Amplifier config flow."""
+
 from unittest.mock import patch
 
 from serial import SerialException

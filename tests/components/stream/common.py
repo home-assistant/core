@@ -1,4 +1,5 @@
 """Collection of test helpers."""
+
 from fractions import Fraction
 import functools
 from functools import partial
@@ -24,7 +25,7 @@ DefaultSegment = partial(
     init=None,
     stream_id=0,
     start_time=FAKE_TIME,
-    stream_outputs=[],
+    _stream_outputs=[],
 )
 
 AUDIO_SAMPLE_RATE = 8000

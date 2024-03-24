@@ -27,6 +27,7 @@ async def async_setup_entry(
         Alpha2IODeviceBatterySensor(coordinator, io_device_id)
         for io_device_id, io_device in coordinator.data["io_devices"].items()
         if io_device["_HEATAREA_ID"]
+        and io_device["_HEATAREA_ID"] in coordinator.data["heat_areas"]
     )
 
 

@@ -1,4 +1,5 @@
 """Test Matter binary sensors."""
+
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
@@ -90,6 +91,7 @@ async def test_occupancy_sensor(
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_battery_sensor(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     matter_client: MagicMock,
     door_lock: MatterNode,
 ) -> None:
@@ -108,7 +110,6 @@ async def test_battery_sensor(
     assert state
     assert state.state == "on"
 
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get(entity_id)
 
     assert entry

@@ -1,8 +1,8 @@
 """Support for MQTT events."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
-import functools
 import logging
 from typing import Any
 
@@ -19,7 +19,7 @@ from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_VALUE_TEMPLAT
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads_object
 
 from . import subscription
@@ -32,9 +32,14 @@ from .const import (
     PAYLOAD_NONE,
 )
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_setup_entity_entry_helper,
+)
 from .models import (
     MqttValueTemplate,
+    MqttValueTemplateException,
     PayloadSentinel,
     ReceiveMessage,
     ReceivePayloadType,
@@ -79,21 +84,15 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT event through YAML and through MQTT discovery."""
-    setup = functools.partial(
-        _async_setup_entity, hass, async_add_entities, config_entry=config_entry
+    await async_setup_entity_entry_helper(
+        hass,
+        config_entry,
+        MqttEvent,
+        event.DOMAIN,
+        async_add_entities,
+        DISCOVERY_SCHEMA,
+        PLATFORM_SCHEMA_MODERN,
     )
-    await async_setup_entry_helper(hass, event.DOMAIN, setup, DISCOVERY_SCHEMA)
-
-
-async def _async_setup_entity(
-    hass: HomeAssistant,
-    async_add_entities: AddEntitiesCallback,
-    config: ConfigType,
-    config_entry: ConfigEntry,
-    discovery_data: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up MQTT event."""
-    async_add_entities([MqttEvent(hass, config, config_entry, discovery_data)])
 
 
 class MqttEvent(MqttEntity, EventEntity):
@@ -103,16 +102,6 @@ class MqttEvent(MqttEntity, EventEntity):
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_EVENT_ATTRIBUTES_BLOCKED
     _template: Callable[[ReceivePayloadType, PayloadSentinel], ReceivePayloadType]
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the sensor."""
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema() -> vol.Schema:
@@ -135,14 +124,24 @@ class MqttEvent(MqttEntity, EventEntity):
         @log_messages(self.hass, self.entity_id)
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
+            if msg.retain:
+                _LOGGER.debug(
+                    "Ignoring event trigger from replayed retained payload '%s' on topic %s",
+                    msg.payload,
+                    msg.topic,
+                )
+                return
             event_attributes: dict[str, Any] = {}
             event_type: str
-            payload = self._template(msg.payload, PayloadSentinel.DEFAULT)
+            try:
+                payload = self._template(msg.payload, PayloadSentinel.DEFAULT)
+            except MqttValueTemplateException as exc:
+                _LOGGER.warning(exc)
+                return
             if (
                 not payload
                 or payload is PayloadSentinel.DEFAULT
-                or payload == PAYLOAD_NONE
-                or payload == PAYLOAD_EMPTY_JSON
+                or payload in (PAYLOAD_NONE, PAYLOAD_EMPTY_JSON)
             ):
                 _LOGGER.debug(
                     "Ignoring empty payload '%s' after rendering for topic %s",
@@ -195,7 +194,8 @@ class MqttEvent(MqttEntity, EventEntity):
                     payload,
                 )
                 return
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+            mqtt_data = get_mqtt_data(self.hass)
+            mqtt_data.state_write_requests.write_state_request(self)
 
         topics["state_topic"] = {
             "topic": self._config[CONF_STATE_TOPIC],

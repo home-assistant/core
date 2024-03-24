@@ -1,7 +1,9 @@
 """SQLAlchemy util functions."""
+
 from __future__ import annotations
 
-from collections.abc import Callable, Generator, Iterable, Sequence
+from collections.abc import Callable, Collection, Generator, Iterable, Sequence
+import contextlib
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta
 import functools
@@ -21,7 +23,7 @@ import ciso8601
 from sqlalchemy import inspect, text
 from sqlalchemy.engine import Result, Row
 from sqlalchemy.engine.interfaces import DBAPIConnection
-from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from sqlalchemy.exc import OperationalError, SQLAlchemyError, StatementError
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
@@ -31,7 +33,15 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 import homeassistant.util.dt as dt_util
 
-from .const import DATA_INSTANCE, DOMAIN, SQLITE_URL_PREFIX, SupportedDialect
+from .const import (
+    DATA_INSTANCE,
+    DEFAULT_MAX_BIND_VARS,
+    DOMAIN,
+    SQLITE_MAX_BIND_VARS,
+    SQLITE_MODERN_MAX_BIND_VARS,
+    SQLITE_URL_PREFIX,
+    SupportedDialect,
+)
 from .db_schema import (
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
@@ -87,6 +97,7 @@ MARIADB_WITH_FIXED_IN_QUERIES_108 = _simple_version("10.8.4")
 MIN_VERSION_MYSQL = _simple_version("8.0.0")
 MIN_VERSION_PGSQL = _simple_version("12.0")
 MIN_VERSION_SQLITE = _simple_version("3.31.0")
+MIN_VERSION_SQLITE_MODERN_BIND_VARS = _simple_version("3.32.0")
 
 
 # This is the maximum time after the recorder ends the session
@@ -149,7 +160,7 @@ def execute(
     This method also retries a few times in the case of stale connections.
     """
     debug = _LOGGER.isEnabledFor(logging.DEBUG)
-    for tryno in range(0, RETRIES):
+    for tryno in range(RETRIES):
         try:
             if debug:
                 timer_start = time.perf_counter()
@@ -461,6 +472,24 @@ def _async_create_mariadb_range_index_regression_issue(
     )
 
 
+@callback
+def async_create_backup_failure_issue(
+    hass: HomeAssistant,
+    local_start_time: datetime,
+) -> None:
+    """Create an issue when the backup fails because we run out of resources."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "backup_failed_out_of_resources",
+        is_fixable=False,
+        severity=ir.IssueSeverity.CRITICAL,
+        learn_more_url="https://www.home-assistant.io/integrations/recorder",
+        translation_key="backup_failed_out_of_resources",
+        translation_placeholders={"start_time": local_start_time.strftime("%H:%M:%S")},
+    )
+
+
 def setup_connection_for_dialect(
     instance: Recorder,
     dialect_name: str,
@@ -471,6 +500,7 @@ def setup_connection_for_dialect(
     version: AwesomeVersion | None = None
     slow_range_in_select = False
     if dialect_name == SupportedDialect.SQLITE:
+        max_bind_vars = SQLITE_MAX_BIND_VARS
         if first_connection:
             old_isolation = dbapi_connection.isolation_level  # type: ignore[attr-defined]
             dbapi_connection.isolation_level = None  # type: ignore[attr-defined]
@@ -487,6 +517,9 @@ def setup_connection_for_dialect(
                 _fail_unsupported_version(
                     version or version_string, "SQLite", MIN_VERSION_SQLITE
                 )
+
+            if version and version > MIN_VERSION_SQLITE_MODERN_BIND_VARS:
+                max_bind_vars = SQLITE_MODERN_MAX_BIND_VARS
 
         # The upper bound on the cache size is approximately 16MiB of memory
         execute_on_connection(dbapi_connection, "PRAGMA cache_size = -16384")
@@ -506,6 +539,7 @@ def setup_connection_for_dialect(
         execute_on_connection(dbapi_connection, "PRAGMA foreign_keys=ON")
 
     elif dialect_name == SupportedDialect.MYSQL:
+        max_bind_vars = DEFAULT_MAX_BIND_VARS
         execute_on_connection(dbapi_connection, "SET session wait_timeout=28800")
         if first_connection:
             result = query_on_connection(dbapi_connection, "SELECT VERSION()")
@@ -546,6 +580,7 @@ def setup_connection_for_dialect(
         # Ensure all times are using UTC to avoid issues with daylight savings
         execute_on_connection(dbapi_connection, "SET time_zone = '+00:00'")
     elif dialect_name == SupportedDialect.POSTGRESQL:
+        max_bind_vars = DEFAULT_MAX_BIND_VARS
         if first_connection:
             # server_version_num was added in 2006
             result = query_on_connection(dbapi_connection, "SHOW server_version")
@@ -566,6 +601,7 @@ def setup_connection_for_dialect(
         dialect=SupportedDialect(dialect_name),
         version=version,
         optimizer=DatabaseOptimizer(slow_range_in_select=slow_range_in_select),
+        max_bind_vars=max_bind_vars,
     )
 
 
@@ -609,7 +645,7 @@ def retryable_database_job(
                 return job(instance, *args, **kwargs)
             except OperationalError as err:
                 if _is_retryable_error(instance, err):
-                    assert isinstance(err.orig, BaseException)
+                    assert isinstance(err.orig, BaseException)  # noqa: PT017
                     _LOGGER.info(
                         "%s; %s not completed, retrying", err.orig.args[1], description
                     )
@@ -642,7 +678,7 @@ def database_job_retry_wrapper(
     """
 
     def decorator(
-        job: _WrappedFuncType[_RecorderT, _P]
+        job: _WrappedFuncType[_RecorderT, _P],
     ) -> _WrappedFuncType[_RecorderT, _P]:
         @functools.wraps(job)
         def wrapper(instance: _RecorderT, *args: _P.args, **kwargs: _P.kwargs) -> None:
@@ -655,7 +691,7 @@ def database_job_retry_wrapper(
                         instance, err
                     ):
                         raise
-                    assert isinstance(err.orig, BaseException)
+                    assert isinstance(err.orig, BaseException)  # noqa: PT017
                     _LOGGER.info(
                         "%s; %s failed, retrying", err.orig.args[1], description
                     )
@@ -841,6 +877,20 @@ def chunked(iterable: Iterable, chunked_num: int) -> Iterable[Any]:
     return iter(partial(take, chunked_num, iter(iterable)), [])
 
 
+def chunked_or_all(iterable: Collection[Any], chunked_num: int) -> Iterable[Any]:
+    """Break *collection* into iterables of length *n*.
+
+    Returns the collection if its length is less than *n*.
+
+    Unlike chunked, this function requires a collection so it can
+    determine the length of the collection and return the collection
+    if it is less than *n*.
+    """
+    if len(iterable) <= chunked_num:
+        return (iterable,)
+    return chunked(iterable, chunked_num)
+
+
 def get_index_by_name(session: Session, table_name: str, index_name: str) -> str | None:
     """Get an index by name."""
     connection = session.connection()
@@ -858,3 +908,54 @@ def get_index_by_name(session: Session, table_name: str, index_name: str) -> str
         ),
         None,
     )
+
+
+def filter_unique_constraint_integrity_error(
+    instance: Recorder, row_type: str
+) -> Callable[[Exception], bool]:
+    """Create a filter for unique constraint integrity errors."""
+
+    def _filter_unique_constraint_integrity_error(err: Exception) -> bool:
+        """Handle unique constraint integrity errors."""
+        if not isinstance(err, StatementError):
+            return False
+
+        assert instance.engine is not None
+        dialect_name = instance.engine.dialect.name
+
+        ignore = False
+        if (
+            dialect_name == SupportedDialect.SQLITE
+            and "UNIQUE constraint failed" in str(err)
+        ):
+            ignore = True
+        if (
+            dialect_name == SupportedDialect.POSTGRESQL
+            and err.orig
+            and hasattr(err.orig, "pgcode")
+            and err.orig.pgcode == "23505"
+        ):
+            ignore = True
+        if (
+            dialect_name == SupportedDialect.MYSQL
+            and err.orig
+            and hasattr(err.orig, "args")
+        ):
+            with contextlib.suppress(TypeError):
+                if err.orig.args[0] == 1062:
+                    ignore = True
+
+        if ignore:
+            _LOGGER.warning(
+                (
+                    "Blocked attempt to insert duplicated %s rows, please report"
+                    " at %s"
+                ),
+                row_type,
+                "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+recorder%22",
+                exc_info=err,
+            )
+
+        return ignore
+
+    return _filter_unique_constraint_integrity_error

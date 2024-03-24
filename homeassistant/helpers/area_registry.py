@@ -1,16 +1,21 @@
 """Provide a way to connect devices to one physical location."""
+
 from __future__ import annotations
 
-from collections import OrderedDict
-from collections.abc import Container, Iterable, MutableMapping
-from typing import Any, cast
-
-import attr
+from collections.abc import Iterable
+import dataclasses
+from typing import Any, Literal, TypedDict, cast
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
 
 from . import device_registry as dr, entity_registry as er
+from .normalized_name_base_registry import (
+    NormalizedNameBaseRegistryEntry,
+    NormalizedNameBaseRegistryItems,
+    normalize_name,
+)
+from .registry import BaseRegistry
 from .storage import Store
 from .typing import UNDEFINED, UndefinedType
 
@@ -18,30 +23,26 @@ DATA_REGISTRY = "area_registry"
 EVENT_AREA_REGISTRY_UPDATED = "area_registry_updated"
 STORAGE_KEY = "core.area_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 3
-SAVE_DELAY = 10
+STORAGE_VERSION_MINOR = 6
 
 
-@attr.s(slots=True, frozen=True)
-class AreaEntry:
+class EventAreaRegistryUpdatedData(TypedDict):
+    """EventAreaRegistryUpdated data."""
+
+    action: Literal["create", "remove", "update"]
+    area_id: str
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True, slots=True)
+class AreaEntry(NormalizedNameBaseRegistryEntry):
     """Area Registry Entry."""
 
-    name: str = attr.ib()
-    normalized_name: str = attr.ib()
-    aliases: set[str] = attr.ib(
-        converter=attr.converters.default_if_none(factory=set)  # type: ignore[misc]
-    )
-    id: str | None = attr.ib(default=None)
-    picture: str | None = attr.ib(default=None)
-
-    def generate_id(self, existing_ids: Container[str]) -> None:
-        """Initialize ID."""
-        suggestion = suggestion_base = slugify(self.name)
-        tries = 1
-        while suggestion in existing_ids:
-            tries += 1
-            suggestion = f"{suggestion_base}_{tries}"
-        object.__setattr__(self, "id", suggestion)
+    aliases: set[str]
+    floor_id: str | None
+    icon: str | None
+    id: str
+    labels: set[str] = dataclasses.field(default_factory=set)
+    picture: str | None
 
 
 class AreaRegistryStore(Store[dict[str, list[dict[str, Any]]]]):
@@ -66,18 +67,35 @@ class AreaRegistryStore(Store[dict[str, list[dict[str, Any]]]]):
                 for area in old_data["areas"]:
                     area["aliases"] = []
 
+            if old_minor_version < 4:
+                # Version 1.4 adds icon
+                for area in old_data["areas"]:
+                    area["icon"] = None
+
+            if old_minor_version < 5:
+                # Version 1.5 adds floor_id
+                for area in old_data["areas"]:
+                    area["floor_id"] = None
+
+            if old_minor_version < 6:
+                # Version 1.6 adds labels
+                for area in old_data["areas"]:
+                    area["labels"] = []
+
         if old_major_version > 1:
             raise NotImplementedError
         return old_data
 
 
-class AreaRegistry:
+class AreaRegistry(BaseRegistry):
     """Class to hold a registry of areas."""
+
+    areas: NormalizedNameBaseRegistryItems[AreaEntry]
+    _area_data: dict[str, AreaEntry]
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the area registry."""
         self.hass = hass
-        self.areas: MutableMapping[str, AreaEntry] = {}
         self._store = AreaRegistryStore(
             hass,
             STORAGE_VERSION_MAJOR,
@@ -85,20 +103,20 @@ class AreaRegistry:
             atomic_writes=True,
             minor_version=STORAGE_VERSION_MINOR,
         )
-        self._normalized_name_area_idx: dict[str, str] = {}
 
     @callback
     def async_get_area(self, area_id: str) -> AreaEntry | None:
-        """Get area by id."""
-        return self.areas.get(area_id)
+        """Get area by id.
+
+        We retrieve the DeviceEntry from the underlying dict to avoid
+        the overhead of the UserDict __getitem__.
+        """
+        return self._area_data.get(area_id)
 
     @callback
     def async_get_area_by_name(self, name: str) -> AreaEntry | None:
         """Get area by name."""
-        normalized_name = normalize_area_name(name)
-        if normalized_name not in self._normalized_name_area_idx:
-            return None
-        return self.areas[self._normalized_name_area_idx[normalized_name]]
+        return self.areas.get_by_name(name)
 
     @callback
     def async_list_areas(self) -> Iterable[AreaEntry]:
@@ -118,21 +136,30 @@ class AreaRegistry:
         name: str,
         *,
         aliases: set[str] | None = None,
+        floor_id: str | None = None,
+        icon: str | None = None,
+        labels: set[str] | None = None,
         picture: str | None = None,
     ) -> AreaEntry:
         """Create a new area."""
-        normalized_name = normalize_area_name(name)
+        normalized_name = normalize_name(name)
 
         if self.async_get_area_by_name(name):
             raise ValueError(f"The name {name} ({normalized_name}) is already in use")
 
+        area_id = self._generate_area_id(name)
         area = AreaEntry(
-            aliases=aliases, name=name, normalized_name=normalized_name, picture=picture
+            aliases=aliases or set(),
+            floor_id=floor_id,
+            icon=icon,
+            id=area_id,
+            labels=labels or set(),
+            name=name,
+            normalized_name=normalized_name,
+            picture=picture,
         )
-        area.generate_id(self.areas)
         assert area.id is not None
         self.areas[area.id] = area
-        self._normalized_name_area_idx[normalized_name] = area.id
         self.async_schedule_save()
         self.hass.bus.async_fire(
             EVENT_AREA_REGISTRY_UPDATED, {"action": "create", "area_id": area.id}
@@ -142,14 +169,12 @@ class AreaRegistry:
     @callback
     def async_delete(self, area_id: str) -> None:
         """Delete area."""
-        area = self.areas[area_id]
         device_registry = dr.async_get(self.hass)
         entity_registry = er.async_get(self.hass)
         device_registry.async_clear_area_id(area_id)
         entity_registry.async_clear_area_id(area_id)
 
         del self.areas[area_id]
-        del self._normalized_name_area_idx[area.normalized_name]
 
         self.hass.bus.async_fire(
             EVENT_AREA_REGISTRY_UPDATED, {"action": "remove", "area_id": area_id}
@@ -163,12 +188,21 @@ class AreaRegistry:
         area_id: str,
         *,
         aliases: set[str] | UndefinedType = UNDEFINED,
+        floor_id: str | None | UndefinedType = UNDEFINED,
+        icon: str | None | UndefinedType = UNDEFINED,
+        labels: set[str] | UndefinedType = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
         picture: str | None | UndefinedType = UNDEFINED,
     ) -> AreaEntry:
         """Update name of area."""
         updated = self._async_update(
-            area_id, aliases=aliases, name=name, picture=picture
+            area_id,
+            aliases=aliases,
+            floor_id=floor_id,
+            icon=icon,
+            labels=labels,
+            name=name,
+            picture=picture,
         )
         self.hass.bus.async_fire(
             EVENT_AREA_REGISTRY_UPDATED, {"action": "update", "area_id": area_id}
@@ -181,6 +215,9 @@ class AreaRegistry:
         area_id: str,
         *,
         aliases: set[str] | UndefinedType = UNDEFINED,
+        floor_id: str | None | UndefinedType = UNDEFINED,
+        icon: str | None | UndefinedType = UNDEFINED,
+        labels: set[str] | UndefinedType = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
         picture: str | None | UndefinedType = UNDEFINED,
     ) -> AreaEntry:
@@ -191,63 +228,51 @@ class AreaRegistry:
 
         for attr_name, value in (
             ("aliases", aliases),
+            ("icon", icon),
+            ("labels", labels),
             ("picture", picture),
+            ("floor_id", floor_id),
         ):
             if value is not UNDEFINED and value != getattr(old, attr_name):
                 new_values[attr_name] = value
 
-        normalized_name = None
-
         if name is not UNDEFINED and name != old.name:
-            normalized_name = normalize_area_name(name)
-
-            if normalized_name != old.normalized_name and self.async_get_area_by_name(
-                name
-            ):
-                raise ValueError(
-                    f"The name {name} ({normalized_name}) is already in use"
-                )
-
             new_values["name"] = name
-            new_values["normalized_name"] = normalized_name
+            new_values["normalized_name"] = normalize_name(name)
 
         if not new_values:
             return old
 
-        new = self.areas[area_id] = attr.evolve(old, **new_values)  # type: ignore[arg-type]
-        if normalized_name is not None:
-            self._normalized_name_area_idx[
-                normalized_name
-            ] = self._normalized_name_area_idx.pop(old.normalized_name)
+        new = self.areas[area_id] = dataclasses.replace(old, **new_values)  # type: ignore[arg-type]
 
         self.async_schedule_save()
         return new
 
     async def async_load(self) -> None:
         """Load the area registry."""
+        self._async_setup_cleanup()
+
         data = await self._store.async_load()
 
-        areas: MutableMapping[str, AreaEntry] = OrderedDict()
+        areas = NormalizedNameBaseRegistryItems[AreaEntry]()
 
         if data is not None:
             for area in data["areas"]:
                 assert area["name"] is not None and area["id"] is not None
-                normalized_name = normalize_area_name(area["name"])
+                normalized_name = normalize_name(area["name"])
                 areas[area["id"]] = AreaEntry(
                     aliases=set(area["aliases"]),
+                    floor_id=area["floor_id"],
+                    icon=area["icon"],
                     id=area["id"],
+                    labels=set(area["labels"]),
                     name=area["name"],
                     normalized_name=normalized_name,
                     picture=area["picture"],
                 )
-                self._normalized_name_area_idx[normalized_name] = area["id"]
 
         self.areas = areas
-
-    @callback
-    def async_schedule_save(self) -> None:
-        """Schedule saving the area registry."""
-        self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
+        self._area_data = areas.data
 
     @callback
     def _data_to_save(self) -> dict[str, list[dict[str, Any]]]:
@@ -257,14 +282,75 @@ class AreaRegistry:
         data["areas"] = [
             {
                 "aliases": list(entry.aliases),
-                "name": entry.name,
+                "floor_id": entry.floor_id,
+                "icon": entry.icon,
                 "id": entry.id,
+                "labels": list(entry.labels),
+                "name": entry.name,
                 "picture": entry.picture,
             }
             for entry in self.areas.values()
         ]
 
         return data
+
+    def _generate_area_id(self, name: str) -> str:
+        """Generate area ID."""
+        suggestion = suggestion_base = slugify(name)
+        tries = 1
+        while suggestion in self.areas:
+            tries += 1
+            suggestion = f"{suggestion_base}_{tries}"
+        return suggestion
+
+    @callback
+    def _async_setup_cleanup(self) -> None:
+        """Set up the area registry cleanup."""
+        # pylint: disable-next=import-outside-toplevel
+        from . import (  # Circular dependencies
+            floor_registry as fr,
+            label_registry as lr,
+        )
+
+        @callback
+        def _removed_from_registry_filter(
+            event_data: fr.EventFloorRegistryUpdatedData
+            | lr.EventLabelRegistryUpdatedData,
+        ) -> bool:
+            """Filter all except for the item removed from registry events."""
+            return event_data["action"] == "remove"
+
+        @callback
+        def _handle_floor_registry_update(event: fr.EventFloorRegistryUpdated) -> None:
+            """Update areas that are associated with a floor that has been removed."""
+            floor_id = event.data["floor_id"]
+            for area_id, area in self.areas.items():
+                if floor_id == area.floor_id:
+                    self.async_update(area_id, floor_id=None)
+
+        self.hass.bus.async_listen(
+            event_type=fr.EVENT_FLOOR_REGISTRY_UPDATED,
+            event_filter=_removed_from_registry_filter,
+            listener=_handle_floor_registry_update,
+            run_immediately=True,
+        )
+
+        @callback
+        def _handle_label_registry_update(event: lr.EventLabelRegistryUpdated) -> None:
+            """Update areas that have a label that has been removed."""
+            label_id = event.data["label_id"]
+            for area_id, area in self.areas.items():
+                if label_id in area.labels:
+                    labels = area.labels.copy()
+                    labels.remove(label_id)
+                    self.async_update(area_id, labels=labels)
+
+        self.hass.bus.async_listen(
+            event_type=lr.EVENT_LABEL_REGISTRY_UPDATED,
+            event_filter=_removed_from_registry_filter,
+            listener=_handle_label_registry_update,
+            run_immediately=True,
+        )
 
 
 @callback
@@ -280,6 +366,13 @@ async def async_load(hass: HomeAssistant) -> None:
     await hass.data[DATA_REGISTRY].async_load()
 
 
-def normalize_area_name(area_name: str) -> str:
-    """Normalize an area name by removing whitespace and case folding."""
-    return area_name.casefold().replace(" ", "")
+@callback
+def async_entries_for_floor(registry: AreaRegistry, floor_id: str) -> list[AreaEntry]:
+    """Return entries that match a floor."""
+    return [area for area in registry.areas.values() if floor_id == area.floor_id]
+
+
+@callback
+def async_entries_for_label(registry: AreaRegistry, label_id: str) -> list[AreaEntry]:
+    """Return entries that match a label."""
+    return [area for area in registry.areas.values() if label_id in area.labels]

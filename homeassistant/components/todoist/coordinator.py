@@ -1,4 +1,5 @@
 """DataUpdateCoordinator for the Todoist component."""
+
 from datetime import timedelta
 import logging
 

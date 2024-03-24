@@ -1,4 +1,5 @@
 """Tests for Vizio config flow."""
+
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
@@ -6,6 +7,7 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import call, patch
 
+from freezegun import freeze_time
 import pytest
 from pyvizio.api.apps import AppConfig
 from pyvizio.const import (
@@ -472,7 +474,7 @@ async def _test_update_availability_switch(
     future_interval = timedelta(minutes=1)
 
     # Setup device as if time is right now
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         await _test_setup_speaker(hass, initial_power_state)
 
     # Clear captured logs so that only availability state changes are captured for
@@ -485,9 +487,7 @@ async def _test_update_availability_switch(
         with patch(
             "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
             return_value=final_power_state,
-        ), patch("homeassistant.util.dt.utcnow", return_value=future), patch(
-            "homeassistant.util.utcnow", return_value=future
-        ):
+        ), freeze_time(future):
             async_fire_time_changed(hass, future)
             await hass.async_block_till_done()
             if final_power_state is None:
@@ -564,7 +564,7 @@ async def test_setup_with_apps_include(
         hass, MOCK_TV_WITH_INCLUDE_CONFIG, CURRENT_APP_CONFIG
     ):
         attr = hass.states.get(ENTITY_ID).attributes
-        _assert_source_list_with_apps(list(INPUT_LIST_WITH_APPS + [CURRENT_APP]), attr)
+        _assert_source_list_with_apps([*INPUT_LIST_WITH_APPS, CURRENT_APP], attr)
         assert CURRENT_APP in attr[ATTR_INPUT_SOURCE_LIST]
         assert attr[ATTR_INPUT_SOURCE] == CURRENT_APP
         assert attr["app_name"] == CURRENT_APP
@@ -582,7 +582,7 @@ async def test_setup_with_apps_exclude(
         hass, MOCK_TV_WITH_EXCLUDE_CONFIG, CURRENT_APP_CONFIG
     ):
         attr = hass.states.get(ENTITY_ID).attributes
-        _assert_source_list_with_apps(list(INPUT_LIST_WITH_APPS + [CURRENT_APP]), attr)
+        _assert_source_list_with_apps([*INPUT_LIST_WITH_APPS, CURRENT_APP], attr)
         assert CURRENT_APP in attr[ATTR_INPUT_SOURCE_LIST]
         assert attr[ATTR_INPUT_SOURCE] == CURRENT_APP
         assert attr["app_name"] == CURRENT_APP

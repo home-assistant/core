@@ -1,4 +1,5 @@
 """Fully Kiosk Browser number entity."""
+
 from __future__ import annotations
 
 from contextlib import suppress
@@ -46,6 +47,7 @@ ENTITY_TYPES: tuple[NumberEntityDescription, ...] = (
         native_max_value=255,
         native_step=1,
         native_min_value=0,
+        entity_category=EntityCategory.CONFIG,
     ),
 )
 

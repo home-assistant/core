@@ -5,6 +5,7 @@ be stable between reboots and upgrades.
 
 This module generates and stores them in a HA storage.
 """
+
 from __future__ import annotations
 
 from uuid import UUID
@@ -36,7 +37,7 @@ class IIDStorage(Store):
         old_major_version: int,
         old_minor_version: int,
         old_data: dict,
-    ):
+    ) -> dict:
         """Migrate to the new version."""
         if old_major_version == 1:
             # Convert v1 to v2 format which uses a unique iid set per accessory

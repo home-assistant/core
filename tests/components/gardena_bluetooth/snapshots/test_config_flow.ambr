@@ -1,17 +1,17 @@
 # serializer version: 1
 # name: test_bluetooth
   FlowResultSnapshot({
-    'data_schema': None,
-    'description_placeholders': dict({
-      'name': 'Gardena Water Computer',
+    'context': dict({
+      'confirm_only': True,
+      'source': 'bluetooth',
+      'title_placeholders': dict({
+        'name': 'Gardena Water Computer',
+      }),
+      'unique_id': '00000000-0000-0000-0000-000000000001',
     }),
-    'errors': None,
     'flow_id': <ANY>,
     'handler': 'gardena_bluetooth',
-    'last_step': None,
-    'preview': None,
     'step_id': 'confirm',
-    'type': <FlowResultType.FORM: 'form'>,
   })
 # ---
 # name: test_bluetooth.1
@@ -31,6 +31,7 @@
     'description_placeholders': None,
     'flow_id': <ANY>,
     'handler': 'gardena_bluetooth',
+    'minor_version': 1,
     'options': dict({
     }),
     'result': ConfigEntrySnapshot({
@@ -40,6 +41,7 @@
       'disabled_by': None,
       'domain': 'gardena_bluetooth',
       'entry_id': <ANY>,
+      'minor_version': 1,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
@@ -238,6 +240,7 @@
     'description_placeholders': None,
     'flow_id': <ANY>,
     'handler': 'gardena_bluetooth',
+    'minor_version': 1,
     'options': dict({
     }),
     'result': ConfigEntrySnapshot({
@@ -247,6 +250,7 @@
       'disabled_by': None,
       'domain': 'gardena_bluetooth',
       'entry_id': <ANY>,
+      'minor_version': 1,
       'options': dict({
       }),
       'pref_disable_new_entities': False,

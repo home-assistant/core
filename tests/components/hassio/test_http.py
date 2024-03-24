@@ -1,5 +1,5 @@
 """The tests for the hassio component."""
-import asyncio
+
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -396,7 +396,7 @@ async def test_bad_gateway_when_cannot_find_supervisor(
     hassio_client, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we get a bad gateway error if we can't find supervisor."""
-    aioclient_mock.get("http://127.0.0.1/app/entrypoint.js", exc=asyncio.TimeoutError)
+    aioclient_mock.get("http://127.0.0.1/app/entrypoint.js", exc=TimeoutError)
 
     resp = await hassio_client.get("/api/hassio/app/entrypoint.js")
     assert resp.status == HTTPStatus.BAD_GATEWAY
@@ -450,9 +450,24 @@ async def test_backup_download_headers(
 
 async def test_stream(hassio_client, aioclient_mock: AiohttpClientMocker) -> None:
     """Verify that the request is a stream."""
-    aioclient_mock.get("http://127.0.0.1/app/entrypoint.js")
-    await hassio_client.get("/api/hassio/app/entrypoint.js", data="test")
+    content_type = "multipart/form-data; boundary='--webkit'"
+    aioclient_mock.post("http://127.0.0.1/backups/new/upload")
+    resp = await hassio_client.post(
+        "/api/hassio/backups/new/upload", headers={"Content-Type": content_type}
+    )
+    # Check we got right response
+    assert resp.status == HTTPStatus.OK
     assert isinstance(aioclient_mock.mock_calls[-1][2], StreamReader)
+
+
+async def test_simple_get_no_stream(
+    hassio_client, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Verify that a simple GET request is not a stream."""
+    aioclient_mock.get("http://127.0.0.1/app/entrypoint.js")
+    resp = await hassio_client.get("/api/hassio/app/entrypoint.js")
+    assert resp.status == HTTPStatus.OK
+    assert aioclient_mock.mock_calls[-1][2] is None
 
 
 async def test_entrypoint_cache_control(

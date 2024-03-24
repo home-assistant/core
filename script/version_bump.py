@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Helper script to bump the current version."""
+
 import argparse
 import re
 import subprocess
@@ -89,7 +90,7 @@ def bump_version(version, bump_type):
         to_change["dev"] = ("dev", dt_util.utcnow().strftime("%Y%m%d"))
 
     else:
-        assert False, f"Unsupported type: {bump_type}"
+        raise ValueError(f"Unsupported type: {bump_type}")
 
     temp = Version("0")
     temp._version = version._version._replace(**to_change)
@@ -177,7 +178,7 @@ def main():
     if not arguments.commit:
         return
 
-    subprocess.run(["git", "commit", "-nam", f"Bumped version to {bumped}"], check=True)
+    subprocess.run(["git", "commit", "-nam", f"Bump version to {bumped}"], check=True)
 
 
 def test_bump_version():

@@ -1,6 +1,8 @@
 """Schema migration helpers."""
+
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable
 import contextlib
 from dataclasses import dataclass, replace as dataclass_replace
@@ -24,6 +26,7 @@ from sqlalchemy.exc import (
 from sqlalchemy.orm.session import Session
 from sqlalchemy.schema import AddConstraint, DropConstraint
 from sqlalchemy.sql.expression import true
+from sqlalchemy.sql.lambdas import StatementLambdaElement
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util.enum import try_parse_enum
@@ -45,7 +48,12 @@ from .auto_repairs.statistics.schema import (
     correct_db_schema as statistics_correct_db_schema,
     validate_db_schema as statistics_validate_db_schema,
 )
-from .const import SupportedDialect
+from .const import (
+    CONTEXT_ID_AS_BINARY_SCHEMA_VERSION,
+    EVENT_TYPE_IDS_SCHEMA_VERSION,
+    STATES_META_SCHEMA_VERSION,
+    SupportedDialect,
+)
 from .db_schema import (
     CONTEXT_ID_BIN_MAX_LENGTH,
     DOUBLE_PRECISION_TYPE_SQL,
@@ -59,6 +67,7 @@ from .db_schema import (
     Base,
     Events,
     EventTypes,
+    MigrationChanges,
     SchemaChanges,
     States,
     StatesMeta,
@@ -68,22 +77,39 @@ from .db_schema import (
     StatisticsShortTerm,
 )
 from .models import process_timestamp
+from .models.time import datetime_to_timestamp_or_none
 from .queries import (
     batch_cleanup_entity_ids,
+    delete_duplicate_short_term_statistics_row,
+    delete_duplicate_statistics_row,
     find_entity_ids_to_migrate,
     find_event_type_to_migrate,
     find_events_context_ids_to_migrate,
     find_states_context_ids_to_migrate,
+    find_unmigrated_short_term_statistics_rows,
+    find_unmigrated_statistics_rows,
+    has_entity_ids_to_migrate,
+    has_event_type_to_migrate,
+    has_events_context_ids_to_migrate,
+    has_states_context_ids_to_migrate,
     has_used_states_event_ids,
+    migrate_single_short_term_statistics_row_to_timestamp,
+    migrate_single_statistics_row_to_timestamp,
 )
 from .statistics import get_start_time
 from .tasks import (
     CommitTask,
+    EntityIDMigrationTask,
+    EventsContextIDMigrationTask,
+    EventTypeIDMigrationTask,
     PostSchemaMigrationTask,
+    RecorderTask,
+    StatesContextIDMigrationTask,
     StatisticsTimestampMigrationCleanupTask,
 )
 from .util import (
     database_job_retry_wrapper,
+    execute_stmt_lambda_element,
     get_index_by_name,
     retryable_database_job,
     session_scope,
@@ -155,7 +181,7 @@ def _get_schema_version(session: Session) -> int | None:
 def get_schema_version(session_maker: Callable[[], Session]) -> int | None:
     """Get the schema version."""
     try:
-        with session_scope(session=session_maker()) as session:
+        with session_scope(session=session_maker(), read_only=True) as session:
             return _get_schema_version(session)
     except Exception as err:  # pylint: disable=broad-except
         _LOGGER.exception("Error when determining DB schema version: %s", err)
@@ -504,28 +530,29 @@ def _update_states_table_with_foreign_key_options(
 ) -> None:
     """Add the options to foreign key constraints."""
     inspector = sqlalchemy.inspect(engine)
-    alters = []
-    for foreign_key in inspector.get_foreign_keys(TABLE_STATES):
-        if foreign_key["name"] and (
+    alters = [
+        {
+            "old_fk": ForeignKeyConstraint((), (), name=foreign_key["name"]),
+            "columns": foreign_key["constrained_columns"],
+        }
+        for foreign_key in inspector.get_foreign_keys(TABLE_STATES)
+        if foreign_key["name"]
+        and (
             # MySQL/MariaDB will have empty options
             not foreign_key.get("options")
-            or
             # Postgres will have ondelete set to None
-            foreign_key.get("options", {}).get("ondelete") is None
-        ):
-            alters.append(
-                {
-                    "old_fk": ForeignKeyConstraint((), (), name=foreign_key["name"]),
-                    "columns": foreign_key["constrained_columns"],
-                }
-            )
+            or foreign_key.get("options", {}).get("ondelete") is None
+        )
+    ]
 
     if not alters:
         return
 
     states_key_constraints = Base.metadata.tables[TABLE_STATES].foreign_key_constraints
     old_states_table = Table(  # noqa: F841
-        TABLE_STATES, MetaData(), *(alter["old_fk"] for alter in alters)  # type: ignore[arg-type]
+        TABLE_STATES,
+        MetaData(),
+        *(alter["old_fk"] for alter in alters),  # type: ignore[arg-type]
     )
 
     for alter in alters:
@@ -547,10 +574,11 @@ def _drop_foreign_key_constraints(
 ) -> None:
     """Drop foreign key constraints for a table on specific columns."""
     inspector = sqlalchemy.inspect(engine)
-    drops = []
-    for foreign_key in inspector.get_foreign_keys(table):
-        if foreign_key["name"] and foreign_key["constrained_columns"] == columns:
-            drops.append(ForeignKeyConstraint((), (), name=foreign_key["name"]))
+    drops = [
+        ForeignKeyConstraint((), (), name=foreign_key["name"])
+        for foreign_key in inspector.get_foreign_keys(table)
+        if foreign_key["name"] and foreign_key["constrained_columns"] == columns
+    ]
 
     # Bind the ForeignKeyConstraints to the table
     old_table = Table(table, MetaData(), *drops)  # noqa: F841
@@ -950,26 +978,9 @@ def _apply_update(  # noqa: C901
             "statistics_short_term",
             "ix_statistics_short_term_statistic_id_start_ts",
         )
-        try:
-            _migrate_statistics_columns_to_timestamp(instance, session_maker, engine)
-        except IntegrityError as ex:
-            _LOGGER.error(
-                "Statistics table contains duplicate entries: %s; "
-                "Cleaning up duplicates and trying again; "
-                "This will take a while; "
-                "Please be patient!",
-                ex,
-            )
-            # There may be duplicated statistics entries, delete duplicates
-            # and try again
-            with session_scope(session=session_maker()) as session:
-                delete_statistics_duplicates(instance, hass, session)
-            _migrate_statistics_columns_to_timestamp(instance, session_maker, engine)
-            # Log at error level to ensure the user sees this message in the log
-            # since we logged the error above.
-            _LOGGER.error(
-                "Statistics migration successfully recovered after statistics table duplicate cleanup"
-            )
+        _migrate_statistics_columns_to_timestamp_removing_duplicates(
+            hass, instance, session_maker, engine
+        )
     elif new_version == 35:
         # Migration is done in two steps to ensure we can start using
         # the new columns before we wipe the old ones.
@@ -1060,8 +1071,53 @@ def _apply_update(  # noqa: C901
     elif new_version == 41:
         _create_index(session_maker, "event_types", "ix_event_types_event_type")
         _create_index(session_maker, "states_meta", "ix_states_meta_entity_id")
+    elif new_version == 42:
+        # If the user had a previously failed migration, or they
+        # downgraded from 2023.3.x to an older version we will have
+        # unmigrated statistics columns so we want to clean this up
+        # one last time since compiling the statistics will be slow
+        # or fail if we have unmigrated statistics.
+        _migrate_statistics_columns_to_timestamp_removing_duplicates(
+            hass, instance, session_maker, engine
+        )
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
+
+
+def _migrate_statistics_columns_to_timestamp_removing_duplicates(
+    hass: HomeAssistant,
+    instance: Recorder,
+    session_maker: Callable[[], Session],
+    engine: Engine,
+) -> None:
+    """Migrate statistics columns to timestamp or cleanup duplicates."""
+    try:
+        _migrate_statistics_columns_to_timestamp(instance, session_maker, engine)
+    except IntegrityError as ex:
+        _LOGGER.error(
+            "Statistics table contains duplicate entries: %s; "
+            "Cleaning up duplicates and trying again; "
+            "This will take a while; "
+            "Please be patient!",
+            ex,
+        )
+        # There may be duplicated statistics entries, delete duplicates
+        # and try again
+        with session_scope(session=session_maker()) as session:
+            delete_statistics_duplicates(instance, hass, session)
+        try:
+            _migrate_statistics_columns_to_timestamp(instance, session_maker, engine)
+        except IntegrityError:
+            _LOGGER.warning(
+                "Statistics table still contains duplicate entries after cleanup; "
+                "Falling back to a one by one migration"
+            )
+            _migrate_statistics_columns_to_timestamp_one_by_one(instance, session_maker)
+        # Log at error level to ensure the user sees this message in the log
+        # since we logged the error above.
+        _LOGGER.error(
+            "Statistics migration successfully recovered after statistics table duplicate cleanup"
+        )
 
 
 def _correct_table_character_set_and_collation(
@@ -1269,6 +1325,59 @@ def _migrate_columns_to_timestamp(
                 )
 
 
+@database_job_retry_wrapper("Migrate statistics columns to timestamp one by one", 3)
+def _migrate_statistics_columns_to_timestamp_one_by_one(
+    instance: Recorder, session_maker: Callable[[], Session]
+) -> None:
+    """Migrate statistics columns to use timestamp on by one.
+
+    If something manually inserted data into the statistics table
+    in the past it may have inserted duplicate rows.
+
+    Before we had the unique index on (statistic_id, start) this
+    the data could have been inserted without any errors and we
+    could end up with duplicate rows that go undetected (even by
+    our current duplicate cleanup code) until we try to migrate the
+    data to use timestamps.
+
+    This will migrate the data one by one to ensure we do not hit any
+    duplicate rows, and remove the duplicate rows as they are found.
+    """
+    for find_func, migrate_func, delete_func in (
+        (
+            find_unmigrated_statistics_rows,
+            migrate_single_statistics_row_to_timestamp,
+            delete_duplicate_statistics_row,
+        ),
+        (
+            find_unmigrated_short_term_statistics_rows,
+            migrate_single_short_term_statistics_row_to_timestamp,
+            delete_duplicate_short_term_statistics_row,
+        ),
+    ):
+        with session_scope(session=session_maker()) as session:
+            while stats := session.execute(find_func(instance.max_bind_vars)).all():
+                for statistic_id, start, created, last_reset in stats:
+                    start_ts = datetime_to_timestamp_or_none(process_timestamp(start))
+                    created_ts = datetime_to_timestamp_or_none(
+                        process_timestamp(created)
+                    )
+                    last_reset_ts = datetime_to_timestamp_or_none(
+                        process_timestamp(last_reset)
+                    )
+                    try:
+                        session.execute(
+                            migrate_func(
+                                statistic_id, start_ts, created_ts, last_reset_ts
+                            )
+                        )
+                    except IntegrityError:
+                        # This can happen if we have duplicate rows
+                        # in the statistics table.
+                        session.execute(delete_func(statistic_id))
+                session.commit()
+
+
 @database_job_retry_wrapper("Migrate statistics columns to timestamp", 3)
 def _migrate_statistics_columns_to_timestamp(
     instance: Recorder, session_maker: Callable[[], Session], engine: Engine
@@ -1292,7 +1401,7 @@ def _migrate_statistics_columns_to_timestamp(
                         f"created_ts=strftime('%s',created) + "
                         "cast(substr(created,-7) AS FLOAT), "
                         f"last_reset_ts=strftime('%s',last_reset) + "
-                        "cast(substr(last_reset,-7) AS FLOAT);"
+                        "cast(substr(last_reset,-7) AS FLOAT) where start_ts is NULL;"
                     )
                 )
     elif engine.dialect.name == SupportedDialect.MYSQL:
@@ -1366,7 +1475,9 @@ def migrate_states_context_ids(instance: Recorder) -> bool:
     session_maker = instance.get_session
     _LOGGER.debug("Migrating states context_ids to binary format")
     with session_scope(session=session_maker()) as session:
-        if states := session.execute(find_states_context_ids_to_migrate()).all():
+        if states := session.execute(
+            find_states_context_ids_to_migrate(instance.max_bind_vars)
+        ).all():
             session.execute(
                 update(States),
                 [
@@ -1385,7 +1496,8 @@ def migrate_states_context_ids(instance: Recorder) -> bool:
             )
         # If there is more work to do return False
         # so that we can be called again
-        is_done = not states
+        if is_done := not states:
+            _mark_migration_done(session, StatesContextIDMigration)
 
     if is_done:
         _drop_index(session_maker, "states", "ix_states_context_id")
@@ -1401,7 +1513,9 @@ def migrate_events_context_ids(instance: Recorder) -> bool:
     session_maker = instance.get_session
     _LOGGER.debug("Migrating context_ids to binary format")
     with session_scope(session=session_maker()) as session:
-        if events := session.execute(find_events_context_ids_to_migrate()).all():
+        if events := session.execute(
+            find_events_context_ids_to_migrate(instance.max_bind_vars)
+        ).all():
             session.execute(
                 update(Events),
                 [
@@ -1420,7 +1534,8 @@ def migrate_events_context_ids(instance: Recorder) -> bool:
             )
         # If there is more work to do return False
         # so that we can be called again
-        is_done = not events
+        if is_done := not events:
+            _mark_migration_done(session, EventsContextIDMigration)
 
     if is_done:
         _drop_index(session_maker, "events", "ix_events_context_id")
@@ -1436,7 +1551,9 @@ def migrate_event_type_ids(instance: Recorder) -> bool:
     _LOGGER.debug("Migrating event_types")
     event_type_manager = instance.event_type_manager
     with session_scope(session=session_maker()) as session:
-        if events := session.execute(find_event_type_to_migrate()).all():
+        if events := session.execute(
+            find_event_type_to_migrate(instance.max_bind_vars)
+        ).all():
             event_types = {event_type for _, event_type in events}
             if None in event_types:
                 # event_type should never be None but we need to be defensive
@@ -1483,7 +1600,8 @@ def migrate_event_type_ids(instance: Recorder) -> bool:
 
         # If there is more work to do return False
         # so that we can be called again
-        is_done = not events
+        if is_done := not events:
+            _mark_migration_done(session, EventTypeIDMigration)
 
     if is_done:
         instance.event_type_manager.active = True
@@ -1505,7 +1623,9 @@ def migrate_entity_ids(instance: Recorder) -> bool:
     _LOGGER.debug("Migrating entity_ids")
     states_meta_manager = instance.states_meta_manager
     with session_scope(session=instance.get_session()) as session:
-        if states := session.execute(find_entity_ids_to_migrate()).all():
+        if states := session.execute(
+            find_entity_ids_to_migrate(instance.max_bind_vars)
+        ).all():
             entity_ids = {entity_id for _, entity_id in states}
             if None in entity_ids:
                 # entity_id should never be None but we need to be defensive
@@ -1555,7 +1675,8 @@ def migrate_entity_ids(instance: Recorder) -> bool:
 
         # If there is more work to do return False
         # so that we can be called again
-        is_done = not states
+        if is_done := not states:
+            _mark_migration_done(session, EntityIDMigration)
 
     _LOGGER.debug("Migrating entity_ids done=%s", is_done)
     return is_done
@@ -1650,11 +1771,116 @@ def _initialize_database(session: Session) -> bool:
 def initialize_database(session_maker: Callable[[], Session]) -> bool:
     """Initialize a new database."""
     try:
-        with session_scope(session=session_maker()) as session:
+        with session_scope(session=session_maker(), read_only=True) as session:
             if _get_schema_version(session) is not None:
                 return True
+
+        with session_scope(session=session_maker()) as session:
             return _initialize_database(session)
 
     except Exception as err:  # pylint: disable=broad-except
         _LOGGER.exception("Error when initialise database: %s", err)
         return False
+
+
+class BaseRunTimeMigration(ABC):
+    """Base class for run time migrations."""
+
+    required_schema_version = 0
+    migration_version = 1
+    migration_id: str
+    task: Callable[[], RecorderTask]
+
+    def __init__(
+        self, session: Session, schema_version: int, migration_changes: dict[str, int]
+    ) -> None:
+        """Initialize a new BaseRunTimeMigration."""
+        self.schema_version = schema_version
+        self.session = session
+        self.migration_changes = migration_changes
+
+    @abstractmethod
+    def needs_migrate_query(self) -> StatementLambdaElement:
+        """Return the query to check if the migration needs to run."""
+
+    def needs_migrate(self) -> bool:
+        """Return if the migration needs to run.
+
+        If the migration needs to run, it will return True.
+
+        If the migration does not need to run, it will return False and
+        mark the migration as done in the database if its not already
+        marked as done.
+        """
+        if self.schema_version < self.required_schema_version:
+            # Schema is too old, we must have to migrate
+            return True
+        if self.migration_changes.get(self.migration_id, -1) >= self.migration_version:
+            # The migration changes table indicates that the migration has been done
+            return False
+        # We do not know if the migration is done from the
+        # migration changes table so we must check the data
+        # This is the slow path
+        if not execute_stmt_lambda_element(self.session, self.needs_migrate_query()):
+            _mark_migration_done(self.session, self.__class__)
+            return False
+        return True
+
+
+class StatesContextIDMigration(BaseRunTimeMigration):
+    """Migration to migrate states context_ids to binary format."""
+
+    required_schema_version = CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
+    migration_id = "state_context_id_as_binary"
+    task = StatesContextIDMigrationTask
+
+    def needs_migrate_query(self) -> StatementLambdaElement:
+        """Return the query to check if the migration needs to run."""
+        return has_states_context_ids_to_migrate()
+
+
+class EventsContextIDMigration(BaseRunTimeMigration):
+    """Migration to migrate events context_ids to binary format."""
+
+    required_schema_version = CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
+    migration_id = "event_context_id_as_binary"
+    task = EventsContextIDMigrationTask
+
+    def needs_migrate_query(self) -> StatementLambdaElement:
+        """Return the query to check if the migration needs to run."""
+        return has_events_context_ids_to_migrate()
+
+
+class EventTypeIDMigration(BaseRunTimeMigration):
+    """Migration to migrate event_type to event_type_ids."""
+
+    required_schema_version = EVENT_TYPE_IDS_SCHEMA_VERSION
+    migration_id = "event_type_id_migration"
+    task = EventTypeIDMigrationTask
+
+    def needs_migrate_query(self) -> StatementLambdaElement:
+        """Check if the data is migrated."""
+        return has_event_type_to_migrate()
+
+
+class EntityIDMigration(BaseRunTimeMigration):
+    """Migration to migrate entity_ids to states_meta."""
+
+    required_schema_version = STATES_META_SCHEMA_VERSION
+    migration_id = "entity_id_migration"
+    task = EntityIDMigrationTask
+
+    def needs_migrate_query(self) -> StatementLambdaElement:
+        """Check if the data is migrated."""
+        return has_entity_ids_to_migrate()
+
+
+def _mark_migration_done(
+    session: Session, migration: type[BaseRunTimeMigration]
+) -> None:
+    """Mark a migration as done in the database."""
+    session.merge(
+        MigrationChanges(
+            migration_id=migration.migration_id, version=migration.migration_version
+        )
+    )

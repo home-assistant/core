@@ -1,4 +1,5 @@
 """Test the Coinbase diagnostics."""
+
 from unittest.mock import patch
 
 from syrupy import SnapshotAssertion

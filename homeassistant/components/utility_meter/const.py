@@ -1,7 +1,6 @@
 """Constants for the utility meter component."""
-DOMAIN = "utility_meter"
 
-TARIFF_ICON = "mdi:clock-outline"
+DOMAIN = "utility_meter"
 
 QUARTER_HOURLY = "quarter-hourly"
 HOURLY = "hourly"
@@ -38,6 +37,7 @@ CONF_TARIFFS = "tariffs"
 CONF_TARIFF = "tariff"
 CONF_TARIFF_ENTITY = "tariff_entity"
 CONF_CRON_PATTERN = "cron"
+CONF_SENSOR_ALWAYS_AVAILABLE = "always_available"
 
 ATTR_TARIFF = "tariff"
 ATTR_TARIFFS = "tariffs"

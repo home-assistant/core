@@ -1,4 +1,5 @@
 """Define tests for the Bravia TV config flow."""
+
 from unittest.mock import patch
 
 from pybravia import (
@@ -12,14 +13,13 @@ import pytest
 from homeassistant import data_entry_flow
 from homeassistant.components import ssdp
 from homeassistant.components.braviatv.const import (
-    CONF_CLIENT_ID,
     CONF_NICKNAME,
     CONF_USE_PSK,
     DOMAIN,
     NICKNAME_PREFIX,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_SSDP, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN
+from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_MAC, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import instance_id
 

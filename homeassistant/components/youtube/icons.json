@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "latest_upload": {
+        "default": "mdi:youtube"
+      },
+      "subscribers": {
+        "default": "mdi:youtube-subscription"
+      }
+    }
+  }
+}

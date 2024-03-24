@@ -1,6 +1,8 @@
 """Decorator service for the media_player.play_media service."""
+
 from collections.abc import Callable
 import logging
+from pathlib import Path
 from typing import Any, cast
 
 import voluptuous as vol
@@ -87,7 +89,7 @@ class MediaExtractor:
 
     def get_entities(self) -> list[str]:
         """Return list of entities."""
-        return self.call_data.get(ATTR_ENTITY_ID, [])
+        return self.call_data.get(ATTR_ENTITY_ID, [])  # type: ignore[no-any-return]
 
     def extract_and_send(self) -> None:
         """Extract exact stream format for each entity_id and play it."""
@@ -106,13 +108,26 @@ class MediaExtractor:
 
     def get_stream_selector(self) -> Callable[[str], str]:
         """Return format selector for the media URL."""
-        ydl = YoutubeDL({"quiet": True, "logger": _LOGGER})
+        cookies_file = Path(
+            self.hass.config.config_dir, "media_extractor", "cookies.txt"
+        )
+        ydl_params = {"quiet": True, "logger": _LOGGER}
+        if cookies_file.exists():
+            ydl_params["cookiefile"] = str(cookies_file)
+            _LOGGER.debug(
+                "Media extractor loaded cookies file from: %s", str(cookies_file)
+            )
+        else:
+            _LOGGER.debug(
+                "Media extractor didn't find cookies file at: %s", str(cookies_file)
+            )
+        ydl = YoutubeDL(ydl_params)
 
         try:
             all_media = ydl.extract_info(self.get_media_url(), process=False)
         except DownloadError as err:
             # This exception will be logged by youtube-dl itself
-            raise MEDownloadException() from err
+            raise MEDownloadException from err
 
         if "entries" in all_media:
             _LOGGER.warning("Playlists are not supported, looking for the first video")
@@ -121,7 +136,7 @@ class MediaExtractor:
                 selected_media = entries[0]
             else:
                 _LOGGER.error("Playlist is empty")
-                raise MEDownloadException()
+                raise MEDownloadException
         else:
             selected_media = all_media
 
@@ -132,14 +147,13 @@ class MediaExtractor:
                 requested_stream = ydl.process_ie_result(selected_media, download=False)
             except (ExtractorError, DownloadError) as err:
                 _LOGGER.error("Could not extract stream for the query: %s", query)
-                raise MEQueryException() from err
+                raise MEQueryException from err
 
             if "formats" in requested_stream:
-                best_stream = requested_stream["formats"][
-                    len(requested_stream["formats"]) - 1
-                ]
-                return str(best_stream["url"])
-            return str(requested_stream["url"])
+                if requested_stream["extractor"] == "youtube":
+                    return get_best_stream_youtube(requested_stream["formats"])
+                return get_best_stream(requested_stream["formats"])
+            return cast(str, requested_stream["url"])
 
         return stream_selector
 
@@ -154,7 +168,7 @@ class MediaExtractor:
         except MEQueryException:
             _LOGGER.error("Wrong query format: %s", stream_query)
             return
-
+        _LOGGER.debug("Selected the following stream: %s", stream_url)
         data = {k: v for k, v in self.call_data.items() if k != ATTR_ENTITY_ID}
         data[ATTR_MEDIA_CONTENT_ID] = stream_url
 
@@ -181,3 +195,29 @@ class MediaExtractor:
             )
 
         return default_stream_query
+
+
+def get_best_stream(formats: list[dict[str, Any]]) -> str:
+    """Return the best quality stream.
+
+    As per
+    https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/extractor/common.py#L128.
+    """
+
+    return cast(str, formats[len(formats) - 1]["url"])
+
+
+def get_best_stream_youtube(formats: list[dict[str, Any]]) -> str:
+    """YouTube responses also include files with only video or audio.
+
+    So we filter on files with both audio and video codec.
+    """
+
+    return get_best_stream(
+        [
+            format
+            for format in formats
+            if format.get("acodec", "none") != "none"
+            and format.get("vcodec", "none") != "none"
+        ]
+    )

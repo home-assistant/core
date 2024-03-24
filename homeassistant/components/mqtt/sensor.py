@@ -1,9 +1,9 @@
 """Support for MQTT sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import datetime, timedelta
-import functools
 import logging
 from typing import Any
 
@@ -18,6 +18,7 @@ from homeassistant.components.sensor import (
     RestoreSensor,
     SensorDeviceClass,
     SensorExtraStoredData,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -33,7 +34,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from . import subscription
@@ -44,7 +45,7 @@ from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttAvailability,
     MqttEntity,
-    async_setup_entry_helper,
+    async_setup_entity_entry_helper,
     write_state_on_attr_change,
 )
 from .models import (
@@ -71,7 +72,6 @@ MQTT_SENSOR_ATTRIBUTES_BLOCKED = frozenset(
 DEFAULT_NAME = "MQTT Sensor"
 DEFAULT_FORCE_UPDATE = False
 
-
 _PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
@@ -85,11 +85,27 @@ _PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
+
+def validate_sensor_state_class_config(config: ConfigType) -> ConfigType:
+    """Validate the sensor state class config."""
+    if (
+        CONF_LAST_RESET_VALUE_TEMPLATE in config
+        and (state_class := config.get(CONF_STATE_CLASS)) != SensorStateClass.TOTAL
+    ):
+        raise vol.Invalid(
+            f"The option `{CONF_LAST_RESET_VALUE_TEMPLATE}` cannot be used "
+            f"together with state class `{state_class}`"
+        )
+
+    return config
+
+
 PLATFORM_SCHEMA_MODERN = vol.All(
     # Deprecated in HA Core 2021.11.0 https://github.com/home-assistant/core/pull/54840
     # Removed in HA Core 2023.6.0
     cv.removed(CONF_LAST_RESET_TOPIC),
     _PLATFORM_SCHEMA_BASE,
+    validate_sensor_state_class_config,
 )
 
 DISCOVERY_SCHEMA = vol.All(
@@ -97,6 +113,7 @@ DISCOVERY_SCHEMA = vol.All(
     # Removed in HA Core 2023.6.0
     cv.removed(CONF_LAST_RESET_TOPIC),
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
+    validate_sensor_state_class_config,
 )
 
 
@@ -106,21 +123,15 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT sensor through YAML and through MQTT discovery."""
-    setup = functools.partial(
-        _async_setup_entity, hass, async_add_entities, config_entry=config_entry
+    await async_setup_entity_entry_helper(
+        hass,
+        config_entry,
+        MqttSensor,
+        sensor.DOMAIN,
+        async_add_entities,
+        DISCOVERY_SCHEMA,
+        PLATFORM_SCHEMA_MODERN,
     )
-    await async_setup_entry_helper(hass, sensor.DOMAIN, setup, DISCOVERY_SCHEMA)
-
-
-async def _async_setup_entity(
-    hass: HomeAssistant,
-    async_add_entities: AddEntitiesCallback,
-    config: ConfigType,
-    config_entry: ConfigEntry,
-    discovery_data: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up MQTT sensor."""
-    async_add_entities([MqttSensor(hass, config, config_entry, discovery_data)])
 
 
 class MqttSensor(MqttEntity, RestoreSensor):
@@ -130,21 +141,11 @@ class MqttSensor(MqttEntity, RestoreSensor):
     _entity_id_format = ENTITY_ID_FORMAT
     _attr_last_reset: datetime | None = None
     _attributes_extra_blocked = MQTT_SENSOR_ATTRIBUTES_BLOCKED
+    _expiration_trigger: CALLBACK_TYPE | None = None
     _expire_after: int | None
     _expired: bool | None
     _template: Callable[[ReceivePayloadType, PayloadSentinel], ReceivePayloadType]
     _last_reset_template: Callable[[ReceivePayloadType], ReceivePayloadType]
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the sensor."""
-        self._expiration_trigger: CALLBACK_TYPE | None = None
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     async def mqtt_async_added_to_hass(self) -> None:
         """Restore state for entities with expire_after set."""
@@ -287,7 +288,9 @@ class MqttSensor(MqttEntity, RestoreSensor):
                 )
 
         @callback
-        @write_state_on_attr_change(self, {"_attr_native_value", "_attr_last_reset"})
+        @write_state_on_attr_change(
+            self, {"_attr_native_value", "_attr_last_reset", "_expired"}
+        )
         @log_messages(self.hass, self.entity_id)
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""

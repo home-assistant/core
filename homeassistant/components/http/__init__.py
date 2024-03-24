@@ -1,4 +1,5 @@
 """Support to serve the Home Assistant API as WSGI application."""
+
 from __future__ import annotations
 
 import asyncio
@@ -16,13 +17,9 @@ from aiohttp.http_parser import RawRequestMessage
 from aiohttp.streams import StreamReader
 from aiohttp.typedefs import JSONDecoder, StrOrURL
 from aiohttp.web_exceptions import HTTPMovedPermanently, HTTPRedirection
-from aiohttp.web_log import AccessLogger
 from aiohttp.web_protocol import RequestHandler
-from aiohttp.web_urldispatcher import (
-    AbstractResource,
-    UrlDispatcher,
-    UrlMappingMatchInfo,
-)
+from aiohttp_fast_url_dispatcher import FastUrlDispatcher, attach_fast_url_dispatcher
+from aiohttp_zlib_ng import enable_zlib_ng
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -36,29 +33,35 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import storage
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.http import (
+    KEY_ALLOW_CONFIGRED_CORS,
+    KEY_AUTHENTICATED,  # noqa: F401
+    KEY_HASS,
+    HomeAssistantView,
+    current_request,
+)
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
-from homeassistant.setup import async_start_setup, async_when_setup_or_start
+from homeassistant.setup import (
+    SetupPhases,
+    async_start_setup,
+    async_when_setup_or_start,
+)
 from homeassistant.util import dt as dt_util, ssl as ssl_util
+from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.json import json_loads
 
 from .auth import async_setup_auth
 from .ban import setup_bans
-from .const import (  # noqa: F401
-    KEY_AUTHENTICATED,
-    KEY_HASS,
-    KEY_HASS_REFRESH_TOKEN_ID,
-    KEY_HASS_USER,
-)
+from .const import KEY_HASS_REFRESH_TOKEN_ID, KEY_HASS_USER  # noqa: F401
 from .cors import setup_cors
 from .decorators import require_admin  # noqa: F401
 from .forwarded import async_setup_forwarded
 from .headers import setup_headers
-from .request_context import current_request, setup_request_context
+from .request_context import setup_request_context
 from .security_filter import setup_security_filter
 from .static import CACHE_HEADERS, CachingStaticResource
-from .view import HomeAssistantView
 from .web_runner import HomeAssistantTCPSite
 
 DOMAIN: Final = "http"
@@ -173,6 +176,8 @@ class ApiConfig:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HTTP API and debug interface."""
+    enable_zlib_ng()
+
     conf: ConfData | None = config.get(DOMAIN)
 
     if conf is None:
@@ -190,6 +195,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     is_ban_enabled = conf[CONF_IP_BAN_ENABLED]
     login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
     ssl_profile = conf[CONF_SSL_PROFILE]
+
+    source_ip_task = create_eager_task(async_get_source_ip(hass))
 
     server = HomeAssistantHTTP(
         hass,
@@ -215,7 +222,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def start_server(*_: Any) -> None:
         """Start the server."""
-        with async_start_setup(hass, ["http"]):
+        with async_start_setup(hass, integration="http", phase=SetupPhases.SETUP):
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_server)
             # We already checked it's not None.
             assert conf is not None
@@ -225,7 +232,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.http = server
 
-    local_ip = await async_get_source_ip(hass)
+    local_ip = await source_ip_task
 
     host = local_ip
     if server_host is not None:
@@ -237,25 +244,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     return True
-
-
-class HomeAssistantAccessLogger(AccessLogger):
-    """Access logger for Home Assistant that does not log when disabled."""
-
-    def log(
-        self, request: web.BaseRequest, response: web.StreamResponse, time: float
-    ) -> None:
-        """Log the request.
-
-        The default implementation logs the request to the logger
-        with the INFO level and than throws it away if the logger
-        is not enabled for the INFO level. This implementation
-        does not log the request if the logger is not enabled for
-        the INFO level.
-        """
-        if not self.logger.isEnabledFor(logging.INFO):
-            return
-        super().log(request, response, time)
 
 
 class HomeAssistantRequest(web.Request):
@@ -318,7 +306,7 @@ class HomeAssistantHTTP:
         # By default aiohttp does a linear search for routing rules,
         # we have a lot of routes, so use a dict lookup with a fallback
         # to the linear search.
-        self.app._router = FastUrlDispatcher()
+        attach_fast_url_dispatcher(self.app, FastUrlDispatcher())
         self.hass = hass
         self.ssl_certificate = ssl_certificate
         self.ssl_peer_certificate = ssl_peer_certificate
@@ -342,6 +330,7 @@ class HomeAssistantHTTP:
     ) -> None:
         """Initialize the server."""
         self.app[KEY_HASS] = self.hass
+        self.app["hass"] = self.hass  # For backwards compatibility
 
         # Order matters, security filters middleware needs to go first,
         # forwarded middleware needs to go second.
@@ -406,7 +395,7 @@ class HomeAssistantHTTP:
             # Should be instance of aiohttp.web_exceptions._HTTPMove.
             raise redirect_exc(redirect_to)  # type: ignore[arg-type,misc]
 
-        self.app["allow_configured_cors"](
+        self.app[KEY_ALLOW_CONFIGRED_CORS](
             self.app.router.add_route("GET", url, redirect)
         )
 
@@ -422,7 +411,7 @@ class HomeAssistantHTTP:
             else:
                 resource = web.StaticResource(url_path, path)
             self.app.router.register_resource(resource)
-            self.app["allow_configured_cors"](resource)
+            self.app[KEY_ALLOW_CONFIGRED_CORS](resource)
             return
 
         async def serve_file(request: web.Request) -> web.FileResponse:
@@ -431,7 +420,7 @@ class HomeAssistantHTTP:
                 return web.FileResponse(path, headers=CACHE_HEADERS)
             return web.FileResponse(path)
 
-        self.app["allow_configured_cors"](
+        self.app[KEY_ALLOW_CONFIGRED_CORS](
             self.app.router.add_route("GET", url_path, serve_file)
         )
 
@@ -445,7 +434,7 @@ class HomeAssistantHTTP:
                 context = ssl_util.server_context_modern()
             context.load_cert_chain(self.ssl_certificate, self.ssl_key)
         except OSError as error:
-            if not self.hass.config.safe_mode:
+            if not self.hass.config.recovery_mode:
                 raise HomeAssistantError(
                     f"Could not use SSL certificate from {self.ssl_certificate}:"
                     f" {error}"
@@ -465,7 +454,7 @@ class HomeAssistantHTTP:
                 context = None
             else:
                 _LOGGER.critical(
-                    "Home Assistant is running in safe mode with an emergency self"
+                    "Home Assistant is running in recovery mode with an emergency self"
                     " signed ssl certificate because the configured SSL certificate was"
                     " not usable"
                 )
@@ -542,7 +531,7 @@ class HomeAssistantHTTP:
         self.app._router.freeze = lambda: None  # type: ignore[method-assign]
 
         self.runner = web.AppRunner(
-            self.app, access_log_class=HomeAssistantAccessLogger
+            self.app, handler_cancellation=True, shutdown_timeout=10
         )
         await self.runner.setup()
 
@@ -572,7 +561,7 @@ async def start_http_server_and_save_config(
     """Startup the http server and save the config."""
     await server.start()
 
-    # If we are set up successful, we store the HTTP settings for safe mode.
+    # If we are set up successful, we store the HTTP settings for recovery mode.
     store: storage.Store[dict[str, Any]] = storage.Store(
         hass, STORAGE_VERSION, STORAGE_KEY
     )
@@ -584,40 +573,3 @@ async def start_http_server_and_save_config(
         ]
 
     store.async_delay_save(lambda: conf, SAVE_DELAY)
-
-
-class FastUrlDispatcher(UrlDispatcher):
-    """UrlDispatcher that uses a dict lookup for resolving."""
-
-    def __init__(self) -> None:
-        """Initialize the dispatcher."""
-        super().__init__()
-        self._resource_index: dict[str, list[AbstractResource]] = {}
-
-    def register_resource(self, resource: AbstractResource) -> None:
-        """Register a resource."""
-        super().register_resource(resource)
-        canonical = resource.canonical
-        if "{" in canonical:  # strip at the first { to allow for variables
-            canonical = canonical.split("{")[0].rstrip("/")
-        # There may be multiple resources for a canonical path
-        # so we use a list to avoid falling back to a full linear search
-        self._resource_index.setdefault(canonical, []).append(resource)
-
-    async def resolve(self, request: web.Request) -> UrlMappingMatchInfo:
-        """Resolve a request."""
-        url_parts = request.rel_url.raw_parts
-        resource_index = self._resource_index
-
-        # Walk the url parts looking for candidates
-        for i in range(len(url_parts), 0, -1):
-            url_part = "/" + "/".join(url_parts[1:i])
-            if (resource_candidates := resource_index.get(url_part)) is not None:
-                for candidate in resource_candidates:
-                    if (
-                        match_dict := (await candidate.resolve(request))[0]
-                    ) is not None:
-                        return match_dict
-
-        # Finally, fallback to the linear search
-        return await super().resolve(request)

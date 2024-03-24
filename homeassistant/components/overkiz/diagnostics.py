@@ -1,8 +1,10 @@
 """Provides diagnostics for Overkiz."""
+
 from __future__ import annotations
 
 from typing import Any
 
+from pyoverkiz.enums import APIType
 from pyoverkiz.obfuscate import obfuscate_id
 
 from homeassistant.config_entries import ConfigEntry
@@ -10,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from . import HomeAssistantOverkizData
-from .const import CONF_HUB, DOMAIN
+from .const import CONF_API_TYPE, CONF_HUB, DOMAIN
 
 
 async def async_get_config_entry_diagnostics(
@@ -23,10 +25,15 @@ async def async_get_config_entry_diagnostics(
     data = {
         "setup": await client.get_diagnostic_data(),
         "server": entry.data[CONF_HUB],
-        "execution_history": [
-            repr(execution) for execution in await client.get_execution_history()
-        ],
+        "api_type": entry.data.get(CONF_API_TYPE, APIType.CLOUD),
     }
+
+    # Only Overkiz cloud servers expose an endpoint with execution history
+    if client.api_type == APIType.CLOUD:
+        execution_history = [
+            repr(execution) for execution in await client.get_execution_history()
+        ]
+        data["execution_history"] = execution_history
 
     return data
 
@@ -49,11 +56,15 @@ async def async_get_device_diagnostics(
         },
         "setup": await client.get_diagnostic_data(),
         "server": entry.data[CONF_HUB],
-        "execution_history": [
+        "api_type": entry.data.get(CONF_API_TYPE, APIType.CLOUD),
+    }
+
+    # Only Overkiz cloud servers expose an endpoint with execution history
+    if client.api_type == APIType.CLOUD:
+        data["execution_history"] = [
             repr(execution)
             for execution in await client.get_execution_history()
             if any(command.device_url == device_url for command in execution.commands)
-        ],
-    }
+        ]
 
     return data

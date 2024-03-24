@@ -1,4 +1,7 @@
 """Test WiZ diagnostics."""
+
+from syrupy import SnapshotAssertion
+
 from homeassistant.core import HomeAssistant
 
 from . import async_setup_integration
@@ -8,17 +11,11 @@ from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test generating diagnostics for a config entry."""
     _, entry = await async_setup_integration(hass)
-    diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)
 
-    assert diag == {
-        "data": {
-            "homeId": "**REDACTED**",
-            "mocked": "mocked",
-            "roomId": "**REDACTED**",
-        },
-        "entry": {"data": {"host": "1.1.1.1"}, "title": "Mock Title"},
-    }
+    assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot

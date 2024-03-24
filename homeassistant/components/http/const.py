@@ -1,7 +1,8 @@
 """HTTP specific constants."""
+
 from typing import Final
 
-KEY_AUTHENTICATED: Final = "ha_authenticated"
-KEY_HASS: Final = "hass"
+from homeassistant.helpers.http import KEY_AUTHENTICATED, KEY_HASS  # noqa: F401
+
 KEY_HASS_USER: Final = "hass_user"
 KEY_HASS_REFRESH_TOKEN_ID: Final = "hass_refresh_token_id"

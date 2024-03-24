@@ -78,7 +78,7 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
         client.locations[location_id].auto_bypass_low_battery = bypass
 
 
-class TotalConnectDataUpdateCoordinator(DataUpdateCoordinator[None]):
+class TotalConnectDataUpdateCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to fetch data from TotalConnect."""
 
     config_entry: ConfigEntry

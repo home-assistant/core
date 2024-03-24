@@ -1,4 +1,5 @@
 """Support for UPnP/IGD Binary Sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -18,7 +19,7 @@ from .const import DOMAIN, LOGGER, WAN_STATUS
 from .entity import UpnpEntity, UpnpEntityDescription
 
 
-@dataclass
+@dataclass(frozen=True)
 class UpnpBinarySensorEntityDescription(
     UpnpEntityDescription, BinarySensorEntityDescription
 ):

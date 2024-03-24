@@ -1,11 +1,12 @@
 """Schema repairs."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 import logging
 from typing import TYPE_CHECKING
 
-from sqlalchemy import MetaData
+from sqlalchemy import MetaData, Table
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm.attributes import InstrumentedAttribute
@@ -93,17 +94,16 @@ def _validate_table_schema_has_correct_collation(
     with session_scope(session=instance.get_session(), read_only=True) as session:
         table = table_object.__tablename__
         metadata_obj = MetaData()
+        reflected_table = Table(table, metadata_obj, autoload_with=instance.engine)
         connection = session.connection()
-        metadata_obj.reflect(bind=connection)
-        dialect_kwargs = metadata_obj.tables[table].dialect_kwargs
+        dialect_kwargs = reflected_table.dialect_kwargs
         # Check if the table has a collation set, if its not set than its
         # using the server default collation for the database
 
         collate = (
             dialect_kwargs.get("mysql_collate")
-            or dialect_kwargs.get(
-                "mariadb_collate"
-            )  # pylint: disable-next=protected-access
+            or dialect_kwargs.get("mariadb_collate")
+            # pylint: disable-next=protected-access
             or connection.dialect._fetch_setting(connection, "collation_server")  # type: ignore[attr-defined]
         )
         if collate and collate != "utf8mb4_unicode_ci":

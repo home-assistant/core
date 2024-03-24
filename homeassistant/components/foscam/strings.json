@@ -9,6 +9,9 @@
           "password": "[%key:common::config_flow::data::password%]",
           "rtsp_port": "RTSP port",
           "stream": "Stream"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Foscam camera."
         }
       }
     },

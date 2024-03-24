@@ -1,4 +1,5 @@
 """Numeric integration of data coming from a source sensor over time."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -26,7 +27,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -38,7 +39,7 @@ from homeassistant.helpers.event import (
     EventStateChangedData,
     async_track_state_change_event,
 )
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CONF_ROUND_DIGITS,
@@ -77,7 +78,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
             vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
-            vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
+            vol.Optional(CONF_UNIT_PREFIX): vol.In(UNIT_PREFIXES),
             vol.Optional(CONF_UNIT_TIME, default=UnitOfTime.HOURS): vol.In(UNIT_TIME),
             vol.Remove(CONF_UNIT_OF_MEASUREMENT): cv.string,
             vol.Optional(CONF_METHOD, default=METHOD_TRAPEZOIDAL): vol.In(
@@ -169,8 +170,8 @@ async def async_setup_entry(
     else:
         device_info = None
 
-    unit_prefix = config_entry.options[CONF_UNIT_PREFIX]
-    if unit_prefix == "none":
+    if (unit_prefix := config_entry.options.get(CONF_UNIT_PREFIX)) == "none":
+        # Before we had support for optional selectors, "none" was used for selecting nothing
         unit_prefix = None
 
     integral = IntegrationSensor(
@@ -200,7 +201,7 @@ async def async_setup_platform(
         round_digits=config[CONF_ROUND_DIGITS],
         source_entity=config[CONF_SOURCE_SENSOR],
         unique_id=config.get(CONF_UNIQUE_ID),
-        unit_prefix=config[CONF_UNIT_PREFIX],
+        unit_prefix=config.get(CONF_UNIT_PREFIX),
         unit_time=config[CONF_UNIT_TIME],
     )
 
@@ -292,7 +293,7 @@ class IntegrationSensor(RestoreSensor):
             self._unit_of_measurement = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         @callback
-        def calc_integration(event: EventType[EventStateChangedData]) -> None:
+        def calc_integration(event: Event[EventStateChangedData]) -> None:
             """Handle the sensor state changes."""
             old_state = event.data["old_state"]
             new_state = event.data["new_state"]

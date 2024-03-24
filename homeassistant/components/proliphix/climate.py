@@ -1,4 +1,5 @@
 """Support for Proliphix NT10e Thermostats."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -60,6 +61,7 @@ class ProliphixThermostat(ClimateEntity):
     _attr_precision = PRECISION_TENTHS
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, pdp):
         """Initialize the thermostat."""

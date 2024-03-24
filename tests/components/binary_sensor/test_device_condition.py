@@ -1,4 +1,5 @@
 """The test for binary_sensor device automation."""
+
 from datetime import timedelta
 
 from freezegun import freeze_time
@@ -81,12 +82,12 @@ async def test_get_conditions(
 
 @pytest.mark.parametrize(
     ("hidden_by", "entity_category"),
-    (
+    [
         (er.RegistryEntryHider.INTEGRATION, None),
         (er.RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
-    ),
+    ],
 )
 async def test_get_conditions_hidden_auxiliary(
     hass: HomeAssistant,
@@ -234,6 +235,7 @@ async def test_get_condition_capabilities_legacy(
 
 async def test_if_state(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls,
     enable_custom_integrations: None,
@@ -245,7 +247,14 @@ async def test_if_state(
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
     entry = entity_registry.async_get(platform.ENTITIES["battery"].entity_id)
+    entity_registry.async_update_entity(entry.entity_id, device_id=device_entry.id)
 
     assert await async_setup_component(
         hass,
@@ -258,7 +267,7 @@ async def test_if_state(
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
+                            "device_id": device_entry.id,
                             "entity_id": entry.id,
                             "type": "is_bat_low",
                         }
@@ -277,7 +286,7 @@ async def test_if_state(
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
+                            "device_id": device_entry.id,
                             "entity_id": entry.id,
                             "type": "is_not_bat_low",
                         }
@@ -312,6 +321,7 @@ async def test_if_state(
 
 async def test_if_state_legacy(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls,
     enable_custom_integrations: None,
@@ -323,7 +333,14 @@ async def test_if_state_legacy(
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
     entry = entity_registry.async_get(platform.ENTITIES["battery"].entity_id)
+    entity_registry.async_update_entity(entry.entity_id, device_id=device_entry.id)
 
     assert await async_setup_component(
         hass,
@@ -336,7 +353,7 @@ async def test_if_state_legacy(
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
+                            "device_id": device_entry.id,
                             "entity_id": entry.entity_id,
                             "type": "is_bat_low",
                         }
@@ -364,6 +381,7 @@ async def test_if_state_legacy(
 
 async def test_if_fires_on_for_condition(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls,
     enable_custom_integrations: None,
@@ -379,7 +397,14 @@ async def test_if_fires_on_for_condition(
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
     entry = entity_registry.async_get(platform.ENTITIES["battery"].entity_id)
+    entity_registry.async_update_entity(entry.entity_id, device_id=device_entry.id)
 
     with freeze_time(point1) as time_freeze:
         assert await async_setup_component(
@@ -392,7 +417,7 @@ async def test_if_fires_on_for_condition(
                         "condition": {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
+                            "device_id": device_entry.id,
                             "entity_id": entry.id,
                             "type": "is_not_bat_low",
                             "for": {"seconds": 5},

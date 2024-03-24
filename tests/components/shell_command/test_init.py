@@ -1,4 +1,5 @@
 """The tests for the Shell command component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -254,7 +255,7 @@ async def test_do_not_run_forever(
         "homeassistant.components.shell_command.asyncio.create_subprocess_shell",
         side_effect=mock_create_subprocess_shell,
     ):
-        with pytest.raises(asyncio.TimeoutError):
+        with pytest.raises(TimeoutError):
             await hass.services.async_call(
                 shell_command.DOMAIN,
                 "test_service",

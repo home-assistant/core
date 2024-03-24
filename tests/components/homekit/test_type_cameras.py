@@ -1,4 +1,5 @@
 """Test different accessory types: Camera."""
+
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 from uuid import UUID
@@ -53,35 +54,35 @@ async def _async_start_streaming(hass, acc):
     """Start streaming a camera."""
     acc.set_selected_stream_configuration(MOCK_START_STREAM_TLV)
     await hass.async_block_till_done()
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
 
 async def _async_setup_endpoints(hass, acc):
     """Set camera endpoints."""
     acc.set_endpoints(MOCK_END_POINTS_TLV)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
 
 async def _async_reconfigure_stream(hass, acc, session_info, stream_config):
     """Reconfigure the stream."""
     await acc.reconfigure_stream(session_info, stream_config)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
 
 async def _async_stop_all_streams(hass, acc):
     """Stop all camera streams."""
     await acc.stop()
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
 
 async def _async_stop_stream(hass, acc, session_info):
     """Stop a camera stream."""
     await acc.stop_stream(session_info)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
 
@@ -163,7 +164,7 @@ async def test_camera_stream_source_configured(
     bridge.add_accessory(acc)
     bridge.add_accessory(not_camera_acc)
 
-    await acc.run()
+    acc.run()
 
     assert acc.aid == 2
     assert acc.category == 17  # Camera
@@ -278,7 +279,7 @@ async def test_camera_stream_source_configured_with_failing_ffmpeg(
     bridge.add_accessory(acc)
     bridge.add_accessory(not_camera_acc)
 
-    await acc.run()
+    acc.run()
 
     assert acc.aid == 2
     assert acc.category == 17  # Camera
@@ -320,7 +321,7 @@ async def test_camera_stream_source_found(
         2,
         {},
     )
-    await acc.run()
+    acc.run()
 
     assert acc.aid == 2
     assert acc.category == 17  # Camera
@@ -402,7 +403,7 @@ async def test_camera_stream_source_fails(
         2,
         {},
     )
-    await acc.run()
+    acc.run()
 
     assert acc.aid == 2
     assert acc.category == 17  # Camera
@@ -437,7 +438,7 @@ async def test_camera_with_no_stream(hass: HomeAssistant, run_driver, events) ->
         2,
         {},
     )
-    await acc.run()
+    acc.run()
 
     assert acc.aid == 2
     assert acc.category == 17  # Camera
@@ -482,7 +483,7 @@ async def test_camera_stream_source_configured_and_copy_codec(
     bridge = HomeBridge("hass", run_driver, "Test Bridge")
     bridge.add_accessory(acc)
 
-    await acc.run()
+    acc.run()
 
     assert acc.aid == 2
     assert acc.category == 17  # Camera
@@ -555,7 +556,7 @@ async def test_camera_stream_source_configured_and_override_profile_names(
     bridge = HomeBridge("hass", run_driver, "Test Bridge")
     bridge.add_accessory(acc)
 
-    await acc.run()
+    acc.run()
 
     assert acc.aid == 2
     assert acc.category == 17  # Camera
@@ -627,7 +628,7 @@ async def test_camera_streaming_fails_after_starting_ffmpeg(
     bridge = HomeBridge("hass", run_driver, "Test Bridge")
     bridge.add_accessory(acc)
 
-    await acc.run()
+    acc.run()
 
     assert acc.aid == 2
     assert acc.category == 17  # Camera
@@ -707,7 +708,7 @@ async def test_camera_with_linked_motion_sensor(
     bridge = HomeBridge("hass", run_driver, "Test Bridge")
     bridge.add_accessory(acc)
 
-    await acc.run()
+    acc.run()
 
     assert acc.aid == 2
     assert acc.category == 17  # Camera
@@ -760,7 +761,7 @@ async def test_camera_with_linked_motion_sensor(
     # motion sensor is removed
     hass.states.async_remove(motion_entity_id)
     await hass.async_block_till_done()
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
     assert char.value is True
 
@@ -789,7 +790,7 @@ async def test_camera_with_a_missing_linked_motion_sensor(
     bridge = HomeBridge("hass", run_driver, "Test Bridge")
     bridge.add_accessory(acc)
 
-    await acc.run()
+    acc.run()
 
     assert acc.aid == 2
     assert acc.category == 17  # Camera
@@ -835,7 +836,7 @@ async def test_camera_with_linked_doorbell_sensor(
     bridge = HomeBridge("hass", run_driver, "Test Bridge")
     bridge.add_accessory(acc)
 
-    await acc.run()
+    acc.run()
 
     assert acc.aid == 2
     assert acc.category == 17  # Camera
@@ -907,7 +908,7 @@ async def test_camera_with_linked_doorbell_sensor(
     # doorbell sensor is removed
     hass.states.async_remove(doorbell_entity_id)
     await hass.async_block_till_done()
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
     assert char.value is None
     assert char2.value is None
@@ -937,7 +938,7 @@ async def test_camera_with_a_missing_linked_doorbell_sensor(
     bridge = HomeBridge("hass", run_driver, "Test Bridge")
     bridge.add_accessory(acc)
 
-    await acc.run()
+    acc.run()
 
     assert acc.aid == 2
     assert acc.category == 17  # Camera

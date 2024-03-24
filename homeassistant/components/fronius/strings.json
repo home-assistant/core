@@ -66,6 +66,21 @@
       "status_code": {
         "name": "Status code"
       },
+      "status_message": {
+        "name": "Status message",
+        "state": {
+          "startup": "Startup",
+          "running": "Running",
+          "standby": "Standby",
+          "bootloading": "Bootloading",
+          "error": "Error",
+          "idle": "Idle",
+          "ready": "Ready",
+          "sleeping": "Sleeping",
+          "unknown": "Unknown",
+          "invalid": "Invalid"
+        }
+      },
       "led_state": {
         "name": "LED state"
       },
@@ -113,6 +128,16 @@
       },
       "meter_location": {
         "name": "Meter location"
+      },
+      "meter_location_description": {
+        "name": "Meter location description",
+        "state": {
+          "feed_in": "Grid interconnection point",
+          "consumption_path": "Consumption path",
+          "external_generator": "External generator",
+          "external_battery": "External battery",
+          "subload": "Subload"
+        }
       },
       "power_apparent_phase_1": {
         "name": "Apparent power phase 1"
@@ -193,7 +218,15 @@
         "name": "State code"
       },
       "state_message": {
-        "name": "State message"
+        "name": "State message",
+        "state": {
+          "up_and_running": "Up and running",
+          "keep_minimum_temperature": "Keep minimum temperature",
+          "legionella_protection": "Legionella protection",
+          "critical_fault": "Critical fault",
+          "fault": "Fault",
+          "boost_mode": "Boost mode"
+        }
       },
       "meter_mode": {
         "name": "Meter mode"

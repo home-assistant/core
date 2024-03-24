@@ -1,4 +1,5 @@
 """Tests for the ecobee config flow."""
+
 from unittest.mock import patch
 
 from pyecobee import ECOBEE_API_KEY, ECOBEE_REFRESH_TOKEN
@@ -198,9 +199,7 @@ async def test_import_flow_triggered_with_ecobee_conf_and_valid_data_and_stale_t
         return_value=MOCK_ECOBEE_CONF,
     ), patch(
         "homeassistant.components.ecobee.config_flow.Ecobee"
-    ) as mock_ecobee, patch.object(
-        flow, "async_step_user"
-    ) as mock_async_step_user:
+    ) as mock_ecobee, patch.object(flow, "async_step_user") as mock_async_step_user:
         mock_ecobee = mock_ecobee.return_value
         mock_ecobee.refresh_tokens.return_value = False
 

@@ -1,4 +1,5 @@
 """The test for sensor device automation."""
+
 import pytest
 from pytest_unordered import unordered
 
@@ -130,12 +131,12 @@ async def test_get_conditions(
 
 @pytest.mark.parametrize(
     ("hidden_by", "entity_category"),
-    (
+    [
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
-    ),
+    ],
 )
 async def test_get_conditions_hidden_auxiliary(
     hass: HomeAssistant,
@@ -224,13 +225,13 @@ async def test_get_conditions_no_state(
 
 @pytest.mark.parametrize(
     ("state_class", "unit", "condition_types"),
-    (
+    [
         (SensorStateClass.MEASUREMENT, None, ["is_value"]),
         (SensorStateClass.TOTAL, None, ["is_value"]),
         (SensorStateClass.TOTAL_INCREASING, None, ["is_value"]),
         (SensorStateClass.MEASUREMENT, "dogs", ["is_value"]),
         (None, None, []),
-    ),
+    ],
 )
 async def test_get_conditions_no_unit_or_stateclass(
     hass: HomeAssistant,
@@ -461,13 +462,22 @@ async def test_get_condition_capabilities_none(
 
 async def test_if_state_not_above_below(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls,
     caplog: pytest.LogCaptureFixture,
     enable_custom_integrations: None,
 ) -> None:
     """Test for bad value conditions."""
-    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
 
     assert await async_setup_component(
         hass,
@@ -480,7 +490,7 @@ async def test_if_state_not_above_below(
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
+                            "device_id": device_entry.id,
                             "entity_id": entry.id,
                             "type": "is_battery_level",
                         }
@@ -495,12 +505,21 @@ async def test_if_state_not_above_below(
 
 async def test_if_state_above(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls,
     enable_custom_integrations: None,
 ) -> None:
     """Test for value conditions."""
-    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
 
     hass.states.async_set(entry.entity_id, STATE_UNKNOWN, {"device_class": "battery"})
 
@@ -515,7 +534,7 @@ async def test_if_state_above(
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
+                            "device_id": device_entry.id,
                             "entity_id": entry.id,
                             "type": "is_battery_level",
                             "above": 10,
@@ -553,12 +572,21 @@ async def test_if_state_above(
 
 async def test_if_state_above_legacy(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls,
     enable_custom_integrations: None,
 ) -> None:
     """Test for value conditions."""
-    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
 
     hass.states.async_set(entry.entity_id, STATE_UNKNOWN, {"device_class": "battery"})
 
@@ -573,7 +601,7 @@ async def test_if_state_above_legacy(
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
+                            "device_id": device_entry.id,
                             "entity_id": entry.entity_id,
                             "type": "is_battery_level",
                             "above": 10,
@@ -611,12 +639,21 @@ async def test_if_state_above_legacy(
 
 async def test_if_state_below(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls,
     enable_custom_integrations: None,
 ) -> None:
     """Test for value conditions."""
-    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
 
     hass.states.async_set(entry.entity_id, STATE_UNKNOWN, {"device_class": "battery"})
 
@@ -631,7 +668,7 @@ async def test_if_state_below(
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
+                            "device_id": device_entry.id,
                             "entity_id": entry.id,
                             "type": "is_battery_level",
                             "below": 10,
@@ -669,12 +706,21 @@ async def test_if_state_below(
 
 async def test_if_state_between(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls,
     enable_custom_integrations: None,
 ) -> None:
     """Test for value conditions."""
-    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
 
     hass.states.async_set(entry.entity_id, STATE_UNKNOWN, {"device_class": "battery"})
 
@@ -689,7 +735,7 @@ async def test_if_state_between(
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
+                            "device_id": device_entry.id,
                             "entity_id": entry.id,
                             "type": "is_battery_level",
                             "above": 10,

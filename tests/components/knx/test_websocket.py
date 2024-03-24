@@ -1,4 +1,5 @@
 """KNX Websocket Tests."""
+
 from typing import Any
 from unittest.mock import patch
 
@@ -136,6 +137,24 @@ async def test_knx_project_file_remove(
 
     assert res["success"], res
     assert not hass.data[DOMAIN].project.loaded
+
+
+async def test_knx_get_project(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    load_knxproj: None,
+):
+    """Test retrieval of kxnproject from store."""
+    await knx.setup_integration({})
+    client = await hass_ws_client(hass)
+    assert hass.data[DOMAIN].project.loaded
+
+    await client.send_json({"id": 3, "type": "knx/get_knx_project"})
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"]["project_loaded"] is True
+    assert res["result"]["knxproject"] == FIXTURE_PROJECT_DATA
 
 
 async def test_knx_group_monitor_info_command(
