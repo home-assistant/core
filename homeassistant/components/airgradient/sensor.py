@@ -102,11 +102,9 @@ async def async_setup_entry(
 
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities = [
+    async_add_entities(
         AirGradientSensor(coordinator, description) for description in SENSOR_TYPES
-    ]
-
-    async_add_entities(entities)
+    )
 
 
 class AirGradientSensor(
