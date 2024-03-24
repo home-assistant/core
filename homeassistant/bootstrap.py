@@ -734,7 +734,7 @@ async def _async_resolve_domains_to_setup(
         *chain.from_iterable(platform_integrations.values()),
     }
 
-    translations_to_load = {*domains_to_setup, *additional_manifests_to_load}
+    translations_to_load = additional_manifests_to_load.copy()
 
     # Resolve all dependencies so we know all integrations
     # that will have to be loaded and start right-away
@@ -818,6 +818,12 @@ async def _async_resolve_domains_to_setup(
         "check installed requirements",
         eager_start=True,
     )
+
+    #
+    # Only add the domains_to_setup after we finish resolving
+    # as new domains are likely to added in the process
+    #
+    translations_to_load.update(domains_to_setup)
     # Start loading translations for all integrations we are going to set up
     # in the background so they are ready when we need them. This avoids a
     # lot of waiting for the translation load lock and a thundering herd of

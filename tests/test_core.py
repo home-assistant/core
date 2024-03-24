@@ -1670,6 +1670,7 @@ async def test_serviceregistry_remove_service(hass: HomeAssistant) -> None:
 
 async def test_serviceregistry_service_that_not_exists(hass: HomeAssistant) -> None:
     """Test remove service that not exists."""
+    await async_setup_component(hass, "homeassistant", {})
     calls_remove = async_capture_events(hass, EVENT_SERVICE_REMOVED)
     assert not hass.services.has_service("test_xxx", "test_yyy")
     hass.services.async_remove("test_xxx", "test_yyy")
@@ -1687,7 +1688,7 @@ async def test_serviceregistry_service_that_not_exists(hass: HomeAssistant) -> N
     assert exc.value.domain == "test_do_not"
     assert exc.value.service == "exist"
 
-    assert str(exc.value) == "Service test_do_not.exist not found."
+    assert str(exc.value) == "Service test_do_not.exist not found"
 
 
 async def test_serviceregistry_async_service_raise_exception(

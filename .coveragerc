@@ -1062,6 +1062,7 @@ omit =
     homeassistant/components/rabbitair/fan.py
     homeassistant/components/rachio/__init__.py
     homeassistant/components/rachio/binary_sensor.py
+    homeassistant/components/rachio/coordinator.py
     homeassistant/components/rachio/device.py
     homeassistant/components/rachio/entity.py
     homeassistant/components/rachio/switch.py
