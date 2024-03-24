@@ -252,6 +252,31 @@ async def test_discover_platform(
     )
 
 
+async def test_discover_platform_missing_platform(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test discovery of device_tracker missing platform."""
+    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, device_tracker.DOMAIN, {})
+    # async_block_till_done is intentionally missing here so we
+    # can verify async_load_platform still works without it
+    with patch("homeassistant.components.device_tracker.legacy.update_config"):
+        await discovery.async_load_platform(
+            hass,
+            device_tracker.DOMAIN,
+            "its_not_there",
+            {"test_key": "test_val"},
+            {"bla": {}},
+        )
+        await hass.async_block_till_done()
+    assert device_tracker.DOMAIN in hass.config.components
+    assert (
+        "Unable to prepare setup for platform 'its_not_there.device_tracker'"
+        in caplog.text
+    )
+    # This test should not generate an unhandled exception
+
+
 async def test_update_stale(
     hass: HomeAssistant,
     mock_device_tracker_conf: list[legacy.Device],
