@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 
-from .. import DOMAIN
+from ..const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
