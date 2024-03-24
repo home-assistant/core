@@ -957,7 +957,7 @@ class Entity(
             _LOGGER.warning(
                 (
                     "Entity %s (%s) is using self.async_update_ha_state(), without"
-                    " enabling force_update. Instead it should use"
+                    " enabling force_refresh. Instead it should use"
                     " self.async_write_ha_state(), please %s"
                 ),
                 self.entity_id,
@@ -1648,7 +1648,7 @@ class ToggleEntity(
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
@@ -1656,7 +1656,7 @@ class ToggleEntity(
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""

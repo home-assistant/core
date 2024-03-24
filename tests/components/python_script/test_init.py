@@ -250,7 +250,7 @@ for index, value in enumerate(["earth", "mars"]):
     hass.states.set('hello.{}'.format(index), value)
     """
 
-    hass.async_add_job(execute, hass, "test.py", source, {})
+    await hass.async_add_executor_job(execute, hass, "test.py", source, {})
     await hass.async_block_till_done()
 
     assert hass.states.is_state("hello.0", "earth")

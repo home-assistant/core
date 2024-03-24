@@ -267,7 +267,7 @@ async def test_ota_sw_version(hass: HomeAssistant, ota_zha_device) -> None:
 
 @pytest.mark.parametrize(
     ("device", "last_seen_delta", "is_available"),
-    (
+    [
         ("zigpy_device", 0, True),
         (
             "zigpy_device",
@@ -305,7 +305,7 @@ async def test_ota_sw_version(hass: HomeAssistant, ota_zha_device) -> None:
             CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY + 2,
             False,
         ),
-    ),
+    ],
 )
 async def test_device_restore_availability(
     hass: HomeAssistant,

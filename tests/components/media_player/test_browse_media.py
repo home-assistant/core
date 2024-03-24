@@ -88,7 +88,7 @@ async def test_process_play_media_url(hass: HomeAssistant, mock_sign_path) -> No
     )
 
     # Not changing a URL which is not absolute and does not start with /
-    async_process_play_media_url(hass, "hello") == "hello"
+    assert async_process_play_media_url(hass, "hello") == "hello"
 
 
 async def test_process_play_media_url_for_addon(

@@ -143,16 +143,6 @@ def error_response(
     )
 
 
-def supports_encryption() -> bool:
-    """Test if we support encryption."""
-    try:
-        import nacl  # noqa: F401 pylint: disable=import-outside-toplevel
-
-        return True
-    except OSError:
-        return False
-
-
 def safe_registration(registration: dict) -> dict:
     """Return a registration without sensitive values."""
     # Sensitive values: webhook_id, secret, cloudhook_url

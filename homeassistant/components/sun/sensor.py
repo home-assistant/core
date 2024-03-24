@@ -21,8 +21,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import Sun
 from .const import DOMAIN, SIGNAL_EVENTS_CHANGED, SIGNAL_POSITION_CHANGED
+from .entity import Sun
 
 ENTITY_ID_SENSOR_FORMAT = SENSOR_DOMAIN + ".sun_{}"
 
