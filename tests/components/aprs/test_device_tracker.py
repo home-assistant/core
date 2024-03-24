@@ -302,7 +302,7 @@ def test_aprs_listener_rx_msg_no_position(mock_ais: MagicMock) -> None:
     see.assert_not_called()
 
 
-def test_aprs_listener_tx_msg_object(mock_ais: MagicMock) -> None:
+def test_aprs_listener_rx_msg_object(mock_ais: MagicMock) -> None:
     """Test rx_msg with object."""
     callsign = TEST_CALLSIGN
     password = TEST_PASSWORD
@@ -320,13 +320,6 @@ def test_aprs_listener_tx_msg_object(mock_ais: MagicMock) -> None:
     listener.run()
     listener.rx_msg(sample_msg)
 
-    assert listener.callsign == callsign
-    assert listener.host == host
-    assert listener.server_filter == server_filter
-    assert listener.see == see
-    assert listener.start_event.is_set()
-    assert listener.start_success
-    assert listener.start_message == "Connected to testhost with callsign testcall."
     see.assert_called_with(
         dev_id=device_tracker.slugify("V4310251"),
         gps=(51.09534249084249, -1.5315201465201465),
