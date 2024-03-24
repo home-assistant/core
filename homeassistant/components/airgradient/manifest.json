@@ -5,6 +5,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/airgradient",
   "iot_class": "local_polling",
-  "requirements": ["airgradient==0.1.0"],
+  "requirements": ["airgradient==0.2.0"],
   "zeroconf": ["_airgradient._tcp.local."]
 }

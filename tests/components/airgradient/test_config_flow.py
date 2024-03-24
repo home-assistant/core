@@ -17,11 +17,16 @@ from tests.common import MockConfigEntry
 ZEROCONF_DISCOVERY = zeroconf.ZeroconfServiceInfo(
     ip_address=ip_address("10.0.0.131"),
     ip_addresses=[ip_address("10.0.0.131")],
-    hostname="mock_hostname",
-    name="12345",
-    port=None,
+    hostname="airgradient_84fce612f5b8.local.",
+    name="airgradient_84fce612f5b8._airgradient._tcp.local.",
+    port=80,
     type="_airgradient._tcp.local.",
-    properties={},
+    properties={
+        "vendor": "AirGradient",
+        "fw_ver": "3.0.8",
+        "serialno": "84fce612f5b8",
+        "model": "I-9PSL",
+    },
 )
 
 
@@ -144,7 +149,7 @@ async def test_zeroconf_flow(
     )
     await hass.async_block_till_done()
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "84fce612f5b8"
+    assert result["title"] == "I-9PSL"
     assert result["data"] == {
         CONF_HOST: "10.0.0.131",
     }

@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -16,26 +16,31 @@ from .const import DOMAIN
 class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
     """AirGradient config flow."""
 
-    host: str | None = None
     device_status: Status | None = None
+
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        self.data: dict[str, Any] = {}
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
-        self.host = discovery_info.host
+        self.data[CONF_HOST] = host = discovery_info.host
+        self.data[CONF_MODEL] = discovery_info.properties["model"]
+
+        await self.async_set_unique_id(discovery_info.properties["serialno"])
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         session = async_get_clientsession(self.hass)
-        air_gradient = AirGradientClient(self.host, session=session)
+        air_gradient = AirGradientClient(host, session=session)
         self.device_status = await air_gradient.get_status()
 
-        await self.async_set_unique_id(self.device_status.serial_number)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: self.host})
         self.context.update(
             {
-                "host": self.host,
+                "host": host,
                 "title_placeholders": {
-                    "model": self.device_status.serial_number,
+                    "model": self.data[CONF_MODEL],
                 },
             }
         )
@@ -48,8 +53,8 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self.device_status is not None
         if user_input is not None:
             return self.async_create_entry(
-                title=self.device_status.serial_number,
-                data={CONF_HOST: self.host},
+                title=self.data[CONF_MODEL],
+                data={CONF_HOST: self.data[CONF_HOST]},
             )
 
         self._set_confirm_only()
@@ -57,6 +62,7 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="discovery_confirm",
             description_placeholders={
                 "serial_number": self.device_status.serial_number,
+                "model": self.data[CONF_MODEL],
             },
         )
 

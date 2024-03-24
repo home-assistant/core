@@ -10,7 +10,7 @@
         }
       },
       "discovery_confirm": {
-        "description": "Do you want to setup {serial_number}?"
+        "description": "Do you want to setup {model} ({serial_number})?"
       }
     },
     "abort": {
