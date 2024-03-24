@@ -68,7 +68,7 @@ async def test_config_not_ready(hass: HomeAssistant) -> None:
         assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_auth_Fails(hass: HomeAssistant) -> None:
+async def test_auth_fails(hass: HomeAssistant) -> None:
     """Test for setup failure if auth has changed."""
     entry = MockConfigEntry(
         domain=DOMAIN,
