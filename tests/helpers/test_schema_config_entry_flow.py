@@ -1,4 +1,5 @@
 """Tests for the schema based data entry flows."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -45,7 +46,7 @@ def manager_fixture():
     handlers = Registry()
     entries = []
 
-    class FlowManager(data_entry_flow.BaseFlowManager):
+    class FlowManager(data_entry_flow.FlowManager):
         """Test flow manager."""
 
         async def async_create_flow(self, handler_key, *, context, data):
@@ -103,9 +104,9 @@ async def test_name(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> 
     assert wrapped_entity_config_entry_title(hass, entry.id) == "Custom Name"
 
 
-@pytest.mark.parametrize("marker", (vol.Required, vol.Optional))
+@pytest.mark.parametrize("marker", [vol.Required, vol.Optional])
 async def test_config_flow_advanced_option(
-    hass: HomeAssistant, manager: data_entry_flow.BaseFlowManager, marker
+    hass: HomeAssistant, manager: data_entry_flow.FlowManager, marker
 ) -> None:
     """Test handling of advanced options in config flow."""
     manager.hass = hass
@@ -198,9 +199,9 @@ async def test_config_flow_advanced_option(
         assert isinstance(option, str)
 
 
-@pytest.mark.parametrize("marker", (vol.Required, vol.Optional))
+@pytest.mark.parametrize("marker", [vol.Required, vol.Optional])
 async def test_options_flow_advanced_option(
-    hass: HomeAssistant, manager: data_entry_flow.BaseFlowManager, marker
+    hass: HomeAssistant, manager: data_entry_flow.FlowManager, marker
 ) -> None:
     """Test handling of advanced options in options flow."""
     manager.hass = hass
@@ -475,7 +476,7 @@ async def test_next_step_function(hass: HomeAssistant) -> None:
 
 
 async def test_suggested_values(
-    hass: HomeAssistant, manager: data_entry_flow.BaseFlowManager
+    hass: HomeAssistant, manager: data_entry_flow.FlowManager
 ) -> None:
     """Test suggested_values handling in SchemaFlowFormStep."""
     manager.hass = hass
@@ -667,7 +668,7 @@ async def test_options_flow_state(hass: HomeAssistant) -> None:
 
 
 async def test_options_flow_omit_optional_keys(
-    hass: HomeAssistant, manager: data_entry_flow.BaseFlowManager
+    hass: HomeAssistant, manager: data_entry_flow.FlowManager
 ) -> None:
     """Test handling of advanced options in options flow."""
     manager.hass = hass

@@ -1,4 +1,5 @@
 """Test Color extractor component setup process."""
+
 from homeassistant.components.color_extractor import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant

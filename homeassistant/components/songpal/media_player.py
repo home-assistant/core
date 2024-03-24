@@ -1,4 +1,5 @@
 """Support for Songpal-enabled (Sony) media devices."""
+
 from __future__ import annotations
 
 import asyncio

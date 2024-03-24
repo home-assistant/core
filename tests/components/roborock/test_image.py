@@ -1,4 +1,5 @@
 """Test Roborock Image platform."""
+
 import copy
 from datetime import timedelta
 from http import HTTPStatus

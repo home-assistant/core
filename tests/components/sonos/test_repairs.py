@@ -1,4 +1,5 @@
 """Test repairs handling for Sonos."""
+
 from unittest.mock import Mock
 
 from homeassistant.components.sonos.const import (

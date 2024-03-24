@@ -1,4 +1,5 @@
 """The tests for the UniFi Network update platform."""
+
 from copy import deepcopy
 
 from aiounifi.models.message import MessageKey
@@ -162,7 +163,10 @@ async def test_install(
     device_state = hass.states.get("update.device_1")
     assert device_state.state == STATE_ON
 
-    url = f"https://{config_entry.data[CONF_HOST]}:1234/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/devmgr"
+    url = (
+        f"https://{config_entry.data[CONF_HOST]}:1234"
+        f"/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/devmgr"
+    )
     aioclient_mock.clear_requests()
     aioclient_mock.post(url)
 

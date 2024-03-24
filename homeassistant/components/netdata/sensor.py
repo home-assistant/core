@@ -1,4 +1,5 @@
 """Support gathering system information of hosts which are running netdata."""
+
 from __future__ import annotations
 
 import logging

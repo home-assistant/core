@@ -1,4 +1,5 @@
 """Support for French FAI Bouygues Bbox routers."""
+
 from __future__ import annotations
 
 from collections import namedtuple

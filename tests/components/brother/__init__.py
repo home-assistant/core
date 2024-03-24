@@ -1,4 +1,5 @@
 """Tests for Brother Printer integration."""
+
 import json
 from unittest.mock import patch
 

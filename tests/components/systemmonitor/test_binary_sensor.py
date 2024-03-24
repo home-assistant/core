@@ -1,4 +1,5 @@
 """Test System Monitor binary sensor."""
+
 from datetime import timedelta
 from unittest.mock import Mock, patch
 

@@ -1,4 +1,5 @@
 """Test the init file for the Insteon component."""
+
 import asyncio
 from unittest.mock import patch
 

@@ -1,11 +1,12 @@
 """Config flow for Ambiclimate."""
+
 import logging
 from typing import Any
 
 from aiohttp import web
 import ambiclimate
 
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant, callback
@@ -150,7 +151,7 @@ class AmbiclimateAuthCallbackView(HomeAssistantView):
         """Receive authorization token."""
         if (code := request.query.get("code")) is None:
             return "No code"
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": "code"}, data=code

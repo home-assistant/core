@@ -1,4 +1,5 @@
 """MQTT component mixins and helpers."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -29,7 +30,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -59,7 +60,6 @@ from homeassistant.helpers.typing import (
     UNDEFINED,
     ConfigType,
     DiscoveryInfoType,
-    EventType,
     UndefinedType,
 )
 from homeassistant.util.json import json_loads
@@ -94,7 +94,6 @@ from .const import (
     DOMAIN,
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
-    TEMPLATE_ERRORS,
 )
 from .debug_info import log_message, log_messages
 from .discovery import (
@@ -109,6 +108,7 @@ from .discovery import (
 from .models import (
     MessageCallbackType,
     MqttValueTemplate,
+    MqttValueTemplateException,
     PublishPayloadType,
     ReceiveMessage,
 )
@@ -482,7 +482,8 @@ def write_state_on_attr_change(
             }
             try:
                 msg_callback(msg)
-            except TEMPLATE_ERRORS:
+            except MqttValueTemplateException as exc:
+                _LOGGER.warning(exc)
                 return
             if not _attrs_have_changed(tracked_attrs):
                 return
@@ -767,7 +768,7 @@ async def async_remove_discovery_payload(
 async def async_clear_discovery_topic_if_entity_removed(
     hass: HomeAssistant,
     discovery_data: DiscoveryInfoType,
-    event: EventType[er.EventEntityRegistryUpdatedData],
+    event: Event[er.EventEntityRegistryUpdatedData],
 ) -> None:
     """Clear the discovery topic if the entity is removed."""
     if event.data["action"] == "remove":
@@ -871,7 +872,7 @@ class MqttDiscoveryDeviceUpdate(ABC):
             return
 
     async def _async_device_removed(
-        self, event: EventType[EventDeviceRegistryUpdatedData]
+        self, event: Event[EventDeviceRegistryUpdatedData]
     ) -> None:
         """Handle the manual removal of a device."""
         if self._skip_device_removal or not async_removed_from_device(
@@ -1342,7 +1343,7 @@ def update_device(
 @callback
 def async_removed_from_device(
     hass: HomeAssistant,
-    event: EventType[EventDeviceRegistryUpdatedData],
+    event: Event[EventDeviceRegistryUpdatedData],
     mqtt_device_id: str,
     config_entry_id: str,
 ) -> bool:

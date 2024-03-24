@@ -1,4 +1,5 @@
 """The tests for the Islamic prayer times sensor platform."""
+
 from unittest.mock import patch
 
 from freezegun import freeze_time

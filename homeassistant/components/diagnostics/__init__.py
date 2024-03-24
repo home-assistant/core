@@ -1,4 +1,5 @@
 """The Diagnostics integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine, Mapping
@@ -232,7 +233,7 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
 
         device_diagnostics = sub_type is not None
 
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[http.KEY_HASS]
 
         if (config_entry := hass.config_entries.async_get_entry(d_id)) is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)

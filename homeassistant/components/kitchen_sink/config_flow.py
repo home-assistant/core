@@ -1,4 +1,5 @@
 """Config flow to configure the Kitchen Sink component."""
+
 from __future__ import annotations
 
 from typing import Any

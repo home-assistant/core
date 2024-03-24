@@ -1,4 +1,5 @@
 """Test the Airthings config flow."""
+
 from unittest.mock import patch
 
 import airthings

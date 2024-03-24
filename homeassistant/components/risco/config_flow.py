@@ -1,4 +1,5 @@
 """Config flow for Risco integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -205,8 +206,8 @@ class RiscoConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=info["title"],
                     data={
                         **user_input,
-                        **{CONF_TYPE: TYPE_LOCAL},
-                        **{CONF_COMMUNICATION_DELAY: info["comm_delay"]},
+                        CONF_TYPE: TYPE_LOCAL,
+                        CONF_COMMUNICATION_DELAY: info["comm_delay"],
                     },
                 )
 

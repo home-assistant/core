@@ -1,4 +1,5 @@
 """Test the CO2 Signal config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from aioelectricitymaps import (

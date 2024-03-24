@@ -1,4 +1,5 @@
 """Test configuration for ping."""
+
 from unittest.mock import patch
 
 from icmplib import Host

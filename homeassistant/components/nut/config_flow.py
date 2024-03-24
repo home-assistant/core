@@ -1,10 +1,12 @@
 """Config flow for Network UPS Tools (NUT) integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
 from typing import Any
 
+from aionut import NUTError
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
@@ -66,10 +68,14 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     username = data.get(CONF_USERNAME)
     password = data.get(CONF_PASSWORD)
 
-    nut_data = PyNUTData(host, port, alias, username, password)
-    await hass.async_add_executor_job(nut_data.update)
-    if not (status := nut_data.status):
-        raise CannotConnect
+    nut_data = PyNUTData(host, port, alias, username, password, persistent=False)
+    try:
+        status = await nut_data.async_update()
+    except NUTError as err:
+        raise CannotConnect(str(err)) from err
+
+    if not alias and not nut_data.ups_list:
+        raise CannotConnect("No UPSes found on the NUT server")
 
     return {"ups_list": nut_data.ups_list, "available_resources": status}
 

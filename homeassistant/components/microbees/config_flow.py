@@ -1,4 +1,5 @@
 """Config flow for microBees integration."""
+
 from collections.abc import Mapping
 import logging
 from typing import Any

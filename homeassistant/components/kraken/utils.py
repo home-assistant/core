@@ -1,4 +1,5 @@
 """Utility functions for the kraken integration."""
+
 from __future__ import annotations
 
 from pykrakenapi.pykrakenapi import KrakenAPI

@@ -1,6 +1,5 @@
 """Constants for the Steamist integration."""
 
-
 import aiohttp
 
 DOMAIN = "steamist"

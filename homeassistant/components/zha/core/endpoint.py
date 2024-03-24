@@ -1,4 +1,5 @@
 """Representation of a Zigbee endpoint for zha."""
+
 from __future__ import annotations
 
 import asyncio

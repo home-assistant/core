@@ -1,4 +1,5 @@
 """Provide common Renault fixtures."""
+
 from collections.abc import Generator
 import contextlib
 from types import MappingProxyType

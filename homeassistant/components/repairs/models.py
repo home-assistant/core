@@ -1,4 +1,5 @@
 """Models for Repairs."""
+
 from __future__ import annotations
 
 from typing import Protocol
@@ -9,8 +10,6 @@ from homeassistant.core import HomeAssistant
 
 class RepairsFlow(data_entry_flow.FlowHandler):
     """Handle a flow for fixing an issue."""
-
-    _flow_result = data_entry_flow.FlowResult
 
     issue_id: str
     data: dict[str, str | int | float | None] | None

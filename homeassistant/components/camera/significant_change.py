@@ -1,4 +1,5 @@
 """Helper to test significant Camera state changes."""
+
 from __future__ import annotations
 
 from typing import Any

@@ -1,4 +1,5 @@
 """Sensor platform for Garages Amsterdam."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity
@@ -26,17 +27,11 @@ async def async_setup_entry(
     """Defer sensor setup to the shared sensor module."""
     coordinator = await get_coordinator(hass)
 
-    entities: list[GaragesAmsterdamSensor] = []
-
-    for info_type in SENSORS:
-        if getattr(coordinator.data[config_entry.data["garage_name"]], info_type) != "":
-            entities.append(
-                GaragesAmsterdamSensor(
-                    coordinator, config_entry.data["garage_name"], info_type
-                )
-            )
-
-    async_add_entities(entities)
+    async_add_entities(
+        GaragesAmsterdamSensor(coordinator, config_entry.data["garage_name"], info_type)
+        for info_type in SENSORS
+        if getattr(coordinator.data[config_entry.data["garage_name"]], info_type) != ""
+    )
 
 
 class GaragesAmsterdamSensor(GaragesAmsterdamEntity, SensorEntity):

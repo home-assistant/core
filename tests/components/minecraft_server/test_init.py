@@ -1,4 +1,5 @@
 """Tests for the Minecraft Server integration."""
+
 from unittest.mock import patch
 
 from mcstatus import JavaServer

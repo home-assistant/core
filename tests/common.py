@@ -1,4 +1,5 @@
 """Test the helper method for writing tests."""
+
 from __future__ import annotations
 
 import asyncio
@@ -16,7 +17,7 @@ import os
 import pathlib
 import threading
 import time
-from types import ModuleType
+from types import FrameType, ModuleType
 from typing import Any, NoReturn, TypeVar
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -58,6 +59,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import (
     area_registry as ar,
+    category_registry as cr,
     device_registry as dr,
     entity,
     entity_platform,
@@ -234,7 +236,7 @@ async def async_test_home_assistant(
     orig_async_create_task = hass.async_create_task
     orig_tz = dt_util.DEFAULT_TIME_ZONE
 
-    def async_add_job(target, *args):
+    def async_add_job(target, *args, eager_start: bool = False):
         """Add job."""
         check_target = target
         while isinstance(check_target, ft.partial):
@@ -245,7 +247,7 @@ async def async_test_home_assistant(
             fut.set_result(target(*args))
             return fut
 
-        return orig_async_add_job(target, *args)
+        return orig_async_add_job(target, *args, eager_start=eager_start)
 
     def async_add_executor_job(target, *args):
         """Add executor job."""
@@ -295,7 +297,9 @@ async def async_test_home_assistant(
         },
     )
     hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, hass.config_entries._async_shutdown
+        EVENT_HOMEASSISTANT_STOP,
+        hass.config_entries._async_shutdown,
+        run_immediately=True,
     )
 
     # Load the registries
@@ -331,6 +335,7 @@ async def async_test_home_assistant(
             "homeassistant.helpers.restore_state.start.async_at_start",
         ):
             await ar.async_load(hass)
+            await cr.async_load(hass)
             await dr.async_load(hass)
             await er.async_load(hass)
             await fr.async_load(hass)
@@ -899,7 +904,9 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
         def _async_on_stop(_: Event) -> None:
             self.async_shutdown()
 
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_on_stop)
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, _async_on_stop, run_immediately=True
+        )
 
 
 class MockToggleEntity(entity.ToggleEntity):
@@ -1096,9 +1103,9 @@ def assert_setup_component(count, domain=None):
         yield config
 
     if domain is None:
-        assert len(config) == 1, "assert_setup_component requires DOMAIN: {}".format(
-            list(config.keys())
-        )
+        assert (
+            len(config) == 1
+        ), f"assert_setup_component requires DOMAIN: {list(config.keys())}"
         domain = list(config.keys())[0]
 
     res = config.get(domain)
@@ -1351,6 +1358,10 @@ def mock_storage(
         # To ensure that the data can be serialized
         _LOGGER.debug("Writing data to %s: %s", store.key, data_to_write)
         raise_contains_mocks(data_to_write)
+
+        if "data_func" in data_to_write:
+            data_to_write["data"] = data_to_write.pop("data_func")()
+
         encoder = store._encoder
         if encoder and encoder is not JSONEncoder:
             # If they pass a custom encoder that is not the
@@ -1358,7 +1369,7 @@ def mock_storage(
             dump = ft.partial(json.dumps, cls=store._encoder)
         else:
             dump = _orjson_default_encoder
-        data[store.key] = json.loads(dump(data_to_write))
+        data[store.key] = json_loads(dump(data_to_write))
 
     async def mock_remove(store: storage.Store) -> None:
         """Remove data."""
@@ -1418,6 +1429,7 @@ def mock_integration(
         else f"{loader.PACKAGE_CUSTOM_COMPONENTS}.{module.DOMAIN}",
         pathlib.Path(""),
         module.mock_manifest(),
+        set(),
     )
 
     def mock_import_platform(platform_name: str) -> NoReturn:
@@ -1445,13 +1457,14 @@ def mock_platform(
 
     platform_path is in form hue.config_flow.
     """
-    domain = platform_path.split(".")[0]
+    domain, _, platform_name = platform_path.partition(".")
     integration_cache = hass.data[loader.DATA_INTEGRATIONS]
     module_cache = hass.data[loader.DATA_COMPONENTS]
 
     if domain not in integration_cache:
         mock_integration(hass, MockModule(domain))
 
+    integration_cache[domain]._top_level_files.add(f"{platform_name}.py")
     _LOGGER.info("Adding mock integration platform: %s", platform_path)
     module_cache[platform_path] = module or Mock()
 
@@ -1616,3 +1629,20 @@ def help_test_all(module: ModuleType) -> None:
     assert set(module.__all__) == {
         itm for itm in module.__dir__() if not itm.startswith("_")
     }
+
+
+def extract_stack_to_frame(extract_stack: list[Mock]) -> FrameType:
+    """Convert an extract stack to a frame list."""
+    stack = list(extract_stack)
+    for frame in stack:
+        frame.f_back = None
+        frame.f_code.co_filename = frame.filename
+        frame.f_lineno = int(frame.lineno)
+
+    top_frame = stack.pop()
+    current_frame = top_frame
+    while stack and (next_frame := stack.pop()):
+        current_frame.f_back = next_frame
+        current_frame = next_frame
+
+    return top_frame

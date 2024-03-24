@@ -1,4 +1,5 @@
 """Generate CODEOWNERS."""
+
 from __future__ import annotations
 
 from .model import Config, Integration

@@ -1,4 +1,5 @@
 """The tests for RFXCOM RFXtrx device triggers."""
+
 from __future__ import annotations
 
 from typing import Any, NamedTuple
@@ -60,7 +61,7 @@ async def setup_entry(hass, devices):
 @pytest.mark.parametrize(
     ("event", "expected"),
     [
-        [
+        (
             EVENT_LIGHTING_1,
             [
                 {"type": "command", "subtype": subtype}
@@ -75,7 +76,7 @@ async def setup_entry(hass, devices):
                     "Illegal command",
                 ]
             ],
-        ]
+        )
     ],
 )
 async def test_get_triggers(

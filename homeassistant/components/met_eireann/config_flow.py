@@ -1,4 +1,5 @@
 """Config flow to configure Met Éireann component."""
+
 from typing import Any
 
 import voluptuous as vol

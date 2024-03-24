@@ -2,6 +2,7 @@
 
 This includes tests for all mock object types.
 """
+
 from unittest.mock import Mock, patch
 
 import pytest

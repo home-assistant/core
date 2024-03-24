@@ -1,4 +1,5 @@
 """Tests for the Wemo fan entity."""
+
 import pytest
 from pywemo.exceptions import ActionException
 from pywemo.ouimeaux_device.humidifier import DesiredHumidity, FanMode

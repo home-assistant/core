@@ -1,4 +1,5 @@
 """Define test fixtures for AirVisual."""
+
 from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, Mock, patch

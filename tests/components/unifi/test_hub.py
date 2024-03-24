@@ -1,4 +1,5 @@
 """Test UniFi Network."""
+
 from copy import deepcopy
 from datetime import timedelta
 from http import HTTPStatus
@@ -23,11 +24,11 @@ from homeassistant.components.unifi.const import (
     DEFAULT_TRACK_DEVICES,
     DEFAULT_TRACK_WIRED_CLIENTS,
     DOMAIN as UNIFI_DOMAIN,
-    PLATFORMS,
     UNIFI_WIRELESS_CLIENTS,
 )
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
 from homeassistant.components.unifi.hub import get_unifi_api
+from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -247,7 +248,7 @@ async def test_hub_setup(
 ) -> None:
     """Successful setup."""
     with patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup",
+        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
         return_value=True,
     ) as forward_entry_setup:
         config_entry = await setup_unifi_integration(
@@ -255,25 +256,31 @@ async def test_hub_setup(
         )
         hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
-    entry = hub.config_entry
-    assert len(forward_entry_setup.mock_calls) == len(PLATFORMS)
-    assert forward_entry_setup.mock_calls[0][1] == (entry, BUTTON_DOMAIN)
-    assert forward_entry_setup.mock_calls[1][1] == (entry, TRACKER_DOMAIN)
-    assert forward_entry_setup.mock_calls[2][1] == (entry, IMAGE_DOMAIN)
-    assert forward_entry_setup.mock_calls[3][1] == (entry, SENSOR_DOMAIN)
-    assert forward_entry_setup.mock_calls[4][1] == (entry, SWITCH_DOMAIN)
+    entry = hub.config.entry
+    assert len(forward_entry_setup.mock_calls) == 1
+    assert forward_entry_setup.mock_calls[0][1] == (
+        entry,
+        [
+            BUTTON_DOMAIN,
+            TRACKER_DOMAIN,
+            IMAGE_DOMAIN,
+            SENSOR_DOMAIN,
+            SWITCH_DOMAIN,
+            UPDATE_DOMAIN,
+        ],
+    )
 
-    assert hub.host == ENTRY_CONFIG[CONF_HOST]
+    assert hub.config.host == ENTRY_CONFIG[CONF_HOST]
     assert hub.is_admin == (SITE[0]["role"] == "admin")
 
-    assert hub.option_allow_bandwidth_sensors == DEFAULT_ALLOW_BANDWIDTH_SENSORS
-    assert hub.option_allow_uptime_sensors == DEFAULT_ALLOW_UPTIME_SENSORS
-    assert isinstance(hub.option_block_clients, list)
-    assert hub.option_track_clients == DEFAULT_TRACK_CLIENTS
-    assert hub.option_track_devices == DEFAULT_TRACK_DEVICES
-    assert hub.option_track_wired_clients == DEFAULT_TRACK_WIRED_CLIENTS
-    assert hub.option_detection_time == timedelta(seconds=DEFAULT_DETECTION_TIME)
-    assert isinstance(hub.option_ssid_filter, set)
+    assert hub.config.option_allow_bandwidth_sensors == DEFAULT_ALLOW_BANDWIDTH_SENSORS
+    assert hub.config.option_allow_uptime_sensors == DEFAULT_ALLOW_UPTIME_SENSORS
+    assert isinstance(hub.config.option_block_clients, list)
+    assert hub.config.option_track_clients == DEFAULT_TRACK_CLIENTS
+    assert hub.config.option_track_devices == DEFAULT_TRACK_DEVICES
+    assert hub.config.option_track_wired_clients == DEFAULT_TRACK_WIRED_CLIENTS
+    assert hub.config.option_detection_time == timedelta(seconds=DEFAULT_DETECTION_TIME)
+    assert isinstance(hub.config.option_ssid_filter, set)
 
     assert hub.signal_reachable == "unifi-reachable-1"
     assert hub.signal_options_update == "unifi-options-1"

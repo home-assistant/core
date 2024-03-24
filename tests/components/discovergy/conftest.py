@@ -1,4 +1,5 @@
 """Fixtures for Discovergy integration tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 

@@ -1,4 +1,5 @@
 """Class for helpers and communication with the OverKiz API."""
+
 from __future__ import annotations
 
 from typing import Any, cast
@@ -40,9 +41,9 @@ class OverkizExecutor:
         """Return Overkiz device linked to this entity."""
         return self.coordinator.data[self.device_url]
 
-    def linked_device(self, index: int) -> Device:
+    def linked_device(self, index: int) -> Device | None:
         """Return Overkiz device sharing the same base url."""
-        return self.coordinator.data[f"{self.base_device_url}#{index}"]
+        return self.coordinator.data.get(f"{self.base_device_url}#{index}")
 
     def select_command(self, *commands: str) -> str | None:
         """Select first existing command in a list of commands."""

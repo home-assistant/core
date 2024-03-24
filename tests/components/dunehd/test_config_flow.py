@@ -1,4 +1,5 @@
 """Define tests for the Dune HD config flow."""
+
 from unittest.mock import patch
 
 from homeassistant import data_entry_flow

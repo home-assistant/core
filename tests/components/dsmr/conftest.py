@@ -1,4 +1,5 @@
 """Common test tools."""
+
 import asyncio
 from unittest.mock import MagicMock, patch
 

@@ -1,4 +1,5 @@
 """The Home Assistant Yellow integration."""
+
 from __future__ import annotations
 
 from homeassistant.components.hassio import get_os_info, is_hassio

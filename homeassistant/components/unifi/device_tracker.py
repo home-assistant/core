@@ -82,21 +82,21 @@ WIRELESS_DISCONNECTION = (
 @callback
 def async_client_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if client is allowed."""
-    if obj_id in hub.option_supported_clients:
+    if obj_id in hub.config.option_supported_clients:
         return True
 
-    if not hub.option_track_clients:
+    if not hub.config.option_track_clients:
         return False
 
     client = hub.api.clients[obj_id]
-    if client.mac not in hub.wireless_clients:
-        if not hub.option_track_wired_clients:
+    if client.mac not in hub.entity_loader.wireless_clients:
+        if not hub.config.option_track_wired_clients:
             return False
 
     elif (
         client.essid
-        and hub.option_ssid_filter
-        and client.essid not in hub.option_ssid_filter
+        and hub.config.option_ssid_filter
+        and client.essid not in hub.config.option_ssid_filter
     ):
         return False
 
@@ -108,21 +108,21 @@ def async_client_is_connected_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if device object is disabled."""
     client = hub.api.clients[obj_id]
 
-    if hub.wireless_clients.is_wireless(client) and client.is_wired:
-        if not hub.option_ignore_wired_bug:
+    if hub.entity_loader.wireless_clients.is_wireless(client) and client.is_wired:
+        if not hub.config.option_ignore_wired_bug:
             return False  # Wired bug in action
 
     if (
         not client.is_wired
         and client.essid
-        and hub.option_ssid_filter
-        and client.essid not in hub.option_ssid_filter
+        and hub.config.option_ssid_filter
+        and client.essid not in hub.config.option_ssid_filter
     ):
         return False
 
     if (
         dt_util.utcnow() - dt_util.utc_from_timestamp(client.last_seen or 0)
-        > hub.option_detection_time
+        > hub.config.option_detection_time
     ):
         return False
 
@@ -149,10 +149,8 @@ class UnifiTrackerEntityDescription(UnifiEntityDescription[HandlerT, ApiItemT]):
 ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
     UnifiTrackerEntityDescription[Clients, Client](
         key="Client device scanner",
-        has_entity_name=True,
         allowed_fn=async_client_allowed_fn,
         api_handler_fn=lambda api: api.clients,
-        available_fn=lambda hub, obj_id: hub.available,
         device_info_fn=lambda api, obj_id: None,
         event_is_on=(WIRED_CONNECTION + WIRELESS_CONNECTION),
         event_to_subscribe=(
@@ -161,27 +159,24 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
             + WIRELESS_CONNECTION
             + WIRELESS_DISCONNECTION
         ),
-        heartbeat_timedelta_fn=lambda hub, _: hub.option_detection_time,
+        heartbeat_timedelta_fn=lambda hub, _: hub.config.option_detection_time,
         is_connected_fn=async_client_is_connected_fn,
         name_fn=lambda client: client.name or client.hostname,
         object_fn=lambda api, obj_id: api.clients[obj_id],
-        supported_fn=lambda hub, obj_id: True,
         unique_id_fn=lambda hub, obj_id: f"{hub.site}-{obj_id}",
         ip_address_fn=lambda api, obj_id: api.clients[obj_id].ip,
         hostname_fn=lambda api, obj_id: api.clients[obj_id].hostname,
     ),
     UnifiTrackerEntityDescription[Devices, Device](
         key="Device scanner",
-        has_entity_name=True,
-        allowed_fn=lambda hub, obj_id: hub.option_track_devices,
+        allowed_fn=lambda hub, obj_id: hub.config.option_track_devices,
         api_handler_fn=lambda api: api.devices,
         available_fn=async_device_available_fn,
         device_info_fn=lambda api, obj_id: None,
         heartbeat_timedelta_fn=async_device_heartbeat_timedelta_fn,
-        is_connected_fn=lambda ctrlr, obj_id: ctrlr.api.devices[obj_id].state == 1,
+        is_connected_fn=lambda hub, obj_id: hub.api.devices[obj_id].state == 1,
         name_fn=lambda device: device.name or device.model,
         object_fn=lambda api, obj_id: api.devices[obj_id],
-        supported_fn=lambda hub, obj_id: True,
         unique_id_fn=lambda hub, obj_id: obj_id,
         ip_address_fn=lambda api, obj_id: api.devices[obj_id].ip,
         hostname_fn=lambda api, obj_id: None,
@@ -220,8 +215,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up device tracker for UniFi Network integration."""
     async_update_unique_id(hass, config_entry)
-    UnifiHub.register_platform(
-        hass, config_entry, async_add_entities, UnifiScannerEntity, ENTITY_DESCRIPTIONS
+    UnifiHub.get_hub(hass, config_entry).entity_loader.register_platform(
+        async_add_entities, UnifiScannerEntity, ENTITY_DESCRIPTIONS
     )
 
 

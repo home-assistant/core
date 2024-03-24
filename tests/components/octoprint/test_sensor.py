@@ -1,4 +1,5 @@
 """The tests for Octoptint binary sensor module."""
+
 from datetime import UTC, datetime
 
 from freezegun.api import FrozenDateTimeFactory

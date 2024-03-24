@@ -1,4 +1,5 @@
 """Test Home Assistant unit conversion utility functions."""
+
 from __future__ import annotations
 
 import inspect
@@ -413,6 +414,8 @@ _CONVERTED_VALUE: dict[
         (5, UnitOfSpeed.KNOTS, 2.57222, UnitOfSpeed.METERS_PER_SECOND),
         # 5 ft/s * 0.3048 m/ft = 1.524 m/s
         (5, UnitOfSpeed.FEET_PER_SECOND, 1.524, UnitOfSpeed.METERS_PER_SECOND),
+        # float(round(((20.7 m/s / 0.836) ** 2) ** (1 / 3))) = 8.0Bft
+        (20.7, UnitOfSpeed.METERS_PER_SECOND, 8.0, UnitOfSpeed.BEAUFORT),
     ],
     TemperatureConverter: [
         (100, UnitOfTemperature.CELSIUS, 212, UnitOfTemperature.FAHRENHEIT),

@@ -1,4 +1,5 @@
 """Test the World Air Quality Index (WAQI) config flow."""
+
 import json
 from typing import Any
 from unittest.mock import AsyncMock, patch

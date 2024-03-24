@@ -1,4 +1,5 @@
 """Support for CM15A/CM19A X10 Controller using mochad daemon."""
+
 import logging
 import threading
 

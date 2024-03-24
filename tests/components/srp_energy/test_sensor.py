@@ -1,4 +1,5 @@
 """Tests for the srp_energy sensor platform."""
+
 import time
 from unittest.mock import patch
 

@@ -1,4 +1,5 @@
 """Config flow for Huisbaasje integration."""
+
 import logging
 
 from energyflip import EnergyFlip, EnergyFlipConnectionException, EnergyFlipException

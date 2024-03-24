@@ -1,4 +1,5 @@
 """Test the Fronius config flow."""
+
 from unittest.mock import patch
 
 from pyfronius import FroniusError

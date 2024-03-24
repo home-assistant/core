@@ -1,4 +1,5 @@
 """The tests for the InfluxDB component."""
+
 from dataclasses import dataclass
 import datetime
 from http import HTTPStatus
