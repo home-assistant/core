@@ -36,18 +36,13 @@ _LOGGER = logging.getLogger(__name__)
 AUTH_SCHEMA = {vol.Optional(CONF_USERNAME): str, vol.Optional(CONF_PASSWORD): str}
 
 
-def _base_schema(discovery_info: zeroconf.ZeroconfServiceInfo | None) -> vol.Schema:
+def _base_schema(nut_config: dict[str, Any]) -> vol.Schema:
     """Generate base schema."""
-    base_schema = {}
-    if not discovery_info:
-        base_schema.update(
-            {
-                vol.Optional(CONF_HOST, default=DEFAULT_HOST): str,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-            }
-        )
+    base_schema = {
+        vol.Optional(CONF_HOST, default=nut_config.get(CONF_HOST) or DEFAULT_HOST): str,
+        vol.Optional(CONF_PORT, default=nut_config.get(CONF_PORT) or DEFAULT_PORT): int,
+    }
     base_schema.update(AUTH_SCHEMA)
-
     return vol.Schema(base_schema)
 
 
@@ -95,7 +90,6 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the nut config flow."""
         self.nut_config: dict[str, Any] = {}
-        self.discovery_info: zeroconf.ZeroconfServiceInfo | None = None
         self.ups_list: dict[str, str] | None = None
         self.title: str | None = None
         self.reauth_entry: ConfigEntry | None = None
@@ -104,12 +98,12 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Prepare configuration for a discovered nut device."""
-        self.discovery_info = discovery_info
         await self._async_handle_discovery_without_unique_id()
-        self.context["title_placeholders"] = {
-            CONF_PORT: discovery_info.port or DEFAULT_PORT,
+        self.nut_config = {
             CONF_HOST: discovery_info.host,
+            CONF_PORT: discovery_info.port or DEFAULT_PORT,
         }
+        self.context["title_placeholders"] = self.nut_config.copy()
         return await self.async_step_user()
 
     async def async_step_user(
@@ -119,18 +113,11 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
         if user_input is not None:
-            if self.discovery_info:
-                user_input.update(
-                    {
-                        CONF_HOST: self.discovery_info.host,
-                        CONF_PORT: self.discovery_info.port or DEFAULT_PORT,
-                    }
-                )
             (
                 info,
                 errors,
                 description_placeholders,
-            ) = await self._async_validate_or_error(user_input)
+            ) = await self._async_validate_or_error({**self.nut_config, **user_input})
 
             if not errors:
                 self.nut_config.update(user_input)
@@ -143,9 +130,11 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
                 title = _format_host_port_alias(self.nut_config)
                 return self.async_create_entry(title=title, data=self.nut_config)
 
+            self.nut_config.update(user_input)
+
         return self.async_show_form(
             step_id="user",
-            data_schema=_base_schema(self.discovery_info),
+            data_schema=_base_schema(self.nut_config),
             errors=errors,
             description_placeholders=description_placeholders,
         )
