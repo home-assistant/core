@@ -235,7 +235,8 @@ async def test_discover_platform(
     """Test discovery of device_tracker demo platform."""
     await async_setup_component(hass, "homeassistant", {})
     await async_setup_component(hass, device_tracker.DOMAIN, {})
-    await hass.async_block_till_done()
+    # async_block_till_done is intentionally missing here so we
+    # can verify async_load_platform still works without it
     with patch("homeassistant.components.device_tracker.legacy.update_config"):
         await discovery.async_load_platform(
             hass, device_tracker.DOMAIN, "demo", {"test_key": "test_val"}, {"bla": {}}
@@ -628,6 +629,7 @@ async def test_bad_platform(hass: HomeAssistant) -> None:
     config = {"device_tracker": [{"platform": "bad_platform"}]}
     with assert_setup_component(0, device_tracker.DOMAIN):
         assert await async_setup_component(hass, device_tracker.DOMAIN, config)
+        await hass.async_block_till_done()
 
     assert f"bad_platform.{device_tracker.DOMAIN}" not in hass.config.components
 
