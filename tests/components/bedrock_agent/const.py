@@ -77,3 +77,26 @@ CONST_ANSWERS: Final = {
     "mistral.mistral-7b-instruct-v0:2": " Hello! How can I help you today? If you have a specific question, feel free to ask. If not, have a great day!",
     "mistral.mixtral-8x7b-instruct-v0:1": "\n\nHello! How can I assist you today?",
 }
+
+CONST_LIST_MODEL_RESPONSE: Final = {
+    "ResponseMetadata": {
+        "RequestId": "61519929-81d2-415f-82be-bf4598ae37a0",
+        "HTTPStatusCode": 200,
+        "HTTPHeaders": {},
+        "RetryAttempts": 0,
+    },
+    "modelSummaries": [
+        {
+            "modelArn": "arn:aws:bedrock:us-west-2::foundation-model/amazon.titan-tg1-large",
+            "modelId": "amazon.titan-tg1-large",
+            "modelName": "Titan Text Large",
+            "providerName": "Amazon",
+            "inputModalities": ["TEXT"],
+            "outputModalities": ["TEXT"],
+            "responseStreamingSupported": True,
+            "customizationsSupported": [],
+            "inferenceTypesSupported": ["ON_DEMAND"],
+            "modelLifecycle": {"status": "ACTIVE"},
+        }
+    ],
+}

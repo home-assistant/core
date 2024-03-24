@@ -64,13 +64,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         _LOGGER.exception("Unable to connect to AWS Endpoint")
         raise CannotConnect from err
     except bedrock.exceptions.ClientError as err:
-        _LOGGER.exception("Unable to ")
+        _LOGGER.exception("Unable to authenticate against AWS Endpoint")
         raise InvalidAuth from err
     except Exception as err:  # pylint: disable=broad-except
         _LOGGER.exception("Unexpected exception")
         raise HomeAssistantError from err
-    finally:
-        bedrock.close()
 
     if response is None or response["ResponseMetadata"]["HTTPStatusCode"] != 200:
         raise CannotConnect

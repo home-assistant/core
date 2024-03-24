@@ -1,17 +1,55 @@
 """Test the Amazon Bedrock Agent config flow."""
+from unittest import mock
 
+import boto3
+from botocore.stub import Stubber
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
+from .const import CONST_LIST_MODEL_RESPONSE
+
 from tests.common import MockConfigEntry
 
 CONST_DOMAIN = "bedrock_agent"
 
 
-async def test_form(hass: HomeAssistant) -> None:
+@pytest.fixture
+def mock_bedrock_client():
+    """Mock bedrock client."""
+    client = boto3.client(
+        service_name="bedrock",
+        region_name="us-west-2",
+        aws_access_key_id="abc",
+        aws_secret_access_key="123",
+    )
+    stubber = Stubber(client)
+    stubber.add_response("list_foundation_models", CONST_LIST_MODEL_RESPONSE)
+    stubber.activate()
+    return client
+
+
+@pytest.fixture
+def mock_bedrock_client_errors():
+    """Mock bedrock client."""
+    client = boto3.client(
+        service_name="bedrock",
+        region_name="us-west-2",
+        aws_access_key_id="abc",
+        aws_secret_access_key="123",
+    )
+    stubber = Stubber(client)
+    stubber.add_client_error(
+        "list_foundation_models", service_error_code="EndpointConnectionError"
+    )
+    stubber.add_client_error("list_foundation_models", service_error_code="Exception")
+    stubber.activate()
+    return client
+
+
+async def test_form(hass: HomeAssistant, mock_bedrock_client) -> None:
     """Test input form."""
     hass.config.components.add("bedrock_agent")
     MockConfigEntry(
@@ -25,18 +63,56 @@ async def test_form(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.FORM
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            "key_id": "abc",
-            "key_secret": "123",
-            "region": "us-west-2",
-            "model_id": "ai21.j2-mid-v1",
-            "prompt_context": "123abc",
-        },
+    with mock.patch(
+        "boto3.client",
+        mock.MagicMock(return_value=mock_bedrock_client),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                "key_id": "abc",
+                "key_secret": "123",
+                "region": "us-west-2",
+                "model_id": "ai21.j2-mid-v1",
+                "prompt_context": "123abc",
+            },
+        )
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Bedrock"
+
+
+async def test_form_errors(hass: HomeAssistant, mock_bedrock_client_errors) -> None:
+    """Test input form."""
+    hass.config.components.add("bedrock_agent")
+    MockConfigEntry(
+        domain=CONST_DOMAIN,
+        state=config_entries.ConfigEntryState.LOADED,
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        CONST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
+    assert result["type"] == FlowResultType.FORM
+
+    with mock.patch(
+        "boto3.client",
+        mock.MagicMock(return_value=mock_bedrock_client_errors),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                "key_id": "abc",
+                "key_secret": "123",
+                "region": "us-somewhere",
+                "model_id": "ai21.j2-mid-v1",
+                "prompt_context": "123abc",
+            },
+        )
+
     assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"]["base"] == "invalid_auth"
 
 
 async def test_invalid_model_id(hass: HomeAssistant) -> None:
