@@ -9,6 +9,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -17,7 +18,6 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
     UnitOfTemperature,
-    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -41,55 +41,55 @@ SENSOR_TYPES: tuple[AirGradientSensorEntityDescription, ...] = (
         key="pm01",
         device_class=SensorDeviceClass.PM1,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda status: status.pm01,
     ),
     AirGradientSensorEntityDescription(
         key="pm02",
         device_class=SensorDeviceClass.PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda status: status.pm02,
     ),
     AirGradientSensorEntityDescription(
         key="pm10",
         device_class=SensorDeviceClass.PM10,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda status: status.pm10,
     ),
     AirGradientSensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda status: status.ambient_temperature,
     ),
     AirGradientSensorEntityDescription(
         key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda status: status.relative_humidity,
-    ),
-    AirGradientSensorEntityDescription(
-        key="boot",
-        translation_key="boot_time",
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda status: status.boot_time,
     ),
     AirGradientSensorEntityDescription(
         key="signal_strength",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda status: status.signal_strength,
     ),
     AirGradientSensorEntityDescription(
         key="tvoc",
         translation_key="total_volatile_organic_component_index",
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda status: status.total_volatile_organic_component_index,
     ),
     AirGradientSensorEntityDescription(
         key="nitrogen_index",
         translation_key="nitrogen_index",
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda status: status.nitrogen_index,
     ),
 )

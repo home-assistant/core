@@ -24,9 +24,6 @@
   },
   "entity": {
     "sensor": {
-      "boot_time": {
-        "name": "Boot time"
-      },
       "total_volatile_organic_component_index": {
         "name": "Total VOC index"
       },

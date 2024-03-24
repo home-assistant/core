@@ -1,58 +1,12 @@
 # serializer version: 1
-# name: test_all_entities[sensor.airgradient_boot_time-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.airgradient_boot_time',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-    'original_icon': None,
-    'original_name': 'Boot time',
-    'platform': 'airgradient',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'boot_time',
-    'unique_id': '84fce612f5b8-boot',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-  })
-# ---
-# name: test_all_entities[sensor.airgradient_boot_time-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Airgradient Boot time',
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.airgradient_boot_time',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '28',
-  })
-# ---
 # name: test_all_entities[sensor.airgradient_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -85,6 +39,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'humidity',
       'friendly_name': 'Airgradient Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -100,7 +55,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -132,6 +89,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Airgradient Nitrogen index',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airgradient_nitrogen_index',
@@ -146,7 +104,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -179,6 +139,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'pm1',
       'friendly_name': 'Airgradient PM1',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'µg/m³',
     }),
     'context': <ANY>,
@@ -194,7 +155,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -227,6 +190,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'pm10',
       'friendly_name': 'Airgradient PM10',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'µg/m³',
     }),
     'context': <ANY>,
@@ -242,7 +206,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -275,6 +241,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'pm25',
       'friendly_name': 'Airgradient PM2.5',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'µg/m³',
     }),
     'context': <ANY>,
@@ -290,7 +257,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -323,6 +292,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Airgradient Signal strength',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dBm',
     }),
     'context': <ANY>,
@@ -338,7 +308,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -371,6 +343,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Airgradient Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -386,7 +359,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -418,6 +393,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Airgradient Total VOC index',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airgradient_total_voc_index',
