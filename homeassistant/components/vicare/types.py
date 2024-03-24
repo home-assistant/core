@@ -4,7 +4,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import enum
 from typing import Any
-import enum
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
