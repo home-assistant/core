@@ -37,7 +37,10 @@ class BinarySensor(ZHAEntity, BinarySensorEntity):
     def __init__(self, entity_data) -> None:
         """Initialize the ZHA binary sensor."""
         super().__init__(entity_data)
-        if hasattr(self.entity_data.entity, "_attr_device_class"):
+        if (
+            hasattr(self.entity_data.entity, "_attr_device_class")
+            and self.entity_data.entity._attr_device_class is not None
+        ):
             self._attr_device_class = BinarySensorDeviceClass(
                 self.entity_data.entity._attr_device_class.value
             )

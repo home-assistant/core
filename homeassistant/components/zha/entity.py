@@ -38,9 +38,15 @@ class ZHAEntity(LogMixin, entity.Entity):
         self._unsubs.append(
             entity_data.entity.on_all_events(self._handle_entity_events)
         )
-        if hasattr(self.entity_data.entity, "_attr_translation_key"):
+        if (
+            hasattr(self.entity_data.entity, "_attr_translation_key")
+            and self.entity_data.entity._attr_translation_key is not None
+        ):
             self._attr_translation_key = self.entity_data.entity._attr_translation_key
-        if hasattr(self.entity_data.entity, "_attr_entity_category"):
+        if (
+            hasattr(self.entity_data.entity, "_attr_entity_category")
+            and self.entity_data.entity._attr_entity_category is not None
+        ):
             self._attr_entity_category = self.entity_data.entity._attr_entity_category
 
     @property
