@@ -54,7 +54,7 @@ class ZHAGatewayProxy(EventBase):
                     EntityData(entity=entity, device_proxy=device_proxy)
                 )
         for group in self.gateway.groups.values():
-            for entity in group.platform_entities.values():
+            for entity in group.group_entities.values():
                 platform = Platform(entity.PLATFORM)
                 ha_zha_data.platforms[platform].append(
                     EntityData(

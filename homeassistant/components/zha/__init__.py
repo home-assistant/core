@@ -142,6 +142,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
     cleaned_path = _clean_serial_port_path(path)
     data = copy.deepcopy(dict(config_entry.data))
+    options = copy.deepcopy(dict(config_entry.options))
 
     if path != cleaned_path:
         _LOGGER.debug("Cleaned serial port path %r -> %r", path, cleaned_path)
@@ -149,6 +150,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         hass.config_entries.async_update_entry(config_entry, data=data)
 
     zha_data = get_zha_data(hass)
+    zha_data.data.config_entry_data = {
+        "data": data,
+        "options": options,
+    }
 
     app_config = zha_data.data.yaml_config.get(CONF_ZIGPY, {})
     database = app_config.get(
