@@ -7,6 +7,8 @@ import pytest
 from homeassistant.components import conversation
 from homeassistant.components.shopping_list import intent as sl_intent
 from homeassistant.const import MATCH_ALL
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from . import MockAgent
 
@@ -52,3 +54,12 @@ async def sl_setup(hass):
     assert await hass.config_entries.async_setup(entry.entry_id)
 
     await sl_intent.async_setup_intents(hass)
+
+
+@pytest.fixture
+async def init_components(hass: HomeAssistant):
+    """Initialize relevant components with empty configs."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "conversation", {})
+    assert await async_setup_component(hass, "intent", {})
+    await hass.async_block_till_done()

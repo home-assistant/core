@@ -12,6 +12,7 @@ from homeassistant.components.homeassistant.exposed_entities import (
     async_get_entity_settings,
     async_listen_entity_updates,
     async_should_expose,
+    async_should_expose_entities,
 )
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, EntityCategory
 from homeassistant.core import HomeAssistant
@@ -351,10 +352,14 @@ async def test_listen_updates(
     # Settings not changed - listener not called
     async_expose_entity(hass, "cloud.alexa", entry.entity_id, True)
     assert len(calls) == 1
+    assert async_should_expose_entities(hass, "cloud.alexa", [entry.entity_id]) == {
+        entry.entity_id
+    }
 
     # Settings changed - listener called
     async_expose_entity(hass, "cloud.alexa", entry.entity_id, False)
     assert len(calls) == 2
+    assert async_should_expose_entities(hass, "cloud.alexa", [entry.entity_id]) == set()
 
 
 async def test_get_assistant_settings(
@@ -431,6 +436,19 @@ async def test_should_expose(
     assert (
         async_should_expose(hass, "cloud.alexa", entities["temperature_sensor"]) is True
     )
+
+    assert async_should_expose_entities(
+        hass,
+        "cloud.alexa",
+        [
+            entities["blocked"],
+            entities["lock"],
+            entities["binary_sensor"],
+            entities["door_sensor"],
+            entities["sensor"],
+            entities["temperature_sensor"],
+        ],
+    ) == {entities["lock"], entities["door_sensor"], entities["temperature_sensor"]}
 
     # Check with a different assistant
     exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]

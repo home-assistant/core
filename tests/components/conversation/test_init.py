@@ -656,14 +656,11 @@ async def test_custom_agent(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_admin_user: MockUser,
+    init_components,
     mock_agent,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test a custom conversation agent."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
-    assert await async_setup_component(hass, "intent", {})
-
     client = await hass_client()
 
     data = {
@@ -1059,7 +1056,9 @@ async def test_light_area_same_name(
     assert call.data == {"entity_id": [kitchen_light.entity_id]}
 
 
-async def test_agent_id_validator_invalid_agent(hass: HomeAssistant) -> None:
+async def test_agent_id_validator_invalid_agent(
+    hass: HomeAssistant, init_components
+) -> None:
     """Test validating agent id."""
     with pytest.raises(vol.Invalid):
         conversation.agent_id_validator("invalid_agent")
