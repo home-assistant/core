@@ -136,6 +136,12 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
         super().__init__(device, device_manager)
 
+        # Determine if the temp_unit_convert attribute indicates Fahrenheit
+        is_unit_fahrenheit: bool = False
+        temp_unit_convert = self.find_dpcode(DPCode.TEMP_UNIT_CONVERT, dptype=DPType.STRING)
+        if (temp_unit_convert and device.status[DPCode.TEMP_UNIT_CONVERT].lower() == "f"):
+            is_unit_fahrenheit = True
+
         # If both temperature values for celsius and fahrenheit are present,
         # use whatever the device is set to, with a fallback to celsius.
         prefered_temperature_unit = None
@@ -153,6 +159,10 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             ):
                 prefered_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
+        # Default preferred unit to Fahrenheit
+        if prefered_temperature_unit is None and is_unit_fahrenheit:
+            prefered_temperature_unit = UnitOfTemperature.FAHRENHEIT
+
         # Default to System Temperature Unit
         self._attr_temperature_unit = system_temperature_unit
 
@@ -163,6 +173,12 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         fahrenheit_type = self.find_dpcode(
             (DPCode.TEMP_CURRENT_F, DPCode.UPPER_TEMP_F), dptype=DPType.INTEGER
         )
+
+        if not fahrenheit_type and is_unit_fahrenheit:
+            fahrenheit_type = self.find_dpcode(
+                (DPCode.TEMP_CURRENT, DPCode.UPPER_TEMP), dptype=DPType.INTEGER
+            )
+
         if fahrenheit_type and (
             prefered_temperature_unit == UnitOfTemperature.FAHRENHEIT
             or (
@@ -183,6 +199,12 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         fahrenheit_type = self.find_dpcode(
             DPCode.TEMP_SET_F, dptype=DPType.INTEGER, prefer_function=True
         )
+
+        if not fahrenheit_type and is_unit_fahrenheit:
+            fahrenheit_type = self.find_dpcode(
+                DPCode.TEMP_SET, dptype=DPType.INTEGER, prefer_function=True
+            )
+
         if fahrenheit_type and (
             prefered_temperature_unit == UnitOfTemperature.FAHRENHEIT
             or (
