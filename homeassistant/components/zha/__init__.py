@@ -30,6 +30,7 @@ from zigpy.config import (
     CONF_DEVICE_PATH,
     CONF_NWK,
     CONF_NWK_CHANNEL,
+    CONF_NWK_VALIDATE_SETTINGS,
 )
 from zigpy.exceptions import NetworkSettingsInconsistent, TransientConnectionError
 
@@ -45,6 +46,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from . import repairs, websocket_api
+from .const import CONF_USE_THREAD, DOMAIN
 from .helpers import HAZHAData, ZHAGatewayProxy, get_zha_data
 from .radio_manager import ZhaRadioManager
 from .repairs.network_settings_inconsistent import warn_on_inconsistent_network_settings
@@ -53,7 +55,6 @@ from .repairs.wrong_silabs_firmware import (
     warn_on_wrong_silabs_firmware,
 )
 
-DOMAIN = "zha"
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({vol.Optional(CONF_TYPE): cv.string})
 ZHA_CONFIG_SCHEMA = {
     vol.Optional(CONF_BAUDRATE): cv.positive_int,
@@ -156,6 +157,20 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
     app_config[CONF_DATABASE] = database
     app_config[CONF_DEVICE] = config_entry.data[CONF_DEVICE]
+
+    radio_type = RadioType[config_entry.data[CONF_RADIO_TYPE]]
+
+    if CONF_NWK_VALIDATE_SETTINGS not in app_config:
+        app_config[CONF_NWK_VALIDATE_SETTINGS] = True
+
+        # The bellows UART thread sometimes propagates a cancellation into the main Core
+        # event loop, when a connection to a TCP coordinator fails in a specific way
+        if (
+            CONF_USE_THREAD not in app_config
+            and radio_type is RadioType.ezsp
+            and app_config[CONF_DEVICE][CONF_DEVICE_PATH].startswith("socket://")
+        ):
+            app_config[CONF_USE_THREAD] = False
 
     # Until we have a way to coordinate channels with the Thread half of multi-PAN,
     # stick to the old zigpy default of channel 15 instead of dynamically scanning
