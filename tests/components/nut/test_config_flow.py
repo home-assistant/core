@@ -254,7 +254,7 @@ async def test_form_no_upses_found(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result2["type"] is data_entry_flow.FlowResultType.ABORT
     assert result2["reason"] == "no_ups_found"
 
 
@@ -326,7 +326,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == "1.1.1.1:2222"
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
@@ -360,7 +360,7 @@ async def test_auth_failures(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"password": "invalid_auth"}
 
     mock_pynut = _get_mock_nutclient(
@@ -384,7 +384,7 @@ async def test_auth_failures(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == "1.1.1.1:2222"
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
@@ -427,7 +427,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"password": "invalid_auth"}
 
     mock_pynut = _get_mock_nutclient(
@@ -449,7 +449,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result2["type"] is data_entry_flow.FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert len(mock_setup_entry.mock_calls) == 1
 
