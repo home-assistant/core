@@ -87,6 +87,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         translation_key="total_time_on_battery",
         native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.DURATION,
     ),
     "date": SensorEntityDescription(
         key="date",
