@@ -31,7 +31,7 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
 
         session = async_get_clientsession(self.hass)
         air_gradient = AirGradientClient(host, session=session)
-        self.data["serial_number"] = await air_gradient.get_current_measures()
+        await air_gradient.get_current_measures()
 
         self.context["title_placeholders"] = {
             "model": self.data[CONF_MODEL],
