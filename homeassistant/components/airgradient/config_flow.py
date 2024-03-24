@@ -33,14 +33,9 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
         air_gradient = AirGradientClient(host, session=session)
         self.data["serial_number"] = await air_gradient.get_current_measures()
 
-        self.context.update(
-            {
-                "host": host,
-                "title_placeholders": {
-                    "model": self.data[CONF_MODEL],
-                },
-            }
-        )
+        self.context["title_placeholders"] = {
+            "model": self.data[CONF_MODEL],
+        }
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(
@@ -57,7 +52,6 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={
-                "serial_number": self.data["serial_number"],
                 "model": self.data[CONF_MODEL],
             },
         )

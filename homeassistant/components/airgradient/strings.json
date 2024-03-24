@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "{model}",
     "step": {
       "user": {
         "data": {
@@ -10,7 +11,7 @@
         }
       },
       "discovery_confirm": {
-        "description": "Do you want to setup {model} ({serial_number})?"
+        "description": "Do you want to setup {model}?"
       }
     },
     "abort": {
