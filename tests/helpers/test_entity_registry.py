@@ -1775,8 +1775,7 @@ async def test_async_migrate_entry_delete_other(
             entity_registry.async_remove(entry2.entity_id)
             return None
         if entity_entry == entry2:
-            # We should not get here
-            pytest.fail()
+            pytest.fail("We should not get here")
         return None
 
     entries = set()

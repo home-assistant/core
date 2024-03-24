@@ -27,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await client.connect_and_stay_connected()
     except TimeoutError as t:
-        raise ConfigEntryNotReady() from t
+        raise ConfigEntryNotReady from t
 
     # Store an API object for your platforms to access
     hass.data[DOMAIN][entry.entry_id] = client

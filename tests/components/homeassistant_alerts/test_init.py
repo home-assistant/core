@@ -42,7 +42,7 @@ async def setup_repairs(hass):
 
 @pytest.mark.parametrize(
     ("ha_version", "supervisor_info", "expected_alerts"),
-    (
+    [
         (
             "2022.7.0",
             {"version": "2022.11.0"},
@@ -93,7 +93,7 @@ async def setup_repairs(hass):
                 ("sochain", "sochain"),
             ],
         ),
-    ),
+    ],
 )
 async def test_alerts(
     hass: HomeAssistant,
@@ -182,7 +182,7 @@ async def test_alerts(
         "initial_alerts",
         "late_alerts",
     ),
-    (
+    [
         (
             "2022.7.0",
             {"version": "2022.11.0"},
@@ -282,7 +282,7 @@ async def test_alerts(
                 ("sochain", "sochain"),
             ],
         ),
-    ),
+    ],
 )
 async def test_alerts_refreshed_on_component_load(
     hass: HomeAssistant,
@@ -399,7 +399,7 @@ async def test_alerts_refreshed_on_component_load(
 
 @pytest.mark.parametrize(
     ("ha_version", "fixture", "expected_alerts"),
-    (
+    [
         (
             "2022.7.0",
             "alerts_no_integrations.json",
@@ -415,7 +415,7 @@ async def test_alerts_refreshed_on_component_load(
                 ("hikvision", "hikvision"),
             ],
         ),
-    ),
+    ],
 )
 async def test_bad_alerts(
     hass: HomeAssistant,
@@ -503,7 +503,7 @@ async def test_no_alerts(
 
 @pytest.mark.parametrize(
     ("ha_version", "fixture_1", "expected_alerts_1", "fixture_2", "expected_alerts_2"),
-    (
+    [
         (
             "2022.7.0",
             "alerts_1.json",
@@ -564,7 +564,7 @@ async def test_no_alerts(
                 ("sochain", "sochain"),
             ],
         ),
-    ),
+    ],
 )
 async def test_alerts_change(
     hass: HomeAssistant,

@@ -43,7 +43,7 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 if not is_host_valid(user_input[CONF_HOST]):
-                    raise InvalidHost()
+                    raise InvalidHost
 
                 snmp_engine = get_snmp_engine(self.hass)
 

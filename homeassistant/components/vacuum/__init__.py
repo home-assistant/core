@@ -293,7 +293,7 @@ class StateVacuumEntity(
 
     def stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner.
@@ -304,7 +304,7 @@ class StateVacuumEntity(
 
     def return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock.
@@ -315,7 +315,7 @@ class StateVacuumEntity(
 
     def clean_spot(self, **kwargs: Any) -> None:
         """Perform a spot clean-up."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_clean_spot(self, **kwargs: Any) -> None:
         """Perform a spot clean-up.
@@ -326,7 +326,7 @@ class StateVacuumEntity(
 
     def locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner.
@@ -337,7 +337,7 @@ class StateVacuumEntity(
 
     def set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed.
@@ -355,7 +355,7 @@ class StateVacuumEntity(
         **kwargs: Any,
     ) -> None:
         """Send a command to a vacuum cleaner."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_send_command(
         self,
@@ -373,7 +373,7 @@ class StateVacuumEntity(
 
     def start(self) -> None:
         """Start or resume the cleaning task."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_start(self) -> None:
         """Start or resume the cleaning task.
@@ -384,7 +384,7 @@ class StateVacuumEntity(
 
     def pause(self) -> None:
         """Pause the cleaning task."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_pause(self) -> None:
         """Pause the cleaning task.

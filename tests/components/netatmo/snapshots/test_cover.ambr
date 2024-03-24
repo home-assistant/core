@@ -44,6 +44,7 @@
     'context': <ANY>,
     'entity_id': 'cover.bubendorff_blind',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'closed',
   })
@@ -93,6 +94,7 @@
     'context': <ANY>,
     'entity_id': 'cover.entrance_blinds',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'closed',
   })
