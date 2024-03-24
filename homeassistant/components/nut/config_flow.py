@@ -211,8 +211,11 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             new_config = {
                 **existing_data,
-                CONF_USERNAME: user_input[CONF_USERNAME],
-                CONF_PASSWORD: user_input[CONF_PASSWORD],
+                # Username/password are optional and some servers
+                # user ip based authentication and will fail if
+                # username/password are provided
+                CONF_USERNAME: user_input.get(CONF_USERNAME),
+                CONF_PASSWORD: user_input.get(CONF_PASSWORD),
             }
             _, errors, placeholders = await self._async_validate_or_error(new_config)
             if not errors:
