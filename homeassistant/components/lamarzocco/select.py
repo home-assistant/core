@@ -10,6 +10,7 @@ from lmcloud.models import LaMarzoccoMachineConfig
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -51,6 +52,7 @@ ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
     LaMarzoccoSelectEntityDescription[LaMarzoccoMachine, LaMarzoccoMachineConfig](
         key="prebrew_infusion_select",
         translation_key="prebrew_infusion_select",
+        entity_category=EntityCategory.CONFIG,
         options=["disabled", "prebrew", "typeb"],
         select_option_fn=lambda machine, option: machine.set_prebrew_mode(
             PBREWBREW_MODE_HA_TO_LM[option]
