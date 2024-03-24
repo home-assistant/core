@@ -1,4 +1,5 @@
 """Tests for the AirGradient sensor platform."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
