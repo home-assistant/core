@@ -1,7 +1,7 @@
 {
   "domain": "airgradient",
   "name": "Airgradient",
-  "codeowners": ["@joostlek"],
+  "codeowners": ["@airgradienthq", "@joostlek"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/airgradient",
   "iot_class": "local_polling",
