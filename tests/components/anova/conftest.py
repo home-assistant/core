@@ -1,4 +1,5 @@
 """Common fixtures for Anova."""
+
 from unittest.mock import AsyncMock, patch
 
 from anova_wifi import AnovaApi, AnovaPrecisionCooker, InvalidLogin, NoDevicesFound
@@ -24,7 +25,7 @@ async def anova_api(
     async def get_devices_side_effect():
         if not api_mock.existing_devices:
             api_mock.existing_devices = []
-        api_mock.existing_devices = api_mock.existing_devices + [new_device]
+        api_mock.existing_devices = [*api_mock.existing_devices, new_device]
         return [new_device]
 
     api_mock.authenticate.side_effect = authenticate_side_effect
@@ -50,7 +51,7 @@ async def anova_api_no_devices(
         api_mock.jwt = "my_test_jwt"
 
     async def get_devices_side_effect():
-        raise NoDevicesFound()
+        raise NoDevicesFound
 
     api_mock.authenticate.side_effect = authenticate_side_effect
     api_mock.get_devices.side_effect = get_devices_side_effect
@@ -72,7 +73,7 @@ async def anova_api_wrong_login(
     api_mock = AsyncMock()
 
     async def authenticate_side_effect():
-        raise InvalidLogin()
+        raise InvalidLogin
 
     api_mock.authenticate.side_effect = authenticate_side_effect
 

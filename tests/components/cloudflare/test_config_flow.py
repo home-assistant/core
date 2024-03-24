@@ -1,4 +1,5 @@
 """Test the Cloudflare config flow."""
+
 import pycfdns
 
 from homeassistant.components.cloudflare.const import CONF_RECORDS, DOMAIN

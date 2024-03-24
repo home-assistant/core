@@ -1,4 +1,5 @@
 """Tests for the ecobee config flow."""
+
 from unittest.mock import patch
 
 from pyecobee import ECOBEE_API_KEY, ECOBEE_REFRESH_TOKEN

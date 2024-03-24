@@ -1,4 +1,5 @@
 """Test ZHA repairs."""
+
 from collections.abc import Callable
 from http import HTTPStatus
 import logging

@@ -1,4 +1,5 @@
 """Tests for the Ruckus Unleashed integration."""
+
 from unittest.mock import AsyncMock, patch
 
 from aioruckus import AjaxSession, RuckusAjaxApi

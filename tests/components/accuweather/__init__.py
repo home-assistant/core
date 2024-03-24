@@ -1,4 +1,5 @@
 """Tests for AccuWeather."""
+
 from unittest.mock import PropertyMock, patch
 
 from homeassistant.components.accuweather.const import DOMAIN

@@ -1,4 +1,5 @@
 """Tests for the lifx integration config flow."""
+
 from ipaddress import ip_address
 import socket
 from unittest.mock import patch
@@ -17,9 +18,9 @@ from homeassistant.setup import async_setup_component
 
 from . import (
     DEFAULT_ENTRY_TITLE,
+    DHCP_FORMATTED_MAC,
     IP_ADDRESS,
     LABEL,
-    MAC_ADDRESS,
     MODULE,
     SERIAL,
     _mocked_bulb,
@@ -284,7 +285,7 @@ async def test_manual_dns_error(hass: HomeAssistant) -> None:
 
         async def async_setup(self):
             """Mock setup."""
-            raise socket.gaierror()
+            raise socket.gaierror
 
         def async_stop(self):
             """Mock teardown."""
@@ -345,7 +346,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
-                ip=IP_ADDRESS, macaddress=MAC_ADDRESS, hostname=LABEL
+                ip=IP_ADDRESS, macaddress=DHCP_FORMATTED_MAC, hostname=LABEL
             ),
         )
         await hass.async_block_till_done()
@@ -357,7 +358,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
-                ip=IP_ADDRESS, macaddress="00:00:00:00:00:00", hostname="mock_hostname"
+                ip=IP_ADDRESS, macaddress="000000000000", hostname="mock_hostname"
             ),
         )
         await hass.async_block_till_done()
@@ -371,7 +372,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
-                ip="1.2.3.5", macaddress="00:00:00:00:00:01", hostname="mock_hostname"
+                ip="1.2.3.5", macaddress="000000000001", hostname="mock_hostname"
             ),
         )
         await hass.async_block_till_done()
@@ -384,7 +385,9 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
     [
         (
             config_entries.SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(ip=IP_ADDRESS, macaddress=MAC_ADDRESS, hostname=LABEL),
+            dhcp.DhcpServiceInfo(
+                ip=IP_ADDRESS, macaddress=DHCP_FORMATTED_MAC, hostname=LABEL
+            ),
         ),
         (
             config_entries.SOURCE_HOMEKIT,
@@ -439,7 +442,9 @@ async def test_discovered_by_dhcp_or_discovery(
     [
         (
             config_entries.SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(ip=IP_ADDRESS, macaddress=MAC_ADDRESS, hostname=LABEL),
+            dhcp.DhcpServiceInfo(
+                ip=IP_ADDRESS, macaddress=DHCP_FORMATTED_MAC, hostname=LABEL
+            ),
         ),
         (
             config_entries.SOURCE_HOMEKIT,
@@ -480,7 +485,9 @@ async def test_discovered_by_dhcp_or_discovery_failed_to_get_device(
     [
         (
             config_entries.SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(ip=IP_ADDRESS, macaddress=MAC_ADDRESS, hostname=LABEL),
+            dhcp.DhcpServiceInfo(
+                ip=IP_ADDRESS, macaddress=DHCP_FORMATTED_MAC, hostname=LABEL
+            ),
         ),
         (
             config_entries.SOURCE_HOMEKIT,

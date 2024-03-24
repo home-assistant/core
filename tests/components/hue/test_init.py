@@ -1,4 +1,5 @@
 """Test Hue setup process."""
+
 from unittest.mock import AsyncMock, Mock, patch
 
 import aiohue.v2 as aiohue_v2

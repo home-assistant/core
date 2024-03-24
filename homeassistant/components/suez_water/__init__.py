@@ -1,4 +1,5 @@
 """The Suez Water integration."""
+
 from __future__ import annotations
 
 from pysuez import SuezClient

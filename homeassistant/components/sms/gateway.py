@@ -1,4 +1,5 @@
 """The sms gateway to interact with a GSM modem."""
+
 import logging
 
 import gammu

@@ -1,4 +1,5 @@
 """The tests for the Netatmo sensor platform."""
+
 from unittest.mock import AsyncMock
 
 import pytest

@@ -1,4 +1,5 @@
 """Test Tautulli config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from pytautulli import exceptions

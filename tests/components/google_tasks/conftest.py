@@ -1,6 +1,5 @@
 """Test fixtures for Google Tasks."""
 
-
 from collections.abc import Awaitable, Callable
 import time
 from typing import Any

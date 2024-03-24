@@ -1,4 +1,5 @@
 """Test Bluetooth LE device tracker."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -102,6 +103,7 @@ async def test_do_not_see_device_if_time_not_updated(
             CONF_CONSIDER_HOME: timedelta(minutes=10),
         }
         result = await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+        await hass.async_block_till_done()
         assert result
 
         # Tick until device seen enough times for to be registered for tracking
@@ -245,6 +247,7 @@ async def test_preserve_new_tracked_device_name(
             CONF_TRACK_NEW: True,
         }
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+        await hass.async_block_till_done()
 
         # Seen once here; return without name when seen subsequent times
         device = BluetoothServiceInfoBleak(
@@ -314,6 +317,7 @@ async def test_tracking_battery_times_out(
             CONF_TRACK_NEW: True,
         }
         result = await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+        await hass.async_block_till_done()
         assert result
 
         # Tick until device seen enough times for to be registered for tracking
@@ -448,6 +452,7 @@ async def test_tracking_battery_successful(
             CONF_TRACK_NEW: True,
         }
         result = await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+        await hass.async_block_till_done()
         assert result
 
         # Tick until device seen enough times for to be registered for tracking

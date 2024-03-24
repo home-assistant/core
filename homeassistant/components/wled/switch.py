@@ -1,4 +1,5 @@
 """Support for WLED switches."""
+
 from __future__ import annotations
 
 from functools import partial

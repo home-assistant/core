@@ -1,4 +1,5 @@
 """Test the helper method for writing tests."""
+
 from __future__ import annotations
 
 import asyncio
@@ -16,8 +17,8 @@ import os
 import pathlib
 import threading
 import time
-from types import ModuleType
-from typing import Any, NoReturn
+from types import FrameType, ModuleType
+from typing import Any, NoReturn, TypeVar
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
@@ -58,13 +59,16 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import (
     area_registry as ar,
+    category_registry as cr,
     device_registry as dr,
     entity,
     entity_platform,
     entity_registry as er,
     event,
+    floor_registry as fr,
     intent,
     issue_registry as ir,
+    label_registry as lr,
     recorder as recorder_helper,
     restore_state,
     restore_state as rs,
@@ -192,13 +196,36 @@ def get_test_home_assistant() -> Generator[HomeAssistant, None, None]:
     loop.close()
 
 
+_T = TypeVar("_T", bound=Mapping[str, Any] | Sequence[Any])
+
+
+class StoreWithoutWriteLoad(storage.Store[_T]):
+    """Fake store that does not write or load. Used for testing."""
+
+    async def async_save(self, *args: Any, **kwargs: Any) -> None:
+        """Save the data.
+
+        This function is mocked out in tests.
+        """
+
+    @callback
+    def async_save_delay(self, *args: Any, **kwargs: Any) -> None:
+        """Save data with an optional delay.
+
+        This function is mocked out in tests.
+        """
+
+
 @asynccontextmanager
 async def async_test_home_assistant(
     event_loop: asyncio.AbstractEventLoop | None = None,
     load_registries: bool = True,
+    storage_dir: str | None = None,
 ) -> AsyncGenerator[HomeAssistant, None]:
     """Return a Home Assistant object pointing at test config dir."""
     hass = HomeAssistant(get_test_config_dir())
+    if storage_dir:
+        hass.config.config_dir = storage_dir
     store = auth_store.AuthStore(hass)
     hass.auth = auth.AuthManager(hass, store, {}, {})
     ensure_auth_manager_loaded(hass.auth)
@@ -209,7 +236,7 @@ async def async_test_home_assistant(
     orig_async_create_task = hass.async_create_task
     orig_tz = dt_util.DEFAULT_TIME_ZONE
 
-    def async_add_job(target, *args):
+    def async_add_job(target, *args, eager_start: bool = False):
         """Add job."""
         check_target = target
         while isinstance(check_target, ft.partial):
@@ -220,7 +247,7 @@ async def async_test_home_assistant(
             fut.set_result(target(*args))
             return fut
 
-        return orig_async_add_job(target, *args)
+        return orig_async_add_job(target, *args, eager_start=eager_start)
 
     def async_add_executor_job(target, *args):
         """Add executor job."""
@@ -235,14 +262,14 @@ async def async_test_home_assistant(
 
         return orig_async_add_executor_job(target, *args)
 
-    def async_create_task(coroutine, name=None):
+    def async_create_task(coroutine, name=None, eager_start=False):
         """Create task."""
         if isinstance(coroutine, Mock) and not isinstance(coroutine, AsyncMock):
             fut = asyncio.Future()
             fut.set_result(None)
             return fut
 
-        return orig_async_create_task(coroutine, name)
+        return orig_async_create_task(coroutine, name, eager_start)
 
     hass.async_add_job = async_add_job
     hass.async_add_executor_job = async_add_executor_job
@@ -270,7 +297,9 @@ async def async_test_home_assistant(
         },
     )
     hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, hass.config_entries._async_shutdown
+        EVENT_HOMEASSISTANT_STOP,
+        hass.config_entries._async_shutdown,
+        run_immediately=True,
     )
 
     # Load the registries
@@ -282,21 +311,37 @@ async def async_test_home_assistant(
         hass
     )
     if load_registries:
-        with patch(
-            "homeassistant.helpers.storage.Store.async_load", return_value=None
+        with patch.object(
+            StoreWithoutWriteLoad, "async_load", return_value=None
+        ), patch(
+            "homeassistant.helpers.area_registry.AreaRegistryStore",
+            StoreWithoutWriteLoad,
+        ), patch(
+            "homeassistant.helpers.device_registry.DeviceRegistryStore",
+            StoreWithoutWriteLoad,
+        ), patch(
+            "homeassistant.helpers.entity_registry.EntityRegistryStore",
+            StoreWithoutWriteLoad,
+        ), patch(
+            "homeassistant.helpers.storage.Store",  # Floor & label registry are different
+            StoreWithoutWriteLoad,
+        ), patch(
+            "homeassistant.helpers.issue_registry.IssueRegistryStore",
+            StoreWithoutWriteLoad,
         ), patch(
             "homeassistant.helpers.restore_state.RestoreStateData.async_setup_dump",
             return_value=None,
         ), patch(
             "homeassistant.helpers.restore_state.start.async_at_start",
         ):
-            await asyncio.gather(
-                ar.async_load(hass),
-                dr.async_load(hass),
-                er.async_load(hass),
-                ir.async_load(hass),
-                rs.async_load(hass),
-            )
+            await ar.async_load(hass)
+            await cr.async_load(hass)
+            await dr.async_load(hass)
+            await er.async_load(hass)
+            await fr.async_load(hass)
+            await ir.async_load(hass)
+            await lr.async_load(hass)
+            await rs.async_load(hass)
         hass.data[bootstrap.DATA_REGISTRIES_LOADED] = None
 
     hass.set_state(CoreState.running)
@@ -855,10 +900,13 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
             entity_namespace=entity_namespace,
         )
 
-        async def _async_on_stop(_: Event) -> None:
-            await self.async_shutdown()
+        @callback
+        def _async_on_stop(_: Event) -> None:
+            self.async_shutdown()
 
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_on_stop)
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, _async_on_stop, run_immediately=True
+        )
 
 
 class MockToggleEntity(entity.ToggleEntity):
@@ -1034,11 +1082,11 @@ def assert_setup_component(count, domain=None):
     """
     config = {}
 
-    async def mock_psc(hass, config_input, integration):
+    async def mock_psc(hass, config_input, integration, component=None):
         """Mock the prepare_setup_component to capture config."""
         domain_input = integration.domain
         integration_config_info = await async_process_component_config(
-            hass, config_input, integration
+            hass, config_input, integration, component
         )
         res = integration_config_info.config
         config[domain_input] = None if res is None else res.get(domain_input)
@@ -1055,9 +1103,9 @@ def assert_setup_component(count, domain=None):
         yield config
 
     if domain is None:
-        assert len(config) == 1, "assert_setup_component requires DOMAIN: {}".format(
-            list(config.keys())
-        )
+        assert (
+            len(config) == 1
+        ), f"assert_setup_component requires DOMAIN: {list(config.keys())}"
         domain = list(config.keys())[0]
 
     res = config.get(domain)
@@ -1310,6 +1358,10 @@ def mock_storage(
         # To ensure that the data can be serialized
         _LOGGER.debug("Writing data to %s: %s", store.key, data_to_write)
         raise_contains_mocks(data_to_write)
+
+        if "data_func" in data_to_write:
+            data_to_write["data"] = data_to_write.pop("data_func")()
+
         encoder = store._encoder
         if encoder and encoder is not JSONEncoder:
             # If they pass a custom encoder that is not the
@@ -1317,7 +1369,7 @@ def mock_storage(
             dump = ft.partial(json.dumps, cls=store._encoder)
         else:
             dump = _orjson_default_encoder
-        data[store.key] = json.loads(dump(data_to_write))
+        data[store.key] = json_loads(dump(data_to_write))
 
     async def mock_remove(store: storage.Store) -> None:
         """Remove data."""
@@ -1375,8 +1427,9 @@ def mock_integration(
         f"{loader.PACKAGE_BUILTIN}.{module.DOMAIN}"
         if built_in
         else f"{loader.PACKAGE_CUSTOM_COMPONENTS}.{module.DOMAIN}",
-        None,
+        pathlib.Path(""),
         module.mock_manifest(),
+        set(),
     )
 
     def mock_import_platform(platform_name: str) -> NoReturn:
@@ -1404,13 +1457,14 @@ def mock_platform(
 
     platform_path is in form hue.config_flow.
     """
-    domain = platform_path.split(".")[0]
+    domain, _, platform_name = platform_path.partition(".")
     integration_cache = hass.data[loader.DATA_INTEGRATIONS]
     module_cache = hass.data[loader.DATA_COMPONENTS]
 
     if domain not in integration_cache:
         mock_integration(hass, MockModule(domain))
 
+    integration_cache[domain]._top_level_files.add(f"{platform_name}.py")
     _LOGGER.info("Adding mock integration platform: %s", platform_path)
     module_cache[platform_path] = module or Mock()
 
@@ -1575,3 +1629,20 @@ def help_test_all(module: ModuleType) -> None:
     assert set(module.__all__) == {
         itm for itm in module.__dir__() if not itm.startswith("_")
     }
+
+
+def extract_stack_to_frame(extract_stack: list[Mock]) -> FrameType:
+    """Convert an extract stack to a frame list."""
+    stack = list(extract_stack)
+    for frame in stack:
+        frame.f_back = None
+        frame.f_code.co_filename = frame.filename
+        frame.f_lineno = int(frame.lineno)
+
+    top_frame = stack.pop()
+    current_frame = top_frame
+    while stack and (next_frame := stack.pop()):
+        current_frame.f_back = next_frame
+        current_frame = next_frame
+
+    return top_frame

@@ -1,4 +1,5 @@
 """Configure tests for the Twitch integration."""
+
 from collections.abc import Awaitable, Callable, Generator
 import time
 from unittest.mock import AsyncMock, patch

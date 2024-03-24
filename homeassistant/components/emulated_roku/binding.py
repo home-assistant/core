@@ -1,4 +1,5 @@
 """Bridge between emulated_roku and Home Assistant."""
+
 import logging
 
 from emulated_roku import EmulatedRokuCommandHandler, EmulatedRokuServer

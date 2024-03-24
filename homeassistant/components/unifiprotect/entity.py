@@ -1,4 +1,5 @@
 """Shared Entity definition for UniFi Protect Integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence

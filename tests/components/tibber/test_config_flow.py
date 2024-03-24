@@ -1,4 +1,5 @@
 """Tests for Tibber config flow."""
+
 from asyncio import TimeoutError
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 

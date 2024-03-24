@@ -1,4 +1,5 @@
 """Tests for Logi Circle config flow."""
+
 import asyncio
 from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, patch
@@ -6,6 +7,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components.http import KEY_HASS
 from homeassistant.components.logi_circle import config_flow
 from homeassistant.components.logi_circle.config_flow import (
     DOMAIN,
@@ -23,7 +25,7 @@ class MockRequest:
 
     def __init__(self, hass, query):
         """Init request object."""
-        self.app = {"hass": hass}
+        self.app = {KEY_HASS: hass}
         self.query = query
 
 

@@ -1,4 +1,5 @@
 """Test the Xiaomi Aqara config flow."""
+
 from ipaddress import ip_address
 from socket import gaierror
 from unittest.mock import Mock, patch

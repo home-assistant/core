@@ -1,0 +1,27 @@
+{
+  "entity": {
+    "sensor": {
+      "status": {
+        "default": "mdi:flower"
+      },
+      "temperature_status": {
+        "default": "mdi:thermometer-lines"
+      },
+      "light_status": {
+        "default": "mdi:sun-clock-outline"
+      },
+      "moisture_status": {
+        "default": "mdi:water-percent-alert"
+      },
+      "salinity_status": {
+        "default": "mdi:sprout-outline"
+      },
+      "light": {
+        "default": "mdi:weather-sunny"
+      },
+      "salinity": {
+        "default": "mdi:sprout-outline"
+      }
+    }
+  }
+}

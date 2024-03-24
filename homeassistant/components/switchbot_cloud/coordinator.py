@@ -1,4 +1,5 @@
 """SwitchBot Cloud coordinator."""
+
 from asyncio import timeout
 from logging import getLogger
 from typing import Any

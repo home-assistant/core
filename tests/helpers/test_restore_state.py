@@ -1,4 +1,5 @@
 """The tests for the Restore component."""
+
 from collections.abc import Coroutine
 from datetime import datetime, timedelta
 import logging

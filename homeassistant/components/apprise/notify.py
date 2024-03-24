@@ -1,4 +1,5 @@
 """Apprise platform for notify component."""
+
 from __future__ import annotations
 
 import logging
@@ -52,9 +53,11 @@ def get_service(
             return None
 
     # Ordered list of URLs
-    if config.get(CONF_URL) and not a_obj.add(config[CONF_URL]):
-        _LOGGER.error("Invalid Apprise URL(s) supplied")
-        return None
+    if urls := config.get(CONF_URL):
+        for entry in urls:
+            if not a_obj.add(entry):
+                _LOGGER.error("One or more specified Apprise URL(s) are invalid")
+                return None
 
     return AppriseNotificationService(a_obj)
 

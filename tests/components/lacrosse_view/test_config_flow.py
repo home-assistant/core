@@ -1,4 +1,5 @@
 """Test the LaCrosse View config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from lacrosse_view import Location, LoginError

@@ -1,4 +1,5 @@
 """The tests for the mFi sensor platform."""
+
 from copy import deepcopy
 import unittest.mock as mock
 

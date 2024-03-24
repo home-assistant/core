@@ -1,4 +1,5 @@
 """Tests for ZHA helpers."""
+
 import logging
 from unittest.mock import patch
 

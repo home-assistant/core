@@ -1,4 +1,5 @@
 """Tests for the LaMetric config flow."""
+
 from http import HTTPStatus
 from unittest.mock import MagicMock
 
@@ -706,7 +707,7 @@ async def test_dhcp_discovery_updates_entry(
         data=DhcpServiceInfo(
             hostname="lametric",
             ip="127.0.0.42",
-            macaddress="aa:bb:cc:dd:ee:ff",
+            macaddress="aabbccddeeff",
         ),
     )
 
@@ -732,7 +733,7 @@ async def test_dhcp_unknown_device(
         data=DhcpServiceInfo(
             hostname="lametric",
             ip="127.0.0.42",
-            macaddress="aa:bb:cc:dd:ee:00",
+            macaddress="aabbccddee00",
         ),
     )
 

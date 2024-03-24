@@ -1,4 +1,5 @@
 """Tests for the solax config flow."""
+
 from unittest.mock import patch
 
 from solax import RealTimeAPI

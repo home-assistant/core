@@ -1,4 +1,5 @@
 """Component to interface with various sensors that can be monitored."""
+
 from __future__ import annotations
 
 import asyncio
@@ -15,8 +16,6 @@ from typing import TYPE_CHECKING, Any, Final, Self, cast, final
 from typing_extensions import override
 
 from homeassistant.config_entries import ConfigEntry
-
-# pylint: disable-next=hass-deprecated-import
 from homeassistant.const import (  # noqa: F401
     _DEPRECATED_DEVICE_CLASS_AQI,
     _DEPRECATED_DEVICE_CLASS_BATTERY,
@@ -71,6 +70,7 @@ from homeassistant.helpers.typing import UNDEFINED, ConfigType, StateType, Undef
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 
+from . import group as group_pre_import  # noqa: F401
 from .const import (  # noqa: F401
     _DEPRECATED_STATE_CLASS_MEASUREMENT,
     _DEPRECATED_STATE_CLASS_TOTAL,

@@ -1,4 +1,5 @@
 """Sensor for Shelly."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -51,20 +52,24 @@ from .entity import (
     async_setup_entry_rest,
     async_setup_entry_rpc,
 )
-from .utils import get_device_entry_gen, get_device_uptime
+from .utils import (
+    get_device_entry_gen,
+    get_device_uptime,
+    is_rpc_wifi_stations_disabled,
+)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class BlockSensorDescription(BlockEntityDescription, SensorEntityDescription):
     """Class to describe a BLOCK sensor."""
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class RpcSensorDescription(RpcEntityDescription, SensorEntityDescription):
     """Class to describe a RPC sensor."""
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class RestSensorDescription(RestEntityDescription, SensorEntityDescription):
     """Class to describe a REST sensor."""
 
@@ -905,9 +910,7 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        removal_condition=lambda config, _status, key: (
-            config[key]["sta"]["enable"] is False
-        ),
+        removal_condition=is_rpc_wifi_stations_disabled,
         entity_category=EntityCategory.DIAGNOSTIC,
         use_polling_coordinator=True,
     ),
@@ -931,7 +934,7 @@ RPC_SENSORS: Final = {
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "battery": RpcSensorDescription(
-        key="devicepower:0",
+        key="devicepower",
         sub_key="battery",
         name="Battery",
         native_unit_of_measurement=PERCENTAGE,
@@ -939,6 +942,7 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        removal_condition=lambda _config, status, key: (status[key]["battery"] is None),
     ),
     "voltmeter": RpcSensorDescription(
         key="voltmeter",
@@ -957,11 +961,34 @@ RPC_SENSORS: Final = {
         name="Analog input",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        removal_condition=lambda config, _status, key: (config[key]["enable"] is False),
     ),
     "analoginput_xpercent": RpcSensorDescription(
         key="input",
         sub_key="xpercent",
         name="Analog value",
+        removal_condition=lambda config, status, key: (
+            config[key]["enable"] is False or status[key].get("xpercent") is None
+        ),
+    ),
+    "pulse_counter": RpcSensorDescription(
+        key="input",
+        sub_key="counts",
+        name="Pulse counter",
+        native_unit_of_measurement="pulse",
+        state_class=SensorStateClass.TOTAL,
+        value=lambda status, _: status["total"],
+        removal_condition=lambda config, _status, key: (config[key]["enable"] is False),
+    ),
+    "counter_value": RpcSensorDescription(
+        key="input",
+        sub_key="counts",
+        name="Counter value",
+        value=lambda status, _: status["xtotal"],
+        removal_condition=lambda config, status, key: (
+            config[key]["enable"] is False
+            or status[key]["counts"].get("xtotal") is None
+        ),
     ),
 }
 

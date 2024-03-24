@@ -1,4 +1,5 @@
 """Tests for the Nettigo Air Monitor integration."""
+
 from unittest.mock import AsyncMock, Mock, patch
 
 from homeassistant.components.nam.const import DOMAIN

@@ -1,4 +1,5 @@
 """Test OTBR Silicon Labs Multiprotocol support."""
+
 from unittest.mock import patch
 
 import pytest

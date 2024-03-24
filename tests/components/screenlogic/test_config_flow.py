@@ -1,4 +1,5 @@
 """Test the Pentair ScreenLogic config flow."""
+
 from unittest.mock import patch
 
 from screenlogicpy import ScreenLogicError
@@ -133,7 +134,7 @@ async def test_dhcp(hass: HomeAssistant) -> None:
         data=dhcp.DhcpServiceInfo(
             hostname="Pentair: 01-01-01",
             ip="1.1.1.1",
-            macaddress="AA:BB:CC:DD:EE:FF",
+            macaddress="aabbccddeeff",
         ),
     )
 

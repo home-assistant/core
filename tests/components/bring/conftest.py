@@ -1,4 +1,5 @@
 """Common fixtures for the Bring! tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
@@ -36,8 +37,8 @@ def mock_bring_client() -> Generator[AsyncMock, None, None]:
     ):
         client = mock_client.return_value
         client.uuid = UUID
-        client.loginAsync.return_value = True
-        client.loadListsAsync.return_value = {"lists": []}
+        client.login.return_value = True
+        client.load_lists.return_value = {"lists": []}
         yield client
 
 

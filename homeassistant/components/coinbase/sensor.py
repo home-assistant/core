@@ -1,4 +1,5 @@
 """Support for Coinbase sensors."""
+
 from __future__ import annotations
 
 import logging
@@ -84,13 +85,12 @@ async def async_setup_entry(
         entities.append(AccountSensor(instance, currency))
 
     if CONF_EXCHANGE_RATES in config_entry.options:
-        rate: str
-        for rate in config_entry.options[CONF_EXCHANGE_RATES]:
-            entities.append(
-                ExchangeRateSensor(
-                    instance, rate, exchange_base_currency, exchange_precision
-                )
+        entities.extend(
+            ExchangeRateSensor(
+                instance, rate, exchange_base_currency, exchange_precision
             )
+            for rate in config_entry.options[CONF_EXCHANGE_RATES]
+        )
 
     async_add_entities(entities)
 

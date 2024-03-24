@@ -1,4 +1,5 @@
 """Test Home Assistant yaml loader."""
+
 from collections.abc import Generator
 import importlib
 import io
@@ -18,7 +19,7 @@ from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.yaml as yaml
 from homeassistant.util.yaml import loader as yaml_loader
 
-from tests.common import get_test_config_dir, patch_yaml_files
+from tests.common import extract_stack_to_frame, get_test_config_dir, patch_yaml_files
 
 
 @pytest.fixture(params=["enable_c_loader", "disable_c_loader"])
@@ -611,20 +612,24 @@ def mock_integration_frame() -> Generator[Mock, None, None]:
         line="self.light.is_on",
     )
     with patch(
-        "homeassistant.helpers.frame.extract_stack",
-        return_value=[
-            Mock(
-                filename="/home/paulus/homeassistant/core.py",
-                lineno="23",
-                line="do_something()",
-            ),
-            correct_frame,
-            Mock(
-                filename="/home/paulus/aiohue/lights.py",
-                lineno="2",
-                line="something()",
-            ),
-        ],
+        "homeassistant.helpers.frame.linecache.getline", return_value=correct_frame.line
+    ), patch(
+        "homeassistant.helpers.frame.get_current_frame",
+        return_value=extract_stack_to_frame(
+            [
+                Mock(
+                    filename="/home/paulus/homeassistant/core.py",
+                    lineno="23",
+                    line="do_something()",
+                ),
+                correct_frame,
+                Mock(
+                    filename="/home/paulus/aiohue/lights.py",
+                    lineno="2",
+                    line="something()",
+                ),
+            ]
+        ),
     ):
         yield correct_frame
 

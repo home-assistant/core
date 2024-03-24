@@ -1,11 +1,14 @@
 """Test the cloud.iot module."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 import aiohttp
 from aiohttp import web
+from hass_nabucasa.client import RemoteActivationNotAllowed
 import pytest
 
+from homeassistant.components import webhook
 from homeassistant.components.cloud import DOMAIN
 from homeassistant.components.cloud.client import (
     VALID_REPAIR_TRANSLATION_KEYS,
@@ -204,7 +207,7 @@ async def test_webhook_msg(
         received.append(request)
         return web.json_response({"from": "handler"})
 
-    hass.components.webhook.async_register("test", "Test", "mock-webhook-id", handler)
+    webhook.async_register(hass, "test", "Test", "mock-webhook-id", handler)
 
     response = await cloud.client.async_webhook_message(
         {
@@ -376,14 +379,15 @@ async def test_cloud_connection_info(hass: HomeAssistant) -> None:
     response = await cloud.client.async_cloud_connection_info({})
 
     assert response == {
+        "instance_id": "12345678901234567890",
         "remote": {
+            "alias": None,
+            "can_enable": True,
             "connected": False,
             "enabled": False,
             "instance_domain": None,
-            "alias": None,
         },
         "version": HA_VERSION,
-        "instance_id": "12345678901234567890",
     }
 
 
@@ -481,6 +485,19 @@ async def test_remote_enable(hass: HomeAssistant) -> None:
     client = CloudClient(hass, prefs, None, {}, {})
     client.cloud = MagicMock(is_logged_in=True, username="mock-username")
 
-    result = await client.async_cloud_connect_update(True)
-    assert result is None
+    await client.async_cloud_connect_update(True)
     prefs.async_update.assert_called_once_with(remote_enabled=True)
+
+
+async def test_remote_enable_not_allowed(hass: HomeAssistant) -> None:
+    """Test enabling remote UI."""
+    prefs = MagicMock(
+        async_update=AsyncMock(return_value=None),
+        remote_allow_remote_enable=False,
+    )
+    client = CloudClient(hass, prefs, None, {}, {})
+    client.cloud = MagicMock(is_logged_in=True, username="mock-username")
+
+    with pytest.raises(RemoteActivationNotAllowed):
+        await client.async_cloud_connect_update(True)
+    prefs.async_update.assert_not_called()

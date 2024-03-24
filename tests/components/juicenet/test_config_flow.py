@@ -1,4 +1,5 @@
 """Test the JuiceNet config flow."""
+
 from unittest.mock import MagicMock, patch
 
 import aiohttp

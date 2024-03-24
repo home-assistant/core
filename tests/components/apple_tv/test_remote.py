@@ -1,4 +1,5 @@
 """Test apple_tv remote."""
+
 from unittest.mock import AsyncMock
 
 import pytest
