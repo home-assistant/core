@@ -238,8 +238,8 @@ async def async_create_fix_flow(
             return CloudAccountRepair(api=api, entry=entry)
 
     elif data is not None and issue_id.startswith("rtsp_disabled_"):
-        entry_id = cast(str, data["entry_id"])
-        camera_id = cast(str, data["camera_id"])
+        entry_id: str = data["entry_id"]
+        camera_id: str = data["camera_id"]
         if (entry := hass.config_entries.async_get_entry(entry_id)) is not None:
             api = async_create_api_client(hass, entry)
             return RTSPRepair(api=api, entry=entry, camera_id=camera_id)
