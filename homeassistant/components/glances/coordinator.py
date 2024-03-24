@@ -44,14 +44,31 @@ class GlancesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise ConfigEntryAuthFailed from err
         except exceptions.GlancesApiError as err:
             raise UpdateFailed from err
+        # Update computed values
+        if data:
+            uptime = self.convert_uptime(data.get("uptime"))
+            data.update({"computed": {"uptime": uptime}})
         return data or {}
 
-    def get_uptime(self) -> datetime | None:
-        """Get uptime by converting Glances duration to datetime."""
+    def convert_uptime(self, uptime_str: str) -> datetime | None:
+        """Convert Glances uptime (duration) to datetime."""
         uptime = None
-        if self.data:
-            uptime = self.data["uptime"]
-            up_duration = parse_duration(uptime)
+        if uptime_str:
+            up_duration = parse_duration(uptime_str)
             if up_duration:
                 uptime = utcnow() - up_duration
+                # Reject small changes to value
+                uptime = self.normalize_uptime(uptime)
         return uptime
+
+    def normalize_uptime(self, uptime: datetime) -> datetime:
+        """Compare uptime with previous value and reject small changes."""
+        value = uptime
+        if self.data is not None:
+            previous_value = self.data["computed"]["uptime"]
+            if (
+                isinstance(previous_value, datetime)
+                and value - previous_value < DEFAULT_SCAN_INTERVAL * 10
+            ):
+                value = previous_value
+        return value

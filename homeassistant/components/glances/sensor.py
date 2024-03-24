@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
 from typing import cast
 
 from homeassistant.components.sensor import (
@@ -20,13 +19,13 @@ from homeassistant.const import (
     UnitOfInformation,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import GlancesDataUpdateCoordinator
-from .const import CPU_ICON, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import CPU_ICON, DOMAIN
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -213,9 +212,9 @@ SENSOR_TYPES = {
         translation_key="raid_used",
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    ("uptime", "uptime"): GlancesSensorEntityDescription(
+    ("computed", "uptime"): GlancesSensorEntityDescription(
         key="uptime",
-        type="uptime",
+        type="computed",
         translation_key="uptime",
         icon="mdi:clock-time-eight-outline",
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -245,14 +244,6 @@ async def async_setup_entry(
                 for param in params
                 if (sensor_description := SENSOR_TYPES.get((sensor_type, param)))
             )
-        elif sensor_type == "uptime":
-            if sensor_description := SENSOR_TYPES.get((sensor_type, sensor_type)):
-                entities.append(
-                    GlancesUptimeSensor(
-                        coordinator,
-                        sensor_description,
-                    )
-                )
         else:
             entities.extend(
                 GlancesSensor(
@@ -306,7 +297,7 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
         return False
 
     @property
-    def native_value(self) -> StateType | datetime:
+    def native_value(self) -> StateType:
         """Return the state of the resources."""
         value = self.coordinator.data[self.entity_description.type]
 
@@ -315,39 +306,3 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
                 StateType, value[self._sensor_label][self.entity_description.key]
             )
         return cast(StateType, value[self.entity_description.key])
-
-
-class GlancesUptimeSensor(GlancesSensor):
-    """Implementation of a Glances Uptime sensor."""
-
-    _attr_native_value: datetime | None = None
-
-    def __init__(
-        self,
-        coordinator: GlancesDataUpdateCoordinator,
-        description: GlancesSensorEntityDescription,
-        sensor_label: str = "",
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, description, sensor_label)
-        self._attr_native_value = self.coordinator.get_uptime()
-
-    @property
-    def native_value(self) -> StateType | datetime:
-        """Return the state of the resources."""
-        return self._attr_native_value
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        uptime = self.coordinator.get_uptime()
-        if (
-            self._attr_native_value is None
-            or uptime is None
-            or
-            # Accept only changes of more than 10 x DEFAULT_SCAN_INTERVAL to avoid flapping
-            uptime - self._attr_native_value > DEFAULT_SCAN_INTERVAL * 10
-        ):
-            self._attr_native_value = uptime
-
-        super()._handle_coordinator_update()
