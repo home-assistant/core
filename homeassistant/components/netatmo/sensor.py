@@ -308,11 +308,9 @@ async def async_setup_entry(
             netatmo_device.device.name,
         )
         async_add_entities(
-            [
-                NetatmoSensor(netatmo_device, description)
-                for description in SENSOR_TYPES
-                if description.key in netatmo_device.device.features
-            ]
+            NetatmoSensor(netatmo_device, description)
+            for description in SENSOR_TYPES
+            if description.key in netatmo_device.device.features
         )
 
     entry.async_on_unload(
