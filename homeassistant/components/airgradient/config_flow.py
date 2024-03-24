@@ -2,7 +2,6 @@
 from typing import Any
 
 from airgradient import AirGradientClient, AirGradientError
-from airgradient.models import Status
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
@@ -15,8 +14,6 @@ from .const import DOMAIN
 
 class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
     """AirGradient config flow."""
-
-    device_status: Status | None = None
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -34,7 +31,7 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
 
         session = async_get_clientsession(self.hass)
         air_gradient = AirGradientClient(host, session=session)
-        self.device_status = await air_gradient.get_status()
+        self.data["serial_number"] = await air_gradient.get_current_measures()
 
         self.context.update(
             {
@@ -50,7 +47,6 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm discovery."""
-        assert self.device_status is not None
         if user_input is not None:
             return self.async_create_entry(
                 title=self.data[CONF_MODEL],
@@ -61,7 +57,7 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={
-                "serial_number": self.device_status.serial_number,
+                "serial_number": self.data["serial_number"],
                 "model": self.data[CONF_MODEL],
             },
         )
@@ -75,16 +71,16 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
             session = async_get_clientsession(self.hass)
             air_gradient = AirGradientClient(user_input[CONF_HOST], session=session)
             try:
-                device_status = await air_gradient.get_status()
+                current_measures = await air_gradient.get_current_measures()
             except AirGradientError:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(device_status.serial_number)
+                await self.async_set_unique_id(current_measures.serial_number)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=device_status.serial_number,
+                    title=current_measures.serial_number,
                     data={CONF_HOST: user_input[CONF_HOST]},
                 )
         return self.async_show_form(

@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from airgradient.models import Status
+from airgradient.models import Measures
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -33,7 +33,7 @@ from .const import DOMAIN
 class AirGradientSensorEntityDescription(SensorEntityDescription):
     """Describes AirGradient sensor entity."""
 
-    value_fn: Callable[[Status], StateType]
+    value_fn: Callable[[Measures], StateType]
 
 
 SENSOR_TYPES: tuple[AirGradientSensorEntityDescription, ...] = (

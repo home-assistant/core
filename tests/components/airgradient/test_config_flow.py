@@ -72,7 +72,7 @@ async def test_flow_errors(
     error: str,
 ) -> None:
     """Test flow errors."""
-    mock_airgradient_client.get_status.side_effect = side_effect
+    mock_airgradient_client.get_current_measures.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -91,7 +91,7 @@ async def test_flow_errors(
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    mock_airgradient_client.get_status.side_effect = None
+    mock_airgradient_client.get_current_measures.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

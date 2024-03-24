@@ -46,7 +46,7 @@ async def test_connection_error(
     """Test connection error."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_airgradient_client.get_status.side_effect = AirGradientError()
+    mock_airgradient_client.get_current_measures.side_effect = AirGradientError()
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

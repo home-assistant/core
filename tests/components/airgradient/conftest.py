@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import patch
 
-from airgradient.models import Status
+from airgradient import Measures
 import pytest
 
 from homeassistant.components.airgradient.const import DOMAIN
@@ -34,8 +34,8 @@ def mock_airgradient_client() -> Generator[AsyncMock, None, None]:
         new=mock_client,
     ):
         client = mock_client.return_value
-        client.get_status.return_value = Status.from_json(
-            load_fixture("status.json", DOMAIN)
+        client.get_current_measures.return_value = Measures.from_json(
+            load_fixture("current_measures.json", DOMAIN)
         )
         yield client
 
