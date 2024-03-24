@@ -21,6 +21,7 @@ from homeassistant.components.unifiprotect.const import (
     DEFAULT_ATTRIBUTION,
     DEFAULT_SCAN_INTERVAL,
 )
+from homeassistant.components.unifiprotect.utils import get_camera_base_name
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_ENTITY_ID,
@@ -36,7 +37,6 @@ from .utils import (
     adopt_devices,
     assert_entity_counts,
     enable_entity,
-    get_camera_base_name,
     init_entry,
     remove_entities,
     time_changed,
