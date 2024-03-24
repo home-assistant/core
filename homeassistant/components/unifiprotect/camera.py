@@ -35,7 +35,7 @@ from .const import (
 )
 from .data import ProtectData
 from .entity import ProtectDeviceEntity
-from .utils import async_dispatch_id as _ufpd
+from .utils import async_dispatch_id as _ufpd, get_camera_base_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -193,9 +193,7 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         super().__init__(data, camera)
         device = self.device
 
-        camera_name = channel.name
-        if channel.name != "Package Camera":
-            camera_name = f"{channel.name} Resolution Channel"
+        camera_name = get_camera_base_name(channel)
         if self._secure:
             self._attr_unique_id = f"{device.mac}_{channel.id}"
             self._attr_name = f"{device.display_name} {camera_name}"

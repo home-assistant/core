@@ -36,6 +36,7 @@ from .utils import (
     adopt_devices,
     assert_entity_counts,
     enable_entity,
+    get_camera_base_name,
     init_entry,
     remove_entities,
     time_changed,
@@ -51,10 +52,8 @@ def validate_default_camera_entity(
 
     channel = camera_obj.channels[channel_id]
 
-    if channel.name == "Package Camera":
-        entity_name = f"{camera_obj.name} {channel.name}"
-    else:
-        entity_name = f"{camera_obj.name} {channel.name} Resolution Channel"
+    camera_name = get_camera_base_name(channel)
+    entity_name = f"{camera_obj.name} {camera_name}"
     unique_id = f"{camera_obj.mac}_{channel.id}"
     entity_id = f"camera.{entity_name.replace(' ', '_').lower()}"
 
