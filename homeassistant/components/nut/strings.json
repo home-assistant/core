@@ -20,8 +20,8 @@
         }
       },
       "reauth_confirm": {
+        "description": "Re-authenticate NUT server at {host}:{port}",
         "data": {
-          "description": "Re-authenticate NUT server at {host}:{port}",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
