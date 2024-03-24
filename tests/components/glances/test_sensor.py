@@ -24,7 +24,7 @@ async def test_sensor_states(
     entry.add_to_hass(hass)
 
     with freeze_time(MOCK_REFERENCE_DATE):
-        await hass.config_entries.async_setup(entry.entry_id)
+        assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
