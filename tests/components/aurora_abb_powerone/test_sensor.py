@@ -36,7 +36,10 @@ def _simulated_returns(index, global_measure=None):
         2: 2.7894,  # current
         3: 45.678,  # power
         4: 50.789,  # frequency
+        6: 1.2345,  # leak dcdc
+        7: 2.3456,  # leak inverter
         21: 9.876,  # temperature
+        30: 0.1234,  # Isolation resistance
         5: 12345,  # energy
     }
     return returns[index]
@@ -107,6 +110,9 @@ async def test_sensors(hass: HomeAssistant, entity_registry: EntityRegistry) -> 
             ("sensor.mydevicename_grid_voltage", "235.9"),
             ("sensor.mydevicename_grid_current", "2.8"),
             ("sensor.mydevicename_frequency", "50.8"),
+            ("sensor.mydevicename_dc_dc_leak_current", "1.2345"),
+            ("sensor.mydevicename_inverter_leak_current", "2.3456"),
+            ("sensor.mydevicename_isolation_resistance", "0.1234"),
         ]
         for entity_id, _ in sensors:
             assert not hass.states.get(entity_id)
