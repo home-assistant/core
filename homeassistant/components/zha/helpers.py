@@ -8,12 +8,19 @@ import logging
 from typing import Any
 
 import voluptuous as vol
-from zha.application.const import CLUSTER_TYPE_IN, CLUSTER_TYPE_OUT, DATA_ZHA
+from zha.application.const import (
+    ATTR_DEVICE_IEEE,
+    ATTR_UNIQUE_ID,
+    CLUSTER_TYPE_IN,
+    CLUSTER_TYPE_OUT,
+    DATA_ZHA,
+    ZHA_EVENT,
+)
 from zha.application.gateway import ZHAGateway
 from zha.application.helpers import ZHAData
 from zha.application.platforms import GroupEntity, PlatformEntity
 from zha.event import EventBase
-from zha.zigbee.device import ZHADevice
+from zha.zigbee.device import ZHADevice, ZHAEvent
 import zigpy.exceptions
 import zigpy.types
 from zigpy.types import EUI64
@@ -21,7 +28,7 @@ import zigpy.util
 import zigpy.zcl
 from zigpy.zcl.foundation import CommandSchema
 
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_DEVICE_ID, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
@@ -91,6 +98,19 @@ class ZHADeviceProxy(EventBase):
 
         self._unsubs: list[Callable[[], None]] = []
         self._unsubs.append(self.device.on_all_events(self._handle_event_protocol))
+
+    def handle_zha_event(self, zha_event: ZHAEvent) -> None:
+        """Handle a ZHA event."""
+        if self.ha_device_info is not None:
+            self.gateway_proxy.hass.bus.async_fire(
+                ZHA_EVENT,
+                {
+                    ATTR_DEVICE_IEEE: zha_event.device_ieee,
+                    ATTR_UNIQUE_ID: zha_event.unique_id,
+                    ATTR_DEVICE_ID: self.ha_device_info.id,
+                    **zha_event.data,
+                },
+            )
 
 
 @dataclasses.dataclass(kw_only=True, slots=True)
