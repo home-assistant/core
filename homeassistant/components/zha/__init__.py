@@ -1,28 +1,17 @@
 """Support for Zigbee Home Automation devices."""
 
 import asyncio
+import collections
+from collections.abc import Callable
 import contextlib
 import copy
+import dataclasses
 import logging
 import re
+from typing import Any
 
 import voluptuous as vol
-from zhaquirks import setup as setup_quirks
-from zigpy.config import CONF_DATABASE, CONF_DEVICE, CONF_DEVICE_PATH
-from zigpy.exceptions import NetworkSettingsInconsistent, TransientConnectionError
-
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TYPE, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.typing import ConfigType
-
-from . import repairs, websocket_api
-from .core import ZHAGateway
-from .core.const import (
+from zha.application.const import (
     BAUD_RATES,
     CONF_BAUDRATE,
     CONF_CUSTOM_QUIRKS_PATH,
@@ -33,14 +22,36 @@ from .core.const import (
     CONF_USB_PATH,
     CONF_ZIGPY,
     DATA_ZHA,
-    DOMAIN,
-    PLATFORMS,
-    SIGNAL_ADD_ENTITIES,
+    DEFAULT_DATABASE_NAME,
     RadioType,
 )
-from .core.device import get_device_automation_triggers
-from .core.discovery import GROUP_PROBE
-from .core.helpers import ZHAData, get_zha_data
+from zha.application.gateway import ZHAGateway
+from zha.application.helpers import ZHAData
+from zha.application.platforms import GroupEntity, PlatformEntity
+from zha.event import EventBase
+from zha.zigbee.device import ZHADevice, get_device_automation_triggers
+from zigpy.config import (
+    CONF_DATABASE,
+    CONF_DEVICE,
+    CONF_DEVICE_PATH,
+    CONF_NWK,
+    CONF_NWK_CHANNEL,
+)
+from zigpy.exceptions import NetworkSettingsInconsistent, TransientConnectionError
+
+from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
+    is_multiprotocol_url,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_TYPE, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
+
+from . import repairs, websocket_api
+from .helpers import get_zha_data
 from .radio_manager import ZhaRadioManager
 from .repairs.network_settings_inconsistent import warn_on_inconsistent_network_settings
 from .repairs.wrong_silabs_firmware import (
@@ -48,6 +59,7 @@ from .repairs.wrong_silabs_firmware import (
     warn_on_wrong_silabs_firmware,
 )
 
+DOMAIN = "zha"
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({vol.Optional(CONF_TYPE): cv.string})
 ZHA_CONFIG_SCHEMA = {
     vol.Optional(CONF_BAUDRATE): cv.positive_int,
@@ -75,8 +87,30 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+PLATFORMS = (
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.DEVICE_TRACKER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SIREN,
+    Platform.SWITCH,
+    Platform.UPDATE,
+)
+
+
 # Zigbee definitions
 CENTICELSIUS = "C-100"
+EZSP_OVERWRITE_EUI64 = (
+    "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it"
+)
 
 # Internal definitions
 _LOGGER = logging.getLogger(__name__)
@@ -86,7 +120,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up ZHA from config."""
     zha_data = ZHAData()
     zha_data.yaml_config = config.get(DOMAIN, {})
-    hass.data[DATA_ZHA] = zha_data
+    ha_zha_data = HAZHAData(data=zha_data)
+    hass.data[DATA_ZHA] = ha_zha_data
 
     return True
 
@@ -123,10 +158,20 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     zha_data = get_zha_data(hass)
 
-    if zha_data.yaml_config.get(CONF_ENABLE_QUIRKS, True):
-        await hass.async_add_import_executor_job(
-            setup_quirks, zha_data.yaml_config.get(CONF_CUSTOM_QUIRKS_PATH)
-        )
+    app_config = zha_data.data.yaml_config.get(CONF_ZIGPY, {})
+    database = app_config.get(
+        CONF_DATABASE,
+        hass.config.path(DEFAULT_DATABASE_NAME),
+    )
+    app_config[CONF_DATABASE] = database
+
+    # Until we have a way to coordinate channels with the Thread half of multi-PAN,
+    # stick to the old zigpy default of channel 15 instead of dynamically scanning
+    if (
+        is_multiprotocol_url(app_config[CONF_DEVICE][CONF_DEVICE_PATH])
+        and app_config.get(CONF_NWK, {}).get(CONF_NWK_CHANNEL) is None
+    ):
+        app_config.setdefault(CONF_NWK, {})[CONF_NWK_CHANNEL] = 15
 
     # Load and cache device trigger information early
     device_registry = dr.async_get(hass)
@@ -142,19 +187,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             if dev_entry is None:
                 continue
 
-            zha_data.device_trigger_cache[dev_entry.id] = (
+            zha_data.data.device_trigger_cache[dev_entry.id] = (
                 str(dev.ieee),
                 get_device_automation_triggers(dev),
             )
 
-    _LOGGER.debug("Trigger cache: %s", zha_data.device_trigger_cache)
+    _LOGGER.debug("Trigger cache: %s", zha_data.data.device_trigger_cache)
 
     try:
-        zha_gateway = await ZHAGateway.async_from_config(
-            hass=hass,
-            config=zha_data.yaml_config,
-            config_entry=config_entry,
-        )
+        zha_gateway = await ZHAGateway.async_from_config(zha_data)
+        zha_data.gateway_proxy = ZHAGatewayProxy(hass, zha_gateway)
     except NetworkSettingsInconsistent as exc:
         await warn_on_inconsistent_network_settings(
             hass,
@@ -206,15 +248,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     websocket_api.async_load_api(hass)
 
     async def async_shutdown(_: Event) -> None:
-        await zha_gateway.shutdown()
+        """Handle shutdown tasks."""
+        assert zha_data.gateway_proxy is not None
+        await zha_data.gateway_proxy.shutdown()
 
     config_entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_shutdown)
     )
 
-    await zha_gateway.async_initialize_devices_and_entities()
+    await zha_data.gateway_proxy.async_initialize_devices_and_entities()
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-    async_dispatcher_send(hass, SIGNAL_ADD_ENTITIES)
     return True
 
 
@@ -222,9 +265,9 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     """Unload ZHA config entry."""
     zha_data = get_zha_data(hass)
 
-    if zha_data.gateway is not None:
-        await zha_data.gateway.shutdown()
-        zha_data.gateway = None
+    if zha_data.gateway_proxy is not None:
+        await zha_data.gateway_proxy.shutdown()
+        zha_data.gateway_proxy = None
 
     # clean up any remaining entity metadata
     # (entities that have been discovered but not yet added to HA)
@@ -234,7 +277,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         for platform in PLATFORMS:
             del zha_data.platforms[platform]
 
-    GROUP_PROBE.cleanup()
     websocket_api.async_unload_api(hass)
 
     # our components don't have unload methods so no need to look at return values
@@ -258,7 +300,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             CONF_DEVICE: {CONF_DEVICE_PATH: config_entry.data[CONF_USB_PATH]},
         }
 
-        baudrate = get_zha_data(hass).yaml_config.get(CONF_BAUDRATE)
+        baudrate = get_zha_data(hass).data.yaml_config.get(CONF_BAUDRATE)
         if data[CONF_RADIO_TYPE] != RadioType.deconz and baudrate in BAUD_RATES:
             data[CONF_DEVICE][CONF_BAUDRATE] = baudrate
 
@@ -291,3 +333,86 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
     return True
+
+
+class ZHAGatewayProxy(EventBase):
+    """Proxy class to interact with the ZHA gateway."""
+
+    def __init__(self, hass: HomeAssistant, gateway: ZHAGateway) -> None:
+        """Initialize the gateway proxy."""
+        super().__init__()
+        self.hass = hass
+        self.gateway: ZHAGateway = gateway
+        self.device_proxies: dict[str, ZHADeviceProxy] = {}
+        self._unsubs: list[Callable[[], None]] = []
+        self._unsubs.append(self.gateway.on_all_events(self._handle_event_protocol))
+
+    async def async_initialize_devices_and_entities(self) -> None:
+        """Initialize devices and entities."""
+        ha_zha_data = get_zha_data(self.hass)
+        for device in self.gateway.devices.values():
+            device_proxy = ZHADeviceProxy(device, self)
+            self.device_proxies[device.ieee] = device_proxy
+            for entity in device.platform_entities.values():
+                platform = Platform(entity.PLATFORM)
+                ha_zha_data.platforms[platform].append(
+                    EntityData(entity=entity, device_proxy=device_proxy)
+                )
+        for group in self.gateway.groups.values():
+            for entity in group.platform_entities.values():
+                platform = Platform(entity.PLATFORM)
+                ha_zha_data.platforms[platform].append(
+                    EntityData(
+                        entity=entity,
+                        device_proxy=self.device_proxies[
+                            self.gateway.coordinator_zha_device.ieee
+                        ],
+                    )
+                )
+
+        await self.gateway.async_initialize_devices_and_entities()
+
+    async def shutdown(self) -> None:
+        """Shutdown the gateway proxy."""
+        for unsub in self._unsubs:
+            unsub()
+        await self.gateway.shutdown()
+
+
+class ZHADeviceProxy(EventBase):
+    """Proxy class to interact with the ZHA device instances."""
+
+    def __init__(self, device: ZHADevice, gateway_proxy: ZHAGatewayProxy) -> None:
+        """Initialize the gateway proxy."""
+        super().__init__()
+        self.device: ZHADevice = device
+        self.gateway_proxy: ZHAGatewayProxy = gateway_proxy
+
+        device_registry = dr.async_get(gateway_proxy.hass)
+        self.ha_device_info: dr.DeviceEntry | None = device_registry.async_get_device(
+            identifiers={(DOMAIN, str(device.ieee))},
+            connections={(dr.CONNECTION_ZIGBEE, str(device.ieee))},
+        )
+
+        self._unsubs: list[Callable[[], None]] = []
+        self._unsubs.append(self.device.on_all_events(self._handle_event_protocol))
+
+
+@dataclasses.dataclass(kw_only=True, slots=True)
+class HAZHAData:
+    """ZHA data stored in `hass.data`."""
+
+    data: ZHAData
+    gateway_proxy: ZHAGatewayProxy | None = dataclasses.field(default=None)
+    platforms: collections.defaultdict[Platform, list] = dataclasses.field(
+        default_factory=lambda: collections.defaultdict(list)
+    )
+    update_coordinator: Any | None = dataclasses.field(default=None)
+
+
+@dataclasses.dataclass(kw_only=True, slots=True)
+class EntityData:
+    """ZHA entity data."""
+
+    entity: PlatformEntity | GroupEntity
+    device_proxy: ZHADeviceProxy

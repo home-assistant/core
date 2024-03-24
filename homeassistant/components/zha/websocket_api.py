@@ -7,27 +7,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TypeVar, cast
 
 import voluptuous as vol
-import zigpy.backups
-from zigpy.config import CONF_DEVICE
-from zigpy.config.validators import cv_boolean
-from zigpy.types.named import EUI64, KeyData
-from zigpy.zcl.clusters.security import IasAce
-import zigpy.zdo.types as zdo_types
-
-from homeassistant.components import websocket_api
-from homeassistant.const import ATTR_COMMAND, ATTR_ID, ATTR_NAME
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import entity_registry as er
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.service import async_register_admin_service
-
-from .api import (
-    async_change_channel,
-    async_get_active_network_settings,
-    async_get_radio_type,
-)
-from .core.const import (
+from zha.application.const import (
     ATTR_ARGS,
     ATTR_ATTRIBUTE,
     ATTR_CLUSTER_ID,
@@ -46,16 +26,26 @@ from .core.const import (
     ATTR_WARNING_DEVICE_STROBE,
     ATTR_WARNING_DEVICE_STROBE_DUTY_CYCLE,
     ATTR_WARNING_DEVICE_STROBE_INTENSITY,
-    BINDINGS,
     CLUSTER_COMMAND_SERVER,
     CLUSTER_COMMANDS_CLIENT,
     CLUSTER_COMMANDS_SERVER,
-    CLUSTER_HANDLER_IAS_WD,
     CLUSTER_TYPE_IN,
     CLUSTER_TYPE_OUT,
+    CONF_ALARM_ARM_REQUIRES_CODE,
+    CONF_ALARM_FAILED_TRIES,
+    CONF_ALARM_MASTER_CODE,
+    CONF_ALWAYS_PREFER_XY_COLOR_MODE,
+    CONF_CONSIDER_UNAVAILABLE_BATTERY,
+    CONF_CONSIDER_UNAVAILABLE_MAINS,
+    CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY,
+    CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS,
+    CONF_DEFAULT_LIGHT_TRANSITION,
+    CONF_ENABLE_ENHANCED_LIGHT_TRANSITION,
+    CONF_ENABLE_IDENTIFY_ON_JOIN,
+    CONF_ENABLE_LIGHT_TRANSITIONING_FLAG,
+    CONF_GROUP_MEMBERS_ASSUME_STATE,
     CUSTOM_CONFIGURATION,
     DOMAIN,
-    EZSP_OVERWRITE_EUI64,
     GROUP_ID,
     GROUP_IDS,
     GROUP_NAME,
@@ -67,25 +57,48 @@ from .core.const import (
     WARNING_DEVICE_STROBE_YES,
     ZHA_ALARM_OPTIONS,
     ZHA_CLUSTER_HANDLER_MSG,
-    ZHA_CONFIG_SCHEMAS,
 )
-from .core.gateway import EntityReference
-from .core.group import GroupMember
-from .core.helpers import (
-    async_cluster_exists,
+from zha.application.gateway import ZHAGateway
+from zha.application.helpers import (
     async_is_bindable_target,
-    cluster_command_schema_to_vol_schema,
     convert_install_code,
     get_matched_clusters,
-    get_zha_gateway,
     qr_to_install_code,
+)
+from zha.zigbee.cluster_handlers import ClusterHandler
+from zha.zigbee.cluster_handlers.const import CLUSTER_HANDLER_IAS_WD
+from zha.zigbee.device import ZHADevice
+from zha.zigbee.group import GroupMember
+import zigpy.backups
+from zigpy.config import CONF_DEVICE
+from zigpy.config.validators import cv_boolean
+from zigpy.types.named import EUI64, KeyData
+from zigpy.zcl.clusters.security import IasAce
+import zigpy.zdo.types as zdo_types
+
+from homeassistant.components import websocket_api
+from homeassistant.const import ATTR_COMMAND, ATTR_ID, ATTR_NAME
+from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.helpers import entity_registry as er
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.service import async_register_admin_service
+
+from . import EZSP_OVERWRITE_EUI64
+from .api import (
+    async_change_channel,
+    async_get_active_network_settings,
+    async_get_radio_type,
+)
+from .helpers import (
+    async_cluster_exists,
+    cluster_command_schema_to_vol_schema,
+    get_zha_gateway,
 )
 
 if TYPE_CHECKING:
     from homeassistant.components.websocket_api.connection import ActiveConnection
-
-    from .core.device import ZHADevice
-    from .core.gateway import ZHAGateway
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,6 +116,8 @@ ATTR_NEW_CHANNEL = "new_channel"
 ATTR_SOURCE_IEEE = "source_ieee"
 ATTR_TARGET_IEEE = "target_ieee"
 ATTR_QR_CODE = "qr_code"
+
+BINDINGS = "bindings"
 
 SERVICE_PERMIT = "permit"
 SERVICE_REMOVE = "remove"
@@ -127,6 +142,16 @@ def _ensure_list_if_present(value: _T | None) -> list[_T] | list[Any] | None:
     if value is None:
         return None
     return cast("list[_T]", value) if isinstance(value, list) else [value]
+
+
+class EntityReference(NamedTuple):
+    """Describes an entity reference."""
+
+    reference_id: str
+    zha_device: ZHADevice
+    cluster_handlers: dict[str, ClusterHandler]
+    device_info: DeviceInfo
+    remove_future: asyncio.Future[Any]
 
 
 SERVICE_PERMIT_PARAMS = {
@@ -233,6 +258,43 @@ SERVICE_SCHEMAS = {
             ),
         }
     ),
+}
+
+CONF_ZHA_OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_DEFAULT_LIGHT_TRANSITION, default=0): vol.All(
+            vol.Coerce(float), vol.Range(min=0, max=2**16 / 10)
+        ),
+        vol.Required(CONF_ENABLE_ENHANCED_LIGHT_TRANSITION, default=False): cv.boolean,
+        vol.Required(CONF_ENABLE_LIGHT_TRANSITIONING_FLAG, default=True): cv.boolean,
+        vol.Required(CONF_ALWAYS_PREFER_XY_COLOR_MODE, default=True): cv.boolean,
+        vol.Required(CONF_GROUP_MEMBERS_ASSUME_STATE, default=True): cv.boolean,
+        vol.Required(CONF_ENABLE_IDENTIFY_ON_JOIN, default=True): cv.boolean,
+        vol.Optional(
+            CONF_CONSIDER_UNAVAILABLE_MAINS,
+            default=CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS,
+        ): cv.positive_int,
+        vol.Optional(
+            CONF_CONSIDER_UNAVAILABLE_BATTERY,
+            default=CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY,
+        ): cv.positive_int,
+    }
+)
+
+CONF_ZHA_ALARM_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ALARM_MASTER_CODE, default="1234"): cv.string,
+        vol.Required(CONF_ALARM_FAILED_TRIES, default=3): cv.positive_int,
+        vol.Required(CONF_ALARM_ARM_REQUIRES_CODE, default=False): cv.boolean,
+    }
+)
+
+
+ZHA_OPTIONS = "zha_options"
+
+ZHA_CONFIG_SCHEMAS = {
+    ZHA_OPTIONS: CONF_ZHA_OPTIONS_SCHEMA,
+    ZHA_ALARM_OPTIONS: CONF_ZHA_ALARM_SCHEMA,
 }
 
 

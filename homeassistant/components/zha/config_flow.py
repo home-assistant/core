@@ -35,13 +35,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import FileSelector, FileSelectorConfig
 from homeassistant.util import dt as dt_util
 
-from .core.const import (
-    CONF_BAUDRATE,
-    CONF_FLOW_CONTROL,
-    CONF_RADIO_TYPE,
-    DOMAIN,
-    RadioType,
-)
+from . import CONF_BAUDRATE, CONF_FLOW_CONTROL, CONF_RADIO_TYPE, DOMAIN, RadioType
 from .radio_manager import (
     DEVICE_SCHEMA,
     HARDWARE_DISCOVERY_SCHEMA,
@@ -151,7 +145,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         return self._hass
 
     @hass.setter
-    def hass(self, hass):
+    def hass(self, hass: HomeAssistant):
         """Set hass."""
         self._hass = hass
         self._radio_mgr.hass = hass

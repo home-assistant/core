@@ -28,15 +28,15 @@ from homeassistant import config_entries
 from homeassistant.components import usb
 from homeassistant.core import HomeAssistant
 
-from . import repairs
-from .core.const import (
+from . import (
     CONF_RADIO_TYPE,
     CONF_ZIGPY,
     DEFAULT_DATABASE_NAME,
     EZSP_OVERWRITE_EUI64,
     RadioType,
+    repairs,
 )
-from .core.helpers import get_zha_data
+from .helpers import get_zha_data
 
 # Only the common radio types will be autoprobed, ordered by new device popularity.
 # XBee takes too long to probe since it scans through all possible bauds and likely has
@@ -161,7 +161,7 @@ class ZhaRadioManager:
         """Connect to the radio with the current config and then clean up."""
         assert self.radio_type is not None
 
-        config = get_zha_data(self.hass).yaml_config
+        config = get_zha_data(self.hass).data.yaml_config
         app_config = config.get(CONF_ZIGPY, {}).copy()
 
         database_path = config.get(

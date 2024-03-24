@@ -9,8 +9,8 @@ from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 from zigpy.types import Channels
 from zigpy.util import pick_optimal_channel
 
-from .core.const import CONF_RADIO_TYPE, DOMAIN, RadioType
-from .core.helpers import get_zha_gateway
+from . import CONF_RADIO_TYPE, DOMAIN, RadioType
+from .helpers import get_zha_gateway
 from .radio_manager import ZhaRadioManager
 
 if TYPE_CHECKING:
