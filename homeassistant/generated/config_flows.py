@@ -27,6 +27,7 @@ FLOWS = {
         "aemet",
         "aftership",
         "agent_dvr",
+        "airgradient",
         "airly",
         "airnow",
         "airq",
