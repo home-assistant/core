@@ -155,6 +155,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         hass.config.path(DEFAULT_DATABASE_NAME),
     )
     app_config[CONF_DATABASE] = database
+    app_config[CONF_DEVICE] = config_entry.data[CONF_DEVICE]
 
     # Until we have a way to coordinate channels with the Thread half of multi-PAN,
     # stick to the old zigpy default of channel 15 instead of dynamically scanning
