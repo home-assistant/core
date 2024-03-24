@@ -33,8 +33,17 @@
       "power_output": {
         "name": "Power output"
       },
+      "i_leak_dcdc": {
+        "name": "DC-DC leak current"
+      },
+      "i_leak_inverter": {
+        "name": "Inverter leak current"
+      },
       "total_energy": {
         "name": "Total energy"
+      },
+      "r_iso": {
+        "name": "Isolation resistance"
       }
     }
   }
