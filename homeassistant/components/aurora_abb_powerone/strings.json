@@ -43,7 +43,7 @@
         "name": "Total energy"
       },
       "r_iso": {
-        "name": "Isolation Resistance"
+        "name": "Isolation resistance"
       }
     }
   }
