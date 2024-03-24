@@ -31,7 +31,7 @@ class AutomowerSensorEntityDescription(SensorEntityDescription):
     """Describes Automower sensor entity."""
 
     exists_fn: Callable[[MowerAttributes], bool] = lambda _: True
-    value_fn: Callable[[MowerAttributes], str | int | None | datetime.datetime]
+    value_fn: Callable[[MowerAttributes], StateType | datetime]
 
 
 SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
