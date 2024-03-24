@@ -85,12 +85,12 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.service import async_register_admin_service
 
-from . import EZSP_OVERWRITE_EUI64
 from .api import (
     async_change_channel,
     async_get_active_network_settings,
     async_get_radio_type,
 )
+from .const import EZSP_OVERWRITE_EUI64
 from .helpers import (
     async_cluster_exists,
     cluster_command_schema_to_vol_schema,

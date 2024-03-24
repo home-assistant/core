@@ -14,7 +14,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN as ZHA_DOMAIN
+from .const import DOMAIN as ZHA_DOMAIN
 from .helpers import async_get_zha_device_proxy, get_zha_data
 
 CONF_SUBTYPE = "subtype"

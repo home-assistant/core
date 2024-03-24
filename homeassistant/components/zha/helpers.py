@@ -1,5 +1,8 @@
 """Helper functions for the ZHA integration."""
 
+import collections
+from collections.abc import Callable
+import dataclasses
 import enum
 import logging
 from typing import Any
@@ -8,6 +11,9 @@ import voluptuous as vol
 from zha.application.const import CLUSTER_TYPE_IN, CLUSTER_TYPE_OUT, DATA_ZHA
 from zha.application.gateway import ZHAGateway
 from zha.application.helpers import ZHAData
+from zha.application.platforms import GroupEntity, PlatformEntity
+from zha.event import EventBase
+from zha.zigbee.device import ZHADevice
 import zigpy.exceptions
 import zigpy.types
 from zigpy.types import EUI64
@@ -15,12 +21,96 @@ import zigpy.util
 import zigpy.zcl
 from zigpy.zcl.foundation import CommandSchema
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
-from . import HAZHAData, ZHADeviceProxy, ZHAGatewayProxy
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class ZHAGatewayProxy(EventBase):
+    """Proxy class to interact with the ZHA gateway."""
+
+    def __init__(self, hass: HomeAssistant, gateway: ZHAGateway) -> None:
+        """Initialize the gateway proxy."""
+        super().__init__()
+        self.hass = hass
+        self.gateway: ZHAGateway = gateway
+        self.device_proxies: dict[str, ZHADeviceProxy] = {}
+        self._unsubs: list[Callable[[], None]] = []
+        self._unsubs.append(self.gateway.on_all_events(self._handle_event_protocol))
+
+    async def async_initialize_devices_and_entities(self) -> None:
+        """Initialize devices and entities."""
+        ha_zha_data = get_zha_data(self.hass)
+        for device in self.gateway.devices.values():
+            device_proxy = ZHADeviceProxy(device, self)
+            self.device_proxies[device.ieee] = device_proxy
+            for entity in device.platform_entities.values():
+                platform = Platform(entity.PLATFORM)
+                ha_zha_data.platforms[platform].append(
+                    EntityData(entity=entity, device_proxy=device_proxy)
+                )
+        for group in self.gateway.groups.values():
+            for entity in group.platform_entities.values():
+                platform = Platform(entity.PLATFORM)
+                ha_zha_data.platforms[platform].append(
+                    EntityData(
+                        entity=entity,
+                        device_proxy=self.device_proxies[
+                            self.gateway.coordinator_zha_device.ieee
+                        ],
+                    )
+                )
+
+        await self.gateway.async_initialize_devices_and_entities()
+
+    async def shutdown(self) -> None:
+        """Shutdown the gateway proxy."""
+        for unsub in self._unsubs:
+            unsub()
+        await self.gateway.shutdown()
+
+
+class ZHADeviceProxy(EventBase):
+    """Proxy class to interact with the ZHA device instances."""
+
+    def __init__(self, device: ZHADevice, gateway_proxy: ZHAGatewayProxy) -> None:
+        """Initialize the gateway proxy."""
+        super().__init__()
+        self.device: ZHADevice = device
+        self.gateway_proxy: ZHAGatewayProxy = gateway_proxy
+
+        device_registry = dr.async_get(gateway_proxy.hass)
+        self.ha_device_info: dr.DeviceEntry | None = device_registry.async_get_device(
+            identifiers={(DOMAIN, str(device.ieee))},
+            connections={(dr.CONNECTION_ZIGBEE, str(device.ieee))},
+        )
+
+        self._unsubs: list[Callable[[], None]] = []
+        self._unsubs.append(self.device.on_all_events(self._handle_event_protocol))
+
+
+@dataclasses.dataclass(kw_only=True, slots=True)
+class HAZHAData:
+    """ZHA data stored in `hass.data`."""
+
+    data: ZHAData
+    gateway_proxy: ZHAGatewayProxy | None = dataclasses.field(default=None)
+    platforms: collections.defaultdict[Platform, list] = dataclasses.field(
+        default_factory=lambda: collections.defaultdict(list)
+    )
+    update_coordinator: Any | None = dataclasses.field(default=None)
+
+
+@dataclasses.dataclass(kw_only=True, slots=True)
+class EntityData:
+    """ZHA entity data."""
+
+    entity: PlatformEntity | GroupEntity
+    device_proxy: ZHADeviceProxy
 
 
 def get_zha_data(hass: HomeAssistant) -> HAZHAData:

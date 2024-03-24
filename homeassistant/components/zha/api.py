@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
+from zha.application.const import CONF_RADIO_TYPE, DOMAIN, RadioType
 from zigpy.backups import NetworkBackup
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 from zigpy.types import Channels
 from zigpy.util import pick_optimal_channel
 
-from . import CONF_RADIO_TYPE, DOMAIN, RadioType
 from .helpers import get_zha_gateway
 from .radio_manager import ZhaRadioManager
 

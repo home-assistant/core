@@ -12,7 +12,7 @@ from homeassistant.const import ATTR_COMMAND, ATTR_DEVICE_ID
 from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.device_registry as dr
 
-from . import DOMAIN as ZHA_DOMAIN
+from .const import DOMAIN as ZHA_DOMAIN
 from .helpers import async_get_zha_device_proxy
 
 if TYPE_CHECKING:

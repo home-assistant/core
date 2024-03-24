@@ -16,9 +16,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import EntityData
 from .entity import ZHAEntity
-from .helpers import get_zha_data
+from .helpers import EntityData, get_zha_data
 
 _LOGGER = logging.getLogger(__name__)
 

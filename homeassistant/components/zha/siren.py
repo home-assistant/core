@@ -10,9 +10,8 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import EntityData
 from .entity import ZHAEntity
-from .helpers import get_zha_data
+from .helpers import EntityData, get_zha_data
 
 
 async def async_setup_entry(

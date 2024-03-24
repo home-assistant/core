@@ -14,7 +14,8 @@ from homeassistant.core import callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
 
-from . import DOMAIN, EntityData
+from .const import DOMAIN
+from .helpers import EntityData
 
 _LOGGER = logging.getLogger(__name__)
 

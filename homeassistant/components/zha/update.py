@@ -22,9 +22,8 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from . import EntityData
 from .entity import ZHAEntity
-from .helpers import get_zha_data, get_zha_gateway
+from .helpers import EntityData, get_zha_data, get_zha_gateway
 
 _LOGGER = logging.getLogger(__name__)
 

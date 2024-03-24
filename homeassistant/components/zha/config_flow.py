@@ -10,6 +10,13 @@ from typing import Any
 import serial.tools.list_ports
 from serial.tools.list_ports_common import ListPortInfo
 import voluptuous as vol
+from zha.application.const import (
+    CONF_BAUDRATE,
+    CONF_FLOW_CONTROL,
+    CONF_RADIO_TYPE,
+    DOMAIN,
+    RadioType,
+)
 import zigpy.backups
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
@@ -35,7 +42,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import FileSelector, FileSelectorConfig
 from homeassistant.util import dt as dt_util
 
-from . import CONF_BAUDRATE, CONF_FLOW_CONTROL, CONF_RADIO_TYPE, DOMAIN, RadioType
 from .radio_manager import (
     DEVICE_SCHEMA,
     HARDWARE_DISCOVERY_SCHEMA,
