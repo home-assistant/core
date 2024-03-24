@@ -159,7 +159,7 @@ async def test_set_chime_paired_doorbells(
 
     registry = er.async_get(hass)
     chime_entry = registry.async_get("button.test_chime_play_chime")
-    camera_entry = registry.async_get("binary_sensor.test_camera_2_doorbell")
+    camera_entry = registry.async_get("camera.test_camera_1_high")
     assert chime_entry is not None
     assert camera_entry is not None
 
@@ -169,7 +169,7 @@ async def test_set_chime_paired_doorbells(
         {
             ATTR_DEVICE_ID: chime_entry.device_id,
             "doorbells": {
-                ATTR_ENTITY_ID: ["binary_sensor.test_camera_1_doorbell"],
+                ATTR_ENTITY_ID: ["camera.test_camera_high"],
                 ATTR_DEVICE_ID: [camera_entry.device_id],
             },
         },
@@ -194,7 +194,7 @@ async def test_remove_privacy_zone_no_zone(
     await init_entry(hass, ufp, [doorbell])
 
     registry = er.async_get(hass)
-    camera_entry = registry.async_get("binary_sensor.test_camera_doorbell")
+    camera_entry = registry.async_get("camera.test_camera_high")
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -221,7 +221,7 @@ async def test_remove_privacy_zone(
     await init_entry(hass, ufp, [doorbell])
 
     registry = er.async_get(hass)
-    camera_entry = registry.async_get("binary_sensor.test_camera_doorbell")
+    camera_entry = registry.async_get("camera.test_camera_high")
 
     await hass.services.async_call(
         DOMAIN,

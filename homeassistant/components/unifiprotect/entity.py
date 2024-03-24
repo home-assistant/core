@@ -11,7 +11,6 @@ from pyunifiprotect.data import (
     Camera,
     Chime,
     Doorlock,
-    Event,
     Light,
     ModelType,
     ProtectAdoptableDeviceModel,
@@ -27,15 +26,9 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import UNDEFINED
 
-from .const import (
-    ATTR_EVENT_ID,
-    ATTR_EVENT_SCORE,
-    DEFAULT_ATTRIBUTION,
-    DEFAULT_BRAND,
-    DOMAIN,
-)
+from .const import DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
 from .data import ProtectData
-from .models import PermRequired, ProtectEventMixin, ProtectRequiredKeysMixin
+from .models import PermRequired, ProtectRequiredKeysMixin
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -333,33 +326,3 @@ class ProtectNVREntity(ProtectDeviceEntity):
             self.device = data.api.bootstrap.nvr
 
         self._attr_available = last_update_success
-
-
-class EventEntityMixin(ProtectDeviceEntity):
-    """Adds motion event attributes to sensor."""
-
-    _unrecorded_attributes = frozenset({ATTR_EVENT_ID, ATTR_EVENT_SCORE})
-
-    entity_description: ProtectEventMixin
-
-    def __init__(
-        self,
-        *args: Any,
-        **kwarg: Any,
-    ) -> None:
-        """Init an sensor that has event thumbnails."""
-        super().__init__(*args, **kwarg)
-        self._event: Event | None = None
-
-    @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
-        event = self.entity_description.get_event_obj(device)
-        if event is not None:
-            self._attr_extra_state_attributes = {
-                ATTR_EVENT_ID: event.id,
-                ATTR_EVENT_SCORE: event.score,
-            }
-        else:
-            self._attr_extra_state_attributes = {}
-        self._event = event
-        super()._async_update_device_from_protect(device)

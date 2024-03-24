@@ -20,7 +20,6 @@ from homeassistant.components.unifiprotect.sensor import (
     ALL_DEVICES_SENSORS,
     CAMERA_DISABLED_SENSORS,
     CAMERA_SENSORS,
-    EVENT_SENSORS,
     MOTION_TRIP_SENSORS,
     NVR_DISABLED_SENSORS,
     NVR_SENSORS,
@@ -58,11 +57,11 @@ async def test_sensor_camera_remove(
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.SENSOR, 24, 12)
+    assert_entity_counts(hass, Platform.SENSOR, 23, 12)
     await remove_entities(hass, ufp, [doorbell, unadopted_camera])
     assert_entity_counts(hass, Platform.SENSOR, 12, 9)
     await adopt_devices(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.SENSOR, 24, 12)
+    assert_entity_counts(hass, Platform.SENSOR, 23, 12)
 
 
 async def test_sensor_sensor_remove(
@@ -316,7 +315,7 @@ async def test_sensor_setup_camera(
     """Test sensor entity setup for camera devices."""
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SENSOR, 24, 12)
+    assert_entity_counts(hass, Platform.SENSOR, 23, 12)
 
     entity_registry = er.async_get(hass)
 
@@ -396,38 +395,6 @@ async def test_sensor_setup_camera(
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
 
-async def test_sensor_setup_camera_with_last_trip_time(
-    hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
-    ufp: MockUFPFixture,
-    doorbell: Camera,
-    fixed_now: datetime,
-) -> None:
-    """Test sensor entity setup for camera devices with last trip time."""
-
-    await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SENSOR, 24, 24)
-
-    entity_registry = er.async_get(hass)
-
-    # Last Trip Time
-    unique_id, entity_id = ids_from_device_description(
-        Platform.SENSOR, doorbell, MOTION_TRIP_SENSORS[0]
-    )
-
-    entity = entity_registry.async_get(entity_id)
-    assert entity
-    assert entity.unique_id == unique_id
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert (
-        state.state
-        == (fixed_now - timedelta(hours=1)).replace(microsecond=0).isoformat()
-    )
-    assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
-
-
 async def test_sensor_update_alarm(
     hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor, fixed_now: datetime
 ) -> None:
@@ -501,56 +468,3 @@ async def test_sensor_update_alarm_with_last_trip_time(
         == (fixed_now - timedelta(hours=1)).replace(microsecond=0).isoformat()
     )
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
-
-
-async def test_camera_update_licenseplate(
-    hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera, fixed_now: datetime
-) -> None:
-    """Test sensor motion entity."""
-
-    camera.feature_flags.smart_detect_types.append(SmartDetectObjectType.LICENSE_PLATE)
-    camera.feature_flags.has_smart_detect = True
-    camera.smart_detect_settings.object_types.append(
-        SmartDetectObjectType.LICENSE_PLATE
-    )
-
-    await init_entry(hass, ufp, [camera])
-    assert_entity_counts(hass, Platform.SENSOR, 23, 13)
-
-    _, entity_id = ids_from_device_description(
-        Platform.SENSOR, camera, EVENT_SENSORS[0]
-    )
-
-    event_metadata = EventMetadata(
-        license_plate=LicensePlateMetadata(name="ABCD1234", confidence_level=95)
-    )
-    event = Event(
-        id="test_event_id",
-        type=EventType.SMART_DETECT,
-        start=fixed_now - timedelta(seconds=1),
-        end=None,
-        score=100,
-        smart_detect_types=[SmartDetectObjectType.LICENSE_PLATE],
-        smart_detect_event_ids=[],
-        metadata=event_metadata,
-        api=ufp.api,
-    )
-
-    new_camera = camera.copy()
-    new_camera.is_smart_detected = True
-    new_camera.last_smart_detect_event_ids[
-        SmartDetectObjectType.LICENSE_PLATE
-    ] = event.id
-
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.new_obj = new_camera
-
-    ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
-    ufp.api.bootstrap.events = {event.id: event}
-    ufp.ws_msg(mock_msg)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "ABCD1234"
