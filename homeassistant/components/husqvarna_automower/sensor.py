@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import datetime
+from datetime import datetime
 import logging
 
 from aioautomower.model import MowerAttributes, MowerModes
@@ -17,6 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfLength, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
@@ -173,6 +174,6 @@ class AutomowerSensorEntity(AutomowerBaseEntity, SensorEntity):
         self._attr_unique_id = f"{mower_id}_{description.key}"
 
     @property
-    def native_value(self) -> str | int | datetime.datetime | None:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.mower_attributes)
