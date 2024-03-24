@@ -75,7 +75,7 @@ class Light(light.LightEntity, ZHAEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self.entity_data.entity.async_turn_on(**kwargs)
+        await self.entity_data.entity.async_turn_off(**kwargs)
         self.async_write_ha_state()
 
     @callback
