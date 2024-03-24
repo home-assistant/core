@@ -31,7 +31,8 @@ async def async_setup_entry(
     """Set up the Zigbee Home Automation Door Lock from config entry."""
     zha_data = get_zha_data(hass)
     entities_to_create = zha_data.platforms.pop(Platform.LOCK, [])
-    async_add_entities(entities_to_create)
+    entities = [ZhaDoorLock(entity_data) for entity_data in entities_to_create]
+    async_add_entities(entities)
 
     platform = async_get_current_platform()
 

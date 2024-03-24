@@ -25,7 +25,8 @@ async def async_setup_entry(
     """Set up the Zigbee Home Automation switch from config entry."""
     zha_data = get_zha_data(hass)
     entities_to_create = zha_data.platforms.pop(Platform.SWITCH, [])
-    async_add_entities(entities_to_create)
+    entities = [Switch(entity_data) for entity_data in entities_to_create]
+    async_add_entities(entities)
 
 
 class Switch(ZHAEntity, SwitchEntity):

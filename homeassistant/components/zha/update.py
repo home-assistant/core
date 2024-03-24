@@ -40,7 +40,10 @@ async def async_setup_entry(
             hass, get_zha_gateway(hass).application_controller
         )
     entities_to_create = zha_data.platforms.pop(Platform.UPDATE, [])
-    async_add_entities(entities_to_create)
+    entities = [
+        ZHAFirmwareUpdateEntity(entity_data) for entity_data in entities_to_create
+    ]
+    async_add_entities(entities)
 
     zha_data = get_zha_data(hass)
     entities_to_create = zha_data.platforms[Platform.UPDATE]

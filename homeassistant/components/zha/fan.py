@@ -22,7 +22,8 @@ async def async_setup_entry(
     """Set up the Zigbee Home Automation fan from config entry."""
     zha_data = get_zha_data(hass)
     entities_to_create = zha_data.platforms.pop(Platform.FAN, [])
-    async_add_entities(entities_to_create)
+    entities = [ZhaFan(entity_data) for entity_data in entities_to_create]
+    async_add_entities(entities)
 
 
 class ZhaFan(FanEntity, ZHAEntity):

@@ -26,7 +26,8 @@ async def async_setup_entry(
     """Set up the Zigbee Home Automation light from config entry."""
     zha_data = get_zha_data(hass)
     entities_to_create = zha_data.platforms.pop(Platform.LIGHT, [])
-    async_add_entities(entities_to_create)
+    entities = [Light(entity_data) for entity_data in entities_to_create]
+    async_add_entities(entities)
 
 
 class Light(light.LightEntity, ZHAEntity):

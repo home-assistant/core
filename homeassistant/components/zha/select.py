@@ -25,7 +25,8 @@ async def async_setup_entry(
     """Set up the Zigbee Home Automation siren from config entry."""
     zha_data = get_zha_data(hass)
     entities_to_create = zha_data.platforms.pop(Platform.SELECT, [])
-    async_add_entities(entities_to_create)
+    entities = [ZHAEnumSelectEntity(entity_data) for entity_data in entities_to_create]
+    async_add_entities(entities)
 
 
 class ZHAEnumSelectEntity(ZHAEntity, SelectEntity):

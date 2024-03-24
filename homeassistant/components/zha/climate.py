@@ -31,7 +31,8 @@ async def async_setup_entry(
     """Set up the Zigbee Home Automation sensor from config entry."""
     zha_data = get_zha_data(hass)
     entities_to_create = zha_data.platforms.pop(Platform.CLIMATE, [])
-    async_add_entities(entities_to_create)
+    entities = [Thermostat(entity_data) for entity_data in entities_to_create]
+    async_add_entities(entities)
 
 
 class Thermostat(ZHAEntity, ClimateEntity):
