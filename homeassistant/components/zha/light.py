@@ -33,27 +33,15 @@ async def async_setup_entry(
 class Light(light.LightEntity, ZHAEntity):
     """Representation of a ZHA or ZLL light."""
 
-    _attr_supported_color_modes: set[ColorMode]
-    _attr_translation_key: str = "light"
-
-    def __init__(self, *args, **kwargs) -> None:
-        """Initialize the light."""
-        super().__init__(*args, **kwargs)
-        self._attr_min_mireds: int = self.entity_data.entity.min_mireds
-        self._attr_max_mireds: int = self.entity_data.entity.max_mireds
-        self._attr_color_mode = self.entity_data.entity.color_mode
-        self._attr_supported_features: LightEntityFeature = LightEntityFeature(
-            self.entity_data.entity.supported_features.value
+    def __init__(self, entity_data: Any) -> None:
+        """Initialize the ZHA light."""
+        super().__init__(entity_data)
+        self._attr_supported_color_modes: set[ColorMode] = set()
+        for color_mode in self.entity_data.entity.supported_color_modes:
+            self._attr_supported_color_modes.add(ColorMode(color_mode))
+        self._attr_supported_features = LightEntityFeature(
+            self.entity_data.entity.supported_features
         )
-        self._attr_effect_list: list[str] | None = self.entity_data.entity.effect_list
-        self._attr_supported_color_modes = (
-            self.entity_data.entity._supported_color_modes
-        )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect entity object when removed."""
-        self._async_unsub_transition_listener()
-        await super().async_will_remove_from_hass()
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -67,6 +55,51 @@ class Light(light.LightEntity, ZHAEntity):
     def is_on(self) -> bool:
         """Return true if entity is on."""
         return self.entity_data.entity.is_on
+
+    @property
+    def brightness(self) -> int:
+        """Return the brightness of this light."""
+        return self.entity_data.entity.brightness
+
+    @property
+    def min_mireds(self) -> int:
+        """Return the coldest color_temp that this light supports."""
+        return self.entity_data.entity.min_mireds
+
+    @property
+    def max_mireds(self) -> int:
+        """Return the warmest color_temp that this light supports."""
+        return self.entity_data.entity.max_mireds
+
+    @property
+    def hs_color(self) -> tuple[float, float] | None:
+        """Return the hs color value [int, int]."""
+        return self.entity_data.entity.hs_color
+
+    @property
+    def xy_color(self) -> tuple[float, float] | None:
+        """Return the xy color value [float, float]."""
+        return self.entity_data.entity.xy_color
+
+    @property
+    def color_temp(self) -> int | None:
+        """Return the CT color value in mireds."""
+        return self.entity_data.entity.color_temp
+
+    @property
+    def color_mode(self) -> ColorMode:
+        """Return the color mode."""
+        return ColorMode(self.entity_data.entity.color_mode)
+
+    @property
+    def effect_list(self) -> list[str] | None:
+        """Return the list of supported effects."""
+        return self.entity_data.entity.effect_list
+
+    @property
+    def effect(self) -> str | None:
+        """Return the current effect."""
+        return self.entity_data.entity.effect
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
