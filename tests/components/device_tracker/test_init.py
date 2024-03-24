@@ -628,6 +628,7 @@ async def test_bad_platform(hass: HomeAssistant) -> None:
     config = {"device_tracker": [{"platform": "bad_platform"}]}
     with assert_setup_component(0, device_tracker.DOMAIN):
         assert await async_setup_component(hass, device_tracker.DOMAIN, config)
+        await hass.async_block_till_done()
 
     assert f"bad_platform.{device_tracker.DOMAIN}" not in hass.config.components
 
