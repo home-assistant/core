@@ -298,8 +298,6 @@ async def _async_setup_component(  # noqa: C901
         load_translations_task = create_eager_task(
             translation.async_load_integrations(hass, integration_set)
         )
-
-    _LOGGER.debug("Resolve deps %s", domain)
     # Validate all dependencies exist and there are no circular dependencies
     if not await integration.resolve_dependencies():
         return False
