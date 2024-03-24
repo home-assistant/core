@@ -10,10 +10,7 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .coordinator import APCUPSdCoordinator, APCUPSdData
 
-TO_REDACT = {
-    "SERIALNO",
-    "HOSTNAME",
-}
+TO_REDACT = {"SERIALNO", "HOSTNAME"}
 
 
 async def async_get_config_entry_diagnostics(
