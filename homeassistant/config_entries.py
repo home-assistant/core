@@ -605,6 +605,7 @@ class ConfigEntry:
                     HassJob(
                         functools.partial(self._async_setup_again, hass),
                         job_type=HassJobType.Callback,
+                        cancel_on_shutdown=True,
                     ),
                 )
             else:
