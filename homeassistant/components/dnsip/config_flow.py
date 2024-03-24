@@ -155,14 +155,12 @@ class DnsIPOptionsFlowHandler(OptionsFlowWithConfigEntry):
         """Manage the options."""
         errors = {}
         if user_input is not None:
-            user_input[CONF_RESOLVER] = user_input.get(CONF_RESOLVER, DEFAULT_RESOLVER)
-            user_input[CONF_RESOLVER_IPV6] = user_input.get(
-                CONF_RESOLVER_IPV6, DEFAULT_RESOLVER_IPV6
-            )
+            resolver = user_input.get(CONF_RESOLVER, DEFAULT_RESOLVER)
+            resolver_ipv6 = user_input.get(CONF_RESOLVER_IPV6, DEFAULT_RESOLVER_IPV6)
             validate = await async_validate_hostname(
                 self.config_entry.data[CONF_HOSTNAME],
-                user_input[CONF_RESOLVER],
-                user_input[CONF_RESOLVER_IPV6],
+                resolver,
+                resolver_ipv6,
             )
 
             if (
@@ -177,7 +175,8 @@ class DnsIPOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 errors[CONF_RESOLVER_IPV6] = "invalid_resolver"
             else:
                 return self.async_create_entry(
-                    title=self.config_entry.title, data=user_input
+                    title=self.config_entry.title,
+                    data={CONF_RESOLVER: resolver, CONF_RESOLVER_IPV6: resolver_ipv6},
                 )
 
         schema = self.add_suggested_values_to_schema(
