@@ -362,9 +362,8 @@ async def test_get_cloud_url(hass: HomeAssistant) -> None:
     assert hass.config.external_url is None
     hass.config.components.add("cloud")
 
-    with patch.object(
-        hass.components.cloud,
-        "async_remote_ui_url",
+    with patch(
+        "homeassistant.components.cloud.async_remote_ui_url",
         return_value="https://example.nabu.casa",
     ):
         assert _get_cloud_url(hass) == "https://example.nabu.casa"
@@ -387,9 +386,8 @@ async def test_get_cloud_url(hass: HomeAssistant) -> None:
         ), pytest.raises(NoURLAvailableError):
             _get_cloud_url(hass, require_current_request=True)
 
-    with patch.object(
-        hass.components.cloud,
-        "async_remote_ui_url",
+    with patch(
+        "homeassistant.components.cloud.async_remote_ui_url",
         side_effect=cloud.CloudNotAvailable,
     ), pytest.raises(NoURLAvailableError):
         _get_cloud_url(hass)
@@ -410,9 +408,8 @@ async def test_get_external_url_cloud_fallback(hass: HomeAssistant) -> None:
 
     # Add Cloud to the previous test
     hass.config.components.add("cloud")
-    with patch.object(
-        hass.components.cloud,
-        "async_remote_ui_url",
+    with patch(
+        "homeassistant.components.cloud.async_remote_ui_url",
         return_value="https://example.nabu.casa",
     ):
         assert _get_external_url(hass, allow_cloud=False) == "http://1.1.1.1:8123"
@@ -436,9 +433,8 @@ async def test_get_external_url_cloud_fallback(hass: HomeAssistant) -> None:
 
     # Add Cloud to the previous test
     hass.config.components.add("cloud")
-    with patch.object(
-        hass.components.cloud,
-        "async_remote_ui_url",
+    with patch(
+        "homeassistant.components.cloud.async_remote_ui_url",
         return_value="https://example.nabu.casa",
     ):
         assert _get_external_url(hass, allow_cloud=False) == "https://example.com"
@@ -710,9 +706,8 @@ async def test_is_hass_url(hass: HomeAssistant) -> None:
     assert is_hass_url(hass, "http://example.com:443") is False
     assert is_hass_url(hass, "http://example.com") is False
 
-    with patch.object(
-        hass.components.cloud,
-        "async_remote_ui_url",
+    with patch(
+        "homeassistant.components.cloud.async_remote_ui_url",
         return_value="https://example.nabu.casa",
     ):
         assert is_hass_url(hass, "https://example.nabu.casa") is False

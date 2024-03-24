@@ -1327,7 +1327,7 @@ async def help_test_entity_debug_info_max_messages(
 
     start_dt = datetime(2019, 1, 1, 0, 0, 0, tzinfo=dt_util.UTC)
     with freeze_time(start_dt):
-        for i in range(0, debug_info.STORED_MESSAGES + 1):
+        for i in range(debug_info.STORED_MESSAGES + 1):
             async_fire_mqtt_message(hass, "test-topic", f"{i}")
 
     debug_info_data = debug_info.info_for_device(hass, device.id)

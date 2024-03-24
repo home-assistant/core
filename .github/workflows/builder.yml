@@ -25,7 +25,7 @@ jobs:
       publish: ${{ steps.version.outputs.publish }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.2
         with:
           fetch-depth: 0
 
@@ -57,7 +57,7 @@ jobs:
     if: github.repository_owner == 'home-assistant' && needs.init.outputs.publish == 'true'
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.2
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v5.0.0
@@ -95,15 +95,16 @@ jobs:
       packages: write
       id-token: write
     strategy:
+      fail-fast: false
       matrix:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.2
 
       - name: Download nightly wheels of frontend
         if: needs.init.outputs.channel == 'dev'
-        uses: dawidd6/action-download-artifact@v3.1.2
+        uses: dawidd6/action-download-artifact@v3.1.4
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           repo: home-assistant/frontend
@@ -114,7 +115,7 @@ jobs:
 
       - name: Download nightly wheels of intents
         if: needs.init.outputs.channel == 'dev'
-        uses: dawidd6/action-download-artifact@v3.1.2
+        uses: dawidd6/action-download-artifact@v3.1.4
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           repo: home-assistant/intents-package
@@ -147,7 +148,7 @@ jobs:
             sed -i "s|home-assistant-frontend==.*|home-assistant-frontend==${BASH_REMATCH[1]}|" \
               homeassistant/package_constraints.txt
 
-            python -m script.gen_requirements_all
+            sed -i "s|home-assistant-frontend==.*||" requirements_all.txt
           fi
 
           if [[ "$(ls home_assistant_intents*.whl)" =~ ^home_assistant_intents-(.*)-py3-none-any.whl$ ]]; then
@@ -165,7 +166,7 @@ jobs:
             sed -i "s|home-assistant-intents==.*|home-assistant-intents==${BASH_REMATCH[1]}|" \
               homeassistant/package_constraints.txt
 
-            python -m script.gen_requirements_all
+            sed -i "s|home-assistant-intents==.*||" requirements_all.txt
           fi
 
       - name: Adjustments for armhf
@@ -200,14 +201,14 @@ jobs:
           echo "${{ github.sha }};${{ github.ref }};${{ github.event_name }};${{ github.actor }}" > rootfs/OFFICIAL_IMAGE
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3.0.0
+        uses: docker/login-action@v3.1.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2024.01.0
+        uses: home-assistant/builder@2024.03.5
         with:
           args: |
             $BUILD_ARGS \
@@ -263,7 +264,7 @@ jobs:
           - green
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.2
 
       - name: Set build additional args
         run: |
@@ -277,14 +278,14 @@ jobs:
           fi
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3.0.0
+        uses: docker/login-action@v3.1.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2024.01.0
+        uses: home-assistant/builder@2024.03.5
         with:
           args: |
             $BUILD_ARGS \
@@ -300,7 +301,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.2
 
       - name: Initialize git
         uses: home-assistant/actions/helpers/git-init@master
@@ -336,23 +337,28 @@ jobs:
       contents: read
       packages: write
       id-token: write
+    strategy:
+      matrix:
+        registry: ["ghcr.io/home-assistant", "docker.io/homeassistant"]
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.2
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3.4.0
         with:
-          cosign-release: "v2.0.2"
+          cosign-release: "v2.2.3"
 
       - name: Login to DockerHub
-        uses: docker/login-action@v3.0.0
+        if: matrix.registry == 'docker.io/homeassistant'
+        uses: docker/login-action@v3.1.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3.0.0
+        if: matrix.registry == 'ghcr.io/home-assistant'
+        uses: docker/login-action@v3.1.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -366,41 +372,37 @@ jobs:
           function create_manifest() {
             local tag_l=${1}
             local tag_r=${2}
+            local registry=${{ matrix.registry }}
 
-            for registry in "ghcr.io/home-assistant" "docker.io/homeassistant"
-            do
+            docker manifest create "${registry}/home-assistant:${tag_l}" \
+              "${registry}/amd64-homeassistant:${tag_r}" \
+              "${registry}/i386-homeassistant:${tag_r}" \
+              "${registry}/armhf-homeassistant:${tag_r}" \
+              "${registry}/armv7-homeassistant:${tag_r}" \
+              "${registry}/aarch64-homeassistant:${tag_r}"
 
-              docker manifest create "${registry}/home-assistant:${tag_l}" \
-                "${registry}/amd64-homeassistant:${tag_r}" \
-                "${registry}/i386-homeassistant:${tag_r}" \
-                "${registry}/armhf-homeassistant:${tag_r}" \
-                "${registry}/armv7-homeassistant:${tag_r}" \
-                "${registry}/aarch64-homeassistant:${tag_r}"
+            docker manifest annotate "${registry}/home-assistant:${tag_l}" \
+              "${registry}/amd64-homeassistant:${tag_r}" \
+              --os linux --arch amd64
 
-              docker manifest annotate "${registry}/home-assistant:${tag_l}" \
-                "${registry}/amd64-homeassistant:${tag_r}" \
-                --os linux --arch amd64
+            docker manifest annotate "${registry}/home-assistant:${tag_l}" \
+              "${registry}/i386-homeassistant:${tag_r}" \
+              --os linux --arch 386
 
-              docker manifest annotate "${registry}/home-assistant:${tag_l}" \
-                "${registry}/i386-homeassistant:${tag_r}" \
-                --os linux --arch 386
+            docker manifest annotate "${registry}/home-assistant:${tag_l}" \
+              "${registry}/armhf-homeassistant:${tag_r}" \
+              --os linux --arch arm --variant=v6
 
-              docker manifest annotate "${registry}/home-assistant:${tag_l}" \
-                "${registry}/armhf-homeassistant:${tag_r}" \
-                --os linux --arch arm --variant=v6
+            docker manifest annotate "${registry}/home-assistant:${tag_l}" \
+              "${registry}/armv7-homeassistant:${tag_r}" \
+              --os linux --arch arm --variant=v7
 
-              docker manifest annotate "${registry}/home-assistant:${tag_l}" \
-                "${registry}/armv7-homeassistant:${tag_r}" \
-                --os linux --arch arm --variant=v7
+            docker manifest annotate "${registry}/home-assistant:${tag_l}" \
+              "${registry}/aarch64-homeassistant:${tag_r}" \
+              --os linux --arch arm64 --variant=v8
 
-              docker manifest annotate "${registry}/home-assistant:${tag_l}" \
-                "${registry}/aarch64-homeassistant:${tag_r}" \
-                --os linux --arch arm64 --variant=v8
-
-              docker manifest push --purge "${registry}/home-assistant:${tag_l}"
-              cosign sign --yes "${registry}/home-assistant:${tag_l}"
-
-            done
+            docker manifest push --purge "${registry}/home-assistant:${tag_l}"
+            cosign sign --yes "${registry}/home-assistant:${tag_l}"
           }
 
           function validate_image() {
@@ -433,12 +435,14 @@ jobs:
           validate_image "ghcr.io/home-assistant/armv7-homeassistant:${{ needs.init.outputs.version }}"
           validate_image "ghcr.io/home-assistant/aarch64-homeassistant:${{ needs.init.outputs.version }}"
 
-          # Upload images to dockerhub
-          push_dockerhub "amd64-homeassistant" "${{ needs.init.outputs.version }}"
-          push_dockerhub "i386-homeassistant" "${{ needs.init.outputs.version }}"
-          push_dockerhub "armhf-homeassistant" "${{ needs.init.outputs.version }}"
-          push_dockerhub "armv7-homeassistant" "${{ needs.init.outputs.version }}"
-          push_dockerhub "aarch64-homeassistant" "${{ needs.init.outputs.version }}"
+          if [[ "${{ matrix.registry }}" ==  "docker.io/homeassistant" ]]; then
+            # Upload images to dockerhub
+            push_dockerhub "amd64-homeassistant" "${{ needs.init.outputs.version }}"
+            push_dockerhub "i386-homeassistant" "${{ needs.init.outputs.version }}"
+            push_dockerhub "armhf-homeassistant" "${{ needs.init.outputs.version }}"
+            push_dockerhub "armv7-homeassistant" "${{ needs.init.outputs.version }}"
+            push_dockerhub "aarch64-homeassistant" "${{ needs.init.outputs.version }}"
+          fi
 
           # Create version tag
           create_manifest "${{ needs.init.outputs.version }}" "${{ needs.init.outputs.version }}"

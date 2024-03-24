@@ -1,5 +1,6 @@
 """Tests for Mill init."""
 
+import asyncio
 from unittest.mock import patch
 
 from homeassistant.components import mill
@@ -42,6 +43,22 @@ async def test_setup_with_cloud_config_fails(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     with patch("mill.Mill.connect", return_value=False):
         assert await async_setup_component(hass, "mill", {})
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_with_cloud_config_times_out(hass: HomeAssistant) -> None:
+    """Test setup of cloud config will retry if timed out."""
+    entry = MockConfigEntry(
+        domain=mill.DOMAIN,
+        data={
+            mill.CONF_USERNAME: "user",
+            mill.CONF_PASSWORD: "pswd",
+            mill.CONNECTION_TYPE: mill.CLOUD,
+        },
+    )
+    entry.add_to_hass(hass)
+    with patch("mill.Mill.connect", side_effect=asyncio.TimeoutError):
+        await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 

@@ -4,7 +4,7 @@ from datetime import timedelta
 
 from aiohttp import ClientResponseError
 from weatherflow4py.api import WeatherFlowRestAPI
-from weatherflow4py.models.unified import WeatherFlowData
+from weatherflow4py.models.rest.unified import WeatherFlowData
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed

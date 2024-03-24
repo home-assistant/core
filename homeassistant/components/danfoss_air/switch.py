@@ -47,12 +47,10 @@ def setup_platform(
         ],
     ]
 
-    dev = []
-
-    for switch in switches:
-        dev.append(DanfossAir(data, switch[0], switch[1], switch[2], switch[3]))
-
-    add_entities(dev)
+    add_entities(
+        DanfossAir(data, switch[0], switch[1], switch[2], switch[3])
+        for switch in switches
+    )
 
 
 class DanfossAir(SwitchEntity):

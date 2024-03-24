@@ -1,5 +1,6 @@
 """Test config utils."""
 
+import asyncio
 from collections import OrderedDict
 import contextlib
 import copy
@@ -15,6 +16,7 @@ import voluptuous as vol
 from voluptuous import Invalid, MultipleInvalid
 import yaml
 
+from homeassistant import config, loader
 import homeassistant.config as config_util
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -30,7 +32,12 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_METRIC,
     __version__,
 )
-from homeassistant.core import ConfigSource, HomeAssistant, HomeAssistantError
+from homeassistant.core import (
+    DOMAIN as HA_DOMAIN,
+    ConfigSource,
+    HomeAssistant,
+    HomeAssistantError,
+)
 from homeassistant.exceptions import ConfigValidationError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 import homeassistant.helpers.check_config as check_config
@@ -863,7 +870,7 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("minor_version", "users", "user_data", "default_language"),
-    (
+    [
         (2, (), {}, "en"),
         (2, ({"is_owner": True},), {}, "en"),
         (
@@ -892,7 +899,7 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
             {"user1": {"language": {"language": "sv"}}},
             "en",
         ),
-    ),
+    ],
 )
 async def test_language_default(
     hass: HomeAssistant,
@@ -1039,7 +1046,7 @@ async def test_check_ha_config_file_wrong(mock_check, hass: HomeAssistant) -> No
     "hass_config",
     [
         {
-            config_util.CONF_CORE: {
+            HA_DOMAIN: {
                 config_util.CONF_PACKAGES: {
                     "pack_dict": {"input_boolean": {"ib1": None}}
                 }
@@ -1056,7 +1063,7 @@ async def test_async_hass_config_yaml_merge(
     conf = await config_util.async_hass_config_yaml(hass)
 
     assert merge_log_err.call_count == 0
-    assert conf[config_util.CONF_CORE].get(config_util.CONF_PACKAGES) is not None
+    assert conf[HA_DOMAIN].get(config_util.CONF_PACKAGES) is not None
     assert len(conf) == 3
     assert len(conf["input_boolean"]) == 2
     assert len(conf["light"]) == 1
@@ -1084,7 +1091,7 @@ async def test_merge(merge_log_err, hass: HomeAssistant) -> None:
         },
     }
     config = {
-        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        HA_DOMAIN: {config_util.CONF_PACKAGES: packages},
         "input_boolean": {"ib2": None},
         "light": {"platform": "test"},
         "automation": [],
@@ -1111,7 +1118,7 @@ async def test_merge_try_falsy(merge_log_err, hass: HomeAssistant) -> None:
         "pack_list2": {"light": OrderedDict()},
     }
     config = {
-        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        HA_DOMAIN: {config_util.CONF_PACKAGES: packages},
         "automation": {"do": "something"},
         "light": {"some": "light"},
     }
@@ -1134,7 +1141,7 @@ async def test_merge_new(merge_log_err, hass: HomeAssistant) -> None:
             "api": {},
         },
     }
-    config = {config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages}}
+    config = {HA_DOMAIN: {config_util.CONF_PACKAGES: packages}}
     await config_util.merge_packages_config(hass, config, packages)
 
     assert merge_log_err.call_count == 0
@@ -1152,7 +1159,7 @@ async def test_merge_type_mismatch(merge_log_err, hass: HomeAssistant) -> None:
         "pack_2": {"light": {"ib1": None}},  # light gets merged - ensure_list
     }
     config = {
-        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        HA_DOMAIN: {config_util.CONF_PACKAGES: packages},
         "input_boolean": {"ib2": None},
         "input_select": [{"ib2": None}],
         "light": [{"platform": "two"}],
@@ -1168,13 +1175,13 @@ async def test_merge_type_mismatch(merge_log_err, hass: HomeAssistant) -> None:
 async def test_merge_once_only_keys(merge_log_err, hass: HomeAssistant) -> None:
     """Test if we have a merge for a comp that may occur only once. Keys."""
     packages = {"pack_2": {"api": None}}
-    config = {config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages}, "api": None}
+    config = {HA_DOMAIN: {config_util.CONF_PACKAGES: packages}, "api": None}
     await config_util.merge_packages_config(hass, config, packages)
     assert config["api"] == OrderedDict()
 
     packages = {"pack_2": {"api": {"key_3": 3}}}
     config = {
-        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        HA_DOMAIN: {config_util.CONF_PACKAGES: packages},
         "api": {"key_1": 1, "key_2": 2},
     }
     await config_util.merge_packages_config(hass, config, packages)
@@ -1183,7 +1190,7 @@ async def test_merge_once_only_keys(merge_log_err, hass: HomeAssistant) -> None:
     # Duplicate keys error
     packages = {"pack_2": {"api": {"key": 2}}}
     config = {
-        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        HA_DOMAIN: {config_util.CONF_PACKAGES: packages},
         "api": {"key": 1},
     }
     await config_util.merge_packages_config(hass, config, packages)
@@ -1198,7 +1205,7 @@ async def test_merge_once_only_lists(hass: HomeAssistant) -> None:
         }
     }
     config = {
-        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        HA_DOMAIN: {config_util.CONF_PACKAGES: packages},
         "api": {"list_1": ["item_1"]},
     }
     await config_util.merge_packages_config(hass, config, packages)
@@ -1221,7 +1228,7 @@ async def test_merge_once_only_dictionaries(hass: HomeAssistant) -> None:
         }
     }
     config = {
-        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        HA_DOMAIN: {config_util.CONF_PACKAGES: packages},
         "api": {"dict_1": {"key_1": 1, "dict_1.1": {"key_1.1": 1.1}}},
     }
     await config_util.merge_packages_config(hass, config, packages)
@@ -1255,7 +1262,7 @@ async def test_merge_duplicate_keys(merge_log_err, hass: HomeAssistant) -> None:
     """Test if keys in dicts are duplicates."""
     packages = {"pack_1": {"input_select": {"ib1": None}}}
     config = {
-        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        HA_DOMAIN: {config_util.CONF_PACKAGES: packages},
         "input_select": {"ib1": 1},
     }
     await config_util.merge_packages_config(hass, config, packages)
@@ -1415,7 +1422,7 @@ async def test_merge_split_component_definition(hass: HomeAssistant) -> None:
         "pack_1": {"light one": {"l1": None}},
         "pack_2": {"light two": {"l2": None}, "light three": {"l3": None}},
     }
-    config = {config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages}}
+    config = {HA_DOMAIN: {config_util.CONF_PACKAGES: packages}}
     await config_util.merge_packages_config(hass, config, packages)
 
     assert len(config) == 4
@@ -1969,7 +1976,7 @@ async def test_core_store_historic_currency(
     assert issue
     assert issue.translation_placeholders == {"currency": "LTT"}
 
-    await hass.config.async_update(**{"currency": "EUR"})
+    await hass.config.async_update(currency="EUR")
     issue = issue_registry.async_get_issue("homeassistant", issue_id)
     assert not issue
 
@@ -2025,7 +2032,7 @@ async def test_core_store_no_country(
     issue = issue_registry.async_get_issue("homeassistant", issue_id)
     assert issue
 
-    await hass.config.async_update(**{"country": "SE"})
+    await hass.config.async_update(country="SE")
     issue = issue_registry.async_get_issue("homeassistant", issue_id)
     assert not issue
 
@@ -2306,7 +2313,7 @@ async def test_packages_schema_validation_error(
     ]
     assert error_records == snapshot
 
-    assert len(config[config_util.CONF_CORE][config_util.CONF_PACKAGES]) == 0
+    assert len(config[HA_DOMAIN][config_util.CONF_PACKAGES]) == 0
 
 
 def test_extract_domain_configs() -> None:
@@ -2348,6 +2355,7 @@ def test_extract_platform_integrations() -> None:
         [
             (b"zone", {"platform": "not str"}),
             ("zone", {"platform": "hello"}),
+            ("switch", {"platform": ["un", "hash", "able"]}),
             ("zonex", []),
             ("zoney", ""),
             ("notzone", {"platform": "nothello"}),
@@ -2361,13 +2369,90 @@ def test_extract_platform_integrations() -> None:
         ]
     )
     assert config_util.extract_platform_integrations(config, {"zone"}) == {
-        "hello",
-        "hello 2",
+        "zone": {"hello", "hello 2"}
     }
-    assert config_util.extract_platform_integrations(config, {"zonex"}) == set()
-    assert config_util.extract_platform_integrations(config, {"zoney"}) == set()
+    assert config_util.extract_platform_integrations(config, {"switch"}) == {}
+    assert config_util.extract_platform_integrations(config, {"zonex"}) == {}
+    assert config_util.extract_platform_integrations(config, {"zoney"}) == {}
     assert config_util.extract_platform_integrations(
         config, {"zone", "not_valid", "notzone"}
-    ) == {"hello", "hello 2", "nothello"}
-    assert config_util.extract_platform_integrations(config, {"zoneq"}) == set()
-    assert config_util.extract_platform_integrations(config, {"zoneempty"}) == set()
+    ) == {"zone": {"hello 2", "hello"}, "notzone": {"nothello"}}
+    assert config_util.extract_platform_integrations(config, {"zoneq"}) == {}
+    assert config_util.extract_platform_integrations(config, {"zoneempty"}) == {}
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_loading_platforms_gathers(hass: HomeAssistant) -> None:
+    """Test loading platform integrations gathers."""
+
+    mock_integration(
+        hass,
+        MockModule(
+            domain="platform_int",
+        ),
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="platform_int2",
+        ),
+    )
+
+    # Its important that we do not mock the platforms with mock_platform
+    # as the loader is smart enough to know they are already loaded and
+    # will not create an executor job to load them. We are testing in
+    # what order the executor jobs happen here as we want to make
+    # sure the platform integrations are at the front of the line
+    light_integration = await loader.async_get_integration(hass, "light")
+    sensor_integration = await loader.async_get_integration(hass, "sensor")
+
+    order: list[tuple[str, str]] = []
+
+    def _load_platform(self, platform: str) -> MockModule:
+        order.append((self.domain, platform))
+        return MockModule()
+
+    # We need to patch what runs in the executor so we are counting
+    # the order that jobs are scheduled in th executor
+    with patch(
+        "homeassistant.loader.Integration._load_platform",
+        _load_platform,
+    ):
+        light_task = hass.async_create_task(
+            config.async_process_component_config(
+                hass,
+                {
+                    "light": [
+                        {"platform": "platform_int"},
+                        {"platform": "platform_int2"},
+                    ]
+                },
+                light_integration,
+            ),
+            eager_start=True,
+        )
+        sensor_task = hass.async_create_task(
+            config.async_process_component_config(
+                hass,
+                {
+                    "sensor": [
+                        {"platform": "platform_int"},
+                        {"platform": "platform_int2"},
+                    ]
+                },
+                sensor_integration,
+            ),
+            eager_start=True,
+        )
+
+        await asyncio.gather(light_task, sensor_task)
+
+    # Should be called in order so that
+    # all the light platforms are imported
+    # before the sensor platforms
+    assert order == [
+        ("platform_int", "light"),
+        ("platform_int2", "light"),
+        ("platform_int", "sensor"),
+        ("platform_int2", "sensor"),
+    ]

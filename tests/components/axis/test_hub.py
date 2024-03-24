@@ -35,17 +35,19 @@ from tests.common import async_fire_mqtt_message
 from tests.typing import MqttMockHAClient
 
 
-@pytest.fixture(name="forward_entry_setup")
+@pytest.fixture(name="forward_entry_setups")
 def hass_mock_forward_entry_setup(hass):
-    """Mock async_forward_entry_setup."""
-    with patch.object(hass.config_entries, "async_forward_entry_setup") as forward_mock:
+    """Mock async_forward_entry_setups."""
+    with patch.object(
+        hass.config_entries, "async_forward_entry_setups"
+    ) as forward_mock:
         yield forward_mock
 
 
 async def test_device_setup(
     hass: HomeAssistant,
-    forward_entry_setup,
-    config,
+    forward_entry_setups,
+    config_entry_data,
     setup_config_entry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
@@ -57,15 +59,13 @@ async def test_device_setup(
     assert hub.api.vapix.product_type == "Network Camera"
     assert hub.api.vapix.serial_number == "00408C123456"
 
-    assert len(forward_entry_setup.mock_calls) == 4
-    assert forward_entry_setup.mock_calls[0][1][1] == "binary_sensor"
-    assert forward_entry_setup.mock_calls[1][1][1] == "camera"
-    assert forward_entry_setup.mock_calls[2][1][1] == "light"
-    assert forward_entry_setup.mock_calls[3][1][1] == "switch"
+    assert len(forward_entry_setups.mock_calls) == 1
+    platforms = set(forward_entry_setups.mock_calls[0][1][1])
+    assert platforms == {"binary_sensor", "camera", "light", "switch"}
 
-    assert hub.config.host == config[CONF_HOST]
-    assert hub.config.model == config[CONF_MODEL]
-    assert hub.config.name == config[CONF_NAME]
+    assert hub.config.host == config_entry_data[CONF_HOST]
+    assert hub.config.model == config_entry_data[CONF_MODEL]
+    assert hub.config.name == config_entry_data[CONF_NAME]
     assert hub.unique_id == FORMATTED_MAC
 
     device_entry = device_registry.async_get_device(
@@ -206,38 +206,42 @@ async def test_device_unknown_error(
     assert hass.data[AXIS_DOMAIN] == {}
 
 
-async def test_shutdown(config) -> None:
+async def test_shutdown(config_entry_data) -> None:
     """Successful shutdown."""
     hass = Mock()
     entry = Mock()
-    entry.data = config
+    entry.data = config_entry_data
 
-    axis_device = axis.hub.AxisHub(hass, entry, Mock())
+    mock_api = Mock()
+    mock_api.vapix.serial_number = FORMATTED_MAC
+    axis_device = axis.hub.AxisHub(hass, entry, mock_api)
 
     await axis_device.shutdown(None)
 
     assert len(axis_device.api.stream.stop.mock_calls) == 1
 
 
-async def test_get_device_fails(hass: HomeAssistant, config) -> None:
+async def test_get_device_fails(hass: HomeAssistant, config_entry_data) -> None:
     """Device unauthorized yields authentication required error."""
     with patch(
         "axis.vapix.vapix.Vapix.initialize", side_effect=axislib.Unauthorized
     ), pytest.raises(axis.errors.AuthenticationRequired):
-        await axis.hub.get_axis_api(hass, config)
+        await axis.hub.get_axis_api(hass, config_entry_data)
 
 
-async def test_get_device_device_unavailable(hass: HomeAssistant, config) -> None:
+async def test_get_device_device_unavailable(
+    hass: HomeAssistant, config_entry_data
+) -> None:
     """Device unavailable yields cannot connect error."""
     with patch(
         "axis.vapix.vapix.Vapix.request", side_effect=axislib.RequestError
     ), pytest.raises(axis.errors.CannotConnect):
-        await axis.hub.get_axis_api(hass, config)
+        await axis.hub.get_axis_api(hass, config_entry_data)
 
 
-async def test_get_device_unknown_error(hass: HomeAssistant, config) -> None:
+async def test_get_device_unknown_error(hass: HomeAssistant, config_entry_data) -> None:
     """Device yield unknown error."""
     with patch(
         "axis.vapix.vapix.Vapix.request", side_effect=axislib.AxisException
     ), pytest.raises(axis.errors.AuthenticationRequired):
-        await axis.hub.get_axis_api(hass, config)
+        await axis.hub.get_axis_api(hass, config_entry_data)

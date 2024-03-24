@@ -11,6 +11,7 @@ from homeassistant.components.homeworks.const import (
     CONF_CONTROLLER_ID,
     CONF_DIMMERS,
     CONF_KEYPADS,
+    CONF_LED,
     CONF_NUMBER,
     CONF_RATE,
     CONF_RELEASE_DELAY,
@@ -47,16 +48,19 @@ def mock_config_entry() -> MockConfigEntry:
                         {
                             CONF_NAME: "Morning",
                             CONF_NUMBER: 1,
+                            CONF_LED: True,
                             CONF_RELEASE_DELAY: None,
                         },
                         {
                             CONF_NAME: "Relax",
                             CONF_NUMBER: 2,
+                            CONF_LED: True,
                             CONF_RELEASE_DELAY: None,
                         },
                         {
                             CONF_NAME: "Dim up",
                             CONF_NUMBER: 3,
+                            CONF_LED: False,
                             CONF_RELEASE_DELAY: 0.2,
                         },
                     ],

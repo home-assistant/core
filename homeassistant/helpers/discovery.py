@@ -50,9 +50,7 @@ def async_listen(
     @core.callback
     def _async_discovery_event_listener(discovered: DiscoveryDict) -> None:
         """Listen for discovery events."""
-        hass.async_run_hass_job(
-            job, discovered["service"], discovered["discovered"], eager_start=True
-        )
+        hass.async_run_hass_job(job, discovered["service"], discovered["discovered"])
 
     async_dispatcher_connect(
         hass,
@@ -115,9 +113,7 @@ def async_listen_platform(
         """Listen for platform discovery events."""
         if not (platform := discovered["platform"]):
             return
-        hass.async_run_hass_job(
-            job, platform, discovered.get("discovered"), eager_start=True
-        )
+        hass.async_run_hass_job(job, platform, discovered.get("discovered"))
 
     return async_dispatcher_connect(
         hass,

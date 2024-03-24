@@ -1399,15 +1399,13 @@ async def test_missing_discover_abbreviations(
             continue
         with open(fil, encoding="utf-8") as file:
             matches = re.findall(regex, file.read())
-            for match in matches:
-                if (
-                    match[1] not in ABBREVIATIONS.values()
-                    and match[1] not in DEVICE_ABBREVIATIONS.values()
-                    and match[0] not in ABBREVIATIONS_WHITE_LIST
-                ):
-                    missing.append(
-                        f"{fil}: no abbreviation for {match[1]} ({match[0]})"
-                    )
+            missing.extend(
+                f"{fil}: no abbreviation for {match[1]} ({match[0]})"
+                for match in matches
+                if match[1] not in ABBREVIATIONS.values()
+                and match[1] not in DEVICE_ABBREVIATIONS.values()
+                and match[0] not in ABBREVIATIONS_WHITE_LIST
+            )
 
     assert not missing
 

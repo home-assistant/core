@@ -187,16 +187,16 @@ async def async_setup_entry(
             and forecast.unit_of_measure in [UnitOfMeasure.THERM, UnitOfMeasure.CCF]
         ):
             sensors = GAS_SENSORS
-        for sensor in sensors:
-            entities.append(
-                OpowerSensor(
-                    coordinator,
-                    sensor,
-                    forecast.account.utility_account_id,
-                    device,
-                    device_id,
-                )
+        entities.extend(
+            OpowerSensor(
+                coordinator,
+                sensor,
+                forecast.account.utility_account_id,
+                device,
+                device_id,
             )
+            for sensor in sensors
+        )
 
     async_add_entities(entities)
 

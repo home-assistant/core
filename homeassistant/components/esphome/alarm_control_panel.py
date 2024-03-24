@@ -32,7 +32,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+from .entity import (
+    EsphomeEntity,
+    convert_api_error_ha_error,
+    esphome_state_property,
+    platform_async_setup_entry,
+)
 from .enum_mapper import EsphomeEnumMapper
 
 _ESPHOME_ACP_STATE_TO_HASS_STATE: EsphomeEnumMapper[
@@ -114,42 +119,49 @@ class EsphomeAlarmControlPanel(
         """Return the state of the device."""
         return _ESPHOME_ACP_STATE_TO_HASS_STATE.from_esphome(self._state.state)
 
+    @convert_api_error_ha_error
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         self._client.alarm_control_panel_command(
             self._key, AlarmControlPanelCommand.DISARM, code
         )
 
+    @convert_api_error_ha_error
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         self._client.alarm_control_panel_command(
             self._key, AlarmControlPanelCommand.ARM_HOME, code
         )
 
+    @convert_api_error_ha_error
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         self._client.alarm_control_panel_command(
             self._key, AlarmControlPanelCommand.ARM_AWAY, code
         )
 
+    @convert_api_error_ha_error
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm away command."""
         self._client.alarm_control_panel_command(
             self._key, AlarmControlPanelCommand.ARM_NIGHT, code
         )
 
+    @convert_api_error_ha_error
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send arm away command."""
         self._client.alarm_control_panel_command(
             self._key, AlarmControlPanelCommand.ARM_CUSTOM_BYPASS, code
         )
 
+    @convert_api_error_ha_error
     async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
         """Send arm away command."""
         self._client.alarm_control_panel_command(
             self._key, AlarmControlPanelCommand.ARM_VACATION, code
         )
 
+    @convert_api_error_ha_error
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger command."""
         self._client.alarm_control_panel_command(
