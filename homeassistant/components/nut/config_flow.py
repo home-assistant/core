@@ -100,7 +100,7 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
         """Prepare configuration for a discovered nut device."""
         await self._async_handle_discovery_without_unique_id()
         self.nut_config = {
-            CONF_HOST: discovery_info.host,
+            CONF_HOST: discovery_info.host or DEFAULT_HOST,
             CONF_PORT: discovery_info.port or DEFAULT_PORT,
         }
         self.context["title_placeholders"] = self.nut_config.copy()
@@ -111,32 +111,28 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the user input."""
         errors: dict[str, str] = {}
-        description_placeholders: dict[str, str] = {}
+        placeholders: dict[str, str] = {}
+        nut_config = self.nut_config
         if user_input is not None:
-            (
-                info,
-                errors,
-                description_placeholders,
-            ) = await self._async_validate_or_error({**self.nut_config, **user_input})
+            nut_config.update(user_input)
+
+            info, errors, placeholders = await self._async_validate_or_error(nut_config)
 
             if not errors:
-                self.nut_config.update(user_input)
                 if len(info["ups_list"]) > 1:
                     self.ups_list = info["ups_list"]
                     return await self.async_step_ups()
 
-                if self._host_port_alias_already_configured(self.nut_config):
+                if self._host_port_alias_already_configured(nut_config):
                     return self.async_abort(reason="already_configured")
-                title = _format_host_port_alias(self.nut_config)
-                return self.async_create_entry(title=title, data=self.nut_config)
-
-            self.nut_config.update(user_input)
+                title = _format_host_port_alias(nut_config)
+                return self.async_create_entry(title=title, data=nut_config)
 
         return self.async_show_form(
             step_id="user",
-            data_schema=_base_schema(self.nut_config),
+            data_schema=_base_schema(nut_config),
             errors=errors,
-            description_placeholders=description_placeholders,
+            description_placeholders=placeholders,
         )
 
     async def async_step_ups(
@@ -144,24 +140,23 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the picking the ups."""
         errors: dict[str, str] = {}
-        description_placeholders: dict[str, str] = {}
+        placeholders: dict[str, str] = {}
+        nut_config = self.nut_config
 
         if user_input is not None:
             self.nut_config.update(user_input)
-            if self._host_port_alias_already_configured(self.nut_config):
+            if self._host_port_alias_already_configured(nut_config):
                 return self.async_abort(reason="already_configured")
-            _, errors, description_placeholders = await self._async_validate_or_error(
-                self.nut_config
-            )
+            _, errors, placeholders = await self._async_validate_or_error(nut_config)
             if not errors:
-                title = _format_host_port_alias(self.nut_config)
-                return self.async_create_entry(title=title, data=self.nut_config)
+                title = _format_host_port_alias(nut_config)
+                return self.async_create_entry(title=title, data=nut_config)
 
         return self.async_show_form(
             step_id="ups",
             data_schema=_ups_schema(self.ups_list or {}),
             errors=errors,
-            description_placeholders=description_placeholders,
+            description_placeholders=placeholders,
         )
 
     def _host_port_alias_already_configured(self, user_input: dict[str, Any]) -> bool:
