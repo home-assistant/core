@@ -997,6 +997,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.0_0_0_0_uptime',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2024-02-10T03:47:52+00:00',
   })
