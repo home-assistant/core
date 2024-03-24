@@ -30,10 +30,7 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
         self.device_status = await air_gradient.get_status()
 
         await self.async_set_unique_id(self.device_status.serial_number)
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: self.host},
-            error="already_configured_device",
-        )
+        self._abort_if_unique_id_configured(updates={CONF_HOST: self.host})
         self.context.update(
             {
                 "host": self.host,
@@ -59,7 +56,7 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={
-                "model": self.device_status.serial_number,
+                "serial_number": self.device_status.serial_number,
             },
         )
 
