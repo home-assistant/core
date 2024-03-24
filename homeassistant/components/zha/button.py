@@ -208,6 +208,19 @@ class AqaraPetFeederFeedButton(ZHAAttributeButton):
     _attr_translation_key = "feed"
 
 
+@MULTI_MATCH(
+    cluster_handler_names="tuya_manufacturer",
+    quirk_ids={"tuya.trv_zonnsmart"},
+)
+class ZonnSmartOnlineButton(ZHAAttributeButton):
+    """Define a button to force the TRV to send all its attribute values to ZHA."""
+
+    _attribute_name = "online_set"
+    _attribute_value = 0
+    _unique_id_suffix = "update"
+    _attr_translation_key = "update_attributes"
+
+
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="opple_cluster", models={"lumi.sensor_smoke.acn03"}
 )

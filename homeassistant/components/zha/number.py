@@ -971,6 +971,52 @@ class ThermostatLocalTempCalibration(ZHANumberConfigurationEntity):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="tuya_manufacturer",
+    quirk_ids={"tuya.trv_zonnsmart"},
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class ZonnSmartTemperatureCalibration(ZHANumberConfigurationEntity):
+    """ZonnsSmart temperature offset configuration entity."""
+
+    _unique_id_suffix = "temperature_calibration_offset"
+    _attr_native_min_value: float = -5
+    _attr_native_max_value: float = 5
+    _attr_native_step: float = 0.5
+    _attribute_name = "temperature_calibration"
+    _attr_icon: str = ICONS[0]
+    _attr_multiplier: float = 0.1
+    _attr_translation_key: str = "local_temperature_calibration"
+    _attr_native_unit_of_measurement: str = UnitOfTemperature.CELSIUS
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="tuya_manufacturer",
+    quirk_ids={"tuya.trv_zonnsmart"},
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class ZonnSmartWindowOpenTemperature(ZHANumberConfigurationEntity):
+    """ZonnsSmart opened window temperature configuration entity."""
+
+    _unique_id_suffix = "opened_window_temperature"
+    _attr_native_min_value: float = 5
+    _attr_native_max_value: float = 30
+    _attr_native_step: float = 0.5
+    _attribute_name = "opened_window_temperature"
+    _attr_icon: str = ICONS[0]
+    _attr_multiplier: float = 0.1
+    _attr_translation_key: str = "window_open_temperature"
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Set the window open temperature value."""
+        await super().async_set_native_value(value * 10.0)
+
+    @property
+    def native_value(self) -> float:
+        """Return the current window open temperature value."""
+        return super().native_value / 10.0
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     models={"TRVZB"},
     stop_on_match_group=CLUSTER_HANDLER_THERMOSTAT,

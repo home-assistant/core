@@ -1523,7 +1523,7 @@ async def test_set_zonnsmart_preset(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: "holiday"},
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: "Holiday"},
         blocking=True,
     )
 
@@ -1539,7 +1539,7 @@ async def test_set_zonnsmart_preset(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: "frost protect"},
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: "Frost protect"},
         blocking=True,
     )
 
@@ -1586,14 +1586,14 @@ async def test_set_zonnsmart_operation_mode(
     await send_attributes_report(hass, thrm_cluster, {"operation_preset": 2})
 
     state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_PRESET_MODE] == "holiday"
+    assert state.attributes[ATTR_PRESET_MODE] == "Holiday"
 
     await send_attributes_report(hass, thrm_cluster, {"operation_preset": 3})
 
     state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_PRESET_MODE] == "holiday"
+    assert state.attributes[ATTR_PRESET_MODE] == "Holiday"
 
     await send_attributes_report(hass, thrm_cluster, {"operation_preset": 4})
 
     state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_PRESET_MODE] == "frost protect"
+    assert state.attributes[ATTR_PRESET_MODE] == "Frost protect"
