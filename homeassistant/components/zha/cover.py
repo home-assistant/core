@@ -42,13 +42,20 @@ class ZhaCover(ZHAEntity, CoverEntity):
         """Initialize the ZHA cover."""
         super().__init__(entity_data)
 
-        if self.entity_data.entity._attr_device_class:
+        if (
+            hasattr(self.entity_data.entity, "_attr_device_class")
+            and self.entity_data.entity._attr_device_class is not None
+        ):
             self._attr_device_class: CoverDeviceClass | None = CoverDeviceClass(
                 self.entity_data.entity._attr_device_class.value
             )
-        self._attr_supported_features: CoverEntityFeature = CoverEntityFeature(
-            self.entity_data.entity._attr_supported_features
-        )
+        if (
+            hasattr(self.entity_data.entity, "_attr_supported_features")
+            and self.entity_data.entity._attr_supported_features is not None
+        ):
+            self._attr_supported_features: CoverEntityFeature = CoverEntityFeature(
+                self.entity_data.entity._attr_supported_features
+            )
 
     @property
     def is_closed(self) -> bool | None:
