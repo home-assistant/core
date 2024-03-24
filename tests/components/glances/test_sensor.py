@@ -50,7 +50,7 @@ async def test_uptime_variation(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    uptime_state = hass.states.get("sensor.0_0_0_0_uptime")
+    uptime_state = hass.states.get("sensor.0_0_0_0_uptime").state
 
     coordinator: GlancesDataUpdateCoordinator = hass.data[DOMAIN]["test"]
 
@@ -59,7 +59,7 @@ async def test_uptime_variation(
         await coordinator._async_update_data()
         await hass.async_block_till_done()
 
-    uptime_state2 = hass.states.get("sensor.0_0_0_0_uptime")
+    uptime_state2 = hass.states.get("sensor.0_0_0_0_uptime").state
 
     assert uptime_state == uptime_state2
 
@@ -68,6 +68,6 @@ async def test_uptime_variation(
         await coordinator._async_update_data()
         await hass.async_block_till_done()
 
-    uptime_state3 = hass.states.get("sensor.0_0_0_0_uptime")
+    uptime_state3 = hass.states.get("sensor.0_0_0_0_uptime").state
 
     assert uptime_state != uptime_state3
