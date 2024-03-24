@@ -514,7 +514,7 @@ bond-async==0.2.1
 boschshcpy==0.2.82
 
 # homeassistant.components.bring
-bring-api==0.5.6
+bring-api==0.5.7
 
 # homeassistant.components.broadlink
 broadlink==0.18.3
