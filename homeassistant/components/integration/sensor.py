@@ -302,7 +302,7 @@ class IntegrationSensor(RestoreSensor):
         self._method = _IntegrationMethod.from_name(integration_method)
 
         self._attr_name = name if name is not None else f"{source_entity} integral"
-        self._unit_template = f"{'' if unit_prefix is None else unit_prefix}{{}}"
+        self._unit_prefix_string = "" if unit_prefix is None else unit_prefix
         self._unit_of_measurement: str | None = None
         self._unit_prefix = UNIT_PREFIXES[unit_prefix]
         self._unit_time = UNIT_TIME[unit_time]
@@ -311,6 +311,9 @@ class IntegrationSensor(RestoreSensor):
         self._source_entity: str = source_entity
         self._last_valid_state: Decimal | None = None
         self._attr_device_info = device_info
+
+    def _calculate_unit_of_measurement(self, source_unit: str) -> str:
+        return self._unit_prefix_string + self._multiply_unit_with_time(source_unit)
 
     def _multiply_unit_with_time(self, source_unit: str) -> str:
         """Multiply source_unit with time unit of the integral.
@@ -334,9 +337,7 @@ class IntegrationSensor(RestoreSensor):
     def _derive_and_set_attributes_from_state(self, source_state: State) -> None:
         source_unit = source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         if source_unit is not None:
-            self._unit_of_measurement = self._unit_template.format(
-                self._multiply_unit_with_time(source_unit)
-            )
+            self._unit_of_measurement = self._calculate_unit_of_measurement(source_unit)
         else:
             # If the source has no defined unit we cannot derive a unit for the integral
             self._unit_of_measurement = None
