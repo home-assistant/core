@@ -336,11 +336,13 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "stesti": SensorEntityDescription(
         key="stesti",
         translation_key="self_test_interval",
+        native_unit_of_measurement=UnitOfTime.DAYS,
         device_class=SensorDeviceClass.DURATION,
     ),
     "timeleft": SensorEntityDescription(
         key="timeleft",
         translation_key="time_left",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DURATION,
     ),
