@@ -68,7 +68,7 @@ class Base(DeclarativeBase):
     """Base class for tables."""
 
 
-SCHEMA_VERSION = 42
+SCHEMA_VERSION = 43
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -428,6 +428,7 @@ class States(Base):
     event_id: Mapped[int | None] = mapped_column(UNUSED_LEGACY_INTEGER_COLUMN)
     last_changed: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
     last_changed_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE)
+    last_reported_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE)
     last_updated: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
     last_updated_ts: Mapped[float | None] = mapped_column(
         TIMESTAMP_TYPE, default=time.time, index=True
@@ -499,6 +500,7 @@ class States(Base):
             dbstate.state = ""
             dbstate.last_updated_ts = event.time_fired_timestamp
             dbstate.last_changed_ts = None
+            dbstate.last_reported_ts = None
             return dbstate
 
         dbstate.state = state.state
@@ -507,6 +509,10 @@ class States(Base):
             dbstate.last_changed_ts = None
         else:
             dbstate.last_changed_ts = state.last_changed_timestamp
+        if state.last_updated == state.last_reported:
+            dbstate.last_reported_ts = None
+        else:
+            dbstate.last_reported_ts = state.last_reported_timestamp
 
         return dbstate
 

@@ -1086,12 +1086,25 @@ class Recorder(threading.Thread):
         entity_id = event.data["entity_id"]
 
         dbstate = States.from_event(event)
+        old_state = event.data["old_state"]
+
+        assert self.event_session is not None
+        session = self.event_session
 
         states_manager = self.states_manager
-        if old_state := states_manager.pop_pending(entity_id):
-            dbstate.old_state = old_state
+        if pending_state := states_manager.pop_pending(entity_id):
+            dbstate.old_state = pending_state
+            if old_state:
+                pending_state.last_reported_ts = old_state.last_reported_timestamp
         elif old_state_id := states_manager.pop_committed(entity_id):
             dbstate.old_state_id = old_state_id
+            if old_state:
+                session.query(States).filter_by(state_id=old_state_id).update(
+                    {
+                        States.last_reported_ts: old_state.last_reported_timestamp,
+                    },
+                    synchronize_session=False,
+                )
         if entity_removed:
             dbstate.state = None
         else:
@@ -1105,8 +1118,6 @@ class Recorder(threading.Thread):
         ):
             return
 
-        assert self.event_session is not None
-        session = self.event_session
         # Map the entity_id to the StatesMeta table
         if pending_states_meta := states_meta_manager.get_pending(entity_id):
             dbstate.states_meta_rel = pending_states_meta
