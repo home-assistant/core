@@ -420,7 +420,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=has
             updates[DATA_SUPERVISOR_STATS] = hassio.get_supervisor_stats()
 
         results = await asyncio.gather(*updates.values())
-        for key, result in zip(updates, results):
+        for key, result in zip(updates, results, strict=True):
             data[key] = result
 
         _addon_data = data[DATA_SUPERVISOR_INFO].get("addons", [])

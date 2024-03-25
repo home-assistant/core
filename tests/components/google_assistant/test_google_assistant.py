@@ -155,6 +155,7 @@ async def test_sync_request(
     for dev, demo in zip(
         sorted(devices, key=lambda d: d["id"]),
         sorted(DEMO_DEVICES, key=lambda d: d["id"]),
+        strict=False,
     ):
         assert dev["name"] == demo["name"]
         assert set(dev["traits"]) == set(demo["traits"])

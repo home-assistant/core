@@ -271,7 +271,7 @@ def mean_int(*args):
 
 def mean_tuple(*args):
     """Return the mean values along the columns of the supplied values."""
-    return tuple(sum(x) / len(x) for x in zip(*args))
+    return tuple(sum(x) / len(x) for x in zip(*args, strict=True))
 
 
 def reduce_attribute(
