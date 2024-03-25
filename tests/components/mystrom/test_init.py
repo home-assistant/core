@@ -26,7 +26,7 @@ async def init_integration(
     config_entry: MockConfigEntry,
     device_type: int,
 ) -> None:
-    """Inititialize integration for testing."""
+    """Initialize integration for testing."""
     with patch(
         "pymystrom.get_device_info",
         side_effect=AsyncMock(return_value=get_default_device_response(device_type)),

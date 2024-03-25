@@ -1584,7 +1584,7 @@ class AlexaModeController(AlexaCapability):
                 )
                 modes += 1
 
-            # Alexa requiers at least 2 modes
+            # Alexa requires at least 2 modes
             if modes == 1:
                 self._resource.add_mode(f"state.{PRESET_MODE_NA}", [PRESET_MODE_NA])
 

@@ -2067,7 +2067,7 @@ def test_deduplication_state_attributes_inside_commit_interval(
     hass.states.set(entity_id, "on", attributes)
     hass.states.set(entity_id, "off", attributes)
 
-    # Now exaust the cache to ensure we go back to the db
+    # Now exhaust the cache to ensure we go back to the db
     for attr_id in range(5):
         hass.states.set(entity_id, "on", {"test_attr": attr_id})
         hass.states.set(entity_id, "off", {"test_attr": attr_id})
