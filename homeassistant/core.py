@@ -563,8 +563,7 @@ class HomeAssistant:
         target: Callable[[*_Ts], Coroutine[Any, Any, _R]],
         *args: *_Ts,
         eager_start: bool = False,
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @overload
     @callback
@@ -573,8 +572,7 @@ class HomeAssistant:
         target: Callable[[*_Ts], Coroutine[Any, Any, _R] | _R],
         *args: *_Ts,
         eager_start: bool = False,
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @overload
     @callback
@@ -583,8 +581,7 @@ class HomeAssistant:
         target: Coroutine[Any, Any, _R],
         *args: Any,
         eager_start: bool = False,
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @callback
     def async_add_job(
@@ -637,8 +634,7 @@ class HomeAssistant:
         *args: Any,
         eager_start: bool = False,
         background: bool = False,
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @overload
     @callback
@@ -648,8 +644,7 @@ class HomeAssistant:
         *args: Any,
         eager_start: bool = False,
         background: bool = False,
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @callback
     def async_add_hass_job(
@@ -801,8 +796,7 @@ class HomeAssistant:
         hassjob: HassJob[..., Coroutine[Any, Any, _R]],
         *args: Any,
         background: bool = False,
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @overload
     @callback
@@ -811,8 +805,7 @@ class HomeAssistant:
         hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
         *args: Any,
         background: bool = False,
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @callback
     def async_run_hass_job(
@@ -848,22 +841,19 @@ class HomeAssistant:
     @callback
     def async_run_job(
         self, target: Callable[[*_Ts], Coroutine[Any, Any, _R]], *args: *_Ts
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @overload
     @callback
     def async_run_job(
         self, target: Callable[[*_Ts], Coroutine[Any, Any, _R] | _R], *args: *_Ts
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @overload
     @callback
     def async_run_job(
         self, target: Coroutine[Any, Any, _R], *args: Any
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @callback
     def async_run_job(
@@ -956,15 +946,13 @@ class HomeAssistant:
     @callback
     def async_add_shutdown_job(
         self, hassjob: HassJob[..., Coroutine[Any, Any, Any]], *args: Any
-    ) -> CALLBACK_TYPE:
-        ...
+    ) -> CALLBACK_TYPE: ...
 
     @overload
     @callback
     def async_add_shutdown_job(
         self, hassjob: HassJob[..., Coroutine[Any, Any, Any] | Any], *args: Any
-    ) -> CALLBACK_TYPE:
-        ...
+    ) -> CALLBACK_TYPE: ...
 
     @callback
     def async_add_shutdown_job(
@@ -1511,6 +1499,15 @@ class EventBus:
         """
         if event_filter is not None and not is_callback_check_partial(event_filter):
             raise HomeAssistantError(f"Event filter {event_filter} is not a callback")
+        if event_type == EVENT_STATE_REPORTED:
+            if not event_filter:
+                raise HomeAssistantError(
+                    f"Event filter is required for event {event_type}"
+                )
+            if not run_immediately:
+                raise HomeAssistantError(
+                    f"Run immediately must be set to True for event {event_type}"
+                )
         return self._async_listen_filterable_job(
             event_type,
             (
@@ -1779,9 +1776,9 @@ class State:
             COMPRESSED_STATE_LAST_CHANGED: self.last_changed_timestamp,
         }
         if self.last_changed != self.last_updated:
-            compressed_state[
-                COMPRESSED_STATE_LAST_UPDATED
-            ] = self.last_updated_timestamp
+            compressed_state[COMPRESSED_STATE_LAST_UPDATED] = (
+                self.last_updated_timestamp
+            )
         return compressed_state
 
     @cached_property

@@ -174,10 +174,13 @@ async def test_one_plant_on_account(hass: HomeAssistant, plant_fixture) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch.object(APIHelper, "authenticate", return_value=True), patch.object(
-        APIHelper,
-        "listPlants",
-        return_value=[plant_fixture],
+    with (
+        patch.object(APIHelper, "authenticate", return_value=True),
+        patch.object(
+            APIHelper,
+            "listPlants",
+            return_value=[plant_fixture],
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], SUNWEG_USER_INPUT
@@ -197,10 +200,13 @@ async def test_existing_plant_configured(hass: HomeAssistant, plant_fixture) -> 
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch.object(APIHelper, "authenticate", return_value=True), patch.object(
-        APIHelper,
-        "listPlants",
-        return_value=[plant_fixture],
+    with (
+        patch.object(APIHelper, "authenticate", return_value=True),
+        patch.object(
+            APIHelper,
+            "listPlants",
+            return_value=[plant_fixture],
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], SUNWEG_USER_INPUT

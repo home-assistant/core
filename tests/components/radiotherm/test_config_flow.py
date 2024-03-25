@@ -33,13 +33,16 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.radiotherm.data.radiotherm.get_thermostat",
-        return_value=_mock_radiotherm(),
-    ), patch(
-        "homeassistant.components.radiotherm.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.radiotherm.data.radiotherm.get_thermostat",
+            return_value=_mock_radiotherm(),
+        ),
+        patch(
+            "homeassistant.components.radiotherm.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -209,12 +212,15 @@ async def test_user_unique_id_already_exists(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.radiotherm.data.radiotherm.get_thermostat",
-        return_value=_mock_radiotherm(),
-    ), patch(
-        "homeassistant.components.radiotherm.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.radiotherm.data.radiotherm.get_thermostat",
+            return_value=_mock_radiotherm(),
+        ),
+        patch(
+            "homeassistant.components.radiotherm.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

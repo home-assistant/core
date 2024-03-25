@@ -306,10 +306,13 @@ async def test_hub_not_accessible(hass: HomeAssistant) -> None:
 
 async def test_hub_trigger_reauth_flow(hass: HomeAssistant) -> None:
     """Failed authentication trigger a reauthentication flow."""
-    with patch(
-        "homeassistant.components.unifi.get_unifi_api",
-        side_effect=AuthenticationRequired,
-    ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
+    with (
+        patch(
+            "homeassistant.components.unifi.get_unifi_api",
+            side_effect=AuthenticationRequired,
+        ),
+        patch.object(hass.config_entries.flow, "async_init") as mock_flow_init,
+    ):
         await setup_unifi_integration(hass)
         mock_flow_init.assert_called_once()
     assert hass.data[UNIFI_DOMAIN] == {}
@@ -440,9 +443,12 @@ async def test_reconnect_mechanism_exceptions(
     """Verify async_reconnect calls expected methods."""
     await setup_unifi_integration(hass, aioclient_mock)
 
-    with patch("aiounifi.Controller.login", side_effect=exception), patch(
-        "homeassistant.components.unifi.hub.hub.UnifiWebsocket.reconnect"
-    ) as mock_reconnect:
+    with (
+        patch("aiounifi.Controller.login", side_effect=exception),
+        patch(
+            "homeassistant.components.unifi.hub.hub.UnifiWebsocket.reconnect"
+        ) as mock_reconnect,
+    ):
         await websocket_mock.disconnect()
 
         await websocket_mock.reconnect()
@@ -481,7 +487,8 @@ async def test_get_unifi_api_fails_to_connect(
     hass: HomeAssistant, side_effect, raised_exception
 ) -> None:
     """Check that get_unifi_api can handle UniFi Network being unavailable."""
-    with patch("aiounifi.Controller.login", side_effect=side_effect), pytest.raises(
-        raised_exception
+    with (
+        patch("aiounifi.Controller.login", side_effect=side_effect),
+        pytest.raises(raised_exception),
     ):
         await get_unifi_api(hass, ENTRY_CONFIG)

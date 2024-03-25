@@ -29,13 +29,16 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.smhi.config_flow.Smhi.async_get_forecast",
-        return_value={"test": "something", "test2": "something else"},
-    ), patch(
-        "homeassistant.components.smhi.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.smhi.config_flow.Smhi.async_get_forecast",
+            return_value={"test": "something", "test2": "something else"},
+        ),
+        patch(
+            "homeassistant.components.smhi.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -62,12 +65,15 @@ async def test_form(hass: HomeAssistant) -> None:
     result3 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    with patch(
-        "homeassistant.components.smhi.config_flow.Smhi.async_get_forecast",
-        return_value={"test": "something", "test2": "something else"},
-    ), patch(
-        "homeassistant.components.smhi.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.smhi.config_flow.Smhi.async_get_forecast",
+            return_value={"test": "something", "test2": "something else"},
+        ),
+        patch(
+            "homeassistant.components.smhi.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result4 = await hass.config_entries.flow.async_configure(
             result3["flow_id"],
@@ -116,12 +122,15 @@ async def test_form_invalid_coordinates(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "wrong_location"}
 
     # Continue flow with new coordinates
-    with patch(
-        "homeassistant.components.smhi.config_flow.Smhi.async_get_forecast",
-        return_value={"test": "something", "test2": "something else"},
-    ), patch(
-        "homeassistant.components.smhi.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.smhi.config_flow.Smhi.async_get_forecast",
+            return_value={"test": "something", "test2": "something else"},
+        ),
+        patch(
+            "homeassistant.components.smhi.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -235,13 +244,16 @@ async def test_reconfigure_flow(
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": "wrong_location"}
 
-    with patch(
-        "homeassistant.components.smhi.config_flow.Smhi.async_get_forecast",
-        return_value={"test": "something", "test2": "something else"},
-    ), patch(
-        "homeassistant.components.smhi.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.smhi.config_flow.Smhi.async_get_forecast",
+            return_value={"test": "something", "test2": "something else"},
+        ),
+        patch(
+            "homeassistant.components.smhi.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
