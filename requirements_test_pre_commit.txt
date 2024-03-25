@@ -3,4 +3,3 @@
 codespell==2.2.6
 ruff==0.3.4
 yamllint==1.35.1
-s
