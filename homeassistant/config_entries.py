@@ -372,9 +372,9 @@ class ConfigEntry:
         self._async_cancel_retry_setup: Callable[[], Any] | None = None
 
         # Hold list for actions to call on unload.
-        self._on_unload: list[
-            Callable[[], Coroutine[Any, Any, None] | None]
-        ] | None = None
+        self._on_unload: list[Callable[[], Coroutine[Any, Any, None] | None]] | None = (
+            None
+        )
 
         # Reload lock to prevent conflicting reloads
         self.reload_lock = asyncio.Lock()
@@ -1138,9 +1138,9 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         loop = self.hass.loop
 
         if context["source"] == SOURCE_IMPORT:
-            self._pending_import_flows.setdefault(handler, {})[
-                flow_id
-            ] = loop.create_future()
+            self._pending_import_flows.setdefault(handler, {})[flow_id] = (
+                loop.create_future()
+            )
 
         cancel_init_future = loop.create_future()
         self._initialize_futures.setdefault(handler, []).append(cancel_init_future)
