@@ -16,11 +16,11 @@ from zha.application.const import (
     DATA_ZHA,
     ZHA_EVENT,
 )
-from zha.application.gateway import ZHAGateway
+from zha.application.gateway import Gateway
 from zha.application.helpers import ZHAData
 from zha.application.platforms import GroupEntity, PlatformEntity
 from zha.event import EventBase
-from zha.zigbee.device import ZHADevice, ZHAEvent
+from zha.zigbee.device import Device, ZHAEvent
 import zigpy.exceptions
 import zigpy.types
 from zigpy.types import EUI64
@@ -40,11 +40,11 @@ _LOGGER = logging.getLogger(__name__)
 class ZHAGatewayProxy(EventBase):
     """Proxy class to interact with the ZHA gateway."""
 
-    def __init__(self, hass: HomeAssistant, gateway: ZHAGateway) -> None:
+    def __init__(self, hass: HomeAssistant, gateway: Gateway) -> None:
         """Initialize the gateway proxy."""
         super().__init__()
         self.hass = hass
-        self.gateway: ZHAGateway = gateway
+        self.gateway: Gateway = gateway
         self.device_proxies: dict[str, ZHADeviceProxy] = {}
         self._unsubs: list[Callable[[], None]] = []
         self._unsubs.append(self.gateway.on_all_events(self._handle_event_protocol))
@@ -84,10 +84,10 @@ class ZHAGatewayProxy(EventBase):
 class ZHADeviceProxy(EventBase):
     """Proxy class to interact with the ZHA device instances."""
 
-    def __init__(self, device: ZHADevice, gateway_proxy: ZHAGatewayProxy) -> None:
+    def __init__(self, device: Device, gateway_proxy: ZHAGatewayProxy) -> None:
         """Initialize the gateway proxy."""
         super().__init__()
-        self.device: ZHADevice = device
+        self.device: Device = device
         self.gateway_proxy: ZHAGatewayProxy = gateway_proxy
 
         device_registry = dr.async_get(gateway_proxy.hass)
@@ -141,7 +141,7 @@ def get_zha_data(hass: HomeAssistant) -> HAZHAData:
     return hass.data[DATA_ZHA]
 
 
-def get_zha_gateway(hass: HomeAssistant) -> ZHAGateway:
+def get_zha_gateway(hass: HomeAssistant) -> Gateway:
     """Get the ZHA gateway object."""
     if (gateway_proxy := get_zha_data(hass).gateway_proxy) is None:
         raise ValueError("No gateway object exists")

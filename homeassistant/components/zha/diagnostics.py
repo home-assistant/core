@@ -17,8 +17,8 @@ from zha.application.const import (
     CONF_ALARM_MASTER_CODE,
     UNKNOWN,
 )
-from zha.application.gateway import ZHAGateway
-from zha.zigbee.device import ZHADevice
+from zha.application.gateway import Gateway
+from zha.zigbee.device import Device
 from zigpy.config import CONF_NWK_EXTENDED_PAN_ID
 from zigpy.profiles import PROFILES
 from zigpy.types import Channels
@@ -65,7 +65,7 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     zha_data = get_zha_data(hass)
-    gateway: ZHAGateway = get_zha_gateway(hass)
+    gateway: Gateway = get_zha_gateway(hass)
     app = gateway.application_controller
 
     energy_scan = await app.energy_scan(
@@ -106,13 +106,13 @@ async def async_get_device_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry, device: dr.DeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
-    zha_device: ZHADevice = async_get_zha_device_proxy(hass, device.id).device
+    zha_device: Device = async_get_zha_device_proxy(hass, device.id).device
     device_info: dict[str, Any] = zha_device.zha_device_info
     device_info[CLUSTER_DETAILS] = get_endpoint_cluster_attr_data(zha_device)
     return async_redact_data(device_info, KEYS_TO_REDACT)
 
 
-def get_endpoint_cluster_attr_data(zha_device: ZHADevice) -> dict:
+def get_endpoint_cluster_attr_data(zha_device: Device) -> dict:
     """Return endpoint cluster attribute data."""
     cluster_details = {}
     for ep_id, endpoint in zha_device.device.endpoints.items():

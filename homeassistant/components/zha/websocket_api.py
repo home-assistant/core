@@ -58,7 +58,7 @@ from zha.application.const import (
     ZHA_ALARM_OPTIONS,
     ZHA_CLUSTER_HANDLER_MSG,
 )
-from zha.application.gateway import ZHAGateway
+from zha.application.gateway import Gateway
 from zha.application.helpers import (
     async_is_bindable_target,
     convert_install_code,
@@ -67,7 +67,7 @@ from zha.application.helpers import (
 )
 from zha.zigbee.cluster_handlers import ClusterHandler
 from zha.zigbee.cluster_handlers.const import CLUSTER_HANDLER_IAS_WD
-from zha.zigbee.device import ZHADevice
+from zha.zigbee.device import Device
 from zha.zigbee.group import GroupMember
 import zigpy.backups
 from zigpy.config import CONF_DEVICE
@@ -148,7 +148,7 @@ class EntityReference(NamedTuple):
     """Describes an entity reference."""
 
     reference_id: str
-    zha_device: ZHADevice
+    zha_device: Device
     cluster_handlers: dict[str, ClusterHandler]
     device_info: DeviceInfo
     remove_future: asyncio.Future[Any]
@@ -423,9 +423,7 @@ async def websocket_get_devices(
 
 
 @callback
-def _get_entity_name(
-    zha_gateway: ZHAGateway, entity_ref: EntityReference
-) -> str | None:
+def _get_entity_name(zha_gateway: Gateway, entity_ref: EntityReference) -> str | None:
     entity_registry = er.async_get(zha_gateway.hass)
     entry = entity_registry.async_get(entity_ref.reference_id)
     return entry.name if entry else None
@@ -433,7 +431,7 @@ def _get_entity_name(
 
 @callback
 def _get_entity_original_name(
-    zha_gateway: ZHAGateway, entity_ref: EntityReference
+    zha_gateway: Gateway, entity_ref: EntityReference
 ) -> str | None:
     entity_registry = er.async_get(zha_gateway.hass)
     entry = entity_registry.async_get(entity_ref.reference_id)
@@ -667,7 +665,7 @@ async def websocket_reconfigure_node(
     """Reconfigure a ZHA nodes entities by its ieee address."""
     zha_gateway = get_zha_gateway(hass)
     ieee: EUI64 = msg[ATTR_IEEE]
-    device: ZHADevice | None = zha_gateway.get_device(ieee)
+    device: Device | None = zha_gateway.get_device(ieee)
 
     async def forward_messages(data):
         """Forward events to websocket."""
@@ -1057,7 +1055,7 @@ async def websocket_unbind_group(
 
 
 async def async_binding_operation(
-    zha_gateway: ZHAGateway,
+    zha_gateway: Gateway,
     source_ieee: EUI64,
     target_ieee: EUI64,
     operation: zdo_types.ZDOCmd,
@@ -1344,7 +1342,7 @@ def async_load_api(hass: HomeAssistant) -> None:
         """Remove a node from the network."""
         zha_gateway = get_zha_gateway(hass)
         ieee: EUI64 = service.data[ATTR_IEEE]
-        zha_device: ZHADevice | None = zha_gateway.get_device(ieee)
+        zha_device: Device | None = zha_gateway.get_device(ieee)
         if zha_device is not None and zha_device.is_active_coordinator:
             _LOGGER.info("Removing the coordinator (%s) is not allowed", ieee)
             return

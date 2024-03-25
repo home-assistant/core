@@ -99,6 +99,11 @@ class ZHAEntity(LogMixin, entity.Entity):
         await super().async_will_remove_from_hass()
         self.remove_future.set_result(True)
 
+    async def async_update(self) -> None:
+        """Update the entity."""
+        await self.entity_data.entity.async_update()
+        self.async_write_ha_state()
+
     def log(self, level: int, msg: str, *args, **kwargs):
         """Log a message."""
         msg = f"%s: {msg}"

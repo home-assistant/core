@@ -16,7 +16,7 @@ from .const import DOMAIN as ZHA_DOMAIN
 from .helpers import async_get_zha_device_proxy
 
 if TYPE_CHECKING:
-    from zha.zigbee.device import ZHADevice
+    from zha.zigbee.device import Device
 
 
 @callback
@@ -32,7 +32,7 @@ def async_describe_events(
         """Describe ZHA logbook event."""
         device: dr.DeviceEntry | None = None
         device_name: str = "Unknown device"
-        zha_device: ZHADevice | None = None
+        zha_device: Device | None = None
         event_data = event.data
         event_type: str | None = None
         event_subtype: str | None = None
