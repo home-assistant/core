@@ -1,4 +1,4 @@
-"""Tests for the Ollama conversation integration."""
+"""Tests for the Ollama integration."""
 
 from unittest.mock import AsyncMock, patch
 
@@ -6,7 +6,7 @@ from httpx import ConnectError
 from ollama import Message, ResponseError
 import pytest
 
-from homeassistant.components import conversation, ollama_conversation
+from homeassistant.components import conversation, ollama
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.const import ATTR_FRIENDLY_NAME, MATCH_ALL
 from homeassistant.core import Context, HomeAssistant
@@ -232,7 +232,7 @@ async def test_message_history_pruning(
         agent = await conversation._get_agent_manager(hass).async_get_agent(
             mock_config_entry.entry_id
         )
-        assert isinstance(agent, ollama_conversation.OllamaAgent)
+        assert isinstance(agent, ollama.OllamaAgent)
         assert len(agent._history) == 3
         assert agent._history.keys() == set(conversation_ids)
 
@@ -270,9 +270,7 @@ async def test_message_history_unlimited(
             "ollama.AsyncClient.chat",
             return_value={"message": {"role": "assistant", "content": "test response"}},
         ),
-        patch.object(
-            mock_config_entry, "options", {ollama_conversation.CONF_MAX_HISTORY: 0}
-        ),
+        patch.object(mock_config_entry, "options", {ollama.CONF_MAX_HISTORY: 0}),
     ):
         for i in range(100):
             result = await conversation.async_converse(
@@ -289,7 +287,7 @@ async def test_message_history_unlimited(
         agent = await conversation._get_agent_manager(hass).async_get_agent(
             mock_config_entry.entry_id
         )
-        assert isinstance(agent, ollama_conversation.OllamaAgent)
+        assert isinstance(agent, ollama.OllamaAgent)
 
         assert len(agent._history) == 1
         assert conversation_id in agent._history
@@ -363,6 +361,6 @@ async def test_init_error(
         "ollama.AsyncClient.list",
         side_effect=side_effect,
     ):
-        assert await async_setup_component(hass, ollama_conversation.DOMAIN, {})
+        assert await async_setup_component(hass, ollama.DOMAIN, {})
         await hass.async_block_till_done()
         assert error in caplog.text

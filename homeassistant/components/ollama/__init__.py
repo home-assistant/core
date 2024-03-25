@@ -1,4 +1,4 @@
-"""The Ollama conversation integration."""
+"""The Ollama integration."""
 
 from __future__ import annotations
 
@@ -30,6 +30,7 @@ from .const import (
     CONF_MAX_HISTORY,
     CONF_MODEL,
     CONF_PROMPT,
+    DEFAULT_PROMPT,
     DEFAULT_TIMEOUT,
     DOMAIN,
     KEEP_ALIVE_FOREVER,
@@ -53,7 +54,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Ollama conversation from a config entry."""
+    """Set up Ollama from a config entry."""
     settings = {**entry.data, **entry.options}
     client = ollama.AsyncClient(host=settings[CONF_URL])
     try:
@@ -69,7 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload Ollama conversation."""
+    """Unload Ollama."""
     hass.data[DOMAIN].pop(entry.entry_id)
     conversation.async_unset_agent(hass, entry)
     return True
@@ -108,7 +109,7 @@ class OllamaAgent(conversation.AbstractConversationAgent):
             # New history
             #
             # Render prompt and error out early if there's a problem
-            raw_prompt = settings[CONF_PROMPT]
+            raw_prompt = settings.get(CONF_PROMPT, DEFAULT_PROMPT)
             try:
                 prompt = self._generate_prompt(raw_prompt)
                 _LOGGER.debug("Prompt: %s", prompt)
@@ -155,6 +156,7 @@ class OllamaAgent(conversation.AbstractConversationAgent):
                 keep_alive=KEEP_ALIVE_FOREVER,
             )
         except (ollama.RequestError, ollama.ResponseError) as err:
+            _LOGGER.error("Unexpected error talking to Ollama server: %s", err)
             intent_response = intent.IntentResponse(language=user_input.language)
             intent_response.async_set_error(
                 intent.IntentResponseErrorCode.UNKNOWN,

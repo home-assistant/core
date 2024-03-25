@@ -1,10 +1,10 @@
 {
-  "domain": "ollama_conversation",
-  "name": "Ollama Conversation",
+  "domain": "ollama",
+  "name": "Ollama",
   "codeowners": ["@synesthesiam"],
   "config_flow": true,
   "dependencies": ["conversation"],
-  "documentation": "https://www.home-assistant.io/integrations/ollama_conversation",
+  "documentation": "https://www.home-assistant.io/integrations/ollama",
   "integration_type": "service",
   "iot_class": "local_polling",
   "requirements": ["ollama-hass==0.1.7"]

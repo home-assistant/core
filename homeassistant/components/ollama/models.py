@@ -1,4 +1,4 @@
-"""Models for Ollama conversation integration."""
+"""Models for Ollama integration."""
 
 from dataclasses import dataclass
 from enum import StrEnum
@@ -28,7 +28,7 @@ class MessageHistory:
     @property
     def num_user_messages(self) -> int:
         """Return a count of user messages."""
-        return sum(1 if m["role"] == MessageRole.USER else 0 for m in self.messages)
+        return sum(m["role"] == MessageRole.USER for m in self.messages)
 
 
 @dataclass

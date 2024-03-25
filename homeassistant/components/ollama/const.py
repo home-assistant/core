@@ -1,6 +1,6 @@
-"""Constants for the Ollama conversation integration."""
+"""Constants for the Ollama integration."""
 
-DOMAIN = "ollama_conversation"
+DOMAIN = "ollama"
 
 CONF_MODEL = "model"
 CONF_PROMPT = "prompt"

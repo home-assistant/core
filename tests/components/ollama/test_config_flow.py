@@ -1,4 +1,4 @@
-"""Test the Ollama Conversation config flow."""
+"""Test the Ollama config flow."""
 
 from unittest.mock import patch
 
@@ -6,7 +6,7 @@ from httpx import ConnectError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import ollama_conversation
+from homeassistant.components import ollama
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -18,24 +18,24 @@ from tests.common import MockConfigEntry
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
     # Pretend we already set up a config entry.
-    hass.config.components.add(ollama_conversation.DOMAIN)
+    hass.config.components.add(ollama.DOMAIN)
     MockConfigEntry(
-        domain=ollama_conversation.DOMAIN,
+        domain=ollama.DOMAIN,
         state=config_entries.ConfigEntryState.LOADED,
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        ollama_conversation.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        ollama.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with (
         patch(
-            "homeassistant.components.ollama_conversation.config_flow.ollama.AsyncClient.list",
+            "homeassistant.components.ollama.config_flow.ollama.AsyncClient.list",
         ),
         patch(
-            "homeassistant.components.ollama_conversation.async_setup_entry",
+            "homeassistant.components.ollama.async_setup_entry",
             return_value=True,
         ) as mock_setup_entry,
     ):
@@ -74,11 +74,11 @@ async def test_options(
 async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
-        ollama_conversation.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        ollama.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-        "homeassistant.components.ollama_conversation.config_flow.ollama.AsyncClient.list",
+        "homeassistant.components.ollama.config_flow.ollama.AsyncClient.list",
         side_effect=side_effect,
     ):
         result2 = await hass.config_entries.flow.async_configure(

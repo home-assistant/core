@@ -1,10 +1,10 @@
-"""Tests helpers."""
+"""Tests Ollama integration."""
 
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import ollama_conversation
+from homeassistant.components import ollama
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -17,7 +17,7 @@ from tests.common import MockConfigEntry
 def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Mock a config entry."""
     entry = MockConfigEntry(
-        domain=ollama_conversation.DOMAIN,
+        domain=ollama.DOMAIN,
         data=TEST_USER_DATA,
         options=TEST_OPTIONS,
     )
@@ -33,5 +33,5 @@ async def mock_init_component(hass: HomeAssistant, mock_config_entry: MockConfig
     with patch(
         "ollama.AsyncClient.list",
     ):
-        assert await async_setup_component(hass, ollama_conversation.DOMAIN, {})
+        assert await async_setup_component(hass, ollama.DOMAIN, {})
         await hass.async_block_till_done()

@@ -1,4 +1,4 @@
-"""Config flow for Ollama conversation integration."""
+"""Config flow for Ollama integration."""
 
 from __future__ import annotations
 
@@ -50,9 +50,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
             TextSelectorConfig(type=TextSelectorType.URL)
         ),
         vol.Required(CONF_MODEL): cv.string,
-        vol.Required(
-            CONF_PROMPT, description={"suggested_value": DEFAULT_PROMPT}
-        ): TemplateSelector(),
     }
 )
 
@@ -68,7 +65,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
 
 class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Ollama conversation."""
+    """Handle a config flow for Ollama."""
 
     VERSION = 1
 
@@ -91,7 +88,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            return self.async_create_entry(title="Ollama Conversation", data=user_input)
+            return self.async_create_entry(title="Ollama", data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
@@ -106,7 +103,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class OllamaOptionsFlow(OptionsFlow):
-    """Ollama conversation options flow."""
+    """Ollama options flow."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
@@ -117,7 +114,7 @@ class OllamaOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
-            return self.async_create_entry(title="Ollama Conversation", data=user_input)
+            return self.async_create_entry(title="Ollama", data=user_input)
 
         options = self.config_entry.options or self.config_entry.data
         schema = ollama_config_option_schema(MappingProxyType(options))
@@ -128,19 +125,15 @@ class OllamaOptionsFlow(OptionsFlow):
 
 
 def ollama_config_option_schema(options: MappingProxyType[str, Any]) -> dict:
-    """Ollama conversation options schema."""
+    """Ollama options schema."""
     return {
-        vol.Required(
-            CONF_URL,
-            description={"suggested_value": options[CONF_URL]},
-        ): TextSelector({"type": TextSelectorType.URL}),
         vol.Required(
             CONF_MODEL,
             description={"suggested_value": options[CONF_MODEL]},
         ): cv.string,
         vol.Optional(
             CONF_PROMPT,
-            description={"suggested_value": options[CONF_PROMPT]},
+            description={"suggested_value": options.get(CONF_PROMPT, DEFAULT_PROMPT)},
         ): TemplateSelector(),
         vol.Optional(
             CONF_MAX_HISTORY,
