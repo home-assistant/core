@@ -94,7 +94,7 @@ def _get_switch_port_base_name(port: OmadaSwitchPortDetails) -> str:
     """Get display name for a switch port."""
 
     if port.name == f"Port{port.port}":
-        return f"{port.port}"
+        return str(port.port)
     return f"{port.port} ({port.name})"
 
 
