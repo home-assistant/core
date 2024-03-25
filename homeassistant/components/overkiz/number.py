@@ -99,7 +99,7 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
     ),
     OverkizNumberDescription(
         key=OverkizState.CORE_TARGET_DWH_TEMPERATURE,
-        name="Target Temperature",
+        name="Target temperature",
         device_class=NumberDeviceClass.TEMPERATURE,
         command="setTargetDHWTemperature",
         native_min_value=50,
