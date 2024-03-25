@@ -1,6 +1,5 @@
 """The Things Network's integration sensors."""
 import logging
-from typing import cast
 
 from ttn_client import TTNSensorValue
 
@@ -50,4 +49,4 @@ class TtnDataSensor(TTNEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the entity."""
-        return cast(StateType, self._ttn_value.value)
+        return self._ttn_value.value
