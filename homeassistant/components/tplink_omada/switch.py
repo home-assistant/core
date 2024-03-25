@@ -73,7 +73,7 @@ async def async_setup_entry(
             entities.extend(
                 OmadaDevicePortSwitchEntity[
                     OmadaGatewayCoordinator, OmadaGateway, OmadaGatewayPortStatus
-                ](gateway_coordinator, gateway, p.port_number, str(p.port_number), desc)
+                ](gateway_coordinator, gateway, p.port_number, desc)
                 for p in gateway.port_status
                 for desc in GATEWAY_PORT_STATUS_SWITCHES
                 if desc.exists_func(gateway, p)
