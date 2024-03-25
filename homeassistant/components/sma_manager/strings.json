@@ -1,0 +1,25 @@
+{
+  "title": "SMA Manager",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Setup Manager",
+        "description": "Enter you SMA Manager Information",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "ip": "[%key:common::config_flow::data::ip%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "refresh_time": "[%key:common::config_flow::data::refresh_time%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Please make sure the IP/port are correct and that you are in the same VLAN as the device",
+      "invalid_ip": "The IP given is not correct",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "SMA Manager already configured"
+    }
+  }
+}
