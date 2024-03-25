@@ -22,6 +22,7 @@ from homeassistant.components.climate.const import (
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_SWING_MODE,
+    SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -811,7 +812,9 @@ async def test_issue_aux_property_deprecated(
     class MockClimateEntityWithAux(MockClimateEntity):
         """Mock climate class with mocked aux heater."""
 
-        _attr_supported_features = ClimateEntityFeature.AUX_HEAT
+        _attr_supported_features = (
+            ClimateEntityFeature.AUX_HEAT | ClimateEntityFeature.TARGET_TEMPERATURE
+        )
 
         @property
         def is_aux_heat(self) -> bool | None:
@@ -890,6 +893,21 @@ async def test_issue_aux_property_deprecated(
         "the auxiliary  heater methods in a subclass of ClimateEntity which is deprecated "
         f"and will be unsupported from Home Assistant 2024.10. Please {report}"
     ) in caplog.text
+
+    # Assert we only log warning once
+    caplog.clear()
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            "entity_id": "climate.test",
+            "temperature": "25",
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert ("implements the `is_aux_heat` property") not in caplog.text
 
 
 @pytest.mark.parametrize(
