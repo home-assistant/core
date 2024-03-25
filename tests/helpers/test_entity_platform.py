@@ -1761,8 +1761,9 @@ async def test_setup_entry_with_entities_that_block_forever(
         hass, platform_name=config_entry.domain, platform=platform
     )
 
-    with patch.object(entity_platform, "SLOW_ADD_ENTITY_MAX_WAIT", 0.01), patch.object(
-        entity_platform, "SLOW_ADD_MIN_TIMEOUT", 0.01
+    with (
+        patch.object(entity_platform, "SLOW_ADD_ENTITY_MAX_WAIT", 0.01),
+        patch.object(entity_platform, "SLOW_ADD_MIN_TIMEOUT", 0.01),
     ):
         assert await platform.async_setup_entry(config_entry)
         await hass.async_block_till_done()
