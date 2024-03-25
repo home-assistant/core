@@ -26,22 +26,16 @@ async def init_integration(
     config_entry: MockConfigEntry,
     device_type: int,
 ) -> None:
-    """Inititialize integration for testing."""
-    with (
-        patch(
-            "pymystrom.get_device_info",
-            side_effect=AsyncMock(
-                return_value=get_default_device_response(device_type)
-            ),
-        ),
-        patch(
-            "homeassistant.components.mystrom._get_mystrom_bulb",
-            return_value=MyStromBulbMock("6001940376EB", get_default_bulb_state()),
-        ),
-        patch(
-            "homeassistant.components.mystrom._get_mystrom_switch",
-            return_value=MyStromSwitchMock(get_default_switch_state()),
-        ),
+    """Initialize integration for testing."""
+    with patch(
+        "pymystrom.get_device_info",
+        side_effect=AsyncMock(return_value=get_default_device_response(device_type)),
+    ), patch(
+        "homeassistant.components.mystrom._get_mystrom_bulb",
+        return_value=MyStromBulbMock("6001940376EB", get_default_bulb_state()),
+    ), patch(
+        "homeassistant.components.mystrom._get_mystrom_switch",
+        return_value=MyStromSwitchMock(get_default_switch_state()),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

@@ -40,6 +40,7 @@ from typing import (
     ParamSpec,
     Self,
     TypedDict,
+    TypeVarTuple,
     cast,
     overload,
 )
@@ -135,6 +136,7 @@ _T = TypeVar("_T")
 _R = TypeVar("_R")
 _R_co = TypeVar("_R_co", covariant=True)
 _P = ParamSpec("_P")
+_Ts = TypeVarTuple("_Ts")
 # Internal; not helpers.typing.UNDEFINED due to circular dependency
 _UNDEF: dict[Any, Any] = {}
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
@@ -529,7 +531,7 @@ class HomeAssistant:
         self.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
 
     def add_job(
-        self, target: Callable[..., Any] | Coroutine[Any, Any, Any], *args: Any
+        self, target: Callable[[*_Ts], Any] | Coroutine[Any, Any, Any], *args: *_Ts
     ) -> None:
         """Add a job to be executed by the event loop or by an executor.
 
@@ -547,7 +549,7 @@ class HomeAssistant:
             )
             return
         if TYPE_CHECKING:
-            target = cast(Callable[..., Any], target)
+            target = cast(Callable[[*_Ts], Any], target)
         self.loop.call_soon_threadsafe(
             functools.partial(
                 self.async_add_hass_job, HassJob(target), *args, eager_start=True
@@ -558,8 +560,8 @@ class HomeAssistant:
     @callback
     def async_add_job(
         self,
-        target: Callable[..., Coroutine[Any, Any, _R]],
-        *args: Any,
+        target: Callable[[*_Ts], Coroutine[Any, Any, _R]],
+        *args: *_Ts,
         eager_start: bool = False,
     ) -> asyncio.Future[_R] | None: ...
 
@@ -567,8 +569,8 @@ class HomeAssistant:
     @callback
     def async_add_job(
         self,
-        target: Callable[..., Coroutine[Any, Any, _R] | _R],
-        *args: Any,
+        target: Callable[[*_Ts], Coroutine[Any, Any, _R] | _R],
+        *args: *_Ts,
         eager_start: bool = False,
     ) -> asyncio.Future[_R] | None: ...
 
@@ -584,8 +586,9 @@ class HomeAssistant:
     @callback
     def async_add_job(
         self,
-        target: Callable[..., Coroutine[Any, Any, _R] | _R] | Coroutine[Any, Any, _R],
-        *args: Any,
+        target: Callable[[*_Ts], Coroutine[Any, Any, _R] | _R]
+        | Coroutine[Any, Any, _R],
+        *args: *_Ts,
         eager_start: bool = False,
     ) -> asyncio.Future[_R] | None:
         """Add a job to be executed by the event loop or by an executor.
@@ -620,7 +623,7 @@ class HomeAssistant:
         # the type used for the cast. For history see:
         # https://github.com/home-assistant/core/pull/71960
         if TYPE_CHECKING:
-            target = cast(Callable[..., Coroutine[Any, Any, _R] | _R], target)
+            target = cast(Callable[[*_Ts], Coroutine[Any, Any, _R] | _R], target)
         return self.async_add_hass_job(HassJob(target), *args, eager_start=eager_start)
 
     @overload
@@ -767,7 +770,7 @@ class HomeAssistant:
 
     @callback
     def async_add_executor_job(
-        self, target: Callable[..., _T], *args: Any
+        self, target: Callable[[*_Ts], _T], *args: *_Ts
     ) -> asyncio.Future[_T]:
         """Add an executor job from within the event loop."""
         task = self.loop.run_in_executor(None, target, *args)
@@ -778,7 +781,7 @@ class HomeAssistant:
 
     @callback
     def async_add_import_executor_job(
-        self, target: Callable[..., _T], *args: Any
+        self, target: Callable[[*_Ts], _T], *args: *_Ts
     ) -> asyncio.Future[_T]:
         """Add an import executor job from within the event loop."""
         task = self.loop.run_in_executor(self.import_executor, target, *args)
@@ -837,14 +840,16 @@ class HomeAssistant:
     @overload
     @callback
     def async_run_job(
-        self, target: Callable[..., Coroutine[Any, Any, _R]], *args: Any
-    ) -> asyncio.Future[_R] | None: ...
+        self, target: Callable[[*_Ts], Coroutine[Any, Any, _R]], *args: *_Ts
+    ) -> asyncio.Future[_R] | None:
+        ...
 
     @overload
     @callback
     def async_run_job(
-        self, target: Callable[..., Coroutine[Any, Any, _R] | _R], *args: Any
-    ) -> asyncio.Future[_R] | None: ...
+        self, target: Callable[[*_Ts], Coroutine[Any, Any, _R] | _R], *args: *_Ts
+    ) -> asyncio.Future[_R] | None:
+        ...
 
     @overload
     @callback
@@ -855,8 +860,9 @@ class HomeAssistant:
     @callback
     def async_run_job(
         self,
-        target: Callable[..., Coroutine[Any, Any, _R] | _R] | Coroutine[Any, Any, _R],
-        *args: Any,
+        target: Callable[[*_Ts], Coroutine[Any, Any, _R] | _R]
+        | Coroutine[Any, Any, _R],
+        *args: *_Ts,
     ) -> asyncio.Future[_R] | None:
         """Run a job from within the event loop.
 
@@ -884,7 +890,7 @@ class HomeAssistant:
         # the type used for the cast. For history see:
         # https://github.com/home-assistant/core/pull/71960
         if TYPE_CHECKING:
-            target = cast(Callable[..., Coroutine[Any, Any, _R] | _R], target)
+            target = cast(Callable[[*_Ts], Coroutine[Any, Any, _R] | _R], target)
         return self.async_run_hass_job(HassJob(target), *args)
 
     def block_till_done(self) -> None:
@@ -1495,6 +1501,15 @@ class EventBus:
         """
         if event_filter is not None and not is_callback_check_partial(event_filter):
             raise HomeAssistantError(f"Event filter {event_filter} is not a callback")
+        if event_type == EVENT_STATE_REPORTED:
+            if not event_filter:
+                raise HomeAssistantError(
+                    f"Event filter is required for event {event_type}"
+                )
+            if not run_immediately:
+                raise HomeAssistantError(
+                    f"Run immediately must be set to True for event {event_type}"
+                )
         return self._async_listen_filterable_job(
             event_type,
             (

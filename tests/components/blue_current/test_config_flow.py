@@ -143,7 +143,7 @@ async def test_reauth(
         ),
         patch(
             "homeassistant.components.blue_current.Client.connect",
-            lambda self, on_data: hass.loop.create_future(),
+            lambda self, on_data, on_open: hass.loop.create_future(),
         ),
     ):
         config_entry.add_to_hass(hass)

@@ -118,13 +118,12 @@ async def test_load_backups_with_exception(
 ) -> None:
     """Test loading backups with exception."""
     manager = BackupManager(hass)
-    with (
-        patch("pathlib.Path.glob", return_value=[TEST_BACKUP.path]),
-        patch("tarfile.open", side_effect=OSError("Test ecxeption")),
+    with patch("pathlib.Path.glob", return_value=[TEST_BACKUP.path]), patch(
+        "tarfile.open", side_effect=OSError("Test exception")
     ):
         await manager.load_backups()
     backups = await manager.get_backups()
-    assert f"Unable to read backup {TEST_BACKUP.path}: Test ecxeption" in caplog.text
+    assert f"Unable to read backup {TEST_BACKUP.path}: Test exception" in caplog.text
     assert backups == {}
 
 

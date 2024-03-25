@@ -9,6 +9,8 @@ import pytest
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
+    ATTR_FAN_MODE,
+    ATTR_FAN_MODES,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
@@ -16,6 +18,11 @@ from homeassistant.components.climate import (
     ATTR_MIN_TEMP,
     ATTR_TARGET_TEMP_STEP,
     DOMAIN as CLIMATE_DOMAIN,
+    FAN_AUTO,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
+    SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
     HVACAction,
@@ -43,6 +50,12 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     assert state.state == HVACMode.OFF
     assert ATTR_CURRENT_HUMIDITY not in state.attributes
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 21.0
+    assert state.attributes[ATTR_FAN_MODE] == FAN_HIGH
+    assert state.attributes[ATTR_FAN_MODES] == [
+        FAN_LOW,
+        FAN_MEDIUM,
+        FAN_HIGH,
+    ]
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.OFF
     assert state.attributes[ATTR_HVAC_MODES] == [
         HVACMode.HEAT_COOL,
@@ -61,6 +74,15 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     assert state.state == HVACMode.COOL
     assert ATTR_CURRENT_HUMIDITY not in state.attributes
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 20.0
+    assert state.attributes[ATTR_FAN_MODE] == "60%"
+    assert state.attributes[ATTR_FAN_MODES] == [
+        FAN_AUTO,
+        "20%",
+        "40%",
+        "60%",
+        "80%",
+        "100%",
+    ]
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.COOLING
     assert state.attributes[ATTR_HVAC_MODES] == [
         HVACMode.HEAT_COOL,
@@ -80,6 +102,8 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     assert state.state == HVACMode.COOL
     assert state.attributes[ATTR_CURRENT_HUMIDITY] == 27
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.5
+    assert ATTR_FAN_MODE not in state.attributes
+    assert ATTR_FAN_MODES not in state.attributes
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.COOLING
     assert state.attributes[ATTR_HVAC_MODES] == [
         HVACMode.COOL,
@@ -98,6 +122,8 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     assert state.state == HVACMode.COOL
     assert state.attributes[ATTR_CURRENT_HUMIDITY] == 27
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 21.5
+    assert ATTR_FAN_MODE not in state.attributes
+    assert ATTR_FAN_MODES not in state.attributes
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.COOLING
     assert state.attributes[ATTR_HVAC_MODES] == [
         HVACMode.HEAT_COOL,
@@ -117,6 +143,8 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     assert state.state == HVACMode.OFF
     assert state.attributes[ATTR_CURRENT_HUMIDITY] == 24
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 25.0
+    assert ATTR_FAN_MODE not in state.attributes
+    assert ATTR_FAN_MODES not in state.attributes
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.OFF
     assert state.attributes[ATTR_HVAC_MODES] == [
         HVACMode.COOL,
@@ -134,6 +162,8 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     assert state.state == HVACMode.COOL
     assert state.attributes[ATTR_CURRENT_HUMIDITY] == 30
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 20.0
+    assert ATTR_FAN_MODE not in state.attributes
+    assert ATTR_FAN_MODES not in state.attributes
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.COOLING
     assert state.attributes[ATTR_HVAC_MODES] == [
         HVACMode.COOL,
@@ -268,6 +298,47 @@ async def test_airzone_climate_turn_on_off(hass: HomeAssistant) -> None:
 
     state = hass.states.get("climate.salon")
     assert state.state == HVACMode.OFF
+
+
+async def test_airzone_climate_set_fan_mode(hass: HomeAssistant) -> None:
+    """Test setting the fan mode."""
+
+    await async_init_integration(hass)
+
+    # Aidoos
+    with patch(
+        "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_patch_device",
+        return_value=None,
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {
+                ATTR_ENTITY_ID: "climate.bron",
+                ATTR_FAN_MODE: FAN_LOW,
+            },
+            blocking=True,
+        )
+
+    state = hass.states.get("climate.bron")
+    assert state.attributes[ATTR_FAN_MODE] == FAN_LOW
+
+    with patch(
+        "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_patch_device",
+        return_value=None,
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {
+                ATTR_ENTITY_ID: "climate.bron_pro",
+                ATTR_FAN_MODE: FAN_AUTO,
+            },
+            blocking=True,
+        )
+
+    state = hass.states.get("climate.bron_pro")
+    assert state.attributes[ATTR_FAN_MODE] == FAN_AUTO
 
 
 async def test_airzone_climate_set_hvac_mode(hass: HomeAssistant) -> None:

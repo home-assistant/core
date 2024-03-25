@@ -35,7 +35,7 @@ async def test_load_unload_entry(
         patch("homeassistant.components.blue_current.Client.disconnect"),
         patch(
             "homeassistant.components.blue_current.Client.connect",
-            lambda self, on_data: hass.loop.create_future(),
+            lambda self, on_data, on_open: hass.loop.create_future(),
         ),
     ):
         config_entry.add_to_hass(hass)

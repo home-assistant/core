@@ -42,10 +42,10 @@ def create_client_mock(
         """Wait until chargepoints are received."""
         await received_charge_points.wait()
 
-    async def connect(receiver):
+    async def connect(receiver, on_open):
         """Set the receiver and await future."""
         client_mock.receiver = receiver
-        await client_mock.get_charge_points()
+        await on_open()
 
         started_loop.set()
         started_loop.clear()

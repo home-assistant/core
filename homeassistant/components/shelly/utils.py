@@ -480,3 +480,11 @@ def is_rpc_wifi_stations_disabled(
 def get_http_port(data: MappingProxyType[str, Any]) -> int:
     """Get port from config entry data."""
     return cast(int, data.get(CONF_PORT, DEFAULT_HTTP_PORT))
+
+
+async def async_shutdown_device(device: BlockDevice | RpcDevice) -> None:
+    """Shutdown a Shelly device."""
+    if isinstance(device, RpcDevice):
+        await device.shutdown()
+    if isinstance(device, BlockDevice):
+        device.shutdown()

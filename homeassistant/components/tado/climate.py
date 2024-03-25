@@ -418,7 +418,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         """Set offset on the entity."""
 
         _LOGGER.debug(
-            "Setting temperature offset for device %s setting to (%d)",
+            "Setting temperature offset for device %s setting to (%.1f)",
             self._device_id,
             offset,
         )

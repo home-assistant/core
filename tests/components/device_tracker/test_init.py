@@ -234,6 +234,9 @@ async def test_discover_platform(
 ) -> None:
     """Test discovery of device_tracker demo platform."""
     await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, device_tracker.DOMAIN, {})
+    # async_block_till_done is intentionally missing here so we
+    # can verify async_load_platform still works without it
     with patch("homeassistant.components.device_tracker.legacy.update_config"):
         await discovery.async_load_platform(
             hass, device_tracker.DOMAIN, "demo", {"test_key": "test_val"}, {"bla": {}}
@@ -247,6 +250,31 @@ async def test_discover_platform(
         mock_see,
         {"test_key": "test_val"},
     )
+
+
+async def test_discover_platform_missing_platform(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test discovery of device_tracker missing platform."""
+    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, device_tracker.DOMAIN, {})
+    # async_block_till_done is intentionally missing here so we
+    # can verify async_load_platform still works without it
+    with patch("homeassistant.components.device_tracker.legacy.update_config"):
+        await discovery.async_load_platform(
+            hass,
+            device_tracker.DOMAIN,
+            "its_not_there",
+            {"test_key": "test_val"},
+            {"bla": {}},
+        )
+        await hass.async_block_till_done()
+    assert device_tracker.DOMAIN in hass.config.components
+    assert (
+        "Unable to prepare setup for platform 'its_not_there.device_tracker'"
+        in caplog.text
+    )
+    # This test should not generate an unhandled exception
 
 
 async def test_update_stale(
@@ -340,6 +368,7 @@ async def test_see_service(
     """Test the see service with a unicode dev_id and NO MAC."""
     with assert_setup_component(1, device_tracker.DOMAIN):
         assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)
+        await hass.async_block_till_done()
     params = {
         "dev_id": "some_device",
         "host_name": "example.com",
@@ -375,6 +404,7 @@ async def test_see_service_guard_config_entry(
     mock_registry(hass, {entity_id: mock_entry})
     devices = mock_device_tracker_conf
     assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)
+    await hass.async_block_till_done()
     params = {"dev_id": dev_id, "gps": [0.3, 0.8]}
 
     common.async_see(hass, **params)
@@ -391,6 +421,7 @@ async def test_new_device_event_fired(
     """Test that the device tracker will fire an event."""
     with assert_setup_component(1, device_tracker.DOMAIN):
         assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)
+        await hass.async_block_till_done()
     test_events = []
 
     @callback
@@ -426,6 +457,7 @@ async def test_duplicate_yaml_keys(
     devices = mock_device_tracker_conf
     with assert_setup_component(1, device_tracker.DOMAIN):
         assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)
+        await hass.async_block_till_done()
 
     common.async_see(hass, "mac_1", host_name="hello")
     common.async_see(hass, "mac_2", host_name="hello")
@@ -445,6 +477,7 @@ async def test_invalid_dev_id(
     devices = mock_device_tracker_conf
     with assert_setup_component(1, device_tracker.DOMAIN):
         assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)
+        await hass.async_block_till_done()
 
     common.async_see(hass, dev_id="hello-world")
     await hass.async_block_till_done()
@@ -457,6 +490,7 @@ async def test_see_state(
 ) -> None:
     """Test device tracker see records state correctly."""
     assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)
+    await hass.async_block_till_done()
 
     params = {
         "mac": "AA:BB:CC:DD:EE:FF",
@@ -511,6 +545,7 @@ async def test_see_passive_zone_state(
         }
 
         await async_setup_component(hass, zone.DOMAIN, {"zone": zone_info})
+        await hass.async_block_till_done()
 
     scanner = getattr(hass.components, "test.device_tracker").SCANNER
     scanner.reset()
@@ -609,6 +644,7 @@ async def test_async_added_to_hass(hass: HomeAssistant) -> None:
     files = {path: "jk:\n  name: JK Phone\n  track: True"}
     with patch_yaml_files(files):
         assert await async_setup_component(hass, device_tracker.DOMAIN, {})
+        await hass.async_block_till_done()
 
     state = hass.states.get("device_tracker.jk")
     assert state
@@ -624,6 +660,7 @@ async def test_bad_platform(hass: HomeAssistant) -> None:
     config = {"device_tracker": [{"platform": "bad_platform"}]}
     with assert_setup_component(0, device_tracker.DOMAIN):
         assert await async_setup_component(hass, device_tracker.DOMAIN, config)
+        await hass.async_block_till_done()
 
     assert f"bad_platform.{device_tracker.DOMAIN}" not in hass.config.components
 
