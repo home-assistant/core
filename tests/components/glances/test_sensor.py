@@ -12,7 +12,7 @@ from homeassistant.util.dt import parse_datetime
 
 from . import MOCK_REFERENCE_DATE, MOCK_USER_INPUT
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_sensor_states(
@@ -56,12 +56,14 @@ async def test_uptime_variation(
 
     # Small time change should not change uptime
     freezer.tick(delta=timedelta(seconds=60))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     uptime_state2 = hass.states.get("sensor.0_0_0_0_uptime").state
     assert uptime_state2 == uptime_state
 
     # Large time change should change uptime
     freezer.tick(delta=timedelta(minutes=60))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     uptime_state3 = hass.states.get("sensor.0_0_0_0_uptime").state
     assert uptime_state3 != uptime_state
