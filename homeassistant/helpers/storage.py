@@ -197,7 +197,8 @@ class _StoreManager:
 
     def _initialize_files(self) -> None:
         """Initialize the cache."""
-        self._files = set(os.listdir(self._storage_path))
+        if self._storage_path.exists():
+            self._files = set(os.listdir(self._storage_path))
 
 
 @bind_hass
