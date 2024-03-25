@@ -68,12 +68,14 @@ class WyomingSatellite:
         self._client: AsyncTcpClient | None = None
         self._chunk_converter = AudioChunkConverter(rate=16000, width=2, channels=1)
         self._is_pipeline_running = False
+        self._is_force_activated = False
         self._pipeline_ended_event = asyncio.Event()
         self._audio_queue: asyncio.Queue[bytes | None] = asyncio.Queue()
         self._pipeline_id: str | None = None
         self._muted_changed_event = asyncio.Event()
 
         self.device.set_is_muted_listener(self._muted_changed)
+        self.device.set_force_activate_listener(self._force_activated)
         self.device.set_pipeline_listener(self._pipeline_changed)
         self.device.set_audio_settings_listener(self._audio_settings_changed)
 
@@ -89,7 +91,7 @@ class WyomingSatellite:
             while self.is_running:
                 try:
                     # Check if satellite has been muted
-                    while self.device.is_muted:
+                    while not self._connection_needed():
                         _LOGGER.debug("Satellite is muted")
                         await self.on_muted()
                         if not self.is_running:
@@ -164,6 +166,10 @@ class WyomingSatellite:
 
     def _muted_changed(self) -> None:
         """Run when device muted status changes."""
+        if self._is_force_activated:
+            # Force activated pipeline running, muted state will be restored when it finishes
+            return
+
         if self.device.is_muted:
             # Cancel any running pipeline
             self._audio_queue.put_nowait(None)
@@ -173,6 +179,34 @@ class WyomingSatellite:
 
         self._muted_changed_event.set()
         self._muted_changed_event.clear()
+
+    def _force_activated(self) -> None:
+        self.config_entry.async_create_background_task(
+            self.hass, self._run_force_activated(), "force activated pipeline"
+        )
+
+    async def _run_force_activated(self) -> None:
+        self._is_force_activated = True
+
+        if self.device.is_muted:
+            # We're muted, connect again, which will cause RunSatellite to be sent
+            self._muted_changed_event.set()
+            self._muted_changed_event.clear()
+
+        else:
+            # Not muted, finish the current pipeline, if any, and send RunSatellite
+            if self._is_pipeline_running:
+                self._audio_queue.put_nowait(None)
+                await self._pipeline_ended_event.wait()
+
+            if self._client is not None:
+                await self._client.write_event(
+                    RunSatellite(start_stage=PipelineStage.ASR).event()
+                )
+
+        # Restore mute state when the force activated pipeline finishes
+        await self._pipeline_ended_event.wait()
+        self._muted_changed()
 
     def _pipeline_changed(self) -> None:
         """Run when device pipeline changes."""
@@ -186,9 +220,14 @@ class WyomingSatellite:
         # Cancel any running pipeline
         self._audio_queue.put_nowait(None)
 
+    def _connection_needed(self) -> bool:
+        return self.is_running and (
+            self._is_force_activated or not self.device.is_muted
+        )
+
     async def _connect_and_loop(self) -> None:
         """Connect to satellite and run pipelines until an error occurs."""
-        while self.is_running and (not self.device.is_muted):
+        while self._connection_needed():
             try:
                 await self._connect()
                 break
@@ -202,15 +241,19 @@ class WyomingSatellite:
 
         _LOGGER.debug("Connected to satellite")
 
-        if (not self.is_running) or self.device.is_muted:
+        if not self._connection_needed():
             # Run was cancelled or satellite was disabled during connection
             return
 
         # Tell satellite that we're ready
-        await self._client.write_event(RunSatellite().event())
+        if self._is_force_activated:
+            start_stage = PipelineStage.ASR
+        else:
+            start_stage = None
+        await self._client.write_event(RunSatellite(start_stage=start_stage).event())
 
         # Run until stopped or muted
-        while self.is_running and (not self.device.is_muted):
+        while self._connection_needed():
             await self._run_pipeline_loop()
 
     async def _run_pipeline_loop(self) -> None:
@@ -233,7 +276,7 @@ class WyomingSatellite:
         # Update info from satellite
         await self._client.write_event(Describe().event())
 
-        while self.is_running and (not self.device.is_muted):
+        while self._connection_needed():
             if send_ping:
                 # Ensure satellite is still connected
                 send_ping = False
@@ -413,6 +456,7 @@ class WyomingSatellite:
 
         if event.type == assist_pipeline.PipelineEventType.RUN_END:
             # Pipeline run is complete
+            self._is_force_activated = False
             self._is_pipeline_running = False
             self._pipeline_ended_event.set()
             self.device.set_is_active(False)

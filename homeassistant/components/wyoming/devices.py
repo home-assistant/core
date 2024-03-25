@@ -26,6 +26,7 @@ class SatelliteDevice:
 
     _is_active_listener: Callable[[], None] | None = None
     _is_muted_listener: Callable[[], None] | None = None
+    _force_activate_listener: Callable[[], None] | None = None
     _pipeline_listener: Callable[[], None] | None = None
     _audio_settings_listener: Callable[[], None] | None = None
 
@@ -44,6 +45,12 @@ class SatelliteDevice:
             self.is_muted = muted
             if self._is_muted_listener is not None:
                 self._is_muted_listener()
+
+    @callback
+    def force_activate(self) -> None:
+        """Request to activate without a wake word."""
+        if self._force_activate_listener is not None:
+            self._force_activate_listener()
 
     @callback
     def set_pipeline_name(self, pipeline_name: str) -> None:
@@ -86,6 +93,13 @@ class SatelliteDevice:
     def set_is_muted_listener(self, is_muted_listener: Callable[[], None]) -> None:
         """Listen for updates to muted status."""
         self._is_muted_listener = is_muted_listener
+
+    @callback
+    def set_force_activate_listener(
+        self, force_activate_listener: Callable[[], None]
+    ) -> None:
+        """Listen for force activate requests."""
+        self._force_activate_listener = force_activate_listener
 
     @callback
     def set_pipeline_listener(self, pipeline_listener: Callable[[], None]) -> None:
