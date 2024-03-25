@@ -12,7 +12,6 @@ from denonavr import DenonAVR
 from denonavr.const import (
     ALL_TELNET_EVENTS,
     ALL_ZONES,
-    POWER_ON,
     STATE_OFF,
     STATE_ON,
     STATE_PAUSED,
@@ -36,61 +35,39 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_COMMAND, CONF_HOST, CONF_MODEL
+from homeassistant.const import ATTR_COMMAND
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import CONF_RECEIVER
 from .config_flow import (
-    CONF_MANUFACTURER,
     CONF_SERIAL_NUMBER,
-    CONF_TYPE,
     CONF_UPDATE_AUDYSSEY,
     DEFAULT_UPDATE_AUDYSSEY,
     DOMAIN,
 )
+from .device import DenonDeviceEntity
+from .sensor import SENSOR_ENTITIES, DenonSensor
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_BASS = "bass"
-ATTR_BASS_LEVEL = "bass_level"
 ATTR_DYNAMIC_EQ = "dynamic_eq"
-ATTR_DYNAMIC_VOLUME = "dynamic_volume"
-ATTR_MULTI_EQ = "multi_eq"
 ATTR_RECEIVER_TYPE = "receiver_type"
-ATTR_REFERENCE_LEVEL_OFFSET = "reference_level_offset"
 ATTR_SOUND_MODE_RAW = "sound_mode_raw"
 ATTR_SUPPORT_SOUND_MODE = "support_sound_mode"
 ATTR_TELNET_CONNECTED = "telnet_connected"
 ATTR_TELNET_HEALTHY = "telnet_healthy"
-ATTR_TONE_CONTROL_ADJUST = "tone_control_adjust"
-ATTR_TONE_CONTROL_STATUS = "tone_control_status"
-ATTR_TREBLE = "treble"
-ATTR_TREBLE_LEVEL = "treble_level"
 ATTR_ZONE = "zone"
 
 EXTRA_STATE_ATTRIBUTES = {
+    ATTR_DYNAMIC_EQ,
     ATTR_RECEIVER_TYPE,
+    ATTR_SOUND_MODE_RAW,
     ATTR_SUPPORT_SOUND_MODE,
     ATTR_TELNET_CONNECTED,
     ATTR_TELNET_HEALTHY,
     ATTR_ZONE,
-}
-
-EXTRA_STATE_ATTRIBUTES_ON = {
-    ATTR_BASS,
-    ATTR_BASS_LEVEL,
-    ATTR_DYNAMIC_EQ,
-    ATTR_DYNAMIC_VOLUME,
-    ATTR_MULTI_EQ,
-    ATTR_REFERENCE_LEVEL_OFFSET,
-    ATTR_SOUND_MODE_RAW,
-    ATTR_TONE_CONTROL_ADJUST,
-    ATTR_TONE_CONTROL_STATUS,
-    ATTR_TREBLE,
-    ATTR_TREBLE_LEVEL,
 }
 
 SUPPORT_DENON = (
@@ -155,7 +132,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the DenonAVR receiver from a config entry."""
-    entities = []
+    entities: list[DenonDeviceEntity] = []
     data = hass.data[DOMAIN][config_entry.entry_id]
     receiver = data[CONF_RECEIVER]
     update_audyssey = config_entry.options.get(
@@ -175,6 +152,16 @@ async def async_setup_entry(
                 update_audyssey,
             )
         )
+        for sensor in SENSOR_ENTITIES:
+            sensor_unique_id = f"{unique_id}-{sensor}"
+            entities.append(
+                DenonSensor(
+                    receiver_zone,
+                    sensor_unique_id,
+                    config_entry,
+                    sensor,
+                )
+            )
     _LOGGER.debug(
         "%s receiver at host %s initialized", receiver.manufacturer, receiver.host
     )
@@ -285,12 +272,11 @@ def async_log_errors(
     return wrapper
 
 
-class DenonDevice(MediaPlayerEntity):
+class DenonDevice(DenonDeviceEntity, MediaPlayerEntity):
     """Representation of a Denon Media Player Device."""
 
-    _attr_has_entity_name = True
-    _attr_name = None
     _attr_device_class = MediaPlayerDeviceClass.RECEIVER
+    _attr_name = None
 
     def __init__(
         self,
@@ -300,18 +286,9 @@ class DenonDevice(MediaPlayerEntity):
         update_audyssey: bool,
     ) -> None:
         """Initialize the device."""
-        self._attr_unique_id = unique_id
-        assert config_entry.unique_id
-        self._attr_device_info = DeviceInfo(
-            configuration_url=f"http://{config_entry.data[CONF_HOST]}/",
-            hw_version=config_entry.data[CONF_TYPE],
-            identifiers={(DOMAIN, config_entry.unique_id)},
-            manufacturer=config_entry.data[CONF_MANUFACTURER],
-            model=config_entry.data[CONF_MODEL],
-            name=receiver.name,
-        )
+        super().__init__(receiver, unique_id, config_entry)
+
         self._attr_sound_mode_list = receiver.sound_mode_list
-        self._receiver = receiver
         self._update_audyssey = update_audyssey
 
         self._supported_features_base = SUPPORT_DENON
@@ -448,12 +425,6 @@ class DenonDevice(MediaPlayerEntity):
             value = getattr(receiver, attr, None)
             if value is not None:
                 state_attributes[attr] = value
-
-        if receiver.power == POWER_ON:
-            for attr in EXTRA_STATE_ATTRIBUTES_ON:
-                value = getattr(receiver, attr, None)
-                if value is not None:
-                    state_attributes[attr] = value
 
         return state_attributes
 
