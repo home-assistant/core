@@ -61,11 +61,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 async_create_issue(
                     hass,
                     DOMAIN,
-                    f"not_allowed_path_{path}",
+                    f"import_failed_not_allowed_path_{path}",
                     is_fixable=False,
                     is_persistent=False,
                     severity=IssueSeverity.ERROR,
-                    translation_key="not_allowed_path",
+                    translation_key="import_failed_not_allowed_path",
                     translation_placeholders={"path": path},
                 )
                 continue
