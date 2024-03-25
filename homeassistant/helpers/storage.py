@@ -134,7 +134,11 @@ class _StoreManager:
         )
 
     def async_invalidate(self, key: str) -> None:
-        """Invalidate cache."""
+        """Invalidate cache.
+
+        Store calls this when its going to save data
+        to ensure that the cache is not used after that.
+        """
         self._invalided.add(key)
         self._data_preload.pop(key, None)
 
@@ -193,8 +197,8 @@ class _StoreManager:
                 self._data_preload[key] = json_util.load_json(
                     storage_path.joinpath(key)
                 )
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.debug("Error loading %s", key)
+            except Exception as ex:  # pylint: disable=broad-except
+                _LOGGER.debug("Error loading %s: %s", key, ex)
 
     def _initialize_files(self) -> None:
         """Initialize the cache."""
