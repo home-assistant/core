@@ -156,14 +156,14 @@ async def async_setup_auth(
         await store.async_save(data)
 
     hass.data[STORAGE_KEY] = refresh_token.id
-    strict_connection_static_file = None
-    if strict_connection_mode_non_cloud == StrictConnectionMode.STATIC_PAGE:
+    strict_connection_static_file_content = None
+    if strict_connection_mode_non_cloud is StrictConnectionMode.STATIC_PAGE:
 
         def read_static_page() -> str:
             with open(STRICT_CONNECTION_STATIC_PAGE, encoding="utf-8") as file:
                 return file.read()
 
-        strict_connection_static_file = await hass.async_add_executor_job(
+        strict_connection_static_file_content = await hass.async_add_executor_job(
             read_static_page
         )
 
@@ -237,7 +237,6 @@ async def async_setup_auth(
         request: Request, handler: Callable[[Request], Awaitable[StreamResponse]]
     ) -> StreamResponse:
         """Authenticate as middleware."""
-
         authenticated = False
 
         if hdrs.AUTHORIZATION in request.headers and async_validate_auth_header(
@@ -258,14 +257,14 @@ async def async_setup_auth(
 
         if (
             not authenticated
-            and strict_connection_mode_non_cloud != StrictConnectionMode.DISABLED
+            and strict_connection_mode_non_cloud is not StrictConnectionMode.DISABLED
             and not request.path.startswith(STRICT_CONNECTION_EXCLUDED_PATH)
             and not await hass.auth.session.async_validate_strict_connection_session(
                 request
             )
             and (
                 resp := _async_perform_action_on_non_local(
-                    request, strict_connection_static_file
+                    request, strict_connection_static_file_content
                 )
             )
             is not None
@@ -290,7 +289,7 @@ async def async_setup_auth(
 @callback
 def _async_perform_action_on_non_local(
     request: Request,
-    strict_connection_static_file: str | None,
+    strict_connection_static_file_content: str | None,
 ) -> StreamResponse | None:
     """Perform strict connection mode action if the request is not local."""
     try:
@@ -303,9 +302,9 @@ def _async_perform_action_on_non_local(
         return None
 
     _LOGGER.debug("Perform strict connection action for %s", ip_address_)
-    if strict_connection_static_file:
+    if strict_connection_static_file_content:
         return Response(
-            text=strict_connection_static_file,
+            text=strict_connection_static_file_content,
             content_type="text/html",
             status=HTTPStatus.IM_A_TEAPOT,
         )

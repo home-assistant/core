@@ -213,7 +213,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _: ServiceCall,
     ) -> ServiceResponse:
         """Create a strict connection url and return it."""
-        if hass.http.strict_connection_non_cloud == StrictConnectionMode.DISABLED:
+        if hass.http.strict_connection_non_cloud is StrictConnectionMode.DISABLED:
             raise ServiceValidationError(
                 "Strict connection is not enabled for non-cloud requests"
             )
