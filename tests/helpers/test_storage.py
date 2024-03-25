@@ -1,5 +1,4 @@
 """Tests for the storage helper."""
-
 import asyncio
 from datetime import timedelta
 import json
@@ -13,6 +12,8 @@ import pytest
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_FINAL_WRITE,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, CoreState, HomeAssistant
@@ -851,7 +852,9 @@ async def test_read_only_store(
     assert read_only_store.key not in hass_storage
 
 
-async def test_store_manager_caching(tmpdir: py.path.local) -> None:
+async def test_store_manager_caching(
+    tmpdir: py.path.local, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test store manager caching."""
     loop = asyncio.get_running_loop()
 
@@ -864,6 +867,7 @@ async def test_store_manager_caching(tmpdir: py.path.local) -> None:
         tmp_storage.join("integration2").write_binary(
             json_bytes({"data": {"integration2": "integration2"}, "version": 1})
         )
+        tmp_storage.join("broken").write_binary(b"invalid")
         return config_dir
 
     config_dir = await loop.run_in_executor(None, _setup_mock_storage)
@@ -897,7 +901,8 @@ async def test_store_manager_caching(tmpdir: py.path.local) -> None:
         assert exists is False
         assert data is None
 
-        await store_manager.async_preload(["integration3", "integration2"])
+        await store_manager.async_preload(["integration3", "integration2", "broken"])
+        assert "Error loading broken" in caplog.text
 
         assert (
             store_manager.async_fetch("integration1") is None
@@ -1045,4 +1050,93 @@ async def test_store_manager_sub_dirs(tmpdir: py.path.local) -> None:
         assert store_manager.async_fetch("subdir/integrationx") is None
         integration1 = storage.Store(hass, 1, "subdir/integration1")
         assert await integration1.async_load() == {"integration1": "integration1"}
+        await hass.async_stop(force=True)
+
+
+async def test_store_manager_cleanup_after_started(
+    tmpdir: py.path.local, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test that the cache is cleaned up after startup."""
+    loop = asyncio.get_running_loop()
+
+    def _setup_mock_storage():
+        config_dir = tmpdir.mkdir("temp_config")
+        tmp_storage = config_dir.mkdir(".storage")
+        tmp_storage.join("integration1").write_binary(
+            json_bytes({"data": {"integration1": "integration1"}, "version": 1})
+        )
+        tmp_storage.join("integration2").write_binary(
+            json_bytes({"data": {"integration2": "integration2"}, "version": 1})
+        )
+        return config_dir
+
+    config_dir = await loop.run_in_executor(None, _setup_mock_storage)
+
+    async with async_test_home_assistant(config_dir=config_dir) as hass:
+        hass.set_state(CoreState.not_running)
+        store_manager = storage.get_internal_store_manager(hass)
+        await store_manager.async_initialize()
+        await store_manager.async_preload(["integration1", "integration2"])
+        assert store_manager.async_fetch("integration1") is not None
+        assert store_manager.async_fetch("integration2") is not None
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+        assert store_manager.async_fetch("integration1") is not None
+        assert store_manager.async_fetch("integration2") is not None
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+        assert store_manager.async_fetch("integration1") is not None
+        assert store_manager.async_fetch("integration2") is not None
+        freezer.tick(storage.MANAGER_CLEANUP_DELAY)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        # The cache should be removed after the cleanup delay
+        # since it means nothing ever loaded it and we want to
+        # recover the memory
+        assert store_manager.async_fetch("integration1") is None
+        assert store_manager.async_fetch("integration2") is None
+        await hass.async_stop(force=True)
+
+
+async def test_store_manager_cleanup_after_stop(
+    tmpdir: py.path.local, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test that the cache is cleaned up after stop event.
+
+    This should only happen if we stop within the cleanup delay.
+    """
+    loop = asyncio.get_running_loop()
+
+    def _setup_mock_storage():
+        config_dir = tmpdir.mkdir("temp_config")
+        tmp_storage = config_dir.mkdir(".storage")
+        tmp_storage.join("integration1").write_binary(
+            json_bytes({"data": {"integration1": "integration1"}, "version": 1})
+        )
+        tmp_storage.join("integration2").write_binary(
+            json_bytes({"data": {"integration2": "integration2"}, "version": 1})
+        )
+        return config_dir
+
+    config_dir = await loop.run_in_executor(None, _setup_mock_storage)
+
+    async with async_test_home_assistant(config_dir=config_dir) as hass:
+        hass.set_state(CoreState.not_running)
+        store_manager = storage.get_internal_store_manager(hass)
+        await store_manager.async_initialize()
+        await store_manager.async_preload(["integration1", "integration2"])
+        assert store_manager.async_fetch("integration1") is not None
+        assert store_manager.async_fetch("integration2") is not None
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+        assert store_manager.async_fetch("integration1") is not None
+        assert store_manager.async_fetch("integration2") is not None
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+        assert store_manager.async_fetch("integration1") is not None
+        assert store_manager.async_fetch("integration2") is not None
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+        assert store_manager.async_fetch("integration1") is None
+        assert store_manager.async_fetch("integration2") is None
         await hass.async_stop(force=True)
