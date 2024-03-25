@@ -4929,10 +4929,13 @@ async def test_validate_action_config(
         assert key in expected_templates or key in script.STATIC_VALIDATION_ACTION_TYPES
 
     # Verify we raise if we don't know the action type
-    with patch(
-        "homeassistant.helpers.config_validation.determine_script_action",
-        return_value="non-existing",
-    ), pytest.raises(ValueError):
+    with (
+        patch(
+            "homeassistant.helpers.config_validation.determine_script_action",
+            return_value="non-existing",
+        ),
+        pytest.raises(ValueError),
+    ):
         await script.async_validate_action_config(hass, {})
 
     # Verify each action can validate

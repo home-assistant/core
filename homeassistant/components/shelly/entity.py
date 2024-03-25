@@ -629,9 +629,9 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
         )
-        self._attr_unique_id = (
-            self._attr_unique_id
-        ) = f"{coordinator.mac}-{key}-{attribute}"
+        self._attr_unique_id = self._attr_unique_id = (
+            f"{coordinator.mac}-{key}-{attribute}"
+        )
         self._last_value = None
 
         if coordinator.device.initialized:
