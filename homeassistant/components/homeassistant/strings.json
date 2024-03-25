@@ -171,7 +171,7 @@
     "config_schema_unknown_err": {
       "message": "Unknown error calling {domain} CONFIG_SCHEMA - {error}."
     },
-    "integration_config_error": {
+    "multiple_integration_config_errors": {
       "message": "Failed to process config for integration {domain} due to multiple ({errors}) errors. Check the logs for more information."
     },
     "max_length_exceeded": {

@@ -136,7 +136,7 @@ class ConfigErrorTranslationKey(StrEnum):
     PLATFORM_SCHEMA_VALIDATOR_ERR = "platform_schema_validator_err"
 
     # translation key in case multiple errors occurred
-    INTEGRATION_CONFIG_ERROR = "integration_config_error"
+    MULTIPLE_INTEGRATION_CONFIG_ERRORS = "multiple_integration_config_errors"
 
 
 _CONFIG_LOG_SHOW_STACK_TRACE: dict[ConfigErrorTranslationKey, bool] = {
@@ -1332,7 +1332,7 @@ def async_handle_component_errors(
     if len(config_exception_info) == 1:
         translation_key = platform_exception.translation_key
     else:
-        translation_key = ConfigErrorTranslationKey.INTEGRATION_CONFIG_ERROR
+        translation_key = ConfigErrorTranslationKey.MULTIPLE_INTEGRATION_CONFIG_ERRORS
         errors = str(len(config_exception_info))
         placeholders = {
             "domain": domain,
