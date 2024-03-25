@@ -15,10 +15,16 @@ from homeassistant import core, setup
 from homeassistant.const import Platform
 from homeassistant.loader import bind_hass
 
-from .dispatcher import async_dispatcher_connect, async_dispatcher_send
+from .dispatcher import (
+    SignalTypeFormat,
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from .typing import ConfigType, DiscoveryInfoType
 
-SIGNAL_PLATFORM_DISCOVERED = "discovery.platform_discovered_{}"
+SIGNAL_PLATFORM_DISCOVERED: SignalTypeFormat[DiscoveryDict] = SignalTypeFormat(
+    "discovery.platform_discovered_{}"
+)
 EVENT_LOAD_PLATFORM = "load_platform.{}"
 ATTR_PLATFORM = "platform"
 ATTR_DISCOVERED = "discovered"
