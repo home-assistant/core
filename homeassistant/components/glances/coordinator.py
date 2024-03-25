@@ -46,11 +46,11 @@ class GlancesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed from err
         # Update computed values
         if data:
-            uptime = self.convert_uptime(data.get("uptime"))
+            uptime = self._convert_uptime(data.get("uptime"))
             data.update({"computed": {"uptime": uptime}})
         return data or {}
 
-    def convert_uptime(self, uptime_str: str) -> datetime | None:
+    def _convert_uptime(self, uptime_str: str | None) -> datetime | None:
         """Convert Glances uptime (duration) to datetime."""
         uptime = None
         if uptime_str:
@@ -58,10 +58,10 @@ class GlancesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if up_duration:
                 uptime = utcnow() - up_duration
                 # Reject small changes to value
-                uptime = self.normalize_uptime(uptime)
+                uptime = self._normalize_uptime(uptime)
         return uptime
 
-    def normalize_uptime(self, uptime: datetime) -> datetime:
+    def _normalize_uptime(self, uptime: datetime) -> datetime:
         """Compare uptime with previous value and reject small changes."""
         value = uptime
         if self.data is not None:
