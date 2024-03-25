@@ -1,4 +1,5 @@
 """Base class for Ring entity."""
+
 from collections.abc import Callable
 from typing import Any, Concatenate, ParamSpec, TypeVar
 
