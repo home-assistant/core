@@ -157,6 +157,11 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
     """Representation of the ViCare heating climate device."""
 
     _attributes: dict[str, Any] = {}
+    _attr_precision = PRECISION_TENTHS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_min_temp = VICARE_TEMP_HEATING_MIN
+    _attr_max_temp = VICARE_TEMP_HEATING_MAX
+    _attr_target_temperature_step = PRECISION_WHOLE
     _current_action: bool | None = None
     _current_mode: str | None = None
     _current_program: str | None = None
@@ -181,11 +186,6 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
             )
             # self._attr_fan_modes = [FAN_LOW, FAN_MEDIUM, FAN_HIGH, FAN_AUTO]
         else:
-            self._attr_precision = PRECISION_TENTHS
-            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
-            self._attr_min_temp = VICARE_TEMP_HEATING_MIN
-            self._attr_max_temp = VICARE_TEMP_HEATING_MAX
-            self._attr_target_temperature_step = PRECISION_WHOLE
             self._attr_preset_modes = list(HA_TO_VICARE_PRESET_HEATING)
             self._attr_supported_features = (
                 ClimateEntityFeature.TARGET_TEMPERATURE
