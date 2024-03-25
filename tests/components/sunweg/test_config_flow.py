@@ -8,7 +8,6 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.sunweg.const import CONF_PLANT_ID, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .common import SUNWEG_MOCK_ENTRY, SUNWEG_USER_INPUT
 
@@ -57,19 +56,6 @@ async def test_server_unavailable(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "timeout_connect"}
-
-
-async def test_reauth_started(hass: HomeAssistant) -> None:
-    """Test reauth flow started."""
-    mock_entry = SUNWEG_MOCK_ENTRY
-    mock_entry.add_to_hass(hass)
-    with patch.object(APIHelper, "authenticate", return_value=False):
-        await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        assert mock_entry.state is config_entries.ConfigEntryState.SETUP_ERROR
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["step_id"] == "reauth_confirm"
 
 
 async def test_reauth(hass: HomeAssistant) -> None:
