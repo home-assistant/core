@@ -7,7 +7,7 @@ from __future__ import annotations
 from functools import partial
 from typing import TYPE_CHECKING
 
-from axis.models.event import Event, EventOperation
+from axis.models.event import Event, EventOperation, EventTopic
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -25,6 +25,7 @@ class AxisEntityLoader:
         """Initialize the UniFi entity loader."""
         self.hub = hub
 
+        self.registered_events: set[tuple[str, EventTopic, str]] = set()
         self.platforms: list[
             tuple[
                 AddEntitiesCallback,
@@ -58,6 +59,11 @@ class AxisEntityLoader:
             @callback
             def create_entity(description: AxisEventDescription, event: Event) -> None:
                 """Create Axis entity."""
+                event_id = (event.topic, event.topic_base, event.id)
+                if event_id in self.registered_events:
+                    # Device has restarted and all events are initiatlized anew
+                    return
+                self.registered_events.add(event_id)
                 if description.supported_fn(self.hub, event):
                     async_add_entities([platform_entity(self.hub, description, event)])
 
