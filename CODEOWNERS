@@ -108,6 +108,8 @@ build.json @home-assistant/supervisor
 /tests/components/aprilaire/ @chamberlain2007
 /homeassistant/components/aprs/ @PhilRW
 /tests/components/aprs/ @PhilRW
+/homeassistant/components/aqvify/ @ptz0n
+/tests/components/aqvify/ @ptz0n
 /homeassistant/components/aranet/ @aschmitz @thecode
 /tests/components/aranet/ @aschmitz @thecode
 /homeassistant/components/arcam_fmj/ @elupus

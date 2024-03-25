@@ -427,6 +427,9 @@ apprise==1.7.4
 # homeassistant.components.aprs
 aprslib==0.7.0
 
+# homeassistant.components.aqvify
+aqvify==0.1.1
+
 # homeassistant.components.aranet
 aranet4==2.2.2
 

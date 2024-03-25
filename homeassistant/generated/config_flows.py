@@ -52,6 +52,7 @@ FLOWS = {
         "aosmith",
         "apcupsd",
         "apple_tv",
+        "aqvify",
         "aprilaire",
         "aranet",
         "arcam_fmj",

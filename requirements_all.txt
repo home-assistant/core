@@ -466,6 +466,9 @@ aprslib==0.7.0
 # homeassistant.components.aqualogic
 aqualogic==2.6
 
+# homeassistant.components.aqvify
+aqvify==0.1.1
+
 # homeassistant.components.aranet
 aranet4==2.2.2
 
