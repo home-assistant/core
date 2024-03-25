@@ -221,6 +221,71 @@ async def test_setup_serial(
     assert result["data"] == entry_data
 
 
+@pytest.mark.parametrize(
+    ("version", "entry_data"),
+    [
+        (
+            "2.2",
+            {
+                "port": "/dev/ttyUSB1234",
+                "dsmr_version": "2.2",
+                "protocol": "dsmr_protocol",
+                "serial_id": None,
+                "serial_id_gas": "123456789",
+            },
+        ),
+        (
+            "5",
+            {
+                "port": "/dev/ttyUSB1234",
+                "dsmr_version": "5",
+                "protocol": "dsmr_protocol",
+                "serial_id": None,
+                "serial_id_gas": "123456789",
+            },
+        ),
+    ],
+)
+@patch("serial.tools.list_ports.comports", return_value=[com_port()])
+async def test_setup_gas_only_serial(
+    com_mock,
+    hass: HomeAssistant,
+    dsmr_connection_gas_only_send_validate_fixture,
+    version: str,
+    entry_data: dict[str, Any],
+) -> None:
+    """Test we can setup serial."""
+    port = com_port()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] is None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"type": "Serial"},
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "setup_serial"
+    assert result["errors"] == {}
+
+    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"port": port.device, "dsmr_version": version},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == port.device
+    assert result["data"] == entry_data
+
+
 @patch("serial.tools.list_ports.comports", return_value=[com_port()])
 async def test_setup_serial_rfxtrx(
     com_mock,
