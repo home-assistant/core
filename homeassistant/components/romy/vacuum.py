@@ -10,7 +10,6 @@ from homeassistant.components.vacuum import StateVacuumEntity, VacuumEntityFeatu
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, LOGGER
 from .coordinator import RomyVacuumCoordinator
@@ -56,9 +55,7 @@ async def async_setup_entry(
     async_add_entities([RomyVacuumEntity(coordinator)])
 
 
-class RomyVacuumEntity(
-    RomyEntity, StateVacuumEntity
-):
+class RomyVacuumEntity(RomyEntity, StateVacuumEntity):
     """Representation of a ROMY vacuum cleaner robot."""
 
     _attr_supported_features = SUPPORT_ROMY_ROBOT
