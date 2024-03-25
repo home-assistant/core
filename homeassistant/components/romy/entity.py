@@ -13,9 +13,10 @@ class RomyEntity(CoordinatorEntity[RomyVacuumCoordinator]):
 
     _attr_has_entity_name = True
 
-    def __init__(self, romy: RomyRobot) -> None:
+    def __init__(self, coordinator: RomyVacuumCoordinator) -> None:
         """Initialize ROMY entity."""
-        self.romy = romy
+        super().__init__(coordinator)
+        self.romy = coordinator.romy
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, romy.unique_id)},
             manufacturer="ROMY",
