@@ -195,7 +195,8 @@ class _StoreManager:
 
     async def async_preload(self, keys: Iterable[str]) -> None:
         """Cache the keys."""
-        if self._files and (existing := self._files.intersection(keys)):
+        assert self._files is not None, "async_initialize must be called first"
+        if existing := self._files.intersection(keys):
             await self._hass.async_add_executor_job(self._preload, existing)
 
     def _preload(self, keys: Iterable[str]) -> None:
