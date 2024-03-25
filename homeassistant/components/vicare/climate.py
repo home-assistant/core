@@ -233,29 +233,29 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
                 with suppress(PyViCareNotSupportedFeatureError):
                     self._attributes["active_vicare_mode"] = self._current_mode = self._circuit.getActiveMode()
 
-            with suppress(PyViCareNotSupportedFeatureError):
-                self._attributes[
-                    "heating_curve_slope"
-                ] = self._circuit.getHeatingCurveSlope()
-
-            with suppress(PyViCareNotSupportedFeatureError):
-                self._attributes[
-                    "heating_curve_shift"
-                ] = self._circuit.getHeatingCurveShift()
-
-            self._attributes["vicare_modes"] = self._circuit.getModes()
-
-            self._current_action = False
-            # Update the specific device attributes
-            with suppress(PyViCareNotSupportedFeatureError):
-                for burner in get_burners(self._api):
-                    self._current_action = self._current_action or burner.getActive()
-
-            with suppress(PyViCareNotSupportedFeatureError):
-                for compressor in get_compressors(self._api):
-                    self._current_action = (
-                        self._current_action or compressor.getActive()
-                    )
+                with suppress(PyViCareNotSupportedFeatureError):
+                    self._attributes[
+                        "heating_curve_slope"
+                    ] = self._circuit.getHeatingCurveSlope()
+    
+                with suppress(PyViCareNotSupportedFeatureError):
+                    self._attributes[
+                        "heating_curve_shift"
+                    ] = self._circuit.getHeatingCurveShift()
+    
+                self._attributes["vicare_modes"] = self._circuit.getModes()
+    
+                self._current_action = False
+                # Update the specific device attributes
+                with suppress(PyViCareNotSupportedFeatureError):
+                    for burner in get_burners(self._api):
+                        self._current_action = self._current_action or burner.getActive()
+    
+                with suppress(PyViCareNotSupportedFeatureError):
+                    for compressor in get_compressors(self._api):
+                        self._current_action = (
+                            self._current_action or compressor.getActive()
+                        )
 
         except requests.exceptions.ConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
