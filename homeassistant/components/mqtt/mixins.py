@@ -314,7 +314,7 @@ async def _async_discover(
         raise
 
 
-class _SetupNonEntityHelperCallbackProtocol(Protocol):
+class _SetupNonEntityHelperCallbackProtocol(Protocol):  # pragma: no cover
     """Callback protocol for async_setup in async_setup_non_entity_entry_helper."""
 
     async def __call__(
