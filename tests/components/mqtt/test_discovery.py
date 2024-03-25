@@ -1545,6 +1545,7 @@ async def test_mqtt_discovery_unsubscribe_once(
 
         async def async_step_mqtt(self, discovery_info: MqttServiceInfo) -> FlowResult:
             """Test mqtt step."""
+            await asyncio.sleep(0.1)
             return self.async_abort(reason="already_configured")
 
     with mock_config_flow("comp", TestFlow):
