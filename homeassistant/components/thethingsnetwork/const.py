@@ -11,5 +11,3 @@ CONF_APP_ID = "app_id"
 
 POLLING_PERIOD_S = 60
 FIRST_FETCH_H = 24
-
-ENTRY_DATA_COORDINATOR = "coordinator"

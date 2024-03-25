@@ -56,7 +56,17 @@ async def test_user(
         data=user_data,
     )
     assert result["type"] == FlowResultType.FORM
-    assert "base" in result["errors"]
+    assert "invalid_auth" in result["errors"]["base"]
+
+    # Unknown error
+    mock_TTNClient_config_flow.return_value.fetch_data.side_effect = Exception
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data=user_data,
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert "unknown" in result["errors"]["base"]
 
 
 async def test_step_reauth(

@@ -29,7 +29,7 @@ async def test_normal(
     device_registry: dr.DeviceRegistry,
     mock_TTNClient_coordinator,
 ) -> None:
-    """Test a working configuratioms."""
+    """Test a working configurations."""
     CONFIG_ENTRY.add_to_hass(hass)
     assert await hass.config_entries.async_setup(CONFIG_ENTRY.entry_id)
 
@@ -37,7 +37,9 @@ async def test_normal(
 
     # Check devices
     assert (
-        device_registry.async_get_device(identifiers={(APP_ID, DEVICE_ID)}).name
+        device_registry.async_get_device(
+            identifiers={(DOMAIN, f"{APP_ID}_{DEVICE_ID}")}
+        ).name
         == DEVICE_ID
     )
 
