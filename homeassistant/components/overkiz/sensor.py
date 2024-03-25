@@ -401,7 +401,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_BOTTOM_TANK_WATER_TEMPERATURE,
-        name="Bottom Tank Water Temperature",
+        name="Bottom tank water temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
