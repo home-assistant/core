@@ -1167,8 +1167,9 @@ async def test_loading_component_loads_translations(hass: HomeAssistant) -> None
     mock_setup = Mock(return_value=True)
 
     mock_integration(hass, MockModule("comp", setup=mock_setup))
-
-    assert await setup.async_setup_component(hass, "comp", {})
+    integration = await loader.async_get_integration(hass, "comp")
+    with patch.object(integration, "has_translations", True):
+        assert await setup.async_setup_component(hass, "comp", {})
     assert mock_setup.called
     assert translation.async_translations_loaded(hass, {"comp"}) is True
 

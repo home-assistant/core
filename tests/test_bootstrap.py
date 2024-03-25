@@ -1,5 +1,4 @@
 """Test the bootstrapping."""
-
 import asyncio
 from collections.abc import Generator, Iterable
 import glob
@@ -17,8 +16,10 @@ from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
 from homeassistant.core import CoreState, HomeAssistant, async_get_hass, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.translation import async_translations_loaded
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration
+from homeassistant.setup import BASE_PLATFORMS
 
 from .common import (
     MockConfigEntry,
@@ -103,6 +104,16 @@ async def test_empty_setup(hass: HomeAssistant) -> None:
     await bootstrap.async_from_config_dict({}, hass)
     for domain in bootstrap.CORE_INTEGRATIONS:
         assert domain in hass.config.components, domain
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_preload_translations(hass: HomeAssistant) -> None:
+    """Test translations are preloaded for all frontend deps and base platforms."""
+    await bootstrap.async_from_config_dict({}, hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    frontend = await loader.async_get_integration(hass, "frontend")
+    assert async_translations_loaded(hass, set(frontend.all_dependencies))
+    assert async_translations_loaded(hass, BASE_PLATFORMS)
 
 
 async def test_core_failure_loads_recovery_mode(

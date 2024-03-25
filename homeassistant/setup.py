@@ -285,6 +285,19 @@ async def _async_setup_component(  # noqa: C901
         log_error(f"Dependency is disabled - {integration.disabled}")
         return False
 
+    integration_set = {domain}
+
+    load_translations_task: asyncio.Task[None] | None = None
+    if integration.has_translations and not translation.async_translations_loaded(
+        hass, integration_set
+    ):
+        # For most cases we expect the translations are already
+        # loaded since we try to load them in bootstrap ahead of time.
+        # If for some reason the background task in bootstrap was too slow
+        # or the integration was added after bootstrap, we will load them here.
+        load_translations_task = create_eager_task(
+            translation.async_load_integrations(hass, integration_set)
+        )
     # Validate all dependencies exist and there are no circular dependencies
     if not await integration.resolve_dependencies():
         return False
@@ -351,17 +364,6 @@ async def _async_setup_component(  # noqa: C901
         )
 
     _LOGGER.info("Setting up %s", domain)
-    integration_set = {domain}
-
-    load_translations_task: asyncio.Task[None] | None = None
-    if not translation.async_translations_loaded(hass, integration_set):
-        # For most cases we expect the translations are already
-        # loaded since we try to load them in bootstrap ahead of time.
-        # If for some reason the background task in bootstrap was too slow
-        # or the integration was added after bootstrap, we will load them here.
-        load_translations_task = create_eager_task(
-            translation.async_load_integrations(hass, integration_set)
-        )
 
     with async_start_setup(hass, integration=domain, phase=SetupPhases.SETUP):
         if hasattr(component, "PLATFORM_SCHEMA"):
