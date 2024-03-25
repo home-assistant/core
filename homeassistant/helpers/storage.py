@@ -10,6 +10,7 @@ import inspect
 from json import JSONDecodeError, JSONEncoder
 import logging
 import os
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from homeassistant.const import (
@@ -91,10 +92,12 @@ async def async_migrator(
     return config
 
 
-def get_store_manager(hass: HomeAssistant) -> _StoreManager:
+def get_store_manager(
+    hass: HomeAssistant, config_dir: str | None = None
+) -> _StoreManager:
     """Get the store manager."""
     if STORAGE_MANAGER not in hass.data:
-        manager = _StoreManager(hass)
+        manager = _StoreManager(hass, config_dir or hass.config.config_dir)
         hass.data[STORAGE_MANAGER] = manager
     return hass.data[STORAGE_MANAGER]
 
@@ -105,62 +108,73 @@ class _StoreManager:
     The store manager is used to cache and manage storage files.
     """
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, config_dir: str) -> None:
         """Initialize storage manager class."""
-        self.hass = hass
-        self.invalided: set[str] = set()
-        self.files: set[str] | None = None
-        self.cache: dict[str, json_util.JsonValueType] = {}
-        self.storage_path = hass.config.path(STORAGE_DIR)
+        self._hass = hass
+        self._invalided: set[str] = set()
+        self._files: set[str] | None = None
+        self._data_preload: dict[str, json_util.JsonValueType] = {}
+        self._storage_path: Path = Path(config_dir).joinpath(STORAGE_DIR)
 
     async def async_initialize(self) -> None:
         """Initialize the storage manager."""
-        await self.hass.async_add_executor_job(self._initialize_files)
-        self.hass.bus.async_listen(
-            EVENT_HOMEASSISTANT_STARTED, self._async_schedule_cleanup
+        hass = self._hass
+        await hass.async_add_executor_job(self._initialize_files)
+        hass.bus.async_listen(
+            EVENT_HOMEASSISTANT_STARTED,
+            self._async_schedule_cleanup,
+            run_immediately=True,
         )
 
     def async_invalidate(self, key: str) -> None:
         """Invalidate cache."""
-        self.invalided.add(key)
+        self._invalided.add(key)
+        self._data_preload.pop(key, None)
 
     @callback
     def async_fetch(
         self, key: str
     ) -> tuple[bool, json_util.JsonValueType | None] | None:
         """Fetch data from cache."""
-        if key in self.invalided or self.files is None:
+        if key in self._invalided or self._files is None:
+            _LOGGER.error("Cache miss for %s", key)
             return None
-        if key not in self.files:
+        if key not in self._files:
+            _LOGGER.error("Cache hit, no exist: %s", key)
             return (False, None)
-        if data := self.cache.get(key):
+        if data := self._data_preload.get(key):
+            _LOGGER.error("Cache hit: %s", key)
             return (True, data)
+        _LOGGER.error("Cache miss, no data: %s", key)
         return None
 
     def _async_schedule_cleanup(self, _event: Event) -> None:
         """Schedule the cleanup of old files."""
-        self.hass.loop.call_later(60, self._async_cleanup)
+        self._hass.loop.call_later(60, self._async_cleanup)
 
     def _async_cleanup(self) -> None:
         """Cleanup unused cache."""
-        self.cache.clear()
+        self._data_preload.clear()
 
-    async def async_cache(self, keys: Iterable[str]) -> None:
+    async def async_preload(self, keys: Iterable[str]) -> None:
         """Cache the keys."""
-        if self.files and (existing := self.files.intersection(keys)):
-            await self.hass.async_add_executor_job(self._cache, existing)
+        if self._files and (existing := self._files.intersection(keys)):
+            await self._hass.async_add_executor_job(self._preload, existing)
 
-    def _cache(self, keys: Iterable[str]) -> None:
+    def _preload(self, keys: Iterable[str]) -> None:
         """Cache the keys."""
+        storage_path = self._storage_path
         for key in keys:
             try:
-                self.cache[key] = json_util.load_json(self.storage_path.join(key))
+                self._data_preload[key] = json_util.load_json(
+                    storage_path.joinpath(key)
+                )
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.debug("Error loading %s", key)
 
     def _initialize_files(self) -> None:
         """Initialize the cache."""
-        self.files = set(os.listdir(self.storage_path))
+        self._files = set(os.listdir(self._storage_path))
 
 
 @bind_hass
@@ -178,6 +192,7 @@ class Store(Generic[_T]):
         encoder: type[JSONEncoder] | None = None,
         minor_version: int = 1,
         read_only: bool = False,
+        config_dir: str | None = None,
     ) -> None:
         """Initialize storage class."""
         self.version = version
@@ -194,7 +209,7 @@ class Store(Generic[_T]):
         self._atomic_writes = atomic_writes
         self._read_only = read_only
         self._next_write_time = 0.0
-        self._manager = get_store_manager(hass)
+        self._manager = get_store_manager(hass, config_dir)
 
     @cached_property
     def path(self):

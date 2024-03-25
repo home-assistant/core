@@ -392,6 +392,8 @@ class HomeAssistant:
         # pylint: disable-next=import-outside-toplevel
         from . import loader
 
+        # This is a dictionary that any component can store any data on.
+        self.data: dict[str, Any] = {}
         self.loop = asyncio.get_running_loop()
         self._tasks: set[asyncio.Future[Any]] = set()
         self._background_tasks: set[asyncio.Future[Any]] = set()
@@ -401,8 +403,6 @@ class HomeAssistant:
         self.config = Config(self, config_dir)
         self.components = loader.Components(self)
         self.helpers = loader.Helpers(self)
-        # This is a dictionary that any component can store any data on.
-        self.data: dict[str, Any] = {}
         self.state: CoreState = CoreState.not_running
         self.exit_code: int = 0
         # If not None, use to signal end-of-loop
@@ -2602,7 +2602,7 @@ class Config:
         """Initialize a new config object."""
         self.hass = hass
 
-        self._store = self._ConfigStore(self.hass)
+        self._store = self._ConfigStore(self.hass, config_dir)
 
         self.latitude: float = 0
         self.longitude: float = 0
@@ -2869,7 +2869,7 @@ class Config:
     class _ConfigStore(Store[dict[str, Any]]):
         """Class to help storing Config data."""
 
-        def __init__(self, hass: HomeAssistant) -> None:
+        def __init__(self, hass: HomeAssistant, config_dir: str) -> None:
             """Initialize storage class."""
             super().__init__(
                 hass,
@@ -2878,6 +2878,7 @@ class Config:
                 private=True,
                 atomic_writes=True,
                 minor_version=CORE_STORAGE_MINOR_VERSION,
+                config_dir=config_dir,
             )
             self._original_unit_system: str | None = None  # from old store 1.1
 

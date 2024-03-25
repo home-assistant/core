@@ -845,8 +845,8 @@ async def _async_resolve_domains_to_setup(
 
     # Preload storage for all integrations we are going to set up
     hass.async_create_background_task(
-        get_store_manager(hass).async_cache(domains_to_setup),
-        "cache integration storage",
+        get_store_manager(hass).async_preload(domains_to_setup),
+        "preload storage",
         eager_start=True,
     )
 
