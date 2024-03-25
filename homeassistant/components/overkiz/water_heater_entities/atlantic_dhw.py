@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class AtlanticDHW(OverkizEntity, WaterHeaterEntity):
-    """Representation of Atlantic Pass APC DHW."""
+    """Representation of Atlantic Water Heater."""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
