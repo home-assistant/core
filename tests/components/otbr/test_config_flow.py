@@ -324,6 +324,57 @@ async def test_hassio_discovery_flow_sky_connect(
     assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
+async def test_hassio_discovery_flow_connect_zbt1(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_info
+) -> None:
+    """Test the hassio discovery flow for HA Connect ZBT-1."""
+    url = "http://core-silabs-multiprotocol:8081"
+    aioclient_mock.get(f"{url}/node/dataset/active", text="aa")
+
+    addon_info.return_value = {
+        "available": True,
+        "hostname": None,
+        "options": {
+            "device": (
+                "/dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1_"
+                "9e2adbd75b8beb119fe564a0f320645d-if00-port0"
+            )
+        },
+        "state": None,
+        "update_available": False,
+        "version": None,
+    }
+
+    with patch(
+        "homeassistant.components.otbr.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
+        )
+
+    expected_data = {
+        "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
+    }
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert (
+        result["title"] == "Home Assistant Connect ZBT-1 (Silicon Labs Multiprotocol)"
+    )
+    assert result["data"] == expected_data
+    assert result["options"] == {}
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
+    assert config_entry.data == expected_data
+    assert config_entry.options == {}
+    assert (
+        config_entry.title
+        == "Home Assistant Connect ZBT-1 (Silicon Labs Multiprotocol)"
+    )
+    assert config_entry.unique_id == HASSIO_DATA.uuid
+
+
 async def test_hassio_discovery_flow_2x_addons(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_info
 ) -> None:
