@@ -37,14 +37,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Honeywell switches."""
     data: HoneywellData = hass.data[DOMAIN][config_entry.entry_id]
-    devices = [
-        device
-        for device in data.devices.values()
-        if device.raw_ui_data.get("SwitchEmergencyHeatAllowed")
-    ]
     async_add_entities(
         HoneywellSwitch(hass, config_entry, device, description)
-        for device in devices
+        for device in data.devices.values()
+        if device.raw_ui_data.get("SwitchEmergencyHeatAllowed")
         for description in SWITCH_TYPES
     )
 
