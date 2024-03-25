@@ -140,8 +140,9 @@ class _StoreManager:
         Store calls this when its going to save data
         to ensure that the cache is not used after that.
         """
-        self._invalidated.add(key)
-        self._data_preload.pop(key, None)
+        if "/" not in key:
+            self._invalidated.add(key)
+            self._data_preload.pop(key, None)
 
     @callback
     def async_fetch(
