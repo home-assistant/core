@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Connect to The Thinks Network v3 App",
-        "description": "Enter the API hostname, app id and API key for your TTN application.\n\nYou can find your API key in the [The Things Network console](https://console.thethingsnetwork.org) -> Applications -> application_id -> API keys",
+        "description": "Enter the API hostname, app id and API key for your TTN application.\n\nYou can find your API key in the [The Things Network console](https://console.thethingsnetwork.org) -> Applications -> application_id -> API keys.",
         "data": {
           "hostname": "Hostname",
           "app_id": "Application ID",
@@ -11,7 +11,7 @@
         }
       },
       "reauth_confirm": {
-        "description": "The Thinks Network application could not be connected.\n\nYou can find your API key in the [The Things Network console](https://console.thethingsnetwork.org) -> Applications -> {app_id} -> API keys"
+        "description": "The Thinks Network application could not be connected.\n\nPlease check your credentials."
       }
     },
     "abort": {
