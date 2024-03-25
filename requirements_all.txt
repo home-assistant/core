@@ -315,7 +315,7 @@ aionanoleaf==0.2.1
 aionotion==2024.03.0
 
 # homeassistant.components.nut
-aionut==4.2.1
+aionut==4.3.2
 
 # homeassistant.components.oncue
 aiooncue==0.3.7
@@ -2901,7 +2901,7 @@ yeelight==0.7.14
 yeelightsunflower==0.0.10
 
 # homeassistant.components.yolink
-yolink-api==0.3.9
+yolink-api==0.4.1
 
 # homeassistant.components.youless
 youless-api==1.0.1
