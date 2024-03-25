@@ -137,15 +137,15 @@ class _StoreManager:
     ) -> tuple[bool, json_util.JsonValueType | None] | None:
         """Fetch data from cache."""
         if key in self._invalided or self._files is None:
-            _LOGGER.error("Cache miss for %s", key)
+            _LOGGER.debug("%s: Cache miss", key)
             return None
         if key not in self._files:
-            _LOGGER.error("Cache hit, no exist: %s", key)
+            _LOGGER.debug("%s: Cache hit, does not exist", key)
             return (False, None)
         if data := self._data_preload.get(key):
-            _LOGGER.error("Cache hit: %s", key)
+            _LOGGER.debug("%s: Cache hit data", key)
             return (True, data)
-        _LOGGER.error("Cache miss, no data: %s", key)
+        _LOGGER.debug("%s: Cache miss, not preloaded", key)
         return None
 
     def _async_schedule_cleanup(self, _event: Event) -> None:

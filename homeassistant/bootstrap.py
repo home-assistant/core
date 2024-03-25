@@ -204,6 +204,23 @@ SETUP_ORDER = (
     ("debugger", DEBUGGER_INTEGRATIONS),
 )
 
+#
+# Storage keys we are likely to load during startup
+# in order of when we expect to load them.
+#
+# If they do not exist they will not be loaded
+#
+PRELOAD_STORAGE = [
+    "http.auth",
+    "image",
+    "lovelace_dashboards",
+    "core.uuid",
+    "bluetooth.passive_update_processor",
+    "bluetooth.remote_scanners",
+    "assist_pipeline.pipelines",
+    "core.analytics",
+]
+
 
 async def async_setup_hass(
     runtime_config: RuntimeConfig,
@@ -847,7 +864,7 @@ async def _async_resolve_domains_to_setup(
     # so we do not have to wait for it to be loaded when we need it
     # in the setup process.
     hass.async_create_background_task(
-        get_store_manager(hass).async_preload(domains_to_setup),
+        get_store_manager(hass).async_preload([*PRELOAD_STORAGE, *domains_to_setup]),
         "preload storage",
         eager_start=True,
     )
