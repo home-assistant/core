@@ -161,6 +161,9 @@ class _StoreManager:
         # because async_initialize has not been called yet as it would
         # cause the Store to return None when it should not.
         #
+        # The "/" in key check is to prevent the cache from being used
+        # for subdirs in case we have a key like "hacs/XXX"
+        #
         if "/" in key or key in self._invalidated or self._files is None:
             _LOGGER.debug("%s: Cache miss", key)
             return None
