@@ -8,7 +8,7 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN
 
 
-class RomyEntity(Entity):
+class RomyEntity(CoordinatorEntity[RomyVacuumCoordinator]):
     """Base ROMY entity."""
 
     _attr_has_entity_name = True
