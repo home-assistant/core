@@ -147,15 +147,24 @@ class _StoreManager:
         self, key: str
     ) -> tuple[bool, json_util.JsonValueType | None] | None:
         """Fetch data from cache."""
+        # If the key is invalidated, we don't need to check the cache
+        # If async_initialize has not been called yet, we don't know
+        # if the file exists or not so its a cache miss
         if key in self._invalided or self._files is None:
             _LOGGER.debug("%s: Cache miss", key)
             return None
+
+        # If async_initialize has been called and the key is not in self._files
+        # then the file does not exist
         if key not in self._files:
             _LOGGER.debug("%s: Cache hit, does not exist", key)
             return (False, None)
+
+        # If the key is in the preload cache, return it
         if data := self._data_preload.get(key):
             _LOGGER.debug("%s: Cache hit data", key)
             return (True, data)
+
         _LOGGER.debug("%s: Cache miss, not preloaded", key)
         return None
 
@@ -182,6 +191,8 @@ class _StoreManager:
         If nothing consumes the cache 60s after startup or when we
         stop Home Assistant, we'll clear the cache.
         """
+        for key in self._data_preload:
+            _LOGGER.debug("Key %s was preloaded but never read", key)
         self._data_preload.clear()
 
     async def async_preload(self, keys: Iterable[str]) -> None:
