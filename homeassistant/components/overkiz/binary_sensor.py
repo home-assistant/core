@@ -118,7 +118,7 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
     ),
     OverkizBinarySensorDescription(
         key=OverkizState.MODBUSLINK_DHW_BOOST_MODE,
-        name="Boost Mode",
+        name="Boost mode",
         value_fn=lambda state: state == OverkizCommandParam.ON,
     ),
 ]
