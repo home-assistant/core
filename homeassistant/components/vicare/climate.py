@@ -116,7 +116,7 @@ def _build_entities(
                 )
             )
         else:
-            entities.append([
+            entities.extend(
                 ViCareClimate(
                     device.api,
                     circuit,
@@ -124,7 +124,7 @@ def _build_entities(
                     "heating",
                 )
                 for circuit in get_circuits(device.api)
-            ])
+            )
     return entities
 
 
