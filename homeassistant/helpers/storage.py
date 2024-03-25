@@ -92,10 +92,15 @@ async def async_migrator(
     return config
 
 
-def get_store_manager(
+def get_internal_store_manager(
     hass: HomeAssistant, config_dir: str | None = None
 ) -> _StoreManager:
-    """Get the store manager."""
+    """Get the store manager.
+
+    This function is not part of the API and should only be
+    used in the Home Assistant core internals. It is not
+    guaranteed to be stable.
+    """
     if STORAGE_MANAGER not in hass.data:
         manager = _StoreManager(hass, config_dir or hass.config.config_dir)
         hass.data[STORAGE_MANAGER] = manager
@@ -209,7 +214,7 @@ class Store(Generic[_T]):
         self._atomic_writes = atomic_writes
         self._read_only = read_only
         self._next_write_time = 0.0
-        self._manager = get_store_manager(hass, config_dir)
+        self._manager = get_internal_store_manager(hass, config_dir)
 
     @cached_property
     def path(self):
