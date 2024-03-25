@@ -412,8 +412,9 @@ async def test_migrator_no_existing_config(
     hass: HomeAssistant, store, hass_storage: dict[str, Any]
 ) -> None:
     """Test migrator with no existing config."""
-    with patch("os.path.isfile", return_value=False), patch.object(
-        store, "async_load", return_value={"cur": "config"}
+    with (
+        patch("os.path.isfile", return_value=False),
+        patch.object(store, "async_load", return_value={"cur": "config"}),
     ):
         data = await storage.async_migrator(hass, "old-path", store)
 
@@ -791,14 +792,20 @@ async def test_os_error_is_fatal(tmpdir: py.path.local) -> None:
         )
         await store.async_save({"hello": "world"})
 
-        with pytest.raises(OSError), patch(
-            "homeassistant.helpers.storage.json_util.load_json", side_effect=OSError
+        with (
+            pytest.raises(OSError),
+            patch(
+                "homeassistant.helpers.storage.json_util.load_json", side_effect=OSError
+            ),
         ):
             await store.async_load()
 
         # Verify second load is also failing
-        with pytest.raises(OSError), patch(
-            "homeassistant.helpers.storage.json_util.load_json", side_effect=OSError
+        with (
+            pytest.raises(OSError),
+            patch(
+                "homeassistant.helpers.storage.json_util.load_json", side_effect=OSError
+            ),
         ):
             await store.async_load()
 
@@ -819,9 +826,12 @@ async def test_json_load_failure(tmpdir: py.path.local) -> None:
         home_assistant_error = HomeAssistantError()
         home_assistant_error.__cause__ = base_os_error
 
-        with pytest.raises(HomeAssistantError), patch(
-            "homeassistant.helpers.storage.json_util.load_json",
-            side_effect=home_assistant_error,
+        with (
+            pytest.raises(HomeAssistantError),
+            patch(
+                "homeassistant.helpers.storage.json_util.load_json",
+                side_effect=home_assistant_error,
+            ),
         ):
             await store.async_load()
 

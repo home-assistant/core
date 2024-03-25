@@ -466,8 +466,9 @@ def test_load_yaml_config_raises_error_if_unsafe_yaml() -> None:
     with open(YAML_PATH, "w") as fp:
         fp.write("- !!python/object/apply:os.system []")
 
-    with patch.object(os, "system") as system_mock, contextlib.suppress(
-        HomeAssistantError
+    with (
+        patch.object(os, "system") as system_mock,
+        contextlib.suppress(HomeAssistantError),
     ):
         config_util.load_yaml_config_file(YAML_PATH)
 
@@ -652,8 +653,9 @@ def test_process_config_upgrade(hass: HomeAssistant) -> None:
     ha_version = "0.92.0"
 
     mock_open = mock.mock_open()
-    with patch("homeassistant.config.open", mock_open, create=True), patch.object(
-        config_util, "__version__", "0.91.0"
+    with (
+        patch("homeassistant.config.open", mock_open, create=True),
+        patch.object(config_util, "__version__", "0.91.0"),
     ):
         opened_file = mock_open.return_value
         opened_file.readline.return_value = ha_version
@@ -1909,10 +1911,13 @@ async def test_component_config_error_processing(
             )
         ),
     )
-    with patch(
-        "homeassistant.config.async_process_component_config",
-        return_value=config_util.IntegrationConfigInfo(None, exception_info_list),
-    ), pytest.raises(ConfigValidationError) as ex:
+    with (
+        patch(
+            "homeassistant.config.async_process_component_config",
+            return_value=config_util.IntegrationConfigInfo(None, exception_info_list),
+        ),
+        pytest.raises(ConfigValidationError) as ex,
+    ):
         await config_util.async_process_component_and_handle_errors(
             hass, {}, test_integration, raise_on_failure=True
         )

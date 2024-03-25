@@ -20,12 +20,13 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.plum_lightpad.utils.Plum.loadCloudData"
-    ), patch(
-        "homeassistant.components.plum_lightpad.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch("homeassistant.components.plum_lightpad.utils.Plum.loadCloudData"),
+        patch(
+            "homeassistant.components.plum_lightpad.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"username": "test-plum-username", "password": "test-plum-password"},
@@ -72,11 +73,12 @@ async def test_form_one_entry_per_email_allowed(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.plum_lightpad.utils.Plum.loadCloudData"
-    ), patch(
-        "homeassistant.components.plum_lightpad.async_setup_entry"
-    ) as mock_setup_entry:
+    with (
+        patch("homeassistant.components.plum_lightpad.utils.Plum.loadCloudData"),
+        patch(
+            "homeassistant.components.plum_lightpad.async_setup_entry"
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"username": "test-plum-username", "password": "test-plum-password"},
