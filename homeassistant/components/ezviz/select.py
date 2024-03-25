@@ -4,7 +4,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from pyezviz.constants import DeviceSwitchType, SoundMode
+from pyezviz.constants import (
+    BatteryCameraWorkMode,
+    DeviceCatagories,
+    DeviceSwitchType,
+    SoundMode,
+)
 from pyezviz.exceptions import HTTPError, PyEzvizError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -36,6 +41,21 @@ SELECT_TYPE = EzvizSelectEntityDescription(
     supported_switch=DeviceSwitchType.ALARM_TONE.value,
 )
 
+BATTERY_WORK_MODE_SELECT_TYPE = EzvizSelectEntityDescription(
+    key="battery_camera_work_mode",
+    translation_key="battery_camera_work_mode",
+    icon="mdi:battery-sync",
+    entity_category=EntityCategory.CONFIG,
+    options=[
+        "plugged_in",
+        "high_performance",
+        "power_save",
+        "super_power_save",
+        "custom",
+    ],
+    supported_switch=-1,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -50,6 +70,13 @@ async def async_setup_entry(
         for camera in coordinator.data
         for switch in coordinator.data[camera]["switches"]
         if switch == SELECT_TYPE.supported_switch
+    )
+
+    async_add_entities(
+        EzvizBatteryWorkModeSelect(coordinator, camera)
+        for camera in coordinator.data
+        if coordinator.data[camera]["device_category"]
+        == DeviceCatagories.BATTERY_CAMERA_DEVICE_CATEGORY.value
     )
 
 
@@ -87,4 +114,44 @@ class EzvizSelect(EzvizEntity, SelectEntity):
         except (HTTPError, PyEzvizError) as err:
             raise HomeAssistantError(
                 f"Cannot set Warning sound level for {self.entity_id}"
+            ) from err
+
+
+class EzvizBatteryWorkModeSelect(EzvizEntity, SelectEntity):
+    """Representation of a EZVIZ select battery work mode entity."""
+
+    def __init__(
+        self,
+        coordinator: EzvizDataUpdateCoordinator,
+        serial: str,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, serial)
+        self._attr_unique_id = f"{serial}_{BATTERY_WORK_MODE_SELECT_TYPE.key}"
+        self.entity_description = BATTERY_WORK_MODE_SELECT_TYPE
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the selected entity option to represent the entity state."""
+        battery_work_mode = getattr(
+            BatteryCameraWorkMode,
+            self.data[self.entity_description.key],
+            BatteryCameraWorkMode.UNKNOWN,
+        )
+        if battery_work_mode == BatteryCameraWorkMode.UNKNOWN:
+            return None
+
+        return battery_work_mode.name.lower()
+
+    def select_option(self, option: str) -> None:
+        """Change the selected option."""
+        battery_work_mode = getattr(BatteryCameraWorkMode, option.upper())
+        try:
+            self.coordinator.ezviz_client.set_battery_camera_work_mode(
+                self._serial, battery_work_mode.value
+            )
+
+        except (HTTPError, PyEzvizError) as err:
+            raise HomeAssistantError(
+                f"Cannot set battery work mode for {self.entity_id}"
             ) from err
