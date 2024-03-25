@@ -26,18 +26,21 @@ from .entity import RomyEntity
 SENSORS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="battery_level",
+        entity_registry_enabled_default=False,
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="rssi",
+        entity_registry_enabled_default=False,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="dustbin_sensor",
+        entity_registry_enabled_default=False,
         translation_key="dustbin_sensor",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -45,12 +48,14 @@ SENSORS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="total_cleaning_time",
         translation_key="total_cleaning_time",
+        entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfTime.HOURS,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="total_number_of_cleaning_runs",
         translation_key="total_number_of_cleaning_runs",
+        entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="Cleaning Runs",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -58,12 +63,14 @@ SENSORS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="total_area_cleaned",
         translation_key="total_area_cleaned",
+        entity_registry_enabled_default=False,
         native_unit_of_measurement=AREA_SQUARE_METERS,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="total_distance_driven",
         translation_key="total_distance_driven",
+        entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfLength.METERS,
         entity_category=EntityCategory.DIAGNOSTIC,
