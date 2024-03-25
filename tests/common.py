@@ -79,8 +79,10 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.json import JSONEncoder, _orjson_default_encoder, json_dumps
-from homeassistant.helpers.typing import ConfigType, StateType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.setup import setup_component
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as dt_util
@@ -1646,3 +1648,47 @@ def extract_stack_to_frame(extract_stack: list[Mock]) -> FrameType:
         current_frame = next_frame
 
     return top_frame
+
+
+def setup_test_component_platform(
+    hass: HomeAssistant,
+    domain: str,
+    entities: Sequence[Entity],
+    from_config_entry: bool = False,
+) -> MockPlatform:
+    """Mock a test component platform for tests."""
+
+    async def _async_setup_platform(
+        hass: HomeAssistant,
+        config: ConfigType,
+        async_add_entities: AddEntitiesCallback,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> None:
+        """Set up a test component platform."""
+        async_add_entities(entities)
+
+    platform = MockPlatform(
+        async_setup_platform=_async_setup_platform,
+    )
+
+    # avoid loading config_entry if not needed
+    if from_config_entry:
+        from homeassistant.config_entries import ConfigEntry
+
+        async def _async_setup_entry(
+            hass: HomeAssistant,
+            entry: ConfigEntry,
+            async_add_entities: AddEntitiesCallback,
+        ) -> None:
+            """Set up a test component platform."""
+            async_add_entities(entities)
+
+        platform.async_setup_entry = _async_setup_entry
+        platform.async_setup_platform = None
+
+    mock_platform(
+        hass,
+        f"test.{domain}",
+        platform,
+    )
+    return platform
