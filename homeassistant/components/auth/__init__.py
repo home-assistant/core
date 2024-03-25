@@ -130,6 +130,7 @@ from datetime import datetime, timedelta
 from http import HTTPStatus
 from logging import getLogger
 from typing import Any, cast
+from urllib.parse import quote_plus, urljoin
 import uuid
 
 from aiohttp import web
@@ -162,6 +163,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2AuthorizeCallbackView
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
@@ -211,15 +213,25 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _: ServiceCall,
     ) -> ServiceResponse:
         """Create a strict connection url and return it."""
-        if not hass.http.strict_connection_non_cloud == StrictConnectionMode.DISABLED:
+        if hass.http.strict_connection_non_cloud == StrictConnectionMode.DISABLED:
             raise ServiceValidationError(
                 "Strict connection is not enabled for non-cloud requests"
             )
 
-        url = async_sign_path(
+        path = async_sign_path(
             hass, STRICT_CONNECTION_URL, timedelta(hours=1), use_content_user=True
         )
-        return {"url": url}
+        try:
+            url = get_url(hass, prefer_external=True, allow_internal=False)
+        except NoURLAvailableError as ex:
+            raise ServiceValidationError("No external URL available") from ex
+
+        url = urljoin(url, path)
+
+        return {
+            "url": f"https://login.home-assistant.io?u={quote_plus(url)}",
+            "direct_url": url,
+        }
 
     hass.services.async_register(
         DOMAIN,
