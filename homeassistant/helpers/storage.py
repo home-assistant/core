@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import suppress
 from copy import deepcopy
 import inspect
@@ -12,7 +12,10 @@ import logging
 import os
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
-from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
+    EVENT_HOMEASSISTANT_STARTED,
+)
 from homeassistant.core import (
     CALLBACK_TYPE,
     DOMAIN as HOMEASSISTANT_DOMAIN,
@@ -43,7 +46,7 @@ STORAGE_DIR = ".storage"
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_SEMAPHORE = "storage_semaphore"
-
+STORAGE_MANAGER = "storage_manager"
 
 _T = TypeVar("_T", bound=Mapping[str, Any] | Sequence[Any])
 
@@ -88,6 +91,78 @@ async def async_migrator(
     return config
 
 
+def get_store_manager(hass: HomeAssistant) -> _StoreManager:
+    """Get the store manager."""
+    if STORAGE_MANAGER not in hass.data:
+        manager = _StoreManager(hass)
+        hass.data[STORAGE_MANAGER] = manager
+    return hass.data[STORAGE_MANAGER]
+
+
+class _StoreManager:
+    """Class to help storing data.
+
+    The store manager is used to cache and manage storage files.
+    """
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize storage manager class."""
+        self.hass = hass
+        self.invalided: set[str] = set()
+        self.files: set[str] | None = None
+        self.cache: dict[str, json_util.JsonValueType] = {}
+        self.storage_path = hass.config.path(STORAGE_DIR)
+
+    async def async_initialize(self) -> None:
+        """Initialize the storage manager."""
+        await self.hass.async_add_executor_job(self._initialize_files)
+        self.hass.bus.async_listen(
+            EVENT_HOMEASSISTANT_STARTED, self._async_schedule_cleanup
+        )
+
+    def async_invalidate(self, key: str) -> None:
+        """Invalidate cache."""
+        self.invalided.add(key)
+
+    @callback
+    def async_fetch(
+        self, key: str
+    ) -> tuple[bool, json_util.JsonValueType | None] | None:
+        """Fetch data from cache."""
+        if key in self.invalided or self.files is None:
+            return None
+        if key not in self.files:
+            return (False, None)
+        if data := self.cache.get(key):
+            return (True, data)
+        return None
+
+    def _async_schedule_cleanup(self, _event: Event) -> None:
+        """Schedule the cleanup of old files."""
+        self.hass.loop.call_later(60, self._async_cleanup)
+
+    def _async_cleanup(self) -> None:
+        """Cleanup unused cache."""
+        self.cache.clear()
+
+    async def async_cache(self, keys: Iterable[str]) -> None:
+        """Cache the keys."""
+        if self.files and (existing := self.files.intersection(keys)):
+            await self.hass.async_add_executor_job(self._cache, existing)
+
+    def _cache(self, keys: Iterable[str]) -> None:
+        """Cache the keys."""
+        for key in keys:
+            try:
+                self.cache[key] = json_util.load_json(self.storage_path.join(key))
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.debug("Error loading %s", key)
+
+    def _initialize_files(self) -> None:
+        """Initialize the cache."""
+        self.files = set(os.listdir(self.storage_path))
+
+
 @bind_hass
 class Store(Generic[_T]):
     """Class to help storing data."""
@@ -119,6 +194,7 @@ class Store(Generic[_T]):
         self._atomic_writes = atomic_writes
         self._read_only = read_only
         self._next_write_time = 0.0
+        self._manager = get_store_manager(hass)
 
     @cached_property
     def path(self):
@@ -170,6 +246,10 @@ class Store(Generic[_T]):
             # We make a copy because code might assume it's safe to mutate loaded data
             # and we don't want that to mess with what we're trying to store.
             data = deepcopy(data)
+        elif cache := self._manager.async_fetch(self.key):
+            exists, data = cache
+            if not exists:
+                return None
         else:
             try:
                 data = await self.hass.async_add_executor_job(
@@ -267,6 +347,7 @@ class Store(Generic[_T]):
 
     async def async_save(self, data: _T) -> None:
         """Save data."""
+        self._manager.async_invalidate(self.key)
         self._data = {
             "version": self.version,
             "minor_version": self.minor_version,
@@ -287,6 +368,7 @@ class Store(Generic[_T]):
         delay: float = 0,
     ) -> None:
         """Save data with an optional delay."""
+        self._manager.async_invalidate(self.key)
         self._data = {
             "version": self.version,
             "minor_version": self.minor_version,

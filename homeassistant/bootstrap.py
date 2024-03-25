@@ -78,6 +78,7 @@ from .helpers import (
     translation,
 )
 from .helpers.dispatcher import async_dispatcher_send
+from .helpers.storage import get_store_manager
 from .helpers.system_info import async_get_system_info
 from .helpers.typing import ConfigType
 from .setup import (
@@ -345,7 +346,9 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
     translation.async_setup(hass)
     entity.async_setup(hass)
     template.async_setup(hass)
+    store_manager = get_store_manager(hass)
     await asyncio.gather(
+        create_eager_task(store_manager.async_initialize()),
         create_eager_task(area_registry.async_load(hass)),
         create_eager_task(category_registry.async_load(hass)),
         create_eager_task(device_registry.async_load(hass)),
@@ -837,6 +840,13 @@ async def _async_resolve_domains_to_setup(
     hass.async_create_background_task(
         translation.async_load_integrations(hass, translations_to_load),
         "load translations",
+        eager_start=True,
+    )
+
+    store_manager = get_store_manager(hass)
+    hass.async_create_background_task(
+        store_manager.async_cache(domains_to_setup),
+        "cache integration storage",
         eager_start=True,
     )
 
