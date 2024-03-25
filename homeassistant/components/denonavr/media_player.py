@@ -47,8 +47,7 @@ from .config_flow import (
     DEFAULT_UPDATE_AUDYSSEY,
     DOMAIN,
 )
-from .device import DenonDeviceEntity
-from .sensor import SENSOR_ENTITIES, DenonSensor
+from .entity import DenonDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -132,7 +131,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the DenonAVR receiver from a config entry."""
-    entities: list[DenonDeviceEntity] = []
+    entities = []
     data = hass.data[DOMAIN][config_entry.entry_id]
     receiver = data[CONF_RECEIVER]
     update_audyssey = config_entry.options.get(
@@ -152,16 +151,6 @@ async def async_setup_entry(
                 update_audyssey,
             )
         )
-        for sensor in SENSOR_ENTITIES:
-            sensor_unique_id = f"{unique_id}-{sensor}"
-            entities.append(
-                DenonSensor(
-                    receiver_zone,
-                    sensor_unique_id,
-                    config_entry,
-                    sensor,
-                )
-            )
     _LOGGER.debug(
         "%s receiver at host %s initialized", receiver.manufacturer, receiver.host
     )

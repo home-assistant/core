@@ -1,5 +1,6 @@
 """Support for Denon AVR additional sensors."""
 
+import logging
 from typing import Any
 
 from denonavr import DenonAVR
@@ -7,9 +8,15 @@ from denonavr.const import POWER_ON
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .device import DenonDeviceEntity
+from . import CONF_RECEIVER
+from .config_flow import CONF_SERIAL_NUMBER, DOMAIN
+from .entity import DenonDeviceEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_ZONE = "zone"
 
@@ -25,17 +32,50 @@ SENSOR_TREBLE = "treble"
 SENSOR_TREBLE_LEVEL = "treble_level"
 
 SENSOR_ENTITIES = {
-    SENSOR_BASS: "Bass",
-    SENSOR_BASS_LEVEL: "Bass Level",
-    SENSOR_DYNAMIC_EQ: "Dynamic EQ",
-    SENSOR_DYNAMIC_VOLUME: "Dynamic Volume",
-    SENSOR_MULTI_EQ: "Multi EQ",
-    SENSOR_REFERENCE_LEVEL_OFFSET: "Reference Level Offset",
-    SENSOR_TONE_CONTROL_ADJUST: "Tone Control Adjust",
-    SENSOR_TONE_CONTROL_STATUS: "Tone Control Status",
-    SENSOR_TREBLE: "Treble",
-    SENSOR_TREBLE_LEVEL: "Treble Level",
+    SENSOR_BASS,
+    SENSOR_BASS_LEVEL,
+    SENSOR_DYNAMIC_EQ,
+    SENSOR_DYNAMIC_VOLUME,
+    SENSOR_MULTI_EQ,
+    SENSOR_REFERENCE_LEVEL_OFFSET,
+    SENSOR_TONE_CONTROL_ADJUST,
+    SENSOR_TONE_CONTROL_STATUS,
+    SENSOR_TREBLE,
+    SENSOR_TREBLE_LEVEL,
 }
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the DenonAVR sensors from a config entry."""
+    entities = []
+    data = hass.data[DOMAIN][config_entry.entry_id]
+    receiver = data[CONF_RECEIVER]
+    for receiver_zone in receiver.zones.values():
+        if config_entry.data[CONF_SERIAL_NUMBER] is not None:
+            unique_id = f"{config_entry.unique_id}-{receiver_zone.zone}"
+        else:
+            unique_id = f"{config_entry.entry_id}-{receiver_zone.zone}"
+        for sensor in SENSOR_ENTITIES:
+            sensor_unique_id = f"{unique_id}-{sensor}"
+            entities.append(
+                DenonSensor(
+                    receiver_zone,
+                    sensor_unique_id,
+                    config_entry,
+                    sensor,
+                )
+            )
+    _LOGGER.debug(
+        "Sensor entities for %s receiver at host %s initialized",
+        receiver.manufacturer,
+        receiver.host,
+    )
+
+    async_add_entities(entities)
 
 
 class DenonSensor(DenonDeviceEntity, SensorEntity):
@@ -52,16 +92,12 @@ class DenonSensor(DenonDeviceEntity, SensorEntity):
         super().__init__(receiver, unique_id, config_entry)
 
         self._attribute = attribute
+        self.translation_key = attribute
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         return {ATTR_ZONE: getattr(self._receiver, ATTR_ZONE, None)}
-
-    @property
-    def name(self) -> str:
-        """Name of the entity."""
-        return SENSOR_ENTITIES.get(self._attribute, self._attribute)
 
     @property
     def native_value(self) -> StateType:
