@@ -250,6 +250,7 @@ FLOWS = {
         "intellifire",
         "ios",
         "iotawatt",
+        "iotty",
         "ipma",
         "ipp",
         "iqvia",
