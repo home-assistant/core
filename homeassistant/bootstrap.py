@@ -215,11 +215,14 @@ PRELOAD_STORAGE = [
     "http.auth",
     "image",
     "lovelace_dashboards",
+    "lovelace_resources",
     "core.uuid",
+    "lovelace.map",
     "bluetooth.passive_update_processor",
     "bluetooth.remote_scanners",
     "assist_pipeline.pipelines",
     "core.analytics",
+    "auth_module.totp",
 ]
 
 
