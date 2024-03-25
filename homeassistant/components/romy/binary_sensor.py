@@ -9,7 +9,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import RomyVacuumCoordinator
@@ -54,9 +53,7 @@ async def async_setup_entry(
     )
 
 
-class RomyBinarySensor(
-    RomyEntity, CoordinatorEntity[RomyVacuumCoordinator], BinarySensorEntity
-):
+class RomyBinarySensor(RomyEntity, BinarySensorEntity):
     """RomyBinarySensor Class."""
 
     entity_description: BinarySensorEntityDescription
@@ -67,8 +64,7 @@ class RomyBinarySensor(
         entity_description: BinarySensorEntityDescription,
     ) -> None:
         """Initialize ROMYs StatusSensor."""
-        RomyEntity.__init__(self, coordinator.romy)
-        CoordinatorEntity.__init__(self, coordinator)
+        super().__init__(coordinator)
         self._attr_unique_id = f"{entity_description.key}_{self.romy.unique_id}"
         self.entity_description = entity_description
 
