@@ -204,11 +204,12 @@ class _StoreManager:
     def _preload(self, keys: Iterable[str]) -> None:
         """Cache the keys."""
         storage_path = self._storage_path
+        data_preload = self._data_preload
         for key in keys:
+            storage_file: Path = storage_path.joinpath(key)
             try:
-                self._data_preload[key] = json_util.load_json(
-                    storage_path.joinpath(key)
-                )
+                if storage_file.is_file():
+                    data_preload[key] = json_util.load_json(storage_file)
             except Exception as ex:  # pylint: disable=broad-except
                 _LOGGER.debug("Error loading %s: %s", key, ex)
 
