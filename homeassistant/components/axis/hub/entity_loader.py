@@ -60,7 +60,7 @@ class AxisEntityLoader:
         """Create Axis entities from event."""
         event_id = (event.topic, event.topic_base, event.id)
         if event_id in self.registered_events:
-            # Device has restarted and all events are initiatlized anew
+            # Device has restarted and all events are initialized anew
             return
         self.registered_events.add(event_id)
         for (
