@@ -125,7 +125,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.28
+SQLAlchemy==2.0.29
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==2.1
