@@ -482,7 +482,7 @@ def get_http_port(data: MappingProxyType[str, Any]) -> int:
     return cast(int, data.get(CONF_PORT, DEFAULT_HTTP_PORT))
 
 
-async def shutdown_device(device: BlockDevice | RpcDevice) -> None:
+async def async_shutdown_device(device: BlockDevice | RpcDevice) -> None:
     """Shutdown a Shelly device."""
     if isinstance(device, RpcDevice):
         await device.shutdown()

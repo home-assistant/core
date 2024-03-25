@@ -58,10 +58,10 @@ from .const import (
     BLEScannerMode,
 )
 from .utils import (
+    async_shutdown_device,
     get_device_entry_gen,
     get_http_port,
     get_rpc_device_wakeup_period,
-    shutdown_device,
     update_device_fw_info,
 )
 
@@ -157,7 +157,7 @@ class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
         # not running disconnect events since we have auth error
         # and won't be able to send commands to the device
         self.last_update_success = False
-        await shutdown_device(self.device)
+        await async_shutdown_device(self.device)
         self.entry.async_start_reauth(self.hass)
 
 
