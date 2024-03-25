@@ -1514,7 +1514,7 @@ class EventBus:
                 )
             if not run_immediately:
                 raise HomeAssistantError(
-                    f"Run immediately must be set for event {event_type}"
+                    f"Run immediately must be set to True for event {event_type}"
                 )
         return self._async_listen_filterable_job(
             event_type,
