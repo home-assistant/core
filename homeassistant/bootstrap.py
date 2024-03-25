@@ -211,6 +211,7 @@ SETUP_ORDER = (
 # If they do not exist they will not be loaded
 #
 PRELOAD_STORAGE = [
+    "core.network",
     "http.auth",
     "image",
     "lovelace_dashboards",
