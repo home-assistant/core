@@ -28,6 +28,8 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 @pytest.fixture
 async def mock_init_component(hass: HomeAssistant, mock_config_entry: MockConfigEntry):
     """Initialize integration."""
+    assert await async_setup_component(hass, "homeassistant", {})
+
     with patch(
         "ollama.AsyncClient.list",
     ):

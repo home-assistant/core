@@ -7,18 +7,73 @@ from ollama import Message, ResponseError
 import pytest
 
 from homeassistant.components import conversation, ollama_conversation
-from homeassistant.const import MATCH_ALL
+from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
+from homeassistant.const import ATTR_FRIENDLY_NAME, MATCH_ALL
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import intent
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+    intent,
+)
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
 
 async def test_chat(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that the chat function is called with the appropriate arguments."""
+
+    # Create some areas, devices, and entities
+    area_kitchen = area_registry.async_get_or_create("kitchen_id")
+    area_kitchen = area_registry.async_update(area_kitchen.id, name="kitchen")
+    area_bedroom = area_registry.async_get_or_create("bedroom_id")
+    area_bedroom = area_registry.async_update(area_bedroom.id, name="bedroom")
+    area_office = area_registry.async_get_or_create("office_id")
+    area_office = area_registry.async_update(area_office.id, name="office")
+
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+    kitchen_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections=set(),
+        identifiers={("demo", "id-1234")},
+    )
+    device_registry.async_update_device(kitchen_device.id, area_id=area_kitchen.id)
+
+    kitchen_light = entity_registry.async_get_or_create("light", "demo", "1234")
+    kitchen_light = entity_registry.async_update_entity(
+        kitchen_light.entity_id, device_id=kitchen_device.id
+    )
+    hass.states.async_set(
+        kitchen_light.entity_id, "on", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
+    )
+
+    bedroom_light = entity_registry.async_get_or_create("light", "demo", "5678")
+    bedroom_light = entity_registry.async_update_entity(
+        bedroom_light.entity_id, area_id=area_bedroom.id
+    )
+    hass.states.async_set(
+        bedroom_light.entity_id, "on", attributes={ATTR_FRIENDLY_NAME: "bedroom light"}
+    )
+
+    # Hide the office light
+    office_light = entity_registry.async_get_or_create("light", "demo", "ABCD")
+    office_light = entity_registry.async_update_entity(
+        office_light.entity_id, area_id=area_office.id
+    )
+    hass.states.async_set(
+        office_light.entity_id, "on", attributes={ATTR_FRIENDLY_NAME: "office light"}
+    )
+    async_expose_entity(hass, conversation.DOMAIN, office_light.entity_id, False)
+
     with patch(
         "ollama.AsyncClient.chat",
         return_value={"message": {"role": "assistant", "content": "test response"}},
@@ -33,11 +88,19 @@ async def test_chat(
 
         assert mock_chat.call_count == 1
         args = mock_chat.call_args.kwargs
+        prompt = args["messages"][0]["content"]
+
         assert args["model"] == "test model"
         assert args["messages"] == [
-            Message({"role": "system", "content": "test prompt"}),
+            Message({"role": "system", "content": prompt}),
             Message({"role": "user", "content": "test message"}),
         ]
+
+        # Verify only exposed devices/areas are in prompt
+        assert "kitchen light" in prompt
+        assert "bedroom light" in prompt
+        assert "office light" not in prompt
+        assert "office" not in prompt
 
         assert (
             result.response.response_type == intent.IntentResponseType.ACTION_DONE
@@ -75,6 +138,7 @@ async def test_message_history_trimming(
 
         assert mock_chat.call_count == 5
         args = mock_chat.call_args_list
+        prompt = args[0].kwargs["messages"][0]["content"]
 
         # system + user-1
         assert len(args[0].kwargs["messages"]) == 2
@@ -84,7 +148,7 @@ async def test_message_history_trimming(
         # system + user-1 + assistant-1 + user-2
         assert len(args[1].kwargs["messages"]) == 4
         assert args[1].kwargs["messages"][0]["role"] == "system"
-        assert args[1].kwargs["messages"][0]["content"] == "test prompt"
+        assert args[1].kwargs["messages"][0]["content"] == prompt
         assert args[1].kwargs["messages"][1]["role"] == "user"
         assert args[1].kwargs["messages"][1]["content"] == "message 1"
         assert args[1].kwargs["messages"][2]["role"] == "assistant"
@@ -96,7 +160,7 @@ async def test_message_history_trimming(
         # system + user-1 + assistant-1 + user-2 + assistant-2 + user-3
         assert len(args[2].kwargs["messages"]) == 6
         assert args[2].kwargs["messages"][0]["role"] == "system"
-        assert args[2].kwargs["messages"][0]["content"] == "test prompt"
+        assert args[2].kwargs["messages"][0]["content"] == prompt
         assert args[2].kwargs["messages"][1]["role"] == "user"
         assert args[2].kwargs["messages"][1]["content"] == "message 1"
         assert args[2].kwargs["messages"][2]["role"] == "assistant"
@@ -112,7 +176,7 @@ async def test_message_history_trimming(
         # system + user-2 + assistant-2 + user-3 + assistant-3 + user-4
         assert len(args[3].kwargs["messages"]) == 6
         assert args[3].kwargs["messages"][0]["role"] == "system"
-        assert args[3].kwargs["messages"][0]["content"] == "test prompt"
+        assert args[3].kwargs["messages"][0]["content"] == prompt
         assert args[3].kwargs["messages"][1]["role"] == "user"
         assert args[3].kwargs["messages"][1]["content"] == "message 2"
         assert args[3].kwargs["messages"][2]["role"] == "assistant"
@@ -128,7 +192,7 @@ async def test_message_history_trimming(
         # system + user-3 + assistant-3 + user-4 + assistant-4 + user-5
         assert len(args[3].kwargs["messages"]) == 6
         assert args[4].kwargs["messages"][0]["role"] == "system"
-        assert args[4].kwargs["messages"][0]["content"] == "test prompt"
+        assert args[4].kwargs["messages"][0]["content"] == prompt
         assert args[4].kwargs["messages"][1]["role"] == "user"
         assert args[4].kwargs["messages"][1]["content"] == "message 3"
         assert args[4].kwargs["messages"][2]["role"] == "assistant"
