@@ -105,22 +105,6 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
         )
         == 1,
     ),
-    OverkizBinarySensorDescription(
-        key=OverkizState.CORE_HEATING_STATUS,
-        name="Heating Status",
-        device_class=BinarySensorDeviceClass.HEAT,
-        value_fn=lambda state: state == OverkizCommandParam.ON,
-    ),
-    OverkizBinarySensorDescription(
-        key=OverkizState.MODBUSLINK_DHW_ABSENCE_MODE,
-        name="Absence Mode State",
-        value_fn=lambda state: state == OverkizCommandParam.ON,
-    ),
-    OverkizBinarySensorDescription(
-        key=OverkizState.MODBUSLINK_DHW_BOOST_MODE,
-        name="Boost Mode State",
-        value_fn=lambda state: state == OverkizCommandParam.ON,
-    ),
 ]
 
 SUPPORTED_STATES = {
