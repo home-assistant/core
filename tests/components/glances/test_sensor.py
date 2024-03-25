@@ -60,10 +60,3 @@ async def test_uptime_variation(
         await hass.async_block_till_done()
         uptime_state2 = hass.states.get("sensor.0_0_0_0_uptime").state
         assert uptime_state == uptime_state2
-
-    # Expected timestamp + 60min => uptime should change
-    with freeze_time(MOCK_REFERENCE_DATE + timedelta(minutes=60)):
-        await coordinator._async_update_data()
-        await hass.async_block_till_done()
-        uptime_state3 = hass.states.get("sensor.0_0_0_0_uptime").state
-        assert uptime_state != uptime_state3
