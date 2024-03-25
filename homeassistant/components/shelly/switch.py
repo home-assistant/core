@@ -3,16 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, Final, cast
 
 from aioshelly.block_device import Block
-from aioshelly.const import (
-    MODEL_2,
-    MODEL_25,
-    MODEL_GAS,
-    MODEL_WALL_DISPLAY,
-    RPC_GENERATIONS,
-)
+from aioshelly.const import MODEL_GAS, RPC_GENERATIONS
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
@@ -28,21 +22,19 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import DOMAIN, GAS_VALVE_OPEN_STATES
-from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
+from .coordinator import ShellyBlockCoordinator, get_entry_data
 from .entity import (
     BlockEntityDescription,
+    RpcEntityDescription,
     ShellyBlockAttributeEntity,
-    ShellyBlockEntity,
-    ShellyRpcEntity,
-    async_setup_block_attribute_entities,
+    ShellyRpcAttributeEntity,
+    async_setup_entry_attribute_entities,
+    async_setup_entry_rpc,
 )
 from .utils import (
-    async_remove_shelly_entity,
     get_device_entry_gen,
-    get_rpc_key_ids,
-    is_block_channel_type_light,
-    is_rpc_channel_type_light,
-    is_rpc_thermostat_internal_actuator,
+    is_block_exclude_from_relay,
+    is_rpc_exclude_from_relay,
 )
 
 
@@ -51,14 +43,38 @@ class BlockSwitchDescription(BlockEntityDescription, SwitchEntityDescription):
     """Class to describe a BLOCK switch."""
 
 
+@dataclass(frozen=True, kw_only=True)
+class RpcSwitchDescription(RpcEntityDescription, SwitchEntityDescription):
+    """Class to describe a RPC sensor."""
+
+
 # This entity description is deprecated and will be removed in Home Assistant 2024.7.0.
-GAS_VALVE_SWITCH = BlockSwitchDescription(
-    key="valve|valve",
-    name="Valve",
-    available=lambda block: block.valve not in ("failure", "checking"),
-    removal_condition=lambda _, block: block.valve in ("not_connected", "unknown"),
-    entity_registry_enabled_default=False,
-)
+GAS_VALVE_SWITCH: Final = {
+    ("valve", "valve"): BlockSwitchDescription(
+        key="valve|valve",
+        name="Valve",
+        available=lambda block: block.valve not in ("failure", "checking"),
+        removal_condition=lambda _, block: block.valve in ("not_connected", "unknown"),
+        entity_registry_enabled_default=False,
+    )
+}
+
+SWITCHES: Final = {
+    ("relay", "output"): BlockSwitchDescription(
+        key="relay|output",
+        removal_condition=is_block_exclude_from_relay,
+        unique_appends_id=False,  # Needed by entities created before moving to EntityDescription
+    ),
+}
+
+RPC_SWITCHES: Final = {
+    "switch": RpcSwitchDescription(
+        key="switch",
+        sub_key="output",
+        removal_condition=is_rpc_exclude_from_relay,
+        unique_appends_id=False,  # Needed by entities created before moving to EntityDescription
+    )
+}
 
 
 async def async_setup_entry(
@@ -67,91 +83,21 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches for device."""
+    entry_data = get_entry_data(hass)[config_entry.entry_id]
+
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
-        return async_setup_rpc_entry(hass, config_entry, async_add_entities)
-
-    return async_setup_block_entry(hass, config_entry, async_add_entities)
-
-
-@callback
-def async_setup_block_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up entities for block device."""
-    coordinator = get_entry_data(hass)[config_entry.entry_id].block
-    assert coordinator
-
-    # Add Shelly Gas Valve as a switch
-    if coordinator.model == MODEL_GAS:
-        async_setup_block_attribute_entities(
-            hass,
-            async_add_entities,
-            coordinator,
-            {("valve", "valve"): GAS_VALVE_SWITCH},
-            BlockValveSwitch,
+        return async_setup_entry_rpc(
+            hass, config_entry, async_add_entities, RPC_SWITCHES, RpcRelaySwitch
         )
-        return
 
-    # In roller mode the relay blocks exist but do not contain required info
-    if (
-        coordinator.model in [MODEL_2, MODEL_25]
-        and coordinator.device.settings["mode"] != "relay"
-    ):
-        return
+    if (block_coordinator := entry_data.block) and block_coordinator.model is MODEL_GAS:
+        return async_setup_entry_attribute_entities(
+            hass, config_entry, async_add_entities, GAS_VALVE_SWITCH, BlockValveSwitch
+        )
 
-    relay_blocks = []
-    assert coordinator.device.blocks
-    for block in coordinator.device.blocks:
-        if block.type != "relay" or is_block_channel_type_light(
-            coordinator.device.settings, int(block.channel)
-        ):
-            continue
-
-        relay_blocks.append(block)
-        unique_id = f"{coordinator.mac}-{block.type}_{block.channel}"
-        async_remove_shelly_entity(hass, "light", unique_id)
-
-    if not relay_blocks:
-        return
-
-    async_add_entities(BlockRelaySwitch(coordinator, block) for block in relay_blocks)
-
-
-@callback
-def async_setup_rpc_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up entities for RPC device."""
-    coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
-    assert coordinator
-    switch_key_ids = get_rpc_key_ids(coordinator.device.status, "switch")
-
-    switch_ids = []
-    for id_ in switch_key_ids:
-        if is_rpc_channel_type_light(coordinator.device.config, id_):
-            continue
-
-        if coordinator.model == MODEL_WALL_DISPLAY:
-            if not is_rpc_thermostat_internal_actuator(coordinator.device.status):
-                # Wall Display relay is not used as the thermostat actuator,
-                # we need to remove a climate entity
-                unique_id = f"{coordinator.mac}-thermostat:{id_}"
-                async_remove_shelly_entity(hass, "climate", unique_id)
-            else:
-                continue
-
-        switch_ids.append(id_)
-        unique_id = f"{coordinator.mac}-switch:{id_}"
-        async_remove_shelly_entity(hass, "light", unique_id)
-
-    if not switch_ids:
-        return
-
-    async_add_entities(RpcRelaySwitch(coordinator, id_) for id_ in switch_ids)
+    return async_setup_entry_attribute_entities(
+        hass, config_entry, async_add_entities, SWITCHES, BlockRelaySwitch
+    )
 
 
 class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
@@ -247,12 +193,20 @@ class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
         super()._update_callback()
 
 
-class BlockRelaySwitch(ShellyBlockEntity, SwitchEntity):
+class BlockRelaySwitch(ShellyBlockAttributeEntity, SwitchEntity):
     """Entity that controls a relay on Block based Shelly devices."""
 
-    def __init__(self, coordinator: ShellyBlockCoordinator, block: Block) -> None:
+    entity_description: BlockSwitchDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyBlockCoordinator,
+        block: Block,
+        attribute: str,
+        description: BlockSwitchDescription,
+    ) -> None:
         """Initialize relay switch."""
-        super().__init__(coordinator, block)
+        super().__init__(coordinator, block, attribute, description)
         self.control_result: dict[str, Any] | None = None
 
     @property
@@ -280,13 +234,10 @@ class BlockRelaySwitch(ShellyBlockEntity, SwitchEntity):
         super()._update_callback()
 
 
-class RpcRelaySwitch(ShellyRpcEntity, SwitchEntity):
+class RpcRelaySwitch(ShellyRpcAttributeEntity, SwitchEntity):
     """Entity that controls a relay on RPC based Shelly devices."""
 
-    def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
-        """Initialize relay switch."""
-        super().__init__(coordinator, f"switch:{id_}")
-        self._id = id_
+    entity_description: RpcSwitchDescription
 
     @property
     def is_on(self) -> bool:
@@ -295,8 +246,8 @@ class RpcRelaySwitch(ShellyRpcEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on relay."""
-        await self.call_rpc("Switch.Set", {"id": self._id, "on": True})
+        await self.call_rpc("Switch.Set", {"id": self.status["id"], "on": True})
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off relay."""
-        await self.call_rpc("Switch.Set", {"id": self._id, "on": False})
+        await self.call_rpc("Switch.Set", {"id": self.status["id"], "on": False})

@@ -90,6 +90,7 @@ MOCK_BLOCKS = [
             "overpower": 0,
             "power": 53.4,
             "energy": 1234567.89,
+            "output": True,
         },
         channel="0",
         type="relay",
@@ -180,7 +181,7 @@ MOCK_CONFIG = {
     },
     "sys": {
         "ui_data": {},
-        "device": {"name": "Test name"},
+        "device": {"name": "Test name", "mac": MOCK_MAC},
     },
     "wifi": {"sta": {"enable": True}, "sta1": {"enable": False}},
 }
@@ -218,9 +219,12 @@ MOCK_STATUS_COAP = {
     "wifi_sta": {"rssi": -64},
 }
 
-
 MOCK_STATUS_RPC = {
-    "switch:0": {"output": True},
+    "switch:0": {
+        "id": 0,
+        "output": True,
+        "apower": 85.3,
+    },
     "input:0": {"id": 0, "state": None},
     "input:1": {"id": 1, "percent": 89, "xpercent": 8.9},
     "input:2": {"id": 2, "counts": {"total": 56174, "xtotal": 561.74}},
@@ -241,6 +245,7 @@ MOCK_STATUS_RPC = {
     "em1:1": {"act_power": 123.3},
     "em1data:0": {"total_act_energy": 123456.4},
     "em1data:1": {"total_act_energy": 987654.3},
+    "relay_in_thermostat": False,
     "thermostat:0": {
         "id": 0,
         "enable": True,
