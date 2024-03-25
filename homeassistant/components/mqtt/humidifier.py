@@ -254,18 +254,16 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         )
         self._optimistic_mode = optimistic or self._topic[CONF_MODE_STATE_TOPIC] is None
 
-        self._command_templates = {}
         command_templates: dict[str, Template | None] = {
             CONF_STATE: config.get(CONF_COMMAND_TEMPLATE),
             ATTR_HUMIDITY: config.get(CONF_TARGET_HUMIDITY_COMMAND_TEMPLATE),
             ATTR_MODE: config.get(CONF_MODE_COMMAND_TEMPLATE),
         }
-        for key, tpl in command_templates.items():
-            self._command_templates[key] = MqttCommandTemplate(
-                tpl, entity=self
-            ).async_render
+        self._command_templates = {
+            key: MqttCommandTemplate(tpl, entity=self).async_render
+            for key, tpl in command_templates.items()
+        }
 
-        self._value_templates = {}
         value_templates: dict[str, Template | None] = {
             ATTR_ACTION: config.get(CONF_ACTION_TEMPLATE),
             ATTR_CURRENT_HUMIDITY: config.get(CONF_CURRENT_HUMIDITY_TEMPLATE),
@@ -273,11 +271,13 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             ATTR_HUMIDITY: config.get(CONF_TARGET_HUMIDITY_STATE_TEMPLATE),
             ATTR_MODE: config.get(CONF_MODE_STATE_TEMPLATE),
         }
-        for key, tpl in value_templates.items():
-            self._value_templates[key] = MqttValueTemplate(
+        self._value_templates = {
+            key: MqttValueTemplate(
                 tpl,
                 entity=self,
             ).async_render_with_possible_json_value
+            for key, tpl in value_templates.items()
+        }
 
     def add_subscription(
         self,

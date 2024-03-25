@@ -47,6 +47,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_name_air_filter_operating_time',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '8820.0',
   })
@@ -97,6 +98,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_name_electric_heater_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.396365851163864',
   })
@@ -146,6 +148,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_name_exhaust_air_fan',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2606',
   })
@@ -195,6 +198,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_name_exhaust_air_fan_control_signal',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '70',
   })
@@ -242,6 +246,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_name_exhaust_air_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-3.3',
   })
@@ -289,6 +294,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_name_extract_air_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '19.0',
   })
@@ -342,6 +348,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_name_fireplace_ventilation_remaining_duration',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10.0',
   })
@@ -391,6 +398,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_name_heat_exchanger_efficiency',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '81',
   })
@@ -440,6 +448,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_name_heat_exchanger_speed',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
@@ -487,6 +496,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_name_outside_air_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-8.6',
   })
@@ -540,6 +550,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_name_rapid_ventilation_remaining_duration',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30.0',
   })
@@ -587,6 +598,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_name_room_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '19.0',
   })
@@ -636,6 +648,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_name_supply_air_fan',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2784',
   })
@@ -685,6 +698,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_name_supply_air_fan_control_signal',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '74',
   })
@@ -732,6 +746,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.device_name_supply_air_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '19.1',
   })

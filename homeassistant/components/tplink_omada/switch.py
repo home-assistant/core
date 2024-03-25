@@ -2,20 +2,33 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
+from functools import partial
 from typing import Any
 
-from tplink_omada_client import SwitchPortOverrides
-from tplink_omada_client.definitions import PoEMode
-from tplink_omada_client.devices import OmadaSwitch, OmadaSwitchPortDetails
+from tplink_omada_client import OmadaSiteClient, SwitchPortOverrides
+from tplink_omada_client.definitions import GatewayPortMode, PoEMode
+from tplink_omada_client.devices import (
+    OmadaDevice,
+    OmadaGateway,
+    OmadaGatewayPortStatus,
+    OmadaSwitch,
+    OmadaSwitchPortDetails,
+)
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .controller import OmadaSiteController, OmadaSwitchPortCoordinator
+from .controller import (
+    OmadaGatewayCoordinator,
+    OmadaSiteController,
+    OmadaSwitchPortCoordinator,
+)
 from .entity import OmadaDeviceEntity
 
 
@@ -44,15 +57,69 @@ async def async_setup_entry(
                     OmadaNetworkSwitchPortPoEControl(coordinator, switch, port_id)
                 )
 
+    gateway_coordinator = await controller.get_gateway_coordinator()
+    if gateway_coordinator:
+        for gateway in gateway_coordinator.data.values():
+            entities.extend(
+                OmadaGatewayPortSwitchEntity(
+                    gateway_coordinator, gateway, p.port_number, desc
+                )
+                for p in gateway.port_status
+                for desc in GATEWAY_PORT_SWITCHES
+                if desc.exists_func(p)
+            )
+
     async_add_entities(entities)
+
+
+@dataclass(frozen=True, kw_only=True)
+class GatewayPortSwitchEntityDescription(SwitchEntityDescription):
+    """Entity description for a toggle switch derived from a gateway port."""
+
+    exists_func: Callable[[OmadaGatewayPortStatus], bool] = lambda _: True
+    set_func: Callable[
+        [OmadaSiteClient, OmadaDevice, OmadaGatewayPortStatus, bool],
+        Awaitable[OmadaGatewayPortStatus],
+    ]
+    update_func: Callable[[OmadaGatewayPortStatus], bool]
+
+
+def _wan_connect_disconnect(
+    client: OmadaSiteClient,
+    device: OmadaDevice,
+    port: OmadaGatewayPortStatus,
+    enable: bool,
+    ipv6: bool,
+) -> Awaitable[OmadaGatewayPortStatus]:
+    return client.set_gateway_wan_port_connect_state(
+        port.port_number, enable, device, ipv6=ipv6
+    )
+
+
+GATEWAY_PORT_SWITCHES: list[GatewayPortSwitchEntityDescription] = [
+    GatewayPortSwitchEntityDescription(
+        key="wan_connect_ipv4",
+        translation_key="wan_connect_ipv4",
+        exists_func=lambda p: p.mode == GatewayPortMode.WAN,
+        set_func=partial(_wan_connect_disconnect, ipv6=False),
+        update_func=lambda p: p.wan_connected,
+    ),
+    GatewayPortSwitchEntityDescription(
+        key="wan_connect_ipv6",
+        translation_key="wan_connect_ipv6",
+        exists_func=lambda p: p.mode == GatewayPortMode.WAN and p.wan_ipv6_enabled,
+        set_func=partial(_wan_connect_disconnect, ipv6=True),
+        update_func=lambda p: p.ipv6_wan_connected,
+    ),
+]
 
 
 def get_port_base_name(port: OmadaSwitchPortDetails) -> str:
     """Get display name for a switch port."""
 
     if port.name == f"Port{port.port}":
-        return f"Port {port.port}"
-    return f"Port {port.port} ({port.name})"
+        return f"{port.port}"
+    return f"{port.port} ({port.name})"
 
 
 class OmadaNetworkSwitchPortPoEControl(
@@ -76,8 +143,9 @@ class OmadaNetworkSwitchPortPoEControl(
         self.port_details = coordinator.data[port_id]
         self.omada_client = coordinator.omada_client
         self._attr_unique_id = f"{device.mac}_{port_id}_poe"
-
-        self._attr_name = f"{get_port_base_name(self.port_details)} PoE"
+        self._attr_translation_placeholders = {
+            "port_name": get_port_base_name(self.port_details)
+        }
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -109,3 +177,72 @@ class OmadaNetworkSwitchPortPoEControl(
         """Handle updated data from the coordinator."""
         self.port_details = self.coordinator.data[self.port_id]
         self._refresh_state()
+
+
+class OmadaGatewayPortSwitchEntity(OmadaDeviceEntity[OmadaGateway], SwitchEntity):
+    """Generic toggle switch on a Gateway entity."""
+
+    _attr_has_entity_name = True
+    _port_details: OmadaGatewayPortStatus | None = None
+    entity_description: GatewayPortSwitchEntityDescription
+
+    def __init__(
+        self,
+        coordinator: OmadaGatewayCoordinator,
+        device: OmadaGateway,
+        port_number: int,
+        entity_description: GatewayPortSwitchEntityDescription,
+    ) -> None:
+        """Initialize the toggle switch."""
+        super().__init__(coordinator, device)
+        self.entity_description = entity_description
+        self._port_number = port_number
+        self._attr_unique_id = f"{device.mac}_{port_number}_{entity_description.key}"
+        self._attr_translation_placeholders = {"port_name": f"{port_number}"}
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self._do_update()
+
+    async def _async_turn_on_off(self, enable: bool) -> None:
+        if self._port_details:
+            self._port_details = await self.entity_description.set_func(
+                self.coordinator.omada_client, self.device, self._port_details, enable
+            )
+        self._attr_is_on = enable
+        # Refresh to make sure the requested changes stuck
+        await self.coordinator.async_request_refresh()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the entity on."""
+        await self._async_turn_on_off(True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the entity off."""
+        await self._async_turn_on_off(False)
+
+    @property
+    def available(self) -> bool:
+        """Return true if entity is available."""
+        return bool(
+            super().available
+            and self._port_details
+            and self.entity_description.exists_func(self._port_details)
+        )
+
+    def _do_update(self) -> None:
+        gateway = self.coordinator.data[self.device.mac]
+
+        port = next(
+            p for p in gateway.port_status if p.port_number == self._port_number
+        )
+        if port:
+            self._port_details = port
+            self._attr_is_on = self.entity_description.update_func(port)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._do_update()
+        self.async_write_ha_state()

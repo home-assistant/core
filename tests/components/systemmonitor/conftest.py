@@ -129,7 +129,21 @@ def mock_psutil(mock_process: list[MockProcess]) -> Generator:
                     "255.255.255.0",
                     "255.255.255.255",
                     None,
-                )
+                ),
+                snicaddr(
+                    socket.AF_INET6,
+                    "fe80::baf2:8a90:4f78:b1cb%end0",
+                    "ffff:ffff:ffff:ffff::",
+                    None,
+                    None,
+                ),
+                snicaddr(
+                    socket.AF_INET6,
+                    "2a00:1f:2103:3a01:3333:2222:1111:0000",
+                    "ffff:ffff:ffff:ffff::",
+                    None,
+                    None,
+                ),
             ],
             "eth1": [
                 snicaddr(

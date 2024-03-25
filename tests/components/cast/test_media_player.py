@@ -116,7 +116,7 @@ async def async_setup_cast(hass, config=None):
     """Set up the cast platform."""
     if config is None:
         config = {}
-    data = {**{"ignore_cec": [], "known_hosts": [], "uuid": []}, **config}
+    data = {"ignore_cec": [], "known_hosts": [], "uuid": [], **config}
     with patch(
         "homeassistant.helpers.entity_platform.EntityPlatform._async_schedule_add_entities_for_entry"
     ) as add_entities:
@@ -754,7 +754,7 @@ async def test_entity_availability(hass: HomeAssistant) -> None:
     assert state.state == "unavailable"
 
 
-@pytest.mark.parametrize(("port", "entry_type"), ((8009, None), (12345, None)))
+@pytest.mark.parametrize(("port", "entry_type"), [(8009, None), (12345, None)])
 async def test_device_registry(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -1261,7 +1261,7 @@ async def test_entity_play_media_sign_URL(hass: HomeAssistant, quick_play_mock) 
 
 @pytest.mark.parametrize(
     ("url", "fixture", "playlist_item"),
-    (
+    [
         # Test title is extracted from m3u playlist
         (
             "https://sverigesradio.se/topsy/direkt/209-hi-mp3.m3u",
@@ -1307,7 +1307,7 @@ async def test_entity_play_media_sign_URL(hass: HomeAssistant, quick_play_mock) 
                 "media_type": "audio",
             },
         ),
-    ),
+    ],
 )
 async def test_entity_play_media_playlist(
     hass: HomeAssistant,

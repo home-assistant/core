@@ -217,18 +217,16 @@ async def async_setup_entry(
         for device_coordinator in device_coordinators.values()
         if device_coordinator.device.device_type in SENSOR_DEVICE_TYPE
     ]
-    entities = []
-    for sensor_device_coordinator in sensor_device_coordinators:
-        for description in SENSOR_TYPES:
-            if description.exists_fn(sensor_device_coordinator.device):
-                entities.append(
-                    YoLinkSensorEntity(
-                        config_entry,
-                        sensor_device_coordinator,
-                        description,
-                    )
-                )
-    async_add_entities(entities)
+    async_add_entities(
+        YoLinkSensorEntity(
+            config_entry,
+            sensor_device_coordinator,
+            description,
+        )
+        for sensor_device_coordinator in sensor_device_coordinators
+        for description in SENSOR_TYPES
+        if description.exists_fn(sensor_device_coordinator.device)
+    )
 
 
 class YoLinkSensorEntity(YoLinkEntity, SensorEntity):

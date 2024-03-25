@@ -45,6 +45,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_mower_1_battery',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
@@ -98,6 +99,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_mower_1_cutting_blade_usage_time',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.034',
   })
@@ -496,6 +498,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_mower_1_mode',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'main_area',
   })
@@ -542,8 +545,9 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_mower_1_next_start',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2023-06-05T19:00:00+00:00',
+    'state': '2023-06-06T02:00:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.test_mower_1_number_of_charging_cycles-entry]
@@ -590,6 +594,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_mower_1_number_of_charging_cycles',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1380',
   })
@@ -638,6 +643,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_mower_1_number_of_collisions',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '11396',
   })
@@ -762,6 +768,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_mower_1_total_charging_time',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1204.000',
   })
@@ -815,6 +822,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_mower_1_total_cutting_time',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1165.000',
   })
@@ -868,6 +876,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_mower_1_total_drive_distance',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1780.272',
   })
@@ -921,6 +930,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_mower_1_total_running_time',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1268.000',
   })
@@ -974,6 +984,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_mower_1_total_searching_time',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '103.000',
   })

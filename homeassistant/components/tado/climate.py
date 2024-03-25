@@ -401,7 +401,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
     def set_timer(
         self,
-        temperature: float | None = None,
+        temperature: float,
         time_period: int | None = None,
         requested_overlay: str | None = None,
     ):
@@ -418,7 +418,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         """Set offset on the entity."""
 
         _LOGGER.debug(
-            "Setting temperature offset for device %s setting to (%d)",
+            "Setting temperature offset for device %s setting to (%.1f)",
             self._device_id,
             offset,
         )
