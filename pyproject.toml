@@ -476,9 +476,6 @@ filterwarnings = [
     # https://github.com/foxel/python_ndms2_client/issues/6 - v0.1.3
     # https://github.com/foxel/python_ndms2_client/pull/8
     "ignore:'telnetlib' is deprecated and slated for removal in Python 3.13:DeprecationWarning:ndms2_client.connection",
-    # https://github.com/pytest-dev/pytest-cov/issues/557 - v4.1.0
-    # Should resolve itself once pytest-xdist 4.0 is released and the option is removed
-    "ignore:The --rsyncdir command line argument and rsyncdirs config variable are deprecated:DeprecationWarning:xdist.plugin",
 
     # -- fixed, waiting for release / update
     # https://github.com/mkmer/AIOAladdinConnect/commit/8851fff4473d80d70ac518db2533f0fbef63b69c - >=0.2.0
