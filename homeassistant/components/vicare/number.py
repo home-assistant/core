@@ -218,8 +218,9 @@ def _build_entities(
 
     return [
         ViCareNumber(
-            circuit,
             device.config,
+            device.api,
+            circuit,
             description,
         )
         for device in device_list
@@ -252,12 +253,13 @@ class ViCareNumber(ViCareEntity, NumberEntity):
 
     def __init__(
         self,
-        api: PyViCareHeatingDeviceComponent,
         device_config: PyViCareDeviceConfig,
+        device: PyViCareDevice,
+        component: PyViCareHeatingDeviceComponent,
         description: ViCareNumberEntityDescription,
     ) -> None:
         """Initialize the number."""
-        super().__init__(device_config, api, description.key)
+        super().__init__(device_config, device, component, description.key)
         self.entity_description = description
 
     @property
