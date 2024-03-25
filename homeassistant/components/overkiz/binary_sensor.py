@@ -113,7 +113,7 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
     ),
     OverkizBinarySensorDescription(
         key=OverkizState.MODBUSLINK_DHW_ABSENCE_MODE,
-        name="Absence Mode",
+        name="Absence mode",
         value_fn=lambda state: state == OverkizCommandParam.ON,
     ),
     OverkizBinarySensorDescription(
