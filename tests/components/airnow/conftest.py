@@ -59,7 +59,8 @@ def mock_api_get_fixture(data):
 @pytest.fixture(name="setup_airnow")
 async def setup_airnow_fixture(hass, config, mock_api_get):
     """Define a fixture to set up AirNow."""
-    with patch("pyairnow.WebServiceAPI._get", mock_api_get), patch(
-        "homeassistant.components.airnow.PLATFORMS", []
+    with (
+        patch("pyairnow.WebServiceAPI._get", mock_api_get),
+        patch("homeassistant.components.airnow.PLATFORMS", []),
     ):
         yield
