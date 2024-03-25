@@ -12,6 +12,9 @@ from zigpy.application import ControllerApplication
 import zigpy.backups
 from zigpy.exceptions import NetworkSettingsInconsistent
 
+from homeassistant.components.homeassistant_connect_zbt1 import (
+    DOMAIN as CONNECT_ZBT1_DOMAIN,
+)
 from homeassistant.components.homeassistant_sky_connect import (
     DOMAIN as SKYCONNECT_DOMAIN,
 )
@@ -38,6 +41,7 @@ from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
 
 SKYCONNECT_DEVICE = "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0"
+CONNECT_ZBT1_DEVICE = "/dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1_9e2adbd75b8beb119fe564a0f320645d-if00-port0"
 
 
 def set_flasher_app_type(app_type: ApplicationType) -> Callable[[Flasher], None]:
@@ -66,6 +70,24 @@ def test_detect_radio_hardware(hass: HomeAssistant) -> None:
     )
     skyconnect_config_entry.add_to_hass(hass)
 
+    connect_zbt1_config_entry = MockConfigEntry(
+        data={
+            "device": CONNECT_ZBT1_DEVICE,
+            "vid": "10C4",
+            "pid": "EA60",
+            "serial_number": "3c0ed67c628beb11b1cd64a0f320645d",
+            "manufacturer": "Nabu Casa",
+            "description": "Home Assistant Connect ZBT-1",
+        },
+        domain=CONNECT_ZBT1_DOMAIN,
+        options={},
+        title="Home Assistant Connect ZBT-1",
+    )
+    connect_zbt1_config_entry.add_to_hass(hass)
+
+    assert (
+        _detect_radio_hardware(hass, CONNECT_ZBT1_DEVICE) == HardwareType.CONNECT_ZBT1
+    )
     assert _detect_radio_hardware(hass, SKYCONNECT_DEVICE) == HardwareType.SKYCONNECT
     assert (
         _detect_radio_hardware(hass, SKYCONNECT_DEVICE + "_foo") == HardwareType.OTHER
@@ -100,6 +122,7 @@ def test_detect_radio_hardware_failure(hass: HomeAssistant) -> None:
     ("detected_hardware", "expected_learn_more_url"),
     [
         (HardwareType.SKYCONNECT, DISABLE_MULTIPAN_URL[HardwareType.SKYCONNECT]),
+        (HardwareType.CONNECT_ZBT1, DISABLE_MULTIPAN_URL[HardwareType.CONNECT_ZBT1]),
         (HardwareType.YELLOW, DISABLE_MULTIPAN_URL[HardwareType.YELLOW]),
         (HardwareType.OTHER, None),
     ],
