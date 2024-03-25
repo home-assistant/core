@@ -482,7 +482,7 @@ def initialize_bot(hass: HomeAssistant, p_config: dict) -> Bot:
                 translation_placeholders={
                     "proxy_params": CONF_PROXY_PARAMS,
                     "proxy_url": CONF_PROXY_URL,
-                    "telegram_bot": DOMAIN,
+                    "telegram_bot": "Telegram bot",
                 },
                 translation_key="proxy_params_auth_deprecation",
                 learn_more_url="https://github.com/home-assistant/core/pull/112778",
@@ -500,7 +500,7 @@ def initialize_bot(hass: HomeAssistant, p_config: dict) -> Bot:
                     "proxy_params": CONF_PROXY_PARAMS,
                     "proxy_url": CONF_PROXY_URL,
                     "httpx": "httpx",
-                    "telegram_bot": DOMAIN,
+                    "telegram_bot": "Telegram bot",
                 },
                 translation_key="proxy_params_deprecation",
                 learn_more_url="https://github.com/home-assistant/core/pull/112778",
