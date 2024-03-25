@@ -3262,9 +3262,22 @@ async def test_eventbus_lazy_object_creation(hass: HomeAssistant) -> None:
 
 async def test_statemachine_report_state(hass: HomeAssistant) -> None:
     """Test report state event."""
+
+    @ha.callback
+    def filter(event_data):
+        """Mock filter."""
+        return True
+
+    @callback
+    def listener(event: ha.Event) -> None:
+        state_reported_events.append(event)
+
     hass.states.async_set("light.bowl", "on", {})
     state_changed_events = async_capture_events(hass, EVENT_STATE_CHANGED)
-    state_reported_events = async_capture_events(hass, EVENT_STATE_REPORTED)
+    state_reported_events = []
+    hass.bus.async_listen(
+        EVENT_STATE_REPORTED, listener, event_filter=filter, run_immediately=True
+    )
 
     hass.states.async_set("light.bowl", "on")
     await hass.async_block_till_done()
@@ -3285,3 +3298,29 @@ async def test_statemachine_report_state(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(state_changed_events) == 3
     assert len(state_reported_events) == 4
+
+
+async def test_report_state_listener_restrictions(hass: HomeAssistant) -> None:
+    """Test we enforce requirements for EVENT_STATE_REPORTED listeners."""
+
+    @ha.callback
+    def listener(event):
+        """Mock listener."""
+
+    @ha.callback
+    def filter(event_data):
+        """Mock filter."""
+        return False
+
+    # run_immediately not set
+    with pytest.raises(HomeAssistantError):
+        hass.bus.async_listen(EVENT_STATE_REPORTED, listener, event_filter=filter)
+
+    # no filter
+    with pytest.raises(HomeAssistantError):
+        hass.bus.async_listen(EVENT_STATE_REPORTED, listener, run_immediately=True)
+
+    # Both filter and run_immediately
+    hass.bus.async_listen(
+        EVENT_STATE_REPORTED, listener, event_filter=filter, run_immediately=True
+    )
