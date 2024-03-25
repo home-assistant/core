@@ -234,7 +234,6 @@ class OmadaDevicePortSwitchEntity(
         coordinator: TCoordinator,
         device: TDevice,
         port_id: int | str,
-        port_name: str,
         entity_description: OmadaDevicePortSwitchEntityDescription[
             TCoordinator, TDevice, TPort
         ],
