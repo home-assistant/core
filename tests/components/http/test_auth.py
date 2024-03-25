@@ -9,6 +9,7 @@ from unittest.mock import Mock, patch
 from aiohttp import BasicAuth, ServerDisconnectedError, web
 from aiohttp.test_utils import TestClient
 from aiohttp.web_exceptions import HTTPUnauthorized
+from aiohttp_session import get_session
 from freezegun.api import FrozenDateTimeFactory
 import jwt
 import pytest
@@ -20,7 +21,7 @@ from homeassistant.auth.providers import trusted_networks
 from homeassistant.auth.providers.legacy_api_password import (
     LegacyApiPasswordAuthProvider,
 )
-from homeassistant.auth.session import TEMP_TIMEOUT
+from homeassistant.auth.session import SESSION_ID, TEMP_TIMEOUT
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_HASS
 from homeassistant.components.http.auth import (
@@ -691,6 +692,7 @@ async def test_strict_connection_non_cloud_authenticated_requestes(
     client = await aiohttp_client(app_strict_connection)
     refresh_token = hass.auth.async_validate_access_token(hass_access_token)
     assert refresh_token
+    assert hass.auth.session._strict_connection_sessions == {}
 
     signed_path = async_sign_path(
         hass, "/", timedelta(seconds=5), refresh_token_id=refresh_token.id
@@ -721,6 +723,7 @@ async def test_strict_connection_non_cloud_local_unauthenticated_requests(
     await async_setup_auth(hass, app_strict_connection, strict_connection_mode)
     set_mock_ip = mock_real_ip(app_strict_connection)
     client = await aiohttp_client(app_strict_connection)
+    assert hass.auth.session._strict_connection_sessions == {}
 
     for remote_addr in (*LOCALHOST_ADDRESSES, *PRIVATE_ADDRESSES):
         set_mock_ip(remote_addr)
@@ -743,7 +746,8 @@ def _add_set_cookie_endpoint(app: web.Application, refresh_token: RefreshToken) 
             await hass.auth.session.async_create_session(request, refresh_token)
         else:
             await hass.auth.session.async_create_temp_unauthorized_session(request)
-        return web.Response()
+        session = await get_session(request)
+        return web.Response(text=session[SESSION_ID])
 
     app.router.add_get("/test/cookie", set_cookie)
 
@@ -760,6 +764,10 @@ async def _test_strict_connection_non_cloud_enabled_external_unauthenticated_req
     """Test external unauthenticated requests with strict connection non cloud enabled."""
     refresh_token = hass.auth.async_validate_access_token(hass_access_token)
     assert refresh_token
+    session = hass.auth.session
+    assert session._strict_connection_sessions == {}
+    assert session._temp_sessions == {}
+
     _add_set_cookie_endpoint(app, refresh_token)
     await async_setup_auth(hass, app, strict_connection_mode)
     set_mock_ip = mock_real_ip(app)
@@ -771,7 +779,8 @@ async def _test_strict_connection_non_cloud_enabled_external_unauthenticated_req
 
     # set strict connection cookie with refresh token
     set_mock_ip(LOCALHOST_ADDRESSES[0])
-    await client.get("/test/cookie?token=refresh")
+    session_id = await (await client.get("/test/cookie?token=refresh")).text()
+    assert session._strict_connection_sessions == {session_id: refresh_token.id}
     for remote_addr in EXTERNAL_ADDRESSES:
         set_mock_ip(remote_addr)
         req = await client.get("/")
@@ -780,14 +789,16 @@ async def _test_strict_connection_non_cloud_enabled_external_unauthenticated_req
 
     # Invalidate refresh token, which should also invalidate session
     hass.auth.async_remove_refresh_token(refresh_token)
-    assert hass.auth.session._strict_connection_sessions == {}
+    assert session._strict_connection_sessions == {}
     for remote_addr in EXTERNAL_ADDRESSES:
         set_mock_ip(remote_addr)
         await perform_unauthenticatd_request(client)
 
     # set strict connection cookie with temp session
+    assert session._temp_sessions == {}
     set_mock_ip(LOCALHOST_ADDRESSES[0])
-    await client.get("/test/cookie?token=temp")
+    session_id = await (await client.get("/test/cookie?token=temp")).text()
+    assert session_id in session._temp_sessions
     for remote_addr in EXTERNAL_ADDRESSES:
         set_mock_ip(remote_addr)
         req = await client.get("/")
@@ -798,7 +809,7 @@ async def _test_strict_connection_non_cloud_enabled_external_unauthenticated_req
     async_fire_time_changed(hass)
     # await hass.async_block_till_done()
 
-    assert hass.auth.session._temp_sessions == {}
+    assert session._temp_sessions == {}
     for remote_addr in EXTERNAL_ADDRESSES:
         set_mock_ip(remote_addr)
         await perform_unauthenticatd_request(client)
