@@ -2,7 +2,6 @@
 
 from datetime import timedelta
 import logging
-import traceback
 
 from ttn_client import TTNAuthError, TTNClient
 
@@ -65,10 +64,6 @@ class TTNCoordinator(DataUpdateCoordinator[TTNClient.DATA_TYPE]):
             # and start a config flow with SOURCE_REAUTH (async_step_reauth)
             _LOGGER.error("TTNAuthError")
             raise ConfigEntryAuthFailed from err
-        except Exception as err:
-            _LOGGER.error(err)
-            _LOGGER.error(traceback.format_exc())
-            raise
 
     async def _push_callback(self, data: TTNClient.DATA_TYPE) -> None:
         _LOGGER.debug("pushed data: %s", data)

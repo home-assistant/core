@@ -9,14 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_APP_ID,
-    CONF_HOSTNAME,
-    DOMAIN,
-    ENTRY_DATA_COORDINATOR,
-    PLATFORMS,
-    TTN_API_HOSTNAME,
-)
+from .const import CONF_APP_ID, CONF_HOSTNAME, DOMAIN, PLATFORMS, TTN_API_HOSTNAME
 from .coordinator import TTNCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,7 +37,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             is_fixable=False,
             severity=ir.IssueSeverity.ERROR,
             translation_key="manual_migration",
-            translation_placeholders={"domain": DOMAIN},
+            translation_placeholders={
+                "domain": DOMAIN,
+                "v2_v3_migration_url": "https://www.thethingsnetwork.org/forum/c/v2-to-v3-upgrade/102",
+                "v2_deprecation_url": "https://www.thethingsnetwork.org/forum/t/the-things-network-v2-is-permanently-shutting-down-completed/50710",
+            },
         )
 
     return True
@@ -61,15 +58,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Create coordinator to fetch TTN updates
     coordinator = TTNCoordinator(hass, entry)
-    hass.data.setdefault(DOMAIN, {}).setdefault(entry.entry_id, {})[
-        ENTRY_DATA_COORDINATOR
-    ] = coordinator
-
-    # Trigger the creation of entities for each supported platform
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Fetch all existing values in the TTN storage DB - NOTE: the free TTN only keeps 24 hours
     await coordinator.async_config_entry_first_refresh()
+
+    # Store the coordinator - support for multiple entries so indexing by entry_id
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+
+    # Trigger the creation of entities for each supported platform
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
