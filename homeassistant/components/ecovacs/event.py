@@ -24,10 +24,8 @@ async def async_setup_entry(
     """Add entities for passed config_entry in HA."""
     controller: EcovacsController = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
-        [
-            EcovacsLastJobEventEntity(device)
-            for device in controller.devices(Capabilities)
-        ]
+        EcovacsLastJobEventEntity(device)
+        for device in controller.devices(Capabilities)
     )
 
 
