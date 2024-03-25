@@ -17,18 +17,20 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import help_test_all, import_and_test_deprecated_constant_enum
+from tests.common import (
+    help_test_all,
+    import_and_test_deprecated_constant_enum,
+    setup_test_component_platform,
+)
 from tests.components.cover.common import MockCover
-from tests.components.cover.conftest import SetupCoverPlatformCallable
 
 
 async def test_services(
     hass: HomeAssistant,
-    setup_cover_platform: SetupCoverPlatformCallable,
     mock_cover_entities: list[MockCover],
 ) -> None:
     """Test the provided services."""
-    setup_cover_platform()
+    setup_test_component_platform(hass, cover.DOMAIN, mock_cover_entities)
 
     assert await async_setup_component(
         hass, cover.DOMAIN, {cover.DOMAIN: {CONF_PLATFORM: "test"}}

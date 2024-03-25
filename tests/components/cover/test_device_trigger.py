@@ -28,9 +28,9 @@ from tests.common import (
     async_get_device_automation_capabilities,
     async_get_device_automations,
     async_mock_service,
+    setup_test_component_platform,
 )
 from tests.components.cover.common import MockCover
-from tests.components.cover.conftest import SetupCoverPlatformCallable
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -177,11 +177,10 @@ async def test_get_trigger_capabilities(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    setup_cover_platform: SetupCoverPlatformCallable,
     mock_cover_entities: list[MockCover],
 ) -> None:
     """Test we get the expected capabilities from a cover trigger."""
-    setup_cover_platform()
+    setup_test_component_platform(hass, DOMAIN, mock_cover_entities)
     ent = mock_cover_entities[0]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
@@ -215,11 +214,10 @@ async def test_get_trigger_capabilities_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    setup_cover_platform: SetupCoverPlatformCallable,
     mock_cover_entities: list[MockCover],
 ) -> None:
     """Test we get the expected capabilities from a cover trigger."""
-    setup_cover_platform()
+    setup_test_component_platform(hass, DOMAIN, mock_cover_entities)
     ent = mock_cover_entities[0]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
@@ -254,11 +252,10 @@ async def test_get_trigger_capabilities_set_pos(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    setup_cover_platform: SetupCoverPlatformCallable,
     mock_cover_entities: list[MockCover],
 ) -> None:
     """Test we get the expected capabilities from a cover trigger."""
-    setup_cover_platform()
+    setup_test_component_platform(hass, DOMAIN, mock_cover_entities)
     ent = mock_cover_entities[1]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
@@ -319,11 +316,10 @@ async def test_get_trigger_capabilities_set_tilt_pos(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    setup_cover_platform: SetupCoverPlatformCallable,
     mock_cover_entities: list[MockCover],
 ) -> None:
     """Test we get the expected capabilities from a cover trigger."""
-    setup_cover_platform()
+    setup_test_component_platform(hass, DOMAIN, mock_cover_entities)
     ent = mock_cover_entities[3]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
@@ -665,12 +661,11 @@ async def test_if_fires_on_position(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
-    setup_cover_platform: SetupCoverPlatformCallable,
     mock_cover_entities: list[MockCover],
+    calls,
 ) -> None:
     """Test for position triggers."""
-    setup_cover_platform()
+    setup_test_component_platform(hass, DOMAIN, mock_cover_entities)
     ent = mock_cover_entities[1]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
@@ -782,11 +777,11 @@ async def test_if_fires_on_position(
     ) == sorted(
         [
             (
-                "is_pos_gt_45_lt_90 - device - cover.set_position_cover - closed - open"
+                f"is_pos_gt_45_lt_90 - device - {entry.entity_id} - closed - open"
                 " - None"
             ),
-            "is_pos_lt_90 - device - cover.set_position_cover - closed - open - None",
-            "is_pos_gt_45 - device - cover.set_position_cover - open - closed - None",
+            f"is_pos_lt_90 - device - {entry.entity_id} - closed - open - None",
+            f"is_pos_gt_45 - device - {entry.entity_id} - open - closed - None",
         ]
     )
 
@@ -801,7 +796,7 @@ async def test_if_fires_on_position(
     assert len(calls) == 4
     assert (
         calls[3].data["some"]
-        == "is_pos_lt_90 - device - cover.set_position_cover - closed - closed - None"
+        == f"is_pos_lt_90 - device - {entry.entity_id} - closed - closed - None"
     )
 
     hass.states.async_set(
@@ -811,7 +806,7 @@ async def test_if_fires_on_position(
     assert len(calls) == 5
     assert (
         calls[4].data["some"]
-        == "is_pos_gt_45 - device - cover.set_position_cover - closed - closed - None"
+        == f"is_pos_gt_45 - device - {entry.entity_id} - closed - closed - None"
     )
 
 
@@ -820,11 +815,10 @@ async def test_if_fires_on_tilt_position(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls,
-    setup_cover_platform: SetupCoverPlatformCallable,
     mock_cover_entities: list[MockCover],
 ) -> None:
     """Test for tilt position triggers."""
-    setup_cover_platform()
+    setup_test_component_platform(hass, DOMAIN, mock_cover_entities)
     ent = mock_cover_entities[1]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
@@ -938,11 +932,11 @@ async def test_if_fires_on_tilt_position(
     ) == sorted(
         [
             (
-                "is_pos_gt_45_lt_90 - device - cover.set_position_cover - closed - open"
+                f"is_pos_gt_45_lt_90 - device - {entry.entity_id} - closed - open"
                 " - None"
             ),
-            "is_pos_lt_90 - device - cover.set_position_cover - closed - open - None",
-            "is_pos_gt_45 - device - cover.set_position_cover - open - closed - None",
+            f"is_pos_lt_90 - device - {entry.entity_id} - closed - open - None",
+            f"is_pos_gt_45 - device - {entry.entity_id} - open - closed - None",
         ]
     )
 
@@ -957,7 +951,7 @@ async def test_if_fires_on_tilt_position(
     assert len(calls) == 4
     assert (
         calls[3].data["some"]
-        == "is_pos_lt_90 - device - cover.set_position_cover - closed - closed - None"
+        == f"is_pos_lt_90 - device - {entry.entity_id} - closed - closed - None"
     )
 
     hass.states.async_set(
@@ -967,5 +961,5 @@ async def test_if_fires_on_tilt_position(
     assert len(calls) == 5
     assert (
         calls[4].data["some"]
-        == "is_pos_gt_45 - device - cover.set_position_cover - closed - closed - None"
+        == f"is_pos_gt_45 - device - {entry.entity_id} - closed - closed - None"
     )

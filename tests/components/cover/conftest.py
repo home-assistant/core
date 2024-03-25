@@ -1,18 +1,10 @@
 """Fixtures for cover entity components tests."""
-from collections.abc import Callable
 
 import pytest
 
-from homeassistant.components.cover import DOMAIN, CoverEntityFeature
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.components.cover import CoverEntityFeature
 
 from .common import MockCover
-
-from tests.common import MockPlatform, mock_platform
-
-SetupCoverPlatformCallable = Callable[[list[MockCover] | None], None]
 
 
 @pytest.fixture
@@ -79,30 +71,3 @@ def mock_cover_entities() -> list[MockCover]:
             reports_opening_closing=True,
         ),
     ]
-
-
-@pytest.fixture
-def setup_cover_platform(
-    hass: HomeAssistant, mock_cover_entities: list[MockCover]
-) -> SetupCoverPlatformCallable:
-    """Set up the mock cover entity platform."""
-
-    def _setup(entities: list[MockCover] | None = None) -> None:
-        """Set up the mock cover entity platform."""
-
-        async def async_setup_platform(
-            hass: HomeAssistant,
-            config: ConfigType,
-            async_add_entities: AddEntitiesCallback,
-            discovery_info: DiscoveryInfoType | None = None,
-        ) -> None:
-            """Set up test cover platform."""
-            async_add_entities(entities if entities else mock_cover_entities)
-
-        mock_platform(
-            hass,
-            f"test.{DOMAIN}",
-            MockPlatform(async_setup_platform=async_setup_platform),
-        )
-
-    return _setup

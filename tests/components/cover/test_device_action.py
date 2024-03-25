@@ -17,9 +17,9 @@ from tests.common import (
     async_get_device_automation_capabilities,
     async_get_device_automations,
     async_mock_service,
+    setup_test_component_platform,
 )
 from tests.components.cover.common import MockCover
-from tests.components.cover.conftest import SetupCoverPlatformCallable
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -147,7 +147,6 @@ async def test_get_action_capabilities(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    setup_cover_platform: SetupCoverPlatformCallable,
 ) -> None:
     """Test we get the expected capabilities from a cover action."""
     ent = MockCover(
@@ -162,7 +161,7 @@ async def test_get_action_capabilities(
         | CoverEntityFeature.CLOSE_TILT
         | CoverEntityFeature.STOP_TILT,
     )
-    setup_cover_platform([ent])
+    setup_test_component_platform(hass, DOMAIN, [ent])
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -193,7 +192,6 @@ async def test_get_action_capabilities_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    setup_cover_platform: SetupCoverPlatformCallable,
 ) -> None:
     """Test we get the expected capabilities from a cover action."""
     ent = MockCover(
@@ -208,7 +206,7 @@ async def test_get_action_capabilities_legacy(
         | CoverEntityFeature.CLOSE_TILT
         | CoverEntityFeature.STOP_TILT,
     )
-    setup_cover_platform([ent])
+    setup_test_component_platform(hass, DOMAIN, [ent])
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -240,11 +238,10 @@ async def test_get_action_capabilities_set_pos(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    setup_cover_platform: SetupCoverPlatformCallable,
     mock_cover_entities: list[MockCover],
 ) -> None:
     """Test we get the expected capabilities from a cover action."""
-    setup_cover_platform()
+    setup_test_component_platform(hass, DOMAIN, mock_cover_entities)
     ent = mock_cover_entities[1]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
@@ -291,11 +288,10 @@ async def test_get_action_capabilities_set_tilt_pos(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    setup_cover_platform: SetupCoverPlatformCallable,
     mock_cover_entities: list[MockCover],
 ) -> None:
     """Test we get the expected capabilities from a cover action."""
-    setup_cover_platform()
+    setup_test_component_platform(hass, DOMAIN, mock_cover_entities)
     ent = mock_cover_entities[3]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
@@ -348,7 +344,6 @@ async def test_action(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    setup_cover_platform: SetupCoverPlatformCallable,
     mock_cover_entities: list[MockCover],
 ) -> None:
     """Test for cover actions."""
@@ -436,7 +431,6 @@ async def test_action_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    setup_cover_platform: SetupCoverPlatformCallable,
     mock_cover_entities: list[MockCover],
 ) -> None:
     """Test for cover actions."""
@@ -484,7 +478,6 @@ async def test_action_tilt(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    setup_cover_platform: SetupCoverPlatformCallable,
     mock_cover_entities: list[MockCover],
 ) -> None:
     """Test for cover tilt actions."""
@@ -556,7 +549,6 @@ async def test_action_set_position(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    setup_cover_platform: SetupCoverPlatformCallable,
     mock_cover_entities: list[MockCover],
 ) -> None:
     """Test for cover set position actions."""
