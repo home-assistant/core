@@ -107,7 +107,7 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
     ),
     OverkizBinarySensorDescription(
         key=OverkizState.CORE_HEATING_STATUS,
-        name="Heating Status",
+        name="Heating status",
         device_class=BinarySensorDeviceClass.HEAT,
         value_fn=lambda state: state == OverkizCommandParam.ON,
     ),
