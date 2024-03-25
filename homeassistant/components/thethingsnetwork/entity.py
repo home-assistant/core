@@ -59,6 +59,8 @@ class TTNEntity(CoordinatorEntity[TTNCoordinator]):
             _LOGGER.debug(
                 "Received update for %s: %s", self.unique_id, my_entity_update
             )
+            # Assume the type of an entity has not changed since the creation
+            assert isinstance(my_entity_update, TTNSensorValue)
             self._ttn_value = my_entity_update
             self.async_write_ha_state()
 
