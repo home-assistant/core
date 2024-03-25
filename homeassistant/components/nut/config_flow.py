@@ -212,7 +212,7 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
             new_config = {
                 **existing_data,
                 # Username/password are optional and some servers
-                # user ip based authentication and will fail if
+                # use ip based authentication and will fail if
                 # username/password are provided
                 CONF_USERNAME: user_input.get(CONF_USERNAME),
                 CONF_PASSWORD: user_input.get(CONF_PASSWORD),
