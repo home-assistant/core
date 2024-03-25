@@ -1,4 +1,5 @@
 """The Things Network's integration sensors."""
+
 import logging
 
 from ttn_client import TTNSensorValue
