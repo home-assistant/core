@@ -237,6 +237,7 @@ class OmadaDevicePortSwitchEntity(
         entity_description: OmadaDevicePortSwitchEntityDescription[
             TCoordinator, TDevice, TPort
         ],
+        port_name: str | None,
     ) -> None:
         """Initialize the toggle switch."""
         super().__init__(coordinator, device)
