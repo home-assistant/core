@@ -100,7 +100,7 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
     OverkizNumberDescription(
         key=OverkizState.CORE_TARGET_DWH_TEMPERATURE,
         name="Target Temperature",
-        icon="mdi:thermometer",
+        device_class=NumberDeviceClass.TEMPERATURE,
         command="setTargetDHWTemperature",
         native_min_value=50,
         native_max_value=65,
