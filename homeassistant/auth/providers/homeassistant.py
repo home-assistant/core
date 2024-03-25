@@ -55,6 +55,13 @@ class InvalidUser(HomeAssistantError):
     """
 
 
+class InvalidUsername(HomeAssistantError):
+    """Raised when invalid username is specified.
+
+    Will not be raised when validating authentication.
+    """
+
+
 class Data:
     """Hold the user data."""
 
@@ -71,9 +78,11 @@ class Data:
         self.is_legacy = False
 
     @callback
-    def normalize_username(self, username: str) -> str:
+    def normalize_username(
+        self, username: str, *, force_normalize: bool = False
+    ) -> str:
         """Normalize a username based on the mode."""
-        if self.is_legacy:
+        if self.is_legacy and not force_normalize:
             return username
 
         return username.strip().casefold()
@@ -162,13 +171,11 @@ class Data:
         return hashed
 
     def add_auth(self, username: str, password: str) -> None:
-        """Add a new authenticated user/pass."""
-        username = self.normalize_username(username)
+        """Add a new authenticated user/pass.
 
-        if any(
-            self.normalize_username(user["username"]) == username for user in self.users
-        ):
-            raise InvalidUser
+        Raises InvalidUsername if the new username is invalid.
+        """
+        self._validate_new_username(username)
 
         self.users.append(
             {
@@ -203,6 +210,47 @@ class Data:
         for user in self.users:
             if self.normalize_username(user["username"]) == username:
                 user["password"] = self.hash_password(new_password, True).decode()
+                break
+        else:
+            raise InvalidUser
+
+    def _validate_new_username(self, new_username: str) -> None:
+        """Validate that username is normalized and unique.
+
+        Raises InvalidUsername if the new username is invalid.
+        """
+        normalized_username = self.normalize_username(
+            new_username, force_normalize=True
+        )
+        if normalized_username != new_username:
+            raise InvalidUsername(
+                f'Username "{new_username}" is not normalized',
+                translation_domain="auth",
+                translation_key="username_not_normalized",
+            )
+
+        if any(
+            self.normalize_username(user["username"]) == normalized_username
+            for user in self.users
+        ):
+            raise InvalidUsername(
+                "Username already exists",
+                translation_domain="auth",
+                translation_key="username_exists",
+            )
+
+    def change_username(self, username: str, new_username: str) -> None:
+        """Update the username.
+
+        Raises InvalidUser if user cannot be found.
+        Raises InvalidUsername if the new username is invalid.
+        """
+        username = self.normalize_username(username)
+        self._validate_new_username(new_username)
+
+        for user in self.users:
+            if self.normalize_username(user["username"]) == username:
+                user["username"] = new_username
                 break
         else:
             raise InvalidUser
@@ -275,6 +323,17 @@ class HassAuthProvider(AuthProvider):
 
         await self.hass.async_add_executor_job(
             self.data.change_password, username, new_password
+        )
+        await self.data.async_save()
+
+    async def async_change_username(self, username: str, new_username: str) -> None:
+        """Call change_username on data."""
+        if self.data is None:
+            await self.async_initialize()
+            assert self.data is not None
+
+        await self.hass.async_add_executor_job(
+            self.data.change_username, username, new_username
         )
         await self.data.async_save()
 
