@@ -36,8 +36,26 @@ class AtlanticDHW(OverkizEntity, WaterHeaterEntity):
         | WaterHeaterEntityFeature.ON_OFF
     )
     _attr_operation_list = [*OVERKIZ_TO_OPERATION_MODE.keys()]
-    _attr_min_temp = 50.0
-    _attr_max_temp = 65.0
+
+    @property
+    def max_temp(self) -> float:
+        """Return the maximum temperature."""
+        return cast(
+            float,
+            self.executor.select_state(
+                OverkizState.CORE_MAXIMAL_TEMPERATURE_MANUAL_MODE
+            ),
+        )
+
+    @property
+    def min_temp(self) -> float:
+        """Return the minimum temperature."""
+        return cast(
+            float,
+            self.executor.select_state(
+                OverkizState.CORE_MINIMAL_TEMPERATURE_MANUAL_MODE
+            ),
+        )
 
     @property
     def current_temperature(self) -> float:
