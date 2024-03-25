@@ -18,7 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import RomyVacuumCoordinator
@@ -88,7 +87,7 @@ async def async_setup_entry(
     )
 
 
-class RomySensor(RomyEntity, CoordinatorEntity[RomyVacuumCoordinator], SensorEntity):
+class RomySensor(RomyEntity, SensorEntity):
     """RomySensor Class."""
 
     entity_description: SensorEntityDescription
@@ -99,8 +98,7 @@ class RomySensor(RomyEntity, CoordinatorEntity[RomyVacuumCoordinator], SensorEnt
         entity_description: SensorEntityDescription,
     ) -> None:
         """Initialize ROMYs StatusSensor."""
-        RomyEntity.__init__(self, coordinator.romy)
-        CoordinatorEntity.__init__(self, coordinator)
+        super().__init__(coordinator)
         self._attr_unique_id = f"{entity_description.key}_{self.romy.unique_id}"
         self.entity_description = entity_description
 
