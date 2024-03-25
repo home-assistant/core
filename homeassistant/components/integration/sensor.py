@@ -319,7 +319,8 @@ class IntegrationSensor(RestoreSensor):
         """Multiply source_unit with time unit of the integral.
 
         Possibly cancelling out a time unit in the denominator of the source_unit.
-        Note that this is a heuristic string manipulation method and might not transform any source_unit in a sensible way.
+        Note that this is a heuristic string manipulation method and might not
+        transform all source units in a sensible way.
 
         Examples:
         - Speed to distance: 'km/h' and 'h' will be transformed to 'km'
