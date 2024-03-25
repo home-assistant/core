@@ -3,7 +3,6 @@
 import asyncio
 from copy import deepcopy
 from datetime import datetime, timedelta
-from functools import partial
 import json
 import ssl
 from typing import Any, TypedDict
@@ -82,12 +81,6 @@ class _DebugInfo(TypedDict):
 
     domain: str
     config: _DebugDeviceInfo
-
-
-class RecordCallsPartial(partial[Any]):
-    """Wrapper class for partial."""
-
-    __name__ = "RecordCallPartialTest"
 
 
 @pytest.fixture(autouse=True)
