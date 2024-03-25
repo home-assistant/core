@@ -12,6 +12,7 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -180,6 +181,19 @@ class SchemaCommonFlowHandler:
             # User input was validated successfully, update options
             self._update_and_remove_omitted_optional_keys(
                 self._options, user_input, data_schema
+            )
+
+        if step_id == SOURCE_REAUTH and user_input is not None:
+            # Re-auth was validated; update the config entry, schedule reload and abort
+            hass = self.parent_handler.hass
+            entry = hass.config_entries.async_get_entry(
+                self.parent_handler.context["entry_id"]
+            )
+            assert entry
+            return cast(
+                SchemaConfigFlowHandler, self.parent_handler
+            ).async_update_reload_and_abort(
+                entry, options={**entry.options, **user_input}
             )
 
         if user_input is not None or form_step.schema is None:
