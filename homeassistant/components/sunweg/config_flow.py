@@ -6,7 +6,7 @@ from sunweg.api import APIHelper, SunWegApiError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_UNIQUE_ID, CONF_USERNAME
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
 from .const import CONF_PLANT_ID, DOMAIN
@@ -123,7 +123,7 @@ class SunWEGConfigFlow(ConfigFlow, domain=DOMAIN):
         if conf_result is not None:
             return conf_result
 
-        entry = await self.async_set_unique_id(self.context[CONF_UNIQUE_ID])
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         if entry is not None:
             data: Mapping[str, Any] = self.data
             self.hass.config_entries.async_update_entry(entry, data=data)
