@@ -81,18 +81,19 @@ class TTNFlowHandler(ConfigFlow, domain=DOMAIN):
             else:
                 user_input = {CONF_HOSTNAME: TTN_API_HOSTNAME}
 
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_HOSTNAME, default=user_input[CONF_HOSTNAME]): str,
-                vol.Required(CONF_APP_ID, default=user_input.get(CONF_APP_ID)): str,
-                vol.Required(
-                    CONF_API_KEY, default=user_input.get(CONF_API_KEY)
-                ): TextSelector(
-                    TextSelectorConfig(
-                        type=TextSelectorType.PASSWORD, autocomplete="api_key"
-                    )
-                ),
-            }
+        schema = self.add_suggested_values_to_schema(
+            vol.Schema(
+                {
+                    vol.Required(CONF_HOSTNAME): str,
+                    vol.Required(CONF_APP_ID): str,
+                    vol.Required(CONF_API_KEY): TextSelector(
+                        TextSelectorConfig(
+                            type=TextSelectorType.PASSWORD, autocomplete="api_key"
+                        )
+                    ),
+                }
+            ),
+            user_input,
         )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 

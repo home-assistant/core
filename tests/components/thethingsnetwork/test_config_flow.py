@@ -13,6 +13,7 @@ from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import add_schema_suggestion
 from .conftest import API_KEY, APP_ID, CONFIG_ENTRY, HOSTNAME
 
 USER_DATA = {CONF_HOSTNAME: HOSTNAME, CONF_APP_ID: APP_ID, CONF_API_KEY: API_KEY}
@@ -32,7 +33,8 @@ async def test_user(
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    user_data = result["data_schema"](USER_DATA_PARTIAL)
+    schema = result["data_schema"]
+    user_data = schema(add_schema_suggestion(schema.schema, USER_DATA_PARTIAL))
     assert user_data[CONF_HOSTNAME] == TTN_API_HOSTNAME  # Default value
 
     user_data[CONF_HOSTNAME] = HOSTNAME  # Change default value
@@ -97,7 +99,8 @@ async def test_step_reauth(
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    user_data = result["data_schema"]({})
+    schema = result["data_schema"]
+    user_data = schema(add_schema_suggestion(schema.schema, {}))
     assert user_data[CONF_API_KEY] == API_KEY  # Default value
     new_api_key = "1234"
     user_data[CONF_API_KEY] = new_api_key  # Change default value
