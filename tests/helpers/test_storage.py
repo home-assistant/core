@@ -984,3 +984,40 @@ async def test_store_manager_caching(tmpdir: py.path.local) -> None:
         assert await integration2.async_load() == {"integration2": "updated2"}
 
         await hass.async_stop(force=True)
+
+    # Now remove the stores
+    async with async_test_home_assistant(config_dir=config_dir) as hass:
+        store_manager = storage.get_internal_store_manager(hass)
+        await store_manager.async_initialize()
+        await store_manager.async_preload(["integration1", "integration2"])
+
+        integration1 = storage.Store(hass, 1, "integration1")
+        assert integration1._manager is store_manager
+        assert await integration1.async_load() == {"integration1": "updated2"}
+
+        integration2 = storage.Store(hass, 1, "integration2")
+        assert integration2._manager is store_manager
+        assert await integration2.async_load() == {"integration2": "updated2"}
+
+        await integration1.async_remove()
+        await integration2.async_remove()
+
+        assert store_manager.async_fetch("integration1") is None
+        assert store_manager.async_fetch("integration2") is None
+
+        assert await integration1.async_load() is None
+        assert await integration2.async_load() is None
+
+        await hass.async_stop(force=True)
+
+    # Now make sure the stores are removed and another run works
+    async with async_test_home_assistant(config_dir=config_dir) as hass:
+        store_manager = storage.get_internal_store_manager(hass)
+        await store_manager.async_initialize()
+        await store_manager.async_preload(["integration1"])
+        result = store_manager.async_fetch("integration1")
+        assert result is not None
+        exists, data = result
+        assert exists is False
+        assert data is None
+        await hass.async_stop(force=True)

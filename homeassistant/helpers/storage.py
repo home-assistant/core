@@ -547,6 +547,7 @@ class Store(Generic[_T]):
 
     async def async_remove(self) -> None:
         """Remove all data."""
+        self._manager.async_invalidate(self.key)
         self._async_cleanup_delay_listener()
         self._async_cleanup_final_write_listener()
 
