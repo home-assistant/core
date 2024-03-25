@@ -151,9 +151,16 @@ class _StoreManager:
         self, key: str
     ) -> tuple[bool, json_util.JsonValueType | None] | None:
         """Fetch data from cache."""
+        #
         # If the key is invalidated, we don't need to check the cache
         # If async_initialize has not been called yet, we don't know
         # if the file exists or not so its a cache miss
+        #
+        # It is very important that we check if self._files is None
+        # because we do not want to incorrectly return a cache miss
+        # because async_initialize has not been called yet as it would
+        # cause the Store to return None when it should not.
+        #
         if "/" in key or key in self._invalidated or self._files is None:
             _LOGGER.debug("%s: Cache miss", key)
             return None
