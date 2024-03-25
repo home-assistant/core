@@ -3,14 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
-    StateType,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -19,7 +17,7 @@ from homeassistant.const import (
     UnitOfInformation,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -283,6 +281,7 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
         self._attr_unique_id = (
             f"{coordinator.config_entry.entry_id}-{sensor_label}-{description.key}"
         )
+        self._update_native_value()
 
     @property
     def available(self) -> bool:
@@ -296,13 +295,18 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
             )
         return False
 
-    @property
-    def native_value(self) -> StateType:
-        """Return the state of the resources."""
-        value = self.coordinator.data[self.entity_description.type]
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_native_value()
+        super()._handle_coordinator_update()
 
-        if isinstance(value.get(self._sensor_label), dict):
-            return cast(
-                StateType, value[self._sensor_label][self.entity_description.key]
-            )
-        return cast(StateType, value[self.entity_description.key])
+    def _update_native_value(self) -> None:
+        """Update sensor native value from coordinator data."""
+        data = self.coordinator.data[self.entity_description.type]
+        if isinstance(data.get(self._sensor_label), dict):
+            self._attr_native_value = data[self._sensor_label][
+                self.entity_description.key
+            ]
+        else:
+            self._attr_native_value = data[self.entity_description.key]
