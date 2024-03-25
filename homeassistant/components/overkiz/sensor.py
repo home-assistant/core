@@ -408,7 +408,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_CONTROL_WATER_TARGET_TEMPERATURE,
-        name="Control Water Target Temperature",
+        name="Control water target temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
