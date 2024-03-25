@@ -859,10 +859,10 @@ async def test_store_manager_caching(tmpdir: py.path.local) -> None:
         config_dir = tmpdir.mkdir("temp_config")
         tmp_storage = config_dir.mkdir(".storage")
         tmp_storage.join("integration1").write_binary(
-            json_bytes({"data": {"integration1": "integration1"}})
+            json_bytes({"data": {"integration1": "integration1"}, "version": 1})
         )
         tmp_storage.join("integration2").write_binary(
-            json_bytes({"data": {"integration2": "integration2"}})
+            json_bytes({"data": {"integration2": "integration2"}, "version": 1})
         )
         return config_dir
 
@@ -906,7 +906,7 @@ async def test_store_manager_caching(tmpdir: py.path.local) -> None:
         assert result is not None
         exists, data = result
         assert exists is True
-        assert data == {"data": {"integration2": "integration2"}}
+        assert data == {"data": {"integration2": "integration2"}, "version": 1}
 
         assert (
             store_manager.async_fetch("integration3") is not None
@@ -1020,4 +1020,29 @@ async def test_store_manager_caching(tmpdir: py.path.local) -> None:
         exists, data = result
         assert exists is False
         assert data is None
+        await hass.async_stop(force=True)
+
+
+async def test_store_manager_sub_dirs(tmpdir: py.path.local) -> None:
+    """Test store manager ignores subdirs."""
+    loop = asyncio.get_running_loop()
+
+    def _setup_mock_storage():
+        config_dir = tmpdir.mkdir("temp_config")
+        sub_dir_storage = config_dir.mkdir(".storage").mkdir("subdir")
+
+        sub_dir_storage.join("integration1").write_binary(
+            json_bytes({"data": {"integration1": "integration1"}, "version": 1})
+        )
+        return config_dir
+
+    config_dir = await loop.run_in_executor(None, _setup_mock_storage)
+
+    async with async_test_home_assistant(config_dir=config_dir) as hass:
+        store_manager = storage.get_internal_store_manager(hass)
+        await store_manager.async_initialize()
+        assert store_manager.async_fetch("subdir/integration1") is None
+        assert store_manager.async_fetch("subdir/integrationx") is None
+        integration1 = storage.Store(hass, 1, "subdir/integration1")
+        assert await integration1.async_load() == {"integration1": "integration1"}
         await hass.async_stop(force=True)
