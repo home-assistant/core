@@ -111,7 +111,7 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
     OverkizNumberDescription(
         key=OverkizState.CORE_WATER_TARGET_TEMPERATURE,
         name="Water Target Temperature",
-        icon="mdi:thermometer",
+        device_class=NumberDeviceClass.TEMPERATURE,
         command=OverkizCommand.SET_WATER_TARGET_TEMPERATURE,
         native_min_value=50,
         native_max_value=65,
