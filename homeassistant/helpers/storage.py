@@ -127,7 +127,7 @@ class _StoreManager:
         """Initialize the storage manager."""
         hass = self._hass
         await hass.async_add_executor_job(self._initialize_files)
-        hass.bus.async_listen(
+        hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STARTED,
             self._async_schedule_cleanup,
             run_immediately=True,
@@ -159,8 +159,9 @@ class _StoreManager:
     def _async_schedule_cleanup(self, _event: Event) -> None:
         """Schedule the cleanup of old files."""
         self._cancel_cleanup = self._hass.loop.call_later(60, self._async_cleanup)
+        # Handle the case where we stop in the first 60s
         self._hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, self._async_cancel_cleanup
+            EVENT_HOMEASSISTANT_STOP, self._async_cancel_cleanup, run_immediately=True
         )
 
     @callback
