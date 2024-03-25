@@ -241,7 +241,14 @@ class OperationNotAllowed(ConfigError):
 
 UpdateListenerType = Callable[[HomeAssistant, "ConfigEntry"], Coroutine[Any, Any, None]]
 
-FROZEN_CONFIG_ENTRY_ATTRS = {"entry_id", "domain", "state", "reason"}
+FROZEN_CONFIG_ENTRY_ATTRS = {
+    "entry_id",
+    "domain",
+    "state",
+    "reason",
+    "error_reason_translation_key",
+    "error_reason_translation_placeholders",
+}
 UPDATE_ENTRY_CONFIG_ENTRY_ATTRS = {
     "unique_id",
     "title",
@@ -272,6 +279,8 @@ class ConfigEntry:
     unique_id: str | None
     state: ConfigEntryState
     reason: str | None
+    error_reason_translation_key: str | None
+    error_reason_translation_placeholders: dict[str, Any] | None
     pref_disable_new_entities: bool
     pref_disable_polling: bool
     version: int
@@ -367,8 +376,8 @@ class ConfigEntry:
 
         # Reason why config entry is in a failed state
         _setter(self, "reason", None)
-        self.reason_translation_key: str | None = None
-        self.reason_translation_placeholders: dict[str, str] | None = None
+        _setter(self, "error_reason_translation_key", None)
+        _setter(self, "error_reason_translation_placeholders", None)
 
         # Function to cancel a scheduled retry
         self._async_cancel_retry_setup: Callable[[], Any] | None = None
@@ -472,8 +481,8 @@ class ConfigEntry:
             "pref_disable_polling": self.pref_disable_polling,
             "disabled_by": self.disabled_by,
             "reason": self.reason,
-            "reason_translation_key": self.reason_translation_key,
-            "reason_translation_placeholders": self.reason_translation_placeholders,
+            "error_reason_translation_key": self.error_reason_translation_key,
+            "error_reason_translation_placeholders": self.error_reason_translation_placeholders,
         }
         return json_fragment(json_bytes(json_repr))
 
@@ -806,10 +815,10 @@ class ConfigEntry:
         _setter = object.__setattr__
         _setter(self, "state", state)
         _setter(self, "reason", reason)
-        _setter(self, "reason_translation_key", error_reason_translation_key)
+        _setter(self, "error_reason_translation_key", error_reason_translation_key)
         _setter(
             self,
-            "reason_translation_placeholders",
+            "error_reason_translation_placeholders",
             error_reason_translation_placeholders,
         )
         self.clear_cache()
