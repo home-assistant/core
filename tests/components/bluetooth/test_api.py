@@ -1,4 +1,5 @@
 """Tests for the Bluetooth integration API."""
+
 import time
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
@@ -8,7 +9,6 @@ from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     MONOTONIC_TIME,
     BaseHaRemoteScanner,
-    BaseHaScanner,
     HaBluetoothConnector,
     async_scanner_by_source,
     async_scanner_devices_by_address,
@@ -124,7 +124,7 @@ async def test_async_scanner_devices_by_address_non_connectable(
         rssi=-100,
     )
 
-    class FakeStaticScanner(BaseHaScanner):
+    class FakeStaticScanner(FakeScanner):
         @property
         def discovered_devices(self) -> list[BLEDevice]:
             """Return a list of discovered devices."""

@@ -1,4 +1,5 @@
 """Helper to test significant Humidifier state changes."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -32,14 +33,15 @@ def async_check_significant_change(
     if old_state != new_state:
         return True
 
-    old_attrs_s = set(old_attrs.items())
-    new_attrs_s = set(new_attrs.items())
+    old_attrs_s = set(
+        {k: v for k, v in old_attrs.items() if k in SIGNIFICANT_ATTRIBUTES}.items()
+    )
+    new_attrs_s = set(
+        {k: v for k, v in new_attrs.items() if k in SIGNIFICANT_ATTRIBUTES}.items()
+    )
     changed_attrs: set[str] = {item[0] for item in old_attrs_s ^ new_attrs_s}
 
     for attr_name in changed_attrs:
-        if attr_name not in SIGNIFICANT_ATTRIBUTES:
-            continue
-
         if attr_name in [ATTR_ACTION, ATTR_MODE]:
             return True
 

@@ -1,4 +1,5 @@
 """The tests for the geolocation trigger."""
+
 import logging
 
 import pytest

@@ -1,4 +1,5 @@
 """Test the NZBGet config flow."""
+
 from unittest.mock import patch
 
 from pynzbgetapi import NZBGetAPIException

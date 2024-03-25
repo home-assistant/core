@@ -1,4 +1,5 @@
 """Support for recording details."""
+
 from __future__ import annotations
 
 import asyncio
@@ -11,7 +12,7 @@ import queue
 import sqlite3
 import threading
 import time
-from typing import Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 import psutil_home_assistant as ha_psutil
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select
@@ -42,11 +43,9 @@ from homeassistant.util.enum import try_parse_enum
 
 from . import migration, statistics
 from .const import (
-    CONTEXT_ID_AS_BINARY_SCHEMA_VERSION,
     DB_WORKER_PREFIX,
     DOMAIN,
     ESTIMATED_QUEUE_ITEM_SIZE,
-    EVENT_TYPE_IDS_SCHEMA_VERSION,
     KEEPALIVE_TIME,
     LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION,
     MARIADB_PYMYSQL_URL_PREFIX,
@@ -57,7 +56,6 @@ from .const import (
     QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY,
     SQLITE_MAX_BIND_VARS,
     SQLITE_URL_PREFIX,
-    STATES_META_SCHEMA_VERSION,
     STATISTICS_ROWS_SCHEMA_VERSION,
     SupportedDialect,
 )
@@ -77,14 +75,15 @@ from .db_schema import (
     StatisticsShortTerm,
 )
 from .executor import DBInterruptibleThreadPoolExecutor
+from .migration import (
+    EntityIDMigration,
+    EventsContextIDMigration,
+    EventTypeIDMigration,
+    StatesContextIDMigration,
+)
 from .models import DatabaseEngine, StatisticData, StatisticMetaData, UnsupportedDialect
 from .pool import POOL_SIZE, MutexPool, RecorderPool
-from .queries import (
-    has_entity_ids_to_migrate,
-    has_event_type_to_migrate,
-    has_events_context_ids_to_migrate,
-    has_states_context_ids_to_migrate,
-)
+from .queries import get_migration_changes
 from .table_managers.event_data import EventDataManager
 from .table_managers.event_types import EventTypeManager
 from .table_managers.recorder_runs import RecorderRunsManager
@@ -100,18 +99,13 @@ from .tasks import (
     CommitTask,
     CompileMissingStatisticsTask,
     DatabaseLockTask,
-    EntityIDMigrationTask,
     EntityIDPostMigrationTask,
     EventIdMigrationTask,
-    EventsContextIDMigrationTask,
-    EventTask,
-    EventTypeIDMigrationTask,
     ImportStatisticsTask,
     KeepAliveTask,
     PerodicCleanupTask,
     PurgeTask,
     RecorderTask,
-    StatesContextIDMigrationTask,
     StatisticsTask,
     StopTask,
     SynchronizeTask,
@@ -120,6 +114,7 @@ from .tasks import (
     WaitTask,
 )
 from .util import (
+    async_create_backup_failure_issue,
     build_mysqldb_conv,
     dburl_to_path,
     end_incomplete_runs,
@@ -187,9 +182,10 @@ class Recorder(threading.Thread):
         self.auto_purge = auto_purge
         self.auto_repack = auto_repack
         self.keep_days = keep_days
+        self.is_running: bool = False
         self._hass_started: asyncio.Future[object] = hass.loop.create_future()
         self.commit_interval = commit_interval
-        self._queue: queue.SimpleQueue[RecorderTask] = queue.SimpleQueue()
+        self._queue: queue.SimpleQueue[RecorderTask | Event] = queue.SimpleQueue()
         self.db_url = uri
         self.db_max_retries = db_max_retries
         self.db_retry_wait = db_retry_wait
@@ -278,7 +274,7 @@ class Recorder(threading.Thread):
             raise RuntimeError("The database connection has not been established")
         return self._get_session()
 
-    def queue_task(self, task: RecorderTask) -> None:
+    def queue_task(self, task: RecorderTask | Event) -> None:
         """Add a task to the recorder queue."""
         self._queue.put(task)
 
@@ -306,7 +302,6 @@ class Recorder(threading.Thread):
         entity_filter = self.entity_filter
         exclude_event_types = self.exclude_event_types
         queue_put = self._queue.put_nowait
-        event_task = EventTask
 
         @callback
         def _event_listener(event: Event) -> None:
@@ -315,23 +310,23 @@ class Recorder(threading.Thread):
                 return
 
             if (entity_id := event.data.get(ATTR_ENTITY_ID)) is None:
-                queue_put(event_task(event))
+                queue_put(event)
                 return
 
             if isinstance(entity_id, str):
                 if entity_filter(entity_id):
-                    queue_put(event_task(event))
+                    queue_put(event)
                 return
 
             if isinstance(entity_id, list):
                 for eid in entity_id:
                     if entity_filter(eid):
-                        queue_put(event_task(event))
+                        queue_put(event)
                         return
                 return
 
             # Unknown what it is.
-            queue_put(event_task(event))
+            queue_put(event)
 
         self._event_listener = self.hass.bus.async_listen(
             MATCH_ALL,
@@ -695,6 +690,7 @@ class Recorder(threading.Thread):
 
     def run(self) -> None:
         """Run the recorder thread."""
+        self.is_running = True
         try:
             self._run()
         except Exception:  # pylint: disable=broad-exception-caught
@@ -704,6 +700,7 @@ class Recorder(threading.Thread):
         finally:
             # Ensure shutdown happens cleanly if
             # anything goes wrong in the run loop
+            self.is_running = False
             self._shutdown()
 
     def _add_to_session(self, session: Session, obj: object) -> None:
@@ -780,44 +777,35 @@ class Recorder(threading.Thread):
 
     def _activate_and_set_db_ready(self) -> None:
         """Activate the table managers or schedule migrations and mark the db as ready."""
-        with session_scope(session=self.get_session(), read_only=True) as session:
+        with session_scope(session=self.get_session()) as session:
             # Prime the statistics meta manager as soon as possible
             # since we want the frontend queries to avoid a thundering
             # herd of queries to find the statistics meta data if
             # there are a lot of statistics graphs on the frontend.
-            if self.schema_version >= STATISTICS_ROWS_SCHEMA_VERSION:
+            schema_version = self.schema_version
+            if schema_version >= STATISTICS_ROWS_SCHEMA_VERSION:
                 self.statistics_meta_manager.load(session)
 
-            if (
-                self.schema_version < CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
-                or execute_stmt_lambda_element(
-                    session, has_states_context_ids_to_migrate()
-                )
-            ):
-                self.queue_task(StatesContextIDMigrationTask())
+            migration_changes: dict[str, int] = {
+                row[0]: row[1]
+                for row in execute_stmt_lambda_element(session, get_migration_changes())
+            }
 
-            if (
-                self.schema_version < CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
-                or execute_stmt_lambda_element(
-                    session, has_events_context_ids_to_migrate()
-                )
-            ):
-                self.queue_task(EventsContextIDMigrationTask())
+            for migrator_cls in (StatesContextIDMigration, EventsContextIDMigration):
+                migrator = migrator_cls(session, schema_version, migration_changes)
+                if migrator.needs_migrate():
+                    self.queue_task(migrator.task())
 
-            if (
-                self.schema_version < EVENT_TYPE_IDS_SCHEMA_VERSION
-                or execute_stmt_lambda_element(session, has_event_type_to_migrate())
-            ):
-                self.queue_task(EventTypeIDMigrationTask())
+            migrator = EventTypeIDMigration(session, schema_version, migration_changes)
+            if migrator.needs_migrate():
+                self.queue_task(migrator.task())
             else:
                 _LOGGER.debug("Activating event_types manager as all data is migrated")
                 self.event_type_manager.active = True
 
-            if (
-                self.schema_version < STATES_META_SCHEMA_VERSION
-                or execute_stmt_lambda_element(session, has_entity_ids_to_migrate())
-            ):
-                self.queue_task(EntityIDMigrationTask())
+            migrator = EntityIDMigration(session, schema_version, migration_changes)
+            if migrator.needs_migrate():
+                self.queue_task(migrator.task())
             else:
                 _LOGGER.debug("Activating states_meta manager as all data is migrated")
                 self.states_meta_manager.active = True
@@ -857,31 +845,35 @@ class Recorder(threading.Thread):
         # with a commit every time the event time
         # has changed. This reduces the disk io.
         queue_ = self._queue
-        startup_tasks: list[RecorderTask] = []
-        while not queue_.empty() and (task := queue_.get_nowait()):
-            startup_tasks.append(task)
-        self._pre_process_startup_tasks(startup_tasks)
-        for task in startup_tasks:
-            self._guarded_process_one_task_or_recover(task)
+        startup_task_or_events: list[RecorderTask | Event] = []
+        while not queue_.empty() and (task_or_event := queue_.get_nowait()):
+            startup_task_or_events.append(task_or_event)
+        self._pre_process_startup_events(startup_task_or_events)
+        for task in startup_task_or_events:
+            self._guarded_process_one_task_or_event_or_recover(task)
 
         # Clear startup tasks since this thread runs forever
         # and we don't want to hold them in memory
-        del startup_tasks
+        del startup_task_or_events
 
         self.stop_requested = False
         while not self.stop_requested:
-            self._guarded_process_one_task_or_recover(queue_.get())
+            self._guarded_process_one_task_or_event_or_recover(queue_.get())
 
-    def _pre_process_startup_tasks(self, startup_tasks: list[RecorderTask]) -> None:
-        """Pre process startup tasks."""
+    def _pre_process_startup_events(
+        self, startup_task_or_events: list[RecorderTask | Event]
+    ) -> None:
+        """Pre process startup events."""
         # Prime all the state_attributes and event_data caches
         # before we start processing events
         state_change_events: list[Event] = []
         non_state_change_events: list[Event] = []
 
-        for task in startup_tasks:
-            if isinstance(task, EventTask):
-                event_ = task.event
+        for task_or_event in startup_task_or_events:
+            # Event is never subclassed so we can
+            # use a fast type check
+            if type(task_or_event) is Event:
+                event_ = task_or_event
                 if event_.event_type == EVENT_STATE_CHANGED:
                     state_change_events.append(event_)
                 else:
@@ -894,19 +886,30 @@ class Recorder(threading.Thread):
         self.states_meta_manager.load(state_change_events, session)
         self.state_attributes_manager.load(state_change_events, session)
 
-    def _guarded_process_one_task_or_recover(self, task: RecorderTask) -> None:
+    def _guarded_process_one_task_or_event_or_recover(
+        self, task: RecorderTask | Event
+    ) -> None:
         """Process a task, guarding against exceptions to ensure the loop does not collapse."""
         _LOGGER.debug("Processing task: %s", task)
         try:
-            self._process_one_task_or_recover(task)
+            self._process_one_task_or_event_or_recover(task)
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception("Error while processing event %s: %s", task, err)
 
-    def _process_one_task_or_recover(self, task: RecorderTask) -> None:
-        """Process an event, reconnect, or recover a malformed database."""
+    def _process_one_task_or_event_or_recover(self, task: RecorderTask | Event) -> None:
+        """Process a task or event, reconnect, or recover a malformed database."""
         try:
+            # Almost everything coming in via the queue
+            # is an Event so we can process it directly
+            # and since its never subclassed, we can
+            # use a fast type check
+            if type(task) is Event:
+                self._process_one_event(task)
+                return
             # If its not an event, commit everything
             # that is pending before running the task
+            if TYPE_CHECKING:
+                assert isinstance(task, RecorderTask)
             if task.commit_before:
                 self._commit_event_session_or_retry()
             return task.run(self)
@@ -993,9 +996,11 @@ class Recorder(threading.Thread):
         def _async_set_database_locked(task: DatabaseLockTask) -> None:
             task.database_locked.set()
 
+        local_start_time = dt_util.now()
+        hass = self.hass
         with write_lock_db_sqlite(self):
             # Notify that lock is being held, wait until database can be used again.
-            self.hass.add_job(_async_set_database_locked, task)
+            hass.add_job(_async_set_database_locked, task)
             while not task.database_unlock.wait(timeout=DB_LOCK_QUEUE_CHECK_TIMEOUT):
                 if self._reached_max_backlog_percentage(90):
                     _LOGGER.warning(
@@ -1007,6 +1012,9 @@ class Recorder(threading.Thread):
                         self.backlog,
                     )
                     task.queue_overflow = True
+                    hass.add_job(
+                        async_create_backup_failure_issue, self.hass, local_start_time
+                    )
                     break
         _LOGGER.info(
             "Database queue backlog reached %d entries during backup",
@@ -1316,7 +1324,7 @@ class Recorder(threading.Thread):
         try:
             async with asyncio.timeout(DB_LOCK_TIMEOUT):
                 await database_locked.wait()
-        except asyncio.TimeoutError as err:
+        except TimeoutError as err:
             task.database_unlock.set()
             raise TimeoutError(
                 f"Could not lock database within {DB_LOCK_TIMEOUT} seconds."

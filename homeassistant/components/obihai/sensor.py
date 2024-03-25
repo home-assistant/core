@@ -1,4 +1,5 @@
 """Support for Obihai Sensors."""
+
 from __future__ import annotations
 
 import datetime
@@ -23,16 +24,16 @@ async def async_setup_entry(
 
     requester: ObihaiConnection = hass.data[DOMAIN][entry.entry_id]
 
-    sensors = []
-    for key in requester.services:
-        sensors.append(ObihaiServiceSensors(requester, key))
+    sensors = [ObihaiServiceSensors(requester, key) for key in requester.services]
+
+    sensors.extend(
+        ObihaiServiceSensors(requester, key) for key in requester.call_direction
+    )
 
     if requester.line_services is not None:
-        for key in requester.line_services:
-            sensors.append(ObihaiServiceSensors(requester, key))
-
-    for key in requester.call_direction:
-        sensors.append(ObihaiServiceSensors(requester, key))
+        sensors.extend(
+            ObihaiServiceSensors(requester, key) for key in requester.line_services
+        )
 
     async_add_entities(sensors, update_before_add=True)
 

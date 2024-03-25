@@ -1,4 +1,5 @@
 """Switches for AVM Fritz!Box functions."""
+
 from __future__ import annotations
 
 import logging
@@ -166,9 +167,7 @@ async def _async_wifi_entities_list(
 
     _LOGGER.debug("WiFi networks list: %s", networks)
     return [
-        FritzBoxWifiSwitch(
-            avm_wrapper, device_friendly_name, index, data["switch_name"]
-        )
+        FritzBoxWifiSwitch(avm_wrapper, device_friendly_name, index, data)
         for index, data in networks.items()
     ]
 
@@ -290,7 +289,7 @@ class FritzBoxBaseCoordinatorSwitch(CoordinatorEntity[AvmWrapper], SwitchEntity)
     @property
     def data(self) -> dict[str, Any]:
         """Return entity data from coordinator data."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     def available(self) -> bool:
@@ -299,7 +298,7 @@ class FritzBoxBaseCoordinatorSwitch(CoordinatorEntity[AvmWrapper], SwitchEntity)
 
     async def _async_handle_turn_on_off(self, turn_on: bool) -> None:
         """Handle switch state change request."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
@@ -310,10 +309,8 @@ class FritzBoxBaseCoordinatorSwitch(CoordinatorEntity[AvmWrapper], SwitchEntity)
         await self._async_handle_turn_on_off(turn_on=False)
 
 
-class FritzBoxBaseSwitch(FritzBoxBaseEntity):
+class FritzBoxBaseSwitch(FritzBoxBaseEntity, SwitchEntity):
     """Fritz switch base class."""
-
-    _attr_is_on: bool | None = False
 
     def __init__(
         self,
@@ -321,7 +318,7 @@ class FritzBoxBaseSwitch(FritzBoxBaseEntity):
         device_friendly_name: str,
         switch_info: SwitchInfo,
     ) -> None:
-        """Init Fritzbox port switch."""
+        """Init Fritzbox base switch."""
         super().__init__(avm_wrapper, device_friendly_name)
 
         self._description = switch_info["description"]
@@ -330,6 +327,7 @@ class FritzBoxBaseSwitch(FritzBoxBaseEntity):
         self._type = switch_info["type"]
         self._update = switch_info["callback_update"]
         self._switch = switch_info["callback_switch"]
+        self._attr_is_on = switch_info["init_state"]
 
         self._name = f"{self._friendly_name} {self._description}"
         self._unique_id = f"{self._avm_wrapper.unique_id}-{slugify(self._description)}"
@@ -381,7 +379,7 @@ class FritzBoxBaseSwitch(FritzBoxBaseEntity):
         self._attr_is_on = turn_on
 
 
-class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
+class FritzBoxPortSwitch(FritzBoxBaseSwitch):
     """Defines a FRITZ!Box Tools PortForward switch."""
 
     def __init__(
@@ -412,6 +410,7 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
             type=SWITCH_TYPE_PORTFORWARD,
             callback_update=self._async_fetch_update,
             callback_switch=self._async_switch_on_off_executor,
+            init_state=port_mapping["NewEnabled"],
         )
         super().__init__(avm_wrapper, device_friendly_name, switch_info)
 
@@ -553,7 +552,7 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
         return True
 
 
-class FritzBoxWifiSwitch(FritzBoxBaseSwitch, SwitchEntity):
+class FritzBoxWifiSwitch(FritzBoxBaseSwitch):
     """Defines a FRITZ!Box Tools Wifi switch."""
 
     def __init__(
@@ -561,7 +560,7 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch, SwitchEntity):
         avm_wrapper: AvmWrapper,
         device_friendly_name: str,
         network_num: int,
-        network_name: str,
+        network_data: dict,
     ) -> None:
         """Init Fritz Wifi switch."""
         self._avm_wrapper = avm_wrapper
@@ -571,12 +570,13 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch, SwitchEntity):
         self._network_num = network_num
 
         switch_info = SwitchInfo(
-            description=f"Wi-Fi {network_name}",
+            description=f"Wi-Fi {network_data['switch_name']}",
             friendly_name=device_friendly_name,
             icon="mdi:wifi",
             type=SWITCH_TYPE_WIFINETWORK,
             callback_update=self._async_fetch_update,
             callback_switch=self._async_switch_on_off_executor,
+            init_state=network_data["enabled"],
         )
         super().__init__(self._avm_wrapper, device_friendly_name, switch_info)
 

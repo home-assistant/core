@@ -1,5 +1,7 @@
 """Tests for the Google Assistant traits."""
+
 from datetime import datetime, timedelta
+from typing import Any
 from unittest.mock import ANY, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -28,6 +30,7 @@ from homeassistant.components import (
     sensor,
     switch,
     vacuum,
+    valve,
     water_heater,
 )
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
@@ -46,6 +49,7 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.components.vacuum import VacuumEntityFeature
+from homeassistant.components.valve import ValveEntityFeature
 from homeassistant.components.water_heater import WaterHeaterEntityFeature
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
@@ -582,17 +586,71 @@ async def test_startstop_vacuum(hass: HomeAssistant) -> None:
     assert unpause_calls[0].data == {ATTR_ENTITY_ID: "vacuum.bla"}
 
 
-async def test_startstop_cover(hass: HomeAssistant) -> None:
-    """Test startStop trait support for cover domain."""
-    assert helpers.get_google_type(cover.DOMAIN, None) is not None
-    assert trait.StartStopTrait.supported(
-        cover.DOMAIN, CoverEntityFeature.STOP, None, None
-    )
+@pytest.mark.parametrize(
+    (
+        "domain",
+        "state_open",
+        "state_closed",
+        "state_opening",
+        "state_closing",
+        "supported_features",
+        "service_close",
+        "service_open",
+        "service_stop",
+        "service_toggle",
+    ),
+    [
+        (
+            cover.DOMAIN,
+            cover.STATE_OPEN,
+            cover.STATE_CLOSED,
+            cover.STATE_OPENING,
+            cover.STATE_CLOSING,
+            CoverEntityFeature.STOP
+            | CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE,
+            cover.SERVICE_OPEN_COVER,
+            cover.SERVICE_CLOSE_COVER,
+            cover.SERVICE_STOP_COVER,
+            cover.SERVICE_TOGGLE,
+        ),
+        (
+            valve.DOMAIN,
+            valve.STATE_OPEN,
+            valve.STATE_CLOSED,
+            valve.STATE_OPENING,
+            valve.STATE_CLOSING,
+            ValveEntityFeature.STOP
+            | ValveEntityFeature.OPEN
+            | ValveEntityFeature.CLOSE,
+            valve.SERVICE_OPEN_VALVE,
+            valve.SERVICE_CLOSE_VALVE,
+            valve.SERVICE_STOP_VALVE,
+            cover.SERVICE_TOGGLE,
+        ),
+    ],
+)
+async def test_startstop_cover_valve(
+    hass: HomeAssistant,
+    domain: str,
+    state_open: str,
+    state_closed: str,
+    state_opening: str,
+    state_closing: str,
+    supported_features: str,
+    service_open: str,
+    service_close: str,
+    service_stop: str,
+    service_toggle: str,
+) -> None:
+    """Test startStop trait support."""
+    assert helpers.get_google_type(domain, None) is not None
+    assert trait.StartStopTrait.supported(domain, supported_features, None, None)
 
     state = State(
-        "cover.bla",
-        cover.STATE_CLOSED,
-        {ATTR_SUPPORTED_FEATURES: CoverEntityFeature.STOP},
+        f"{domain}.bla",
+        state_closed,
+        {ATTR_SUPPORTED_FEATURES: supported_features},
     )
 
     trt = trait.StartStopTrait(
@@ -603,25 +661,48 @@ async def test_startstop_cover(hass: HomeAssistant) -> None:
 
     assert trt.sync_attributes() == {}
 
-    for state_value in (cover.STATE_CLOSING, cover.STATE_OPENING):
+    for state_value in (state_closing, state_opening):
         state.state = state_value
         assert trt.query_attributes() == {"isRunning": True}
 
-    stop_calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_STOP_COVER)
+    stop_calls = async_mock_service(hass, domain, service_stop)
+    open_calls = async_mock_service(hass, domain, service_open)
+    close_calls = async_mock_service(hass, domain, service_close)
+    toggle_calls = async_mock_service(hass, domain, service_toggle)
     await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": False}, {})
     assert len(stop_calls) == 1
-    assert stop_calls[0].data == {ATTR_ENTITY_ID: "cover.bla"}
+    assert stop_calls[0].data == {ATTR_ENTITY_ID: f"{domain}.bla"}
 
-    for state_value in (cover.STATE_CLOSED, cover.STATE_OPEN):
+    for state_value in (state_closed, state_open):
         state.state = state_value
         assert trt.query_attributes() == {"isRunning": False}
 
-    with pytest.raises(SmartHomeError, match="Cover is already stopped"):
+    for state_value in (state_closing, state_opening):
+        state.state = state_value
+        assert trt.query_attributes() == {"isRunning": True}
+
+    state.state = state_open
+    with pytest.raises(
+        SmartHomeError, match=f"{domain.capitalize()} is already stopped"
+    ):
         await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": False}, {})
 
-    with pytest.raises(SmartHomeError, match="Starting a cover is not supported"):
-        await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": True}, {})
+    # Start triggers toggle open
+    state.state = state_closed
+    await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": True}, {})
+    assert len(open_calls) == 0
+    assert len(close_calls) == 0
+    assert len(toggle_calls) == 1
+    assert toggle_calls[0].data == {ATTR_ENTITY_ID: f"{domain}.bla"}
+    # Second start triggers toggle close
+    state.state = state_open
+    await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": True}, {})
+    assert len(open_calls) == 0
+    assert len(close_calls) == 0
+    assert len(toggle_calls) == 2
+    assert toggle_calls[1].data == {ATTR_ENTITY_ID: f"{domain}.bla"}
 
+    state.state = state_closed
     with pytest.raises(
         SmartHomeError,
         match="Command action.devices.commands.PauseUnpause is not supported",
@@ -629,25 +710,89 @@ async def test_startstop_cover(hass: HomeAssistant) -> None:
         await trt.execute(trait.COMMAND_PAUSEUNPAUSE, BASIC_DATA, {"start": True}, {})
 
 
-async def test_startstop_cover_assumed(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    (
+        "domain",
+        "state_open",
+        "state_closed",
+        "state_opening",
+        "state_closing",
+        "supported_features",
+        "service_close",
+        "service_open",
+        "service_stop",
+        "service_toggle",
+    ),
+    [
+        (
+            cover.DOMAIN,
+            cover.STATE_OPEN,
+            cover.STATE_CLOSED,
+            cover.STATE_OPENING,
+            cover.STATE_CLOSING,
+            CoverEntityFeature.STOP
+            | CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE,
+            cover.SERVICE_OPEN_COVER,
+            cover.SERVICE_CLOSE_COVER,
+            cover.SERVICE_STOP_COVER,
+            cover.SERVICE_TOGGLE,
+        ),
+        (
+            valve.DOMAIN,
+            valve.STATE_OPEN,
+            valve.STATE_CLOSED,
+            valve.STATE_OPENING,
+            valve.STATE_CLOSING,
+            ValveEntityFeature.STOP
+            | ValveEntityFeature.OPEN
+            | ValveEntityFeature.CLOSE,
+            valve.SERVICE_OPEN_VALVE,
+            valve.SERVICE_CLOSE_VALVE,
+            valve.SERVICE_STOP_VALVE,
+            cover.SERVICE_TOGGLE,
+        ),
+    ],
+)
+async def test_startstop_cover_valve_assumed(
+    hass: HomeAssistant,
+    domain: str,
+    state_open: str,
+    state_closed: str,
+    state_opening: str,
+    state_closing: str,
+    supported_features: str,
+    service_open: str,
+    service_close: str,
+    service_stop: str,
+    service_toggle: str,
+) -> None:
     """Test startStop trait support for cover domain of assumed state."""
     trt = trait.StartStopTrait(
         hass,
         State(
-            "cover.bla",
-            cover.STATE_CLOSED,
+            f"{domain}.bla",
+            state_closed,
             {
-                ATTR_SUPPORTED_FEATURES: CoverEntityFeature.STOP,
+                ATTR_SUPPORTED_FEATURES: supported_features,
                 ATTR_ASSUMED_STATE: True,
             },
         ),
         BASIC_CONFIG,
     )
 
-    stop_calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_STOP_COVER)
+    stop_calls = async_mock_service(hass, domain, service_stop)
+    toggle_calls = async_mock_service(hass, domain, service_toggle)
     await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": False}, {})
     assert len(stop_calls) == 1
-    assert stop_calls[0].data == {ATTR_ENTITY_ID: "cover.bla"}
+    assert len(toggle_calls) == 0
+    assert stop_calls[0].data == {ATTR_ENTITY_ID: f"{domain}.bla"}
+
+    stop_calls.clear()
+    await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": True}, {})
+    assert len(stop_calls) == 0
+    assert len(toggle_calls) == 1
+    assert toggle_calls[0].data == {ATTR_ENTITY_ID: f"{domain}.bla"}
 
 
 @pytest.mark.parametrize("supported_color_modes", [["hs"], ["rgb"], ["xy"]])
@@ -937,7 +1082,9 @@ async def test_temperature_setting_climate_onoff(hass: HomeAssistant) -> None:
             "climate.bla",
             climate.HVACMode.AUTO,
             {
-                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+                | ClimateEntityFeature.TURN_ON
+                | ClimateEntityFeature.TURN_OFF,
                 climate.ATTR_HVAC_MODES: [
                     climate.HVACMode.OFF,
                     climate.HVACMode.COOL,
@@ -1018,7 +1165,9 @@ async def test_temperature_setting_climate_range(hass: HomeAssistant) -> None:
             {
                 climate.ATTR_CURRENT_TEMPERATURE: 70,
                 climate.ATTR_CURRENT_HUMIDITY: 25,
-                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+                | ClimateEntityFeature.TURN_ON
+                | ClimateEntityFeature.TURN_OFF,
                 climate.ATTR_HVAC_MODES: [
                     STATE_OFF,
                     climate.HVACMode.COOL,
@@ -1130,7 +1279,9 @@ async def test_temperature_setting_climate_setpoint(hass: HomeAssistant) -> None
             "climate.bla",
             climate.HVACMode.COOL,
             {
-                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+                | ClimateEntityFeature.TURN_ON
+                | ClimateEntityFeature.TURN_OFF,
                 climate.ATTR_HVAC_MODES: [STATE_OFF, climate.HVACMode.COOL],
                 climate.ATTR_MIN_TEMP: 10,
                 climate.ATTR_MAX_TEMP: 30,
@@ -2823,21 +2974,59 @@ async def test_traits_unknown_domains(
     caplog.clear()
 
 
-async def test_openclose_cover(hass: HomeAssistant) -> None:
-    """Test OpenClose trait support for cover domain."""
-    assert helpers.get_google_type(cover.DOMAIN, None) is not None
-    assert trait.OpenCloseTrait.supported(
-        cover.DOMAIN, CoverEntityFeature.SET_POSITION, None, None
-    )
+@pytest.mark.parametrize(
+    (
+        "domain",
+        "set_position_service",
+        "close_service",
+        "open_service",
+        "set_position_feature",
+        "attr_position",
+        "attr_current_position",
+    ),
+    [
+        (
+            cover.DOMAIN,
+            cover.SERVICE_SET_COVER_POSITION,
+            cover.SERVICE_CLOSE_COVER,
+            cover.SERVICE_OPEN_COVER,
+            CoverEntityFeature.SET_POSITION,
+            cover.ATTR_POSITION,
+            cover.ATTR_CURRENT_POSITION,
+        ),
+        (
+            valve.DOMAIN,
+            valve.SERVICE_SET_VALVE_POSITION,
+            valve.SERVICE_CLOSE_VALVE,
+            valve.SERVICE_OPEN_VALVE,
+            ValveEntityFeature.SET_POSITION,
+            valve.ATTR_POSITION,
+            valve.ATTR_CURRENT_POSITION,
+        ),
+    ],
+)
+async def test_openclose_cover_valve(
+    hass: HomeAssistant,
+    domain: str,
+    set_position_service: str,
+    close_service: str,
+    open_service: str,
+    set_position_feature: int,
+    attr_position: str,
+    attr_current_position: str,
+) -> None:
+    """Test OpenClose trait support."""
+    assert helpers.get_google_type(domain, None) is not None
+    assert trait.OpenCloseTrait.supported(domain, set_position_service, None, None)
 
     trt = trait.OpenCloseTrait(
         hass,
         State(
-            "cover.bla",
-            cover.STATE_OPEN,
+            f"{domain}.bla",
+            "open",
             {
-                cover.ATTR_CURRENT_POSITION: 75,
-                ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_POSITION,
+                attr_current_position: 75,
+                ATTR_SUPPORTED_FEATURES: set_position_feature,
             },
         ),
         BASIC_CONFIG,
@@ -2846,34 +3035,74 @@ async def test_openclose_cover(hass: HomeAssistant) -> None:
     assert trt.sync_attributes() == {}
     assert trt.query_attributes() == {"openPercent": 75}
 
-    calls_set = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION)
-    calls_open = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_OPEN_COVER)
+    calls_set = async_mock_service(hass, domain, set_position_service)
+    calls_open = async_mock_service(hass, domain, open_service)
+    calls_close = async_mock_service(hass, domain, close_service)
 
     await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 50}, {})
     await trt.execute(
         trait.COMMAND_OPENCLOSE_RELATIVE, BASIC_DATA, {"openRelativePercent": 50}, {}
     )
     assert len(calls_set) == 1
-    assert calls_set[0].data == {ATTR_ENTITY_ID: "cover.bla", cover.ATTR_POSITION: 50}
+    assert calls_set[0].data == {
+        ATTR_ENTITY_ID: f"{domain}.bla",
+        attr_position: 50,
+    }
+    calls_set.pop(0)
 
     assert len(calls_open) == 1
-    assert calls_open[0].data == {ATTR_ENTITY_ID: "cover.bla"}
+    assert calls_open[0].data == {ATTR_ENTITY_ID: f"{domain}.bla"}
+    calls_open.pop(0)
+
+    assert len(calls_close) == 0
+
+    await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 0}, {})
+    await trt.execute(
+        trait.COMMAND_OPENCLOSE_RELATIVE, BASIC_DATA, {"openRelativePercent": 0}, {}
+    )
+    assert len(calls_set) == 1
+    assert len(calls_close) == 1
+    assert calls_close[0].data == {ATTR_ENTITY_ID: f"{domain}.bla"}
+    assert len(calls_open) == 0
 
 
-async def test_openclose_cover_unknown_state(hass: HomeAssistant) -> None:
-    """Test OpenClose trait support for cover domain with unknown state."""
-    assert helpers.get_google_type(cover.DOMAIN, None) is not None
+@pytest.mark.parametrize(
+    ("domain", "open_service", "set_position_feature", "open_feature"),
+    [
+        (
+            cover.DOMAIN,
+            cover.SERVICE_OPEN_COVER,
+            CoverEntityFeature.SET_POSITION,
+            CoverEntityFeature.OPEN,
+        ),
+        (
+            valve.DOMAIN,
+            valve.SERVICE_OPEN_VALVE,
+            ValveEntityFeature.SET_POSITION,
+            ValveEntityFeature.OPEN,
+        ),
+    ],
+)
+async def test_openclose_cover_valve_unknown_state(
+    hass: HomeAssistant,
+    open_service: str,
+    domain: str,
+    set_position_feature: int,
+    open_feature: int,
+) -> None:
+    """Test OpenClose trait support with unknown state."""
+    assert helpers.get_google_type(domain, None) is not None
     assert trait.OpenCloseTrait.supported(
-        cover.DOMAIN, CoverEntityFeature.SET_POSITION, None, None
+        cover.DOMAIN, set_position_feature, None, None
     )
 
     # No state
     trt = trait.OpenCloseTrait(
         hass,
         State(
-            "cover.bla",
+            f"{domain}.bla",
             STATE_UNKNOWN,
-            {ATTR_SUPPORTED_FEATURES: CoverEntityFeature.OPEN},
+            {ATTR_SUPPORTED_FEATURES: open_feature},
         ),
         BASIC_CONFIG,
     )
@@ -2883,30 +3112,51 @@ async def test_openclose_cover_unknown_state(hass: HomeAssistant) -> None:
     with pytest.raises(helpers.SmartHomeError):
         trt.query_attributes()
 
-    calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_OPEN_COVER)
+    calls = async_mock_service(hass, domain, open_service)
     await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 100}, {})
     assert len(calls) == 1
-    assert calls[0].data == {ATTR_ENTITY_ID: "cover.bla"}
+    assert calls[0].data == {ATTR_ENTITY_ID: f"{domain}.bla"}
 
     with pytest.raises(helpers.SmartHomeError):
         trt.query_attributes()
 
 
-async def test_openclose_cover_assumed_state(hass: HomeAssistant) -> None:
-    """Test OpenClose trait support for cover domain."""
-    assert helpers.get_google_type(cover.DOMAIN, None) is not None
-    assert trait.OpenCloseTrait.supported(
-        cover.DOMAIN, CoverEntityFeature.SET_POSITION, None, None
-    )
+@pytest.mark.parametrize(
+    ("domain", "set_position_service", "set_position_feature", "state_open"),
+    [
+        (
+            cover.DOMAIN,
+            cover.SERVICE_SET_COVER_POSITION,
+            CoverEntityFeature.SET_POSITION,
+            cover.STATE_OPEN,
+        ),
+        (
+            valve.DOMAIN,
+            valve.SERVICE_SET_VALVE_POSITION,
+            ValveEntityFeature.SET_POSITION,
+            valve.STATE_OPEN,
+        ),
+    ],
+)
+async def test_openclose_cover_valve_assumed_state(
+    hass: HomeAssistant,
+    domain: str,
+    set_position_service: str,
+    set_position_feature: int,
+    state_open: str,
+) -> None:
+    """Test OpenClose trait support."""
+    assert helpers.get_google_type(domain, None) is not None
+    assert trait.OpenCloseTrait.supported(domain, set_position_feature, None, None)
 
     trt = trait.OpenCloseTrait(
         hass,
         State(
-            "cover.bla",
-            cover.STATE_OPEN,
+            f"{domain}.bla",
+            state_open,
             {
                 ATTR_ASSUMED_STATE: True,
-                ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_POSITION,
+                ATTR_SUPPORTED_FEATURES: set_position_feature,
             },
         ),
         BASIC_CONFIG,
@@ -2916,20 +3166,37 @@ async def test_openclose_cover_assumed_state(hass: HomeAssistant) -> None:
 
     assert trt.query_attributes() == {}
 
-    calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION)
+    calls = async_mock_service(hass, domain, set_position_service)
     await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 40}, {})
     assert len(calls) == 1
-    assert calls[0].data == {ATTR_ENTITY_ID: "cover.bla", cover.ATTR_POSITION: 40}
+    assert calls[0].data == {ATTR_ENTITY_ID: f"{domain}.bla", cover.ATTR_POSITION: 40}
 
 
-async def test_openclose_cover_query_only(hass: HomeAssistant) -> None:
-    """Test OpenClose trait support for cover domain."""
-    assert helpers.get_google_type(cover.DOMAIN, None) is not None
-    assert trait.OpenCloseTrait.supported(cover.DOMAIN, 0, None, None)
+@pytest.mark.parametrize(
+    ("domain", "state_open"),
+    [
+        (
+            cover.DOMAIN,
+            cover.STATE_OPEN,
+        ),
+        (
+            valve.DOMAIN,
+            valve.STATE_OPEN,
+        ),
+    ],
+)
+async def test_openclose_cover_valve_query_only(
+    hass: HomeAssistant,
+    domain: str,
+    state_open: str,
+) -> None:
+    """Test OpenClose trait support."""
+    assert helpers.get_google_type(domain, None) is not None
+    assert trait.OpenCloseTrait.supported(domain, 0, None, None)
 
     state = State(
-        "cover.bla",
-        cover.STATE_OPEN,
+        f"{domain}.bla",
+        state_open,
     )
 
     trt = trait.OpenCloseTrait(
@@ -2945,21 +3212,57 @@ async def test_openclose_cover_query_only(hass: HomeAssistant) -> None:
     assert trt.query_attributes() == {"openPercent": 100}
 
 
-async def test_openclose_cover_no_position(hass: HomeAssistant) -> None:
-    """Test OpenClose trait support for cover domain."""
-    assert helpers.get_google_type(cover.DOMAIN, None) is not None
+@pytest.mark.parametrize(
+    (
+        "domain",
+        "state_open",
+        "state_closed",
+        "supported_features",
+        "open_service",
+        "close_service",
+    ),
+    [
+        (
+            cover.DOMAIN,
+            cover.STATE_OPEN,
+            cover.STATE_CLOSED,
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE,
+            cover.SERVICE_OPEN_COVER,
+            cover.SERVICE_CLOSE_COVER,
+        ),
+        (
+            valve.DOMAIN,
+            valve.STATE_OPEN,
+            valve.STATE_CLOSED,
+            ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE,
+            valve.SERVICE_OPEN_VALVE,
+            valve.SERVICE_CLOSE_VALVE,
+        ),
+    ],
+)
+async def test_openclose_cover_valve_no_position(
+    hass: HomeAssistant,
+    domain: str,
+    state_open: str,
+    state_closed: str,
+    supported_features: int,
+    open_service: str,
+    close_service: str,
+) -> None:
+    """Test OpenClose trait support."""
+    assert helpers.get_google_type(domain, None) is not None
     assert trait.OpenCloseTrait.supported(
-        cover.DOMAIN,
-        CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE,
+        domain,
+        supported_features,
         None,
         None,
     )
 
     state = State(
-        "cover.bla",
-        cover.STATE_OPEN,
+        f"{domain}.bla",
+        state_open,
         {
-            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE,
+            ATTR_SUPPORTED_FEATURES: supported_features,
         },
     )
 
@@ -2972,20 +3275,20 @@ async def test_openclose_cover_no_position(hass: HomeAssistant) -> None:
     assert trt.sync_attributes() == {"discreteOnlyOpenClose": True}
     assert trt.query_attributes() == {"openPercent": 100}
 
-    state.state = cover.STATE_CLOSED
+    state.state = state_closed
 
     assert trt.sync_attributes() == {"discreteOnlyOpenClose": True}
     assert trt.query_attributes() == {"openPercent": 0}
 
-    calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_CLOSE_COVER)
+    calls = async_mock_service(hass, domain, close_service)
     await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 0}, {})
     assert len(calls) == 1
-    assert calls[0].data == {ATTR_ENTITY_ID: "cover.bla"}
+    assert calls[0].data == {ATTR_ENTITY_ID: f"{domain}.bla"}
 
-    calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_OPEN_COVER)
+    calls = async_mock_service(hass, domain, open_service)
     await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 100}, {})
     assert len(calls) == 1
-    assert calls[0].data == {ATTR_ENTITY_ID: "cover.bla"}
+    assert calls[0].data == {ATTR_ENTITY_ID: f"{domain}.bla"}
 
     with pytest.raises(
         SmartHomeError, match=r"Current position not know for relative command"
@@ -3003,11 +3306,11 @@ async def test_openclose_cover_no_position(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     "device_class",
-    (
+    [
         cover.CoverDeviceClass.DOOR,
         cover.CoverDeviceClass.GARAGE,
         cover.CoverDeviceClass.GATE,
-    ),
+    ],
 )
 async def test_openclose_cover_secure(hass: HomeAssistant, device_class) -> None:
     """Test OpenClose trait support for cover domain."""
@@ -3069,13 +3372,13 @@ async def test_openclose_cover_secure(hass: HomeAssistant, device_class) -> None
 
 @pytest.mark.parametrize(
     "device_class",
-    (
+    [
         binary_sensor.BinarySensorDeviceClass.DOOR,
         binary_sensor.BinarySensorDeviceClass.GARAGE_DOOR,
         binary_sensor.BinarySensorDeviceClass.LOCK,
         binary_sensor.BinarySensorDeviceClass.OPENING,
         binary_sensor.BinarySensorDeviceClass.WINDOW,
-    ),
+    ],
 )
 async def test_openclose_binary_sensor(hass: HomeAssistant, device_class) -> None:
     """Test OpenClose trait support for binary_sensor domain."""
@@ -3513,7 +3816,7 @@ async def test_transport_control(
 
 @pytest.mark.parametrize(
     "state",
-    (
+    [
         STATE_OFF,
         STATE_IDLE,
         STATE_PLAYING,
@@ -3522,7 +3825,7 @@ async def test_transport_control(
         STATE_STANDBY,
         STATE_UNAVAILABLE,
         STATE_UNKNOWN,
-    ),
+    ],
 )
 async def test_media_state(hass: HomeAssistant, state) -> None:
     """Test the MediaStateTrait."""
@@ -3624,16 +3927,15 @@ async def test_air_quality_description_for_aqi(hass: HomeAssistant) -> None:
         BASIC_CONFIG,
     )
 
-    assert trt._air_quality_description_for_aqi("0") == "healthy"
-    assert trt._air_quality_description_for_aqi("75") == "moderate"
+    assert trt._air_quality_description_for_aqi(0) == "healthy"
+    assert trt._air_quality_description_for_aqi(75) == "moderate"
     assert (
-        trt._air_quality_description_for_aqi("125") == "unhealthy for sensitive groups"
+        trt._air_quality_description_for_aqi(125.0) == "unhealthy for sensitive groups"
     )
-    assert trt._air_quality_description_for_aqi("175") == "unhealthy"
-    assert trt._air_quality_description_for_aqi("250") == "very unhealthy"
-    assert trt._air_quality_description_for_aqi("350") == "hazardous"
-    assert trt._air_quality_description_for_aqi("-1") == "unknown"
-    assert trt._air_quality_description_for_aqi("non-numeric") == "unknown"
+    assert trt._air_quality_description_for_aqi(175) == "unhealthy"
+    assert trt._air_quality_description_for_aqi(250) == "very unhealthy"
+    assert trt._air_quality_description_for_aqi(350) == "hazardous"
+    assert trt._air_quality_description_for_aqi(-1) == "unknown"
 
 
 async def test_null_device_class(hass: HomeAssistant) -> None:
@@ -3654,7 +3956,19 @@ async def test_null_device_class(hass: HomeAssistant) -> None:
     assert trt.query_attributes() == {}
 
 
-async def test_sensorstate(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("value", "published", "aqi"),
+    [
+        (100.0, 100.0, "moderate"),
+        (10.0, 10.0, "healthy"),
+        (0, 0.0, "healthy"),
+        ("", None, "unknown"),
+        ("unknown", None, "unknown"),
+    ],
+)
+async def test_sensorstate(
+    hass: HomeAssistant, value: Any, published: Any, aqi: Any
+) -> None:
     """Test SensorState trait support for sensor domain."""
     sensor_types = {
         sensor.SensorDeviceClass.AQI: ("AirQuality", "AQI"),
@@ -3676,7 +3990,7 @@ async def test_sensorstate(hass: HomeAssistant) -> None:
             hass,
             State(
                 "sensor.test",
-                100.0,
+                value,
                 {
                     "device_class": sensor_type,
                 },
@@ -3722,16 +4036,14 @@ async def test_sensorstate(hass: HomeAssistant) -> None:
                 "currentSensorStateData": [
                     {
                         "name": name,
-                        "currentSensorState": trt._air_quality_description_for_aqi(
-                            trt.state.state
-                        ),
-                        "rawValue": trt.state.state,
+                        "currentSensorState": aqi,
+                        "rawValue": published,
                     },
                 ]
             }
         else:
             assert trt.query_attributes() == {
-                "currentSensorStateData": [{"name": name, "rawValue": trt.state.state}]
+                "currentSensorStateData": [{"name": name, "rawValue": published}]
             }
 
     assert helpers.get_google_type(sensor.DOMAIN, None) is not None

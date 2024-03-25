@@ -26,6 +26,7 @@ The following cases will never be passed to your function:
 - if either state is unknown/unavailable
 - state adding/removing
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -82,7 +83,8 @@ async def _initialize(hass: HomeAssistant) -> None:
 
     functions = hass.data[DATA_FUNCTIONS] = {}
 
-    async def process_platform(
+    @callback
+    def process_platform(
         hass: HomeAssistant, component_name: str, platform: Any
     ) -> None:
         """Process a significant change platform."""

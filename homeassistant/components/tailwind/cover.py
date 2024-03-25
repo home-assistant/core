@@ -1,9 +1,16 @@
 """Cover entity platform for Tailwind."""
+
 from __future__ import annotations
 
 from typing import Any
 
-from gotailwind import TailwindDoorOperationCommand, TailwindDoorState
+from gotailwind import (
+    TailwindDoorDisabledError,
+    TailwindDoorLockedOutError,
+    TailwindDoorOperationCommand,
+    TailwindDoorState,
+    TailwindError,
+)
 
 from homeassistant.components.cover import (
     CoverDeviceClass,
@@ -12,6 +19,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -56,11 +64,28 @@ class TailwindDoorCoverEntity(TailwindDoorEntity, CoverEntity):
         """
         self._attr_is_opening = True
         self.async_write_ha_state()
-        await self.coordinator.tailwind.operate(
-            door=self.coordinator.data.doors[self.door_id],
-            operation=TailwindDoorOperationCommand.OPEN,
-        )
-        self._attr_is_opening = False
+        try:
+            await self.coordinator.tailwind.operate(
+                door=self.coordinator.data.doors[self.door_id],
+                operation=TailwindDoorOperationCommand.OPEN,
+            )
+        except TailwindDoorDisabledError as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="door_disabled",
+            ) from exc
+        except TailwindDoorLockedOutError as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="door_locked_out",
+            ) from exc
+        except TailwindError as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+            ) from exc
+        finally:
+            self._attr_is_opening = False
         await self.coordinator.async_request_refresh()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
@@ -71,9 +96,26 @@ class TailwindDoorCoverEntity(TailwindDoorEntity, CoverEntity):
         """
         self._attr_is_closing = True
         self.async_write_ha_state()
-        await self.coordinator.tailwind.operate(
-            door=self.coordinator.data.doors[self.door_id],
-            operation=TailwindDoorOperationCommand.CLOSE,
-        )
-        self._attr_is_closing = False
+        try:
+            await self.coordinator.tailwind.operate(
+                door=self.coordinator.data.doors[self.door_id],
+                operation=TailwindDoorOperationCommand.CLOSE,
+            )
+        except TailwindDoorDisabledError as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="door_disabled",
+            ) from exc
+        except TailwindDoorLockedOutError as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="door_locked_out",
+            ) from exc
+        except TailwindError as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+            ) from exc
+        finally:
+            self._attr_is_closing = False
         await self.coordinator.async_request_refresh()

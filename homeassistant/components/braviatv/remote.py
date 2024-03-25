@@ -1,4 +1,5 @@
 """Remote control support for Bravia TV."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable

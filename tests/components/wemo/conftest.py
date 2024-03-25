@@ -1,4 +1,5 @@
 """Fixtures for pywemo."""
+
 import contextlib
 from unittest.mock import create_autospec, patch
 

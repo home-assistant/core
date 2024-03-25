@@ -1,4 +1,5 @@
 """Constants for the Alexa integration."""
+
 from collections import OrderedDict
 
 from homeassistant.components import climate
@@ -89,6 +90,9 @@ API_THERMOSTAT_PRESETS = {climate.PRESET_ECO: "ECO"}
 # AlexaModeController does not like a single mode for the fan preset or humidifier mode,
 # we add PRESET_MODE_NA if a fan / humidifier has only one preset_mode
 PRESET_MODE_NA = "-"
+
+STORAGE_ACCESS_TOKEN = "access_token"
+STORAGE_REFRESH_TOKEN = "refresh_token"
 
 
 class Cause:

@@ -20,7 +20,7 @@
         "title": "Template sensor"
       },
       "user": {
-        "description": "This helper allow you to create helper entities that define their state using a template.",
+        "description": "This helper allows you to create helper entities that define their state using a template.",
         "menu_options": {
           "binary_sensor": "Template a binary sensor",
           "sensor": "Template a sensor"
@@ -75,6 +75,7 @@
         "safety": "[%key:component::binary_sensor::entity_component::safety::name%]",
         "smoke": "[%key:component::binary_sensor::entity_component::smoke::name%]",
         "sound": "[%key:component::binary_sensor::entity_component::sound::name%]",
+        "tamper": "[%key:component::binary_sensor::entity_component::tamper::name%]",
         "update": "[%key:component::binary_sensor::entity_component::update::name%]",
         "vibration": "[%key:component::binary_sensor::entity_component::vibration::name%]",
         "window": "[%key:component::binary_sensor::entity_component::window::name%]"
@@ -127,6 +128,7 @@
         "volatile_organic_compounds_parts": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]",
         "voltage": "[%key:component::sensor::entity_component::voltage::name%]",
         "volume": "[%key:component::sensor::entity_component::volume::name%]",
+        "volume_flow_rate": "[%key:component::sensor::entity_component::volume_flow_rate::name%]",
         "volume_storage": "[%key:component::sensor::entity_component::volume_storage::name%]",
         "water": "[%key:component::sensor::entity_component::water::name%]",
         "weight": "[%key:component::sensor::entity_component::weight::name%]",

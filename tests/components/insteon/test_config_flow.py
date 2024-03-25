@@ -1,4 +1,5 @@
 """Test the config flow for the Insteon integration."""
+
 from unittest.mock import patch
 
 import pytest
@@ -229,7 +230,7 @@ async def test_form_select_hub_v2(hass: HomeAssistant) -> None:
 
 async def test_form_discovery_dhcp(hass: HomeAssistant) -> None:
     """Test the discovery of the Hub via DHCP."""
-    discovery_info = dhcp.DhcpServiceInfo("1.2.3.4", "", "aa:bb:cc:dd:ee:ff")
+    discovery_info = dhcp.DhcpServiceInfo("1.2.3.4", "", "aabbccddeeff")
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=discovery_info
     )

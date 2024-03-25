@@ -1,4 +1,5 @@
 """Constants for the Harmony component."""
+
 from homeassistant.const import Platform
 
 DOMAIN = "harmony"

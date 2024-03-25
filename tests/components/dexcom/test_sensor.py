@@ -1,4 +1,5 @@
 """The sensor tests for the griddy platform."""
+
 from unittest.mock import patch
 
 from pydexcom import SessionError

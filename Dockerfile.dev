@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/vscode/devcontainers/python:0-3.11
+FROM mcr.microsoft.com/devcontainers/python:1-3.12
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -16,6 +16,7 @@ RUN \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         # Additional library needed by some tests and accordingly by VScode Tests Discovery
         bluez \
+        ffmpeg \
         libudev-dev \
         libavformat-dev \
         libavcodec-dev \

@@ -1,4 +1,5 @@
 """Test the Xiaomi Miio config flow."""
+
 from ipaddress import ip_address
 from unittest.mock import Mock, patch
 

@@ -1,4 +1,5 @@
 """Hass.io Add-on ingress service."""
+
 from __future__ import annotations
 
 import asyncio
@@ -9,7 +10,7 @@ import logging
 from urllib.parse import quote
 
 import aiohttp
-from aiohttp import ClientTimeout, hdrs, web
+from aiohttp import ClientTimeout, ClientWebSocketResponse, hdrs, web
 from aiohttp.web_exceptions import HTTPBadGateway, HTTPBadRequest
 from multidict import CIMultiDict
 from yarl import URL
@@ -18,6 +19,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.util.async_ import create_eager_task
 
 from .const import X_HASS_SOURCE, X_INGRESS_PATH
 from .http import should_compress
@@ -46,7 +48,7 @@ MAX_SIMPLE_RESPONSE_SIZE = 4194000
 
 
 @callback
-def async_setup_ingress_view(hass: HomeAssistant, host: str):
+def async_setup_ingress_view(hass: HomeAssistant, host: str) -> None:
     """Auth setup."""
     websession = async_get_clientsession(hass)
 
@@ -75,10 +77,10 @@ class HassIOIngress(HomeAssistantView):
         try:
             target_url = URL(url)
         except ValueError as err:
-            raise HTTPBadRequest() from err
+            raise HTTPBadRequest from err
 
         if not target_url.path.startswith(base_path):
-            raise HTTPBadRequest()
+            raise HTTPBadRequest
 
         return target_url
 
@@ -97,7 +99,7 @@ class HassIOIngress(HomeAssistantView):
         except aiohttp.ClientError as err:
             _LOGGER.debug("Ingress error with %s / %s: %s", token, path, err)
 
-        raise HTTPBadGateway() from None
+        raise HTTPBadGateway from None
 
     get = _handle
     post = _handle
@@ -143,8 +145,8 @@ class HassIOIngress(HomeAssistantView):
             # Proxy requests
             await asyncio.wait(
                 [
-                    asyncio.create_task(_websocket_forward(ws_server, ws_client)),
-                    asyncio.create_task(_websocket_forward(ws_client, ws_server)),
+                    create_eager_task(_websocket_forward(ws_server, ws_client)),
+                    create_eager_task(_websocket_forward(ws_client, ws_server)),
                 ],
                 return_when=asyncio.FIRST_COMPLETED,
             )
@@ -245,7 +247,7 @@ def _init_header(request: web.Request, token: str) -> CIMultiDict | dict[str, st
     assert request.transport
     if (peername := request.transport.get_extra_info("peername")) is None:
         _LOGGER.error("Can't set forward_for header, missing peername")
-        raise HTTPBadRequest()
+        raise HTTPBadRequest
 
     headers[hdrs.X_FORWARDED_FOR] = _forwarded_for_header(forward_for, peername[0])
 
@@ -281,20 +283,23 @@ def _is_websocket(request: web.Request) -> bool:
     )
 
 
-async def _websocket_forward(ws_from, ws_to):
+async def _websocket_forward(
+    ws_from: web.WebSocketResponse | ClientWebSocketResponse,
+    ws_to: web.WebSocketResponse | ClientWebSocketResponse,
+) -> None:
     """Handle websocket message directly."""
     try:
         async for msg in ws_from:
-            if msg.type == aiohttp.WSMsgType.TEXT:
+            if msg.type is aiohttp.WSMsgType.TEXT:
                 await ws_to.send_str(msg.data)
-            elif msg.type == aiohttp.WSMsgType.BINARY:
+            elif msg.type is aiohttp.WSMsgType.BINARY:
                 await ws_to.send_bytes(msg.data)
-            elif msg.type == aiohttp.WSMsgType.PING:
+            elif msg.type is aiohttp.WSMsgType.PING:
                 await ws_to.ping()
-            elif msg.type == aiohttp.WSMsgType.PONG:
+            elif msg.type is aiohttp.WSMsgType.PONG:
                 await ws_to.pong()
             elif ws_to.closed:
-                await ws_to.close(code=ws_to.close_code, message=msg.extra)
+                await ws_to.close(code=ws_to.close_code, message=msg.extra)  # type: ignore[arg-type]
     except RuntimeError:
         _LOGGER.debug("Ingress Websocket runtime error")
     except ConnectionResetError:

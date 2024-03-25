@@ -1,4 +1,5 @@
 """Basic checks for HomeKit cameras."""
+
 import base64
 
 from aiohomekit.model.services import ServicesTypes

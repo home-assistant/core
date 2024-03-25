@@ -1,4 +1,5 @@
 """Support for Verisure Smartplugs."""
+
 from __future__ import annotations
 
 from time import monotonic
@@ -53,7 +54,6 @@ class VerisureSmartplug(CoordinatorEntity[VerisureDataUpdateCoordinator], Switch
         ]
         return DeviceInfo(
             name=area,
-            suggested_area=area,
             manufacturer="Verisure",
             model="SmartPlug",
             identifiers={(DOMAIN, self.serial_number)},

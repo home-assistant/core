@@ -1,4 +1,5 @@
 """Hue event entities from Button resources."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -80,18 +81,15 @@ class HueButtonEventEntity(HueBaseEntity, EventEntity):
         # fill the event types based on the features the switch supports
         hue_dev_id = self.controller.get_device(self.resource.id).id
         model_id = self.bridge.api.devices[hue_dev_id].product_data.product_name
-        event_types: list[str] = []
-        for event_type in DEVICE_SPECIFIC_EVENT_TYPES.get(
-            model_id, DEFAULT_BUTTON_EVENT_TYPES
-        ):
-            event_types.append(event_type.value)
-        self._attr_event_types = event_types
-
-    @property
-    def name(self) -> str:
-        """Return name for the entity."""
-        # this can be translated too as soon as we support arguments into translations ?
-        return f"Button {self.resource.metadata.control_id}"
+        self._attr_event_types: list[str] = [
+            event_type.value
+            for event_type in DEVICE_SPECIFIC_EVENT_TYPES.get(
+                model_id, DEFAULT_BUTTON_EVENT_TYPES
+            )
+        ]
+        self._attr_translation_placeholders = {
+            "button_id": self.resource.metadata.control_id
+        }
 
     @callback
     def _handle_event(self, event_type: EventType, resource: Button) -> None:

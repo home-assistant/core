@@ -1,4 +1,5 @@
 """Test different accessory types: Switches."""
+
 from datetime import timedelta
 
 import pytest
@@ -49,7 +50,7 @@ async def test_outlet_set_state(hass: HomeAssistant, hk_driver, events) -> None:
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
     acc = Outlet(hass, hk_driver, "Outlet", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -103,7 +104,7 @@ async def test_switch_set_state(
     hass.states.async_set(entity_id, None, attrs)
     await hass.async_block_till_done()
     acc = Switch(hass, hk_driver, "Switch", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -147,25 +148,25 @@ async def test_valve_set_state(hass: HomeAssistant, hk_driver, events) -> None:
     await hass.async_block_till_done()
 
     acc = Valve(hass, hk_driver, "Valve", entity_id, 2, {CONF_TYPE: TYPE_FAUCET})
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
     assert acc.category == 29  # Faucet
     assert acc.char_valve_type.value == 3  # Water faucet
 
     acc = Valve(hass, hk_driver, "Valve", entity_id, 3, {CONF_TYPE: TYPE_SHOWER})
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
     assert acc.category == 30  # Shower
     assert acc.char_valve_type.value == 2  # Shower head
 
     acc = Valve(hass, hk_driver, "Valve", entity_id, 4, {CONF_TYPE: TYPE_SPRINKLER})
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
     assert acc.category == 28  # Sprinkler
     assert acc.char_valve_type.value == 1  # Irrigation
 
     acc = Valve(hass, hk_driver, "Valve", entity_id, 5, {CONF_TYPE: TYPE_VALVE})
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 5
@@ -223,7 +224,7 @@ async def test_vacuum_set_state_with_returnhome_and_start_support(
     await hass.async_block_till_done()
 
     acc = Vacuum(hass, hk_driver, "Vacuum", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
     assert acc.aid == 2
     assert acc.category == 8  # Switch
@@ -285,7 +286,7 @@ async def test_vacuum_set_state_without_returnhome_and_start_support(
     await hass.async_block_till_done()
 
     acc = Vacuum(hass, hk_driver, "Vacuum", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
     assert acc.aid == 2
     assert acc.category == 8  # Switch
@@ -329,7 +330,7 @@ async def test_reset_switch(hass: HomeAssistant, hk_driver, events) -> None:
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
     acc = Switch(hass, hk_driver, "Switch", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.activate_only is True
@@ -373,7 +374,7 @@ async def test_script_switch(hass: HomeAssistant, hk_driver, events) -> None:
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
     acc = Switch(hass, hk_driver, "Switch", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.activate_only is True
@@ -424,7 +425,7 @@ async def test_input_select_switch(
     )
     await hass.async_block_till_done()
     acc = SelectSwitch(hass, hk_driver, "SelectSwitch", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.select_chars["option1"].value is True
@@ -476,7 +477,7 @@ async def test_button_switch(hass: HomeAssistant, hk_driver, events, domain) -> 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
     acc = Switch(hass, hk_driver, "Switch", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.activate_only is True

@@ -1,4 +1,5 @@
 """Component to allow numeric input for platforms."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -306,6 +307,8 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @cached_property
     def native_step(self) -> float | None:
         """Return the increment/decrement step."""
+        if hasattr(self, "_attr_native_step"):
+            return self._attr_native_step
         if (
             hasattr(self, "entity_description")
             and self.entity_description.native_step is not None
@@ -321,8 +324,6 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def _calculate_step(self, min_value: float, max_value: float) -> float:
         """Return the increment/decrement step."""
-        if hasattr(self, "_attr_native_step"):
-            return self._attr_native_step
         if (native_step := self.native_step) is not None:
             return native_step
         step = DEFAULT_STEP
@@ -393,7 +394,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def set_native_value(self, value: float) -> None:
         """Set new value."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
@@ -402,7 +403,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @final
     def set_value(self, value: float) -> None:
         """Set new value."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @final
     async def async_set_value(self, value: float) -> None:
@@ -424,22 +425,22 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         native_unit_of_measurement = self.native_unit_of_measurement
         unit_of_measurement = self.unit_of_measurement
         if native_unit_of_measurement != unit_of_measurement:
-            assert native_unit_of_measurement
-            assert unit_of_measurement
+            if TYPE_CHECKING:
+                assert native_unit_of_measurement
+                assert unit_of_measurement
 
             value_s = str(value)
             prec = len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
 
             # Suppress ValueError (Could not convert value to float)
             with suppress(ValueError):
-                value_new: float = UNIT_CONVERTERS[device_class].convert(
-                    value,
+                value_new: float = UNIT_CONVERTERS[device_class].converter_factory(
                     native_unit_of_measurement,
                     unit_of_measurement,
-                )
+                )(value)
 
                 # Round to the wanted precision
-                value = method(value_new, prec)
+                return method(value_new, prec)
 
         return value
 
@@ -453,21 +454,22 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         native_unit_of_measurement = self.native_unit_of_measurement
         unit_of_measurement = self.unit_of_measurement
         if native_unit_of_measurement != unit_of_measurement:
-            assert native_unit_of_measurement
-            assert unit_of_measurement
+            if TYPE_CHECKING:
+                assert native_unit_of_measurement
+                assert unit_of_measurement
 
-            value = UNIT_CONVERTERS[device_class].convert(
-                value,
+            return UNIT_CONVERTERS[device_class].converter_factory(
                 unit_of_measurement,
                 native_unit_of_measurement,
-            )
+            )(value)
 
         return value
 
     @callback
     def async_registry_entry_updated(self) -> None:
         """Run when the entity registry entry has been updated."""
-        assert self.registry_entry
+        if TYPE_CHECKING:
+            assert self.registry_entry
         if (
             (number_options := self.registry_entry.options.get(DOMAIN))
             and (custom_unit := number_options.get(CONF_UNIT_OF_MEASUREMENT))

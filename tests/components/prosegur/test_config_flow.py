@@ -1,4 +1,5 @@
 """Test the Prosegur Alarm config flow."""
+
 from unittest.mock import patch
 
 import pytest

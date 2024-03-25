@@ -1,4 +1,5 @@
 """Test Voice Assistant init."""
+
 import asyncio
 from dataclasses import asdict
 import itertools as it

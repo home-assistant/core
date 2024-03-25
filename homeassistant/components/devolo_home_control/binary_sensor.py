@@ -1,4 +1,5 @@
 """Platform for binary sensor integration."""
+
 from __future__ import annotations
 
 from devolo_home_control_api.devices.zwave import Zwave
@@ -33,29 +34,27 @@ async def async_setup_entry(
     entities: list[BinarySensorEntity] = []
 
     for gateway in hass.data[DOMAIN][entry.entry_id]["gateways"]:
-        for device in gateway.binary_sensor_devices:
-            for binary_sensor in device.binary_sensor_property:
-                entities.append(
-                    DevoloBinaryDeviceEntity(
-                        homecontrol=gateway,
-                        device_instance=device,
-                        element_uid=binary_sensor,
-                    )
-                )
-        for device in gateway.devices.values():
-            if hasattr(device, "remote_control_property"):
-                for remote in device.remote_control_property:
-                    for index in range(
-                        1, device.remote_control_property[remote].key_count + 1
-                    ):
-                        entities.append(
-                            DevoloRemoteControl(
-                                homecontrol=gateway,
-                                device_instance=device,
-                                element_uid=remote,
-                                key=index,
-                            )
-                        )
+        entities.extend(
+            DevoloBinaryDeviceEntity(
+                homecontrol=gateway,
+                device_instance=device,
+                element_uid=binary_sensor,
+            )
+            for device in gateway.binary_sensor_devices
+            for binary_sensor in device.binary_sensor_property
+        )
+        entities.extend(
+            DevoloRemoteControl(
+                homecontrol=gateway,
+                device_instance=device,
+                element_uid=remote,
+                key=index,
+            )
+            for device in gateway.devices.values()
+            if hasattr(device, "remote_control_property")
+            for remote in device.remote_control_property
+            for index in range(1, device.remote_control_property[remote].key_count + 1)
+        )
     async_add_entities(entities)
 
 

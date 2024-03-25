@@ -1,4 +1,5 @@
 """The Ecowitt Weather Station Entity."""
+
 from __future__ import annotations
 
 import time
@@ -31,10 +32,10 @@ class EcowittEntity(Entity):
             sw_version=sensor.station.version,
         )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Install listener for updates later."""
 
-        def _update_state():
+        def _update_state() -> None:
             """Update the state on callback."""
             self.async_write_ha_state()
 

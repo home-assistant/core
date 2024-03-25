@@ -65,9 +65,6 @@
       "room_temperature": {
         "name": "Room temperature"
       },
-      "daily_energy": {
-        "name": "Daily energy consumed"
-      },
       "outside_temperature": {
         "name": "Outside temperature"
       },

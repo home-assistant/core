@@ -1,4 +1,5 @@
 """The tests for local file camera component."""
+
 from http import HTTPStatus
 from unittest import mock
 

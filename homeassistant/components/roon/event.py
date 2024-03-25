@@ -1,4 +1,5 @@
 """Roon event entities."""
+
 import logging
 from typing import cast
 

@@ -1,4 +1,5 @@
 """Config flow for ZHA."""
+
 from __future__ import annotations
 
 import asyncio
@@ -10,6 +11,7 @@ import logging
 import os
 from typing import Any, Self
 
+from bellows.config import CONF_USE_THREAD
 import voluptuous as vol
 from zigpy.application import ControllerApplication
 import zigpy.backups
@@ -174,6 +176,7 @@ class ZhaRadioManager:
         app_config[CONF_DATABASE] = database_path
         app_config[CONF_DEVICE] = self.device_settings
         app_config[CONF_NWK_BACKUP_ENABLED] = False
+        app_config[CONF_USE_THREAD] = False
         app_config = self.radio_type.controller.SCHEMA(app_config)
 
         app = await self.radio_type.controller.new(

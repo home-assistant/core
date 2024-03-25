@@ -1,4 +1,5 @@
 """Support for Xiaomi Yeelight WiFi color bulb."""
+
 from __future__ import annotations
 
 import asyncio
@@ -155,7 +156,7 @@ class YeelightScanner:
         for listener in self._listeners:
             listener.async_search((host, SSDP_TARGET[1]))
 
-        with contextlib.suppress(asyncio.TimeoutError):
+        with contextlib.suppress(TimeoutError):
             async with asyncio.timeout(DISCOVERY_TIMEOUT):
                 await host_event.wait()
 

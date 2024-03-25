@@ -1,4 +1,5 @@
 """Test the Holiday config flow."""
+
 from unittest.mock import AsyncMock
 
 import pytest
@@ -126,3 +127,206 @@ async def test_single_combination_country_province(hass: HomeAssistant) -> None:
     )
     assert result_de_step2["type"] == FlowResultType.ABORT
     assert result_de_step2["reason"] == "already_configured"
+
+
+async def test_form_babel_unresolved_language(hass: HomeAssistant) -> None:
+    """Test the config flow if using not babel supported language."""
+    hass.config.language = "en-XX"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_COUNTRY: "SE",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["title"] == "Sweden"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_COUNTRY: "DE",
+        },
+    )
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PROVINCE: "BW",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Germany, BW"
+    assert result["data"] == {
+        "country": "DE",
+        "province": "BW",
+    }
+
+
+async def test_form_babel_replace_dash_with_underscore(hass: HomeAssistant) -> None:
+    """Test the config flow if using language with dash."""
+    hass.config.language = "en-GB"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_COUNTRY: "SE",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["title"] == "Sweden"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_COUNTRY: "DE",
+        },
+    )
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PROVINCE: "BW",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Germany, BW"
+    assert result["data"] == {
+        "country": "DE",
+        "province": "BW",
+    }
+
+
+async def test_reconfigure(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+    """Test reconfigure flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Germany, BW",
+        data={"country": "DE", "province": "BW"},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": entry.entry_id,
+        },
+    )
+    assert result["type"] == FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PROVINCE: "NW",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    entry = hass.config_entries.async_get_entry(entry.entry_id)
+    assert entry.title == "Germany, NW"
+    assert entry.data == {"country": "DE", "province": "NW"}
+
+
+async def test_reconfigure_incorrect_language(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test reconfigure flow default to English."""
+    hass.config.language = "en-XX"
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Germany, BW",
+        data={"country": "DE", "province": "BW"},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": entry.entry_id,
+        },
+    )
+    assert result["type"] == FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PROVINCE: "NW",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    entry = hass.config_entries.async_get_entry(entry.entry_id)
+    assert entry.title == "Germany, NW"
+    assert entry.data == {"country": "DE", "province": "NW"}
+
+
+async def test_reconfigure_entry_exists(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test reconfigure flow stops if other entry already exist."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Germany, BW",
+        data={"country": "DE", "province": "BW"},
+    )
+    entry.add_to_hass(hass)
+    entry2 = MockConfigEntry(
+        domain=DOMAIN,
+        title="Germany, NW",
+        data={"country": "DE", "province": "NW"},
+    )
+    entry2.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": entry.entry_id,
+        },
+    )
+    assert result["type"] == FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PROVINCE: "NW",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    entry = hass.config_entries.async_get_entry(entry.entry_id)
+    assert entry.title == "Germany, BW"
+    assert entry.data == {"country": "DE", "province": "BW"}

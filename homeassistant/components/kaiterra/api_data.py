@@ -1,4 +1,5 @@
 """Data for all Kaiterra devices."""
+
 import asyncio
 from logging import getLogger
 
@@ -54,7 +55,7 @@ class KaiterraApiData:
         try:
             async with asyncio.timeout(10):
                 data = await self._api.get_latest_sensor_readings(self._devices)
-        except (ClientResponseError, ClientConnectorError, asyncio.TimeoutError) as err:
+        except (ClientResponseError, ClientConnectorError, TimeoutError) as err:
             _LOGGER.debug("Couldn't fetch data from Kaiterra API: %s", err)
             self.data = {}
             async_dispatcher_send(self._hass, DISPATCHER_KAITERRA)

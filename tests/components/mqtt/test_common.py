@@ -1,4 +1,5 @@
 """Common test objects."""
+
 from collections.abc import Iterable
 from contextlib import suppress
 import copy
@@ -43,6 +44,7 @@ DEFAULT_CONFIG_DEVICE_INFO_ID = {
     "name": "Beer",
     "model": "Glass",
     "hw_version": "rev1",
+    "serial_number": "1234deadbeef",
     "sw_version": "0.1-beta",
     "suggested_area": "default_area",
     "configuration_url": "http://example.com",
@@ -54,6 +56,7 @@ DEFAULT_CONFIG_DEVICE_INFO_MAC = {
     "name": "Beer",
     "model": "Glass",
     "hw_version": "rev1",
+    "serial_number": "1234deadbeef",
     "sw_version": "0.1-beta",
     "suggested_area": "default_area",
     "configuration_url": "http://example.com",
@@ -1324,7 +1327,7 @@ async def help_test_entity_debug_info_max_messages(
 
     start_dt = datetime(2019, 1, 1, 0, 0, 0, tzinfo=dt_util.UTC)
     with freeze_time(start_dt):
-        for i in range(0, debug_info.STORED_MESSAGES + 1):
+        for i in range(debug_info.STORED_MESSAGES + 1):
             async_fire_mqtt_message(hass, "test-topic", f"{i}")
 
     debug_info_data = debug_info.info_for_device(hass, device.id)
@@ -1707,10 +1710,8 @@ async def help_test_publishing_with_custom_encoding(
 
     # setup test entities using discovery
     mqtt_mock = await mqtt_mock_entry()
-    item: int = 0
-    for component_config in setup_config:
+    for item, component_config in enumerate(setup_config):
         conf = json.dumps(component_config)
-        item += 1
         async_fire_mqtt_message(
             hass, f"homeassistant/{domain}/component_{item}/config", conf
         )

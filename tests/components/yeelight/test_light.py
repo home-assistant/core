@@ -1,5 +1,5 @@
 """Test the Yeelight light."""
-import asyncio
+
 from datetime import timedelta
 import logging
 import socket
@@ -504,7 +504,7 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
         )
     assert hass.states.get(ENTITY_LIGHT).state == STATE_OFF
 
-    mocked_bulb.async_set_brightness = AsyncMock(side_effect=asyncio.TimeoutError)
+    mocked_bulb.async_set_brightness = AsyncMock(side_effect=TimeoutError)
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             "light",
@@ -553,7 +553,7 @@ async def test_update_errors(
 
     # Timeout usually means the bulb is overloaded with commands
     # but will still respond eventually.
-    mocked_bulb.async_turn_off = AsyncMock(side_effect=asyncio.TimeoutError)
+    mocked_bulb.async_turn_off = AsyncMock(side_effect=TimeoutError)
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             "light",
@@ -826,6 +826,9 @@ async def test_device_types(
         # nightlight as a setting of the main entity
         if nightlight_mode_properties is not None:
             mocked_bulb.last_properties["active_mode"] = True
+            config_entry = MockConfigEntry(
+                domain=DOMAIN, data={**CONFIG_ENTRY_DATA, CONF_NIGHTLIGHT_SWITCH: False}
+            )
             config_entry.add_to_hass(hass)
             await _async_setup(config_entry)
             state = hass.states.get(entity_id)
@@ -854,7 +857,6 @@ async def test_device_types(
             state = hass.states.get(f"{entity_id}_nightlight")
             assert state.state == "on"
             nightlight_entity_properties["friendly_name"] = f"{name} Nightlight"
-            nightlight_entity_properties["icon"] = "mdi:weather-night"
             nightlight_entity_properties["flowing"] = False
             nightlight_entity_properties["night_light"] = True
             nightlight_entity_properties["music_mode"] = False
@@ -1416,9 +1418,10 @@ async def test_effects(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert hass.states.get(ENTITY_LIGHT).attributes.get(
-        "effect_list"
-    ) == YEELIGHT_COLOR_EFFECT_LIST + ["mock_effect"]
+    assert hass.states.get(ENTITY_LIGHT).attributes.get("effect_list") == [
+        *YEELIGHT_COLOR_EFFECT_LIST,
+        "mock_effect",
+    ]
 
     async def _async_test_effect(name, target=None, called=True):
         async_mocked_start_flow = AsyncMock()

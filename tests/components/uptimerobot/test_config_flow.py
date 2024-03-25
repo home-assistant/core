@@ -1,4 +1,5 @@
 """Test the UptimeRobot config flow."""
+
 from unittest.mock import patch
 
 import pytest

@@ -1,4 +1,5 @@
 """Support for Hydrawise sprinkler sensors."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -33,7 +34,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="watering_time",
         translation_key="watering_time",
-        icon="mdi:water-pump",
         native_unit_of_measurement=UnitOfTime.MINUTES,
     ),
 )
@@ -76,7 +76,7 @@ async def async_setup_entry(
     ]
     async_add_entities(
         HydrawiseSensor(coordinator, description, controller, zone)
-        for controller in coordinator.data.controllers
+        for controller in coordinator.data.controllers.values()
         for zone in controller.zones
         for description in SENSOR_TYPES
     )

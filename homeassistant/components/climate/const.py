@@ -5,6 +5,7 @@ from functools import partial
 
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
+    all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
@@ -162,6 +163,8 @@ class ClimateEntityFeature(IntFlag):
     PRESET_MODE = 16
     SWING_MODE = 32
     AUX_HEAT = 64
+    TURN_OFF = 128
+    TURN_ON = 256
 
 
 # These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
@@ -188,6 +191,9 @@ _DEPRECATED_SUPPORT_AUX_HEAT = DeprecatedConstantEnum(
     ClimateEntityFeature.AUX_HEAT, "2025.1"
 )
 
-# Both can be removed if no deprecated constant are in this module anymore
+# These can be removed if no deprecated constant are in this module anymore
 __getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

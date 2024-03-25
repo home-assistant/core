@@ -1,4 +1,5 @@
 """Tests for Islamic Prayer Times init."""
+
 from datetime import timedelta
 from unittest.mock import patch
 

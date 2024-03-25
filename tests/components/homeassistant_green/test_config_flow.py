@@ -1,11 +1,14 @@
 """Test the Home Assistant Green config flow."""
+
 from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.hassio import DOMAIN as HASSIO_DOMAIN
 from homeassistant.components.homeassistant_green.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
 
@@ -36,6 +39,7 @@ def mock_set_green_settings():
 async def test_config_flow(hass: HomeAssistant) -> None:
     """Test the config flow."""
     mock_integration(hass, MockModule("hassio"))
+    await async_setup_component(hass, HASSIO_DOMAIN, {})
 
     with patch(
         "homeassistant.components.homeassistant_green.async_setup_entry",
@@ -60,6 +64,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
 async def test_config_flow_single_entry(hass: HomeAssistant) -> None:
     """Test only a single entry is allowed."""
     mock_integration(hass, MockModule("hassio"))
+    await async_setup_component(hass, HASSIO_DOMAIN, {})
 
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -115,6 +120,7 @@ async def test_option_flow_led_settings(
 ) -> None:
     """Test updating LED settings."""
     mock_integration(hass, MockModule("hassio"))
+    await async_setup_component(hass, HASSIO_DOMAIN, {})
 
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -146,6 +152,7 @@ async def test_option_flow_led_settings_unchanged(
 ) -> None:
     """Test updating LED settings."""
     mock_integration(hass, MockModule("hassio"))
+    await async_setup_component(hass, HASSIO_DOMAIN, {})
 
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -171,6 +178,7 @@ async def test_option_flow_led_settings_unchanged(
 async def test_option_flow_led_settings_fail_1(hass: HomeAssistant) -> None:
     """Test updating LED settings."""
     mock_integration(hass, MockModule("hassio"))
+    await async_setup_component(hass, HASSIO_DOMAIN, {})
 
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -196,6 +204,7 @@ async def test_option_flow_led_settings_fail_2(
 ) -> None:
     """Test updating LED settings."""
     mock_integration(hass, MockModule("hassio"))
+    await async_setup_component(hass, HASSIO_DOMAIN, {})
 
     # Setup the config entry
     config_entry = MockConfigEntry(

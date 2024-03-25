@@ -1,6 +1,8 @@
 """Decorator service for the media_player.play_media service."""
+
 from collections.abc import Callable
 import logging
+from pathlib import Path
 from typing import Any, cast
 
 import voluptuous as vol
@@ -106,13 +108,26 @@ class MediaExtractor:
 
     def get_stream_selector(self) -> Callable[[str], str]:
         """Return format selector for the media URL."""
-        ydl = YoutubeDL({"quiet": True, "logger": _LOGGER})
+        cookies_file = Path(
+            self.hass.config.config_dir, "media_extractor", "cookies.txt"
+        )
+        ydl_params = {"quiet": True, "logger": _LOGGER}
+        if cookies_file.exists():
+            ydl_params["cookiefile"] = str(cookies_file)
+            _LOGGER.debug(
+                "Media extractor loaded cookies file from: %s", str(cookies_file)
+            )
+        else:
+            _LOGGER.debug(
+                "Media extractor didn't find cookies file at: %s", str(cookies_file)
+            )
+        ydl = YoutubeDL(ydl_params)
 
         try:
             all_media = ydl.extract_info(self.get_media_url(), process=False)
         except DownloadError as err:
             # This exception will be logged by youtube-dl itself
-            raise MEDownloadException() from err
+            raise MEDownloadException from err
 
         if "entries" in all_media:
             _LOGGER.warning("Playlists are not supported, looking for the first video")
@@ -121,7 +136,7 @@ class MediaExtractor:
                 selected_media = entries[0]
             else:
                 _LOGGER.error("Playlist is empty")
-                raise MEDownloadException()
+                raise MEDownloadException
         else:
             selected_media = all_media
 
@@ -132,7 +147,7 @@ class MediaExtractor:
                 requested_stream = ydl.process_ie_result(selected_media, download=False)
             except (ExtractorError, DownloadError) as err:
                 _LOGGER.error("Could not extract stream for the query: %s", query)
-                raise MEQueryException() from err
+                raise MEQueryException from err
 
             if "formats" in requested_stream:
                 if requested_stream["extractor"] == "youtube":

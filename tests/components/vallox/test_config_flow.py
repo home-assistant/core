@@ -1,4 +1,5 @@
 """Test the Vallox integration config flow."""
+
 from unittest.mock import patch
 
 from vallox_websocket_api import ValloxApiException, ValloxWebsocketException
@@ -33,7 +34,7 @@ async def test_form_create_entry(hass: HomeAssistant) -> None:
     assert init["errors"] is None
 
     with patch(
-        "homeassistant.components.vallox.config_flow.Vallox.get_info",
+        "homeassistant.components.vallox.config_flow.Vallox.fetch_metric_data",
         return_value=None,
     ), patch(
         "homeassistant.components.vallox.async_setup_entry",
@@ -74,7 +75,7 @@ async def test_form_vallox_api_exception_cannot_connect(hass: HomeAssistant) -> 
     )
 
     with patch(
-        "homeassistant.components.vallox.config_flow.Vallox.get_info",
+        "homeassistant.components.vallox.config_flow.Vallox.fetch_metric_data",
         side_effect=ValloxApiException,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -94,7 +95,7 @@ async def test_form_os_error_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.vallox.config_flow.Vallox.get_info",
+        "homeassistant.components.vallox.config_flow.Vallox.fetch_metric_data",
         side_effect=ValloxWebsocketException,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -114,7 +115,7 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.vallox.config_flow.Vallox.get_info",
+        "homeassistant.components.vallox.config_flow.Vallox.fetch_metric_data",
         side_effect=Exception,
     ):
         result = await hass.config_entries.flow.async_configure(

@@ -1,4 +1,5 @@
 """deCONZ alarm control panel platform tests."""
+
 from unittest.mock import patch
 
 from pydeconz.models.sensor.ancillary_control import AncillaryControlPanel

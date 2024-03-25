@@ -1,4 +1,5 @@
 """The tests for generic camera component."""
+
 import asyncio
 from contextlib import suppress
 import copy

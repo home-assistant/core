@@ -1,4 +1,5 @@
 """Tests for Minecraft Server binary sensor."""
+
 from datetime import timedelta
 from unittest.mock import patch
 

@@ -1,6 +1,5 @@
 """Tests for Google Tasks todo platform."""
 
-
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 import json
@@ -48,6 +47,7 @@ LIST_TASKS_RESPONSE_WATER = {
             "id": "some-task-id",
             "title": "Water",
             "status": "needsAction",
+            "description": "Any size is ok",
             "position": "00000000000000000001",
         },
     ],
@@ -516,9 +516,19 @@ async def test_update_todo_list_item_error(
     [
         (UPDATE_API_RESPONSES, {"rename": "Soda"}),
         (UPDATE_API_RESPONSES, {"due_date": "2023-11-18"}),
-        (UPDATE_API_RESPONSES, {"description": "6-pack"}),
+        (UPDATE_API_RESPONSES, {"due_date": None}),
+        (UPDATE_API_RESPONSES, {"description": "At least one gallon"}),
+        (UPDATE_API_RESPONSES, {"description": ""}),
+        (UPDATE_API_RESPONSES, {"description": None}),
     ],
-    ids=("rename", "due_date", "description"),
+    ids=(
+        "rename",
+        "due_date",
+        "clear_due_date",
+        "description",
+        "empty_description",
+        "clear_description",
+    ),
 )
 async def test_partial_update(
     hass: HomeAssistant,

@@ -1,4 +1,5 @@
 """Test the Google Maps Travel Time config flow."""
+
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
@@ -115,7 +116,7 @@ async def test_timeout(hass: HomeAssistant) -> None:
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == {"base": "timeout_connect"}
 
 
 async def test_malformed_api_key(hass: HomeAssistant) -> None:

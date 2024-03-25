@@ -1,4 +1,5 @@
 """The tests for Mobile App device actions."""
+
 from homeassistant.components import automation, device_automation
 from homeassistant.components.mobile_app import DATA_DEVICES, DOMAIN, util
 from homeassistant.core import HomeAssistant

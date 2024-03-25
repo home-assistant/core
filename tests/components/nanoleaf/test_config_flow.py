@@ -1,4 +1,5 @@
 """Test the Nanoleaf config flow."""
+
 from __future__ import annotations
 
 from ipaddress import ip_address

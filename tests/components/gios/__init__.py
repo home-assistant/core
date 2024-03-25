@@ -1,4 +1,5 @@
 """Tests for GIOS."""
+
 import json
 from unittest.mock import patch
 

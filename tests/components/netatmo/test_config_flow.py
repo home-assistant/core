@@ -1,10 +1,11 @@
 """Test the Netatmo config flow."""
+
 from ipaddress import ip_address
 from unittest.mock import patch
 
 from pyatmo.const import ALL_SCOPES
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import zeroconf
 from homeassistant.components.netatmo import config_flow
 from homeassistant.components.netatmo.const import (
@@ -14,16 +15,14 @@ from homeassistant.components.netatmo.const import (
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
 )
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
+
+from .conftest import CLIENT_ID
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
-
-CLIENT_ID = "1234"
-CLIENT_SECRET = "5678"
 
 VALID_CONFIG = {}
 
@@ -65,14 +64,6 @@ async def test_full_flow(
     current_request_with_host: None,
 ) -> None:
     """Check full flow."""
-    assert await setup.async_setup_component(
-        hass,
-        "netatmo",
-        {
-            "netatmo": {CONF_CLIENT_ID: CLIENT_ID, CONF_CLIENT_SECRET: CLIENT_SECRET},
-            "http": {"base_url": "https://example.com"},
-        },
-    )
 
     result = await hass.config_entries.flow.async_init(
         "netatmo", context={"source": config_entries.SOURCE_USER}
@@ -240,14 +231,6 @@ async def test_reauth(
     current_request_with_host: None,
 ) -> None:
     """Test initialization of the reauth flow."""
-    assert await setup.async_setup_component(
-        hass,
-        "netatmo",
-        {
-            "netatmo": {CONF_CLIENT_ID: CLIENT_ID, CONF_CLIENT_SECRET: CLIENT_SECRET},
-            "http": {"base_url": "https://example.com"},
-        },
-    )
 
     result = await hass.config_entries.flow.async_init(
         "netatmo", context={"source": config_entries.SOURCE_USER}

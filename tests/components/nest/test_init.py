@@ -7,6 +7,7 @@ By default all tests use test fixtures that run in each possible configuration
 mode (e.g. yaml, ConfigEntry, etc) however some tests override and just run in
 relevant modes.
 """
+
 import logging
 from typing import Any
 from unittest.mock import patch
@@ -160,7 +161,7 @@ async def test_subscriber_auth_failure(
 async def test_setup_missing_subscriber_id(
     hass: HomeAssistant, warning_caplog, setup_base_platform
 ) -> None:
-    """Test missing susbcriber id from configuration."""
+    """Test missing subscriber id from configuration."""
     await setup_base_platform()
     assert "Configuration option" in warning_caplog.text
 

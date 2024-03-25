@@ -1,4 +1,5 @@
 """Test the Aussie Broadband init."""
+
 from unittest.mock import patch
 
 from aiohttp import ClientConnectionError
@@ -22,9 +23,10 @@ async def test_unload(hass: HomeAssistant) -> None:
 async def test_auth_failure(hass: HomeAssistant) -> None:
     """Test init with an authentication failure."""
     with patch(
-        "homeassistant.components.aussie_broadband.config_flow.ConfigFlow.async_step_reauth",
+        "homeassistant.components.aussie_broadband.config_flow.AussieBroadbandConfigFlow.async_step_reauth",
         return_value={
             "type": data_entry_flow.FlowResultType.FORM,
+            "flow_id": "mock_flow",
             "step_id": "reauth_confirm",
         },
     ) as mock_async_step_reauth:

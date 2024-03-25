@@ -1,4 +1,5 @@
 """Define pytest.fixtures available for all tests."""
+
 from unittest.mock import MagicMock, patch
 
 from pyezviz import EzvizClient

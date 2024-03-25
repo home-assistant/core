@@ -1,4 +1,5 @@
 """Tests for the Sonos Media Player platform."""
+
 import json
 from unittest.mock import Mock, patch
 

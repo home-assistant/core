@@ -1,4 +1,5 @@
 """Test the Electra Smart config flow."""
+
 from json import loads
 from unittest.mock import patch
 

@@ -1,4 +1,5 @@
 """Support for Bluesound devices."""
+
 from __future__ import annotations
 
 import asyncio
@@ -200,7 +201,6 @@ class BluesoundPlayer(MediaPlayerEntity):
     """Representation of a Bluesound Player."""
 
     _attr_media_content_type = MediaType.MUSIC
-    _attr_volume_step = 0.01
 
     def __init__(self, hass, host, port=None, name=None, init_callback=None):
         """Initialize the media player."""
@@ -291,7 +291,7 @@ class BluesoundPlayer(MediaPlayerEntity):
             while True:
                 await self.async_update_status()
 
-        except (asyncio.TimeoutError, ClientError, BluesoundPlayer._TimeoutException):
+        except (TimeoutError, ClientError, BluesoundPlayer._TimeoutException):
             _LOGGER.info("Node %s:%s is offline, retrying later", self.name, self.port)
             await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT)
             self.start_polling()
@@ -318,7 +318,7 @@ class BluesoundPlayer(MediaPlayerEntity):
                 self._retry_remove = None
 
             await self.force_update_sync_status(self._init_callback, True)
-        except (asyncio.TimeoutError, ClientError):
+        except (TimeoutError, ClientError):
             _LOGGER.info("Node %s:%s is offline, retrying later", self.host, self.port)
             self._retry_remove = async_track_time_interval(
                 self._hass, self.async_init, NODE_RETRY_INITIATION
@@ -366,12 +366,12 @@ class BluesoundPlayer(MediaPlayerEntity):
                     data = None
             elif response.status == 595:
                 _LOGGER.info("Status 595 returned, treating as timeout")
-                raise BluesoundPlayer._TimeoutException()
+                raise BluesoundPlayer._TimeoutException
             else:
                 _LOGGER.error("Error %s on %s", response.status, url)
                 return None
 
-        except (asyncio.TimeoutError, aiohttp.ClientError):
+        except (TimeoutError, aiohttp.ClientError):
             if raise_timeout:
                 _LOGGER.info("Timeout: %s:%s", self.host, self.port)
                 raise
@@ -432,13 +432,13 @@ class BluesoundPlayer(MediaPlayerEntity):
                 self.async_write_ha_state()
             elif response.status == 595:
                 _LOGGER.info("Status 595 returned, treating as timeout")
-                raise BluesoundPlayer._TimeoutException()
+                raise BluesoundPlayer._TimeoutException
             else:
                 _LOGGER.error(
                     "Error %s on %s. Trying one more time", response.status, url
                 )
 
-        except (asyncio.TimeoutError, ClientError):
+        except (TimeoutError, ClientError):
             self._is_online = False
             self._last_status_update = None
             self._status = None
@@ -686,20 +686,15 @@ class BluesoundPlayer(MediaPlayerEntity):
         if self._status is None or (self.is_grouped and not self.is_master):
             return None
 
-        sources = []
+        sources = [source["title"] for source in self._preset_items]
 
-        for source in self._preset_items:
-            sources.append(source["title"])
+        sources.extend(
+            source["title"]
+            for source in self._services_items
+            if source["type"] in ("LocalMusic", "RadioService")
+        )
 
-        for source in [
-            x
-            for x in self._services_items
-            if x["type"] in ("LocalMusic", "RadioService")
-        ]:
-            sources.append(source["title"])
-
-        for source in self._capture_items:
-            sources.append(source["title"])
+        sources.extend(source["title"] for source in self._capture_items)
 
         return sources
 
@@ -1027,6 +1022,20 @@ class BluesoundPlayer(MediaPlayerEntity):
         url = f"Play?url={media_id}"
 
         return await self.send_bluesound_command(url)
+
+    async def async_volume_up(self) -> None:
+        """Volume up the media player."""
+        current_vol = self.volume_level
+        if not current_vol or current_vol >= 1:
+            return
+        return await self.async_set_volume_level(current_vol + 0.01)
+
+    async def async_volume_down(self) -> None:
+        """Volume down the media player."""
+        current_vol = self.volume_level
+        if not current_vol or current_vol <= 0:
+            return
+        return await self.async_set_volume_level(current_vol - 0.01)
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Send volume_up command to media player."""

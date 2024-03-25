@@ -1,4 +1,5 @@
 """Tests for the kraken integration."""
+
 from unittest.mock import patch
 
 from pykrakenapi.pykrakenapi import CallRateLimitError, KrakenAPIError

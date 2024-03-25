@@ -31,11 +31,6 @@ from .entity import DROPEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-LEAK_ICON = "mdi:pipe-leak"
-NOTIFICATION_ICON = "mdi:bell-ring"
-PUMP_ICON = "mdi:water-pump"
-SALT_ICON = "mdi:shaker"
-WATER_ICON = "mdi:water"
 
 # Binary sensor type constants
 LEAK_DETECTED = "leak"
@@ -49,39 +44,34 @@ SALT_LOW = "salt"
 class DROPBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes DROP binary sensor entity."""
 
-    value_fn: Callable[[DROPDeviceDataUpdateCoordinator], bool | None]
+    value_fn: Callable[[DROPDeviceDataUpdateCoordinator], int | None]
 
 
 BINARY_SENSORS: list[DROPBinarySensorEntityDescription] = [
     DROPBinarySensorEntityDescription(
         key=LEAK_DETECTED,
         translation_key=LEAK_DETECTED,
-        icon=LEAK_ICON,
         device_class=BinarySensorDeviceClass.MOISTURE,
         value_fn=lambda device: device.drop_api.leak_detected(),
     ),
     DROPBinarySensorEntityDescription(
         key=PENDING_NOTIFICATION,
         translation_key=PENDING_NOTIFICATION,
-        icon=NOTIFICATION_ICON,
         value_fn=lambda device: device.drop_api.notification_pending(),
     ),
     DROPBinarySensorEntityDescription(
         key=SALT_LOW,
         translation_key=SALT_LOW,
-        icon=SALT_ICON,
         value_fn=lambda device: device.drop_api.salt_low(),
     ),
     DROPBinarySensorEntityDescription(
         key=RESERVE_IN_USE,
         translation_key=RESERVE_IN_USE,
-        icon=WATER_ICON,
         value_fn=lambda device: device.drop_api.reserve_in_use(),
     ),
     DROPBinarySensorEntityDescription(
         key=PUMP_STATUS,
         translation_key=PUMP_STATUS,
-        icon=PUMP_ICON,
         value_fn=lambda device: device.drop_api.pump_status(),
     ),
 ]

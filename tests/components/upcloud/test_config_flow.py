@@ -1,4 +1,5 @@
 """Tests for the UpCloud config flow."""
+
 from unittest.mock import patch
 
 import requests.exceptions

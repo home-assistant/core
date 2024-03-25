@@ -1,4 +1,5 @@
 """Sensor for monitoring the contents of a folder."""
+
 from __future__ import annotations
 
 from datetime import timedelta

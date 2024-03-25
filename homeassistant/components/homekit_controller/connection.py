@@ -1,4 +1,5 @@
 """Helpers for managing a pairing with a HomeKit accessory or bridge."""
+
 from __future__ import annotations
 
 import asyncio
@@ -18,7 +19,7 @@ from aiohomekit.exceptions import (
     EncryptionError,
 )
 from aiohomekit.model import Accessories, Accessory, Transport
-from aiohomekit.model.characteristics import Characteristic
+from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components.thread.dataset_store import async_get_preferred_dataset
@@ -46,6 +47,7 @@ from .const import (
     SUBSCRIBE_COOLDOWN,
 )
 from .device_trigger import async_fire_triggers, async_setup_triggers_for_entry
+from .utils import IidTuple, unique_id_to_iids
 
 RETRY_INTERVAL = 60  # seconds
 MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE = 3
@@ -143,6 +145,7 @@ class HKDevice:
             cooldown=DEBOUNCE_COOLDOWN,
             immediate=False,
             function=self.async_update,
+            background=True,
         )
 
         self._availability_callbacks: set[CALLBACK_TYPE] = set()
@@ -195,13 +198,19 @@ class HKDevice:
             self._subscribe_timer()
             self._subscribe_timer = None
 
-    async def _async_subscribe(self, _now: datetime) -> None:
+    @callback
+    def _async_subscribe(self, _now: datetime) -> None:
         """Subscribe to characteristics."""
         self._subscribe_timer = None
         if self._pending_subscribes:
             subscribes = self._pending_subscribes.copy()
             self._pending_subscribes.clear()
-            await self.pairing.subscribe(subscribes)
+            self.config_entry.async_create_task(
+                self.hass,
+                self.pairing.subscribe(subscribes),
+                name=f"hkc subscriptions {self.unique_id}",
+                eager_start=True,
+            )
 
     def remove_watchable_characteristics(
         self, characteristics: list[tuple[int, int]]
@@ -261,7 +270,7 @@ class HKDevice:
         # Ideally we would know which entities we are about to add
         # so we only poll those chars but that is not possible
         # yet.
-        attempts = None if self.hass.state == CoreState.running else 1
+        attempts = None if self.hass.state is CoreState.running else 1
         if (
             transport == Transport.BLE
             and pairing.accessories
@@ -277,6 +286,7 @@ class HKDevice:
                 self.hass.bus.async_listen(
                     EVENT_HOMEASSISTANT_STARTED,
                     self._async_populate_ble_accessory_state,
+                    run_immediately=True,
                 )
             )
         else:
@@ -318,7 +328,7 @@ class HKDevice:
             )
             # BLE devices always get an RSSI sensor as well
             if "sensor" not in self.platforms:
-                await self.async_load_platform("sensor")
+                await self._async_load_platforms({"sensor"})
 
     @callback
     def _async_start_polling(self) -> None:
@@ -329,10 +339,20 @@ class HKDevice:
         self.config_entry.async_on_unload(
             async_track_time_interval(
                 self.hass,
-                self.async_request_update,
+                self._async_schedule_update,
                 self.pairing.poll_interval,
                 name=f"HomeKit Device {self.unique_id} availability check poll",
             )
+        )
+
+    @callback
+    def _async_schedule_update(self, now: datetime) -> None:
+        """Schedule an update."""
+        self.config_entry.async_create_background_task(
+            self.hass,
+            self._debounced_update.async_call(),
+            name=f"hkc {self.unique_id} alive poll",
+            eager_start=True,
         )
 
     async def async_add_new_entities(self) -> None:
@@ -514,6 +534,58 @@ class HKDevice:
             device_registry.async_update_device(device.id, new_identifiers=identifiers)
 
     @callback
+    def async_reap_stale_entity_registry_entries(self) -> None:
+        """Delete entity registry entities for removed characteristics, services and accessories."""
+        _LOGGER.debug(
+            "Removing stale entity registry entries for pairing %s",
+            self.unique_id,
+        )
+
+        reg = er.async_get(self.hass)
+
+        # For the current config entry only, visit all registry entity entries
+        # Build a set of (unique_id, aid, sid, iid)
+        # For services, (unique_id, aid, sid, None)
+        # For accessories, (unique_id, aid, None, None)
+        entries = er.async_entries_for_config_entry(reg, self.config_entry.entry_id)
+        existing_entities = {
+            iids: entry.entity_id
+            for entry in entries
+            if (iids := unique_id_to_iids(entry.unique_id))
+        }
+
+        # Process current entity map and produce a similar set
+        current_unique_id: set[IidTuple] = set()
+        for accessory in self.entity_map.accessories:
+            current_unique_id.add((accessory.aid, None, None))
+
+            for service in accessory.services:
+                current_unique_id.add((accessory.aid, service.iid, None))
+
+                for char in service.characteristics:
+                    if self.pairing.transport != Transport.BLE:
+                        if char.type == CharacteristicsTypes.THREAD_CONTROL_POINT:
+                            continue
+
+                    current_unique_id.add(
+                        (
+                            accessory.aid,
+                            service.iid,
+                            char.iid,
+                        )
+                    )
+
+        # Remove the difference
+        if stale := existing_entities.keys() - current_unique_id:
+            for parts in stale:
+                _LOGGER.debug(
+                    "Removing stale entity registry entry %s for pairing %s",
+                    existing_entities[parts],
+                    self.unique_id,
+                )
+                reg.async_remove(existing_entities[parts])
+
+    @callback
     def async_migrate_ble_unique_id(self) -> None:
         """Config entries from step_bluetooth used incorrect identifier for unique_id."""
         unique_id = normalize_hkid(self.unique_id)
@@ -615,6 +687,8 @@ class HKDevice:
 
         self.async_migrate_ble_unique_id()
 
+        self.async_reap_stale_entity_registry_entries()
+
         self.async_create_devices()
 
         # Load any triggers for this config entry
@@ -630,7 +704,9 @@ class HKDevice:
 
     def process_config_changed(self, config_num: int) -> None:
         """Handle a config change notification from the pairing."""
-        self.hass.async_create_task(self.async_update_new_accessories_state())
+        self.config_entry.async_create_task(
+            self.hass, self.async_update_new_accessories_state(), eager_start=True
+        )
 
     async def async_update_new_accessories_state(self) -> None:
         """Process a change in the pairings accessories state."""
@@ -641,7 +717,9 @@ class HKDevice:
         await self.async_add_new_entities()
 
     @callback
-    def async_entity_key_removed(self, entity_key: tuple[int, int | None, int | None]):
+    def async_entity_key_removed(
+        self, entity_key: tuple[int, int | None, int | None]
+    ) -> None:
         """Handle an entity being removed.
 
         Releases the entity from self.entities so it can be added again.
@@ -666,7 +744,7 @@ class HKDevice:
         self.char_factories.append(add_entities_cb)
         self._add_new_entities_for_char([add_entities_cb])
 
-    def _add_new_entities_for_char(self, handlers) -> None:
+    def _add_new_entities_for_char(self, handlers: list[AddCharacteristicCb]) -> None:
         for accessory in self.entity_map.accessories:
             for service in accessory.services:
                 for char in service.characteristics:
@@ -724,19 +802,14 @@ class HKDevice:
                         self.entities.add(entity_key)
                         break
 
-    async def async_load_platform(self, platform: str) -> None:
-        """Load a single platform idempotently."""
-        if platform in self.platforms:
+    async def _async_load_platforms(self, platforms: set[str]) -> None:
+        """Load a group of platforms."""
+        if not (to_load := platforms - self.platforms):
             return
-
-        self.platforms.add(platform)
-        try:
-            await self.hass.config_entries.async_forward_entry_setup(
-                self.config_entry, platform
-            )
-        except Exception:
-            self.platforms.remove(platform)
-            raise
+        self.platforms.update(to_load)
+        await self.hass.config_entries.async_forward_entry_setups(
+            self.config_entry, platforms
+        )
 
     async def async_load_platforms(self) -> None:
         """Load any platforms needed by this HomeKit device."""
@@ -755,9 +828,7 @@ class HKDevice:
                             to_load.add(platform)
 
         if to_load:
-            await asyncio.gather(
-                *[self.async_load_platform(platform) for platform in to_load]
-            )
+            await self._async_load_platforms(to_load)
 
     @callback
     def async_update_available_state(self, *_: Any) -> None:
@@ -768,7 +839,7 @@ class HKDevice:
         """Request an debounced update from the accessory."""
         await self._debounced_update.async_call()
 
-    async def async_update(self, now=None):
+    async def async_update(self, now: datetime | None = None) -> None:
         """Poll state of all entities attached to this bridge/accessory."""
         if not self.pollable_characteristics:
             self.async_update_available_state()
