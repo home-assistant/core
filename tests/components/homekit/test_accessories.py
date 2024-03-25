@@ -28,6 +28,7 @@ from homeassistant.components.homekit.const import (
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
+    EMPTY_MAC,
     MANUFACTURER,
     SERV_ACCESSORY_INFO,
 )
@@ -747,7 +748,9 @@ def test_home_driver(iid_storage) -> None:
             persist_file=path,
         )
 
-    mock_driver.assert_called_with(address=ip_address, port=port, persist_file=path)
+    mock_driver.assert_called_with(
+        address=ip_address, port=port, persist_file=path, mac=EMPTY_MAC
+    )
     driver.state = Mock(pincode=pin, paired=False)
     xhm_uri_mock = Mock(return_value="X-HM://0")
     driver.accessory = Mock(display_name="any", xhm_uri=xhm_uri_mock)

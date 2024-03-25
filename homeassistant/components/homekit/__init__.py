@@ -12,6 +12,7 @@ import socket
 from typing import Any, cast
 
 from aiohttp import web
+from pyhap import util as pyhap_util
 from pyhap.characteristic import Characteristic
 from pyhap.const import STANDALONE_AID
 from pyhap.loader import get_loader
@@ -580,6 +581,8 @@ class HomeKit:
             self.driver.load()
             return True
 
+        # If there is no persist file, we need to generate a mac
+        self.driver.state.mac = pyhap_util.generate_mac()
         return False
 
     async def async_reset_accessories(self, entity_ids: Iterable[str]) -> None:
