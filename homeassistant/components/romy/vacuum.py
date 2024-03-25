@@ -70,8 +70,7 @@ class RomyVacuumEntity(
         coordinator: RomyVacuumCoordinator,
     ) -> None:
         """Initialize the ROMY Robot."""
-        RomyEntity.__init__(self, coordinator.romy)
-        CoordinatorEntity.__init__(self, coordinator)
+        super().__init__(coordinator)
         self._attr_unique_id = self.romy.unique_id
 
     @callback
