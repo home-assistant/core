@@ -391,6 +391,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
 
         self._circuit.setMode(vicare_mode)
 
+    @property
     def fan_modes(self) -> list[str] | None:
         """Get available fan mode."""
 
@@ -406,6 +407,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
     
         return []
 
+    @property
     def fan_mode(self) -> str | None:
         """Get current fan mode."""
 
