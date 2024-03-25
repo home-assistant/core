@@ -92,7 +92,7 @@ async def test_chain(
         assert state.state == "18.05"
 
 
-@pytest.mark.parametrize("missing", (True, False))
+@pytest.mark.parametrize("missing", [True, False])
 async def test_chain_history(
     recorder_mock: Recorder,
     hass: HomeAssistant,

@@ -1298,7 +1298,7 @@
     "downloader": {
       "name": "Downloader",
       "integration_type": "hub",
-      "config_flow": false
+      "config_flow": true
     },
     "dremel_3d_printer": {
       "name": "Dremel 3D Printer",
@@ -5042,7 +5042,7 @@
     "rova": {
       "name": "ROVA",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "rss_feed_template": {

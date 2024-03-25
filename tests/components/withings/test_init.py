@@ -495,15 +495,15 @@ async def test_cloud_disconnect(
 @pytest.mark.parametrize(
     ("body", "expected_code"),
     [
-        [{"userid": 0, "appli": NotificationCategory.WEIGHT.value}, 0],  # Success
-        [{"userid": None, "appli": 1}, 0],  # Success, we ignore the user_id.
-        [{}, 12],  # No request body.
-        [{"userid": "GG"}, 20],  # appli not provided.
-        [{"userid": 0}, 20],  # appli not provided.
-        [
+        ({"userid": 0, "appli": NotificationCategory.WEIGHT.value}, 0),  # Success
+        ({"userid": None, "appli": 1}, 0),  # Success, we ignore the user_id.
+        ({}, 12),  # No request body.
+        ({"userid": "GG"}, 20),  # appli not provided.
+        ({"userid": 0}, 20),  # appli not provided.
+        (
             {"userid": 11, "appli": NotificationCategory.WEIGHT.value},
             0,
-        ],  # Success, we ignore the user_id
+        ),  # Success, we ignore the user_id
     ],
 )
 async def test_webhook_post(
