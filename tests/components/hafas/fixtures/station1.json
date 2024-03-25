@@ -1,0 +1,1931 @@
+{
+  "ver": "1.16",
+  "ext": "DB.R19.04.a",
+  "lang": "deu",
+  "id": "7zm2siuwmgxcx48x",
+  "cInfo": { "code": "OK" },
+  "svcResL": [
+    {
+      "meth": "LocMatch",
+      "err": "OK",
+      "res": {
+        "common": {
+          "locL": [],
+          "prodL": [
+            { "name": "ICE", "icoX": 0, "cls": 1 },
+            { "name": "RJ", "icoX": 1, "cls": 1 },
+            { "name": "EC", "icoX": 2, "cls": 2 },
+            { "name": "IC", "icoX": 3, "cls": 2 },
+            { "name": "NJ", "icoX": 4, "cls": 2 },
+            { "name": "BUS", "icoX": 5, "cls": 4 },
+            { "name": "Bus", "icoX": 6, "cls": 4 },
+            { "name": "D", "icoX": 7, "cls": 4 },
+            { "name": "EN", "icoX": 8, "cls": 4 },
+            { "name": "FLX", "icoX": 9, "cls": 4 },
+            { "name": "UEX", "icoX": 9, "cls": 4 },
+            {
+              "name": "Bus RE1",
+              "nameS": "RE1",
+              "icoX": 6,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_BB_____RE1!!1498363!!5840671" }
+            },
+            {
+              "name": "Bus RE3",
+              "nameS": "RE3",
+              "icoX": 6,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_BB_____RE3!!1486688!!5837713" }
+            },
+            {
+              "name": "Bus RE5",
+              "nameS": "RE5",
+              "icoX": 6,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_BW_____RE5!!1487358!!5842925" }
+            },
+            {
+              "name": "Bus SEV",
+              "nameS": "SEV",
+              "icoX": 6,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_080001_SEV!!1498363!!5840671" }
+            },
+            {
+              "name": "Bus RB14",
+              "nameS": "RB14",
+              "icoX": 6,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_BB_____RB14" }
+            },
+            { "name": "FEX", "icoX": 10, "cls": 8 },
+            { "name": "HBX", "icoX": 11, "cls": 8 },
+            { "name": "RB", "icoX": 11, "cls": 8 },
+            { "name": "RB", "icoX": 12, "cls": 8 },
+            { "name": "RE", "icoX": 11, "cls": 8 },
+            { "name": "RE", "icoX": 13, "cls": 8 },
+            {
+              "name": "S 3",
+              "nameS": "3",
+              "icoX": 14,
+              "cls": 16,
+              "prodCtx": { "lineId": "4_08_____3" }
+            },
+            {
+              "name": "S 5",
+              "nameS": "5",
+              "icoX": 14,
+              "cls": 16,
+              "prodCtx": { "lineId": "4_08_____5" }
+            },
+            {
+              "name": "S 7",
+              "nameS": "7",
+              "icoX": 14,
+              "cls": 16,
+              "prodCtx": { "lineId": "4_08_____7" }
+            },
+            {
+              "name": "S 9",
+              "nameS": "9",
+              "icoX": 14,
+              "cls": 16,
+              "prodCtx": { "lineId": "4_08_____9" }
+            },
+            {
+              "name": "S 47",
+              "nameS": "47",
+              "icoX": 14,
+              "cls": 16,
+              "prodCtx": { "lineId": "4_08_____47" }
+            },
+            {
+              "name": "Bus N5",
+              "nameS": "N5",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_N5" }
+            },
+            {
+              "name": "Bus 120",
+              "nameS": "120",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_120" }
+            },
+            {
+              "name": "Bus 123",
+              "nameS": "123",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_123" }
+            },
+            {
+              "name": "Bus 142",
+              "nameS": "142",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_142" }
+            },
+            {
+              "name": "Bus 147",
+              "nameS": "147",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_147" }
+            },
+            {
+              "name": "Bus 245",
+              "nameS": "245",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_245" }
+            },
+            {
+              "name": "Bus M10",
+              "nameS": "M10",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_M10!!1487269!!5843277" }
+            },
+            {
+              "name": "Bus M41",
+              "nameS": "M41",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_M41" }
+            },
+            {
+              "name": "Bus M85",
+              "nameS": "M85",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_M85" }
+            },
+            {
+              "name": "Bus N20",
+              "nameS": "N20",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_N20" }
+            },
+            {
+              "name": "Bus N40",
+              "nameS": "N40",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_N40" }
+            },
+            {
+              "name": "U 5",
+              "nameS": "5",
+              "icoX": 15,
+              "cls": 128,
+              "prodCtx": { "lineId": "7_vbbBVU_5" }
+            },
+            {
+              "name": "STR M5",
+              "nameS": "M5",
+              "icoX": 16,
+              "cls": 256,
+              "prodCtx": { "lineId": "8_vbbBVT_M5" }
+            },
+            {
+              "name": "STR M8",
+              "nameS": "M8",
+              "icoX": 16,
+              "cls": 256,
+              "prodCtx": { "lineId": "8_vbbBVT_M8" }
+            },
+            {
+              "name": "STR M10",
+              "nameS": "M10",
+              "icoX": 16,
+              "cls": 256,
+              "prodCtx": { "lineId": "8_vbbBVT_M10" }
+            },
+            {
+              "name": "Bus RE3",
+              "nameS": "RE3",
+              "icoX": 6,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_BB_____RE3!!1489398!!5845780" }
+            },
+            {
+              "name": "Bus SEV",
+              "nameS": "SEV",
+              "icoX": 6,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_NB_____SEV!!1501432!!5841461" }
+            },
+            { "name": "IRE", "icoX": 17, "cls": 8 },
+            {
+              "name": "LT SEV",
+              "nameS": "SEV",
+              "icoX": 18,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_NB_____SEV!!1501432!!5841461" }
+            },
+            {
+              "name": "S 1",
+              "nameS": "1",
+              "icoX": 14,
+              "cls": 16,
+              "prodCtx": { "lineId": "4_08_____1" }
+            },
+            {
+              "name": "S 2",
+              "nameS": "2",
+              "icoX": 14,
+              "cls": 16,
+              "prodCtx": { "lineId": "4_08_____2" }
+            },
+            {
+              "name": "S 25",
+              "nameS": "25",
+              "icoX": 14,
+              "cls": 16,
+              "prodCtx": { "lineId": "4_08_____25" }
+            },
+            {
+              "name": "S 26",
+              "nameS": "26",
+              "icoX": 14,
+              "cls": 16,
+              "prodCtx": { "lineId": "4_08_____26" }
+            },
+            {
+              "name": "S 41",
+              "nameS": "41",
+              "icoX": 14,
+              "cls": 16,
+              "prodCtx": { "lineId": "4_08_____41" }
+            },
+            {
+              "name": "S 42",
+              "nameS": "42",
+              "icoX": 14,
+              "cls": 16,
+              "prodCtx": { "lineId": "4_08_____42" }
+            },
+            {
+              "name": "S 45",
+              "nameS": "45",
+              "icoX": 14,
+              "cls": 16,
+              "prodCtx": { "lineId": "4_08_____45" }
+            },
+            {
+              "name": "S 46",
+              "nameS": "46",
+              "icoX": 14,
+              "cls": 16,
+              "prodCtx": { "lineId": "4_08_____46" }
+            },
+            {
+              "name": "Bus N8",
+              "nameS": "N8",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_N8" }
+            },
+            {
+              "name": "Bus 247",
+              "nameS": "247",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_247" }
+            },
+            {
+              "name": "U 8",
+              "nameS": "8",
+              "icoX": 15,
+              "cls": 128,
+              "prodCtx": { "lineId": "7_vbbBVU_8" }
+            },
+            {
+              "name": "Bus RE6",
+              "nameS": "RE6",
+              "icoX": 6,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_BB_____RE6" }
+            },
+            {
+              "name": "Bus SEV",
+              "nameS": "SEV",
+              "icoX": 6,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_OWBus__SEV!!1468082!!5844188" }
+            },
+            {
+              "name": "Bus RB10",
+              "nameS": "RB10",
+              "icoX": 6,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_BB_____RB10" }
+            },
+            {
+              "name": "Bus N7",
+              "nameS": "N7",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_N7" }
+            },
+            {
+              "name": "Bus 130",
+              "nameS": "130",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_130" }
+            },
+            {
+              "name": "Bus 134",
+              "nameS": "134",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_134" }
+            },
+            {
+              "name": "Bus 135",
+              "nameS": "135",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_135" }
+            },
+            {
+              "name": "Bus 136",
+              "nameS": "136",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_136" }
+            },
+            {
+              "name": "Bus 137",
+              "nameS": "137",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_137" }
+            },
+            {
+              "name": "Bus 237",
+              "nameS": "237",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_237" }
+            },
+            {
+              "name": "Bus 337",
+              "nameS": "337",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_337" }
+            },
+            {
+              "name": "Bus 638",
+              "nameS": "638",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbVIB_638" }
+            },
+            {
+              "name": "Bus 671",
+              "nameS": "671",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbHVG_671" }
+            },
+            {
+              "name": "Bus M32",
+              "nameS": "M32",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_M32" }
+            },
+            {
+              "name": "Bus M36",
+              "nameS": "M36",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_M36" }
+            },
+            {
+              "name": "Bus M37",
+              "nameS": "M37",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_M37" }
+            },
+            {
+              "name": "Bus M45",
+              "nameS": "M45",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_M45" }
+            },
+            {
+              "name": "Bus N30",
+              "nameS": "N30",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_N30" }
+            },
+            {
+              "name": "Bus N34",
+              "nameS": "N34",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_N34" }
+            },
+            {
+              "name": "Bus X33",
+              "nameS": "X33",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_X33" }
+            },
+            {
+              "name": "Bus X37",
+              "nameS": "X37",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_X37" }
+            },
+            {
+              "name": "U 7",
+              "nameS": "7",
+              "icoX": 15,
+              "cls": 128,
+              "prodCtx": { "lineId": "7_vbbBVU_7" }
+            },
+            {
+              "name": "Bus RE5",
+              "nameS": "RE5",
+              "icoX": 6,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_BW_____RE5!!1486817!!5837557" }
+            },
+            {
+              "name": "Bus SEV",
+              "nameS": "SEV",
+              "icoX": 6,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_OWBus__SEV!!1486817!!5837557" }
+            },
+            {
+              "name": "Bus 106",
+              "nameS": "106",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_106" }
+            },
+            {
+              "name": "Bus 184",
+              "nameS": "184",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_184" }
+            },
+            {
+              "name": "Bus 187",
+              "nameS": "187",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_187" }
+            },
+            {
+              "name": "Bus 204",
+              "nameS": "204",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_204" }
+            },
+            {
+              "name": "Bus 248",
+              "nameS": "248",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_248" }
+            },
+            {
+              "name": "Bus M46",
+              "nameS": "M46",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_M46" }
+            },
+            {
+              "name": "Bus N42",
+              "nameS": "N42",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_N42" }
+            },
+            {
+              "name": "S 75",
+              "nameS": "75",
+              "icoX": 14,
+              "cls": 16,
+              "prodCtx": { "lineId": "4_08_____75" }
+            },
+            {
+              "name": "Bus 140",
+              "nameS": "140",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_140" }
+            },
+            {
+              "name": "Bus 165",
+              "nameS": "165",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_165" }
+            },
+            {
+              "name": "Bus 240",
+              "nameS": "240",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_240" }
+            },
+            {
+              "name": "Bus 265",
+              "nameS": "265",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_265" }
+            },
+            {
+              "name": "Bus 300",
+              "nameS": "300",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_300" }
+            },
+            {
+              "name": "Bus 347",
+              "nameS": "347",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_347" }
+            },
+            {
+              "name": "Bus 108",
+              "nameS": "108",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_108" }
+            },
+            {
+              "name": "Bus 256",
+              "nameS": "256",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_256" }
+            },
+            {
+              "name": "Bus 296",
+              "nameS": "296",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_296" }
+            },
+            {
+              "name": "Bus N50",
+              "nameS": "N50",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_N50" }
+            },
+            {
+              "name": "Bus N94",
+              "nameS": "N94",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_N94" }
+            },
+            {
+              "name": "STR 21",
+              "nameS": "21",
+              "icoX": 16,
+              "cls": 256,
+              "prodCtx": { "lineId": "8_vbbBVT_21" }
+            },
+            {
+              "name": "STR 37",
+              "nameS": "37",
+              "icoX": 16,
+              "cls": 256,
+              "prodCtx": { "lineId": "8_vbbBVT_37" }
+            },
+            {
+              "name": "STR M13",
+              "nameS": "M13",
+              "icoX": 16,
+              "cls": 256,
+              "prodCtx": { "lineId": "8_vbbBVT_M13" }
+            },
+            {
+              "name": "Bus SEV",
+              "nameS": "SEV",
+              "icoX": 6,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_OWBus__SEV!!1498363!!5840671" }
+            },
+            {
+              "name": "S 8",
+              "nameS": "8",
+              "icoX": 14,
+              "cls": 16,
+              "prodCtx": { "lineId": "4_08_____8" }
+            },
+            {
+              "name": "S 85",
+              "nameS": "85",
+              "icoX": 14,
+              "cls": 16,
+              "prodCtx": { "lineId": "4_08_____85" }
+            },
+            {
+              "name": "Bus 194",
+              "nameS": "194",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_194" }
+            },
+            {
+              "name": "Bus M43",
+              "nameS": "M43",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_M43" }
+            },
+            {
+              "name": "Bus M2",
+              "nameS": "M2",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_M2" }
+            },
+            {
+              "name": "Bus M5",
+              "nameS": "M5",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_M5" }
+            },
+            {
+              "name": "Bus N2",
+              "nameS": "N2",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_N2" }
+            },
+            {
+              "name": "Bus 100",
+              "nameS": "100",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_100" }
+            },
+            {
+              "name": "Bus 200",
+              "nameS": "200",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_200" }
+            },
+            {
+              "name": "Bus N60",
+              "nameS": "N60",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_N60" }
+            },
+            {
+              "name": "Bus N65",
+              "nameS": "N65",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_N65" }
+            },
+            {
+              "name": "U 2",
+              "nameS": "2",
+              "icoX": 15,
+              "cls": 128,
+              "prodCtx": { "lineId": "7_vbbBVU_2" }
+            },
+            {
+              "name": "STR M1",
+              "nameS": "M1",
+              "icoX": 16,
+              "cls": 256,
+              "prodCtx": { "lineId": "8_vbbBVT_M1" }
+            },
+            {
+              "name": "STR M2",
+              "nameS": "M2",
+              "icoX": 16,
+              "cls": 256,
+              "prodCtx": { "lineId": "8_vbbBVT_M2" }
+            },
+            {
+              "name": "STR M4",
+              "nameS": "M4",
+              "icoX": 16,
+              "cls": 256,
+              "prodCtx": { "lineId": "8_vbbBVT_M4" }
+            },
+            {
+              "name": "STR M6",
+              "nameS": "M6",
+              "icoX": 16,
+              "cls": 256,
+              "prodCtx": { "lineId": "8_vbbBVT_M6" }
+            },
+            {
+              "name": "Bus N1",
+              "nameS": "N1",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_N1" }
+            },
+            {
+              "name": "Bus N9",
+              "nameS": "N9",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_N9" }
+            },
+            {
+              "name": "Bus U9",
+              "nameS": "U9",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_U9" }
+            },
+            {
+              "name": "Bus 109",
+              "nameS": "109",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_109" }
+            },
+            {
+              "name": "Bus 110",
+              "nameS": "110",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_110" }
+            },
+            {
+              "name": "Bus 249",
+              "nameS": "249",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_249" }
+            },
+            {
+              "name": "Bus A05",
+              "nameS": "A05",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_rbrSEV_A05" }
+            },
+            {
+              "name": "Bus M19",
+              "nameS": "M19",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_M19" }
+            },
+            {
+              "name": "Bus M29",
+              "nameS": "M29",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_M29" }
+            },
+            {
+              "name": "Bus M49",
+              "nameS": "M49",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_M49" }
+            },
+            {
+              "name": "Bus N10",
+              "nameS": "N10",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_N10" }
+            },
+            {
+              "name": "Bus N26",
+              "nameS": "N26",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_N26" }
+            },
+            {
+              "name": "Bus N7X",
+              "nameS": "N7X",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_N7X" }
+            },
+            {
+              "name": "Bus X10",
+              "nameS": "X10",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_X10" }
+            },
+            {
+              "name": "Bus X34",
+              "nameS": "X34",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_X34" }
+            },
+            {
+              "name": "U 3",
+              "nameS": "3",
+              "icoX": 15,
+              "cls": 128,
+              "prodCtx": { "lineId": "7_vbbBVU_3" }
+            },
+            {
+              "name": "U 9",
+              "nameS": "9",
+              "icoX": 15,
+              "cls": 128,
+              "prodCtx": { "lineId": "7_vbbBVU_9" }
+            },
+            {
+              "name": "U 12",
+              "nameS": "12",
+              "icoX": 15,
+              "cls": 128,
+              "prodCtx": { "lineId": "7_vbbBVU_12" }
+            },
+            {
+              "name": "Bus 309",
+              "nameS": "309",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_309" }
+            },
+            {
+              "name": "Bus 310",
+              "nameS": "310",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_310" }
+            },
+            {
+              "name": "Bus X49",
+              "nameS": "X49",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_X49" }
+            },
+            {
+              "name": "Bus M1",
+              "nameS": "M1",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_M1" }
+            },
+            {
+              "name": "Bus N6",
+              "nameS": "N6",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_N6" }
+            },
+            {
+              "name": "U 6",
+              "nameS": "6",
+              "icoX": 15,
+              "cls": 128,
+              "prodCtx": { "lineId": "7_vbbBVU_6" }
+            },
+            {
+              "name": "STR 12",
+              "nameS": "12",
+              "icoX": 16,
+              "cls": 256,
+              "prodCtx": { "lineId": "8_vbbBVT_12" }
+            },
+            {
+              "name": "Bus M48",
+              "nameS": "M48",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_M48" }
+            },
+            {
+              "name": "Bus SEV",
+              "nameS": "SEV",
+              "icoX": 6,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_080001_SEV!!1466149!!5831542" }
+            },
+            {
+              "name": "Bus 114",
+              "nameS": "114",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_114" }
+            },
+            {
+              "name": "Bus 118",
+              "nameS": "118",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_118" }
+            },
+            {
+              "name": "Bus 218",
+              "nameS": "218",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_218" }
+            },
+            {
+              "name": "Bus 316",
+              "nameS": "316",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_316" }
+            },
+            {
+              "name": "Bus 318",
+              "nameS": "318",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_318" }
+            },
+            {
+              "name": "Bus 620",
+              "nameS": "620",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbRPM_620" }
+            },
+            {
+              "name": "Bus N16",
+              "nameS": "N16",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbVIB_N16" }
+            },
+            {
+              "name": "Bus N18",
+              "nameS": "N18",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_N18" }
+            },
+            {
+              "name": "Fäh F10",
+              "nameS": "F10",
+              "icoX": 19,
+              "cls": 64,
+              "prodCtx": { "lineId": "6_vbbBVF_F10" }
+            },
+            {
+              "name": "Bus M21",
+              "nameS": "M21",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_M21" }
+            },
+            {
+              "name": "Bus M27",
+              "nameS": "M27",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_M27" }
+            },
+            {
+              "name": "Bus X21",
+              "nameS": "X21",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_X21" }
+            },
+            {
+              "name": "Bus RB24",
+              "nameS": "RB24",
+              "icoX": 6,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_BB_____RB24!!1503182!!5847676" }
+            },
+            {
+              "name": "Bus RE24",
+              "nameS": "RE24",
+              "icoX": 6,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_BB_____RE24!!1503182!!5847676" }
+            },
+            {
+              "name": "Bus 154",
+              "nameS": "154",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_154" }
+            },
+            {
+              "name": "Bus 197",
+              "nameS": "197",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_197" }
+            },
+            {
+              "name": "Bus 893",
+              "nameS": "893",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBBG_893" }
+            },
+            {
+              "name": "Bus N56",
+              "nameS": "N56",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_N56" }
+            },
+            {
+              "name": "Bus X54",
+              "nameS": "X54",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_X54" }
+            },
+            {
+              "name": "STR M17",
+              "nameS": "M17",
+              "icoX": 16,
+              "cls": 256,
+              "prodCtx": { "lineId": "8_vbbBVT_M17" }
+            },
+            {
+              "name": "Bus 163",
+              "nameS": "163",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_163" }
+            },
+            {
+              "name": "Bus 263",
+              "nameS": "263",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbRVS_263" }
+            },
+            {
+              "name": "Bus 363",
+              "nameS": "363",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_rbrOST_363" }
+            },
+            {
+              "name": "Bus N62",
+              "nameS": "N62",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_N62" }
+            },
+            {
+              "name": "Bus N68",
+              "nameS": "N68",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_N68" }
+            },
+            {
+              "name": "STR 68",
+              "nameS": "68",
+              "icoX": 16,
+              "cls": 256,
+              "prodCtx": { "lineId": "8_vbbBVT_68" }
+            },
+            {
+              "name": "Bus SEV",
+              "nameS": "SEV",
+              "icoX": 6,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_080001_SEV!!1514156!!5841686" }
+            },
+            {
+              "name": "Bus 62",
+              "nameS": "62",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_62" }
+            },
+            {
+              "name": "Bus 195",
+              "nameS": "195",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_195" }
+            },
+            {
+              "name": "Bus 395",
+              "nameS": "395",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_395" }
+            },
+            {
+              "name": "Bus 398",
+              "nameS": "398",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_398" }
+            },
+            {
+              "name": "Bus N90",
+              "nameS": "N90",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_N90" }
+            },
+            {
+              "name": "Bus N95",
+              "nameS": "N95",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_N95" }
+            },
+            {
+              "name": "STR 62",
+              "nameS": "62",
+              "icoX": 16,
+              "cls": 256,
+              "prodCtx": { "lineId": "8_vbbBVT_62" }
+            },
+            {
+              "name": "STR 63",
+              "nameS": "63",
+              "icoX": 16,
+              "cls": 256,
+              "prodCtx": { "lineId": "8_vbbBVT_63" }
+            },
+            {
+              "name": "Bus 282",
+              "nameS": "282",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_282" }
+            },
+            {
+              "name": "Bus N84",
+              "nameS": "N84",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_N84" }
+            },
+            {
+              "name": "Bus 166",
+              "nameS": "166",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_166" }
+            },
+            {
+              "name": "Bus 377",
+              "nameS": "377",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_377" }
+            },
+            {
+              "name": "Bus N77",
+              "nameS": "N77",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_N77" }
+            },
+            {
+              "name": "Bus 170",
+              "nameS": "170",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_170" }
+            },
+            {
+              "name": "Bus 246",
+              "nameS": "246",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_246" }
+            },
+            {
+              "name": "Bus M76",
+              "nameS": "M76",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_M76" }
+            },
+            {
+              "name": "Bus X76",
+              "nameS": "X76",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_X76" }
+            },
+            {
+              "name": "Bus 275",
+              "nameS": "275",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_275" }
+            },
+            {
+              "name": "Bus X83",
+              "nameS": "X83",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_X83" }
+            },
+            {
+              "name": "Bus RE5",
+              "nameS": "RE5",
+              "icoX": 6,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_BB_____RE5!!1486688!!5837713" }
+            },
+            {
+              "name": "Bus RE7",
+              "nameS": "RE7",
+              "icoX": 6,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_BB_____RE7!!1503403!!5825271" }
+            },
+            {
+              "name": "Bus RB22",
+              "nameS": "RB22",
+              "icoX": 6,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_BB_____RB22!!1503403!!5825271" }
+            },
+            {
+              "name": "Bus RB24",
+              "nameS": "RB24",
+              "icoX": 6,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_BB_____RB24!!1503403!!5825271" }
+            },
+            {
+              "name": "Bus X7",
+              "nameS": "X7",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_X7" }
+            },
+            {
+              "name": "Bus 734",
+              "nameS": "734",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbRVS_734" }
+            },
+            {
+              "name": "Bus 735",
+              "nameS": "735",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbRVS_735" }
+            },
+            {
+              "name": "Bus 736",
+              "nameS": "736",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbRVS_736" }
+            },
+            {
+              "name": "Bus 743",
+              "nameS": "743",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbRVS_743" }
+            },
+            {
+              "name": "Bus N36",
+              "nameS": "N36",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbRVS_N36" }
+            },
+            {
+              "name": "Bus X71",
+              "nameS": "X71",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_vbbBVB_X71" }
+            },
+            {
+              "name": "Bus BER1",
+              "nameS": "BER1",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_rbrSBE_BER1" }
+            },
+            {
+              "name": "Bus BER2",
+              "nameS": "BER2",
+              "icoX": 6,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_rbr004_BER2" }
+            }
+          ],
+          "polyL": [],
+          "layerL": [
+            { "id": "standard", "name": "standard", "index": 0, "annoCnt": 0 }
+          ],
+          "crdSysL": [
+            { "id": "standard", "index": 0, "type": "WGS84", "dim": 3 }
+          ],
+          "opL": [],
+          "remL": [],
+          "icoL": [
+            { "res": "ICE" },
+            { "res": "RJ" },
+            { "res": "EC" },
+            { "res": "IC" },
+            { "res": "NJ" },
+            { "res": "BUS" },
+            { "res": "Bus" },
+            { "res": "D" },
+            { "res": "EN" },
+            { "res": "DPF" },
+            { "res": "FEX" },
+            { "res": "DPN" },
+            { "res": "RB" },
+            { "res": "RE" },
+            { "res": "S" },
+            { "res": "U" },
+            { "res": "STR" },
+            { "res": "IRE" },
+            { "res": "LT" },
+            { "res": "Fähre" }
+          ]
+        },
+        "match": {
+          "field": "S",
+          "state": "L",
+          "locL": [
+            {
+              "lid": "A=1@O=Berlin Hbf@X=13369549@Y=52525589@U=80@L=8011160@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Berlin Hbf",
+              "icoX": 0,
+              "extId": "8011160",
+              "state": "F",
+              "crd": {
+                "x": 13369629,
+                "y": 52524924,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 447,
+              "pRefL": [
+                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
+                18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33,
+                34, 35, 36, 37, 38, 39, 40, 41
+              ],
+              "wt": 32767
+            },
+            {
+              "lid": "A=1@O=BERLIN@X=13386988@Y=52520501@U=80@L=8096003@B=1@p=1663183251@",
+              "type": "S",
+              "name": "BERLIN",
+              "icoX": 0,
+              "extId": "8096003",
+              "state": "F",
+              "crd": {
+                "x": 13386988,
+                "y": 52520501,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "meta": true,
+              "pCls": 447,
+              "pRefL": [
+                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 42, 13, 43, 15, 16, 17,
+                44, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
+                33, 34, 35, 36, 37, 45, 38, 39, 40, 41
+              ],
+              "wt": 32767
+            },
+            {
+              "lid": "A=1@O=Berlin Gesundbrunnen@X=13388516@Y=52548961@U=80@L=8011102@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Berlin Gesundbrunnen",
+              "icoX": 0,
+              "extId": "8011102",
+              "state": "F",
+              "crd": {
+                "x": 13391060,
+                "y": 52548656,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 191,
+              "pRefL": [
+                0, 1, 2, 3, 4, 7, 8, 9, 42, 13, 14, 16, 17, 18, 19, 20, 21, 46,
+                47, 48, 49, 50, 51, 52, 53, 26, 54, 55, 56
+              ],
+              "wt": 29985
+            },
+            {
+              "lid": "A=1@O=Berlin-Spandau@X=13196902@Y=52534650@U=80@L=8010404@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Berlin-Spandau",
+              "icoX": 0,
+              "extId": "8010404",
+              "state": "F",
+              "crd": {
+                "x": 13200947,
+                "y": 52533787,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 191,
+              "pRefL": [
+                0, 2, 3, 9, 11, 57, 58, 59, 15, 19, 20, 21, 22, 25, 60, 61, 62,
+                63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78
+              ],
+              "wt": 29991
+            },
+            {
+              "lid": "A=1@O=Berlin Südkreuz@X=13365315@Y=52475043@U=80@L=8011113@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Berlin Südkreuz",
+              "icoX": 0,
+              "extId": "8011113",
+              "state": "F",
+              "crd": {
+                "x": 13365863,
+                "y": 52476230,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 63,
+              "pRefL": [
+                0, 1, 2, 3, 4, 9, 12, 79, 80, 16, 19, 20, 21, 47, 25, 48, 49,
+                50, 51, 52, 53, 26, 81, 82, 83, 84, 85, 86, 87
+              ],
+              "wt": 29715
+            },
+            {
+              "lid": "A=1@O=Berlin Ostbahnhof@X=13434684@Y=52510487@U=80@L=8010255@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Berlin Ostbahnhof",
+              "icoX": 0,
+              "extId": "8010255",
+              "state": "F",
+              "crd": {
+                "x": 13434900,
+                "y": 52510424,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 63,
+              "pRefL": [
+                0, 1, 2, 3, 4, 8, 9, 11, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+                25, 26, 88, 89, 30, 31, 90, 91, 92, 93, 94, 37
+              ],
+              "wt": 29454
+            },
+            {
+              "lid": "A=1@O=Berlin-Lichtenberg@X=13496692@Y=52510137@U=80@L=8010036@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Berlin-Lichtenberg",
+              "icoX": 1,
+              "extId": "8010036",
+              "state": "F",
+              "crd": {
+                "x": 13496494,
+                "y": 52509840,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 447,
+              "pRefL": [
+                1, 2, 3, 4, 8, 9, 11, 43, 16, 17, 44, 18, 19, 20, 21, 22, 23,
+                24, 25, 88, 95, 91, 96, 97, 98, 99, 45, 38, 100, 101, 102
+              ],
+              "wt": 9941
+            },
+            {
+              "lid": "A=1@O=Berlin Ostkreuz@X=13469104@Y=52503035@U=80@L=8011162@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Berlin Ostkreuz",
+              "icoX": 0,
+              "extId": "8011162",
+              "state": "F",
+              "crd": {
+                "x": 13470497,
+                "y": 52504689,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 63,
+              "pRefL": [
+                0, 1, 2, 3, 9, 11, 103, 16, 44, 18, 19, 20, 21, 47, 22, 23, 24,
+                104, 25, 50, 51, 53, 26, 88, 105, 106, 94, 107, 99
+              ],
+              "wt": 9168
+            },
+            {
+              "lid": "A=1@O=Berlin Alexanderplatz@X=13410962@Y=52521481@U=80@L=8011155@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Berlin Alexanderplatz",
+              "icoX": 6,
+              "extId": "8011155",
+              "state": "F",
+              "crd": {
+                "x": 13411088,
+                "y": 52521526,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 440,
+              "pRefL": [
+                11, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 108, 109,
+                110, 27, 54, 111, 112, 85, 93, 37, 87, 113, 114, 115, 38, 56,
+                116, 117, 118, 39, 119, 40, 41
+              ],
+              "wt": 8963
+            },
+            {
+              "lid": "A=1@O=Berlin Zoologischer Garten@X=13331992@Y=52507278@U=80@L=8010406@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Berlin Zoologischer Garten",
+              "icoX": 0,
+              "extId": "8010406",
+              "state": "F",
+              "crd": {
+                "x": 13332414,
+                "y": 52507242,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 191,
+              "pRefL": [
+                0, 2, 3, 9, 10, 11, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+                25, 52, 26, 120, 110, 121, 122, 111, 123, 124, 112, 84, 32, 125,
+                126, 127, 128, 73, 86, 129, 130, 131, 132, 133, 134, 115, 135,
+                136, 137
+              ],
+              "wt": 8904
+            },
+            {
+              "lid": "A=1@O=Berlin-Charlottenburg@X=13302327@Y=52504213@U=80@L=8010403@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Berlin-Charlottenburg",
+              "icoX": 1,
+              "extId": "8010403",
+              "state": "F",
+              "crd": {
+                "x": 13302049,
+                "y": 52504195,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 191,
+              "pRefL": [
+                1, 2, 4, 8, 9, 10, 11, 14, 15, 16, 18, 19, 20, 21, 22, 23, 24,
+                25, 50, 51, 52, 53, 26, 60, 123, 124, 138, 139, 127, 128, 140
+              ],
+              "wt": 8634
+            },
+            {
+              "lid": "A=1@O=Berlin Friedrichstraße@X=13387203@Y=52520376@U=80@L=8011306@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Berlin Friedrichstraße",
+              "icoX": 7,
+              "extId": "8011306",
+              "state": "F",
+              "crd": {
+                "x": 13386925,
+                "y": 52520331,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 444,
+              "pRefL": [
+                7, 9, 11, 14, 16, 17, 18, 19, 20, 21, 46, 47, 22, 23, 24, 25,
+                48, 49, 26, 141, 142, 31, 143, 144, 116
+              ],
+              "wt": 8419
+            },
+            {
+              "lid": "A=1@O=Berlin Potsdamer Platz@X=13375985@Y=52509382@U=80@L=8011118@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Berlin Potsdamer Platz",
+              "icoX": 6,
+              "extId": "8011118",
+              "state": "F",
+              "crd": {
+                "x": 13375904,
+                "y": 52509436,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 184,
+              "pRefL": [
+                12, 14, 19, 20, 21, 46, 47, 48, 49, 110, 112, 93, 34, 145, 35,
+                115
+              ],
+              "wt": 8393
+            },
+            {
+              "lid": "A=1@O=Berlin Wannsee@X=13179526@Y=52420973@U=80@L=8010405@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Berlin Wannsee",
+              "icoX": 0,
+              "extId": "8010405",
+              "state": "F",
+              "crd": {
+                "x": 13179696,
+                "y": 52420955,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 123,
+              "pRefL": [
+                0, 3, 11, 146, 17, 18, 19, 21, 46, 47, 24, 147, 148, 149, 150,
+                151, 152, 153, 154, 155
+              ],
+              "wt": 8350
+            },
+            {
+              "lid": "A=1@O=Berlin Jungfernheide@X=13299433@Y=52530273@U=80@L=8011167@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Berlin Jungfernheide",
+              "icoX": 6,
+              "extId": "8011167",
+              "state": "F",
+              "crd": {
+                "x": 13299451,
+                "y": 52530291,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 184,
+              "pRefL": [
+                14, 19, 20, 21, 50, 51, 52, 53, 26, 60, 123, 156, 157, 158, 78
+              ],
+              "wt": 8138
+            },
+            {
+              "lid": "A=1@O=Berlin-Hohenschönhausen@X=13512423@Y=52566005@U=80@L=8011901@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Berlin-Hohenschönhausen",
+              "icoX": 6,
+              "extId": "8011901",
+              "state": "F",
+              "crd": {
+                "x": 13512522,
+                "y": 52565906,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 312,
+              "pRefL": [
+                43, 159, 160, 18, 19, 21, 23, 88, 161, 162, 96, 163, 164, 165,
+                118, 166
+              ],
+              "wt": 8104
+            },
+            {
+              "lid": "A=1@O=Berlin-Grünau@X=13573496@Y=52413026@U=80@L=8089063@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Berlin-Grünau",
+              "icoX": 6,
+              "extId": "8089063",
+              "state": "F",
+              "crd": {
+                "x": 13573289,
+                "y": 52413152,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 312,
+              "pRefL": [
+                14, 104, 25, 50, 51, 52, 53, 26, 105, 167, 168, 169, 170, 171,
+                172
+              ],
+              "wt": 7977
+            },
+            {
+              "lid": "A=1@O=Berlin-Mahlsdorf@X=13611421@Y=52512105@U=80@L=8011343@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Berlin-Mahlsdorf",
+              "icoX": 6,
+              "extId": "8011343",
+              "state": "F",
+              "crd": {
+                "x": 13611421,
+                "y": 52512105,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 312,
+              "pRefL": [
+                173, 18, 23, 174, 175, 162, 176, 177, 178, 179, 45, 180, 181
+              ],
+              "wt": 7977
+            },
+            {
+              "lid": "A=1@O=Berlin Attilastr.@X=13360955@Y=52447680@U=80@L=8089003@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Berlin Attilastr.",
+              "icoX": 6,
+              "extId": "8089003",
+              "state": "F",
+              "crd": {
+                "x": 13361171,
+                "y": 52447203,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 56,
+              "pRefL": [14, 47, 49, 82, 182, 183],
+              "wt": 7862
+            },
+            {
+              "lid": "A=1@O=Berlin Plänterwald@X=13473122@Y=52478540@U=80@L=8089030@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Berlin Plänterwald",
+              "icoX": 6,
+              "extId": "8089030",
+              "state": "F",
+              "crd": {
+                "x": 13473374,
+                "y": 52478477,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 56,
+              "pRefL": [
+                14, 104, 25, 50, 51, 52, 53, 26, 105, 90, 184, 185, 113, 114,
+                186
+              ],
+              "wt": 7862
+            },
+            {
+              "lid": "A=1@O=Berlin Priesterweg@X=13356280@Y=52459914@U=80@L=8089034@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Berlin Priesterweg",
+              "icoX": 6,
+              "extId": "8089034",
+              "state": "F",
+              "crd": {
+                "x": 13356586,
+                "y": 52460795,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 56,
+              "pRefL": [14, 47, 48, 49, 187, 188, 189, 190],
+              "wt": 7862
+            },
+            {
+              "lid": "A=1@O=Berlin Schichauweg@X=13389307@Y=52398841@U=80@L=8089038@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Berlin Schichauweg",
+              "icoX": 6,
+              "extId": "8089038",
+              "state": "F",
+              "crd": {
+                "x": 13389244,
+                "y": 52398832,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 56,
+              "pRefL": [14, 47, 191, 192],
+              "wt": 7862
+            },
+            {
+              "lid": "A=1@O=Berlin Südende@X=13353898@Y=52448453@U=80@L=8089115@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Berlin Südende",
+              "icoX": 6,
+              "extId": "8089115",
+              "state": "F",
+              "crd": {
+                "x": 13354285,
+                "y": 52448830,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 56,
+              "pRefL": [14, 47, 48, 49, 182],
+              "wt": 7862
+            },
+            {
+              "lid": "A=1@O=Berlin Treptower Park@X=13461445@Y=52493561@U=80@L=8089043@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Berlin Treptower Park",
+              "icoX": 6,
+              "extId": "8089043",
+              "state": "F",
+              "crd": {
+                "x": 13461364,
+                "y": 52493345,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 56,
+              "pRefL": [
+                14, 104, 25, 50, 51, 52, 53, 26, 105, 90, 184, 106, 92, 107,
+                113, 114, 99
+              ],
+              "wt": 7862
+            },
+            {
+              "lid": "A=1@O=BER Berlin Brandenburg Airport@X=13511947@Y=52364808@U=80@L=8011201@B=1@p=1663183251@",
+              "type": "S",
+              "name": "BER Berlin Brandenburg Airport",
+              "icoX": 3,
+              "extId": "8011201",
+              "state": "F",
+              "crd": {
+                "x": 13511947,
+                "y": 52364808,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 58,
+              "pRefL": [
+                3, 193, 194, 103, 195, 196, 16, 19, 21, 25, 52, 60, 197, 168,
+                198, 199, 200, 201, 202, 113, 132, 203, 204, 205
+              ],
+              "wt": 8805
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

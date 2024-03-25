@@ -1,0 +1,13 @@
+{
+  "domain": "hafas",
+  "name": "HaFAS",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/hafas",
+  "requirements": ["pyhafas==0.3.0"],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": ["@kilimnik"],
+  "iot_class": "cloud_polling"
+}

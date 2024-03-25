@@ -1,0 +1,6 @@
+{
+  "domain": "db",
+  "name": "Deutsche Bahn",
+  "integration_type": "virtual",
+  "supported_by": "hafas"
+}

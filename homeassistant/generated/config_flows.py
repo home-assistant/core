@@ -212,6 +212,7 @@ FLOWS = {
         "growatt_server",
         "guardian",
         "habitica",
+        "hafas",
         "harmony",
         "heos",
         "here_travel_time",

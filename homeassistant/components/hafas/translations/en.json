@@ -1,0 +1,22 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "profile": "Profile",
+                    "start": "Start",
+                    "destination": "Destination",
+                    "offset": "Offset",
+                    "only_direct": "Only direct connections?"
+                }
+            },
+            "stations": {
+                "data": {
+                    "start": "Start",
+                    "destination": "Destination"
+                },
+                "title": "Verify the selected stations"
+            }
+        }
+    }
+}
