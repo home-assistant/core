@@ -18,6 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir, storage
+from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util
 from homeassistant.util.color import RGBColor
 
@@ -621,10 +622,9 @@ async def test_changing_delayed_written_data(
 
 async def test_saving_load_round_trip(tmpdir: py.path.local) -> None:
     """Test saving and loading round trip."""
-    async with async_test_home_assistant() as hass:
-        hass.config.config_dir = await hass.async_add_executor_job(
-            tmpdir.mkdir, "temp_storage"
-        )
+    loop = asyncio.get_running_loop()
+    config_dir = await loop.run_in_executor(None, tmpdir.mkdir, "temp_storage")
+    async with async_test_home_assistant(config_dir=config_dir) as hass:
 
         class NamedTupleSubclass(NamedTuple):
             """A NamedTuple subclass."""
@@ -668,7 +668,7 @@ async def test_loading_corrupt_core_file(
     loop = asyncio.get_running_loop()
     tmp_storage = await loop.run_in_executor(None, tmpdir.mkdir, "temp_storage")
 
-    async with async_test_home_assistant(storage_dir=tmp_storage) as hass:
+    async with async_test_home_assistant(config_dir=tmp_storage) as hass:
         storage_key = "core.anything"
         store = storage.Store(
             hass, MOCK_VERSION_2, storage_key, minor_version=MOCK_MINOR_VERSION_1
@@ -727,7 +727,7 @@ async def test_loading_corrupt_file_known_domain(
     loop = asyncio.get_running_loop()
     tmp_storage = await loop.run_in_executor(None, tmpdir.mkdir, "temp_storage")
 
-    async with async_test_home_assistant(storage_dir=tmp_storage) as hass:
+    async with async_test_home_assistant(config_dir=tmp_storage) as hass:
         hass.config.components.add("testdomain")
         storage_key = "testdomain.testkey"
 
@@ -782,10 +782,9 @@ async def test_loading_corrupt_file_known_domain(
 
 async def test_os_error_is_fatal(tmpdir: py.path.local) -> None:
     """Test OSError during load is fatal."""
-    async with async_test_home_assistant() as hass:
-        tmp_storage = await hass.async_add_executor_job(tmpdir.mkdir, "temp_storage")
-        hass.config.config_dir = tmp_storage
-
+    loop = asyncio.get_running_loop()
+    tmp_storage = await loop.run_in_executor(None, tmpdir.mkdir, "temp_storage")
+    async with async_test_home_assistant(config_dir=tmp_storage) as hass:
         store = storage.Store(
             hass, MOCK_VERSION_2, MOCK_KEY, minor_version=MOCK_MINOR_VERSION_1
         )
@@ -807,10 +806,9 @@ async def test_os_error_is_fatal(tmpdir: py.path.local) -> None:
 
 async def test_json_load_failure(tmpdir: py.path.local) -> None:
     """Test json load raising HomeAssistantError."""
-    async with async_test_home_assistant() as hass:
-        tmp_storage = await hass.async_add_executor_job(tmpdir.mkdir, "temp_storage")
-        hass.config.config_dir = tmp_storage
-
+    loop = asyncio.get_running_loop()
+    tmp_storage = await loop.run_in_executor(None, tmpdir.mkdir, "temp_storage")
+    async with async_test_home_assistant(config_dir=tmp_storage) as hass:
         store = storage.Store(
             hass, MOCK_VERSION_2, MOCK_KEY, minor_version=MOCK_MINOR_VERSION_1
         )
@@ -851,3 +849,132 @@ async def test_read_only_store(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
     await hass.async_block_till_done()
     assert read_only_store.key not in hass_storage
+
+
+async def test_store_manager_caching(tmpdir: py.path.local) -> None:
+    """Test store manager caching."""
+    loop = asyncio.get_running_loop()
+
+    def _setup_mock_storage():
+        config_dir = tmpdir.mkdir("temp_config")
+        tmp_storage = config_dir.mkdir(".storage")
+        tmp_storage.join("integration1").write_binary(
+            json_bytes({"data": {"integration1": "integration1"}})
+        )
+        tmp_storage.join("integration2").write_binary(
+            json_bytes({"data": {"integration2": "integration2"}})
+        )
+        return config_dir
+
+    config_dir = await loop.run_in_executor(None, _setup_mock_storage)
+
+    async with async_test_home_assistant(config_dir=config_dir) as hass:
+        store_manager = storage.get_internal_store_manager(hass)
+        assert (
+            store_manager.async_fetch("integration1") is None
+        )  # has data but not cached
+        assert (
+            store_manager.async_fetch("integration2") is None
+        )  # has data but not cached
+        assert (
+            store_manager.async_fetch("integration3") is None
+        )  # no file not but cached
+
+        await store_manager.async_initialize()
+        assert (
+            store_manager.async_fetch("integration1") is None
+        )  # has data but not cached
+        assert (
+            store_manager.async_fetch("integration2") is None
+        )  # has data but not cached
+        assert (
+            store_manager.async_fetch("integration3") is not None
+        )  # no file and initialized
+
+        result = store_manager.async_fetch("integration3")
+        assert result is not None
+        exists, data = result
+        assert exists is False
+        assert data is None
+
+        await store_manager.async_preload(["integration3", "integration2"])
+
+        assert (
+            store_manager.async_fetch("integration1") is None
+        )  # has data but not cached
+        result = store_manager.async_fetch("integration2")
+        assert result is not None
+        exists, data = result
+        assert exists is True
+        assert data == {"data": {"integration2": "integration2"}}
+
+        assert (
+            store_manager.async_fetch("integration3") is not None
+        )  # no file and initialized
+        result = store_manager.async_fetch("integration3")
+        assert result is not None
+        exists, data = result
+        assert exists is False
+        assert data is None
+
+        integration1 = storage.Store(hass, 1, "integration1")
+        await integration1.async_save({"integration1": "updated"})
+        # Save should invalidate the cache
+        assert store_manager.async_fetch("integration1") is None  # invalided
+
+        integration2 = storage.Store(hass, 1, "integration2")
+        integration2.async_delay_save(lambda: {"integration2": "updated"})
+        # Delay save should invalidate the cache
+        assert store_manager.async_fetch("integration2") is None  # invalided
+        await hass.async_block_till_done()
+
+        store_manager.async_invalidate("integration3")
+        assert store_manager.async_fetch("integration1") is None  # invalided by save
+        assert (
+            store_manager.async_fetch("integration2") is None
+        )  # invalided by delay save
+        assert store_manager.async_fetch("integration3") is None  # invalided
+
+        await hass.async_stop(force=True)
+
+    async with async_test_home_assistant(config_dir=config_dir) as hass:
+        store_manager = storage.get_internal_store_manager(hass)
+        assert store_manager.async_fetch("integration1") is None
+        assert store_manager.async_fetch("integration2") is None
+        assert store_manager.async_fetch("integration3") is None
+        await store_manager.async_initialize()
+        await store_manager.async_preload(["integration1", "integration2"])
+        result = store_manager.async_fetch("integration1")
+        assert result is not None
+        exists, data = result
+        assert exists is True
+        assert data["data"] == {"integration1": "updated"}
+
+        integration1 = storage.Store(hass, 1, "integration1")
+        assert await integration1.async_load() == {"integration1": "updated"}
+
+        # Load should not invalidate the cache
+        assert store_manager.async_fetch("integration1") is not None
+
+        integration2 = storage.Store(hass, 1, "integration2")
+        assert await integration2.async_load() == {"integration2": "updated"}
+
+        # Load should not invalidate the cache
+        assert store_manager.async_fetch("integration2") is not None
+
+        await hass.async_stop(force=True)
+
+    # Now make sure everything still works when we do not
+    # manually load the storage manager
+    async with async_test_home_assistant(config_dir=config_dir) as hass:
+        integration1 = storage.Store(hass, 1, "integration1")
+        assert await integration1.async_load() == {"integration1": "updated"}
+        await integration1.async_save({"integration1": "updated2"})
+        assert await integration1.async_load() == {"integration1": "updated2"}
+
+        integration2 = storage.Store(hass, 1, "integration2")
+        assert await integration2.async_load() == {"integration2": "updated"}
+        await integration2.async_save({"integration2": "updated2"})
+        assert await integration2.async_load() == {"integration2": "updated2"}
+
+        await hass.async_stop(force=True)

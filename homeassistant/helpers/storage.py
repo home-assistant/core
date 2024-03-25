@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING, Any, Generic, TypeVar
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -120,6 +121,7 @@ class _StoreManager:
         self._files: set[str] | None = None
         self._data_preload: dict[str, json_util.JsonValueType] = {}
         self._storage_path: Path = Path(config_dir).joinpath(STORAGE_DIR)
+        self._cancel_cleanup: asyncio.TimerHandle | None = None
 
     async def async_initialize(self) -> None:
         """Initialize the storage manager."""
@@ -153,12 +155,28 @@ class _StoreManager:
         _LOGGER.debug("%s: Cache miss, not preloaded", key)
         return None
 
+    @callback
     def _async_schedule_cleanup(self, _event: Event) -> None:
         """Schedule the cleanup of old files."""
-        self._hass.loop.call_later(60, self._async_cleanup)
+        self._cancel_cleanup = self._hass.loop.call_later(60, self._async_cleanup)
+        self._hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, self._async_cancel_cleanup
+        )
+
+    @callback
+    def _async_cancel_cleanup(self, _event: Event) -> None:
+        """Cancel the cleanup of old files."""
+        self._async_cleanup()
+        if self._cancel_cleanup:
+            self._cancel_cleanup.cancel()
+            self._cancel_cleanup = None
 
     def _async_cleanup(self) -> None:
-        """Cleanup unused cache."""
+        """Cleanup unused cache.
+
+        If nothing consumes the cache 60s after startup or when we
+        stop Home Assistant, we'll clear the cache.
+        """
         self._data_preload.clear()
 
     async def async_preload(self, keys: Iterable[str]) -> None:
