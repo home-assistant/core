@@ -1304,6 +1304,8 @@ build.json @home-assistant/supervisor
 /tests/components/suez_water/ @ooii
 /homeassistant/components/sun/ @Swamp-Ig
 /tests/components/sun/ @Swamp-Ig
+/homeassistant/components/sunsynk/ @jamesridgway
+/tests/components/sunsynk/ @jamesridgway
 /homeassistant/components/sunweg/ @rokam
 /tests/components/sunweg/ @rokam
 /homeassistant/components/supla/ @mwegrzynek
