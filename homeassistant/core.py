@@ -1507,6 +1507,15 @@ class EventBus:
         """
         if event_filter is not None and not is_callback_check_partial(event_filter):
             raise HomeAssistantError(f"Event filter {event_filter} is not a callback")
+        if event_type == EVENT_STATE_REPORTED:
+            if not event_filter:
+                raise HomeAssistantError(
+                    f"Event filter is required for event {event_type}"
+                )
+            if not run_immediately:
+                raise HomeAssistantError(
+                    f"Run immediately must be set for event {event_type}"
+                )
         return self._async_listen_filterable_job(
             event_type,
             (
