@@ -1888,6 +1888,7 @@ async def test_serviceregistry_return_response_optional(
 async def test_config_defaults() -> None:
     """Test config defaults."""
     hass = Mock()
+    hass.data = {}
     config = ha.Config(hass, "/test/ha-config")
     assert config.hass is hass
     assert config.latitude == 0
@@ -1915,20 +1916,25 @@ async def test_config_defaults() -> None:
 
 async def test_config_path_with_file() -> None:
     """Test get_config_path method."""
-    config = ha.Config(None, "/test/ha-config")
+    hass = Mock()
+    hass.data = {}
+    config = ha.Config(hass, "/test/ha-config")
     assert config.path("test.conf") == "/test/ha-config/test.conf"
 
 
 async def test_config_path_with_dir_and_file() -> None:
     """Test get_config_path method."""
-    config = ha.Config(None, "/test/ha-config")
+    hass = Mock()
+    hass.data = {}
+    config = ha.Config(hass, "/test/ha-config")
     assert config.path("dir", "test.conf") == "/test/ha-config/dir/test.conf"
 
 
 async def test_config_as_dict() -> None:
     """Test as dict."""
-    config = ha.Config(None, "/test/ha-config")
-    config.hass = MagicMock()
+    hass = Mock()
+    hass.data = {}
+    config = ha.Config(hass, "/test/ha-config")
     type(config.hass.state).value = PropertyMock(return_value="RUNNING")
     expected = {
         "latitude": 0,
@@ -1959,7 +1965,9 @@ async def test_config_as_dict() -> None:
 
 async def test_config_is_allowed_path() -> None:
     """Test is_allowed_path method."""
-    config = ha.Config(None, "/test/ha-config")
+    hass = Mock()
+    hass.data = {}
+    config = ha.Config(hass, "/test/ha-config")
     with TemporaryDirectory() as tmp_dir:
         # The created dir is in /tmp. This is a symlink on OS X
         # causing this test to fail unless we resolve path first.
@@ -1991,7 +1999,9 @@ async def test_config_is_allowed_path() -> None:
 
 async def test_config_is_allowed_external_url() -> None:
     """Test is_allowed_external_url method."""
-    config = ha.Config(None, "/test/ha-config")
+    hass = Mock()
+    hass.data = {}
+    config = ha.Config(hass, "/test/ha-config")
     config.allowlist_external_urls = [
         "http://x.com/",
         "https://y.com/bla/",
