@@ -872,9 +872,9 @@ class SensorExtraStoredData(ExtraStoredData):
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the sensor data."""
-        native_value: StateType | date | datetime | Decimal | dict[
-            str, str
-        ] = self.native_value
+        native_value: StateType | date | datetime | Decimal | dict[str, str] = (
+            self.native_value
+        )
         if isinstance(native_value, (date, datetime)):
             native_value = {
                 "__type": str(type(native_value)),

@@ -53,16 +53,14 @@ _DispatcherDataType = dict[
 @bind_hass
 def dispatcher_connect(
     hass: HomeAssistant, signal: SignalType[*_Ts], target: Callable[[*_Ts], None]
-) -> Callable[[], None]:
-    ...
+) -> Callable[[], None]: ...
 
 
 @overload
 @bind_hass
 def dispatcher_connect(
     hass: HomeAssistant, signal: str, target: Callable[..., None]
-) -> Callable[[], None]:
-    ...
+) -> Callable[[], None]: ...
 
 
 @bind_hass  # type: ignore[misc]  # workaround; exclude typing of 2 overload in func def
@@ -108,8 +106,7 @@ def _async_remove_dispatcher(
 @bind_hass
 def async_dispatcher_connect(
     hass: HomeAssistant, signal: SignalType[*_Ts], target: Callable[[*_Ts], Any]
-) -> Callable[[], None]:
-    ...
+) -> Callable[[], None]: ...
 
 
 @overload
@@ -117,8 +114,7 @@ def async_dispatcher_connect(
 @bind_hass
 def async_dispatcher_connect(
     hass: HomeAssistant, signal: str, target: Callable[..., Any]
-) -> Callable[[], None]:
-    ...
+) -> Callable[[], None]: ...
 
 
 @callback
@@ -150,14 +146,14 @@ def async_dispatcher_connect(
 
 @overload
 @bind_hass
-def dispatcher_send(hass: HomeAssistant, signal: SignalType[*_Ts], *args: *_Ts) -> None:
-    ...
+def dispatcher_send(
+    hass: HomeAssistant, signal: SignalType[*_Ts], *args: *_Ts
+) -> None: ...
 
 
 @overload
 @bind_hass
-def dispatcher_send(hass: HomeAssistant, signal: str, *args: Any) -> None:
-    ...
+def dispatcher_send(hass: HomeAssistant, signal: str, *args: Any) -> None: ...
 
 
 @bind_hass  # type: ignore[misc]  # workaround; exclude typing of 2 overload in func def
@@ -195,15 +191,13 @@ def _generate_job(
 @bind_hass
 def async_dispatcher_send(
     hass: HomeAssistant, signal: SignalType[*_Ts], *args: *_Ts
-) -> None:
-    ...
+) -> None: ...
 
 
 @overload
 @callback
 @bind_hass
-def async_dispatcher_send(hass: HomeAssistant, signal: str, *args: Any) -> None:
-    ...
+def async_dispatcher_send(hass: HomeAssistant, signal: str, *args: Any) -> None: ...
 
 
 @callback

@@ -447,7 +447,7 @@ class BaseScriptEntity(ToggleEntity, ABC):
 class UnavailableScriptEntity(BaseScriptEntity):
     """A non-functional script entity with its state set to unavailable.
 
-    This class is instatiated when an script fails to validate.
+    This class is instantiated when an script fails to validate.
     """
 
     _attr_should_poll = False
