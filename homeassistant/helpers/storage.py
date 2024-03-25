@@ -191,8 +191,6 @@ class _StoreManager:
         If nothing consumes the cache 60s after startup or when we
         stop Home Assistant, we'll clear the cache.
         """
-        for key in self._data_preload:
-            _LOGGER.debug("Key %s was preloaded but never read", key)
         self._data_preload.clear()
 
     async def async_preload(self, keys: Iterable[str]) -> None:
@@ -402,7 +400,6 @@ class Store(Generic[_T]):
 
     async def async_save(self, data: _T) -> None:
         """Save data."""
-        self._manager.async_invalidate(self.key)
         self._data = {
             "version": self.version,
             "minor_version": self.minor_version,
@@ -423,7 +420,6 @@ class Store(Generic[_T]):
         delay: float = 0,
     ) -> None:
         """Save data with an optional delay."""
-        self._manager.async_invalidate(self.key)
         self._data = {
             "version": self.version,
             "minor_version": self.minor_version,
@@ -503,6 +499,7 @@ class Store(Generic[_T]):
     async def _async_handle_write_data(self, *_args):
         """Handle writing the config."""
         async with self._write_lock:
+            self._manager.async_invalidate(self.key)
             self._async_cleanup_delay_listener()
             self._async_cleanup_final_write_listener()
 
