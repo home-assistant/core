@@ -514,7 +514,7 @@ aurorapy==0.2.7
 # avion==0.10
 
 # homeassistant.components.axis
-axis==58
+axis==59
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
