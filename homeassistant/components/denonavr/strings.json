@@ -33,6 +33,40 @@
       "not_denonavr_missing": "Not a Denon AVR Network Receiver, discovery information not complete"
     }
   },
+  "entity": {
+    "sensor": {
+      "bass": {
+        "name": "Bass"
+      },
+      "bass_level": {
+        "name": "Bass Level"
+      },
+      "dynamic_eq": {
+        "name": "Dynamic EQ"
+      },
+      "dynamic_volume": {
+        "name": "Dynamic Volume"
+      },
+      "multi_eq": {
+        "name": "Multi EQ"
+      },
+      "reference_level_offset": {
+        "name": "Reference Level Offset"
+      },
+      "tone_control_adjust": {
+        "name": "Tone Control Adjust"
+      },
+      "tone_control_status": {
+        "name": "Tone Control Status"
+      },
+      "treble": {
+        "name": "Treble"
+      },
+      "treble_level": {
+        "name": "Treble Level"
+      }
+    }
+  },
   "options": {
     "step": {
       "init": {
