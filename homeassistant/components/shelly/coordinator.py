@@ -162,31 +162,28 @@ class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
             raise UpdateFailed(f"Device disconnected: {repr(err)}") from err
         except InvalidAuthError:
             self.entry.async_start_reauth(self.hass)
-        else:
-            if not self.finish_setup_platforms:
-                return
+            return
 
-            LOGGER.debug("Device %s is online, resuming setup", self.entry.title)
-            platforms = self.finish_setup_platforms
-            self.finish_setup_platforms = None
+        if not self.finish_setup_platforms:
+            return
 
-            data = {**self.entry.data}
+        LOGGER.debug("Device %s is online, resuming setup", self.entry.title)
+        platforms = self.finish_setup_platforms
+        self.finish_setup_platforms = None
 
-            # Update sleep_period
-            if isinstance(self.device, RpcDevice):
-                data[CONF_SLEEP_PERIOD] = get_rpc_device_wakeup_period(
-                    self.device.status
-                )
-            elif isinstance(self.device, BlockDevice):
-                data[CONF_SLEEP_PERIOD] = get_block_device_sleep_period(
-                    self.device.settings
-                )
-            self.hass.config_entries.async_update_entry(self.entry, data=data)
+        data = {**self.entry.data}
 
-            # Resume platform setup
-            await self.hass.config_entries.async_forward_entry_setups(
-                self.entry, platforms
+        # Update sleep_period
+        if isinstance(self.device, RpcDevice):
+            data[CONF_SLEEP_PERIOD] = get_rpc_device_wakeup_period(self.device.status)
+        elif isinstance(self.device, BlockDevice):
+            data[CONF_SLEEP_PERIOD] = get_block_device_sleep_period(
+                self.device.settings
             )
+        self.hass.config_entries.async_update_entry(self.entry, data=data)
+
+        # Resume platform setup
+        await self.hass.config_entries.async_forward_entry_setups(self.entry, platforms)
 
     async def _async_reload_entry(self) -> None:
         """Reload entry."""
