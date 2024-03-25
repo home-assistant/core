@@ -61,7 +61,7 @@ async def async_setup_entry(
         entities.extend(
             OmadaDevicePortSwitchEntity[
                 OmadaSwitchPortCoordinator, OmadaSwitch, OmadaSwitchPortDetails
-            ](coordinator, switch, port.port_id, desc, _get_switch_port_base_name(port))
+            ](coordinator, switch, port.port_id, desc, port_name=_get_switch_port_base_name(port))
             for port in coordinator.data.values()
             for desc in SWITCH_PORT_DETAILS_SWITCHES
             if desc.exists_func(switch, port)
@@ -237,7 +237,7 @@ class OmadaDevicePortSwitchEntity(
         entity_description: OmadaDevicePortSwitchEntityDescription[
             TCoordinator, TDevice, TPort
         ],
-        port_name: str | None,
+        port_name: str | None = None,
     ) -> None:
         """Initialize the toggle switch."""
         super().__init__(coordinator, device)
