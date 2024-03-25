@@ -1653,7 +1653,7 @@ def extract_stack_to_frame(extract_stack: list[Mock]) -> FrameType:
 def setup_test_component_platform(
     hass: HomeAssistant,
     domain: str,
-    entities: list[Entity],
+    entities: Sequence[Entity],
     from_config_entry: bool = False,
 ) -> MockPlatform:
     """Mock a test component platform for tests."""
