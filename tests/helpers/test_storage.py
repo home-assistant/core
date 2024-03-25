@@ -920,26 +920,26 @@ async def test_store_manager_caching(tmpdir: py.path.local) -> None:
         integration1 = storage.Store(hass, 1, "integration1")
         await integration1.async_save({"integration1": "updated"})
         # Save should invalidate the cache
-        assert store_manager.async_fetch("integration1") is None  # invalided
+        assert store_manager.async_fetch("integration1") is None  # invalidated
 
         integration2 = storage.Store(hass, 1, "integration2")
         integration2.async_delay_save(lambda: {"integration2": "updated"})
         # Delay save should invalidate the cache after it saves
         assert (
             store_manager.async_fetch("integration2") is not None
-        )  # not invalided yet
+        )  # not invalidated yet
 
         # Block twice to flush out the delayed save
         await hass.async_block_till_done()
         await hass.async_block_till_done()
-        assert store_manager.async_fetch("integration2") is None  # invalided
+        assert store_manager.async_fetch("integration2") is None  # invalidated
 
         store_manager.async_invalidate("integration3")
-        assert store_manager.async_fetch("integration1") is None  # invalided by save
+        assert store_manager.async_fetch("integration1") is None  # invalidated by save
         assert (
             store_manager.async_fetch("integration2") is None
-        )  # invalided by delay save
-        assert store_manager.async_fetch("integration3") is None  # invalided
+        )  # invalidated by delay save
+        assert store_manager.async_fetch("integration3") is None  # invalidated
 
         await hass.async_stop(force=True)
 

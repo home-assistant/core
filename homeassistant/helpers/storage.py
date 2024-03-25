@@ -117,7 +117,7 @@ class _StoreManager:
     def __init__(self, hass: HomeAssistant, config_dir: str) -> None:
         """Initialize storage manager class."""
         self._hass = hass
-        self._invalided: set[str] = set()
+        self._invalidated: set[str] = set()
         self._files: set[str] | None = None
         self._data_preload: dict[str, json_util.JsonValueType] = {}
         self._storage_path: Path = Path(config_dir).joinpath(STORAGE_DIR)
@@ -140,7 +140,7 @@ class _StoreManager:
         Store calls this when its going to save data
         to ensure that the cache is not used after that.
         """
-        self._invalided.add(key)
+        self._invalidated.add(key)
         self._data_preload.pop(key, None)
 
     @callback
@@ -151,7 +151,7 @@ class _StoreManager:
         # If the key is invalidated, we don't need to check the cache
         # If async_initialize has not been called yet, we don't know
         # if the file exists or not so its a cache miss
-        if key in self._invalided or self._files is None:
+        if key in self._invalidated or self._files is None:
             _LOGGER.debug("%s: Cache miss", key)
             return None
 
