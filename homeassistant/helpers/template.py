@@ -2118,6 +2118,23 @@ def as_timedelta(value: str) -> timedelta | None:
     return dt_util.parse_duration(value)
 
 
+def merge_response(value: dict[str, dict[str, list]]) -> list[Any]:
+    """Merge service responses into single list.
+
+    Checks that the input is a correct service response:
+    dict[str, dict[str, list[Any]]].
+    Returns empty list by default.
+    """
+    response_items = []
+    if isinstance(value, dict):
+        for entity_response in value.values():
+            if isinstance(entity_response, dict):
+                for type_response in entity_response.values():
+                    if isinstance(type_response, list):
+                        response_items.extend(type_response)
+    return response_items
+
+
 def strptime(string, fmt, default=_SENTINEL):
     """Parse a time string to datetime."""
     try:
@@ -2833,6 +2850,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["as_timedelta"] = as_timedelta
         self.globals["as_timestamp"] = forgiving_as_timestamp
         self.globals["timedelta"] = timedelta
+        self.globals["merge_response"] = merge_response
         self.globals["strptime"] = strptime
         self.globals["urlencode"] = urlencode
         self.globals["average"] = average
