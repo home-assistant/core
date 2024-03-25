@@ -41,6 +41,11 @@
         "name": "Outdoor humidity"
       }
     },
+    "switch": {
+      "emergency_heat": {
+        "name": "Emergency heat"
+      }
+    },
     "climate": {
       "honeywell": {
         "state_attributes": {
@@ -53,6 +58,14 @@
           }
         }
       }
+    }
+  },
+  "exceptions": {
+    "switch_failed_off": {
+      "message": "Honeywell could turn off emergency heat mode."
+    },
+    "switch_failed_on": {
+      "message": "Honeywell could not set system mode to emergency heat mode."
     }
   }
 }
