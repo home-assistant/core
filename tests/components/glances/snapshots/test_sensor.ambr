@@ -977,7 +977,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': 'mdi:clock-time-eight-outline',
+    'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'glances',
     'previous_unique_id': None,
@@ -992,7 +992,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
       'friendly_name': '0.0.0.0 Uptime',
-      'icon': 'mdi:clock-time-eight-outline',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.0_0_0_0_uptime',

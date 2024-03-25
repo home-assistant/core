@@ -214,7 +214,6 @@ SENSOR_TYPES = {
         key="uptime",
         type="computed",
         translation_key="uptime",
-        icon="mdi:clock-time-eight-outline",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
 }
