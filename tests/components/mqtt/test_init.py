@@ -550,8 +550,8 @@ async def test_service_call_with_template_topic_renders_invalid_topic(
             blocking=True,
         )
     assert str(exc.value) == (
-        "Unable to publish: topic template 'test/{{ '+' if True else 'topic' }}/topic' "
-        "produced an invalid topic 'test/+/topic' after rendering "
+        "Unable to publish: topic template `test/{{ '+' if True else 'topic' }}/topic` "
+        "produced an invalid topic `test/+/topic` after rendering "
         "(Wildcards cannot be used in topic names)"
     )
     assert not mqtt_mock.async_publish.called

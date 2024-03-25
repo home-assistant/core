@@ -319,9 +319,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     platform_setups = await async_setup_legacy(hass, config)
 
-    if platform_setups:
-        await asyncio.wait([asyncio.create_task(setup) for setup in platform_setups])
-
     component.async_register_entity_service(
         "speak",
         {
@@ -344,6 +341,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         async_clear_cache_handle,
         schema=SCHEMA_SERVICE_CLEAR_CACHE,
     )
+
+    for setup in platform_setups:
+        # Tasks are created as tracked tasks to ensure startup
+        # waits for them to finish, but we explicitly do not
+        # want to wait for them to finish here because we want
+        # any config entries that use tts as a base platform
+        # to be able to start with out having to wait for the
+        # legacy platforms to finish setting up.
+        hass.async_create_task(setup, eager_start=True)
 
     return True
 

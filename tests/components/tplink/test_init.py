@@ -70,7 +70,7 @@ async def test_configuring_tplink_causes_discovery(
 async def test_config_entry_reload(hass: HomeAssistant) -> None:
     """Test that a config entry can be reloaded."""
     already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
     with _patch_discovery(), _patch_single_discovery(), _patch_connect():
@@ -266,7 +266,9 @@ async def test_config_entry_errors(
 
 async def test_plug_auth_fails(hass: HomeAssistant) -> None:
     """Test a smart plug auth failure."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=MAC_ADDRESS)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
+    )
     config_entry.add_to_hass(hass)
     plug = _mocked_plug()
     with _patch_discovery(device=plug), _patch_connect(device=plug):

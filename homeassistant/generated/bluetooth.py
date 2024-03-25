@@ -267,6 +267,22 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "local_name": "mib*",
     },
     {
+        "domain": "lamarzocco",
+        "local_name": "MICRA_*",
+    },
+    {
+        "domain": "lamarzocco",
+        "local_name": "MINI_*",
+    },
+    {
+        "domain": "lamarzocco",
+        "local_name": "GS3_*",
+    },
+    {
+        "domain": "lamarzocco",
+        "local_name": "GS3AV_*",
+    },
+    {
         "domain": "ld2410_ble",
         "local_name": "HLK-LD2410B_*",
     },

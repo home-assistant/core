@@ -78,13 +78,13 @@ async def test_migrate_times(caplog: pytest.LogCaptureFixture, tmp_path: Path) -
             "new_state": mock_state,
         },
         EventOrigin.local,
-        time_fired=now,
+        time_fired_timestamp=now.timestamp(),
     )
     custom_event = Event(
         "custom_event",
         {"entity_id": "sensor.custom"},
         EventOrigin.local,
-        time_fired=now,
+        time_fired_timestamp=now.timestamp(),
     )
     number_of_migrations = 5
 
@@ -242,13 +242,13 @@ async def test_migrate_can_resume_entity_id_post_migration(
             "new_state": mock_state,
         },
         EventOrigin.local,
-        time_fired=now,
+        time_fired_timestamp=now.timestamp(),
     )
     custom_event = Event(
         "custom_event",
         {"entity_id": "sensor.custom"},
         EventOrigin.local,
-        time_fired=now,
+        time_fired_timestamp=now.timestamp(),
     )
     number_of_migrations = 5
 
