@@ -52,6 +52,11 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
 )
+from homeassistant.components.remote import (
+    ATTR_NUM_REPEATS,
+    DOMAIN as REMOTE_DOMAIN,
+    SERVICE_SEND_COMMAND,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_COMMAND,
@@ -203,6 +208,19 @@ def _setup(config) -> tuple[str, str, MockConfigEntry]:
     """Perform common setup tasks for the tests."""
     patch_key = config[ADB_PATCH_KEY]
     entity_id = f"{MP_DOMAIN}.{slugify(config[TEST_ENTITY_NAME])}"
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=config[DOMAIN],
+        unique_id="a1:b1:c1:d1:e1:f1",
+    )
+
+    return patch_key, entity_id, config_entry
+
+
+def _setup_remote(config) -> tuple[str, str, MockConfigEntry]:
+    """Perform common setup tasks for the tests."""
+    patch_key = config[ADB_PATCH_KEY]
+    entity_id = f"{REMOTE_DOMAIN}.{slugify(config[TEST_ENTITY_NAME])}"
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=config[DOMAIN],
@@ -987,13 +1005,14 @@ async def test_get_image_disabled(hass: HomeAssistant) -> None:
 
 async def _test_service(
     hass: HomeAssistant,
+    service_domain,
     entity_id,
     ha_service_name,
     androidtv_method,
     additional_service_data=None,
     return_value=None,
 ) -> None:
-    """Test generic Android media player entity service."""
+    """Test generic Android entity service."""
     service_data = {ATTR_ENTITY_ID: entity_id}
     if additional_service_data:
         service_data.update(additional_service_data)
@@ -1007,7 +1026,7 @@ async def _test_service(
         f"androidtv.{androidtv_patch}.{androidtv_method}", return_value=return_value
     ) as service_call:
         await hass.services.async_call(
-            MP_DOMAIN,
+            service_domain,
             ha_service_name,
             service_data=service_data,
             blocking=True,
@@ -1029,24 +1048,42 @@ async def test_services_androidtv(hass: HomeAssistant) -> None:
             patch_key
         ], patchers.PATCH_SCREENCAP:
             await _test_service(
-                hass, entity_id, SERVICE_MEDIA_NEXT_TRACK, "media_next_track"
-            )
-            await _test_service(hass, entity_id, SERVICE_MEDIA_PAUSE, "media_pause")
-            await _test_service(hass, entity_id, SERVICE_MEDIA_PLAY, "media_play")
-            await _test_service(
-                hass, entity_id, SERVICE_MEDIA_PLAY_PAUSE, "media_play_pause"
+                hass, MP_DOMAIN, entity_id, SERVICE_MEDIA_NEXT_TRACK, "media_next_track"
             )
             await _test_service(
-                hass, entity_id, SERVICE_MEDIA_PREVIOUS_TRACK, "media_previous_track"
+                hass, MP_DOMAIN, entity_id, SERVICE_MEDIA_PAUSE, "media_pause"
             )
-            await _test_service(hass, entity_id, SERVICE_MEDIA_STOP, "media_stop")
-            await _test_service(hass, entity_id, SERVICE_TURN_OFF, "turn_off")
-            await _test_service(hass, entity_id, SERVICE_TURN_ON, "turn_on")
             await _test_service(
-                hass, entity_id, SERVICE_VOLUME_DOWN, "volume_down", return_value=0.1
+                hass, MP_DOMAIN, entity_id, SERVICE_MEDIA_PLAY, "media_play"
+            )
+            await _test_service(
+                hass, MP_DOMAIN, entity_id, SERVICE_MEDIA_PLAY_PAUSE, "media_play_pause"
             )
             await _test_service(
                 hass,
+                MP_DOMAIN,
+                entity_id,
+                SERVICE_MEDIA_PREVIOUS_TRACK,
+                "media_previous_track",
+            )
+            await _test_service(
+                hass, MP_DOMAIN, entity_id, SERVICE_MEDIA_STOP, "media_stop"
+            )
+            await _test_service(
+                hass, MP_DOMAIN, entity_id, SERVICE_TURN_OFF, "turn_off"
+            )
+            await _test_service(hass, MP_DOMAIN, entity_id, SERVICE_TURN_ON, "turn_on")
+            await _test_service(
+                hass,
+                MP_DOMAIN,
+                entity_id,
+                SERVICE_VOLUME_DOWN,
+                "volume_down",
+                return_value=0.1,
+            )
+            await _test_service(
+                hass,
+                MP_DOMAIN,
                 entity_id,
                 SERVICE_VOLUME_SET,
                 "set_volume_level",
@@ -1054,7 +1091,12 @@ async def test_services_androidtv(hass: HomeAssistant) -> None:
                 0.5,
             )
             await _test_service(
-                hass, entity_id, SERVICE_VOLUME_UP, "volume_up", return_value=0.2
+                hass,
+                MP_DOMAIN,
+                entity_id,
+                SERVICE_VOLUME_UP,
+                "volume_up",
+                return_value=0.2,
             )
 
 
@@ -1078,9 +1120,13 @@ async def test_services_firetv(hass: HomeAssistant) -> None:
         with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[
             patch_key
         ], patchers.PATCH_SCREENCAP:
-            await _test_service(hass, entity_id, SERVICE_MEDIA_STOP, "back")
-            await _test_service(hass, entity_id, SERVICE_TURN_OFF, "adb_shell")
-            await _test_service(hass, entity_id, SERVICE_TURN_ON, "adb_shell")
+            await _test_service(hass, MP_DOMAIN, entity_id, SERVICE_MEDIA_STOP, "back")
+            await _test_service(
+                hass, MP_DOMAIN, entity_id, SERVICE_TURN_OFF, "adb_shell"
+            )
+            await _test_service(
+                hass, MP_DOMAIN, entity_id, SERVICE_TURN_ON, "adb_shell"
+            )
 
 
 async def test_volume_mute(hass: HomeAssistant) -> None:
@@ -1211,3 +1257,88 @@ async def test_options_reload(hass: HomeAssistant) -> None:
 
             assert setup_entry_call.called
             assert config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize("config", [CONFIG_ANDROID_DEFAULT, CONFIG_FIRETV_DEFAULT])
+async def test_services_remote(hass: HomeAssistant, config) -> None:
+    """Test services for remote entity."""
+    patch_key, entity_id, config_entry = _setup_remote(config)
+    config_entry.add_to_hass(hass)
+
+    with patchers.patch_connect(True)[patch_key]:
+        with patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
+            assert await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
+
+        with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[
+            patch_key
+        ], patchers.PATCH_SCREENCAP:
+            await _test_service(
+                hass, REMOTE_DOMAIN, entity_id, SERVICE_TURN_OFF, "turn_off"
+            )
+            await _test_service(
+                hass, REMOTE_DOMAIN, entity_id, SERVICE_TURN_ON, "turn_on"
+            )
+            await _test_service(
+                hass,
+                REMOTE_DOMAIN,
+                entity_id,
+                SERVICE_SEND_COMMAND,
+                "adb_shell",
+                {ATTR_COMMAND: ["BACK", "test"], ATTR_NUM_REPEATS: 2},
+            )
+
+
+@pytest.mark.parametrize("config", [CONFIG_ANDROID_DEFAULT, CONFIG_FIRETV_DEFAULT])
+async def test_services_remote_custom(hass: HomeAssistant, config) -> None:
+    """Test services with custom options for remote entity."""
+    patch_key, entity_id, config_entry = _setup_remote(config)
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={
+            CONF_TURN_OFF_COMMAND: "test off",
+            CONF_TURN_ON_COMMAND: "test on",
+        },
+    )
+
+    with patchers.patch_connect(True)[patch_key]:
+        with patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
+            assert await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
+
+        with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[
+            patch_key
+        ], patchers.PATCH_SCREENCAP:
+            await _test_service(
+                hass, REMOTE_DOMAIN, entity_id, SERVICE_TURN_OFF, "adb_shell"
+            )
+            await _test_service(
+                hass, REMOTE_DOMAIN, entity_id, SERVICE_TURN_ON, "adb_shell"
+            )
+
+
+async def test_remote_unicode_decode_error(hass: HomeAssistant) -> None:
+    """Test sending a command via the send_command remote service that raises a UnicodeDecodeError exception."""
+    patch_key, entity_id, config_entry = _setup_remote(CONFIG_ANDROID_DEFAULT)
+    config_entry.add_to_hass(hass)
+    response = b"test response"
+
+    with patchers.patch_connect(True)[patch_key]:
+        with patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
+            assert await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
+
+        with patch(
+            "androidtv.basetv.basetv_async.BaseTVAsync.adb_shell",
+            side_effect=UnicodeDecodeError("utf-8", response, 0, len(response), "TEST"),
+        ):
+            await hass.services.async_call(
+                REMOTE_DOMAIN,
+                SERVICE_SEND_COMMAND,
+                service_data={ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: "BACK"},
+                blocking=True,
+            )
+
+            state = hass.states.get(entity_id)
+            assert state is not None
