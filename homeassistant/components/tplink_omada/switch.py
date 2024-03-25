@@ -244,7 +244,7 @@ class OmadaDevicePortSwitchEntity(
         self._device = device
         self._port_id = port_id
         self._attr_unique_id = f"{device.mac}_{port_id}_{entity_description.key}"
-        self._attr_translation_placeholders = {"port_name": port_name}
+        self._attr_translation_placeholders = {"port_name": port_name or str(port_id)}
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
