@@ -3,7 +3,6 @@
 DOMAIN = "ollama_conversation"
 
 CONF_MODEL = "model"
-CONF_MODEL_OPTIONS = "model_options"
 CONF_PROMPT = "prompt"
 DEFAULT_PROMPT = """{%- set used_domains = set([
   "binary_sensor",

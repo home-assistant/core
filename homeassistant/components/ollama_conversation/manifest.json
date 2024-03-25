@@ -7,5 +7,5 @@
   "documentation": "https://www.home-assistant.io/integrations/ollama_conversation",
   "integration_type": "service",
   "iot_class": "local_polling",
-  "requirements": ["ollama==0.1.7"]
+  "requirements": ["ollama-hass==0.1.7"]
 }

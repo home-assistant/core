@@ -1437,7 +1437,7 @@ odp-amsterdam==6.0.1
 oemthermostat==1.1.1
 
 # homeassistant.components.ollama_conversation
-ollama==0.1.7
+ollama-hass==0.1.7
 
 # homeassistant.components.omnilogic
 omnilogic==0.4.5

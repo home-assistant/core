@@ -34,7 +34,6 @@ async def test_chat(
         assert mock_chat.call_count == 1
         args = mock_chat.call_args.kwargs
         assert args["model"] == "test model"
-        assert args["options"] == {"test option": "test value"}
         assert args["messages"] == [
             Message({"role": "system", "content": "test prompt"}),
             Message({"role": "user", "content": "test message"}),

@@ -29,7 +29,6 @@ from homeassistant.util import ulid
 from .const import (
     CONF_MAX_HISTORY,
     CONF_MODEL,
-    CONF_MODEL_OPTIONS,
     CONF_PROMPT,
     DEFAULT_TIMEOUT,
     DOMAIN,
@@ -45,7 +44,6 @@ __all__ = [
     "CONF_URL",
     "CONF_PROMPT",
     "CONF_MODEL",
-    "CONF_MODEL_OPTIONS",
     "CONF_MAX_HISTORY",
     "MAX_HISTORY_NO_LIMIT",
     "DOMAIN",
@@ -102,7 +100,6 @@ class OllamaAgent(conversation.AbstractConversationAgent):
         client = self.hass.data[DOMAIN][self.entry.entry_id]
         conversation_id = user_input.conversation_id or ulid.ulid_now()
         model = settings[CONF_MODEL]
-        model_options = settings.get(CONF_MODEL_OPTIONS, {})
 
         # Look up message history
         message_history: MessageHistory | None = None
@@ -120,7 +117,7 @@ class OllamaAgent(conversation.AbstractConversationAgent):
                 intent_response = intent.IntentResponse(language=user_input.language)
                 intent_response.async_set_error(
                     intent.IntentResponseErrorCode.UNKNOWN,
-                    f"Sorry, I had a problem with my template: {err}",
+                    f"Sorry, I had a problem generating my prompt: {err}",
                 )
                 return conversation.ConversationResult(
                     response=intent_response, conversation_id=conversation_id
@@ -156,7 +153,6 @@ class OllamaAgent(conversation.AbstractConversationAgent):
                 messages=list(message_history.messages),
                 stream=False,
                 keep_alive=KEEP_ALIVE_FOREVER,
-                options={**model_options},
             )
         except (ollama.RequestError, ollama.ResponseError) as err:
             intent_response = intent.IntentResponse(language=user_input.language)

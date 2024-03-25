@@ -25,7 +25,6 @@ from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
-    ObjectSelector,
     TemplateSelector,
     TextSelector,
     TextSelectorConfig,
@@ -35,7 +34,6 @@ from homeassistant.helpers.selector import (
 from .const import (
     CONF_MAX_HISTORY,
     CONF_MODEL,
-    CONF_MODEL_OPTIONS,
     CONF_PROMPT,
     DEFAULT_PROMPT,
     DEFAULT_TIMEOUT,
@@ -55,14 +53,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(
             CONF_PROMPT, description={"suggested_value": DEFAULT_PROMPT}
         ): TemplateSelector(),
-        vol.Optional(CONF_MODEL_OPTIONS): ObjectSelector(),
-        vol.Optional(
-            CONF_MAX_HISTORY, description={"suggested_value": MAX_HISTORY_NO_LIMIT}
-        ): NumberSelector(
-            NumberSelectorConfig(
-                min=0, max=sys.maxsize, step=1, mode=NumberSelectorMode.BOX
-            )
-        ),
     }
 )
 
@@ -148,10 +138,6 @@ def ollama_config_option_schema(options: MappingProxyType[str, Any]) -> dict:
             CONF_MODEL,
             description={"suggested_value": options[CONF_MODEL]},
         ): cv.string,
-        vol.Optional(
-            CONF_MODEL_OPTIONS,
-            description={"suggested_value": options.get(CONF_MODEL_OPTIONS)},
-        ): ObjectSelector(),
         vol.Optional(
             CONF_PROMPT,
             description={"suggested_value": options[CONF_PROMPT]},
