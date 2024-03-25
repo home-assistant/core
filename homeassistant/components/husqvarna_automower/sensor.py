@@ -149,7 +149,7 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         value_fn=lambda data: (
             "no_error" if data.mower.error_key is None else data.mower.error_key
         ),
-        options=["no_error"] + error_key_list(),
+        options=["no_error", *error_key_list()],
     ),
     AutomowerSensorEntityDescription(
         key="restricted_reason",
