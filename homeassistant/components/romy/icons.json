@@ -15,6 +15,23 @@
           "on": "mdi:basket-check"
         }
       }
+    },
+    "sensor": {
+      "dustbin_sensor": {
+        "default": "mdi:basket-fill"
+      },
+      "total_cleaning_time": {
+        "default": "mdi:clock"
+      },
+      "total_number_of_cleaning_runs": {
+        "default": "mdi:counter"
+      },
+      "total_area_cleaned": {
+        "default": "mdi:texture-box"
+      },
+      "total_distance_driven": {
+        "default": "mdi:run"
+      }
     }
   }
 }
