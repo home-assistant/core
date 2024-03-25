@@ -79,6 +79,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.json import JSONEncoder, _orjson_default_encoder, json_dumps
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
@@ -1652,7 +1653,7 @@ def extract_stack_to_frame(extract_stack: list[Mock]) -> FrameType:
 def setup_test_component_platform(
     hass: HomeAssistant,
     domain: str,
-    entities: Sequence[MockEntity | MockToggleEntity],
+    entities: list[Entity],
     from_config_entry: bool = False,
 ) -> MockPlatform:
     """Mock a test component platform for tests."""
