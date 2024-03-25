@@ -29,9 +29,10 @@ async def test_bridge_setup_v1(hass: HomeAssistant, mock_api_v1) -> None:
         options={CONF_ALLOW_HUE_GROUPS: False, CONF_ALLOW_UNREACHABLE: False},
     )
 
-    with patch.object(bridge, "HueBridgeV1", return_value=mock_api_v1), patch.object(
-        hass.config_entries, "async_forward_entry_setups"
-    ) as mock_forward:
+    with (
+        patch.object(bridge, "HueBridgeV1", return_value=mock_api_v1),
+        patch.object(hass.config_entries, "async_forward_entry_setups") as mock_forward,
+    ):
         hue_bridge = bridge.HueBridge(hass, config_entry)
         assert await hue_bridge.async_initialize_bridge() is True
 
@@ -50,9 +51,10 @@ async def test_bridge_setup_v2(hass: HomeAssistant, mock_api_v2) -> None:
         data={"host": "1.2.3.4", "api_key": "mock-api-key", "api_version": 2},
     )
 
-    with patch.object(bridge, "HueBridgeV2", return_value=mock_api_v2), patch.object(
-        hass.config_entries, "async_forward_entry_setups"
-    ) as mock_forward:
+    with (
+        patch.object(bridge, "HueBridgeV2", return_value=mock_api_v2),
+        patch.object(hass.config_entries, "async_forward_entry_setups") as mock_forward,
+    ):
         hue_bridge = bridge.HueBridge(hass, config_entry)
         assert await hue_bridge.async_initialize_bridge() is True
 
@@ -118,9 +120,10 @@ async def test_reset_unloads_entry_if_setup(hass: HomeAssistant, mock_api_v1) ->
         options={CONF_ALLOW_HUE_GROUPS: False, CONF_ALLOW_UNREACHABLE: False},
     )
 
-    with patch.object(bridge, "HueBridgeV1", return_value=mock_api_v1), patch.object(
-        hass.config_entries, "async_forward_entry_setups"
-    ) as mock_forward:
+    with (
+        patch.object(bridge, "HueBridgeV1", return_value=mock_api_v1),
+        patch.object(hass.config_entries, "async_forward_entry_setups") as mock_forward,
+    ):
         hue_bridge = bridge.HueBridge(hass, config_entry)
         assert await hue_bridge.async_initialize_bridge() is True
 

@@ -1,4 +1,5 @@
 """Test the bootstrapping."""
+
 import asyncio
 from collections.abc import Generator, Iterable
 import glob

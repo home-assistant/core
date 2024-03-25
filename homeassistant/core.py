@@ -841,15 +841,13 @@ class HomeAssistant:
     @callback
     def async_run_job(
         self, target: Callable[[*_Ts], Coroutine[Any, Any, _R]], *args: *_Ts
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @overload
     @callback
     def async_run_job(
         self, target: Callable[[*_Ts], Coroutine[Any, Any, _R] | _R], *args: *_Ts
-    ) -> asyncio.Future[_R] | None:
-        ...
+    ) -> asyncio.Future[_R] | None: ...
 
     @overload
     @callback
