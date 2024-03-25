@@ -18,7 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DEV_MODEL_WATER_METER_YS5007, DOMAIN
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
@@ -38,7 +38,8 @@ DEVICE_TYPES: tuple[YoLinkValveEntityDescription, ...] = (
         device_class=ValveDeviceClass.WATER,
         value=lambda value: value == "closed" if value is not None else None,
         exists_fn=lambda device: device.device_type
-        == ATTR_DEVICE_WATER_METER_CONTROLLER,
+        == ATTR_DEVICE_WATER_METER_CONTROLLER
+        and not device.device_model_name.startswith(DEV_MODEL_WATER_METER_YS5007),
     ),
 )
 
