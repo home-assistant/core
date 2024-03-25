@@ -391,13 +391,27 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
 
         self._circuit.setMode(vicare_mode)
 
-
     def fan_modes(self) -> list[str] | None:
         """Get available fan mode."""
+
+        if self._isVentilator and "vicare_modes" in self._attributes:
+            supported_modes = self._attributes["vicare_modes"]
+            fan_modes = []
+            for key, value in VICARE_TO_HA_FAN_MODE.items():
+                if value in fan_modes:
+                    continue
+                if key in supported_modes:
+                    fan_modes.append(value)
+            return fan_modes
+    
         return []
 
     def fan_mode(self) -> str | None:
         """Get current fan mode."""
+
+        if self._isVentilator and "active_vicare_mode" in self._attributes and self._attributes["active_vicare_mode"] is not None:
+            return VICARE_TO_HA_FAN_MODE.get(self._attributes["active_vicare_mode"], None)
+
         return None
 
     def set_fan_mode(self, fan_mode):
