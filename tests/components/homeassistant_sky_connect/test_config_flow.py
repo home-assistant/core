@@ -20,12 +20,21 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry, MockModule, mock_integration
 
 USB_DATA = usb.UsbServiceInfo(
-    device="bla_device",
-    vid="bla_vid",
-    pid="bla_pid",
-    serial_number="bla_serial_number",
-    manufacturer="bla_manufacturer",
-    description="bla_description",
+    device="/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
+    vid="10C4",
+    pid="EA60",
+    serial_number="9e2adbd75b8beb119fe564a0f320645d",
+    manufacturer="Nabu Casa",
+    description="SkyConnect v1.0",
+)
+
+USB_DATA_ZBT1 = usb.UsbServiceInfo(
+    device="/dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
+    vid="10C4",
+    pid="EA60",
+    serial_number="9e2adbd75b8beb119fe564a0f320645d",
+    manufacturer="Nabu Casa",
+    description="Home Assistant Connect ZBT-1",
 )
 
 
@@ -38,27 +47,36 @@ def config_flow_handler(hass: HomeAssistant) -> Generator[None, None, None]:
         yield
 
 
-async def test_config_flow(hass: HomeAssistant) -> None:
-    """Test the config flow."""
+@pytest.mark.parametrize(
+    ("usb_data", "title"),
+    [
+        (USB_DATA, "Home Assistant SkyConnect"),
+        (USB_DATA_ZBT1, "Home Assistant Connect ZBT-1"),
+    ],
+)
+async def test_config_flow(
+    usb_data: usb.UsbServiceInfo, title: str, hass: HomeAssistant
+) -> None:
+    """Test the config flow for SkyConnect."""
     with patch(
         "homeassistant.components.homeassistant_sky_connect.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "usb"}, data=USB_DATA
+            DOMAIN, context={"source": "usb"}, data=usb_data
         )
 
     expected_data = {
-        "device": USB_DATA.device,
-        "vid": USB_DATA.vid,
-        "pid": USB_DATA.pid,
-        "serial_number": USB_DATA.serial_number,
-        "manufacturer": USB_DATA.manufacturer,
-        "description": USB_DATA.description,
+        "device": usb_data.device,
+        "vid": usb_data.vid,
+        "pid": usb_data.pid,
+        "serial_number": usb_data.serial_number,
+        "manufacturer": usb_data.manufacturer,
+        "description": usb_data.description,
     }
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Home Assistant SkyConnect"
+    assert result["title"] == title
     assert result["data"] == expected_data
     assert result["options"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
@@ -66,10 +84,45 @@ async def test_config_flow(hass: HomeAssistant) -> None:
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert config_entry.data == expected_data
     assert config_entry.options == {}
-    assert config_entry.title == "Home Assistant SkyConnect"
+    assert config_entry.title == title
     assert (
         config_entry.unique_id
-        == f"{USB_DATA.vid}:{USB_DATA.pid}_{USB_DATA.serial_number}_{USB_DATA.manufacturer}_{USB_DATA.description}"
+        == f"{usb_data.vid}:{usb_data.pid}_{usb_data.serial_number}_{usb_data.manufacturer}_{usb_data.description}"
+    )
+
+
+async def test_config_flow_zbt1(hass: HomeAssistant) -> None:
+    """Test the config flow for ZBT-1."""
+    with patch(
+        "homeassistant.components.homeassistant_sky_connect.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "usb"}, data=USB_DATA_ZBT1
+        )
+
+    expected_data = {
+        "device": USB_DATA_ZBT1.device,
+        "vid": USB_DATA_ZBT1.vid,
+        "pid": USB_DATA_ZBT1.pid,
+        "serial_number": USB_DATA_ZBT1.serial_number,
+        "manufacturer": USB_DATA_ZBT1.manufacturer,
+        "description": USB_DATA_ZBT1.description,
+    }
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Home Assistant Connect ZBT-1"
+    assert result["data"] == expected_data
+    assert result["options"] == {}
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert config_entry.data == expected_data
+    assert config_entry.options == {}
+    assert config_entry.title == "Home Assistant Connect ZBT-1"
+    assert (
+        config_entry.unique_id
+        == f"{USB_DATA_ZBT1.vid}:{USB_DATA_ZBT1.pid}_{USB_DATA_ZBT1.serial_number}_{USB_DATA_ZBT1.manufacturer}_{USB_DATA_ZBT1.description}"
     )
 
 
@@ -167,7 +220,13 @@ async def test_config_flow_update_device(hass: HomeAssistant) -> None:
     assert len(mock_unload_entry.mock_calls) == 1
 
 
+@pytest.mark.parametrize(
+    ("usb_data", "title"),
+    [(USB_DATA, "Home Assistant SkyConnect"), (USB_DATA_ZBT1, "Home Assistant ZBT-1")],
+)
 async def test_option_flow_install_multi_pan_addon(
+    usb_data: usb.UsbServiceInfo,
+    title: str,
     hass: HomeAssistant,
     addon_store_info,
     addon_info,
@@ -182,17 +241,17 @@ async def test_option_flow_install_multi_pan_addon(
     # Setup the config entry
     config_entry = MockConfigEntry(
         data={
-            "device": USB_DATA.device,
-            "vid": USB_DATA.vid,
-            "pid": USB_DATA.pid,
-            "serial_number": USB_DATA.serial_number,
-            "manufacturer": USB_DATA.manufacturer,
-            "description": USB_DATA.description,
+            "device": usb_data.device,
+            "vid": usb_data.vid,
+            "pid": usb_data.pid,
+            "serial_number": usb_data.serial_number,
+            "manufacturer": usb_data.manufacturer,
+            "description": usb_data.description,
         },
         domain=DOMAIN,
         options={},
-        title="Home Assistant SkyConnect",
-        unique_id=f"{USB_DATA.vid}:{USB_DATA.pid}_{USB_DATA.serial_number}_{USB_DATA.manufacturer}_{USB_DATA.description}",
+        title=title,
+        unique_id=f"{usb_data.vid}:{usb_data.pid}_{usb_data.serial_number}_{usb_data.manufacturer}_{usb_data.description}",
     )
     config_entry.add_to_hass(hass)
 
@@ -226,7 +285,7 @@ async def test_option_flow_install_multi_pan_addon(
         {
             "options": {
                 "autoflash_firmware": True,
-                "device": "bla_device",
+                "device": usb_data.device,
                 "baudrate": "115200",
                 "flow_control": True,
             }
@@ -288,7 +347,7 @@ async def test_option_flow_install_multi_pan_addon_zha(
     config_entry.add_to_hass(hass)
 
     zha_config_entry = MockConfigEntry(
-        data={"device": {"path": "bla_device"}, "radio_type": "ezsp"},
+        data={"device": {"path": USB_DATA.device}, "radio_type": "ezsp"},
         domain=ZHA_DOMAIN,
         options={},
         title="Yellow",
@@ -325,7 +384,7 @@ async def test_option_flow_install_multi_pan_addon_zha(
         {
             "options": {
                 "autoflash_firmware": True,
-                "device": "bla_device",
+                "device": USB_DATA.device,
                 "baudrate": "115200",
                 "flow_control": True,
             }

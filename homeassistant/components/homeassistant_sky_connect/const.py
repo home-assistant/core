@@ -26,7 +26,7 @@ class HardwareVariant(VariantInfo, enum.Enum):
     )
 
     CONNECT_ZBT1 = (
-        "Connect ZBT-1",
+        "Home Assistant Connect ZBT-1",
         "Connect ZBT-1",
         "Home Assistant Connect ZBT-1",
     )
