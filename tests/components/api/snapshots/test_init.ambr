@@ -1,0 +1,25 @@
+# serializer version: 1
+# name: test_api_get_services
+  list([
+    dict({
+      'domain': 'http',
+      'services': dict({
+        'unban_ip': dict({
+          'description': 'Remove a previously banned IP address from the ban list.',
+          'fields': dict({
+            'ip_address': dict({
+              'description': 'The IP address (IPv4 or IPv6) to unban.',
+              'example': '192.168.178.2',
+              'name': 'IP address',
+              'required': True,
+              'selector': dict({
+                'text': None,
+              }),
+            }),
+          }),
+          'name': 'Unban an IP',
+        }),
+      }),
+    }),
+  ])
+# ---
