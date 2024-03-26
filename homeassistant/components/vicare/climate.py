@@ -229,19 +229,18 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
                         self._circuit.getCurrentDesiredTemperature()
                     )
 
-
                 with suppress(PyViCareNotSupportedFeatureError):
                     self._attributes["active_vicare_mode"] = self._current_mode = self._circuit.getActiveMode()
 
                 with suppress(PyViCareNotSupportedFeatureError):
-                    self._attributes[
-                        "heating_curve_slope"
-                    ] = self._circuit.getHeatingCurveSlope()
-    
+                    self._attributes["heating_curve_slope"] = (
+                        self._circuit.getHeatingCurveSlope()
+                    )
+
                 with suppress(PyViCareNotSupportedFeatureError):
-                    self._attributes[
-                        "heating_curve_shift"
-                    ] = self._circuit.getHeatingCurveShift()
+                    self._attributes["heating_curve_shift"] = (
+                        self._circuit.getHeatingCurveShift()
+                    )
     
                 self._attributes["vicare_modes"] = self._circuit.getModes()
     

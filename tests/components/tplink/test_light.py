@@ -419,9 +419,11 @@ async def test_smart_strip_effects(hass: HomeAssistant) -> None:
     already_migrated_config_entry.add_to_hass(hass)
     strip = _mocked_smart_light_strip()
 
-    with _patch_discovery(device=strip), _patch_single_discovery(
-        device=strip
-    ), _patch_connect(device=strip):
+    with (
+        _patch_discovery(device=strip),
+        _patch_single_discovery(device=strip),
+        _patch_connect(device=strip),
+    ):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 
