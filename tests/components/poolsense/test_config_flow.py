@@ -37,11 +37,12 @@ async def test_invalid_credentials(hass: HomeAssistant) -> None:
 
 async def test_valid_credentials(hass: HomeAssistant) -> None:
     """Test we handle invalid credentials."""
-    with patch(
-        "poolsense.PoolSense.test_poolsense_credentials", return_value=True
-    ), patch(
-        "homeassistant.components.poolsense.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        patch("poolsense.PoolSense.test_poolsense_credentials", return_value=True),
+        patch(
+            "homeassistant.components.poolsense.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},

@@ -62,12 +62,15 @@ def config_polling():
 @pytest.fixture
 def mock_register_webhook():
     """Mock calls made by telegram_bot when (de)registering webhook."""
-    with patch(
-        "homeassistant.components.telegram_bot.webhooks.PushBot.register_webhook",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.telegram_bot.webhooks.PushBot.deregister_webhook",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.webhooks.PushBot.register_webhook",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.telegram_bot.webhooks.PushBot.deregister_webhook",
+            return_value=True,
+        ),
     ):
         yield
 
@@ -76,16 +79,21 @@ def mock_register_webhook():
 def mock_external_calls():
     """Mock calls that make calls to the live Telegram API."""
     test_user = User(123456, "Testbot", True)
-    with patch(
-        "telegram.Bot.get_me",
-        return_value=test_user,
-    ), patch(
-        "telegram.Bot._bot_user",
-        test_user,
-    ), patch(
-        "telegram.Bot.bot",
-        test_user,
-    ), patch("telegram.ext.Updater._bootstrap"):
+    with (
+        patch(
+            "telegram.Bot.get_me",
+            return_value=test_user,
+        ),
+        patch(
+            "telegram.Bot._bot_user",
+            test_user,
+        ),
+        patch(
+            "telegram.Bot.bot",
+            test_user,
+        ),
+        patch("telegram.ext.Updater._bootstrap"),
+    ):
         yield
 
 

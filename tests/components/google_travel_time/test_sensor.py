@@ -26,9 +26,12 @@ from tests.common import MockConfigEntry
 @pytest.fixture(name="mock_update")
 def mock_update_fixture():
     """Mock an update to the sensor."""
-    with patch("homeassistant.components.google_travel_time.sensor.Client"), patch(
-        "homeassistant.components.google_travel_time.sensor.distance_matrix"
-    ) as distance_matrix_mock:
+    with (
+        patch("homeassistant.components.google_travel_time.sensor.Client"),
+        patch(
+            "homeassistant.components.google_travel_time.sensor.distance_matrix"
+        ) as distance_matrix_mock,
+    ):
         distance_matrix_mock.return_value = {
             "rows": [
                 {
@@ -224,9 +227,12 @@ async def test_sensor_unit_system(
         entry_id="test",
     )
     config_entry.add_to_hass(hass)
-    with patch("homeassistant.components.google_travel_time.sensor.Client"), patch(
-        "homeassistant.components.google_travel_time.sensor.distance_matrix"
-    ) as distance_matrix_mock:
+    with (
+        patch("homeassistant.components.google_travel_time.sensor.Client"),
+        patch(
+            "homeassistant.components.google_travel_time.sensor.distance_matrix"
+        ) as distance_matrix_mock,
+    ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 

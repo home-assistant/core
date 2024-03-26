@@ -1,4 +1,5 @@
 """The tests for the Ring switch platform."""
+
 from unittest.mock import PropertyMock, patch
 
 import pytest

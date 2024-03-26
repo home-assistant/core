@@ -344,7 +344,7 @@ class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
                 f" {repr(err)}"
             ) from err
         except InvalidAuthError:
-            self.coordinator.entry.async_start_reauth(self.hass)
+            await self.coordinator.async_shutdown_device_and_start_reauth()
 
 
 class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
@@ -397,7 +397,7 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
                 f" {params}, error: {repr(err)}"
             ) from err
         except InvalidAuthError:
-            self.coordinator.entry.async_start_reauth(self.hass)
+            await self.coordinator.async_shutdown_device_and_start_reauth()
 
 
 class ShellyBlockAttributeEntity(ShellyBlockEntity, Entity):
@@ -629,9 +629,9 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
         )
-        self._attr_unique_id = (
-            self._attr_unique_id
-        ) = f"{coordinator.mac}-{key}-{attribute}"
+        self._attr_unique_id = self._attr_unique_id = (
+            f"{coordinator.mac}-{key}-{attribute}"
+        )
         self._last_value = None
 
         if coordinator.device.initialized:

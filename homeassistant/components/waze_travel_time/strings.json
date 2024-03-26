@@ -26,8 +26,8 @@
         "data": {
           "units": "Units",
           "vehicle_type": "Vehicle Type",
-          "incl_filter": "Substring in Description of Selected Route",
-          "excl_filter": "Substring NOT in Description of Selected Route",
+          "incl_filter": "Streetname which must be part of the Selected Route",
+          "excl_filter": "Streetname which must NOT be part of the Selected Route",
           "realtime": "Realtime Travel Time?",
           "avoid_toll_roads": "Avoid Toll Roads?",
           "avoid_ferries": "Avoid Ferries?",

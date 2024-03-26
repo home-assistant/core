@@ -101,13 +101,17 @@ async def test_update_entity(
         return
 
     # Compile failed, don't try to upload
-    with patch(
-        "esphome_dashboard_api.ESPHomeDashboardAPI.compile", return_value=False
-    ) as mock_compile, patch(
-        "esphome_dashboard_api.ESPHomeDashboardAPI.upload", return_value=True
-    ) as mock_upload, pytest.raises(
-        HomeAssistantError,
-        match="compiling",
+    with (
+        patch(
+            "esphome_dashboard_api.ESPHomeDashboardAPI.compile", return_value=False
+        ) as mock_compile,
+        patch(
+            "esphome_dashboard_api.ESPHomeDashboardAPI.upload", return_value=True
+        ) as mock_upload,
+        pytest.raises(
+            HomeAssistantError,
+            match="compiling",
+        ),
     ):
         await hass.services.async_call(
             "update",
@@ -122,13 +126,17 @@ async def test_update_entity(
     assert len(mock_upload.mock_calls) == 0
 
     # Compile success, upload fails
-    with patch(
-        "esphome_dashboard_api.ESPHomeDashboardAPI.compile", return_value=True
-    ) as mock_compile, patch(
-        "esphome_dashboard_api.ESPHomeDashboardAPI.upload", return_value=False
-    ) as mock_upload, pytest.raises(
-        HomeAssistantError,
-        match="OTA",
+    with (
+        patch(
+            "esphome_dashboard_api.ESPHomeDashboardAPI.compile", return_value=True
+        ) as mock_compile,
+        patch(
+            "esphome_dashboard_api.ESPHomeDashboardAPI.upload", return_value=False
+        ) as mock_upload,
+        pytest.raises(
+            HomeAssistantError,
+            match="OTA",
+        ),
     ):
         await hass.services.async_call(
             "update",
@@ -144,11 +152,14 @@ async def test_update_entity(
     assert mock_upload.mock_calls[0][1][0] == "test.yaml"
 
     # Everything works
-    with patch(
-        "esphome_dashboard_api.ESPHomeDashboardAPI.compile", return_value=True
-    ) as mock_compile, patch(
-        "esphome_dashboard_api.ESPHomeDashboardAPI.upload", return_value=True
-    ) as mock_upload:
+    with (
+        patch(
+            "esphome_dashboard_api.ESPHomeDashboardAPI.compile", return_value=True
+        ) as mock_compile,
+        patch(
+            "esphome_dashboard_api.ESPHomeDashboardAPI.upload", return_value=True
+        ) as mock_upload,
+    ):
         await hass.services.async_call(
             "update",
             "install",
@@ -260,12 +271,15 @@ async def test_update_entity_dashboard_not_available_startup(
     mock_dashboard,
 ) -> None:
     """Test ESPHome update entity when dashboard is not available at startup."""
-    with patch(
-        "homeassistant.components.esphome.update.DomainData.get_entry_data",
-        return_value=Mock(available=True, device_info=mock_device_info),
-    ), patch(
-        "esphome_dashboard_api.ESPHomeDashboardAPI.get_devices",
-        side_effect=TimeoutError,
+    with (
+        patch(
+            "homeassistant.components.esphome.update.DomainData.get_entry_data",
+            return_value=Mock(available=True, device_info=mock_device_info),
+        ),
+        patch(
+            "esphome_dashboard_api.ESPHomeDashboardAPI.get_devices",
+            side_effect=TimeoutError,
+        ),
     ):
         await async_get_dashboard(hass).async_refresh()
         assert await hass.config_entries.async_forward_entry_setup(

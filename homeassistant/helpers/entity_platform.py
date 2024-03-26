@@ -163,9 +163,9 @@ class EntityPlatform:
         # with the child dict indexed by entity_id
         #
         # This is usually media_player.yamaha, light.hue, switch.tplink, etc.
-        domain_platform_entities: dict[
-            tuple[str, str], dict[str, Entity]
-        ] = hass.data.setdefault(DATA_DOMAIN_PLATFORM_ENTITIES, {})
+        domain_platform_entities: dict[tuple[str, str], dict[str, Entity]] = (
+            hass.data.setdefault(DATA_DOMAIN_PLATFORM_ENTITIES, {})
+        )
         key = (domain, platform_name)
         self.domain_platform_entities = domain_platform_entities.setdefault(key, {})
 

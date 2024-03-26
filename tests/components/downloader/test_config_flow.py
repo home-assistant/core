@@ -1,4 +1,5 @@
 """Test the Downloader config flow."""
+
 from unittest.mock import patch
 
 import pytest
@@ -39,11 +40,14 @@ async def test_user_form(hass: HomeAssistant) -> None:
             assert result["step_id"] == "user"
             assert result["errors"] == {"base": "cannot_connect"}
 
-    with patch(
-        "homeassistant.components.downloader.async_setup_entry", return_value=True
-    ), patch(
-        "homeassistant.components.downloader.config_flow.DownloaderConfigFlow._validate_input",
-        return_value=None,
+    with (
+        patch(
+            "homeassistant.components.downloader.async_setup_entry", return_value=True
+        ),
+        patch(
+            "homeassistant.components.downloader.config_flow.DownloaderConfigFlow._validate_input",
+            return_value=None,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -75,11 +79,14 @@ async def test_single_instance_allowed(
 
 async def test_import_flow_success(hass: HomeAssistant) -> None:
     """Test import flow."""
-    with patch(
-        "homeassistant.components.downloader.async_setup_entry", return_value=True
-    ), patch(
-        "homeassistant.components.downloader.config_flow.DownloaderConfigFlow._validate_input",
-        return_value=None,
+    with (
+        patch(
+            "homeassistant.components.downloader.async_setup_entry", return_value=True
+        ),
+        patch(
+            "homeassistant.components.downloader.config_flow.DownloaderConfigFlow._validate_input",
+            return_value=None,
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

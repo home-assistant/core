@@ -20,10 +20,13 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert len(result["errors"]) == 0
 
-    with patch("volvooncall.Connection.get"), patch(
-        "homeassistant.components.volvooncall.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch("volvooncall.Connection.get"),
+        patch(
+            "homeassistant.components.volvooncall.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -86,9 +89,12 @@ async def test_flow_already_configured(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert len(result["errors"]) == 0
 
-    with patch("volvooncall.Connection.get"), patch(
-        "homeassistant.components.volvooncall.async_setup_entry",
-        return_value=True,
+    with (
+        patch("volvooncall.Connection.get"),
+        patch(
+            "homeassistant.components.volvooncall.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

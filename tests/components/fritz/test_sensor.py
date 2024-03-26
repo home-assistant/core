@@ -100,7 +100,7 @@ SENSOR_STATES: dict[str, dict[str, Any]] = {
 
 
 async def test_sensor_setup(hass: HomeAssistant, fc_class_mock, fh_class_mock) -> None:
-    """Test setup of Fritz!Tools sesnors."""
+    """Test setup of Fritz!Tools sensors."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     entry.add_to_hass(hass)
@@ -124,7 +124,7 @@ async def test_sensor_setup(hass: HomeAssistant, fc_class_mock, fh_class_mock) -
 async def test_sensor_update_fail(
     hass: HomeAssistant, fc_class_mock, fh_class_mock
 ) -> None:
-    """Test failed update of Fritz!Tools sesnors."""
+    """Test failed update of Fritz!Tools sensors."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     entry.add_to_hass(hass)

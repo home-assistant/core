@@ -1102,14 +1102,17 @@ async def test_reload_automation_when_blueprint_changes(
         blueprint_config["action"] = [blueprint_config["action"]]
         blueprint_config["action"].append(blueprint_config["action"][-1])
 
-        with patch(
-            "homeassistant.config.load_yaml_config_file",
-            autospec=True,
-            return_value=config,
-        ), patch(
-            "homeassistant.components.blueprint.models.yaml.load_yaml_dict",
-            autospec=True,
-            return_value=blueprint_config,
+        with (
+            patch(
+                "homeassistant.config.load_yaml_config_file",
+                autospec=True,
+                return_value=config,
+            ),
+            patch(
+                "homeassistant.components.blueprint.models.yaml.load_yaml_dict",
+                autospec=True,
+                return_value=blueprint_config,
+            ),
         ):
             await hass.services.async_call(
                 automation.DOMAIN, SERVICE_RELOAD, blocking=True

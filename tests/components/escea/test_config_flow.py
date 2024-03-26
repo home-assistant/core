@@ -47,10 +47,11 @@ async def test_not_found(
 ) -> None:
     """Test not finding any Escea controllers."""
 
-    with patch(
-        "homeassistant.components.escea.discovery.pescea_discovery_service"
-    ) as discovery_service, patch(
-        "homeassistant.components.escea.config_flow.TIMEOUT_DISCOVERY", 0
+    with (
+        patch(
+            "homeassistant.components.escea.discovery.pescea_discovery_service"
+        ) as discovery_service,
+        patch("homeassistant.components.escea.config_flow.TIMEOUT_DISCOVERY", 0),
     ):
         discovery_service.return_value = mock_discovery_service
 
@@ -75,12 +76,15 @@ async def test_found(
     """Test finding an Escea controller."""
     mock_discovery_service.controllers["test-uid"] = mock_controller
 
-    with patch(
-        "homeassistant.components.escea.async_setup_entry",
-        return_value=True,
-    ) as mock_setup, patch(
-        "homeassistant.components.escea.discovery.pescea_discovery_service"
-    ) as discovery_service:
+    with (
+        patch(
+            "homeassistant.components.escea.async_setup_entry",
+            return_value=True,
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.escea.discovery.pescea_discovery_service"
+        ) as discovery_service,
+    ):
         discovery_service.return_value = mock_discovery_service
         mock_discovery_service.start_discovery.side_effect = _mock_start_discovery(
             discovery_service, mock_controller

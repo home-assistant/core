@@ -1208,13 +1208,11 @@ def _resolve_state(
 
 
 @overload
-def forgiving_boolean(value: Any) -> bool | object:
-    ...
+def forgiving_boolean(value: Any) -> bool | object: ...
 
 
 @overload
-def forgiving_boolean(value: Any, default: _T) -> bool | _T:
-    ...
+def forgiving_boolean(value: Any, default: _T) -> bool | _T: ...
 
 
 def forgiving_boolean(
@@ -1252,6 +1250,7 @@ def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
 
     search = list(args)
     found = {}
+    sources = entity_helper.entity_sources(hass)
     while search:
         entity = search.pop()
         if isinstance(entity, str):
@@ -1267,14 +1266,17 @@ def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
             # ignore other types
             continue
 
-        if entity_id.startswith(_GROUP_DOMAIN_PREFIX) or (
-            (source := entity_helper.entity_sources(hass).get(entity_id))
-            and source["domain"] == "group"
+        if entity_id in found:
+            continue
+
+        domain = entity.domain
+        if domain == "group" or (
+            (source := sources.get(entity_id)) and source["domain"] == "group"
         ):
             # Collect state will be called in here since it's wrapped
             if group_entities := entity.attributes.get(ATTR_ENTITY_ID):
                 search += group_entities
-        elif entity_id.startswith(_ZONE_DOMAIN_PREFIX):
+        elif domain == "zone":
             if zone_entities := entity.attributes.get(ATTR_PERSONS):
                 search += zone_entities
         else:
@@ -2842,8 +2844,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         filename: str | None = None,
         raw: Literal[False] = False,
         defer_init: bool = False,
-    ) -> CodeType:
-        ...
+    ) -> CodeType: ...
 
     @overload
     def compile(
@@ -2853,8 +2854,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         filename: str | None = None,
         raw: Literal[True] = ...,
         defer_init: bool = False,
-    ) -> str:
-        ...
+    ) -> str: ...
 
     def compile(
         self,

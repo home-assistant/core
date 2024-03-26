@@ -74,9 +74,12 @@ async def test_form(
     """Test the form with a normal set of settings."""
 
     respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
-    with mock_create_stream as mock_setup, patch(
-        "homeassistant.components.generic.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        mock_create_stream as mock_setup,
+        patch(
+            "homeassistant.components.generic.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
         result1 = await hass.config_entries.flow.async_configure(
             user_flow["flow_id"],
             TESTDATA,
@@ -187,10 +190,13 @@ async def test_form_still_preview_cam_off(
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Test camera errors are triggered during preview."""
-    with patch(
-        "homeassistant.components.generic.camera.GenericCamera.is_on",
-        new_callable=PropertyMock(return_value=False),
-    ), mock_create_stream:
+    with (
+        patch(
+            "homeassistant.components.generic.camera.GenericCamera.is_on",
+            new_callable=PropertyMock(return_value=False),
+        ),
+        mock_create_stream,
+    ):
         result1 = await hass.config_entries.flow.async_configure(
             user_flow["flow_id"],
             TESTDATA,
@@ -358,8 +364,9 @@ async def test_form_rtsp_mode(
     data = TESTDATA.copy()
     data[CONF_RTSP_TRANSPORT] = "tcp"
     data[CONF_STREAM_SOURCE] = "rtsp://127.0.0.1/testurl/2"
-    with mock_create_stream as mock_setup, patch(
-        "homeassistant.components.generic.async_setup_entry", return_value=True
+    with (
+        mock_create_stream as mock_setup,
+        patch("homeassistant.components.generic.async_setup_entry", return_value=True),
     ):
         result1 = await hass.config_entries.flow.async_configure(
             user_flow["flow_id"], data
@@ -640,10 +647,13 @@ async def test_form_stream_io_error(
 @respx.mock
 async def test_form_oserror(hass: HomeAssistant, fakeimg_png, user_flow) -> None:
     """Test we handle OS error when setting up stream."""
-    with patch(
-        "homeassistant.components.generic.config_flow.create_stream",
-        side_effect=OSError("Some other OSError"),
-    ), pytest.raises(OSError):
+    with (
+        patch(
+            "homeassistant.components.generic.config_flow.create_stream",
+            side_effect=OSError("Some other OSError"),
+        ),
+        pytest.raises(OSError),
+    ):
         await hass.config_entries.flow.async_configure(
             user_flow["flow_id"],
             TESTDATA,
@@ -878,9 +888,10 @@ async def test_use_wallclock_as_timestamps_option(
     )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
-    with patch(
-        "homeassistant.components.generic.async_setup_entry", return_value=True
-    ), mock_create_stream:
+    with (
+        patch("homeassistant.components.generic.async_setup_entry", return_value=True),
+        mock_create_stream,
+    ):
         result2 = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={CONF_USE_WALLCLOCK_AS_TIMESTAMPS: True, **TESTDATA},
@@ -892,9 +903,10 @@ async def test_use_wallclock_as_timestamps_option(
     )
     assert result3["type"] == FlowResultType.FORM
     assert result3["step_id"] == "init"
-    with patch(
-        "homeassistant.components.generic.async_setup_entry", return_value=True
-    ), mock_create_stream:
+    with (
+        patch("homeassistant.components.generic.async_setup_entry", return_value=True),
+        mock_create_stream,
+    ):
         result4 = await hass.config_entries.options.async_configure(
             result3["flow_id"],
             user_input={CONF_USE_WALLCLOCK_AS_TIMESTAMPS: True, **TESTDATA},

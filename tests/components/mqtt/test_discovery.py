@@ -1506,8 +1506,9 @@ async def test_mqtt_integration_discovery_subscribe_unsubscribe(
         wait_unsub.set()
         return (0, 0)
 
-    with mock_config_flow("comp", TestFlow), patch.object(
-        mqtt_client_mock, "unsubscribe", side_effect=_mock_unsubscribe
+    with (
+        mock_config_flow("comp", TestFlow),
+        patch.object(mqtt_client_mock, "unsubscribe", side_effect=_mock_unsubscribe),
     ):
         async_fire_mqtt_message(hass, "comp/discovery/bla/config", "")
         await wait_unsub.wait()
@@ -1545,6 +1546,7 @@ async def test_mqtt_discovery_unsubscribe_once(
 
         async def async_step_mqtt(self, discovery_info: MqttServiceInfo) -> FlowResult:
             """Test mqtt step."""
+            await asyncio.sleep(0.1)
             return self.async_abort(reason="already_configured")
 
     with mock_config_flow("comp", TestFlow):

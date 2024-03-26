@@ -53,16 +53,20 @@ async def test_form(hass: HomeAssistant) -> None:
 
     c4_account = _get_mock_c4_account()
     c4_director = _get_mock_c4_director()
-    with patch(
-        "homeassistant.components.control4.config_flow.C4Account",
-        return_value=c4_account,
-    ), patch(
-        "homeassistant.components.control4.config_flow.C4Director",
-        return_value=c4_director,
-    ), patch(
-        "homeassistant.components.control4.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.control4.config_flow.C4Account",
+            return_value=c4_account,
+        ),
+        patch(
+            "homeassistant.components.control4.config_flow.C4Director",
+            return_value=c4_director,
+        ),
+        patch(
+            "homeassistant.components.control4.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -136,12 +140,15 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.control4.config_flow.Control4Validator.authenticate",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.control4.config_flow.C4Director",
-        side_effect=Unauthorized("message"),
+    with (
+        patch(
+            "homeassistant.components.control4.config_flow.Control4Validator.authenticate",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.control4.config_flow.C4Director",
+            side_effect=Unauthorized("message"),
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

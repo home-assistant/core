@@ -1,4 +1,5 @@
 """Test the fyta config flow."""
+
 from datetime import datetime
 from unittest.mock import AsyncMock
 

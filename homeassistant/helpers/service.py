@@ -656,9 +656,9 @@ async def async_get_all_descriptions(
     hass: HomeAssistant,
 ) -> dict[str, dict[str, Any]]:
     """Return descriptions (i.e. user documentation) for all service calls."""
-    descriptions_cache: dict[
-        tuple[str, str], dict[str, Any] | None
-    ] = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
+    descriptions_cache: dict[tuple[str, str], dict[str, Any] | None] = (
+        hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
+    )
 
     # We don't mutate services here so we avoid calling
     # async_services which makes a copy of every services
@@ -808,9 +808,9 @@ def async_set_service_schema(
     domain = domain.lower()
     service = service.lower()
 
-    descriptions_cache: dict[
-        tuple[str, str], dict[str, Any] | None
-    ] = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
+    descriptions_cache: dict[tuple[str, str], dict[str, Any] | None] = (
+        hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
+    )
 
     description = {
         "name": schema.get("name", ""),

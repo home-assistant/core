@@ -111,11 +111,14 @@ async def test_noop_statistics(hass: HomeAssistant, client) -> None:
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
 
-    with patch(
-        "zwave_js_server.model.driver.Driver.async_enable_statistics"
-    ) as mock_cmd1, patch(
-        "zwave_js_server.model.driver.Driver.async_disable_statistics"
-    ) as mock_cmd2:
+    with (
+        patch(
+            "zwave_js_server.model.driver.Driver.async_enable_statistics"
+        ) as mock_cmd1,
+        patch(
+            "zwave_js_server.model.driver.Driver.async_disable_statistics"
+        ) as mock_cmd2,
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert not mock_cmd1.called

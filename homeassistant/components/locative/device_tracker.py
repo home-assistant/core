@@ -24,9 +24,9 @@ async def async_setup_entry(
 
         async_add_entities([LocativeEntity(device, location, location_name)])
 
-    hass.data[LT_DOMAIN]["unsub_device_tracker"][
-        entry.entry_id
-    ] = async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
+    hass.data[LT_DOMAIN]["unsub_device_tracker"][entry.entry_id] = (
+        async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
+    )
 
 
 class LocativeEntity(TrackerEntity):

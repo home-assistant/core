@@ -194,16 +194,14 @@ CRITICAL_INTEGRATIONS = {
     "frontend",
 }
 
-SETUP_ORDER = {
+SETUP_ORDER = (
     # Load logging as soon as possible
-    "logging": LOGGING_INTEGRATIONS,
-    # Setup frontend
-    "frontend": FRONTEND_INTEGRATIONS,
-    # Setup recorder
-    "recorder": RECORDER_INTEGRATIONS,
+    ("logging", LOGGING_INTEGRATIONS),
+    # Setup frontend and recorder
+    ("frontend, recorder", {*FRONTEND_INTEGRATIONS, *RECORDER_INTEGRATIONS}),
     # Start up debuggers. Start these first in case they want to wait.
-    "debugger": DEBUGGER_INTEGRATIONS,
-}
+    ("debugger", DEBUGGER_INTEGRATIONS),
+)
 
 
 async def async_setup_hass(
@@ -736,7 +734,7 @@ async def _async_resolve_domains_to_setup(
         *chain.from_iterable(platform_integrations.values()),
     }
 
-    translations_to_load = {*domains_to_setup, *additional_manifests_to_load}
+    translations_to_load = additional_manifests_to_load.copy()
 
     # Resolve all dependencies so we know all integrations
     # that will have to be loaded and start right-away
@@ -820,6 +818,12 @@ async def _async_resolve_domains_to_setup(
         "check installed requirements",
         eager_start=True,
     )
+
+    #
+    # Only add the domains_to_setup after we finish resolving
+    # as new domains are likely to added in the process
+    #
+    translations_to_load.update(domains_to_setup)
     # Start loading translations for all integrations we are going to set up
     # in the background so they are ready when we need them. This avoids a
     # lot of waiting for the translation load lock and a thundering herd of
@@ -856,10 +860,9 @@ async def _async_set_up_integrations(
     if "recorder" in domains_to_setup:
         recorder.async_initialize_recorder(hass)
 
-    pre_stage_domains: dict[str, set[str]] = {
-        name: domains_to_setup & domain_group
-        for name, domain_group in SETUP_ORDER.items()
-    }
+    pre_stage_domains = [
+        (name, domains_to_setup & domain_group) for name, domain_group in SETUP_ORDER
+    ]
 
     # calculate what components to setup in what stage
     stage_1_domains: set[str] = set()
@@ -885,10 +888,18 @@ async def _async_set_up_integrations(
 
     stage_2_domains = domains_to_setup - stage_1_domains
 
-    for name, domain_group in pre_stage_domains.items():
+    for name, domain_group in pre_stage_domains:
         if domain_group:
             stage_2_domains -= domain_group
             _LOGGER.info("Setting up %s: %s", name, domain_group)
+            to_be_loaded = domain_group.copy()
+            to_be_loaded.update(
+                dep
+                for domain in domain_group
+                if (integration := integration_cache.get(domain)) is not None
+                for dep in integration.all_dependencies
+            )
+            async_set_domains_to_be_loaded(hass, to_be_loaded)
             await async_setup_multi_components(hass, domain_group, config)
 
     # Enables after dependencies when setting up stage 1 domains

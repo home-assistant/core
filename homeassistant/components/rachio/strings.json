@@ -63,6 +63,16 @@
         }
       }
     },
+    "start_watering": {
+      "name": "Start watering",
+      "description": "Start a single zone, a schedule or any number of smart hose timers.",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "Number of minutes to run. For sprinkler zones the maximum duration is 3 hours, or 24 hours for smart hose timers. Leave empty for schedules."
+        }
+      }
+    },
     "pause_watering": {
       "name": "Pause watering",
       "description": "Pause any currently running zones or schedules.",

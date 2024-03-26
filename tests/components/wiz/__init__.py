@@ -232,9 +232,12 @@ def _patch_wizlight(device=None, extended_white_range=None, bulb_type=None):
     @contextmanager
     def _patcher():
         bulb = device or _mocked_wizlight(device, extended_white_range, bulb_type)
-        with patch("homeassistant.components.wiz.wizlight", return_value=bulb), patch(
-            "homeassistant.components.wiz.config_flow.wizlight",
-            return_value=bulb,
+        with (
+            patch("homeassistant.components.wiz.wizlight", return_value=bulb),
+            patch(
+                "homeassistant.components.wiz.config_flow.wizlight",
+                return_value=bulb,
+            ),
         ):
             yield
 

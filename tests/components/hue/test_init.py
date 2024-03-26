@@ -148,15 +148,18 @@ async def test_security_vuln_check(hass: HomeAssistant) -> None:
     )
     config.name = "Hue"
 
-    with patch.object(hue.migration, "is_v2_bridge", return_value=False), patch.object(
-        hue,
-        "HueBridge",
-        Mock(
-            return_value=Mock(
-                async_initialize_bridge=AsyncMock(return_value=True),
-                api=Mock(config=config),
-                api_version=1,
-            )
+    with (
+        patch.object(hue.migration, "is_v2_bridge", return_value=False),
+        patch.object(
+            hue,
+            "HueBridge",
+            Mock(
+                return_value=Mock(
+                    async_initialize_bridge=AsyncMock(return_value=True),
+                    api=Mock(config=config),
+                    api_version=1,
+                )
+            ),
         ),
     ):
         assert await async_setup_component(hass, "hue", {})

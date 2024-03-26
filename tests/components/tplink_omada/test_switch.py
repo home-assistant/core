@@ -1,4 +1,5 @@
 """Tests for TP-Link Omada switch entities."""
+
 from datetime import timedelta
 from typing import Any
 from unittest.mock import MagicMock

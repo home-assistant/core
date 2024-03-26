@@ -1,4 +1,5 @@
 """Support for Lutron Homeworks binary sensors."""
+
 from __future__ import annotations
 
 import logging

@@ -320,9 +320,9 @@ class StatisticsSensor(SensorEntity):
         self.ages: deque[datetime] = deque(maxlen=self._samples_max_buffer_size)
         self.attributes: dict[str, StateType] = {}
 
-        self._state_characteristic_fn: Callable[
-            [], StateType | datetime
-        ] = self._callable_characteristic_fn(self._state_characteristic)
+        self._state_characteristic_fn: Callable[[], StateType | datetime] = (
+            self._callable_characteristic_fn(self._state_characteristic)
+        )
 
         self._update_listener: CALLBACK_TYPE | None = None
 

@@ -123,9 +123,12 @@ async def test_import_delete_known_devices(
     }
     files = {legacy.YAML_DEVICES: dump(yaml_devices)}
 
-    with patch_yaml_files(files, True), patch(
-        "homeassistant.components.ping.device_tracker.remove_device_from_config"
-    ) as remove_device_from_config:
+    with (
+        patch_yaml_files(files, True),
+        patch(
+            "homeassistant.components.ping.device_tracker.remove_device_from_config"
+        ) as remove_device_from_config,
+    ):
         await async_setup_component(
             hass,
             "device_tracker",

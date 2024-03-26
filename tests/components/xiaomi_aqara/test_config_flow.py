@@ -33,14 +33,18 @@ def xiaomi_aqara_fixture():
     """Mock xiaomi_aqara discovery and entry setup."""
     mock_gateway_discovery = get_mock_discovery([TEST_HOST])
 
-    with patch(
-        "homeassistant.components.xiaomi_aqara.config_flow.XiaomiGatewayDiscovery",
-        return_value=mock_gateway_discovery,
-    ), patch(
-        "homeassistant.components.xiaomi_aqara.config_flow.XiaomiGateway",
-        return_value=mock_gateway_discovery.gateways[TEST_HOST],
-    ), patch(
-        "homeassistant.components.xiaomi_aqara.async_setup_entry", return_value=True
+    with (
+        patch(
+            "homeassistant.components.xiaomi_aqara.config_flow.XiaomiGatewayDiscovery",
+            return_value=mock_gateway_discovery,
+        ),
+        patch(
+            "homeassistant.components.xiaomi_aqara.config_flow.XiaomiGateway",
+            return_value=mock_gateway_discovery.gateways[TEST_HOST],
+        ),
+        patch(
+            "homeassistant.components.xiaomi_aqara.async_setup_entry", return_value=True
+        ),
     ):
         yield
 

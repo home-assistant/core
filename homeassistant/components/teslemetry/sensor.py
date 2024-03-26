@@ -476,7 +476,7 @@ class TeslemetryVehicleTimeSensorEntity(TeslemetryVehicleEntity, SensorEntity):
 
     @property
     def available(self) -> bool:
-        """Return the avaliability of the sensor."""
+        """Return the availability of the sensor."""
         return isinstance(self._value, int | float) and self._value > 0
 
 

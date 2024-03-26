@@ -54,7 +54,7 @@ async def velbus_connect_task(
 
 
 def _migrate_device_identifiers(hass: HomeAssistant, entry_id: str) -> None:
-    """Migrate old device indentifiers."""
+    """Migrate old device identifiers."""
     dev_reg = dr.async_get(hass)
     devices: list[dr.DeviceEntry] = dr.async_entries_for_config_entry(dev_reg, entry_id)
     for device in devices:

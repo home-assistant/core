@@ -54,13 +54,13 @@ class FloorRegistry(BaseRegistry):
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the floor registry."""
         self.hass = hass
-        self._store: Store[
-            dict[str, list[dict[str, str | int | list[str] | None]]]
-        ] = Store(
-            hass,
-            STORAGE_VERSION_MAJOR,
-            STORAGE_KEY,
-            atomic_writes=True,
+        self._store: Store[dict[str, list[dict[str, str | int | list[str] | None]]]] = (
+            Store(
+                hass,
+                STORAGE_VERSION_MAJOR,
+                STORAGE_KEY,
+                atomic_writes=True,
+            )
         )
 
     @callback

@@ -186,10 +186,10 @@ class PlexLibrarySectionSensor(SensorEntity):
             libtype=primary_libtype, includeCollections=False
         )
         for libtype in LIBRARY_ATTRIBUTE_TYPES.get(self.library_type, []):
-            self._attr_extra_state_attributes[
-                f"{libtype}s"
-            ] = self.library_section.totalViewSize(
-                libtype=libtype, includeCollections=False
+            self._attr_extra_state_attributes[f"{libtype}s"] = (
+                self.library_section.totalViewSize(
+                    libtype=libtype, includeCollections=False
+                )
             )
 
         recent_libtype = LIBRARY_RECENT_LIBTYPE.get(

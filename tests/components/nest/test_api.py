@@ -3,7 +3,7 @@
 There are two interesting cases to exercise that have different strategies
 for token refresh and for testing:
 - API based requests, tested using aioclient_mock
-- Pub/sub subcriber initialization, intercepted with patch()
+- Pub/sub subscriber initialization, intercepted with patch()
 
 The tests below exercise both cases during integration setup.
 """
@@ -75,7 +75,7 @@ async def test_auth(
     (method, url, data, headers) = calls[1]
     assert headers == {"Authorization": f"Bearer {FAKE_TOKEN}"}
 
-    # Verify the susbcriber was created with the correct credentials
+    # Verify the subscriber was created with the correct credentials
     assert len(new_subscriber_mock.mock_calls) == 1
     assert captured_creds
     creds = captured_creds

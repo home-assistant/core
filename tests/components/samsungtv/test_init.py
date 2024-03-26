@@ -76,17 +76,20 @@ async def test_setup(hass: HomeAssistant) -> None:
 
 async def test_setup_without_port_device_offline(hass: HomeAssistant) -> None:
     """Test import from yaml when the device is offline."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError
-    ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
-        side_effect=OSError,
-    ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
-        side_effect=OSError,
-    ), patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
-        return_value=None,
+    with (
+        patch("homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError),
+        patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
+            side_effect=OSError,
+        ),
+        patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
+            side_effect=OSError,
+        ),
+        patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
+            return_value=None,
+        ),
     ):
         await setup_samsungtv_entry(hass, MOCK_CONFIG)
 

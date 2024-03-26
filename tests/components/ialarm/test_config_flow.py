@@ -23,16 +23,20 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch(
-        "homeassistant.components.ialarm.config_flow.IAlarm.get_status",
-        return_value=1,
-    ), patch(
-        "homeassistant.components.ialarm.config_flow.IAlarm.get_mac",
-        return_value=TEST_MAC,
-    ), patch(
-        "homeassistant.components.ialarm.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.ialarm.config_flow.IAlarm.get_status",
+            return_value=1,
+        ),
+        patch(
+            "homeassistant.components.ialarm.config_flow.IAlarm.get_mac",
+            return_value=TEST_MAC,
+        ),
+        patch(
+            "homeassistant.components.ialarm.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_DATA
         )

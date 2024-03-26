@@ -12,9 +12,9 @@ from homeassistant.util.decorator import Registry
 
 from .models import Event
 
-PARSERS: Registry[
-    str, Callable[[str, Any], Coroutine[Any, Any, Event | None]]
-] = Registry()
+PARSERS: Registry[str, Callable[[str, Any], Coroutine[Any, Any, Event | None]]] = (
+    Registry()
+)
 
 VIDEO_SOURCE_MAPPING = {
     "vsconf": "VideoSourceToken",

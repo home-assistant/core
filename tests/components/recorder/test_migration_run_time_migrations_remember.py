@@ -89,16 +89,19 @@ async def test_migration_changes_prevent_trying_to_migrate_again(
     old_db_schema = sys.modules[SCHEMA_MODULE]
 
     # Start with db schema that needs migration (version 32)
-    with patch.object(recorder, "db_schema", old_db_schema), patch.object(
-        recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-    ), patch.object(core, "StatesMeta", old_db_schema.StatesMeta), patch.object(
-        core, "EventTypes", old_db_schema.EventTypes
-    ), patch.object(core, "EventData", old_db_schema.EventData), patch.object(
-        core, "States", old_db_schema.States
-    ), patch.object(core, "Events", old_db_schema.Events), patch.object(
-        core, "StateAttributes", old_db_schema.StateAttributes
-    ), patch.object(migration.EntityIDMigration, "task", core.RecorderTask), patch(
-        CREATE_ENGINE_TARGET, new=_create_engine_test
+    with (
+        patch.object(recorder, "db_schema", old_db_schema),
+        patch.object(
+            recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
+        ),
+        patch.object(core, "StatesMeta", old_db_schema.StatesMeta),
+        patch.object(core, "EventTypes", old_db_schema.EventTypes),
+        patch.object(core, "EventData", old_db_schema.EventData),
+        patch.object(core, "States", old_db_schema.States),
+        patch.object(core, "Events", old_db_schema.Events),
+        patch.object(core, "StateAttributes", old_db_schema.StateAttributes),
+        patch.object(migration.EntityIDMigration, "task", core.RecorderTask),
+        patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
     ):
         async with async_test_home_assistant() as hass:
             await async_setup_recorder_instance(hass, config)
@@ -136,12 +139,16 @@ async def test_migration_changes_prevent_trying_to_migrate_again(
 
     # Finally verify we did not call needs_migrate_query on StatesContextIDMigration
     async with async_test_home_assistant() as hass:
-        with patch(
-            "homeassistant.components.recorder.core.Recorder.queue_task", _queue_task
-        ), patch.object(
-            migration.StatesContextIDMigration,
-            "needs_migrate_query",
-            side_effect=RuntimeError("Should not be called"),
+        with (
+            patch(
+                "homeassistant.components.recorder.core.Recorder.queue_task",
+                _queue_task,
+            ),
+            patch.object(
+                migration.StatesContextIDMigration,
+                "needs_migrate_query",
+                side_effect=RuntimeError("Should not be called"),
+            ),
         ):
             await async_setup_recorder_instance(hass, config)
             await hass.async_block_till_done()

@@ -574,12 +574,12 @@ class TriggerWeatherEntity(TriggerEntity, WeatherEntity, RestoreEntity):
             and state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
             and (weather_data := await self.async_get_last_weather_data())
         ):
-            self._rendered[
-                CONF_APPARENT_TEMPERATURE_TEMPLATE
-            ] = weather_data.last_apparent_temperature
-            self._rendered[
-                CONF_CLOUD_COVERAGE_TEMPLATE
-            ] = weather_data.last_cloud_coverage
+            self._rendered[CONF_APPARENT_TEMPERATURE_TEMPLATE] = (
+                weather_data.last_apparent_temperature
+            )
+            self._rendered[CONF_CLOUD_COVERAGE_TEMPLATE] = (
+                weather_data.last_cloud_coverage
+            )
             self._rendered[CONF_CONDITION_TEMPLATE] = state.state
             self._rendered[CONF_DEW_POINT_TEMPLATE] = weather_data.last_dew_point
             self._rendered[CONF_HUMIDITY_TEMPLATE] = weather_data.last_humidity
@@ -588,9 +588,9 @@ class TriggerWeatherEntity(TriggerEntity, WeatherEntity, RestoreEntity):
             self._rendered[CONF_TEMPERATURE_TEMPLATE] = weather_data.last_temperature
             self._rendered[CONF_VISIBILITY_TEMPLATE] = weather_data.last_visibility
             self._rendered[CONF_WIND_BEARING_TEMPLATE] = weather_data.last_wind_bearing
-            self._rendered[
-                CONF_WIND_GUST_SPEED_TEMPLATE
-            ] = weather_data.last_wind_gust_speed
+            self._rendered[CONF_WIND_GUST_SPEED_TEMPLATE] = (
+                weather_data.last_wind_gust_speed
+            )
             self._rendered[CONF_WIND_SPEED_TEMPLATE] = weather_data.last_wind_speed
 
     @property

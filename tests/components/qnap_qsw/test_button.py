@@ -18,13 +18,16 @@ async def test_qnap_buttons(hass: HomeAssistant) -> None:
     assert state
     assert state.state == STATE_UNKNOWN
 
-    with patch(
-        "homeassistant.components.qnap_qsw.QnapQswApi.get_users_verification",
-        return_value=USERS_VERIFICATION_MOCK,
-    ) as mock_users_verification, patch(
-        "homeassistant.components.qnap_qsw.QnapQswApi.post_system_command",
-        return_value=SYSTEM_COMMAND_MOCK,
-    ) as mock_post_system_command:
+    with (
+        patch(
+            "homeassistant.components.qnap_qsw.QnapQswApi.get_users_verification",
+            return_value=USERS_VERIFICATION_MOCK,
+        ) as mock_users_verification,
+        patch(
+            "homeassistant.components.qnap_qsw.QnapQswApi.post_system_command",
+            return_value=SYSTEM_COMMAND_MOCK,
+        ) as mock_post_system_command,
+    ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
