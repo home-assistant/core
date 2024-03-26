@@ -36,7 +36,7 @@ PARALLEL_UPDATES = 0
 class MotionblindsBLEButtonEntityDescription(ButtonEntityDescription):
     """Entity description of a button entity with command attribute."""
 
-    command: Callable[[MotionDevice], Coroutine[Any, Any, None]] | None = None
+    command: Callable[[MotionDevice], Coroutine[Any, Any, None]]
 
 
 BUTTON_TYPES: dict[str, MotionblindsBLEButtonEntityDescription] = {
@@ -99,5 +99,4 @@ class MotionblindsBLEButtonEntity(MotionblindsBLEEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Handle the button press."""
-        if callable(self.entity_description.command):
-            await self.entity_description.command(self.device)
+        await self.entity_description.command(self.device)
