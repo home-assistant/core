@@ -44,6 +44,7 @@ import homeassistant.helpers.check_config as check_config
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, async_get_integration
+from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import (
     _CONF_UNIT_SYSTEM_US_CUSTOMARY,
     METRIC_SYSTEM,
@@ -51,6 +52,7 @@ from homeassistant.util.unit_system import (
     UnitSystem,
 )
 from homeassistant.util.yaml import SECRET_YAML
+from homeassistant.util.yaml.objects import NodeDictClass
 
 from .common import (
     MockModule,
@@ -373,6 +375,14 @@ async def mock_custom_validator_integrations_with_docs(
         )
 
 
+class ConfigTestClass(NodeDictClass):
+    """Test class for config with wrapper."""
+
+    __dict__ = {"__config_file__": "configuration.yaml", "__line__": 140}
+    __line__ = 140
+    __config_file__ = "configuration.yaml"
+
+
 async def test_create_default_config(hass: HomeAssistant) -> None:
     """Test creation of default config."""
     assert not os.path.isfile(YAML_PATH)
@@ -456,8 +466,9 @@ def test_load_yaml_config_raises_error_if_unsafe_yaml() -> None:
     with open(YAML_PATH, "w") as fp:
         fp.write("- !!python/object/apply:os.system []")
 
-    with patch.object(os, "system") as system_mock, contextlib.suppress(
-        HomeAssistantError
+    with (
+        patch.object(os, "system") as system_mock,
+        contextlib.suppress(HomeAssistantError),
     ):
         config_util.load_yaml_config_file(YAML_PATH)
 
@@ -642,8 +653,9 @@ def test_process_config_upgrade(hass: HomeAssistant) -> None:
     ha_version = "0.92.0"
 
     mock_open = mock.mock_open()
-    with patch("homeassistant.config.open", mock_open, create=True), patch.object(
-        config_util, "__version__", "0.91.0"
+    with (
+        patch("homeassistant.config.open", mock_open, create=True),
+        patch.object(config_util, "__version__", "0.91.0"),
     ):
         opened_file = mock_open.return_value
         opened_file.readline.return_value = ha_version
@@ -1435,7 +1447,24 @@ async def test_component_config_exceptions(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test unexpected exceptions validating component config."""
-    # Config validator
+
+    # Create test config with embedded info
+    test_config = ConfigTestClass({"test_domain": {}})
+    test_platform_config = ConfigTestClass(
+        {"test_domain": {"platform": "test_platform"}}
+    )
+    test_multi_platform_config = ConfigTestClass(
+        {
+            "test_domain": [
+                {"platform": "test_platform1"},
+                {"platform": "test_platform2"},
+            ]
+        },
+    )
+
+    # Make sure the exception translation cache is loaded
+    await async_setup_component(hass, "homeassistant", {})
+
     test_integration = Mock(
         domain="test_domain",
         async_get_component=AsyncMock(),
@@ -1447,7 +1476,7 @@ async def test_component_config_exceptions(
     )
     assert (
         await config_util.async_process_component_and_handle_errors(
-            hass, {}, integration=test_integration
+            hass, test_config, integration=test_integration
         )
         is None
     )
@@ -1456,12 +1485,13 @@ async def test_component_config_exceptions(
     caplog.clear()
     with pytest.raises(HomeAssistantError) as ex:
         await config_util.async_process_component_and_handle_errors(
-            hass, {}, integration=test_integration, raise_on_failure=True
+            hass, test_config, integration=test_integration, raise_on_failure=True
         )
     assert "ValueError: broken" in caplog.text
     assert "Unknown error calling test_domain config validator" in caplog.text
-    assert str(ex.value) == "Unknown error calling test_domain config validator"
-
+    assert (
+        str(ex.value) == "Unknown error calling test_domain config validator - broken"
+    )
     test_integration = Mock(
         domain="test_domain",
         async_get_platform=AsyncMock(
@@ -1476,17 +1506,23 @@ async def test_component_config_exceptions(
     caplog.clear()
     assert (
         await config_util.async_process_component_and_handle_errors(
-            hass, {}, integration=test_integration, raise_on_failure=False
+            hass, test_config, integration=test_integration, raise_on_failure=False
         )
         is None
     )
-    assert "Invalid config for 'test_domain': broken" in caplog.text
+    assert (
+        "Invalid config for 'test_domain' at ../../configuration.yaml, "
+        "line 140: broken, please check the docs at" in caplog.text
+    )
     with pytest.raises(HomeAssistantError) as ex:
         await config_util.async_process_component_and_handle_errors(
-            hass, {}, integration=test_integration, raise_on_failure=True
+            hass, test_config, integration=test_integration, raise_on_failure=True
         )
-    assert "Invalid config for 'test_domain': broken" in str(ex.value)
-
+    assert (
+        str(ex.value)
+        == "Invalid config for integration test_domain at configuration.yaml, "
+        "line 140: broken"
+    )
     # component.CONFIG_SCHEMA
     caplog.clear()
     test_integration = Mock(
@@ -1499,23 +1535,23 @@ async def test_component_config_exceptions(
     assert (
         await config_util.async_process_component_and_handle_errors(
             hass,
-            {},
+            test_config,
             integration=test_integration,
             raise_on_failure=False,
         )
         is None
     )
     assert "Unknown error calling test_domain CONFIG_SCHEMA" in caplog.text
+    caplog.clear()
     with pytest.raises(HomeAssistantError) as ex:
         await config_util.async_process_component_and_handle_errors(
             hass,
-            {},
+            test_config,
             integration=test_integration,
             raise_on_failure=True,
         )
     assert "Unknown error calling test_domain CONFIG_SCHEMA" in caplog.text
-    assert str(ex.value) == "Unknown error calling test_domain CONFIG_SCHEMA"
-
+    assert str(ex.value) == "Unknown error calling test_domain CONFIG_SCHEMA - broken"
     # component.PLATFORM_SCHEMA
     caplog.clear()
     test_integration = Mock(
@@ -1530,30 +1566,30 @@ async def test_component_config_exceptions(
     )
     assert await config_util.async_process_component_and_handle_errors(
         hass,
-        {"test_domain": {"platform": "test_platform"}},
+        test_platform_config,
         integration=test_integration,
         raise_on_failure=False,
     ) == {"test_domain": []}
     assert "ValueError: broken" in caplog.text
     assert (
-        "Unknown error validating config for test_platform platform "
-        "for test_domain component with PLATFORM_SCHEMA"
+        "Unknown error when validating config for test_domain "
+        "from integration test_platform - broken"
     ) in caplog.text
     caplog.clear()
     with pytest.raises(HomeAssistantError) as ex:
         await config_util.async_process_component_and_handle_errors(
             hass,
-            {"test_domain": {"platform": "test_platform"}},
+            test_platform_config,
             integration=test_integration,
             raise_on_failure=True,
         )
     assert (
-        "Unknown error validating config for test_platform platform "
-        "for test_domain component with PLATFORM_SCHEMA"
+        "Unknown error when validating config for test_domain "
+        "from integration test_platform - broken"
     ) in caplog.text
     assert str(ex.value) == (
-        "Unknown error validating config for test_platform platform "
-        "for test_domain component with PLATFORM_SCHEMA"
+        "Unknown error when validating config for test_domain "
+        "from integration test_platform - broken"
     )
 
     # platform.PLATFORM_SCHEMA
@@ -1575,78 +1611,65 @@ async def test_component_config_exceptions(
     ):
         assert await config_util.async_process_component_and_handle_errors(
             hass,
-            {"test_domain": {"platform": "test_platform"}},
+            test_platform_config,
             integration=test_integration,
             raise_on_failure=False,
         ) == {"test_domain": []}
         assert "ValueError: broken" in caplog.text
         assert (
-            "Unknown error validating config for test_platform platform for test_domain"
-            " component with PLATFORM_SCHEMA"
+            "Unknown error when validating config for test_domain "
+            "from integration test_platform - broken"
         ) in caplog.text
         caplog.clear()
         with pytest.raises(HomeAssistantError) as ex:
             assert await config_util.async_process_component_and_handle_errors(
                 hass,
-                {"test_domain": {"platform": "test_platform"}},
+                test_platform_config,
                 integration=test_integration,
                 raise_on_failure=True,
             )
         assert (
-            "Unknown error validating config for test_platform platform for test_domain"
-            " component with PLATFORM_SCHEMA"
-        ) in str(ex.value)
+            "Unknown error when validating config for test_domain "
+            "from integration test_platform - broken" in str(ex.value)
+        )
         assert "ValueError: broken" in caplog.text
         assert (
-            "Unknown error validating config for test_platform platform for test_domain"
-            " component with PLATFORM_SCHEMA" in caplog.text
+            "Unknown error when validating config for test_domain "
+            "from integration test_platform - broken" in caplog.text
         )
         # Test multiple platform failures
         assert await config_util.async_process_component_and_handle_errors(
             hass,
-            {
-                "test_domain": [
-                    {"platform": "test_platform1"},
-                    {"platform": "test_platform2"},
-                ]
-            },
+            test_multi_platform_config,
             integration=test_integration,
             raise_on_failure=False,
         ) == {"test_domain": []}
         assert "ValueError: broken" in caplog.text
         assert (
-            "Unknown error validating config for test_platform1 platform "
-            "for test_domain component with PLATFORM_SCHEMA"
-        ) in caplog.text
-        assert (
-            "Unknown error validating config for test_platform2 platform "
-            "for test_domain component with PLATFORM_SCHEMA"
+            "Unknown error when validating config for test_domain "
+            "from integration test_platform - broken"
         ) in caplog.text
         caplog.clear()
         with pytest.raises(HomeAssistantError) as ex:
             assert await config_util.async_process_component_and_handle_errors(
                 hass,
-                {
-                    "test_domain": [
-                        {"platform": "test_platform1"},
-                        {"platform": "test_platform2"},
-                    ]
-                },
+                test_multi_platform_config,
                 integration=test_integration,
                 raise_on_failure=True,
             )
         assert (
-            "Failed to process component config for integration test_domain"
-            " due to multiple errors (2), check the logs for more information."
-        ) in str(ex.value)
+            "Failed to process config for integration test_domain "
+            "due to multiple (2) errors. Check the logs for more information"
+            in str(ex.value)
+        )
         assert "ValueError: broken" in caplog.text
         assert (
-            "Unknown error validating config for test_platform1 platform "
-            "for test_domain component with PLATFORM_SCHEMA"
+            "Unknown error when validating config for test_domain "
+            "from integration test_platform1 - broken"
         ) in caplog.text
         assert (
-            "Unknown error validating config for test_platform2 platform "
-            "for test_domain component with PLATFORM_SCHEMA"
+            "Unknown error when validating config for test_domain "
+            "from integration test_platform2 - broken"
         ) in caplog.text
 
     # async_get_platform("domain") raising on ImportError
@@ -1668,7 +1691,7 @@ async def test_component_config_exceptions(
     ):
         assert await config_util.async_process_component_and_handle_errors(
             hass,
-            {"test_domain": {"platform": "test_platform"}},
+            test_platform_config,
             integration=test_integration,
             raise_on_failure=False,
         ) == {"test_domain": []}
@@ -1680,7 +1703,7 @@ async def test_component_config_exceptions(
         with pytest.raises(HomeAssistantError) as ex:
             assert await config_util.async_process_component_and_handle_errors(
                 hass,
-                {"test_domain": {"platform": "test_platform"}},
+                test_platform_config,
                 integration=test_integration,
                 raise_on_failure=True,
             )
@@ -1713,7 +1736,7 @@ async def test_component_config_exceptions(
     assert (
         await config_util.async_process_component_and_handle_errors(
             hass,
-            {"test_domain": {}},
+            test_config,
             integration=test_integration,
             raise_on_failure=False,
         )
@@ -1726,7 +1749,7 @@ async def test_component_config_exceptions(
     with pytest.raises(HomeAssistantError) as ex:
         await config_util.async_process_component_and_handle_errors(
             hass,
-            {"test_domain": {}},
+            test_config,
             integration=test_integration,
             raise_on_failure=True,
         )
@@ -1751,7 +1774,7 @@ async def test_component_config_exceptions(
     assert (
         await config_util.async_process_component_and_handle_errors(
             hass,
-            {"test_domain": {}},
+            test_config,
             integration=test_integration,
             raise_on_failure=False,
         )
@@ -1761,7 +1784,7 @@ async def test_component_config_exceptions(
     with pytest.raises(HomeAssistantError) as ex:
         await config_util.async_process_component_and_handle_errors(
             hass,
-            {"test_domain": {}},
+            test_config,
             integration=test_integration,
             raise_on_failure=True,
         )
@@ -1778,7 +1801,7 @@ async def test_component_config_exceptions(
                     ImportError("bla"),
                     "component_import_err",
                     "test_domain",
-                    {"test_domain": []},
+                    ConfigTestClass({"test_domain": []}),
                     "https://example.com",
                 )
             ],
@@ -1793,13 +1816,14 @@ async def test_component_config_exceptions(
                     HomeAssistantError("bla"),
                     "config_validation_err",
                     "test_domain",
-                    {"test_domain": []},
+                    ConfigTestClass({"test_domain": []}),
                     "https://example.com",
                 )
             ],
             "bla",
             [
-                "Invalid config for 'test_domain': bla, "
+                "Invalid config for 'test_domain' at "
+                "../../configuration.yaml, line 140: bla, "
                 "please check the docs at https://example.com",
                 "bla",
             ],
@@ -1812,14 +1836,15 @@ async def test_component_config_exceptions(
                     vol.Invalid("bla", ["path"]),
                     "config_validation_err",
                     "test_domain",
-                    {"test_domain": []},
+                    ConfigTestClass({"test_domain": []}),
                     "https://example.com",
                 )
             ],
             "bla @ data['path']",
             [
-                "Invalid config for 'test_domain': bla 'path', got None, "
-                "please check the docs at https://example.com",
+                "Invalid config for 'test_domain' at "
+                "../../configuration.yaml, line 140: bla 'path', "
+                "got None, please check the docs at https://example.com",
                 "bla",
             ],
             False,
@@ -1831,14 +1856,15 @@ async def test_component_config_exceptions(
                     vol.Invalid("bla", ["path"]),
                     "platform_config_validation_err",
                     "test_domain",
-                    {"test_domain": []},
+                    ConfigTestClass({"test_domain": []}),
                     "https://alt.example.com",
                 )
             ],
             "bla @ data['path']",
             [
-                "Invalid config for 'test_domain': bla 'path', got None, "
-                "please check the docs at https://alt.example.com",
+                "Invalid config for 'test_domain' at "
+                "../../configuration.yaml, line 140: bla 'path', "
+                "got None, please check the docs at https://alt.example.com",
                 "bla",
             ],
             False,
@@ -1850,7 +1876,7 @@ async def test_component_config_exceptions(
                     ImportError("bla"),
                     "platform_component_load_err",
                     "test_domain",
-                    {"test_domain": []},
+                    ConfigTestClass({"test_domain": []}),
                     "https://example.com",
                 )
             ],
@@ -1864,13 +1890,18 @@ async def test_component_config_exceptions(
 async def test_component_config_error_processing(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    error: str,
     exception_info_list: list[config_util.ConfigExceptionInfo],
+    snapshot: SnapshotAssertion,
+    error: str,
     messages: list[str],
     show_stack_trace: bool,
     translation_key: str,
 ) -> None:
     """Test component config error processing."""
+
+    # Make sure the exception translation cache is loaded
+    await async_setup_component(hass, "homeassistant", {})
+
     test_integration = Mock(
         domain="test_domain",
         documentation="https://example.com",
@@ -1880,17 +1911,20 @@ async def test_component_config_error_processing(
             )
         ),
     )
-    with patch(
-        "homeassistant.config.async_process_component_config",
-        return_value=config_util.IntegrationConfigInfo(None, exception_info_list),
-    ), pytest.raises(ConfigValidationError) as ex:
+    with (
+        patch(
+            "homeassistant.config.async_process_component_config",
+            return_value=config_util.IntegrationConfigInfo(None, exception_info_list),
+        ),
+        pytest.raises(ConfigValidationError) as ex,
+    ):
         await config_util.async_process_component_and_handle_errors(
             hass, {}, test_integration, raise_on_failure=True
         )
     records = [record for record in caplog.records if record.msg == messages[0]]
     assert len(records) == 1
     assert (records[0].exc_info is not None) == show_stack_trace
-    assert str(ex.value) == messages[0]
+    assert str(ex.value) == snapshot
     assert ex.value.translation_key == translation_key
     assert ex.value.translation_domain == "homeassistant"
     assert ex.value.translation_placeholders["domain"] == "test_domain"
@@ -1902,7 +1936,7 @@ async def test_component_config_error_processing(
         return_value=config_util.IntegrationConfigInfo(None, exception_info_list),
     ):
         await config_util.async_process_component_and_handle_errors(
-            hass, {}, test_integration
+            hass, ConfigTestClass({}), test_integration
         )
     assert all(message in caplog.text for message in messages)
 

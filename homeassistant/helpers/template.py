@@ -1208,13 +1208,11 @@ def _resolve_state(
 
 
 @overload
-def forgiving_boolean(value: Any) -> bool | object:
-    ...
+def forgiving_boolean(value: Any) -> bool | object: ...
 
 
 @overload
-def forgiving_boolean(value: Any, default: _T) -> bool | _T:
-    ...
+def forgiving_boolean(value: Any, default: _T) -> bool | _T: ...
 
 
 def forgiving_boolean(
@@ -2846,8 +2844,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         filename: str | None = None,
         raw: Literal[False] = False,
         defer_init: bool = False,
-    ) -> CodeType:
-        ...
+    ) -> CodeType: ...
 
     @overload
     def compile(
@@ -2857,8 +2854,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         filename: str | None = None,
         raw: Literal[True] = ...,
         defer_init: bool = False,
-    ) -> str:
-        ...
+    ) -> str: ...
 
     def compile(
         self,
