@@ -15,16 +15,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    ATTR_CONNECT,
-    ATTR_DISCONNECT,
-    ATTR_FAVORITE,
-    CONF_MAC_CODE,
-    DOMAIN,
-    ICON_CONNECT,
-    ICON_DISCONNECT,
-    ICON_FAVORITE,
-)
+from .const import ATTR_CONNECT, ATTR_DISCONNECT, ATTR_FAVORITE, CONF_MAC_CODE, DOMAIN
 from .entity import MotionblindsBLEEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,21 +34,18 @@ BUTTON_TYPES: list[MotionblindsBLEButtonEntityDescription] = [
     MotionblindsBLEButtonEntityDescription(
         key=ATTR_CONNECT,
         translation_key=ATTR_CONNECT,
-        icon=ICON_CONNECT,
         entity_category=EntityCategory.CONFIG,
         command=lambda device: device.connect(),
     ),
     MotionblindsBLEButtonEntityDescription(
         key=ATTR_DISCONNECT,
         translation_key=ATTR_DISCONNECT,
-        icon=ICON_DISCONNECT,
         entity_category=EntityCategory.CONFIG,
         command=lambda device: device.disconnect(),
     ),
     MotionblindsBLEButtonEntityDescription(
         key=ATTR_FAVORITE,
         translation_key=ATTR_FAVORITE,
-        icon=ICON_FAVORITE,
         entity_category=EntityCategory.CONFIG,
         command=lambda device: device.favorite(),
     ),
