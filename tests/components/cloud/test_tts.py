@@ -12,10 +12,20 @@ import voluptuous as vol
 
 from homeassistant.components.assist_pipeline.pipeline import STORAGE_KEY
 from homeassistant.components.cloud import DOMAIN, const, tts
-from homeassistant.components.tts import DOMAIN as TTS_DOMAIN
+from homeassistant.components.media_player import (
+    ATTR_MEDIA_CONTENT_ID,
+    DOMAIN as DOMAIN_MP,
+    SERVICE_PLAY_MEDIA,
+)
+from homeassistant.components.tts import (
+    ATTR_LANGUAGE,
+    ATTR_MEDIA_PLAYER_ENTITY_ID,
+    ATTR_MESSAGE,
+    DOMAIN as TTS_DOMAIN,
+)
 from homeassistant.components.tts.helper import get_engine_instance
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.helpers.issue_registry import IssueRegistry, IssueSeverity
@@ -23,6 +33,8 @@ from homeassistant.setup import async_setup_component
 
 from . import PIPELINE_DATA
 
+from tests.common import async_mock_service
+from tests.components.tts.common import get_media_source_url
 from tests.typing import ClientSessionGenerator
 
 
@@ -733,3 +745,65 @@ async def test_deprecated_gender(
     }
 
     assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        (
+            "speak",
+            {
+                ATTR_ENTITY_ID: "tts.home_assistant_cloud",
+                ATTR_LANGUAGE: "id-ID",
+                ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+                ATTR_MESSAGE: "There is someone at the door.",
+            },
+        ),
+        (
+            "cloud_say",
+            {
+                ATTR_ENTITY_ID: "media_player.something",
+                ATTR_LANGUAGE: "id-ID",
+                ATTR_MESSAGE: "There is someone at the door.",
+            },
+        ),
+    ],
+)
+async def test_tts_services(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    hass_client: ClientSessionGenerator,
+    service: str,
+    service_data: dict[str, Any],
+) -> None:
+    """Test tts services."""
+    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    mock_process_tts = AsyncMock(return_value=b"")
+    cloud.voice.process_tts = mock_process_tts
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+    await cloud.login("test-user", "test-pass")
+    client = await hass_client()
+
+    await hass.services.async_call(
+        domain=TTS_DOMAIN,
+        service=service,
+        service_data=service_data,
+        blocking=True,
+    )
+
+    assert len(calls) == 1
+
+    url = await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+    await hass.async_block_till_done()
+    response = await client.get(url)
+    assert response.status == HTTPStatus.OK
+    await hass.async_block_till_done()
+
+    assert mock_process_tts.call_count == 1
+    assert mock_process_tts.call_args is not None
+    assert mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
+    assert mock_process_tts.call_args.kwargs["language"] == service_data[ATTR_LANGUAGE]
+    assert mock_process_tts.call_args.kwargs["voice"] == "GadisNeural"
+    assert mock_process_tts.call_args.kwargs["output"] == "mp3"
