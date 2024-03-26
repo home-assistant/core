@@ -705,6 +705,8 @@ ignore = [
     "UP007", # keep type annotation style as is
     # Ignored due to performance: https://github.com/charliermarsh/ruff/issues/2923
     "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
+    # Ignored due to incompatible with mypy: https://github.com/python/mypy/issues/15238
+    "UP040", # Checks for use of TypeAlias annotation for declaring type aliases.
 
     # May conflict with the formatter, https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
     "W191",
