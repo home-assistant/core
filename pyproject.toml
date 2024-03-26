@@ -672,9 +672,7 @@ select = [
     "T100", # Trace found: {name} used
     "T20", # flake8-print
     "TID251", # Banned imports
-    "TRY",
-    "TRY004", # Prefer TypeError exception for invalid type
-    "TRY302", # Remove exception handler; error is immediately re-raised
+    "TRY", # tryceratops
     "UP", # pyupgrade
     "W", # pycodestyle
 ]
