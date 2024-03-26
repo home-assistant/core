@@ -161,7 +161,7 @@ class Searcher:
         for entity_entry in er.async_entries_for_area(self._entity_registry, area_id):
             self._add(ItemType.ENTITY, entity_entry.entity_id)
 
-            # If this entity also exists a resource, we add it.
+            # If this entity also exists as a resource, we add it.
             if entity_entry.domain in self.EXIST_AS_ENTITY:
                 self._add(ItemType(entity_entry.domain), entity_entry.entity_id)
 
@@ -233,7 +233,7 @@ class Searcher:
             self._add(ItemType.ENTITY, entity_id)
             self._async_resolve_up_entity(entity_id)
 
-            # If this entity also exists a resource, we add it.
+            # If this entity also exists as a resource, we add it.
             domain = split_entity_id(entity_id)[0]
             if domain in self.EXIST_AS_ENTITY:
                 self._add(ItemType(domain), entity_id)
@@ -374,7 +374,7 @@ class Searcher:
         for entity_entry in er.async_entries_for_label(self._entity_registry, label_id):
             self._add(ItemType.ENTITY, entity_entry.entity_id)
 
-            # If this entity also exists a resource, we add it.
+            # If this entity also exists as a resource, we add it.
             domain = split_entity_id(entity_entry.entity_id)[0]
             if domain in self.EXIST_AS_ENTITY:
                 self._add(ItemType(domain), entity_entry.entity_id)
@@ -462,7 +462,7 @@ class Searcher:
             self._add(ItemType.ENTITY, entity_id)
             self._async_resolve_up_entity(entity_id)
 
-            # If this entity also exists a resource, we add it.
+            # If this entity also exists as a resource, we add it.
             domain = split_entity_id(entity_id)[0]
             if domain in self.EXIST_AS_ENTITY:
                 self._add(ItemType(domain), entity_id)
