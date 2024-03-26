@@ -57,6 +57,15 @@ class RestData:
         self.headers: httpx.Headers | None = None
 
     @property
+    def payload(self) -> str | None:
+        """Get request data."""
+        return self._request_data
+
+    def set_payload(self, payload: str) -> None:
+        """Set request data."""
+        self._request_data = payload
+
+    @property
     def url(self) -> str:
         """Get url."""
         return self._resource
