@@ -44,8 +44,6 @@ class TTNFlowHandler(ConfigFlow, domain=DOMAIN):
             try:
                 await client.fetch_data()
             except TTNAuthError:
-                # Raising ConfigEntryAuthFailed will cancel future updates
-                # and start a config flow with SOURCE_REAUTH (async_step_reauth)
                 _LOGGER.exception("Error authenticating with The Things Network")
                 errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-exception-caught
