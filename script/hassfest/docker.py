@@ -56,7 +56,7 @@ COPY . homeassistant/
 RUN \
     uv pip install \
         -e ./homeassistant \
-    && python3 -m compileall \
+    && python3 -m compileall -j 4 \
         homeassistant/homeassistant
 
 # Home Assistant S6-Overlay
