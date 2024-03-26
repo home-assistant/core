@@ -319,6 +319,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/diagnostics/ @home-assistant/core
 /tests/components/diagnostics/ @home-assistant/core
 /homeassistant/components/digital_ocean/ @fabaff
+/homeassistant/components/dio_chacon/ @cnico
+/tests/components/dio_chacon/ @cnico
 /homeassistant/components/discogs/ @thibmaek
 /homeassistant/components/discord/ @tkdrob
 /tests/components/discord/ @tkdrob
