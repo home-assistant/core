@@ -1,4 +1,5 @@
 """Config flow for Sun WEG integration."""
+
 from collections.abc import Mapping
 from typing import Any
 
