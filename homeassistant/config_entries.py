@@ -372,9 +372,9 @@ class ConfigEntry:
         self._async_cancel_retry_setup: Callable[[], Any] | None = None
 
         # Hold list for actions to call on unload.
-        self._on_unload: list[
-            Callable[[], Coroutine[Any, Any, None] | None]
-        ] | None = None
+        self._on_unload: list[Callable[[], Coroutine[Any, Any, None] | None]] | None = (
+            None
+        )
 
         # Reload lock to prevent conflicting reloads
         self.reload_lock = asyncio.Lock()
@@ -1071,7 +1071,7 @@ class FlowCancelledError(Exception):
     """Error to indicate that a flow has been cancelled."""
 
 
-class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
+class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult, str]):
     """Manage all the config entry flows that are in progress."""
 
     _flow_result = ConfigFlowResult
@@ -1138,9 +1138,9 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         loop = self.hass.loop
 
         if context["source"] == SOURCE_IMPORT:
-            self._pending_import_flows.setdefault(handler, {})[
-                flow_id
-            ] = loop.create_future()
+            self._pending_import_flows.setdefault(handler, {})[flow_id] = (
+                loop.create_future()
+            )
 
         cancel_init_future = loop.create_future()
         self._initialize_futures.setdefault(handler, []).append(cancel_init_future)
@@ -1197,7 +1197,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
 
     async def async_finish_flow(
         self,
-        flow: data_entry_flow.FlowHandler[ConfigFlowResult],
+        flow: data_entry_flow.FlowHandler[ConfigFlowResult, str],
         result: ConfigFlowResult,
     ) -> ConfigFlowResult:
         """Finish a config flow and add an entry."""
@@ -1319,7 +1319,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
 
     async def async_post_init(
         self,
-        flow: data_entry_flow.FlowHandler[ConfigFlowResult],
+        flow: data_entry_flow.FlowHandler[ConfigFlowResult, str],
         result: ConfigFlowResult,
     ) -> None:
         """After a flow is initialised trigger new flow notifications."""
@@ -1987,7 +1987,7 @@ def _async_abort_entries_match(
             raise data_entry_flow.AbortFlow("already_configured")
 
 
-class ConfigEntryBaseFlow(data_entry_flow.FlowHandler[ConfigFlowResult]):
+class ConfigEntryBaseFlow(data_entry_flow.FlowHandler[ConfigFlowResult, str]):
     """Base class for config and option flows."""
 
     _flow_result = ConfigFlowResult
@@ -2339,7 +2339,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         return self.async_abort(reason=reason)
 
 
-class OptionsFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
+class OptionsFlowManager(data_entry_flow.FlowManager[ConfigFlowResult, str]):
     """Flow to set options for a configuration entry."""
 
     _flow_result = ConfigFlowResult
@@ -2369,7 +2369,7 @@ class OptionsFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
 
     async def async_finish_flow(
         self,
-        flow: data_entry_flow.FlowHandler[ConfigFlowResult],
+        flow: data_entry_flow.FlowHandler[ConfigFlowResult, str],
         result: ConfigFlowResult,
     ) -> ConfigFlowResult:
         """Finish an options flow and update options for configuration entry.
@@ -2391,7 +2391,7 @@ class OptionsFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         return result
 
     async def _async_setup_preview(
-        self, flow: data_entry_flow.FlowHandler[ConfigFlowResult]
+        self, flow: data_entry_flow.FlowHandler[ConfigFlowResult, str]
     ) -> None:
         """Set up preview for an option flow handler."""
         entry = self._async_get_config_entry(flow.handler)

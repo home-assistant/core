@@ -99,6 +99,8 @@ jobs:
       - name: Adjust nightly version
         if: needs.init.outputs.channel == 'dev'
         shell: bash
+        env:
+          UV_PRERELEASE: allow
         run: |
           python3 -m pip install "$(grep '^uv' < requirements_test.txt)"
           uv pip install packaging tomli

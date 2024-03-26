@@ -292,10 +292,13 @@ async def test_update_stale(
     register_time = datetime(now.year + 1, 9, 15, 23, tzinfo=dt_util.UTC)
     scan_time = datetime(now.year + 1, 9, 15, 23, 1, tzinfo=dt_util.UTC)
 
-    with patch(
-        "homeassistant.components.device_tracker.legacy.dt_util.utcnow",
-        return_value=register_time,
-    ), assert_setup_component(1, device_tracker.DOMAIN):
+    with (
+        patch(
+            "homeassistant.components.device_tracker.legacy.dt_util.utcnow",
+            return_value=register_time,
+        ),
+        assert_setup_component(1, device_tracker.DOMAIN),
+    ):
         assert await async_setup_component(
             hass,
             device_tracker.DOMAIN,
@@ -548,10 +551,13 @@ async def test_see_passive_zone_state(
     scanner.reset()
     scanner.come_home("dev1")
 
-    with patch(
-        "homeassistant.components.device_tracker.legacy.dt_util.utcnow",
-        return_value=register_time,
-    ), assert_setup_component(1, device_tracker.DOMAIN):
+    with (
+        patch(
+            "homeassistant.components.device_tracker.legacy.dt_util.utcnow",
+            return_value=register_time,
+        ),
+        assert_setup_component(1, device_tracker.DOMAIN),
+    ):
         assert await async_setup_component(
             hass,
             device_tracker.DOMAIN,

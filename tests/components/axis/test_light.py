@@ -149,11 +149,12 @@ async def test_lights(
     assert light_0.name == f"{NAME} IR Light 0"
 
     # Turn on, set brightness, light already on
-    with patch(
-        "axis.interfaces.vapix.LightHandler.activate_light"
-    ) as mock_activate, patch(
-        "axis.interfaces.vapix.LightHandler.set_manual_intensity"
-    ) as mock_set_intensity:
+    with (
+        patch("axis.interfaces.vapix.LightHandler.activate_light") as mock_activate,
+        patch(
+            "axis.interfaces.vapix.LightHandler.set_manual_intensity"
+        ) as mock_set_intensity,
+    ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
@@ -189,11 +190,12 @@ async def test_lights(
     assert light_0.state == STATE_OFF
 
     # Turn on, set brightness
-    with patch(
-        "axis.interfaces.vapix.LightHandler.activate_light"
-    ) as mock_activate, patch(
-        "axis.interfaces.vapix.LightHandler.set_manual_intensity"
-    ) as mock_set_intensity:
+    with (
+        patch("axis.interfaces.vapix.LightHandler.activate_light") as mock_activate,
+        patch(
+            "axis.interfaces.vapix.LightHandler.set_manual_intensity"
+        ) as mock_set_intensity,
+    ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,

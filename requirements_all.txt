@@ -125,7 +125,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.28
+SQLAlchemy==2.0.29
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==2.1
@@ -603,7 +603,7 @@ boschshcpy==0.2.82
 boto3==1.33.13
 
 # homeassistant.components.bring
-bring-api==0.5.6
+bring-api==0.5.7
 
 # homeassistant.components.broadlink
 broadlink==0.18.3
@@ -1327,6 +1327,9 @@ mopeka-iot-ble==0.7.0
 # homeassistant.components.motion_blinds
 motionblinds==0.6.23
 
+# homeassistant.components.motionblinds_ble
+motionblindsble==0.0.9
+
 # homeassistant.components.motioneye
 motioneye-client==0.3.14
 
@@ -1790,7 +1793,7 @@ pyedimax==0.2.1
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.20.0
+pyenphase==1.20.1
 
 # homeassistant.components.envisalink
 pyenvisalink==4.6
@@ -2226,7 +2229,7 @@ python-gitlab==1.6.0
 python-homeassistant-analytics==0.6.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==4.3.1
+python-homewizard-energy==v5.0.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.4.3

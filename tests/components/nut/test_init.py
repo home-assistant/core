@@ -56,12 +56,15 @@ async def test_config_not_ready(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.nut.AIONUTClient.list_ups",
-        return_value={"ups1"},
-    ), patch(
-        "homeassistant.components.nut.AIONUTClient.list_vars",
-        side_effect=NUTError,
+    with (
+        patch(
+            "homeassistant.components.nut.AIONUTClient.list_ups",
+            return_value={"ups1"},
+        ),
+        patch(
+            "homeassistant.components.nut.AIONUTClient.list_vars",
+            side_effect=NUTError,
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -76,12 +79,15 @@ async def test_auth_fails(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.nut.AIONUTClient.list_ups",
-        return_value={"ups1"},
-    ), patch(
-        "homeassistant.components.nut.AIONUTClient.list_vars",
-        side_effect=NUTLoginError,
+    with (
+        patch(
+            "homeassistant.components.nut.AIONUTClient.list_ups",
+            return_value={"ups1"},
+        ),
+        patch(
+            "homeassistant.components.nut.AIONUTClient.list_vars",
+            side_effect=NUTLoginError,
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
