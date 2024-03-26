@@ -1,4 +1,5 @@
 """Test the Scrape config flow."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
@@ -8,7 +9,6 @@ from homeassistant import config_entries
 from homeassistant.components.rest.data import DEFAULT_TIMEOUT
 from homeassistant.components.rest.schema import DEFAULT_METHOD
 from homeassistant.components.scrape import DOMAIN
-from homeassistant.components.scrape.config_flow import NONE_SENTINEL
 from homeassistant.components.scrape.const import (
     CONF_ENCODING,
     CONF_INDEX,
@@ -71,9 +71,6 @@ async def test_form(
                 CONF_NAME: "Current version",
                 CONF_SELECT: ".current-version h1",
                 CONF_INDEX: 0.0,
-                CONF_DEVICE_CLASS: NONE_SENTINEL,
-                CONF_STATE_CLASS: NONE_SENTINEL,
-                CONF_UNIT_OF_MEASUREMENT: NONE_SENTINEL,
             },
         )
         await hass.async_block_till_done()
@@ -132,9 +129,6 @@ async def test_form_with_post(
                 CONF_NAME: "Current version",
                 CONF_SELECT: ".current-version h1",
                 CONF_INDEX: 0.0,
-                CONF_DEVICE_CLASS: NONE_SENTINEL,
-                CONF_STATE_CLASS: NONE_SENTINEL,
-                CONF_UNIT_OF_MEASUREMENT: NONE_SENTINEL,
             },
         )
         await hass.async_block_till_done()
@@ -226,9 +220,6 @@ async def test_flow_fails(
                 CONF_NAME: "Current version",
                 CONF_SELECT: ".current-version h1",
                 CONF_INDEX: 0.0,
-                CONF_DEVICE_CLASS: NONE_SENTINEL,
-                CONF_STATE_CLASS: NONE_SENTINEL,
-                CONF_UNIT_OF_MEASUREMENT: NONE_SENTINEL,
             },
         )
         await hass.async_block_till_done()
@@ -340,9 +331,12 @@ async def test_options_add_remove_sensor_flow(
     assert result["step_id"] == "add_sensor"
 
     mocker = MockRestData("test_scrape_sensor2")
-    with patch("homeassistant.components.rest.RestData", return_value=mocker), patch(
-        "homeassistant.components.scrape.config_flow.uuid.uuid1",
-        return_value=uuid.UUID("3699ef88-69e6-11ed-a1eb-0242ac120003"),
+    with (
+        patch("homeassistant.components.rest.RestData", return_value=mocker),
+        patch(
+            "homeassistant.components.scrape.config_flow.uuid.uuid1",
+            return_value=uuid.UUID("3699ef88-69e6-11ed-a1eb-0242ac120003"),
+        ),
     ):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -350,9 +344,6 @@ async def test_options_add_remove_sensor_flow(
                 CONF_NAME: "Template",
                 CONF_SELECT: "template",
                 CONF_INDEX: 0.0,
-                CONF_DEVICE_CLASS: NONE_SENTINEL,
-                CONF_STATE_CLASS: NONE_SENTINEL,
-                CONF_UNIT_OF_MEASUREMENT: NONE_SENTINEL,
             },
         )
         await hass.async_block_till_done()
@@ -480,9 +471,6 @@ async def test_options_edit_sensor_flow(
             user_input={
                 CONF_SELECT: "template",
                 CONF_INDEX: 0.0,
-                CONF_DEVICE_CLASS: NONE_SENTINEL,
-                CONF_STATE_CLASS: NONE_SENTINEL,
-                CONF_UNIT_OF_MEASUREMENT: NONE_SENTINEL,
             },
         )
         await hass.async_block_till_done()
@@ -646,9 +634,6 @@ async def test_sensor_options_remove_device_class(
             CONF_SELECT: ".current-temp h3",
             CONF_INDEX: 0.0,
             CONF_VALUE_TEMPLATE: "{{ value.split(':')[1] }}",
-            CONF_DEVICE_CLASS: NONE_SENTINEL,
-            CONF_STATE_CLASS: NONE_SENTINEL,
-            CONF_UNIT_OF_MEASUREMENT: NONE_SENTINEL,
         },
     )
     await hass.async_block_till_done()

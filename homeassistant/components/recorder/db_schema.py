@@ -1,4 +1,5 @@
 """Models for SQLAlchemy."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -39,8 +40,7 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_ENTITY_ID,
     MAX_LENGTH_STATE_STATE,
 )
-from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
-from homeassistant.helpers.entity import EntityInfo
+from homeassistant.core import Context, Event, EventOrigin, State
 from homeassistant.helpers.json import JSON_DUMP, json_bytes, json_bytes_strip_null
 import homeassistant.util.dt as dt_util
 from homeassistant.util.json import (
@@ -68,7 +68,7 @@ class Base(DeclarativeBase):
     """Base class for tables."""
 
 
-SCHEMA_VERSION = 41
+SCHEMA_VERSION = 42
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,6 +84,7 @@ TABLE_STATISTICS = "statistics"
 TABLE_STATISTICS_META = "statistics_meta"
 TABLE_STATISTICS_RUNS = "statistics_runs"
 TABLE_STATISTICS_SHORT_TERM = "statistics_short_term"
+TABLE_MIGRATION_CHANGES = "migration_changes"
 
 STATISTICS_TABLES = ("statistics", "statistics_short_term")
 
@@ -100,6 +101,7 @@ ALL_TABLES = [
     TABLE_EVENT_TYPES,
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
+    TABLE_MIGRATION_CHANGES,
     TABLE_STATES_META,
     TABLE_STATISTICS,
     TABLE_STATISTICS_META,
@@ -176,13 +178,17 @@ class NativeLargeBinary(LargeBinary):
 # For MariaDB and MySQL we can use an unsigned integer type since it will fit 2**32
 # for sqlite and postgresql we use a bigint
 UINT_32_TYPE = BigInteger().with_variant(
-    mysql.INTEGER(unsigned=True), "mysql", "mariadb"  # type: ignore[no-untyped-call]
+    mysql.INTEGER(unsigned=True),  # type: ignore[no-untyped-call]
+    "mysql",
+    "mariadb",
 )
 JSON_VARIANT_CAST = Text().with_variant(
-    postgresql.JSON(none_as_null=True), "postgresql"  # type: ignore[no-untyped-call]
+    postgresql.JSON(none_as_null=True),  # type: ignore[no-untyped-call]
+    "postgresql",
 )
 JSONB_VARIANT_CAST = Text().with_variant(
-    postgresql.JSONB(none_as_null=True), "postgresql"  # type: ignore[no-untyped-call]
+    postgresql.JSONB(none_as_null=True),  # type: ignore[no-untyped-call]
+    "postgresql",
 )
 DATETIME_TYPE = (
     DateTime(timezone=True)
@@ -292,7 +298,7 @@ class Events(Base):
             event_data=None,
             origin_idx=EVENT_ORIGIN_TO_IDX.get(event.origin),
             time_fired=None,
-            time_fired_ts=dt_util.utc_to_timestamp(event.time_fired),
+            time_fired_ts=event.time_fired_timestamp,
             context_id=None,
             context_id_bin=ulid_to_bytes_or_none(event.context.id),
             context_user_id=None,
@@ -315,7 +321,7 @@ class Events(Base):
                 EventOrigin(self.origin)
                 if self.origin
                 else EVENT_ORIGIN_ORDER[self.origin_idx or 0],
-                dt_util.utc_from_timestamp(self.time_fired_ts or 0),
+                self.time_fired_ts or 0,
                 context=context,
             )
         except JSON_DECODE_EXCEPTIONS:
@@ -491,16 +497,16 @@ class States(Base):
         # None state means the state was removed from the state machine
         if state is None:
             dbstate.state = ""
-            dbstate.last_updated_ts = dt_util.utc_to_timestamp(event.time_fired)
+            dbstate.last_updated_ts = event.time_fired_timestamp
             dbstate.last_changed_ts = None
             return dbstate
 
         dbstate.state = state.state
-        dbstate.last_updated_ts = dt_util.utc_to_timestamp(state.last_updated)
+        dbstate.last_updated_ts = state.last_updated_timestamp
         if state.last_updated == state.last_changed:
             dbstate.last_changed_ts = None
         else:
-            dbstate.last_changed_ts = dt_util.utc_to_timestamp(state.last_changed)
+            dbstate.last_changed_ts = state.last_changed_timestamp
 
         return dbstate
 
@@ -530,8 +536,9 @@ class States(Base):
             # Join the state_attributes table on attributes_id to get the attributes
             # for newer states
             attrs,
-            last_changed,
-            last_updated,
+            last_changed=last_changed,
+            last_reported=last_updated,  # Recorder does not yet record last_reported
+            last_updated=last_updated,
             context=context,
             validate_entity_id=validate_entity_id,
         )
@@ -559,8 +566,6 @@ class StateAttributes(Base):
     @staticmethod
     def shared_attrs_bytes_from_event(
         event: Event,
-        entity_sources: dict[str, EntityInfo],
-        exclude_attrs_by_domain: dict[str, set[str]],
         dialect: SupportedDialect | None,
     ) -> bytes:
         """Create shared_attrs from a state_changed event."""
@@ -568,14 +573,13 @@ class StateAttributes(Base):
         # None state means the state was removed from the state machine
         if state is None:
             return b"{}"
-        domain = split_entity_id(state.entity_id)[0]
-        exclude_attrs = set(ALL_DOMAIN_EXCLUDE_ATTRS)
-        if base_platform_attrs := exclude_attrs_by_domain.get(domain):
-            exclude_attrs |= base_platform_attrs
-        if (entity_info := entity_sources.get(state.entity_id)) and (
-            integration_attrs := exclude_attrs_by_domain.get(entity_info["domain"])
-        ):
-            exclude_attrs |= integration_attrs
+        if state_info := state.state_info:
+            exclude_attrs = {
+                *ALL_DOMAIN_EXCLUDE_ATTRS,
+                *state_info["unrecorded_attributes"],
+            }
+        else:
+            exclude_attrs = ALL_DOMAIN_EXCLUDE_ATTRS
         encoder = json_bytes_strip_null if dialect == PSQL_DIALECT else json_bytes
         bytes_result = encoder(
             {k: v for k, v in state.attributes.items() if k not in exclude_attrs}
@@ -768,6 +772,15 @@ class RecorderRuns(Base):
     def to_native(self, validate_entity_id: bool = True) -> Self:
         """Return self, native format is this model."""
         return self
+
+
+class MigrationChanges(Base):
+    """Representation of migration changes."""
+
+    __tablename__ = TABLE_MIGRATION_CHANGES
+
+    migration_id: Mapped[str] = mapped_column(String(255), primary_key=True)
+    version: Mapped[int] = mapped_column(SmallInteger)
 
 
 class SchemaChanges(Base):

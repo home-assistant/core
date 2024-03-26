@@ -1,4 +1,5 @@
 """Support for Xiaomi buttons."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -37,7 +38,7 @@ ATTR_RESET_VACUUM_FILTER = "reset_vacuum_filter"
 ATTR_RESET_VACUUM_SENSOR_DIRTY = "reset_vacuum_sensor_dirty"
 
 
-@dataclass
+@dataclass(frozen=True)
 class XiaomiMiioButtonDescription(ButtonEntityDescription):
     """A class that describes button entities."""
 
@@ -169,8 +170,12 @@ class XiaomiGenericCoordinatedButton(XiaomiCoordinatedMiioEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Press the button."""
         method = getattr(self._device, self.entity_description.method_press)
-        await self._try_command(
-            self.entity_description.method_press_error_message,
-            method,
-            self.entity_description.method_press_params,
-        )
+        params = self.entity_description.method_press_params
+        if params is not None:
+            await self._try_command(
+                self.entity_description.method_press_error_message, method, params
+            )
+        else:
+            await self._try_command(
+                self.entity_description.method_press_error_message, method
+            )

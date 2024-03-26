@@ -1,4 +1,5 @@
 """Define switch func."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -18,7 +19,7 @@ from .coordinator import IntellifireDataUpdateCoordinator
 from .entity import IntellifireEntity
 
 
-@dataclass()
+@dataclass(frozen=True)
 class IntellifireSwitchRequiredKeysMixin:
     """Mixin for required keys."""
 
@@ -27,7 +28,7 @@ class IntellifireSwitchRequiredKeysMixin:
     value_fn: Callable[[IntellifirePollData], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class IntellifireSwitchEntityDescription(
     SwitchEntityDescription, IntellifireSwitchRequiredKeysMixin
 ):
@@ -45,7 +46,6 @@ INTELLIFIRE_SWITCHES: tuple[IntellifireSwitchEntityDescription, ...] = (
     IntellifireSwitchEntityDescription(
         key="pilot",
         translation_key="pilot_light",
-        icon="mdi:fire-alert",
         on_fn=lambda control_api: control_api.pilot_on(),
         off_fn=lambda control_api: control_api.pilot_off(),
         value_fn=lambda data: data.pilot_on,

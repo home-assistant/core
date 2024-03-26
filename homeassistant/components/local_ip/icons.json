@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "local_ip": {
+        "default": "mdi:ip"
+      }
+    }
+  }
+}

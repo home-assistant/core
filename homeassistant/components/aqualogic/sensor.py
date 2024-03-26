@@ -1,4 +1,5 @@
 """Support for AquaLogic sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -26,7 +27,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from . import DOMAIN, UPDATE_TOPIC, AquaLogicProcessor
 
 
-@dataclass
+@dataclass(frozen=True)
 class AquaLogicSensorEntityDescription(SensorEntityDescription):
     """Describes AquaLogic sensor entity."""
 

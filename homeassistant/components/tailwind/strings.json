@@ -1,0 +1,75 @@
+{
+  "config": {
+    "step": {
+      "reauth_confirm": {
+        "description": "Reauthenticate with your Tailwind garage door opener.\n\nTo do so, you will need to get your new local control key of your Tailwind device. For more details, see the description below the field down below.",
+        "data": {
+          "token": "[%key:component::tailwind::config::step::user::data::token%]"
+        },
+        "data_description": {
+          "token": "[%key:component::tailwind::config::step::user::data_description::token%]"
+        }
+      },
+      "user": {
+        "description": "Set up your Tailwind garage door opener to integrate with Home Assistant.\n\nTo do so, you will need to get the local control key and IP address of your Tailwind device. For more details, see the description below the fields down below.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "token": "Local control key token"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Tailwind device. You can find the IP address by going into the Tailwind app and selecting your Tailwind device's cog icon. The IP address is shown in the **Device Info** section.",
+          "token": "To find local control key token, browse to the [Tailwind web portal]({url}), log in with your Tailwind account, and select the [**Local Control Key**]({url}) tab. The 6-digit number shown is your local control key token."
+        }
+      },
+      "zeroconf_confirm": {
+        "description": "Set up your discovered Tailwind garage door opener to integrate with Home Assistant.\n\nTo do so, you will need to get the local control key of your Tailwind device. For more details, see the description below the field down below.",
+        "data": {
+          "token": "[%key:component::tailwind::config::step::user::data::token%]"
+        },
+        "data_description": {
+          "token": "[%key:component::tailwind::config::step::user::data_description::token%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_device_id": "The discovered Tailwind device did not provide a device ID.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unsupported_firmware": "The firmware of your Tailwind device is not supported. Please update your Tailwind device to the latest firmware version using the Tailwind app."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "operational_problem": {
+        "name": "Operational problem",
+        "state": {
+          "off": "Operational",
+          "on": "Locked out"
+        }
+      }
+    },
+    "number": {
+      "brightness": {
+        "name": "Status LED brightness"
+      }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "An error occurred while communicating with the Tailwind device."
+    },
+    "door_disabled": {
+      "message": "The door is disabled and cannot be operated."
+    },
+    "door_locked_out": {
+      "message": "The door is locked out and cannot be operated."
+    }
+  }
+}

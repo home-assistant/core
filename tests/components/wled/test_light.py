@@ -1,4 +1,5 @@
 """Tests for the WLED light platform."""
+
 import json
 from unittest.mock import MagicMock
 
@@ -15,7 +16,7 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     DOMAIN as LIGHT_DOMAIN,
 )
-from homeassistant.components.wled.const import CONF_KEEP_MASTER_LIGHT, SCAN_INTERVAL
+from homeassistant.components.wled.const import CONF_KEEP_MAIN_LIGHT, SCAN_INTERVAL
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ICON,
@@ -43,7 +44,7 @@ async def test_rgb_light_state(
     assert state.attributes.get(ATTR_BRIGHTNESS) == 127
     assert state.attributes.get(ATTR_EFFECT) == "Solid"
     assert state.attributes.get(ATTR_HS_COLOR) == (37.412, 100.0)
-    assert state.attributes.get(ATTR_ICON) == "mdi:led-strip-variant"
+    assert state.attributes.get(ATTR_ICON) is None
     assert state.state == STATE_ON
 
     assert (entry := entity_registry.async_get("light.wled_rgb_light"))
@@ -54,7 +55,7 @@ async def test_rgb_light_state(
     assert state.attributes.get(ATTR_BRIGHTNESS) == 127
     assert state.attributes.get(ATTR_EFFECT) == "Blink"
     assert state.attributes.get(ATTR_HS_COLOR) == (148.941, 100.0)
-    assert state.attributes.get(ATTR_ICON) == "mdi:led-strip-variant"
+    assert state.attributes.get(ATTR_ICON) is None
     assert state.state == STATE_ON
 
     assert (entry := entity_registry.async_get("light.wled_rgb_light_segment_1"))
@@ -355,7 +356,7 @@ async def test_single_segment_with_keep_main_light(
     assert not hass.states.get("light.wled_rgb_light_main")
 
     hass.config_entries.async_update_entry(
-        init_integration, options={CONF_KEEP_MASTER_LIGHT: True}
+        init_integration, options={CONF_KEEP_MAIN_LIGHT: True}
     )
     await hass.async_block_till_done()
 

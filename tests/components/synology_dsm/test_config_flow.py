@@ -1,4 +1,6 @@
 """Tests for the Synology DSM config flow."""
+
+from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
@@ -379,12 +381,15 @@ async def test_reconfig_user(hass: HomeAssistant, service: MagicMock) -> None:
         unique_id=SERIAL,
     ).add_to_hass(hass)
 
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
-        return_value=service,
+    with (
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_reload",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
+            return_value=service,
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -666,8 +671,8 @@ async def test_discovered_via_zeroconf(hass: HomeAssistant, service: MagicMock) 
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="192.168.1.5",
-            addresses=["192.168.1.5"],
+            ip_address=ip_address("192.168.1.5"),
+            ip_addresses=[ip_address("192.168.1.5")],
             port=5000,
             hostname="mydsm.local.",
             type="_http._tcp.local.",
@@ -714,8 +719,8 @@ async def test_discovered_via_zeroconf_missing_mac(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="192.168.1.5",
-            addresses=["192.168.1.5"],
+            ip_address=ip_address("192.168.1.5"),
+            ip_addresses=[ip_address("192.168.1.5")],
             port=5000,
             hostname="mydsm.local.",
             type="_http._tcp.local.",

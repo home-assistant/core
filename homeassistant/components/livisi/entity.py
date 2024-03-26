@@ -1,4 +1,5 @@
 """Code to handle a Livisi switches."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -66,6 +67,7 @@ class LivisiEntity(CoordinatorEntity[LivisiDataUpdateCoordinator]):
 
     async def async_added_to_hass(self) -> None:
         """Register callback for reachability."""
+        await super().async_added_to_hass()
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,

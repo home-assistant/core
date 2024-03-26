@@ -12,5 +12,12 @@
         "description": "Set up the Mullvad VPN integration?"
       }
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "exit_ip": {
+        "name": "Exit IP"
+      }
+    }
   }
 }

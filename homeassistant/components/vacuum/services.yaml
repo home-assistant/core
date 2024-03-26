@@ -14,6 +14,14 @@ turn_off:
       supported_features:
         - vacuum.VacuumEntityFeature.TURN_OFF
 
+toggle:
+  target:
+    entity:
+      domain: vacuum
+      supported_features:
+        - vacuum.VacuumEntityFeature.TURN_OFF
+        - vacuum.VacuumEntityFeature.TURN_ON
+
 stop:
   target:
     entity:

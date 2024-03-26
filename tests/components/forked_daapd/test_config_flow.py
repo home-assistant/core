@@ -1,4 +1,6 @@
 """The config flow tests for the forked_daapd media player platform."""
+
+from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -67,13 +69,16 @@ async def test_show_form(hass: HomeAssistant) -> None:
 
 async def test_config_flow(hass: HomeAssistant, config_entry) -> None:
     """Test that the user step works."""
-    with patch(
-        "homeassistant.components.forked_daapd.config_flow.ForkedDaapdAPI.test_connection",
-        new=AsyncMock(),
-    ) as mock_test_connection, patch(
-        "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI.get_request",
-        autospec=True,
-    ) as mock_get_request:
+    with (
+        patch(
+            "homeassistant.components.forked_daapd.config_flow.ForkedDaapdAPI.test_connection",
+            new=AsyncMock(),
+        ) as mock_test_connection,
+        patch(
+            "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI.get_request",
+            autospec=True,
+        ) as mock_get_request,
+    ):
         mock_get_request.return_value = SAMPLE_CONFIG
         mock_test_connection.return_value = ["ok", "My Music on myhost"]
         config_data = config_entry.data
@@ -103,8 +108,8 @@ async def test_zeroconf_updates_title(hass: HomeAssistant, config_entry) -> None
     config_entry.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
     discovery_info = zeroconf.ZeroconfServiceInfo(
-        host="192.168.1.1",
-        addresses=["192.168.1.1"],
+        ip_address=ip_address("192.168.1.1"),
+        ip_addresses=[ip_address("192.168.1.1")],
         hostname="mock_hostname",
         name="mock_name",
         port=23,
@@ -138,8 +143,8 @@ async def test_config_flow_zeroconf_invalid(hass: HomeAssistant) -> None:
     """Test that an invalid zeroconf entry doesn't work."""
     # test with no discovery properties
     discovery_info = zeroconf.ZeroconfServiceInfo(
-        host="127.0.0.1",
-        addresses=["127.0.0.1"],
+        ip_address=ip_address("127.0.0.1"),
+        ip_addresses=[ip_address("127.0.0.1")],
         hostname="mock_hostname",
         name="mock_name",
         port=23,
@@ -153,8 +158,8 @@ async def test_config_flow_zeroconf_invalid(hass: HomeAssistant) -> None:
     assert result["reason"] == "not_forked_daapd"
     # test with forked-daapd version < 27
     discovery_info = zeroconf.ZeroconfServiceInfo(
-        host="127.0.0.1",
-        addresses=["127.0.0.1"],
+        ip_address=ip_address("127.0.0.1"),
+        ip_addresses=[ip_address("127.0.0.1")],
         hostname="mock_hostname",
         name="mock_name",
         port=23,
@@ -168,8 +173,8 @@ async def test_config_flow_zeroconf_invalid(hass: HomeAssistant) -> None:
     assert result["reason"] == "not_forked_daapd"
     # test with verbose mtd-version from Firefly
     discovery_info = zeroconf.ZeroconfServiceInfo(
-        host="127.0.0.1",
-        addresses=["127.0.0.1"],
+        ip_address=ip_address("127.0.0.1"),
+        ip_addresses=[ip_address("127.0.0.1")],
         hostname="mock_hostname",
         name="mock_name",
         port=23,
@@ -183,8 +188,8 @@ async def test_config_flow_zeroconf_invalid(hass: HomeAssistant) -> None:
     assert result["reason"] == "not_forked_daapd"
     # test with svn mtd-version from Firefly
     discovery_info = zeroconf.ZeroconfServiceInfo(
-        host="127.0.0.1",
-        addresses=["127.0.0.1"],
+        ip_address=ip_address("127.0.0.1"),
+        ip_addresses=[ip_address("127.0.0.1")],
         hostname="mock_hostname",
         name="mock_name",
         port=23,
@@ -201,8 +206,8 @@ async def test_config_flow_zeroconf_invalid(hass: HomeAssistant) -> None:
 async def test_config_flow_zeroconf_valid(hass: HomeAssistant) -> None:
     """Test that a valid zeroconf entry works."""
     discovery_info = zeroconf.ZeroconfServiceInfo(
-        host="192.168.1.1",
-        addresses=["192.168.1.1"],
+        ip_address=ip_address("192.168.1.1"),
+        ip_addresses=[ip_address("192.168.1.1")],
         hostname="mock_hostname",
         name="mock_name",
         port=23,

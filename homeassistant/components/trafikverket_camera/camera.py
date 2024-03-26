@@ -1,4 +1,5 @@
 """Camera for the Trafikverket Camera integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -36,6 +37,8 @@ async def async_setup_entry(
 
 class TVCamera(TrafikverketCameraEntity, Camera):
     """Implement Trafikverket camera."""
+
+    _unrecorded_attributes = frozenset({ATTR_DESCRIPTION, ATTR_LOCATION})
 
     _attr_name = None
     _attr_translation_key = "tv_camera"

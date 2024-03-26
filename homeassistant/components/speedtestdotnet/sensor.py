@@ -1,4 +1,5 @@
 """Support for Speedtest.net internet speed testing sensor."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -6,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
@@ -27,12 +29,11 @@ from .const import (
     ATTRIBUTION,
     DEFAULT_NAME,
     DOMAIN,
-    ICON,
 )
 from .coordinator import SpeedTestDataCoordinator
 
 
-@dataclass
+@dataclass(frozen=True)
 class SpeedtestSensorEntityDescription(SensorEntityDescription):
     """Class describing Speedtest sensor entities."""
 
@@ -45,12 +46,14 @@ SENSOR_TYPES: tuple[SpeedtestSensorEntityDescription, ...] = (
         translation_key="ping",
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DURATION,
     ),
     SpeedtestSensorEntityDescription(
         key="download",
         translation_key="download",
         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DATA_RATE,
         value=lambda value: round(value / 10**6, 2),
     ),
     SpeedtestSensorEntityDescription(
@@ -58,6 +61,7 @@ SENSOR_TYPES: tuple[SpeedtestSensorEntityDescription, ...] = (
         translation_key="upload",
         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DATA_RATE,
         value=lambda value: round(value / 10**6, 2),
     ),
 )
@@ -82,7 +86,6 @@ class SpeedtestSensor(CoordinatorEntity[SpeedTestDataCoordinator], SensorEntity)
     entity_description: SpeedtestSensorEntityDescription
     _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
-    _attr_icon = ICON
 
     def __init__(
         self,

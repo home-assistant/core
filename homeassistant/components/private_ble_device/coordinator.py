@@ -1,4 +1,5 @@
 """Central manager for tracking devices with random but resolvable MAC addresses."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -102,6 +103,16 @@ class PrivateDevicesCoordinator:
 
     def _async_irk_resolved_to_mac(self, irk: bytes, mac: str) -> None:
         if previous_mac := self._irk_to_mac.get(irk):
+            previous_interval = bluetooth.async_get_learned_advertising_interval(
+                self.hass, previous_mac
+            ) or bluetooth.async_get_fallback_availability_interval(
+                self.hass, previous_mac
+            )
+            if previous_interval:
+                bluetooth.async_set_fallback_availability_interval(
+                    self.hass, mac, previous_interval
+                )
+
             self._mac_to_irk.pop(previous_mac, None)
 
         self._mac_to_irk[mac] = irk

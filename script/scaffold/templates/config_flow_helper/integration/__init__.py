@@ -1,4 +1,5 @@
 """The NEW_NAME integration."""
+
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
@@ -11,7 +12,7 @@ from .const import DOMAIN
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up NEW_NAME from a config entry."""
     # TODO Optionally store an object for your platforms to access
-    # hass.data[DOMAIN][entry.entry_id] = ...
+    # hass.data.setdefault(DOMAIN, {})[entry.entry_id] = ...
 
     # TODO Optionally validate config entry options before setting up platform
 

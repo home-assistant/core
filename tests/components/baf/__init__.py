@@ -1,6 +1,5 @@
 """Tests for the Big Ass Fans integration."""
 
-
 import asyncio
 
 from aiobafi6 import Device

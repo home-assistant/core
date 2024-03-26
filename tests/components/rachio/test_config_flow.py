@@ -1,4 +1,6 @@
 """Test the Rachio config flow."""
+
+from ipaddress import ip_address
 from unittest.mock import MagicMock, patch
 
 from homeassistant import config_entries
@@ -37,12 +39,16 @@ async def test_form(hass: HomeAssistant) -> None:
         info=({"status": 200}, {"id": "myid"}),
     )
 
-    with patch(
-        "homeassistant.components.rachio.config_flow.Rachio", return_value=rachio_mock
-    ), patch(
-        "homeassistant.components.rachio.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.rachio.config_flow.Rachio",
+            return_value=rachio_mock,
+        ),
+        patch(
+            "homeassistant.components.rachio.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -114,8 +120,8 @@ async def test_form_homekit(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="mock_host",
-            addresses=["mock_host"],
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -139,8 +145,8 @@ async def test_form_homekit(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="mock_host",
-            addresses=["mock_host"],
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -165,8 +171,8 @@ async def test_form_homekit_ignored(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="mock_host",
-            addresses=["mock_host"],
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,

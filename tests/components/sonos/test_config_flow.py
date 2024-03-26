@@ -1,6 +1,8 @@
 """Test the sonos config flow."""
+
 from __future__ import annotations
 
+from ipaddress import ip_address
 from unittest.mock import MagicMock, patch
 
 from homeassistant import config_entries
@@ -40,13 +42,16 @@ async def test_user_form(
     )
     assert result["type"] == "form"
     assert result["errors"] is None
-    with patch(
-        "homeassistant.components.sonos.async_setup",
-        return_value=True,
-    ) as mock_setup, patch(
-        "homeassistant.components.sonos.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.sonos.async_setup",
+            return_value=True,
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.sonos.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},
@@ -91,13 +96,16 @@ async def test_zeroconf_form(
     assert result["type"] == "form"
     assert result["errors"] is None
 
-    with patch(
-        "homeassistant.components.sonos.async_setup",
-        return_value=True,
-    ) as mock_setup, patch(
-        "homeassistant.components.sonos.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.sonos.async_setup",
+            return_value=True,
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.sonos.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},
@@ -133,13 +141,16 @@ async def test_ssdp_discovery(hass: HomeAssistant, soco) -> None:
     assert len(flows) == 1
     flow = flows[0]
 
-    with patch(
-        "homeassistant.components.sonos.async_setup",
-        return_value=True,
-    ) as mock_setup, patch(
-        "homeassistant.components.sonos.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.sonos.async_setup",
+            return_value=True,
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.sonos.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             flow["flow_id"],
             {},
@@ -162,8 +173,8 @@ async def test_zeroconf_sonos_v1(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="192.168.1.107",
-            addresses=["192.168.1.107"],
+            ip_address=ip_address("192.168.1.107"),
+            ip_addresses=[ip_address("192.168.1.107")],
             port=1443,
             hostname="sonos5CAAFDE47AC8.local.",
             type="_sonos._tcp.local.",
@@ -183,13 +194,16 @@ async def test_zeroconf_sonos_v1(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] is None
 
-    with patch(
-        "homeassistant.components.sonos.async_setup",
-        return_value=True,
-    ) as mock_setup, patch(
-        "homeassistant.components.sonos.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.sonos.async_setup",
+            return_value=True,
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.sonos.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},

@@ -1,4 +1,5 @@
 """Fixtures for Met Office weather integration tests."""
+
 from unittest.mock import patch
 
 from datapoint.exceptions import APIException

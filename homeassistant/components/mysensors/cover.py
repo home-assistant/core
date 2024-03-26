@@ -1,4 +1,5 @@
 """Support for MySensors covers."""
+
 from __future__ import annotations
 
 from enum import Enum, unique
@@ -54,7 +55,7 @@ async def async_setup_entry(
     )
 
 
-class MySensorsCover(mysensors.device.MySensorsEntity, CoverEntity):
+class MySensorsCover(mysensors.device.MySensorsChildEntity, CoverEntity):
     """Representation of the value of a MySensors Cover child node."""
 
     def get_cover_state(self) -> CoverState:

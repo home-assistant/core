@@ -1,4 +1,5 @@
 """Support for ISY sensors."""
+
 from __future__ import annotations
 
 from typing import Any, cast
@@ -186,7 +187,7 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
 
         # Check if this is a known index pair UOM
         if isinstance(uom, dict):
-            return uom.get(value, value)
+            return uom.get(value, value)  # type: ignore[no-any-return]
 
         if uom in (UOM_INDEX, UOM_ON_OFF):
             return cast(str, self.target.formatted)
@@ -262,6 +263,7 @@ class ISYAuxSensorEntity(ISYSensorEntity):
         """Return the target value."""
         return None if self.target is None else self.target.value
 
+    # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self) -> None:
         """Subscribe to the node control change events.
 

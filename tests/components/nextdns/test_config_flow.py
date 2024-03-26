@@ -1,18 +1,14 @@
 """Define tests for the NextDNS config flow."""
-import asyncio
+
 from unittest.mock import patch
 
 from nextdns import ApiError, InvalidApiKeyError
 import pytest
 
 from homeassistant import data_entry_flow
-from homeassistant.components.nextdns.const import (
-    CONF_PROFILE_ID,
-    CONF_PROFILE_NAME,
-    DOMAIN,
-)
+from homeassistant.components.nextdns.const import CONF_PROFILE_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_PROFILE_NAME
 from homeassistant.core import HomeAssistant
 
 from . import PROFILES, init_integration
@@ -27,11 +23,15 @@ async def test_form_create_entry(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.nextdns.NextDns.get_profiles", return_value=PROFILES
-    ), patch(
-        "homeassistant.components.nextdns.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.nextdns.NextDns.get_profiles",
+            return_value=PROFILES,
+        ),
+        patch(
+            "homeassistant.components.nextdns.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_API_KEY: "fake_api_key"},
@@ -57,7 +57,7 @@ async def test_form_create_entry(hass: HomeAssistant) -> None:
     [
         (ApiError("API Error"), "cannot_connect"),
         (InvalidApiKeyError, "invalid_api_key"),
-        (asyncio.TimeoutError, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
         (ValueError, "unknown"),
     ],
 )

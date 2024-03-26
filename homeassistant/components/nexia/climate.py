@@ -1,4 +1,5 @@
 """Support for Nexia / Trane XL thermostats."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -107,6 +108,8 @@ NEXIA_SUPPORTED = (
     | ClimateEntityFeature.TARGET_TEMPERATURE
     | ClimateEntityFeature.FAN_MODE
     | ClimateEntityFeature.PRESET_MODE
+    | ClimateEntityFeature.TURN_OFF
+    | ClimateEntityFeature.TURN_ON
 )
 
 
@@ -151,6 +154,7 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
     """Provides Nexia Climate support."""
 
     _attr_name = None
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, coordinator: NexiaDataUpdateCoordinator, zone: NexiaThermostatZone

@@ -1,4 +1,5 @@
 """OpenTherm Gateway config flow."""
+
 from __future__ import annotations
 
 import asyncio
@@ -8,7 +9,7 @@ from pyotgw import vars as gw_vars
 from serial import SerialException
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_ID,
@@ -30,7 +31,7 @@ from .const import (
 )
 
 
-class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class OpenThermGwConfigFlow(ConfigFlow, domain=DOMAIN):
     """OpenTherm Gateway Config Flow."""
 
     VERSION = 1
@@ -38,7 +39,7 @@ class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> OpenThermGwOptionsFlow:
         """Get the options flow for this handler."""
         return OpenThermGwOptionsFlow(config_entry)
@@ -70,7 +71,7 @@ class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 async with asyncio.timeout(CONNECTION_TIMEOUT):
                     await test_connection()
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 return self._show_form({"base": "timeout_connect"})
             except (ConnectionError, SerialException):
                 return self._show_form({"base": "cannot_connect"})
@@ -116,10 +117,10 @@ class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class OpenThermGwOptionsFlow(config_entries.OptionsFlow):
+class OpenThermGwOptionsFlow(OptionsFlow):
     """Handle opentherm_gw options."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize the options flow."""
         self.config_entry = config_entry
 

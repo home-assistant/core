@@ -43,8 +43,22 @@
         "size": {
           "name": "Size",
           "description": "The size of the image to generate"
+        },
+        "quality": {
+          "name": "Quality",
+          "description": "The quality of the image that will be generated"
+        },
+        "style": {
+          "name": "Style",
+          "description": "The style of the generated image"
         }
       }
+    }
+  },
+  "issues": {
+    "image_size_deprecated_format": {
+      "title": "Deprecated size format for image generation service",
+      "description": "OpenAI is now using Dall-E 3 to generate images when calling `openai_conversation.generate_image`, which supports different sizes. Valid values are now \"1024x1024\", \"1024x1792\", \"1792x1024\". The old values of \"256\", \"512\", \"1024\" are currently interpreted as \"1024x1024\".\nPlease update your scripts or automations with the new parameters."
     }
   }
 }

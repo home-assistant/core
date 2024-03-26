@@ -1,8 +1,10 @@
 """Support for the AirNow sensor service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -13,6 +15,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_TIME,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
 )
@@ -21,6 +24,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util.dt import get_time_zone
 
 from . import AirNowDataUpdateCoordinator
 from .const import (
@@ -29,6 +33,9 @@ from .const import (
     ATTR_API_AQI_LEVEL,
     ATTR_API_O3,
     ATTR_API_PM25,
+    ATTR_API_REPORT_DATE,
+    ATTR_API_REPORT_HOUR,
+    ATTR_API_REPORT_TZ,
     ATTR_API_STATION,
     ATTR_API_STATION_LATITUDE,
     ATTR_API_STATION_LONGITUDE,
@@ -45,34 +52,45 @@ ATTR_LEVEL = "level"
 ATTR_STATION = "reporting_station"
 
 
-@dataclass
-class AirNowEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class AirNowEntityDescription(SensorEntityDescription):
+    """Describes Airnow sensor entity."""
 
     value_fn: Callable[[Any], StateType]
     extra_state_attributes_fn: Callable[[Any], dict[str, str]] | None
 
 
-@dataclass
-class AirNowEntityDescription(SensorEntityDescription, AirNowEntityDescriptionMixin):
-    """Describes Airnow sensor entity."""
+def station_extra_attrs(data: dict[str, Any]) -> dict[str, Any]:
+    """Process extra attributes for station location (if available)."""
+    if ATTR_API_STATION in data:
+        return {
+            "lat": data.get(ATTR_API_STATION_LATITUDE),
+            "long": data.get(ATTR_API_STATION_LONGITUDE),
+        }
+    return {}
 
 
 SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
     AirNowEntityDescription(
         key=ATTR_API_AQI,
-        icon="mdi:blur",
+        translation_key="aqi",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.AQI,
         value_fn=lambda data: data.get(ATTR_API_AQI),
         extra_state_attributes_fn=lambda data: {
             ATTR_DESCR: data[ATTR_API_AQI_DESCRIPTION],
             ATTR_LEVEL: data[ATTR_API_AQI_LEVEL],
+            ATTR_TIME: datetime.strptime(
+                f"{data[ATTR_API_REPORT_DATE]} {data[ATTR_API_REPORT_HOUR]}",
+                "%Y-%m-%d %H",
+            )
+            .replace(tzinfo=get_time_zone(data[ATTR_API_REPORT_TZ]))
+            .isoformat(),
         },
     ),
     AirNowEntityDescription(
         key=ATTR_API_PM25,
-        icon="mdi:blur",
+        translation_key="pm25",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PM25,
@@ -82,7 +100,6 @@ SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
     AirNowEntityDescription(
         key=ATTR_API_O3,
         translation_key="o3",
-        icon="mdi:blur",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.get(ATTR_API_O3),
@@ -91,12 +108,8 @@ SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
     AirNowEntityDescription(
         key=ATTR_API_STATION,
         translation_key="station",
-        icon="mdi:blur",
         value_fn=lambda data: data.get(ATTR_API_STATION),
-        extra_state_attributes_fn=lambda data: {
-            "lat": data[ATTR_API_STATION_LATITUDE],
-            "long": data[ATTR_API_STATION_LONGITUDE],
-        },
+        extra_state_attributes_fn=station_extra_attrs,
     ),
 )
 
@@ -129,13 +142,14 @@ class AirNowSensor(CoordinatorEntity[AirNowDataUpdateCoordinator], SensorEntity)
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
+
+        _device_id = f"{coordinator.latitude}-{coordinator.longitude}"
+
         self.entity_description = description
-        self._attr_unique_id = (
-            f"{coordinator.latitude}-{coordinator.longitude}-{description.key.lower()}"
-        )
+        self._attr_unique_id = f"{_device_id}-{description.key.lower()}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, self._attr_unique_id)},
+            identifiers={(DOMAIN, _device_id)},
             manufacturer=DEFAULT_NAME,
             name=DEFAULT_NAME,
         )

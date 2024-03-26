@@ -1,10 +1,12 @@
 """Test the Airthings config flow."""
+
 from unittest.mock import patch
 
 import airthings
 
 from homeassistant import config_entries
-from homeassistant.components.airthings.const import CONF_ID, CONF_SECRET, DOMAIN
+from homeassistant.components.airthings.const import CONF_SECRET, DOMAIN
+from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -25,13 +27,16 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch(
-        "airthings.get_token",
-        return_value="test_token",
-    ), patch(
-        "homeassistant.components.airthings.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "airthings.get_token",
+            return_value="test_token",
+        ),
+        patch(
+            "homeassistant.components.airthings.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             TEST_DATA,

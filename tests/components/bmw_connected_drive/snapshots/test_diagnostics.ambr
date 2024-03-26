@@ -413,7 +413,6 @@
             'servicePack': 'WAVE_01',
           }),
           'fetched_at': '2022-07-10T11:00:00+00:00',
-          'is_metric': True,
           'mappingInfo': dict({
             'isAssociated': False,
             'isLmmEnabled': False,
@@ -824,6 +823,11 @@
         }),
         'has_combustion_drivetrain': False,
         'has_electric_drivetrain': True,
+        'headunit': dict({
+          'headunit_type': 'MGU',
+          'idrive_version': 'ID8',
+          'software_version': '07/2021.00',
+        }),
         'is_charging_plan_supported': True,
         'is_lsc_enabled': True,
         'is_remote_charge_start_enabled': True,
@@ -1283,7 +1287,6 @@
             'servicePack': 'WAVE_01',
           }),
           'fetched_at': '2022-07-10T11:00:00+00:00',
-          'is_metric': True,
           'mappingInfo': dict({
             'isAssociated': False,
             'isLmmEnabled': False,
@@ -1685,6 +1688,11 @@
         }),
         'has_combustion_drivetrain': False,
         'has_electric_drivetrain': True,
+        'headunit': dict({
+          'headunit_type': 'MGU',
+          'idrive_version': 'ID8',
+          'software_version': '11/2021.70',
+        }),
         'is_charging_plan_supported': True,
         'is_lsc_enabled': True,
         'is_remote_charge_start_enabled': False,
@@ -1969,7 +1977,6 @@
           'charging_settings': dict({
           }),
           'fetched_at': '2022-07-10T11:00:00+00:00',
-          'is_metric': True,
           'mappingInfo': dict({
             'isAssociated': False,
             'isLmmEnabled': False,
@@ -2318,6 +2325,11 @@
         }),
         'has_combustion_drivetrain': True,
         'has_electric_drivetrain': False,
+        'headunit': dict({
+          'headunit_type': 'MGU',
+          'idrive_version': 'ID7',
+          'software_version': '07/2021.70',
+        }),
         'is_charging_plan_supported': False,
         'is_lsc_enabled': True,
         'is_remote_charge_start_enabled': False,
@@ -2719,7 +2731,6 @@
             'servicePack': 'TCB1',
           }),
           'fetched_at': '2022-07-10T11:00:00+00:00',
-          'is_metric': True,
           'mappingInfo': dict({
             'isPrimaryUser': True,
             'mappingStatus': 'CONFIRMED',
@@ -3015,6 +3026,11 @@
         }),
         'has_combustion_drivetrain': True,
         'has_electric_drivetrain': True,
+        'headunit': dict({
+          'headunit_type': 'NBT',
+          'idrive_version': 'ID4',
+          'software_version': '11/2021.10',
+        }),
         'is_charging_plan_supported': True,
         'is_lsc_enabled': True,
         'is_remote_charge_start_enabled': False,
@@ -5050,7 +5066,6 @@
           'servicePack': 'TCB1',
         }),
         'fetched_at': '2022-07-10T11:00:00+00:00',
-        'is_metric': True,
         'mappingInfo': dict({
           'isPrimaryUser': True,
           'mappingStatus': 'CONFIRMED',
@@ -5346,6 +5361,11 @@
       }),
       'has_combustion_drivetrain': True,
       'has_electric_drivetrain': True,
+      'headunit': dict({
+        'headunit_type': 'NBT',
+        'idrive_version': 'ID4',
+        'software_version': '11/2021.10',
+      }),
       'is_charging_plan_supported': True,
       'is_lsc_enabled': True,
       'is_remote_charge_start_enabled': False,

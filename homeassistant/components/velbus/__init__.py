@@ -1,4 +1,5 @@
 """Support for Velbus devices."""
+
 from __future__ import annotations
 
 from contextlib import suppress
@@ -53,7 +54,7 @@ async def velbus_connect_task(
 
 
 def _migrate_device_identifiers(hass: HomeAssistant, entry_id: str) -> None:
-    """Migrate old device indentifiers."""
+    """Migrate old device identifiers."""
     dev_reg = dr.async_get(hass)
     devices: list[dr.DeviceEntry] = dr.async_entries_for_config_entry(dev_reg, entry_id)
     for device in devices:
@@ -119,9 +120,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Handle Memo Text service call."""
         memo_text = call.data[CONF_MEMO_TEXT]
         memo_text.hass = hass
-        await hass.data[DOMAIN][call.data[CONF_INTERFACE]]["cntrl"].get_module(
-            call.data[CONF_ADDRESS]
-        ).set_memo_text(memo_text.async_render())
+        await (
+            hass.data[DOMAIN][call.data[CONF_INTERFACE]]["cntrl"]
+            .get_module(call.data[CONF_ADDRESS])
+            .set_memo_text(memo_text.async_render())
+        )
 
     hass.services.async_register(
         DOMAIN,
@@ -209,7 +212,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         if os.path.isdir(cache_path):
             await hass.async_add_executor_job(shutil.rmtree, cache_path)
         # set the new version
-        config_entry.version = 2
+        hass.config_entries.async_update_entry(config_entry, version=2)
 
     _LOGGER.debug("Migration to version %s successful", config_entry.version)
     return True

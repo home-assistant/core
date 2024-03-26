@@ -1,4 +1,5 @@
 """Define an update coordinator for OpenUV."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -17,7 +18,7 @@ from .const import LOGGER
 DEFAULT_DEBOUNCER_COOLDOWN_SECONDS = 15 * 60
 
 
-class OpenUvCoordinator(DataUpdateCoordinator):
+class OpenUvCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Define an OpenUV data coordinator."""
 
     config_entry: ConfigEntry

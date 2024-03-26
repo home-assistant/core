@@ -1,4 +1,6 @@
 """Test the Xiaomi Aqara config flow."""
+
+from ipaddress import ip_address
 from socket import gaierror
 from unittest.mock import Mock, patch
 
@@ -31,14 +33,18 @@ def xiaomi_aqara_fixture():
     """Mock xiaomi_aqara discovery and entry setup."""
     mock_gateway_discovery = get_mock_discovery([TEST_HOST])
 
-    with patch(
-        "homeassistant.components.xiaomi_aqara.config_flow.XiaomiGatewayDiscovery",
-        return_value=mock_gateway_discovery,
-    ), patch(
-        "homeassistant.components.xiaomi_aqara.config_flow.XiaomiGateway",
-        return_value=mock_gateway_discovery.gateways[TEST_HOST],
-    ), patch(
-        "homeassistant.components.xiaomi_aqara.async_setup_entry", return_value=True
+    with (
+        patch(
+            "homeassistant.components.xiaomi_aqara.config_flow.XiaomiGatewayDiscovery",
+            return_value=mock_gateway_discovery,
+        ),
+        patch(
+            "homeassistant.components.xiaomi_aqara.config_flow.XiaomiGateway",
+            return_value=mock_gateway_discovery.gateways[TEST_HOST],
+        ),
+        patch(
+            "homeassistant.components.xiaomi_aqara.async_setup_entry", return_value=True
+        ),
     ):
         yield
 
@@ -403,8 +409,8 @@ async def test_zeroconf_success(hass: HomeAssistant) -> None:
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host=TEST_HOST,
-            addresses=[TEST_HOST],
+            ip_address=ip_address(TEST_HOST),
+            ip_addresses=[ip_address(TEST_HOST)],
             hostname="mock_hostname",
             name=TEST_ZEROCONF_NAME,
             port=None,
@@ -450,8 +456,8 @@ async def test_zeroconf_missing_data(hass: HomeAssistant) -> None:
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host=TEST_HOST,
-            addresses=[TEST_HOST],
+            ip_address=ip_address(TEST_HOST),
+            ip_addresses=[ip_address(TEST_HOST)],
             hostname="mock_hostname",
             name=TEST_ZEROCONF_NAME,
             port=None,
@@ -470,8 +476,8 @@ async def test_zeroconf_unknown_device(hass: HomeAssistant) -> None:
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host=TEST_HOST,
-            addresses=[TEST_HOST],
+            ip_address=ip_address(TEST_HOST),
+            ip_addresses=[ip_address(TEST_HOST)],
             hostname="mock_hostname",
             name="not-a-xiaomi-aqara-gateway",
             port=None,

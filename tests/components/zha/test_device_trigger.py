@@ -1,9 +1,11 @@
 """ZHA device automation trigger tests."""
+
 from datetime import timedelta
 import time
 from unittest.mock import patch
 
 import pytest
+from zigpy.application import ControllerApplication
 import zigpy.profiles.zha
 import zigpy.zcl.clusters.general as general
 
@@ -70,10 +72,7 @@ def _same_lists(list_a, list_b):
     if len(list_a) != len(list_b):
         return False
 
-    for item in list_a:
-        if item not in list_b:
-            return False
-    return True
+    return all(item in list_b for item in list_a)
 
 
 @pytest.fixture
@@ -408,7 +407,7 @@ async def test_validate_trigger_config_missing_info(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     zigpy_device_mock,
-    mock_zigpy_connect,
+    mock_zigpy_connect: ControllerApplication,
     zha_device_joined,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -461,7 +460,7 @@ async def test_validate_trigger_config_unloaded_bad_info(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     zigpy_device_mock,
-    mock_zigpy_connect,
+    mock_zigpy_connect: ControllerApplication,
     zha_device_joined,
     caplog: pytest.LogCaptureFixture,
 ) -> None:

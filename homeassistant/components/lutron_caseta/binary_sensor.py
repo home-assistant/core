@@ -1,4 +1,5 @@
 """Support for Lutron Caseta Occupancy/Vacancy Sensors."""
+
 from pylutron_caseta import OCCUPANCY_GROUP_OCCUPIED
 
 from homeassistant.components.binary_sensor import (
@@ -63,6 +64,7 @@ class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
         """Return the brightness of the light."""
         return self._device["status"] == OCCUPANCY_GROUP_OCCUPIED
 
+    # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self._smartbridge.add_occupancy_subscriber(

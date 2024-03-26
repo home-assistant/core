@@ -3,6 +3,7 @@
 Test setup of rflink sensor component/platform. Verify manual and
 automatic sensor creation.
 """
+
 from datetime import timedelta
 
 from freezegun import freeze_time
@@ -193,7 +194,7 @@ async def test_restore_state(hass: HomeAssistant, monkeypatch) -> None:
         hass, (State(f"{DOMAIN}.test", STATE_ON), State(f"{DOMAIN}.test2", STATE_ON))
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     # setup mocking rflink module
     _, _, _, _ = await mock_rflink(hass, CONFIG, DOMAIN, monkeypatch)

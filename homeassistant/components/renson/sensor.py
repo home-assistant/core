@@ -1,4 +1,5 @@
 """Sensor data of the Renson ventilation unit."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -17,13 +18,11 @@ from renson_endura_delta.field_enum import (
     CURRENT_AIRFLOW_INGOING_FIELD,
     CURRENT_LEVEL_FIELD,
     DAY_POLLUTION_FIELD,
-    DAYTIME_FIELD,
     FILTER_REMAIN_FIELD,
     HUMIDITY_FIELD,
     INDOOR_TEMP_FIELD,
     MANUAL_LEVEL_FIELD,
     NIGHT_POLLUTION_FIELD,
-    NIGHTTIME_FIELD,
     OUTDOOR_TEMP_FIELD,
     FieldEnum,
 )
@@ -46,34 +45,18 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RensonCoordinator, RensonData
+from . import RensonData
 from .const import DOMAIN
+from .coordinator import RensonCoordinator
 from .entity import RensonEntity
 
-OPTIONS_MAPPING = {
-    "Off": "off",
-    "Level1": "level1",
-    "Level2": "level2",
-    "Level3": "level3",
-    "Level4": "level4",
-    "Breeze": "breeze",
-    "Holiday": "holiday",
-}
 
-
-@dataclass
-class RensonSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class RensonSensorEntityDescription(SensorEntityDescription):
+    """Description of a Renson sensor."""
 
     field: FieldEnum
     raw_format: bool
-
-
-@dataclass
-class RensonSensorEntityDescription(
-    SensorEntityDescription, RensonSensorEntityDescriptionMixin
-):
-    """Description of a Renson sensor."""
 
 
 SENSORS: tuple[RensonSensorEntityDescription, ...] = (
@@ -183,30 +166,14 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         raw_format=False,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        entity_registry_enabled_default=False,
     ),
     RensonSensorEntityDescription(
         key="BREEZE_LEVEL_FIELD",
         translation_key="breeze_level",
         field=BREEZE_LEVEL_FIELD,
         raw_format=False,
-        entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
         options=["off", "level1", "level2", "level3", "level4", "breeze"],
-    ),
-    RensonSensorEntityDescription(
-        key="DAYTIME_FIELD",
-        translation_key="start_day_time",
-        field=DAYTIME_FIELD,
-        raw_format=False,
-        entity_registry_enabled_default=False,
-    ),
-    RensonSensorEntityDescription(
-        key="NIGHTTIME_FIELD",
-        translation_key="start_night_time",
-        field=NIGHTTIME_FIELD,
-        raw_format=False,
-        entity_registry_enabled_default=False,
     ),
     RensonSensorEntityDescription(
         key="DAY_POLLUTION_FIELD",
@@ -293,9 +260,9 @@ class RensonSensor(RensonEntity, SensorEntity):
         if self.raw_format:
             self._attr_native_value = value
         elif self.entity_description.device_class == SensorDeviceClass.ENUM:
-            self._attr_native_value = OPTIONS_MAPPING.get(
-                self.api.parse_value(value, self.data_type), None
-            )
+            self._attr_native_value = self.api.parse_value(
+                value, self.data_type
+            ).lower()
         else:
             self._attr_native_value = self.api.parse_value(value, self.data_type)
 

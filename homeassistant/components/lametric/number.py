@@ -1,4 +1,5 @@
 """Support for LaMetric numbers."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -19,26 +20,19 @@ from .entity import LaMetricEntity
 from .helpers import lametric_exception_handler
 
 
-@dataclass
-class LaMetricEntityDescriptionMixin:
-    """Mixin values for LaMetric entities."""
+@dataclass(frozen=True, kw_only=True)
+class LaMetricNumberEntityDescription(NumberEntityDescription):
+    """Class describing LaMetric number entities."""
 
     value_fn: Callable[[Device], int | None]
     set_value_fn: Callable[[LaMetricDevice, float], Awaitable[Any]]
 
 
-@dataclass
-class LaMetricNumberEntityDescription(
-    NumberEntityDescription, LaMetricEntityDescriptionMixin
-):
-    """Class describing LaMetric number entities."""
-
-
 NUMBERS = [
     LaMetricNumberEntityDescription(
         key="brightness",
+        translation_key="brightness",
         name="Brightness",
-        icon="mdi:brightness-6",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_min_value=0,
@@ -49,8 +43,8 @@ NUMBERS = [
     ),
     LaMetricNumberEntityDescription(
         key="volume",
+        translation_key="volume",
         name="Volume",
-        icon="mdi:volume-high",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_min_value=0,

@@ -1,4 +1,5 @@
-"""Support for Motion Blinds using their WLAN API."""
+"""Support for Motionblinds using their WLAN API."""
+
 from __future__ import annotations
 
 from motionblinds import DEVICE_TYPES_GATEWAY, DEVICE_TYPES_WIFI, MotionGateway
@@ -8,7 +9,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DataUpdateCoordinatorMotionBlinds
 from .const import (
     ATTR_AVAILABLE,
     DEFAULT_GATEWAY_NAME,
@@ -16,11 +16,12 @@ from .const import (
     KEY_GATEWAY,
     MANUFACTURER,
 )
+from .coordinator import DataUpdateCoordinatorMotionBlinds
 from .gateway import device_name
 
 
 class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlinds]):
-    """Representation of a Motion Blind entity."""
+    """Representation of a Motionblind entity."""
 
     _attr_has_entity_name = True
 

@@ -1,4 +1,5 @@
 """Tests for Transmission config flow."""
+
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -71,33 +72,12 @@ async def test_device_already_configured(
     assert result2["reason"] == "already_configured"
 
 
-async def test_name_already_configured(hass: HomeAssistant) -> None:
-    """Test name is already configured."""
-    entry = MockConfigEntry(
-        domain=transmission.DOMAIN,
-        data=MOCK_CONFIG_DATA,
-        options={"scan_interval": 120},
-    )
-    entry.add_to_hass(hass)
-
-    mock_entry = MOCK_CONFIG_DATA.copy()
-    mock_entry["host"] = "1.1.1.1"
-    result = await hass.config_entries.flow.async_init(
-        transmission.DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=mock_entry,
-    )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"name": "name_exists"}
-
-
 async def test_options(hass: HomeAssistant) -> None:
     """Test updating options."""
     entry = MockConfigEntry(
         domain=transmission.DOMAIN,
         data=MOCK_CONFIG_DATA,
-        options={"scan_interval": 120},
+        options={"limit": 10, "order": "oldest_first"},
     )
     entry.add_to_hass(hass)
 
@@ -114,11 +94,12 @@ async def test_options(hass: HomeAssistant) -> None:
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"scan_interval": 10}
+        result["flow_id"], user_input={"limit": 20}
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"]["scan_interval"] == 10
+    assert result["data"]["limit"] == 20
+    assert result["data"]["order"] == "oldest_first"
 
 
 async def test_error_on_wrong_credentials(
@@ -176,10 +157,7 @@ async def test_error_on_connection_failure(
 
 async def test_reauth_success(hass: HomeAssistant) -> None:
     """Test we can reauth."""
-    entry = MockConfigEntry(
-        domain=transmission.DOMAIN,
-        data=MOCK_CONFIG_DATA,
-    )
+    entry = MockConfigEntry(domain=transmission.DOMAIN, data=MOCK_CONFIG_DATA)
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(

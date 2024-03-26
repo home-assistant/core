@@ -1,4 +1,5 @@
 """Test the Universal Devices ISY/IoX config flow."""
+
 import re
 from unittest.mock import patch
 
@@ -90,10 +91,13 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE), patch(
-        PATCH_ASYNC_SETUP_ENTRY,
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE),
+        patch(
+            PATCH_ASYNC_SETUP_ENTRY,
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             MOCK_USER_INPUT,
@@ -283,10 +287,13 @@ async def test_form_ssdp(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE), patch(
-        PATCH_ASYNC_SETUP_ENTRY,
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE),
+        patch(
+            PATCH_ASYNC_SETUP_ENTRY,
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             MOCK_USER_INPUT,
@@ -442,10 +449,13 @@ async def test_form_dhcp(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE), patch(
-        PATCH_ASYNC_SETUP_ENTRY,
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE),
+        patch(
+            PATCH_ASYNC_SETUP_ENTRY,
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             MOCK_USER_INPUT,
@@ -479,10 +489,13 @@ async def test_form_dhcp_with_polisy(hass: HomeAssistant) -> None:
         == "http://1.2.3.4:8080"
     )
 
-    with patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE), patch(
-        PATCH_ASYNC_SETUP_ENTRY,
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE),
+        patch(
+            PATCH_ASYNC_SETUP_ENTRY,
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             MOCK_IOX_USER_INPUT,
@@ -516,10 +529,13 @@ async def test_form_dhcp_with_eisy(hass: HomeAssistant) -> None:
         == "http://1.2.3.4:8080"
     )
 
-    with patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE), patch(
-        PATCH_ASYNC_SETUP_ENTRY,
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE),
+        patch(
+            PATCH_ASYNC_SETUP_ENTRY,
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             MOCK_IOX_USER_INPUT,
@@ -665,10 +681,13 @@ async def test_reauth(hass: HomeAssistant) -> None:
     assert result3["type"] == "form"
     assert result3["errors"] == {"base": "cannot_connect"}
 
-    with patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE), patch(
-        "homeassistant.components.isy994.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE),
+        patch(
+            "homeassistant.components.isy994.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result4 = await hass.config_entries.flow.async_configure(
             result3["flow_id"],
             {
@@ -676,6 +695,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
                 CONF_PASSWORD: "test-password",
             },
         )
+        await hass.async_block_till_done()
 
     assert mock_setup_entry.called
     assert result4["type"] == "abort"

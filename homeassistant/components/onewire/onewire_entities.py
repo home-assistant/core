@@ -1,4 +1,5 @@
 """Support for 1-Wire entities."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -14,7 +15,7 @@ from homeassistant.helpers.typing import StateType
 from .const import READ_MODE_BOOL, READ_MODE_INT
 
 
-@dataclass
+@dataclass(frozen=True)
 class OneWireEntityDescription(EntityDescription):
     """Class describing OneWire entities."""
 

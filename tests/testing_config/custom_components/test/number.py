@@ -2,6 +2,7 @@
 
 Call init before using it in your tests to ensure clean test data.
 """
+
 from homeassistant.components.number import NumberEntity, RestoreNumber
 
 from tests.common import MockEntity
@@ -55,9 +56,9 @@ class MockRestoreNumber(MockNumberEntity, RestoreNumber):
         self._values["native_max_value"] = last_number_data.native_max_value
         self._values["native_min_value"] = last_number_data.native_min_value
         self._values["native_step"] = last_number_data.native_step
-        self._values[
-            "native_unit_of_measurement"
-        ] = last_number_data.native_unit_of_measurement
+        self._values["native_unit_of_measurement"] = (
+            last_number_data.native_unit_of_measurement
+        )
         self._values["native_value"] = last_number_data.native_value
 
 

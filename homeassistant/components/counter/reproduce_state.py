@@ -1,4 +1,5 @@
 """Reproduce an Counter state."""
+
 from __future__ import annotations
 
 import asyncio
@@ -9,15 +10,7 @@ from typing import Any
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context, HomeAssistant, State
 
-from . import (
-    ATTR_INITIAL,
-    ATTR_MAXIMUM,
-    ATTR_MINIMUM,
-    ATTR_STEP,
-    DOMAIN,
-    SERVICE_CONFIGURE,
-    VALUE,
-)
+from . import ATTR_MAXIMUM, ATTR_MINIMUM, ATTR_STEP, DOMAIN, SERVICE_SET_VALUE, VALUE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +36,6 @@ async def _async_reproduce_state(
     # Return if we are already at the right state.
     if (
         cur_state.state == state.state
-        and cur_state.attributes.get(ATTR_INITIAL) == state.attributes.get(ATTR_INITIAL)
         and cur_state.attributes.get(ATTR_MAXIMUM) == state.attributes.get(ATTR_MAXIMUM)
         and cur_state.attributes.get(ATTR_MINIMUM) == state.attributes.get(ATTR_MINIMUM)
         and cur_state.attributes.get(ATTR_STEP) == state.attributes.get(ATTR_STEP)
@@ -51,9 +43,7 @@ async def _async_reproduce_state(
         return
 
     service_data = {ATTR_ENTITY_ID: state.entity_id, VALUE: state.state}
-    service = SERVICE_CONFIGURE
-    if ATTR_INITIAL in state.attributes:
-        service_data[ATTR_INITIAL] = state.attributes[ATTR_INITIAL]
+    service = SERVICE_SET_VALUE
     if ATTR_MAXIMUM in state.attributes:
         service_data[ATTR_MAXIMUM] = state.attributes[ATTR_MAXIMUM]
     if ATTR_MINIMUM in state.attributes:

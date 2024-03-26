@@ -1,4 +1,5 @@
 """Test the Home Assistant SkyConnect integration."""
+
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
@@ -42,17 +43,21 @@ def mock_zha_config_flow_setup() -> Generator[None, None, None]:
     mock_connect_app = MagicMock()
     mock_connect_app.__aenter__.return_value.backups.backups = []
 
-    with patch(
-        "bellows.zigbee.application.ControllerApplication.probe", side_effect=mock_probe
-    ), patch(
-        "homeassistant.components.zha.radio_manager.ZhaRadioManager.connect_zigpy_app",
-        return_value=mock_connect_app,
+    with (
+        patch(
+            "bellows.zigbee.application.ControllerApplication.probe",
+            side_effect=mock_probe,
+        ),
+        patch(
+            "homeassistant.components.zha.radio_manager.ZhaRadioManager.connect_zigpy_app",
+            return_value=mock_connect_app,
+        ),
     ):
         yield
 
 
 @pytest.mark.parametrize(
-    ("onboarded", "num_entries", "num_flows"), ((False, 1, 0), (True, 0, 1))
+    ("onboarded", "num_entries", "num_flows"), [(False, 1, 0), (True, 0, 1)]
 )
 async def test_setup_entry(
     mock_zha_config_flow_setup,
@@ -74,11 +79,15 @@ async def test_setup_entry(
         title="Home Assistant SkyConnect",
     )
     config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.homeassistant_sky_connect.usb.async_is_plugged_in",
-        return_value=True,
-    ) as mock_is_plugged_in, patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=onboarded
+    with (
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.usb.async_is_plugged_in",
+            return_value=True,
+        ) as mock_is_plugged_in,
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded",
+            return_value=onboarded,
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -122,11 +131,14 @@ async def test_setup_zha(
         title="Home Assistant SkyConnect",
     )
     config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.homeassistant_sky_connect.usb.async_is_plugged_in",
-        return_value=True,
-    ) as mock_is_plugged_in, patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    with (
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.usb.async_is_plugged_in",
+            return_value=True,
+        ) as mock_is_plugged_in,
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+        ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -147,7 +159,7 @@ async def test_setup_zha(
     assert config_entry.data == {
         "device": {
             "baudrate": 115200,
-            "flow_control": "software",
+            "flow_control": None,
             "path": CONFIG_ENTRY_DATA["device"],
         },
         "radio_type": "ezsp",
@@ -173,68 +185,18 @@ async def test_setup_zha_multipan(
         title="Home Assistant SkyConnect",
     )
     config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.homeassistant_sky_connect.usb.async_is_plugged_in",
-        return_value=True,
-    ) as mock_is_plugged_in, patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
-    ), patch(
-        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
-        side_effect=Mock(return_value=True),
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        assert len(mock_is_plugged_in.mock_calls) == 1
-
-    # Finish setting up ZHA
-    zha_flows = hass.config_entries.flow.async_progress_by_handler("zha")
-    assert len(zha_flows) == 1
-    assert zha_flows[0]["step_id"] == "choose_formation_strategy"
-
-    await hass.config_entries.flow.async_configure(
-        zha_flows[0]["flow_id"],
-        user_input={"next_step_id": zha.config_flow.FORMATION_REUSE_SETTINGS},
-    )
-    await hass.async_block_till_done()
-
-    config_entry = hass.config_entries.async_entries("zha")[0]
-    assert config_entry.data == {
-        "device": {
-            "baudrate": 57600,  # ZHA default
-            "flow_control": "software",  # ZHA default
-            "path": "socket://core-silabs-multiprotocol:9999",
-        },
-        "radio_type": "ezsp",
-    }
-    assert config_entry.options == {}
-    assert config_entry.title == "SkyConnect Multi-PAN"
-
-
-async def test_setup_zha_multipan_other_device(
-    mock_zha_config_flow_setup, hass: HomeAssistant, addon_info, addon_running
-) -> None:
-    """Test zha gets the right config."""
-    assert await async_setup_component(hass, "usb", {})
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-
-    addon_info.return_value["options"]["device"] = "/dev/not_our_sky_connect"
-
-    # Setup the config entry
-    config_entry = MockConfigEntry(
-        data=CONFIG_ENTRY_DATA,
-        domain=DOMAIN,
-        options={},
-        title="Home Assistant Yellow",
-    )
-    config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.homeassistant_sky_connect.usb.async_is_plugged_in",
-        return_value=True,
-    ) as mock_is_plugged_in, patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
-    ), patch(
-        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
-        side_effect=Mock(return_value=True),
+    with (
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.usb.async_is_plugged_in",
+            return_value=True,
+        ) as mock_is_plugged_in,
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
+            side_effect=Mock(return_value=True),
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -255,7 +217,65 @@ async def test_setup_zha_multipan_other_device(
     assert config_entry.data == {
         "device": {
             "baudrate": 115200,
-            "flow_control": "software",
+            "flow_control": None,
+            "path": "socket://core-silabs-multiprotocol:9999",
+        },
+        "radio_type": "ezsp",
+    }
+    assert config_entry.options == {}
+    assert config_entry.title == "SkyConnect Multiprotocol"
+
+
+async def test_setup_zha_multipan_other_device(
+    mock_zha_config_flow_setup, hass: HomeAssistant, addon_info, addon_running
+) -> None:
+    """Test zha gets the right config."""
+    assert await async_setup_component(hass, "usb", {})
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+
+    addon_info.return_value["options"]["device"] = "/dev/not_our_sky_connect"
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data=CONFIG_ENTRY_DATA,
+        domain=DOMAIN,
+        options={},
+        title="Home Assistant Yellow",
+    )
+    config_entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.usb.async_is_plugged_in",
+            return_value=True,
+        ) as mock_is_plugged_in,
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
+            side_effect=Mock(return_value=True),
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert len(mock_is_plugged_in.mock_calls) == 1
+
+    # Finish setting up ZHA
+    zha_flows = hass.config_entries.flow.async_progress_by_handler("zha")
+    assert len(zha_flows) == 1
+    assert zha_flows[0]["step_id"] == "choose_formation_strategy"
+
+    await hass.config_entries.flow.async_configure(
+        zha_flows[0]["flow_id"],
+        user_input={"next_step_id": zha.config_flow.FORMATION_REUSE_SETTINGS},
+    )
+    await hass.async_block_till_done()
+
+    config_entry = hass.config_entries.async_entries("zha")[0]
+    assert config_entry.data == {
+        "device": {
+            "baudrate": 115200,
+            "flow_control": None,
             "path": CONFIG_ENTRY_DATA["device"],
         },
         "radio_type": "ezsp",
@@ -305,14 +325,18 @@ async def test_setup_entry_addon_info_fails(
         title="Home Assistant SkyConnect",
     )
     config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.homeassistant_sky_connect.usb.async_is_plugged_in",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
-    ), patch(
-        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
-        side_effect=Mock(return_value=True),
+    with (
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.usb.async_is_plugged_in",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
+            side_effect=Mock(return_value=True),
+        ),
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -334,14 +358,18 @@ async def test_setup_entry_addon_not_running(
         title="Home Assistant SkyConnect",
     )
     config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.homeassistant_sky_connect.usb.async_is_plugged_in",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
-    ), patch(
-        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
-        side_effect=Mock(return_value=True),
+    with (
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.usb.async_is_plugged_in",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
+            side_effect=Mock(return_value=True),
+        ),
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

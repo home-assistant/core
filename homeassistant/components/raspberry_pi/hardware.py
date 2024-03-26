@@ -1,4 +1,5 @@
 """The Raspberry Pi hardware platform."""
+
 from __future__ import annotations
 
 from homeassistant.components.hardware.models import BoardInfo, HardwareInfo
@@ -17,6 +18,7 @@ BOARD_NAMES = {
     "rpi3-64": "Raspberry Pi 3",
     "rpi4": "Raspberry Pi 4 (32-bit)",
     "rpi4-64": "Raspberry Pi 4",
+    "rpi5-64": "Raspberry Pi 5",
 }
 
 MODELS = {
@@ -28,6 +30,7 @@ MODELS = {
     "rpi3-64": "3",
     "rpi4": "4",
     "rpi4-64": "4",
+    "rpi5-64": "5",
 }
 
 

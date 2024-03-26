@@ -1,4 +1,5 @@
 """Support for recording details."""
+
 from __future__ import annotations
 
 import abc
@@ -10,7 +11,6 @@ import logging
 import threading
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.core import Event
 from homeassistant.helpers.typing import UndefinedType
 
 from . import entity_registry, purge, statistics
@@ -266,19 +266,6 @@ class StopTask(RecorderTask):
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         instance.stop_requested = True
-
-
-@dataclass(slots=True)
-class EventTask(RecorderTask):
-    """An event to be processed."""
-
-    event: Event
-    commit_before = False
-
-    def run(self, instance: Recorder) -> None:
-        """Handle the task."""
-        # pylint: disable-next=[protected-access]
-        instance._process_one_event(self.event)
 
 
 @dataclass(slots=True)

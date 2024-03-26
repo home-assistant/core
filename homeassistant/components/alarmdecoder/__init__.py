@@ -1,4 +1,5 @@
 """Support for AlarmDecoder devices."""
+
 from datetime import timedelta
 import logging
 
@@ -39,8 +40,8 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
-    Platform.SENSOR,
     Platform.BINARY_SENSOR,
+    Platform.SENSOR,
 ]
 
 

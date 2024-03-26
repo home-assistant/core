@@ -1,4 +1,5 @@
 """Binary sensors for renson."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -25,23 +26,16 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RensonCoordinator
 from .const import DOMAIN
+from .coordinator import RensonCoordinator
 from .entity import RensonEntity
 
 
-@dataclass
-class RensonBinarySensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class RensonBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Description of binary sensor."""
 
     field: FieldEnum
-
-
-@dataclass
-class RensonBinarySensorEntityDescription(
-    BinarySensorEntityDescription, RensonBinarySensorEntityDescriptionMixin
-):
-    """Description of binary sensor."""
 
 
 BINARY_SENSORS: tuple[RensonBinarySensorEntityDescription, ...] = (

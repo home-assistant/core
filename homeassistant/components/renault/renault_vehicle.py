@@ -1,4 +1,5 @@
 """Proxy to handle account communication with Renault servers."""
+
 from __future__ import annotations
 
 import asyncio
@@ -26,7 +27,7 @@ _P = ParamSpec("_P")
 
 
 def with_error_wrapping(
-    func: Callable[Concatenate[RenaultVehicleProxy, _P], Awaitable[_T]]
+    func: Callable[Concatenate[RenaultVehicleProxy, _P], Awaitable[_T]],
 ) -> Callable[Concatenate[RenaultVehicleProxy, _P], Coroutine[Any, Any, _T]]:
     """Catch Renault errors."""
 

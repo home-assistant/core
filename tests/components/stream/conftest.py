@@ -9,6 +9,7 @@ nothing for the test to verify. The solution is the WorkerSync class that
 allows the tests to pause the worker thread before finalizing the stream
 so that it can inspect the output.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -142,23 +143,29 @@ class HLSSync:
 def hls_sync():
     """Patch HLSOutput to allow test to synchronize playlist requests and responses."""
     sync = HLSSync()
-    with patch(
-        "homeassistant.components.stream.core.StreamOutput.recv",
-        side_effect=sync.recv,
-        autospec=True,
-    ), patch(
-        "homeassistant.components.stream.core.StreamOutput.part_recv",
-        side_effect=sync.part_recv,
-        autospec=True,
-    ), patch(
-        "homeassistant.components.stream.hls.web.HTTPBadRequest",
-        side_effect=sync.bad_request,
-    ), patch(
-        "homeassistant.components.stream.hls.web.HTTPNotFound",
-        side_effect=sync.not_found,
-    ), patch(
-        "homeassistant.components.stream.hls.web.Response",
-        side_effect=sync.response,
+    with (
+        patch(
+            "homeassistant.components.stream.core.StreamOutput.recv",
+            side_effect=sync.recv,
+            autospec=True,
+        ),
+        patch(
+            "homeassistant.components.stream.core.StreamOutput.part_recv",
+            side_effect=sync.part_recv,
+            autospec=True,
+        ),
+        patch(
+            "homeassistant.components.stream.hls.web.HTTPBadRequest",
+            side_effect=sync.bad_request,
+        ),
+        patch(
+            "homeassistant.components.stream.hls.web.HTTPNotFound",
+            side_effect=sync.not_found,
+        ),
+        patch(
+            "homeassistant.components.stream.hls.web.Response",
+            side_effect=sync.response,
+        ),
     ):
         yield sync
 

@@ -1,4 +1,5 @@
 """Constants for the LCN component."""
+
 from itertools import product
 
 from homeassistant.const import Platform
@@ -21,7 +22,6 @@ CONNECTION = "connection"
 CONF_HARDWARE_SERIAL = "hardware_serial"
 CONF_SOFTWARE_SERIAL = "software_serial"
 CONF_HARDWARE_TYPE = "hardware_type"
-CONF_RESOURCE = "resource"
 CONF_DOMAIN_DATA = "domain_data"
 
 CONF_CONNECTIONS = "connections"

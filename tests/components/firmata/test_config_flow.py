@@ -1,4 +1,5 @@
 """Test the Firmata config flow."""
+
 from unittest.mock import patch
 
 from pymata_express.pymata_express_serial import serial
@@ -31,7 +32,7 @@ async def test_import_cannot_connect_serial(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.firmata.board.PymataExpress.start_aio",
-        side_effect=serial.serialutil.SerialException,
+        side_effect=serial.SerialException,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -48,7 +49,7 @@ async def test_import_cannot_connect_serial_timeout(hass: HomeAssistant) -> None
 
     with patch(
         "homeassistant.components.firmata.board.PymataExpress.start_aio",
-        side_effect=serial.serialutil.SerialTimeoutException,
+        side_effect=serial.SerialTimeoutException,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -63,13 +64,15 @@ async def test_import_cannot_connect_serial_timeout(hass: HomeAssistant) -> None
 async def test_import(hass: HomeAssistant) -> None:
     """Test we create an entry from config."""
 
-    with patch(
-        "homeassistant.components.firmata.board.PymataExpress", autospec=True
-    ), patch(
-        "homeassistant.components.firmata.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.firmata.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        patch("homeassistant.components.firmata.board.PymataExpress", autospec=True),
+        patch(
+            "homeassistant.components.firmata.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.firmata.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},

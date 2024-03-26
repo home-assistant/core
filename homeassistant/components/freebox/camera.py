@@ -1,4 +1,5 @@
 """Support for Freebox cameras."""
+
 from __future__ import annotations
 
 import logging
@@ -29,11 +30,11 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up cameras."""
-    router = hass.data[DOMAIN][entry.unique_id]
-    tracked: set = set()
+    router: FreeboxRouter = hass.data[DOMAIN][entry.unique_id]
+    tracked: set[str] = set()
 
     @callback
-    def update_callback():
+    def update_callback() -> None:
         add_entities(hass, router, async_add_entities, tracked)
 
     router.listeners.append(
@@ -45,9 +46,14 @@ async def async_setup_entry(
 
 
 @callback
-def add_entities(hass: HomeAssistant, router, async_add_entities, tracked):
+def add_entities(
+    hass: HomeAssistant,
+    router: FreeboxRouter,
+    async_add_entities: AddEntitiesCallback,
+    tracked: set[str],
+) -> None:
     """Add new cameras from the router."""
-    new_tracked = []
+    new_tracked: list[FreeboxCamera] = []
 
     for nodeid, node in router.home_devices.items():
         if (node["category"] != FreeboxHomeCategory.CAMERA) or (nodeid in tracked):
@@ -80,27 +86,27 @@ class FreeboxCamera(FreeboxHomeEntity, FFmpegCamera):
         )
 
         self._command_motion_detection = self.get_command_id(
-            node["type"]["endpoints"], ATTR_DETECTION
+            node["type"]["endpoints"], "slot", ATTR_DETECTION
         )
         self._attr_extra_state_attributes = {}
         self.update_node(node)
 
     async def async_enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""
-        await self.set_home_endpoint_value(self._command_motion_detection, True)
-        self._attr_motion_detection_enabled = True
+        if await self.set_home_endpoint_value(self._command_motion_detection, True):
+            self._attr_motion_detection_enabled = True
 
     async def async_disable_motion_detection(self) -> None:
         """Disable motion detection in camera."""
-        await self.set_home_endpoint_value(self._command_motion_detection, False)
-        self._attr_motion_detection_enabled = False
+        if await self.set_home_endpoint_value(self._command_motion_detection, False):
+            self._attr_motion_detection_enabled = False
 
     async def async_update_signal(self) -> None:
         """Update the camera node."""
         self.update_node(self._router.home_devices[self._id])
         self.async_write_ha_state()
 
-    def update_node(self, node):
+    def update_node(self, node: dict[str, Any]) -> None:
         """Update params."""
         self._name = node["label"].strip()
 

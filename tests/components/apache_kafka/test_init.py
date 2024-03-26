@@ -1,4 +1,5 @@
 """The tests for the Apache Kafka component."""
+
 from __future__ import annotations
 
 from asyncio import AbstractEventLoop
@@ -42,9 +43,11 @@ class MockKafkaClient:
 @pytest.fixture(name="mock_client")
 def mock_client_fixture():
     """Mock the apache kafka client."""
-    with patch(f"{PRODUCER_PATH}.start") as start, patch(
-        f"{PRODUCER_PATH}.send_and_wait"
-    ) as send_and_wait, patch(f"{PRODUCER_PATH}.__init__", return_value=None) as init:
+    with (
+        patch(f"{PRODUCER_PATH}.start") as start,
+        patch(f"{PRODUCER_PATH}.send_and_wait") as send_and_wait,
+        patch(f"{PRODUCER_PATH}.__init__", return_value=None) as init,
+    ):
         yield MockKafkaClient(init, start, send_and_wait)
 
 
@@ -62,7 +65,7 @@ async def test_minimal_config(
     config = {apache_kafka.DOMAIN: MIN_CONFIG}
     assert await async_setup_component(hass, apache_kafka.DOMAIN, config)
     await hass.async_block_till_done()
-    assert mock_client.start.called_once
+    mock_client.start.assert_called_once()
 
 
 async def test_full_config(hass: HomeAssistant, mock_client: MockKafkaClient) -> None:
@@ -83,7 +86,7 @@ async def test_full_config(hass: HomeAssistant, mock_client: MockKafkaClient) ->
 
     assert await async_setup_component(hass, apache_kafka.DOMAIN, config)
     await hass.async_block_till_done()
-    assert mock_client.start.called_once
+    mock_client.start.assert_called_once()
 
 
 async def _setup(hass, filter_config):

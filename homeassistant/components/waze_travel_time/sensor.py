@@ -1,4 +1,5 @@
 """Support for Waze travel time sensor."""
+
 from __future__ import annotations
 
 import asyncio
@@ -43,6 +44,7 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     IMPERIAL_UNITS,
+    SEMAPHORE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,7 +53,7 @@ SCAN_INTERVAL = timedelta(minutes=5)
 
 PARALLEL_UPDATES = 1
 
-MS_BETWEEN_API_CALLS = 0.5
+SECONDS_BETWEEN_API_CALLS = 0.5
 
 
 async def async_setup_entry(
@@ -89,6 +91,7 @@ class WazeTravelTime(SensorEntity):
         identifiers={(DOMAIN, DOMAIN)},
         configuration_url="https://www.waze.com",
     )
+    _attr_translation_key = "waze_travel_time"
 
     def __init__(
         self,
@@ -104,12 +107,11 @@ class WazeTravelTime(SensorEntity):
         self._attr_name = name
         self._origin = origin
         self._destination = destination
-        self._attr_icon = "mdi:car"
         self._state = None
 
     async def async_added_to_hass(self) -> None:
         """Handle when entity is added."""
-        if self.hass.state != CoreState.running:
+        if self.hass.state is not CoreState.running:
             self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STARTED, self.first_update
             )
@@ -148,8 +150,12 @@ class WazeTravelTime(SensorEntity):
         _LOGGER.debug("Fetching Route for %s", self._attr_name)
         self._waze_data.origin = find_coordinates(self.hass, self._origin)
         self._waze_data.destination = find_coordinates(self.hass, self._destination)
-        await self._waze_data.async_update()
-        await asyncio.sleep(MS_BETWEEN_API_CALLS)
+        await self.hass.data[DOMAIN][SEMAPHORE].acquire()
+        try:
+            await self._waze_data.async_update()
+            await asyncio.sleep(SECONDS_BETWEEN_API_CALLS)
+        finally:
+            self.hass.data[DOMAIN][SEMAPHORE].release()
 
 
 class WazeTravelTimeData:
@@ -190,7 +196,7 @@ class WazeTravelTimeData:
 
             routes = {}
             try:
-                routes = await self.client.calc_all_routes_info(
+                routes = await self.client.calc_routes(
                     self.origin,
                     self.destination,
                     vehicle_type=vehicle_type,
@@ -198,29 +204,37 @@ class WazeTravelTimeData:
                     avoid_subscription_roads=avoid_subscription_roads,
                     avoid_ferries=avoid_ferries,
                     real_time=realtime,
+                    alternatives=3,
                 )
 
                 if incl_filter not in {None, ""}:
-                    routes = {
-                        k: v
-                        for k, v in routes.items()
-                        if incl_filter.lower() in k.lower()
-                    }
+                    routes = [
+                        r
+                        for r in routes
+                        if any(
+                            incl_filter.lower() == street_name.lower()
+                            for street_name in r.street_names
+                        )
+                    ]
 
                 if excl_filter not in {None, ""}:
-                    routes = {
-                        k: v
-                        for k, v in routes.items()
-                        if excl_filter.lower() not in k.lower()
-                    }
+                    routes = [
+                        r
+                        for r in routes
+                        if not any(
+                            excl_filter.lower() == street_name.lower()
+                            for street_name in r.street_names
+                        )
+                    ]
 
-                if routes:
-                    route = list(routes)[0]
-                else:
+                if len(routes) < 1:
                     _LOGGER.warning("No routes found")
                     return
 
-                self.duration, distance = routes[route]
+                route = routes[0]
+
+                self.duration = route.duration
+                distance = route.distance
 
                 if units == IMPERIAL_UNITS:
                     # Convert to miles.
@@ -230,10 +244,7 @@ class WazeTravelTimeData:
                 else:
                     self.distance = distance
 
-                self.route = route
+                self.route = route.name
             except WRCError as exp:
                 _LOGGER.warning("Error on retrieving data: %s", exp)
-                return
-            except KeyError:
-                _LOGGER.error("Error retrieving data from server")
                 return

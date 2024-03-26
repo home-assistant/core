@@ -1,4 +1,5 @@
 """Common test utils for working with recorder."""
+
 from __future__ import annotations
 
 import asyncio
@@ -11,7 +12,7 @@ import importlib
 import sys
 import time
 from typing import Any, Literal, cast
-from unittest.mock import patch, sentinel
+from unittest.mock import MagicMock, patch, sentinel
 
 from freezegun import freeze_time
 from sqlalchemy import create_engine
@@ -19,7 +20,13 @@ from sqlalchemy.orm.session import Session
 
 from homeassistant import core as ha
 from homeassistant.components import recorder
-from homeassistant.components.recorder import Recorder, core, get_instance, statistics
+from homeassistant.components.recorder import (
+    Recorder,
+    core,
+    get_instance,
+    migration,
+    statistics,
+)
 from homeassistant.components.recorder.db_schema import (
     Events,
     EventTypes,
@@ -408,25 +415,37 @@ def old_db_schema(schema_version_postfix: str) -> Iterator[None]:
     importlib.import_module(schema_module)
     old_db_schema = sys.modules[schema_module]
 
-    with patch.object(recorder, "db_schema", old_db_schema), patch.object(
-        recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-    ), patch.object(core, "StatesMeta", old_db_schema.StatesMeta), patch.object(
-        core, "EventTypes", old_db_schema.EventTypes
-    ), patch.object(
-        core, "EventData", old_db_schema.EventData
-    ), patch.object(
-        core, "States", old_db_schema.States
-    ), patch.object(
-        core, "Events", old_db_schema.Events
-    ), patch.object(
-        core, "StateAttributes", old_db_schema.StateAttributes
-    ), patch.object(
-        core, "EntityIDMigrationTask", core.RecorderTask
-    ), patch(
-        CREATE_ENGINE_TARGET,
-        new=partial(
-            create_engine_test_for_schema_version_postfix,
-            schema_version_postfix=schema_version_postfix,
+    with (
+        patch.object(recorder, "db_schema", old_db_schema),
+        patch.object(
+            recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
+        ),
+        patch.object(core, "StatesMeta", old_db_schema.StatesMeta),
+        patch.object(core, "EventTypes", old_db_schema.EventTypes),
+        patch.object(core, "EventData", old_db_schema.EventData),
+        patch.object(core, "States", old_db_schema.States),
+        patch.object(core, "Events", old_db_schema.Events),
+        patch.object(core, "StateAttributes", old_db_schema.StateAttributes),
+        patch.object(migration.EntityIDMigration, "task", core.RecorderTask),
+        patch(
+            CREATE_ENGINE_TARGET,
+            new=partial(
+                create_engine_test_for_schema_version_postfix,
+                schema_version_postfix=schema_version_postfix,
+            ),
         ),
     ):
         yield
+
+
+async def async_attach_db_engine(hass: HomeAssistant) -> None:
+    """Attach a database engine to the recorder."""
+    instance = recorder.get_instance(hass)
+
+    def _mock_setup_recorder_connection():
+        with instance.engine.connect() as connection:
+            instance._setup_recorder_connection(
+                connection._dbapi_connection, MagicMock()
+            )
+
+    await instance.async_add_executor_job(_mock_setup_recorder_connection)

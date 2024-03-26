@@ -1,4 +1,6 @@
 """Define tests for the Elexa Guardian config flow."""
+
+from ipaddress import ip_address
 from unittest.mock import patch
 
 from aioguardian.errors import GuardianError
@@ -79,8 +81,8 @@ async def test_step_user(hass: HomeAssistant, config, setup_guardian) -> None:
 async def test_step_zeroconf(hass: HomeAssistant, setup_guardian) -> None:
     """Test the zeroconf step."""
     zeroconf_data = zeroconf.ZeroconfServiceInfo(
-        host="192.168.1.100",
-        addresses=["192.168.1.100"],
+        ip_address=ip_address("192.168.1.100"),
+        ip_addresses=[ip_address("192.168.1.100")],
         port=7777,
         hostname="GVC1-ABCD.local.",
         type="_api._udp.local.",
@@ -109,8 +111,8 @@ async def test_step_zeroconf(hass: HomeAssistant, setup_guardian) -> None:
 async def test_step_zeroconf_already_in_progress(hass: HomeAssistant) -> None:
     """Test the zeroconf step aborting because it's already in progress."""
     zeroconf_data = zeroconf.ZeroconfServiceInfo(
-        host="192.168.1.100",
-        addresses=["192.168.1.100"],
+        ip_address=ip_address("192.168.1.100"),
+        ip_addresses=[ip_address("192.168.1.100")],
         port=7777,
         hostname="GVC1-ABCD.local.",
         type="_api._udp.local.",
@@ -136,7 +138,7 @@ async def test_step_dhcp(hass: HomeAssistant, setup_guardian) -> None:
     dhcp_data = dhcp.DhcpServiceInfo(
         ip="192.168.1.100",
         hostname="GVC1-ABCD.local.",
-        macaddress="aa:bb:cc:dd:ee:ff",
+        macaddress="aabbccddeeff",
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -162,7 +164,7 @@ async def test_step_dhcp_already_in_progress(hass: HomeAssistant) -> None:
     dhcp_data = dhcp.DhcpServiceInfo(
         ip="192.168.1.100",
         hostname="GVC1-ABCD.local.",
-        macaddress="aa:bb:cc:dd:ee:ff",
+        macaddress="aabbccddeeff",
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -191,7 +193,7 @@ async def test_step_dhcp_already_setup_match_mac(hass: HomeAssistant) -> None:
         data=dhcp.DhcpServiceInfo(
             ip="192.168.1.100",
             hostname="GVC1-ABCD.local.",
-            macaddress="aa:bb:cc:dd:ab:cd",
+            macaddress="aabbccddabcd",
         ),
     )
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
@@ -213,7 +215,7 @@ async def test_step_dhcp_already_setup_match_ip(hass: HomeAssistant) -> None:
         data=dhcp.DhcpServiceInfo(
             ip="192.168.1.100",
             hostname="GVC1-ABCD.local.",
-            macaddress="aa:bb:cc:dd:ab:cd",
+            macaddress="aabbccddabcd",
         ),
     )
     assert result["type"] == data_entry_flow.FlowResultType.ABORT

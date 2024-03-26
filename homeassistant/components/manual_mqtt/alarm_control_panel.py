@@ -1,9 +1,9 @@
 """Support for manual alarms controllable via MQTT."""
+
 from __future__ import annotations
 
 import datetime
 import logging
-import re
 from typing import Any
 
 import voluptuous as vol
@@ -28,7 +28,7 @@ from homeassistant.const import (
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -37,7 +37,7 @@ from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_state_change_event,
 )
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -347,7 +347,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         """Return one or more digits/characters."""
         if self._code is None:
             return None
-        if isinstance(self._code, str) and re.search("^\\d+$", self._code):
+        if isinstance(self._code, str) and self._code.isdigit():
             return alarm.CodeFormat.NUMBER
         return alarm.CodeFormat.TEXT
 
@@ -483,7 +483,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         )
 
     async def _async_state_changed_listener(
-        self, event: EventType[EventStateChangedData]
+        self, event: Event[EventStateChangedData]
     ) -> None:
         """Publish state change to MQTT."""
         if (new_state := event.data["new_state"]) is None:

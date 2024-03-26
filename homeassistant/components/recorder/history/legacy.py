@@ -1,4 +1,5 @@
 """Provide pre-made queries on top of the recorder component."""
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -50,7 +51,7 @@ _BASE_STATES = (
     States.last_changed_ts,
     States.last_updated_ts,
 )
-_BASE_STATES_NO_LAST_CHANGED = (  # type: ignore[var-annotated]
+_BASE_STATES_NO_LAST_CHANGED = (
     States.entity_id,
     States.state,
     literal(value=None).label("last_changed_ts"),
@@ -813,6 +814,7 @@ def _sorted_states_to_dict(
                         }
                     )
                     prev_state = state
+            continue
 
         for row in group:
             if (state := row[state_idx]) != prev_state:

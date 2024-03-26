@@ -1,4 +1,5 @@
 """Support for Litter-Robot selects."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -28,7 +29,7 @@ BRIGHTNESS_LEVEL_ICON_MAP: dict[BrightnessLevel | None, str] = {
 }
 
 
-@dataclass
+@dataclass(frozen=True)
 class RequiredKeysMixin(Generic[_RobotT, _CastTypeT]):
     """A class that describes robot select entity required keys."""
 
@@ -37,7 +38,7 @@ class RequiredKeysMixin(Generic[_RobotT, _CastTypeT]):
     select_fn: Callable[[_RobotT, str], Coroutine[Any, Any, bool]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RobotSelectEntityDescription(
     SelectEntityDescription, RequiredKeysMixin[_RobotT, _CastTypeT]
 ):
@@ -51,7 +52,6 @@ ROBOT_SELECT_MAP: dict[type[Robot], RobotSelectEntityDescription] = {
     LitterRobot: RobotSelectEntityDescription[LitterRobot, int](  # type: ignore[type-abstract]  # only used for isinstance check
         key="cycle_delay",
         translation_key="cycle_delay",
-        icon="mdi:timer-outline",
         unit_of_measurement=UnitOfTime.MINUTES,
         current_fn=lambda robot: robot.clean_cycle_wait_time_minutes,
         options_fn=lambda robot: robot.VALID_WAIT_TIMES,
@@ -72,7 +72,6 @@ ROBOT_SELECT_MAP: dict[type[Robot], RobotSelectEntityDescription] = {
     FeederRobot: RobotSelectEntityDescription[FeederRobot, float](
         key="meal_insert_size",
         translation_key="meal_insert_size",
-        icon="mdi:scale",
         unit_of_measurement="cups",
         current_fn=lambda robot: robot.meal_insert_size,
         options_fn=lambda robot: robot.VALID_MEAL_INSERT_SIZES,

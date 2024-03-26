@@ -1,4 +1,6 @@
 """Test sensor of GIOS integration."""
+
+from copy import deepcopy
 from datetime import timedelta
 import json
 from unittest.mock import patch
@@ -30,10 +32,9 @@ from . import init_integration
 from tests.common import async_fire_time_changed, load_fixture
 
 
-async def test_sensor(hass: HomeAssistant) -> None:
+async def test_sensor(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
     """Test states of the sensor."""
     await init_integration(hass)
-    registry = er.async_get(hass)
 
     state = hass.states.get("sensor.home_benzene")
     assert state
@@ -44,9 +45,9 @@ async def test_sensor(hass: HomeAssistant) -> None:
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
-    assert state.attributes.get(ATTR_ICON) == "mdi:molecule"
+    assert state.attributes.get(ATTR_ICON) is None
 
-    entry = registry.async_get("sensor.home_benzene")
+    entry = entity_registry.async_get("sensor.home_benzene")
     assert entry
     assert entry.unique_id == "123-c6h6"
 
@@ -61,7 +62,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
 
-    entry = registry.async_get("sensor.home_carbon_monoxide")
+    entry = entity_registry.async_get("sensor.home_carbon_monoxide")
     assert entry
     assert entry.unique_id == "123-co"
 
@@ -76,7 +77,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
 
-    entry = registry.async_get("sensor.home_nitrogen_dioxide")
+    entry = entity_registry.async_get("sensor.home_nitrogen_dioxide")
     assert entry
     assert entry.unique_id == "123-no2"
 
@@ -94,7 +95,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
         "very_good",
     ]
 
-    entry = registry.async_get("sensor.home_nitrogen_dioxide_index")
+    entry = entity_registry.async_get("sensor.home_nitrogen_dioxide_index")
     assert entry
     assert entry.unique_id == "123-no2-index"
 
@@ -109,7 +110,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
 
-    entry = registry.async_get("sensor.home_ozone")
+    entry = entity_registry.async_get("sensor.home_ozone")
     assert entry
     assert entry.unique_id == "123-o3"
 
@@ -127,7 +128,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
         "very_good",
     ]
 
-    entry = registry.async_get("sensor.home_ozone_index")
+    entry = entity_registry.async_get("sensor.home_ozone_index")
     assert entry
     assert entry.unique_id == "123-o3-index"
 
@@ -142,7 +143,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
 
-    entry = registry.async_get("sensor.home_pm10")
+    entry = entity_registry.async_get("sensor.home_pm10")
     assert entry
     assert entry.unique_id == "123-pm10"
 
@@ -160,7 +161,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
         "very_good",
     ]
 
-    entry = registry.async_get("sensor.home_pm10_index")
+    entry = entity_registry.async_get("sensor.home_pm10_index")
     assert entry
     assert entry.unique_id == "123-pm10-index"
 
@@ -175,7 +176,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
 
-    entry = registry.async_get("sensor.home_pm2_5")
+    entry = entity_registry.async_get("sensor.home_pm2_5")
     assert entry
     assert entry.unique_id == "123-pm25"
 
@@ -193,7 +194,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
         "very_good",
     ]
 
-    entry = registry.async_get("sensor.home_pm2_5_index")
+    entry = entity_registry.async_get("sensor.home_pm2_5_index")
     assert entry
     assert entry.unique_id == "123-pm25-index"
 
@@ -208,7 +209,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
 
-    entry = registry.async_get("sensor.home_sulphur_dioxide")
+    entry = entity_registry.async_get("sensor.home_sulphur_dioxide")
     assert entry
     assert entry.unique_id == "123-so2"
 
@@ -226,7 +227,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
         "very_good",
     ]
 
-    entry = registry.async_get("sensor.home_sulphur_dioxide_index")
+    entry = entity_registry.async_get("sensor.home_sulphur_dioxide_index")
     assert entry
     assert entry.unique_id == "123-so2-index"
 
@@ -245,7 +246,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
         "very_good",
     ]
 
-    entry = registry.async_get("sensor.home_air_quality_index")
+    entry = entity_registry.async_get("sensor.home_air_quality_index")
     assert entry
     assert entry.unique_id == "123-aqi"
 
@@ -277,64 +278,73 @@ async def test_availability(hass: HomeAssistant) -> None:
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-        state = hass.states.get("sensor.home_pm2_5")
-        assert state
-        assert state.state == STATE_UNAVAILABLE
+    state = hass.states.get("sensor.home_pm2_5")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
-        state = hass.states.get("sensor.home_pm2_5_index")
-        assert state
-        assert state.state == STATE_UNAVAILABLE
+    state = hass.states.get("sensor.home_pm2_5_index")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
-        state = hass.states.get("sensor.home_air_quality_index")
-        assert state
-        assert state.state == STATE_UNAVAILABLE
+    state = hass.states.get("sensor.home_air_quality_index")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
+    incomplete_sensors = deepcopy(sensors)
+    incomplete_sensors["pm2.5"] = {}
     future = utcnow() + timedelta(minutes=120)
-    with patch(
-        "homeassistant.components.gios.Gios._get_all_sensors",
-        return_value=sensors,
-    ), patch(
-        "homeassistant.components.gios.Gios._get_indexes",
-        return_value={},
+    with (
+        patch(
+            "homeassistant.components.gios.Gios._get_all_sensors",
+            return_value=incomplete_sensors,
+        ),
+        patch(
+            "homeassistant.components.gios.Gios._get_indexes",
+            return_value={},
+        ),
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-        state = hass.states.get("sensor.home_pm2_5")
-        assert state
-        assert state.state == "4"
+    # There is no PM2.5 data so the state should be unavailable
+    state = hass.states.get("sensor.home_pm2_5")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
-        # Indexes are empty so the state should be unavailable
-        state = hass.states.get("sensor.home_air_quality_index")
-        assert state
-        assert state.state == STATE_UNAVAILABLE
+    # Indexes are empty so the state should be unavailable
+    state = hass.states.get("sensor.home_air_quality_index")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
-        # Indexes are empty so the state should be unavailable
-        state = hass.states.get("sensor.home_pm2_5_index")
-        assert state
-        assert state.state == STATE_UNAVAILABLE
+    # Indexes are empty so the state should be unavailable
+    state = hass.states.get("sensor.home_pm2_5_index")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
-        future = utcnow() + timedelta(minutes=180)
-    with patch(
-        "homeassistant.components.gios.Gios._get_all_sensors", return_value=sensors
-    ), patch(
-        "homeassistant.components.gios.Gios._get_indexes",
-        return_value=indexes,
+    future = utcnow() + timedelta(minutes=180)
+    with (
+        patch(
+            "homeassistant.components.gios.Gios._get_all_sensors", return_value=sensors
+        ),
+        patch(
+            "homeassistant.components.gios.Gios._get_indexes",
+            return_value=indexes,
+        ),
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-        state = hass.states.get("sensor.home_pm2_5")
-        assert state
-        assert state.state == "4"
+    state = hass.states.get("sensor.home_pm2_5")
+    assert state
+    assert state.state == "4"
 
-        state = hass.states.get("sensor.home_pm2_5_index")
-        assert state
-        assert state.state == "good"
+    state = hass.states.get("sensor.home_pm2_5_index")
+    assert state
+    assert state.state == "good"
 
-        state = hass.states.get("sensor.home_air_quality_index")
-        assert state
-        assert state.state == "good"
+    state = hass.states.get("sensor.home_air_quality_index")
+    assert state
+    assert state.state == "good"
 
 
 async def test_invalid_indexes(hass: HomeAssistant) -> None:
@@ -365,11 +375,11 @@ async def test_invalid_indexes(hass: HomeAssistant) -> None:
     assert state is None
 
 
-async def test_unique_id_migration(hass: HomeAssistant) -> None:
+async def test_unique_id_migration(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test states of the unique_id migration."""
-    registry = er.async_get(hass)
-
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         PLATFORM,
         DOMAIN,
         "123-pm2.5",
@@ -379,6 +389,6 @@ async def test_unique_id_migration(hass: HomeAssistant) -> None:
 
     await init_integration(hass)
 
-    entry = registry.async_get("sensor.home_pm2_5")
+    entry = entity_registry.async_get("sensor.home_pm2_5")
     assert entry
     assert entry.unique_id == "123-pm25"

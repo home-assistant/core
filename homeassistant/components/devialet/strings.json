@@ -1,0 +1,22 @@
+{
+  "config": {
+    "flow_title": "{title}",
+    "step": {
+      "user": {
+        "description": "Please enter the host name or IP address of the Devialet device.",
+        "data": {
+          "host": "Host"
+        }
+      },
+      "confirm": {
+        "description": "Do you want to set up Devialet device {device}?"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  }
+}

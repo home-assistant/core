@@ -1,4 +1,5 @@
 """Support for Verisure Smartplugs."""
+
 from __future__ import annotations
 
 from time import monotonic
@@ -53,7 +54,6 @@ class VerisureSmartplug(CoordinatorEntity[VerisureDataUpdateCoordinator], Switch
         ]
         return DeviceInfo(
             name=area,
-            suggested_area=area,
             manufacturer="Verisure",
             model="SmartPlug",
             identifiers={(DOMAIN, self.serial_number)},
@@ -90,9 +90,9 @@ class VerisureSmartplug(CoordinatorEntity[VerisureDataUpdateCoordinator], Switch
 
     async def async_set_plug_state(self, state: bool) -> None:
         """Set smartplug state."""
-        command: dict[
-            str, str | dict[str, str]
-        ] = self.coordinator.verisure.set_smartplug(self.serial_number, state)
+        command: dict[str, str | dict[str, str]] = (
+            self.coordinator.verisure.set_smartplug(self.serial_number, state)
+        )
         await self.hass.async_add_executor_job(
             self.coordinator.verisure.request,
             command,

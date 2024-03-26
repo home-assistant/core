@@ -1,4 +1,5 @@
 """Support for OVO Energy."""
+
 from __future__ import annotations
 
 import asyncio

@@ -1,4 +1,5 @@
 """Test the DLNA config flow."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -97,6 +98,15 @@ def mock_get_mac_address() -> Iterable[Mock]:
         yield gma_mock
 
 
+@pytest.fixture(autouse=True)
+def mock_setup_entry() -> Iterable[Mock]:
+    """Mock async_setup_entry."""
+    with patch(
+        "homeassistant.components.dlna_dmr.async_setup_entry", return_value=True
+    ) as setup_entry_mock:
+        yield setup_entry_mock
+
+
 async def test_user_flow_undiscovered_manual(hass: HomeAssistant) -> None:
     """Test user-init'd flow, no discovered devices, user entering a valid URL."""
     result = await hass.config_entries.flow.async_init(
@@ -119,9 +129,6 @@ async def test_user_flow_undiscovered_manual(hass: HomeAssistant) -> None:
         CONF_MAC: MOCK_MAC_ADDRESS,
     }
     assert result["options"] == {CONF_POLL_AVAILABILITY: True}
-
-    # Wait for platform to be fully setup
-    await hass.async_block_till_done()
 
 
 async def test_user_flow_discovered_manual(
@@ -163,9 +170,6 @@ async def test_user_flow_discovered_manual(
     }
     assert result["options"] == {CONF_POLL_AVAILABILITY: True}
 
-    # Wait for platform to be fully setup
-    await hass.async_block_till_done()
-
 
 async def test_user_flow_selected(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> None:
     """Test user-init'd flow, user selects discovered device."""
@@ -195,8 +199,6 @@ async def test_user_flow_selected(hass: HomeAssistant, ssdp_scanner_mock: Mock) 
         CONF_MAC: MOCK_MAC_ADDRESS,
     }
     assert result["options"] == {}
-
-    await hass.async_block_till_done()
 
 
 async def test_user_flow_uncontactable(
@@ -259,9 +261,6 @@ async def test_user_flow_embedded_st(
         CONF_MAC: MOCK_MAC_ADDRESS,
     }
     assert result["options"] == {CONF_POLL_AVAILABILITY: True}
-
-    # Wait for platform to be fully setup
-    await hass.async_block_till_done()
 
 
 async def test_user_flow_wrong_st(hass: HomeAssistant, domain_data_mock: Mock) -> None:
@@ -588,9 +587,9 @@ async def test_ssdp_ignore_device(hass: HomeAssistant) -> None:
 
     discovery = dataclasses.replace(MOCK_DISCOVERY)
     discovery.upnp = dict(discovery.upnp)
-    discovery.upnp[
-        ssdp.ATTR_UPNP_DEVICE_TYPE
-    ] = "urn:schemas-upnp-org:device:ZonePlayer:1"
+    discovery.upnp[ssdp.ATTR_UPNP_DEVICE_TYPE] = (
+        "urn:schemas-upnp-org:device:ZonePlayer:1"
+    )
     result = await hass.config_entries.flow.async_init(
         DLNA_DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
@@ -716,9 +715,6 @@ async def test_unignore_flow(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> No
         CONF_MAC: MOCK_MAC_ADDRESS,
     }
     assert result["options"] == {}
-
-    # Wait for platform to be fully setup
-    await hass.async_block_till_done()
 
 
 async def test_unignore_flow_offline(

@@ -5,6 +5,9 @@
         "description": "Ensure that your player is turned on.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Dune HD device."
         }
       }
     },

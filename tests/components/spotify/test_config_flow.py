@@ -1,5 +1,7 @@
 """Tests for the Spotify config flow."""
+
 from http import HTTPStatus
+from ipaddress import ip_address
 from unittest.mock import patch
 
 import pytest
@@ -22,8 +24,8 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 BLANK_ZEROCONF_INFO = zeroconf.ZeroconfServiceInfo(
-    host="1.2.3.4",
-    addresses=["1.2.3.4"],
+    ip_address=ip_address("1.2.3.4"),
+    ip_addresses=[ip_address("1.2.3.4")],
     hostname="mock_hostname",
     name="mock_name",
     port=None,
@@ -120,9 +122,10 @@ async def test_full_flow(
         },
     )
 
-    with patch(
-        "homeassistant.components.spotify.async_setup_entry", return_value=True
-    ), patch("homeassistant.components.spotify.config_flow.Spotify") as spotify_mock:
+    with (
+        patch("homeassistant.components.spotify.async_setup_entry", return_value=True),
+        patch("homeassistant.components.spotify.config_flow.Spotify") as spotify_mock,
+    ):
         spotify_mock.return_value.current_user.return_value = {
             "id": "fake_id",
             "display_name": "frenck",
@@ -233,9 +236,10 @@ async def test_reauthentication(
         },
     )
 
-    with patch(
-        "homeassistant.components.spotify.async_setup_entry", return_value=True
-    ), patch("homeassistant.components.spotify.config_flow.Spotify") as spotify_mock:
+    with (
+        patch("homeassistant.components.spotify.async_setup_entry", return_value=True),
+        patch("homeassistant.components.spotify.config_flow.Spotify") as spotify_mock,
+    ):
         spotify_mock.return_value.current_user.return_value = {"id": "frenck"}
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 

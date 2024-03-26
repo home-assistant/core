@@ -1,4 +1,5 @@
 """The tests for the Event automation."""
+
 import pytest
 
 import homeassistant.components.automation as automation

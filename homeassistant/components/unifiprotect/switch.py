@@ -1,7 +1,9 @@
 """Component providing Switches for UniFi Protect."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 from typing import Any
 
 from pyunifiprotect.data import (
@@ -27,11 +29,12 @@ from .entity import ProtectDeviceEntity, ProtectNVREntity, async_all_device_enti
 from .models import PermRequired, ProtectSetableKeysMixin, T
 from .utils import async_dispatch_id as _ufpd
 
+_LOGGER = logging.getLogger(__name__)
 ATTR_PREV_MIC = "prev_mic_level"
 ATTR_PREV_RECORD = "prev_record_mode"
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class ProtectSwitchEntityDescription(
     ProtectSetableKeysMixin[T], SwitchEntityDescription
 ):
@@ -71,6 +74,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         name="HDR Mode",
         icon="mdi:brightness-7",
         entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
         ufp_required_field="feature_flags.has_hdr",
         ufp_value="hdr_mode",
         ufp_set_method="set_hdr",
@@ -134,6 +138,16 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
+        key="color_night_vision",
+        name="Color Night Vision",
+        icon="mdi:light-flood-down",
+        entity_category=EntityCategory.CONFIG,
+        ufp_required_field="has_color_night_vision",
+        ufp_value="isp_settings.is_color_night_vision_enabled",
+        ufp_set_method="set_color_night_vision",
+        ufp_perm=PermRequired.WRITE,
+    ),
+    ProtectSwitchEntityDescription(
         key="motion",
         name="Detections: Motion",
         icon="mdi:run-fast",
@@ -166,17 +180,6 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
-        key="smart_face",
-        name="Detections: Face",
-        icon="mdi:human-greeting",
-        entity_category=EntityCategory.CONFIG,
-        ufp_required_field="can_detect_face",
-        ufp_value="is_face_detection_on",
-        ufp_enabled="is_recording_enabled",
-        ufp_set_method="set_face_detection",
-        ufp_perm=PermRequired.WRITE,
-    ),
-    ProtectSwitchEntityDescription(
         key="smart_package",
         name="Detections: Package",
         icon="mdi:package-variant-closed",
@@ -200,13 +203,111 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
     ),
     ProtectSwitchEntityDescription(
         key="smart_smoke",
-        name="Detections: Smoke/CO",
+        name="Detections: Smoke",
         icon="mdi:fire",
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="can_detect_smoke",
         ufp_value="is_smoke_detection_on",
         ufp_enabled="is_recording_enabled",
         ufp_set_method="set_smoke_detection",
+        ufp_perm=PermRequired.WRITE,
+    ),
+    ProtectSwitchEntityDescription(
+        key="smart_cmonx",
+        name="Detections: CO",
+        icon="mdi:molecule-co",
+        entity_category=EntityCategory.CONFIG,
+        ufp_required_field="can_detect_co",
+        ufp_value="is_co_detection_on",
+        ufp_enabled="is_recording_enabled",
+        ufp_set_method="set_cmonx_detection",
+        ufp_perm=PermRequired.WRITE,
+    ),
+    ProtectSwitchEntityDescription(
+        key="smart_siren",
+        name="Detections: Siren",
+        icon="mdi:alarm-bell",
+        entity_category=EntityCategory.CONFIG,
+        ufp_required_field="can_detect_siren",
+        ufp_value="is_siren_detection_on",
+        ufp_enabled="is_recording_enabled",
+        ufp_set_method="set_siren_detection",
+        ufp_perm=PermRequired.WRITE,
+    ),
+    ProtectSwitchEntityDescription(
+        key="smart_baby_cry",
+        name="Detections: Baby Cry",
+        icon="mdi:cradle",
+        entity_category=EntityCategory.CONFIG,
+        ufp_required_field="can_detect_baby_cry",
+        ufp_value="is_baby_cry_detection_on",
+        ufp_enabled="is_recording_enabled",
+        ufp_set_method="set_baby_cry_detection",
+        ufp_perm=PermRequired.WRITE,
+    ),
+    ProtectSwitchEntityDescription(
+        key="smart_speak",
+        name="Detections: Speaking",
+        icon="mdi:account-voice",
+        entity_category=EntityCategory.CONFIG,
+        ufp_required_field="can_detect_speaking",
+        ufp_value="is_speaking_detection_on",
+        ufp_enabled="is_recording_enabled",
+        ufp_set_method="set_speaking_detection",
+        ufp_perm=PermRequired.WRITE,
+    ),
+    ProtectSwitchEntityDescription(
+        key="smart_bark",
+        name="Detections: Barking",
+        icon="mdi:dog",
+        entity_category=EntityCategory.CONFIG,
+        ufp_required_field="can_detect_bark",
+        ufp_value="is_bark_detection_on",
+        ufp_enabled="is_recording_enabled",
+        ufp_set_method="set_bark_detection",
+        ufp_perm=PermRequired.WRITE,
+    ),
+    ProtectSwitchEntityDescription(
+        key="smart_car_alarm",
+        name="Detections: Car Alarm",
+        icon="mdi:car",
+        entity_category=EntityCategory.CONFIG,
+        ufp_required_field="can_detect_car_alarm",
+        ufp_value="is_car_alarm_detection_on",
+        ufp_enabled="is_recording_enabled",
+        ufp_set_method="set_car_alarm_detection",
+        ufp_perm=PermRequired.WRITE,
+    ),
+    ProtectSwitchEntityDescription(
+        key="smart_car_horn",
+        name="Detections: Car Horn",
+        icon="mdi:bugle",
+        entity_category=EntityCategory.CONFIG,
+        ufp_required_field="can_detect_car_horn",
+        ufp_value="is_car_horn_detection_on",
+        ufp_enabled="is_recording_enabled",
+        ufp_set_method="set_car_horn_detection",
+        ufp_perm=PermRequired.WRITE,
+    ),
+    ProtectSwitchEntityDescription(
+        key="smart_glass_break",
+        name="Detections: Glass Break",
+        icon="mdi:glass-fragile",
+        entity_category=EntityCategory.CONFIG,
+        ufp_required_field="can_detect_glass_break",
+        ufp_value="is_glass_break_detection_on",
+        ufp_enabled="is_recording_enabled",
+        ufp_set_method="set_glass_break_detection",
+        ufp_perm=PermRequired.WRITE,
+    ),
+    ProtectSwitchEntityDescription(
+        key="track_person",
+        name="Tracking: Person",
+        icon="mdi:walk",
+        entity_category=EntityCategory.CONFIG,
+        ufp_required_field="is_ptz",
+        ufp_value="is_person_tracking_enabled",
+        ufp_set_method="set_person_track",
         ufp_perm=PermRequired.WRITE,
     ),
 )
@@ -353,7 +454,8 @@ async def async_setup_entry(
     """Set up sensors for UniFi Protect integration."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
-    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+    @callback
+    def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
         entities = async_all_device_entities(
             data,
             ProtectSwitch,
@@ -420,20 +522,27 @@ class ProtectSwitch(ProtectDeviceEntity, SwitchEntity):
         self._attr_name = f"{self.device.display_name} {self.entity_description.name}"
         self._switch_type = self.entity_description.key
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if device is on."""
-        return self.entity_description.get_ufp_value(self.device) is True
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        super()._async_update_device_from_protect(device)
+        self._attr_is_on = self.entity_description.get_ufp_value(self.device) is True
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-
         await self.entity_description.ufp_set(self.device, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-
         await self.entity_description.ufp_set(self.device, False)
+
+    @callback
+    def _async_get_state_attrs(self) -> tuple[Any, ...]:
+        """Retrieve data that goes into the current state of the entity.
+
+        Called before and after updating entity and state is only written if there
+        is a change.
+        """
+
+        return (self._attr_available, self._attr_is_on)
 
 
 class ProtectNVRSwitch(ProtectNVREntity, SwitchEntity):

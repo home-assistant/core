@@ -14,6 +14,7 @@ PRODUCT = "product"
 SERIAL_NUMBER = "serial_number"
 TITLE = "title"
 
+FIRMWARE_UPDATE_INTERVAL = timedelta(hours=5)
 LONG_UPDATE_INTERVAL = timedelta(minutes=5)
 SHORT_UPDATE_INTERVAL = timedelta(seconds=15)
 
@@ -24,6 +25,8 @@ IDENTIFY = "identify"
 IMAGE_GUEST_WIFI = "image_guest_wifi"
 NEIGHBORING_WIFI_NETWORKS = "neighboring_wifi_networks"
 PAIRING = "pairing"
+PLC_RX_RATE = "plc_rx_rate"
+PLC_TX_RATE = "plc_tx_rate"
 REGULAR_FIRMWARE = "regular_firmware"
 RESTART = "restart"
 START_WPS = "start_wps"

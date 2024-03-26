@@ -1,4 +1,5 @@
 """Support for Modbus Coil and Discrete Input sensors."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -24,7 +25,12 @@ from homeassistant.helpers.update_coordinator import (
 
 from . import get_hub
 from .base_platform import BasePlatform
-from .const import CALL_TYPE_COIL, CALL_TYPE_DISCRETE, CONF_SLAVE_COUNT
+from .const import (
+    CALL_TYPE_COIL,
+    CALL_TYPE_DISCRETE,
+    CONF_SLAVE_COUNT,
+    CONF_VIRTUAL_COUNT,
+)
 from .modbus import ModbusHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,8 +52,10 @@ async def async_setup_platform(
     sensors: list[ModbusBinarySensor | SlaveSensor] = []
     hub = get_hub(hass, discovery_info[CONF_NAME])
     for entry in discovery_info[CONF_BINARY_SENSORS]:
-        slave_count = entry.get(CONF_SLAVE_COUNT, 0)
-        sensor = ModbusBinarySensor(hub, entry, slave_count)
+        slave_count = entry.get(CONF_SLAVE_COUNT, None) or entry.get(
+            CONF_VIRTUAL_COUNT, 0
+        )
+        sensor = ModbusBinarySensor(hass, hub, entry, slave_count)
         if slave_count > 0:
             sensors.extend(await sensor.async_setup_slaves(hass, slave_count, entry))
         sensors.append(sensor)
@@ -57,12 +65,18 @@ async def async_setup_platform(
 class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
     """Modbus binary sensor."""
 
-    def __init__(self, hub: ModbusHub, entry: dict[str, Any], slave_count: int) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        hub: ModbusHub,
+        entry: dict[str, Any],
+        slave_count: int,
+    ) -> None:
         """Initialize the Modbus binary sensor."""
         self._count = slave_count + 1
         self._coordinator: DataUpdateCoordinator[list[int] | None] | None = None
         self._result: list[int] = []
-        super().__init__(hub, entry)
+        super().__init__(hass, hub, entry)
 
     async def async_setup_slaves(
         self, hass: HomeAssistant, slave_count: int, entry: dict[str, Any]
@@ -79,10 +93,9 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
             name=name,
         )
 
-        slaves: list[SlaveSensor] = []
-        for idx in range(0, slave_count):
-            slaves.append(SlaveSensor(self._coordinator, idx, entry))
-        return slaves
+        return [
+            SlaveSensor(self._coordinator, idx, entry) for idx in range(slave_count)
+        ]
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -102,23 +115,15 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
         )
         self._call_active = False
         if result is None:
-            if self._lazy_errors:
-                self._lazy_errors -= 1
-                return
-            self._lazy_errors = self._lazy_error_count
             self._attr_available = False
             self._result = []
         else:
-            self._lazy_errors = self._lazy_error_count
             self._attr_available = True
             if self._input_type in (CALL_TYPE_COIL, CALL_TYPE_DISCRETE):
                 self._result = result.bits
             else:
                 self._result = result.registers
-            if len(self._result) >= 1:
-                self._attr_is_on = bool(self._result[0] & 1)
-            else:
-                self._attr_available = False
+            self._attr_is_on = bool(self._result[0] & 1)
 
         self.async_write_ha_state()
         if self._coordinator:

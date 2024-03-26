@@ -1,4 +1,5 @@
 """Tests for the Freebox sensors."""
+
 from copy import deepcopy
 from unittest.mock import Mock
 
@@ -104,8 +105,8 @@ async def test_battery(
     # Simulate a changed battery
     data_home_get_nodes_changed = deepcopy(DATA_HOME_GET_NODES)
     data_home_get_nodes_changed[2]["show_endpoints"][3]["value"] = 25
-    data_home_get_nodes_changed[3]["show_endpoints"][3]["value"] = 50
-    data_home_get_nodes_changed[4]["show_endpoints"][3]["value"] = 75
+    data_home_get_nodes_changed[3]["show_endpoints"][4]["value"] = 50
+    data_home_get_nodes_changed[4]["show_endpoints"][5]["value"] = 75
     router().home.get_home_nodes.return_value = data_home_get_nodes_changed
     # Simulate an update
     freezer.tick(SCAN_INTERVAL)

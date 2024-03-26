@@ -1,4 +1,5 @@
 """Provides device automations for Cover."""
+
 from __future__ import annotations
 
 import voluptuous as vol
@@ -26,13 +27,7 @@ from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import (
-    DOMAIN,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
-)
+from . import DOMAIN, CoverEntityFeature
 
 # mypy: disallow-any-generics
 
@@ -78,7 +73,9 @@ async def async_get_conditions(
             continue
 
         supported_features = get_supported_features(hass, entry.entity_id)
-        supports_open_close = supported_features & (SUPPORT_OPEN | SUPPORT_CLOSE)
+        supports_open_close = supported_features & (
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+        )
 
         # Add conditions for each entity that belongs to this integration
         base_condition = {
@@ -92,9 +89,9 @@ async def async_get_conditions(
             conditions += [
                 {**base_condition, CONF_TYPE: cond} for cond in STATE_CONDITION_TYPES
             ]
-        if supported_features & SUPPORT_SET_POSITION:
+        if supported_features & CoverEntityFeature.SET_POSITION:
             conditions.append({**base_condition, CONF_TYPE: "is_position"})
-        if supported_features & SUPPORT_SET_TILT_POSITION:
+        if supported_features & CoverEntityFeature.SET_TILT_POSITION:
             conditions.append({**base_condition, CONF_TYPE: "is_tilt_position"})
 
     return conditions

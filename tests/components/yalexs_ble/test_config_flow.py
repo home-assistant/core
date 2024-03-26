@@ -1,4 +1,5 @@
 """Test the Yale Access Bluetooth config flow."""
+
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
@@ -60,12 +61,15 @@ async def test_user_step_success(hass: HomeAssistant, slot: int) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.yalexs_ble.config_flow.PushLock.validate",
-    ), patch(
-        "homeassistant.components.yalexs_ble.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.yalexs_ble.config_flow.PushLock.validate",
+        ),
+        patch(
+            "homeassistant.components.yalexs_ble.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -174,12 +178,15 @@ async def test_user_step_invalid_keys(hass: HomeAssistant) -> None:
     assert result4["step_id"] == "user"
     assert result4["errors"] == {CONF_SLOT: "invalid_key_index"}
 
-    with patch(
-        "homeassistant.components.yalexs_ble.config_flow.PushLock.validate",
-    ), patch(
-        "homeassistant.components.yalexs_ble.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.yalexs_ble.config_flow.PushLock.validate",
+        ),
+        patch(
+            "homeassistant.components.yalexs_ble.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result5 = await hass.config_entries.flow.async_configure(
             result4["flow_id"],
             {
@@ -233,12 +240,15 @@ async def test_user_step_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "cannot_connect"}
 
-    with patch(
-        "homeassistant.components.yalexs_ble.config_flow.PushLock.validate",
-    ), patch(
-        "homeassistant.components.yalexs_ble.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.yalexs_ble.config_flow.PushLock.validate",
+        ),
+        patch(
+            "homeassistant.components.yalexs_ble.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
@@ -292,12 +302,15 @@ async def test_user_step_auth_exception(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "user"
     assert result2["errors"] == {CONF_KEY: "invalid_auth"}
 
-    with patch(
-        "homeassistant.components.yalexs_ble.config_flow.PushLock.validate",
-    ), patch(
-        "homeassistant.components.yalexs_ble.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.yalexs_ble.config_flow.PushLock.validate",
+        ),
+        patch(
+            "homeassistant.components.yalexs_ble.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
@@ -351,12 +364,15 @@ async def test_user_step_unknown_exception(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "unknown"}
 
-    with patch(
-        "homeassistant.components.yalexs_ble.config_flow.PushLock.validate",
-    ), patch(
-        "homeassistant.components.yalexs_ble.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.yalexs_ble.config_flow.PushLock.validate",
+        ),
+        patch(
+            "homeassistant.components.yalexs_ble.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
@@ -390,12 +406,15 @@ async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.yalexs_ble.config_flow.PushLock.validate",
-    ), patch(
-        "homeassistant.components.yalexs_ble.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.yalexs_ble.config_flow.PushLock.validate",
+        ),
+        patch(
+            "homeassistant.components.yalexs_ble.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -578,13 +597,16 @@ async def test_integration_discovery_updates_key_unique_local_name(
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.yalexs_ble.util.async_discovered_service_info",
-        return_value=[LOCK_DISCOVERY_INFO_UUID_ADDRESS],
-    ), patch(
-        "homeassistant.components.yalexs_ble.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.yalexs_ble.util.async_discovered_service_info",
+            return_value=[LOCK_DISCOVERY_INFO_UUID_ADDRESS],
+        ),
+        patch(
+            "homeassistant.components.yalexs_ble.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
@@ -852,13 +874,16 @@ async def test_user_is_setting_up_lock_and_discovery_happens_in_the_middle(
         valdidate_started.set()
         await user_flow_event.wait()
 
-    with patch(
-        "homeassistant.components.yalexs_ble.config_flow.PushLock.validate",
-        side_effect=_wait_for_user_flow,
-    ), patch(
-        "homeassistant.components.yalexs_ble.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.yalexs_ble.config_flow.PushLock.validate",
+            side_effect=_wait_for_user_flow,
+        ),
+        patch(
+            "homeassistant.components.yalexs_ble.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         user_flow_task = asyncio.create_task(
             hass.config_entries.flow.async_configure(
                 result["flow_id"],
@@ -945,20 +970,24 @@ async def test_reauth(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "reauth_validate"
     assert result2["errors"] == {"base": "no_longer_in_range"}
 
-    with patch(
-        "homeassistant.components.yalexs_ble.config_flow.async_ble_device_from_address",
-        return_value=YALE_ACCESS_LOCK_DISCOVERY_INFO,
-    ), patch(
-        "homeassistant.components.yalexs_ble.config_flow.PushLock.validate",
-    ), patch(
-        "homeassistant.components.yalexs_ble.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.yalexs_ble.config_flow.async_ble_device_from_address",
+            return_value=YALE_ACCESS_LOCK_DISCOVERY_INFO,
+        ),
+        patch(
+            "homeassistant.components.yalexs_ble.config_flow.PushLock.validate",
+        ),
+        patch(
+            "homeassistant.components.yalexs_ble.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
                 CONF_KEY: "2fd51b8621c6a139eaffbedcb846b60f",
-                CONF_SLOT: 66,
+                CONF_SLOT: 67,
             },
         )
         await hass.async_block_till_done()

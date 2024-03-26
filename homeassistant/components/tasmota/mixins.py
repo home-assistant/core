@@ -1,4 +1,5 @@
 """Tasmota entity mixins."""
+
 from __future__ import annotations
 
 import logging
@@ -38,6 +39,9 @@ class TasmotaEntity(Entity):
         """Initialize."""
         self._tasmota_entity = tasmota_entity
         self._unique_id = tasmota_entity.unique_id
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, tasmota_entity.mac)}
+        )
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
@@ -60,13 +64,6 @@ class TasmotaEntity(Entity):
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         await self._tasmota_entity.subscribe_topics()
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return a device description for device registry."""
-        return DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self._tasmota_entity.mac)}
-        )
 
     @property
     def name(self) -> str | None:
@@ -116,8 +113,11 @@ class TasmotaAvailability(TasmotaEntity):
 
     def __init__(self, **kwds: Any) -> None:
         """Initialize the availability mixin."""
-        self._available = False
         super().__init__(**kwds)
+        if self._tasmota_entity.deep_sleep_enabled:
+            self._available = True
+        else:
+            self._available = False
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
@@ -126,6 +126,8 @@ class TasmotaAvailability(TasmotaEntity):
             async_subscribe_connection_status(self.hass, self.async_mqtt_connected)
         )
         await super().async_added_to_hass()
+        if self._tasmota_entity.deep_sleep_enabled:
+            await self._tasmota_entity.poll_status()
 
     async def availability_updated(self, available: bool) -> None:
         """Handle updated availability."""
@@ -139,6 +141,8 @@ class TasmotaAvailability(TasmotaEntity):
         if not self.hass.is_stopping:
             if not mqtt_connected(self.hass):
                 self._available = False
+            elif self._tasmota_entity.deep_sleep_enabled:
+                self._available = True
             self.async_write_ha_state()
 
     @property

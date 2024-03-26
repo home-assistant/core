@@ -1,4 +1,5 @@
 """Support managing States."""
+
 from __future__ import annotations
 
 from ..db_schema import States
