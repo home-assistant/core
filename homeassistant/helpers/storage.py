@@ -175,7 +175,7 @@ class _StoreManager:
             return (False, None)
 
         # If the key is in the preload cache, return it
-        if data := self._data_preload.get(key):
+        if data := self._data_preload.pop(key, None):
             _LOGGER.debug("%s: Cache hit data", key)
             return (True, data)
 

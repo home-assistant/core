@@ -941,9 +941,7 @@ async def test_store_manager_caching(
         integration2 = storage.Store(hass, 1, "integration2")
         integration2.async_delay_save(lambda: {"integration2": "updated"})
         # Delay save should invalidate the cache after it saves
-        assert (
-            store_manager.async_fetch("integration2") is not None
-        )  # not invalidated yet
+        assert "integration2" not in store_manager._invalidated
 
         # Block twice to flush out the delayed save
         await hass.async_block_till_done()
@@ -975,14 +973,14 @@ async def test_store_manager_caching(
         integration1 = storage.Store(hass, 1, "integration1")
         assert await integration1.async_load() == {"integration1": "updated"}
 
-        # Load should not invalidate the cache
-        assert store_manager.async_fetch("integration1") is not None
+        # Load should pop the cache
+        assert store_manager.async_fetch("integration1") is None
 
         integration2 = storage.Store(hass, 1, "integration2")
         assert await integration2.async_load() == {"integration2": "updated"}
 
-        # Load should not invalidate the cache
-        assert store_manager.async_fetch("integration2") is not None
+        # Load should pop the cache
+        assert store_manager.async_fetch("integration2") is None
 
         await hass.async_stop(force=True)
 
@@ -1088,22 +1086,24 @@ async def test_store_manager_cleanup_after_started(
         store_manager = storage.get_internal_store_manager(hass)
         await store_manager.async_initialize()
         await store_manager.async_preload(["integration1", "integration2"])
-        assert store_manager.async_fetch("integration1") is not None
-        assert store_manager.async_fetch("integration2") is not None
+        assert "integration1" in store_manager._data_preload
+        assert "integration2" in store_manager._data_preload
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
-        assert store_manager.async_fetch("integration1") is not None
-        assert store_manager.async_fetch("integration2") is not None
+        assert "integration1" in store_manager._data_preload
+        assert "integration2" in store_manager._data_preload
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
-        assert store_manager.async_fetch("integration1") is not None
-        assert store_manager.async_fetch("integration2") is not None
+        assert "integration1" in store_manager._data_preload
+        assert "integration2" in store_manager._data_preload
         freezer.tick(storage.MANAGER_CLEANUP_DELAY)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         # The cache should be removed after the cleanup delay
         # since it means nothing ever loaded it and we want to
         # recover the memory
+        assert "integration1" not in store_manager._data_preload
+        assert "integration2" not in store_manager._data_preload
         assert store_manager.async_fetch("integration1") is None
         assert store_manager.async_fetch("integration2") is None
         await hass.async_stop(force=True)
@@ -1136,18 +1136,20 @@ async def test_store_manager_cleanup_after_stop(
         store_manager = storage.get_internal_store_manager(hass)
         await store_manager.async_initialize()
         await store_manager.async_preload(["integration1", "integration2"])
-        assert store_manager.async_fetch("integration1") is not None
-        assert store_manager.async_fetch("integration2") is not None
+        assert "integration1" in store_manager._data_preload
+        assert "integration2" in store_manager._data_preload
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
-        assert store_manager.async_fetch("integration1") is not None
-        assert store_manager.async_fetch("integration2") is not None
+        assert "integration1" in store_manager._data_preload
+        assert "integration2" in store_manager._data_preload
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
-        assert store_manager.async_fetch("integration1") is not None
-        assert store_manager.async_fetch("integration2") is not None
+        assert "integration1" in store_manager._data_preload
+        assert "integration2" in store_manager._data_preload
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
+        assert "integration1" not in store_manager._data_preload
+        assert "integration2" not in store_manager._data_preload
         assert store_manager.async_fetch("integration1") is None
         assert store_manager.async_fetch("integration2") is None
         await hass.async_stop(force=True)
