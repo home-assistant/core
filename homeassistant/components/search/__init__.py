@@ -495,10 +495,10 @@ class Searcher:
 
     @callback
     def _async_resolve_up_device(self, device_id: str) -> None:
-        """Resolve up from an device.
+        """Resolve up from a device.
 
-        Above an device is an area or floor.
-        Above an device is also the config entry.
+        Above a device is an area or floor.
+        Above a device is also the config entry.
         """
         if device_entry := self._device_registry.async_get(device_id):
             if device_entry.area_id:
