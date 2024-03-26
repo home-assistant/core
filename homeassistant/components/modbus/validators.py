@@ -490,10 +490,18 @@ def check_config(hass: HomeAssistant, config: dict) -> dict:
                 else:
                     entity_inx += 1
         if no_entities:
-            err = f"Modbus {hub[CONF_NAME]} contain no entities, this will cause instability,  please add at least one entity!"
-            _LOGGER.warning(err)
-            # Ensure timeout is not started/handled.
-            hub[CONF_TIMEOUT] = -1
+            modbus_create_issue(
+                hass,
+                "no_entities",
+                [
+                    hub[CONF_NAME],
+                    "",
+                    "",
+                ],
+                f"Modbus {hub[CONF_NAME]} contain no entities, causing instability, entry not loaded",
+            )
+            del config[hub_inx]
+            continue
         if hub[CONF_TIMEOUT] >= minimum_scan_interval:
             hub[CONF_TIMEOUT] = minimum_scan_interval - 1
             _LOGGER.warning(

@@ -837,7 +837,7 @@ class SonosSpeaker:
                         if p.uid != coordinator_uid and p.is_visible
                     ]
 
-            return [coordinator_uid] + joined_uids
+            return [coordinator_uid, *joined_uids]
 
         async def _async_extract_group(event: SonosEvent | None) -> list[str]:
             """Extract group layout from a topology event."""

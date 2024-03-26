@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable, Iterable
-from contextlib import suppress
 from dataclasses import replace
 from datetime import datetime, timedelta
 import logging
@@ -68,11 +66,8 @@ async def async_setup_entry(
         """
 
         for shade in pv_entry.shade_data.values():
-            with suppress(TimeoutError):
-                # hold off to avoid spamming the hub
-                async with asyncio.timeout(10):
-                    _LOGGER.debug("Initial refresh of shade: %s", shade.name)
-                    await shade.refresh()
+            _LOGGER.debug("Initial refresh of shade: %s", shade.name)
+            await shade.refresh(suppress_timeout=True)  # default 15 second timeout
 
     entities: list[ShadeEntity] = []
     for shade in pv_entry.shade_data.values():
@@ -324,9 +319,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
             # error if are already have one in flight
             return
         # suppress timeouts caused by hub nightly reboot
-        with suppress(TimeoutError):
-            async with asyncio.timeout(10):
-                await self._shade.refresh()
+        await self._shade.refresh(suppress_timeout=True)  # default 15 second timeout
         _LOGGER.debug("Process update %s: %s", self.name, self._shade.current_position)
         self._async_update_shade_data(self._shade.current_position)
 
@@ -519,6 +512,22 @@ class PowerViewShadeTiltOnly(PowerViewShadeWithTiltBase):
         if self._shade.is_supported(MOTION_STOP):
             self._attr_supported_features |= CoverEntityFeature.STOP_TILT
         self._max_tilt = self._shade.shade_limits.tilt_max
+
+    @property
+    def current_cover_position(self) -> int:
+        """Return the current position of cover."""
+        # allows using parent class with no other alterations
+        return CLOSED_POSITION
+
+    @property
+    def transition_steps(self) -> int:
+        """Return the steps to make a move."""
+        return self.positions.tilt
+
+    @property
+    def is_closed(self) -> bool:
+        """Return if the cover is closed."""
+        return self.positions.tilt <= CLOSED_POSITION
 
 
 class PowerViewShadeTopDown(PowerViewShadeBase):
@@ -981,6 +990,11 @@ TYPE_TO_CLASSES = {
     ),
     10: (
         PowerViewShadeDualOverlappedCombinedTilt,
+        PowerViewShadeDualOverlappedFront,
+        PowerViewShadeDualOverlappedRear,
+    ),
+    11: (
+        PowerViewShadeDualOverlappedCombined,
         PowerViewShadeDualOverlappedFront,
         PowerViewShadeDualOverlappedRear,
     ),
