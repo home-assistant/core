@@ -13,13 +13,11 @@ def mock_cover_entities() -> list[MockCover]:
     return [
         MockCover(
             name="Simple cover",
-            is_on=True,
             unique_id="unique_cover",
             supported_features=CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE,
         ),
         MockCover(
             name="Set position cover",
-            is_on=True,
             unique_id="unique_set_pos_cover",
             current_cover_position=50,
             supported_features=CoverEntityFeature.OPEN
@@ -29,7 +27,6 @@ def mock_cover_entities() -> list[MockCover]:
         ),
         MockCover(
             name="Simple tilt cover",
-            is_on=True,
             unique_id="unique_tilt_cover",
             supported_features=CoverEntityFeature.OPEN
             | CoverEntityFeature.CLOSE
@@ -38,7 +35,6 @@ def mock_cover_entities() -> list[MockCover]:
         ),
         MockCover(
             name="Set tilt position cover",
-            is_on=True,
             unique_id="unique_set_pos_tilt_cover",
             current_cover_tilt_position=50,
             supported_features=CoverEntityFeature.OPEN
@@ -50,7 +46,6 @@ def mock_cover_entities() -> list[MockCover]:
         ),
         MockCover(
             name="All functions cover",
-            is_on=True,
             unique_id="unique_all_functions_cover",
             current_cover_position=50,
             current_cover_tilt_position=50,
@@ -65,7 +60,6 @@ def mock_cover_entities() -> list[MockCover]:
         ),
         MockCover(
             name="Simple with opening/closing cover",
-            is_on=True,
             unique_id="unique_opening_closing_cover",
             supported_features=CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE,
             reports_opening_closing=True,
