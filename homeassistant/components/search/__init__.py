@@ -121,7 +121,11 @@ class Searcher:
     @callback
     def _async_search_area(self, area_id: str) -> None:
         """Find results for an area."""
-        self._async_resolve_up_area(area_id)
+        if not (area_entry := self._async_resolve_up_area(area_id)):
+            return
+
+        # Add labels of this area
+        self._add(ItemType.LABEL, area_entry.labels)
 
         # Automations referencing this area
         self._add(
@@ -202,7 +206,9 @@ class Searcher:
     def _async_search_automation(self, automation_entity_id: str) -> None:
         """Find results for an automation."""
         # Up resolve the automation entity itself
-        self._async_resolve_up_entity(automation_entity_id)
+        if entity_entry := self._async_resolve_up_entity(automation_entity_id):
+            # Add labels of this automation entity
+            self._add(ItemType.LABEL, entity_entry.labels)
 
         # Find the blueprint used in this automation
         self._add(
@@ -283,7 +289,11 @@ class Searcher:
     @callback
     def _async_search_device(self, device_id: str) -> None:
         """Find results for a device."""
-        self._async_resolve_up_device(device_id)
+        if not (device_entry := self._async_resolve_up_device(device_id)):
+            return
+
+        # Add labels of this device
+        self._add(ItemType.LABEL, device_entry.labels)
 
         # Automations referencing this device
         self._add(
@@ -305,7 +315,9 @@ class Searcher:
     @callback
     def _async_search_entity(self, entity_id: str) -> None:
         """Find results for an entity."""
-        self._async_resolve_up_entity(entity_id)
+        if entity_entry := self._async_resolve_up_entity(entity_id):
+            # Add labels of this entity
+            self._add(ItemType.LABEL, entity_entry.labels)
 
         # Automations referencing this entity
         self._add(
@@ -392,7 +404,9 @@ class Searcher:
     def _async_search_person(self, person_entity_id: str) -> None:
         """Find results for a person."""
         # Up resolve the scene entity itself
-        self._async_resolve_up_entity(person_entity_id)
+        if entity_entry := self._async_resolve_up_entity(person_entity_id):
+            # Add labels of this person entity
+            self._add(ItemType.LABEL, entity_entry.labels)
 
         # Automations referencing this person
         self._add(
@@ -414,7 +428,9 @@ class Searcher:
     def _async_search_scene(self, scene_entity_id: str) -> None:
         """Find results for a scene."""
         # Up resolve the scene entity itself
-        self._async_resolve_up_entity(scene_entity_id)
+        if entity_entry := self._async_resolve_up_entity(scene_entity_id):
+            # Add labels of this scene entity
+            self._add(ItemType.LABEL, entity_entry.labels)
 
         # Automations referencing this scene
         self._add(
@@ -436,7 +452,9 @@ class Searcher:
     def _async_search_script(self, script_entity_id: str) -> None:
         """Find results for a script."""
         # Up resolve the script entity itself
-        self._async_resolve_up_entity(script_entity_id)
+        if entity_entry := self._async_resolve_up_entity(script_entity_id):
+            # Add labels of this script entity
+            self._add(ItemType.LABEL, entity_entry.labels)
 
         # Find the blueprint used in this script
         self._add(
@@ -494,7 +512,7 @@ class Searcher:
         )
 
     @callback
-    def _async_resolve_up_device(self, device_id: str) -> None:
+    def _async_resolve_up_device(self, device_id: str) -> dr.DeviceEntry | None:
         """Resolve up from a device.
 
         Above a device is an area or floor.
@@ -505,12 +523,12 @@ class Searcher:
                 self._add(ItemType.AREA, device_entry.area_id)
                 self._async_resolve_up_area(device_entry.area_id)
 
-            self._add(ItemType.LABEL, device_entry.labels)
-
             self._add(ItemType.CONFIG_ENTRY, device_entry.config_entries)
 
+        return device_entry
+
     @callback
-    def _async_resolve_up_entity(self, entity_id: str) -> None:
+    def _async_resolve_up_entity(self, entity_id: str) -> er.RegistryEntry | None:
         """Resolve up from an entity.
 
         Above an entity is a device, area or floor.
@@ -530,9 +548,6 @@ class Searcher:
                     self._add(ItemType.AREA, device_entry.area_id)
                     self._async_resolve_up_area(device_entry.area_id)
 
-            # Add labels this entity has
-            self._add(ItemType.LABEL, entity_entry.labels)
-
             # Add device that provided this entity
             self._add(ItemType.DEVICE, entity_entry.device_id)
 
@@ -542,12 +557,15 @@ class Searcher:
             # Add config entry that provided this entity
             self._add(ItemType.CONFIG_ENTRY, source.get("config_entry"))
 
+        return entity_entry
+
     @callback
-    def _async_resolve_up_area(self, area_id: str) -> None:
+    def _async_resolve_up_area(self, area_id: str) -> ar.AreaEntry | None:
         """Resolve up from an area.
 
         Above an area can be a floor.
         """
         if area_entry := self._area_registry.async_get_area(area_id):
             self._add(ItemType.FLOOR, area_entry.floor_id)
-            self._add(ItemType.LABEL, area_entry.labels)
+
+        return area_entry
