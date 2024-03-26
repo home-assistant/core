@@ -13,6 +13,7 @@ from aiohttp import CookieJar
 from pyunifiprotect import ProtectApiClient
 from pyunifiprotect.data import (
     Bootstrap,
+    CameraChannel,
     Light,
     LightModeEnableType,
     LightModeType,
@@ -146,3 +147,14 @@ def async_create_api_client(
         ignore_unadopted=False,
         cache_dir=Path(hass.config.path(STORAGE_DIR, "unifiprotect_cache")),
     )
+
+
+@callback
+def get_camera_base_name(channel: CameraChannel) -> str:
+    """Get base name for cameras channel."""
+
+    camera_name = channel.name
+    if channel.name != "Package Camera":
+        camera_name = f"{channel.name} Resolution Channel"
+
+    return camera_name

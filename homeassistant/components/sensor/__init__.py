@@ -11,9 +11,7 @@ from decimal import Decimal, InvalidOperation as DecimalInvalidOperation
 from functools import partial
 import logging
 from math import ceil, floor, isfinite, log10
-from typing import TYPE_CHECKING, Any, Final, Self, cast, final
-
-from typing_extensions import override
+from typing import TYPE_CHECKING, Any, Final, Self, cast, final, override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401
@@ -872,9 +870,9 @@ class SensorExtraStoredData(ExtraStoredData):
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the sensor data."""
-        native_value: StateType | date | datetime | Decimal | dict[
-            str, str
-        ] = self.native_value
+        native_value: StateType | date | datetime | Decimal | dict[str, str] = (
+            self.native_value
+        )
         if isinstance(native_value, (date, datetime)):
             native_value = {
                 "__type": str(type(native_value)),

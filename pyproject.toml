@@ -18,10 +18,10 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Home Automation",
 ]
-requires-python = ">=3.11.0"
+requires-python = ">=3.12.0"
 dependencies    = [
     "aiohttp==3.9.3",
     "aiohttp_cors==0.7.0",
@@ -50,8 +50,7 @@ dependencies    = [
     # PyJWT has loose dependency. We want the latest one.
     "cryptography==42.0.5",
     "Pillow==10.2.0",
-    # pyOpenSSL 23.2.0 is required to work with cryptography 41+
-    "pyOpenSSL==24.0.0",
+    "pyOpenSSL==24.1.0",
     "orjson==3.9.15",
     "packaging>=23.1",
     "pip>=21.3.1",
@@ -59,7 +58,7 @@ dependencies    = [
     "python-slugify==8.0.4",
     "PyYAML==6.0.1",
     "requests==2.31.0",
-    "SQLAlchemy==2.0.28",
+    "SQLAlchemy==2.0.29",
     "typing-extensions>=4.10.0,<5.0",
     "ulid-transform==0.9.0",
     # Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
@@ -91,7 +90,7 @@ include-package-data = true
 include = ["homeassistant*"]
 
 [tool.pylint.MAIN]
-py-version = "3.11"
+py-version = "3.12"
 ignore = [
     "tests",
 ]
@@ -476,9 +475,6 @@ filterwarnings = [
     # https://github.com/foxel/python_ndms2_client/issues/6 - v0.1.3
     # https://github.com/foxel/python_ndms2_client/pull/8
     "ignore:'telnetlib' is deprecated and slated for removal in Python 3.13:DeprecationWarning:ndms2_client.connection",
-    # https://github.com/pytest-dev/pytest-cov/issues/557 - v4.1.0
-    # Should resolve itself once pytest-xdist 4.0 is released and the option is removed
-    "ignore:The --rsyncdir command line argument and rsyncdirs config variable are deprecated:DeprecationWarning:xdist.plugin",
 
     # -- fixed, waiting for release / update
     # https://github.com/mkmer/AIOAladdinConnect/commit/8851fff4473d80d70ac518db2533f0fbef63b69c - >=0.2.0
@@ -709,6 +705,8 @@ ignore = [
     "UP007", # keep type annotation style as is
     # Ignored due to performance: https://github.com/charliermarsh/ruff/issues/2923
     "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
+    # Ignored due to incompatible with mypy: https://github.com/python/mypy/issues/15238
+    "UP040", # Checks for use of TypeAlias annotation for declaring type aliases.
 
     # May conflict with the formatter, https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
     "W191",

@@ -138,6 +138,6 @@ class MockRestoreSensor(MockSensor, RestoreSensor):
         if (last_sensor_data := await self.async_get_last_sensor_data()) is None:
             return
         self._values["native_value"] = last_sensor_data.native_value
-        self._values[
-            "native_unit_of_measurement"
-        ] = last_sensor_data.native_unit_of_measurement
+        self._values["native_unit_of_measurement"] = (
+            last_sensor_data.native_unit_of_measurement
+        )
