@@ -467,9 +467,7 @@ async def test_search(
 
     def search(item_type: ItemType, item_id: str) -> dict[str, set[str]]:
         """Search."""
-        searcher = Searcher(
-            hass, area_registry, device_registry, entity_registry, entity_sources
-        )
+        searcher = Searcher(hass, entity_sources)
         return searcher.async_search(item_type, item_id)
 
     #

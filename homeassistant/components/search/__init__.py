@@ -70,13 +70,7 @@ def websocket_search_related(
     msg: dict[str, Any],
 ) -> None:
     """Handle search."""
-    searcher = Searcher(
-        hass,
-        ar.async_get(hass),
-        dr.async_get(hass),
-        er.async_get(hass),
-        get_entity_sources(hass),
-    )
+    searcher = Searcher(hass, get_entity_sources(hass))
     connection.send_result(
         msg["id"], searcher.async_search(msg["item_type"], msg["item_id"])
     )
@@ -90,16 +84,13 @@ class Searcher:
     def __init__(
         self,
         hass: HomeAssistant,
-        area_registry: ar.AreaRegistry,
-        device_registry: dr.DeviceRegistry,
-        entity_registry: er.EntityRegistry,
         entity_sources: dict[str, EntityInfo],
     ) -> None:
         """Search results."""
         self.hass = hass
-        self._area_registry = area_registry
-        self._device_registry = device_registry
-        self._entity_registry = entity_registry
+        self._area_registry = ar.async_get(hass)
+        self._device_registry = dr.async_get(hass)
+        self._entity_registry = er.async_get(hass)
         self._entity_sources = entity_sources
         self.results: defaultdict[str, set[str]] = defaultdict(set)
 
