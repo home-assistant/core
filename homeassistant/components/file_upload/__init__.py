@@ -154,9 +154,9 @@ class FileUploadView(HomeAssistantView):
 
         file_upload_data: FileUploadData = hass.data[DOMAIN]
         file_dir = file_upload_data.file_dir(file_id)
-        queue: SimpleQueue[
-            tuple[bytes, asyncio.Future[None] | None] | None
-        ] = SimpleQueue()
+        queue: SimpleQueue[tuple[bytes, asyncio.Future[None] | None] | None] = (
+            SimpleQueue()
+        )
 
         def _sync_queue_consumer() -> None:
             file_dir.mkdir()

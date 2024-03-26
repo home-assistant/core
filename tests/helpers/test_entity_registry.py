@@ -704,9 +704,10 @@ async def test_update_entity_unique_id_conflict(
     entry2 = entity_registry.async_get_or_create(
         "light", "hue", "1234", config_entry=mock_config
     )
-    with patch.object(
-        entity_registry, "async_schedule_save"
-    ) as mock_schedule_save, pytest.raises(ValueError):
+    with (
+        patch.object(entity_registry, "async_schedule_save") as mock_schedule_save,
+        pytest.raises(ValueError),
+    ):
         entity_registry.async_update_entity(
             entry.entity_id, new_unique_id=entry2.unique_id
         )
@@ -752,9 +753,10 @@ async def test_update_entity_entity_id_entity_id(
     assert entry2.entity_id != state_entity_id
 
     # Try updating to a registered entity_id
-    with patch.object(
-        entity_registry, "async_schedule_save"
-    ) as mock_schedule_save, pytest.raises(ValueError):
+    with (
+        patch.object(entity_registry, "async_schedule_save") as mock_schedule_save,
+        pytest.raises(ValueError),
+    ):
         entity_registry.async_update_entity(
             entry.entity_id, new_entity_id=entry2.entity_id
         )
@@ -769,9 +771,10 @@ async def test_update_entity_entity_id_entity_id(
     assert entity_registry.async_get(entry2.entity_id) is entry2
 
     # Try updating to an entity_id which is in the state machine
-    with patch.object(
-        entity_registry, "async_schedule_save"
-    ) as mock_schedule_save, pytest.raises(ValueError):
+    with (
+        patch.object(entity_registry, "async_schedule_save") as mock_schedule_save,
+        pytest.raises(ValueError),
+    ):
         entity_registry.async_update_entity(
             entry.entity_id, new_entity_id=state_entity_id
         )

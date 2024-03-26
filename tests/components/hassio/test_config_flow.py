@@ -9,12 +9,15 @@ from homeassistant.core import HomeAssistant
 async def test_config_flow(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
-    with patch(
-        "homeassistant.components.hassio.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.hassio.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.hassio.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.hassio.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "system"}
         )

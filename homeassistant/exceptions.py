@@ -72,9 +72,9 @@ class HomeAssistantError(Exception):
             assert self.translation_domain is not None
 
         if "async_get_exception_message" not in _function_cache:
-            _function_cache[
-                "async_get_exception_message"
-            ] = import_async_get_exception_message()
+            _function_cache["async_get_exception_message"] = (
+                import_async_get_exception_message()
+            )
 
         self._message = _function_cache["async_get_exception_message"](
             self.translation_domain, self.translation_key, self.translation_placeholders
@@ -87,20 +87,19 @@ class ConfigValidationError(HomeAssistantError, ExceptionGroup[Exception]):
 
     def __init__(
         self,
-        message: str,
+        message_translation_key: str,
         exceptions: list[Exception],
         translation_domain: str | None = None,
-        translation_key: str | None = None,
         translation_placeholders: dict[str, str] | None = None,
     ) -> None:
         """Initialize exception."""
         super().__init__(
-            *(message, exceptions),
+            *(message_translation_key, exceptions),
             translation_domain=translation_domain,
-            translation_key=translation_key,
+            translation_key=message_translation_key,
             translation_placeholders=translation_placeholders,
         )
-        self._message = message
+        self.generate_message = True
 
 
 class ServiceValidationError(HomeAssistantError):

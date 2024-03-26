@@ -63,6 +63,7 @@ from .exceptions import ConfigValidationError, HomeAssistantError
 from .generated.currencies import HISTORIC_CURRENCIES
 from .helpers import config_validation as cv, issue_registry as ir
 from .helpers.entity_values import EntityValues
+from .helpers.translation import async_get_exception_message
 from .helpers.typing import ConfigType
 from .loader import ComponentProtocol, Integration, IntegrationNotFound
 from .requirements import RequirementsNotFound, async_get_integration_with_requirements
@@ -130,13 +131,23 @@ class ConfigErrorTranslationKey(StrEnum):
     CONFIG_PLATFORM_IMPORT_ERR = "config_platform_import_err"
     CONFIG_VALIDATOR_UNKNOWN_ERR = "config_validator_unknown_err"
     CONFIG_SCHEMA_UNKNOWN_ERR = "config_schema_unknown_err"
-    PLATFORM_VALIDATOR_UNKNOWN_ERR = "platform_validator_unknown_err"
     PLATFORM_COMPONENT_LOAD_ERR = "platform_component_load_err"
     PLATFORM_COMPONENT_LOAD_EXC = "platform_component_load_exc"
     PLATFORM_SCHEMA_VALIDATOR_ERR = "platform_schema_validator_err"
 
     # translation key in case multiple errors occurred
-    INTEGRATION_CONFIG_ERROR = "integration_config_error"
+    MULTIPLE_INTEGRATION_CONFIG_ERRORS = "multiple_integration_config_errors"
+
+
+_CONFIG_LOG_SHOW_STACK_TRACE: dict[ConfigErrorTranslationKey, bool] = {
+    ConfigErrorTranslationKey.COMPONENT_IMPORT_ERR: False,
+    ConfigErrorTranslationKey.CONFIG_PLATFORM_IMPORT_ERR: False,
+    ConfigErrorTranslationKey.CONFIG_VALIDATOR_UNKNOWN_ERR: True,
+    ConfigErrorTranslationKey.CONFIG_SCHEMA_UNKNOWN_ERR: True,
+    ConfigErrorTranslationKey.PLATFORM_COMPONENT_LOAD_ERR: False,
+    ConfigErrorTranslationKey.PLATFORM_COMPONENT_LOAD_EXC: True,
+    ConfigErrorTranslationKey.PLATFORM_SCHEMA_VALIDATOR_ERR: True,
+}
 
 
 @dataclass
@@ -1101,9 +1112,9 @@ async def merge_packages_config(
                 continue
 
             try:
-                config_platform: ModuleType | None = (
-                    await integration.async_get_platform("config")
-                )
+                config_platform: (
+                    ModuleType | None
+                ) = await integration.async_get_platform("config")
                 # Test if config platform has a config validator
                 if not hasattr(config_platform, "async_validate_config"):
                     config_platform = None
@@ -1183,48 +1194,16 @@ def _get_log_message_and_stack_print_pref(
     platform_config = platform_exception.config
     link = platform_exception.integration_link
 
-    placeholders: dict[str, str] = {"domain": domain, "error": str(exception)}
-
-    log_message_mapping: dict[ConfigErrorTranslationKey, tuple[str, bool]] = {
-        ConfigErrorTranslationKey.COMPONENT_IMPORT_ERR: (
-            f"Unable to import {domain}: {exception}",
-            False,
-        ),
-        ConfigErrorTranslationKey.CONFIG_PLATFORM_IMPORT_ERR: (
-            f"Error importing config platform {domain}: {exception}",
-            False,
-        ),
-        ConfigErrorTranslationKey.CONFIG_VALIDATOR_UNKNOWN_ERR: (
-            f"Unknown error calling {domain} config validator",
-            True,
-        ),
-        ConfigErrorTranslationKey.CONFIG_SCHEMA_UNKNOWN_ERR: (
-            f"Unknown error calling {domain} CONFIG_SCHEMA",
-            True,
-        ),
-        ConfigErrorTranslationKey.PLATFORM_VALIDATOR_UNKNOWN_ERR: (
-            f"Unknown error validating {platform_path} platform config with {domain} "
-            "component platform schema",
-            True,
-        ),
-        ConfigErrorTranslationKey.PLATFORM_COMPONENT_LOAD_ERR: (
-            f"Platform error: {domain} - {exception}",
-            False,
-        ),
-        ConfigErrorTranslationKey.PLATFORM_COMPONENT_LOAD_EXC: (
-            f"Platform error: {domain} - {exception}",
-            True,
-        ),
-        ConfigErrorTranslationKey.PLATFORM_SCHEMA_VALIDATOR_ERR: (
-            f"Unknown error validating config for {platform_path} platform "
-            f"for {domain} component with PLATFORM_SCHEMA",
-            True,
-        ),
+    placeholders: dict[str, str] = {
+        "domain": domain,
+        "error": str(exception),
+        "p_name": platform_path,
     }
-    log_message_show_stack_trace = log_message_mapping.get(
+
+    show_stack_trace: bool | None = _CONFIG_LOG_SHOW_STACK_TRACE.get(
         platform_exception.translation_key
     )
-    if log_message_show_stack_trace is None:
+    if show_stack_trace is None:
         # If no pre defined log_message is set, we generate an enriched error
         # message, so we can notify about it during setup
         show_stack_trace = False
@@ -1247,9 +1226,14 @@ def _get_log_message_and_stack_print_pref(
             show_stack_trace = True
         return (log_message, show_stack_trace, placeholders)
 
-    assert isinstance(log_message_show_stack_trace, tuple)
+    # Generate the log message from the English translations
+    log_message = async_get_exception_message(
+        HA_DOMAIN,
+        platform_exception.translation_key,
+        translation_placeholders=placeholders,
+    )
 
-    return (*log_message_show_stack_trace, placeholders)
+    return (log_message, show_stack_trace, placeholders)
 
 
 async def async_process_component_and_handle_errors(
@@ -1348,21 +1332,16 @@ def async_handle_component_errors(
     if len(config_exception_info) == 1:
         translation_key = platform_exception.translation_key
     else:
-        translation_key = ConfigErrorTranslationKey.INTEGRATION_CONFIG_ERROR
+        translation_key = ConfigErrorTranslationKey.MULTIPLE_INTEGRATION_CONFIG_ERRORS
         errors = str(len(config_exception_info))
-        log_message = (
-            f"Failed to process component config for integration {domain} "
-            f"due to multiple errors ({errors}), check the logs for more information."
-        )
         placeholders = {
             "domain": domain,
             "errors": errors,
         }
     raise ConfigValidationError(
-        str(log_message),
+        translation_key,
         [platform_exception.exception for platform_exception in config_exception_info],
-        translation_domain="homeassistant",
-        translation_key=translation_key,
+        translation_domain=HA_DOMAIN,
         translation_placeholders=placeholders,
     )
 

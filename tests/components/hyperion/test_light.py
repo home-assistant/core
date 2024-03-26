@@ -713,9 +713,13 @@ async def test_setup_entry_no_token_reauth(hass: HomeAssistant) -> None:
     config_entry = add_test_config_entry(hass)
     client.async_is_auth_required = AsyncMock(return_value=TEST_AUTH_REQUIRED_RESP)
 
-    with patch(
-        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
-    ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
+    with (
+        patch(
+            "homeassistant.components.hyperion.client.HyperionClient",
+            return_value=client,
+        ),
+        patch.object(hass.config_entries.flow, "async_init") as mock_flow_init,
+    ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         assert client.async_client_disconnect.called
@@ -743,9 +747,13 @@ async def test_setup_entry_bad_token_reauth(hass: HomeAssistant) -> None:
 
     # Fail to log in.
     client.async_client_login = AsyncMock(return_value=False)
-    with patch(
-        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
-    ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
+    with (
+        patch(
+            "homeassistant.components.hyperion.client.HyperionClient",
+            return_value=client,
+        ),
+        patch.object(hass.config_entries.flow, "async_init") as mock_flow_init,
+    ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         assert client.async_client_disconnect.called
