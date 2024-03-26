@@ -8,6 +8,7 @@ from unittest.mock import patch
 from aiohttp import ServerDisconnectedError, web
 from aiohttp.test_utils import TestClient
 import pytest
+from syrupy import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant import const
@@ -296,17 +297,12 @@ async def test_api_get_event_listeners(
 
 
 async def test_api_get_services(
-    hass: HomeAssistant, mock_api_client: TestClient
+    hass: HomeAssistant, mock_api_client: TestClient, snapshot: SnapshotAssertion
 ) -> None:
     """Test if we can get a dict describing current services."""
     resp = await mock_api_client.get(const.URL_API_SERVICES)
     data = await resp.json()
-    local_services = hass.services.async_services()
-
-    for serv_domain in data:
-        local = local_services.pop(serv_domain["domain"])
-
-        assert serv_domain["services"] == local
+    assert data == snapshot
 
 
 async def test_api_call_service_no_data(
