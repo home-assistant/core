@@ -263,7 +263,7 @@ class RuntimeEntryData:
         if async_get_dashboard(hass):
             needed_platforms.add(Platform.UPDATE)
 
-        if self.device_info and self.device_info.voice_assistant_version:
+        if self.device_info and self.device_info.voice_assistant_feature_flags_compat:
             needed_platforms.add(Platform.BINARY_SENSOR)
             needed_platforms.add(Platform.SELECT)
 

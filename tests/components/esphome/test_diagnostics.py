@@ -94,7 +94,7 @@ async def test_diagnostics_with_bluetooth(
                 "project_version": "",
                 "suggested_area": "",
                 "uses_password": False,
-                "voice_assistant_version": 0,
+                "legacy_voice_assistant_version": 0,
                 "webserver_port": 0,
             },
             "services": [],

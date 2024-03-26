@@ -343,7 +343,11 @@ async def mock_voice_assistant_entry(
     async def _mock_voice_assistant_entry(version: int) -> MockConfigEntry:
         return (
             await _mock_generic_device_entry(
-                hass, mock_client, {"voice_assistant_version": version}, ([], []), []
+                hass,
+                mock_client,
+                {"legacy_voice_assistant_version": version},
+                ([], []),
+                [],
             )
         ).entry
 
