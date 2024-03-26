@@ -1,5 +1,31 @@
 {
   "title": "Plant Monitor",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add plant integration",
+        "description": "Add the plant sensor to monitor your plants",
+        "data": {
+          "moisture": "Name of the moisture sensor",
+          "temperature": "Name of the temperature sensor",
+          "battery": "Name of the battery sensor",
+          "conductivity": "Name of the conductivity sensor",
+          "brightness": "Name of the brightness sensor",
+          "min_moisture": "Minimum moisture level before triggering a problem.",
+          "min_temperature": "Minimum temperature level before triggering a problem.",
+          "min_battery": "Minimum battery level before triggering a problem.",
+          "min_conductivity": "Minimum conductivity level before triggering a problem.",
+          "min_brightness": "Minimum brightness level before triggering a problem.",
+          "max_moisture": "Maximum moisture level before triggering a problem.",
+          "max_temperature": "Maximum temperature level before triggering a problem.",
+          "max_battery": "Maximum battery level before triggering a problem.",
+          "max_conductivity": "Maximum conductivity level before triggering a problem.",
+          "max_brightness": "Maximum brightness level before triggering a problem.",
+          "check_days": "Time interval (in days) used when checking min_brightness."
+        }
+      }
+    }
+  },
   "entity_component": {
     "_": {
       "name": "[%key:component::plant::title%]",
