@@ -1,4 +1,5 @@
 """Common test fixtures for the update component test."""
+
 import logging
 from typing import Any
 

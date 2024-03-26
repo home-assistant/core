@@ -1,4 +1,5 @@
 """Fixtures for update component testing."""
+
 import pytest
 
 from homeassistant.components.update import UpdateEntityFeature
