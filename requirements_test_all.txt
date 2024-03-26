@@ -1148,6 +1148,9 @@ objgraph==3.5.0
 # homeassistant.components.garages_amsterdam
 odp-amsterdam==6.0.1
 
+# homeassistant.components.ollama
+ollama-hass==0.1.7
+
 # homeassistant.components.omnilogic
 omnilogic==0.4.5
 
