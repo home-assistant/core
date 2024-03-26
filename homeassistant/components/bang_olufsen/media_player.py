@@ -12,6 +12,7 @@ from mozart_api.models import (
     Action,
     Art,
     OverlayPlayRequest,
+    OverlayPlayRequestTextToSpeechTextToSpeech,
     PlaybackContentMetadata,
     PlaybackError,
     PlaybackProgress,
@@ -29,6 +30,7 @@ from mozart_api.models import (
     VolumeState,
 )
 from mozart_api.mozart_client import MozartClient, get_highest_resolution_artwork
+import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -44,9 +46,13 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 from homeassistant.util.dt import utcnow
 
 from . import BangOlufsenData
@@ -93,6 +99,31 @@ async def async_setup_entry(
 
     # Add MediaPlayer entity
     async_add_entities(new_entities=[BangOlufsenMediaPlayer(config_entry, data.client)])
+
+    # Register services.
+    platform = async_get_current_platform()
+
+    platform.async_register_entity_service(
+        name="overlay_audio",
+        schema={
+            vol.Exclusive("tts", "media", ""): cv.string,
+            vol.Optional("tts_language"): cv.string,
+            vol.Exclusive("uri", "media", "Define either uri or tts"): cv.string,
+            vol.Exclusive("absolute_volume", "volume"): vol.All(
+                vol.Coerce(int),
+                vol.Range(min=0, max=100),
+            ),
+            vol.Exclusive(
+                "offset_volume",
+                "volume",
+                "Define either offset_volume or absolute_volume",
+            ): vol.All(
+                vol.Coerce(int),
+                vol.Range(min=0, max=100),
+            ),
+        },
+        func="async_overlay_audio",
+    )
 
 
 class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
@@ -646,3 +677,49 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             media_content_id,
             content_filter=lambda item: item.media_content_type.startswith("audio/"),
         )
+
+    async def async_overlay_audio(
+        self,
+        absolute_volume: int | None = None,
+        offset_volume: int | None = None,
+        tts_language: str = "en-us",
+        tts: str | None = None,
+        uri: str | None = None,
+    ) -> None:
+        """Overlay audio over any currently playing audio."""
+
+        # Construct request
+        overlay_play_request = OverlayPlayRequest()
+
+        # Define volume level
+        if absolute_volume:
+            overlay_play_request.volume_absolute = absolute_volume
+        elif offset_volume:
+            # Ensure that the volume is not above 100
+            if not self._volume.level or not self._volume.level.level:
+                _LOGGER.warning("Error setting volume")
+            else:
+                overlay_play_request.volume_absolute = min(
+                    self._volume.level.level + offset_volume, 100
+                )
+        # Define media type for overlay
+        if uri:
+            media_id = uri
+
+            # Play local HA file.
+            if media_source.is_media_source_id(media_id):
+                sourced_media = await media_source.async_resolve_media(
+                    self.hass, media_id, self.entity_id
+                )
+
+                media_id = async_process_play_media_url(self.hass, sourced_media.url)
+
+            # URI
+            overlay_play_request.uri = Uri(location=media_id)
+
+        elif tts:
+            # Bang & Olufsen cloud TTS
+            overlay_play_request.text_to_speech = (
+                OverlayPlayRequestTextToSpeechTextToSpeech(lang=tts_language, text=tts)
+            )
+        await self._client.post_overlay_play(overlay_play_request)
