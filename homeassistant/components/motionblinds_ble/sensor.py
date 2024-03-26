@@ -31,8 +31,6 @@ from .const import (
     ATTR_SIGNAL_STRENGTH,
     CONF_MAC_CODE,
     DOMAIN,
-    ICON_CALIBRATION,
-    ICON_CONNECTION,
 )
 from .entity import MotionblindsBLEEntity
 
@@ -60,7 +58,6 @@ SENSOR_TYPES: dict[str, MotionblindsBLESensorEntityDescription] = {
     ATTR_CONNECTION: MotionblindsBLESensorEntityDescription(
         key=ATTR_CONNECTION,
         translation_key=ATTR_CONNECTION,
-        icon=ICON_CONNECTION,
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=[connection_type.value for connection_type in MotionConnectionType],
@@ -69,7 +66,6 @@ SENSOR_TYPES: dict[str, MotionblindsBLESensorEntityDescription] = {
     ATTR_CALIBRATION: MotionblindsBLESensorEntityDescription(
         key=ATTR_CALIBRATION,
         translation_key=ATTR_CALIBRATION,
-        icon=ICON_CALIBRATION,
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
