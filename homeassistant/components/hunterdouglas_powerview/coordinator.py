@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -36,16 +35,15 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
     async def _async_update_data(self) -> PowerviewShadeData:
         """Fetch data from shade endpoint."""
 
-        async with asyncio.timeout(10):
-            try:
-                shade_entries = await self.shades.get_shades()
-            except PvApiMaintenance as error:
-                # hub is undergoing maintenance, pause polling
-                raise UpdateFailed(error) from error
-            except HUB_EXCEPTIONS as error:
-                raise UpdateFailed(
-                    f"Powerview Hub {self.hub.hub_address} did not return any data: {error}"
-                ) from error
+        try:
+            shade_entries = await self.shades.get_shades()
+        except PvApiMaintenance as error:
+            # hub is undergoing maintenance, pause polling
+            raise UpdateFailed(error) from error
+        except HUB_EXCEPTIONS as error:
+            raise UpdateFailed(
+                f"Powerview Hub {self.hub.hub_address} did not return any data: {error}"
+            ) from error
 
         if not shade_entries:
             raise UpdateFailed("No new shade data was returned")

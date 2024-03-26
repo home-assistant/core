@@ -394,12 +394,15 @@ async def test_creating_sensor_loads_group(hass: HomeAssistant) -> None:
 
     hass.bus.async_listen(EVENT_COMPONENT_LOADED, set_after_dep_event)
 
-    with patch(
-        "homeassistant.components.group.async_setup",
-        new=async_setup_group,
-    ), patch(
-        "homeassistant.components.template.sensor.async_setup_platform",
-        new=async_setup_template,
+    with (
+        patch(
+            "homeassistant.components.group.async_setup",
+            new=async_setup_group,
+        ),
+        patch(
+            "homeassistant.components.template.sensor.async_setup_platform",
+            new=async_setup_template,
+        ),
     ):
         await async_from_config_dict(
             {"sensor": {"platform": "template", "sensors": {}}, "group": {}}, hass
@@ -476,7 +479,11 @@ async def test_invalid_attribute_template(
     await hass.async_block_till_done()
     await async_update_entity(hass, "sensor.invalid_template")
     assert "TemplateError" in caplog_setup_text
-    assert "test_attribute" in caplog.text
+    assert (
+        "Template variable error: 'None' has no attribute 'attributes' when rendering"
+        in caplog.text
+    )
+    assert hass.states.get("sensor.invalid_template").state == "startup"
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, sensor.DOMAIN)])
@@ -970,7 +977,7 @@ async def test_self_referencing_entity_picture_loop(
     assert len(hass.states.async_all()) == 1
     next_time = dt_util.utcnow() + timedelta(seconds=1.2)
     with patch(
-        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+        "homeassistant.helpers.ratelimit.time.time", return_value=next_time.timestamp()
     ):
         async_fire_time_changed(hass, next_time)
         await hass.async_block_till_done()
@@ -1598,11 +1605,15 @@ async def test_entity_last_reset_parsing(
     # State of timestamp sensors are always in UTC
     now = dt_util.utcnow()
 
-    with patch(
-        "homeassistant.components.template.sensor._LOGGER.warning"
-    ) as mocked_warning, patch(
-        "homeassistant.components.template.template_entity._LOGGER.error"
-    ) as mocked_error, patch("homeassistant.util.dt.now", return_value=now):
+    with (
+        patch(
+            "homeassistant.components.template.sensor._LOGGER.warning"
+        ) as mocked_warning,
+        patch(
+            "homeassistant.components.template.template_entity._LOGGER.error"
+        ) as mocked_error,
+        patch("homeassistant.util.dt.now", return_value=now),
+    ):
         assert await async_setup_component(
             hass,
             "template",

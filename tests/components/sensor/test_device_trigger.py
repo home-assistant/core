@@ -133,12 +133,12 @@ async def test_get_triggers(
 
 @pytest.mark.parametrize(
     ("hidden_by", "entity_category"),
-    (
+    [
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
-    ),
+    ],
 )
 async def test_get_triggers_hidden_auxiliary(
     hass: HomeAssistant,
@@ -182,13 +182,13 @@ async def test_get_triggers_hidden_auxiliary(
 
 @pytest.mark.parametrize(
     ("state_class", "unit", "trigger_types"),
-    (
+    [
         (SensorStateClass.MEASUREMENT, None, ["value"]),
         (SensorStateClass.TOTAL, None, ["value"]),
         (SensorStateClass.TOTAL_INCREASING, None, ["value"]),
         (SensorStateClass.MEASUREMENT, "dogs", ["value"]),
         (None, None, []),
-    ),
+    ],
 )
 async def test_get_triggers_no_unit_or_stateclass(
     hass: HomeAssistant,

@@ -30,15 +30,18 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.sentry.AioHttpIntegration"
-    ) as sentry_aiohttp_mock, patch(
-        "homeassistant.components.sentry.SqlalchemyIntegration"
-    ) as sentry_sqlalchemy_mock, patch(
-        "homeassistant.components.sentry.LoggingIntegration"
-    ) as sentry_logging_mock, patch(
-        "homeassistant.components.sentry.sentry_sdk"
-    ) as sentry_mock:
+    with (
+        patch(
+            "homeassistant.components.sentry.AioHttpIntegration"
+        ) as sentry_aiohttp_mock,
+        patch(
+            "homeassistant.components.sentry.SqlalchemyIntegration"
+        ) as sentry_sqlalchemy_mock,
+        patch(
+            "homeassistant.components.sentry.LoggingIntegration"
+        ) as sentry_logging_mock,
+        patch("homeassistant.components.sentry.sentry_sdk") as sentry_mock,
+    ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -84,11 +87,12 @@ async def test_setup_entry_with_tracing(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.sentry.AioHttpIntegration"), patch(
-        "homeassistant.components.sentry.SqlalchemyIntegration"
-    ), patch("homeassistant.components.sentry.LoggingIntegration"), patch(
-        "homeassistant.components.sentry.sentry_sdk"
-    ) as sentry_mock:
+    with (
+        patch("homeassistant.components.sentry.AioHttpIntegration"),
+        patch("homeassistant.components.sentry.SqlalchemyIntegration"),
+        patch("homeassistant.components.sentry.LoggingIntegration"),
+        patch("homeassistant.components.sentry.sentry_sdk") as sentry_mock,
+    ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 

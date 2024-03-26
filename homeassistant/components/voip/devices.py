@@ -97,7 +97,7 @@ class VoIPDevices:
             self.hass.bus.async_listen(
                 dr.EVENT_DEVICE_REGISTRY_UPDATED,
                 async_device_removed,
-                callback(lambda ev: ev.data.get("action") == "remove"),
+                callback(lambda event_data: event_data.get("action") == "remove"),
             )
         )
 
