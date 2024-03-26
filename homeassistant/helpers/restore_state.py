@@ -253,7 +253,7 @@ class RestoreStateData:
 
         # Dump states when stopping hass
         self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, _async_dump_states_at_stop
+            EVENT_HOMEASSISTANT_STOP, _async_dump_states_at_stop, run_immediately=True
         )
 
     @callback

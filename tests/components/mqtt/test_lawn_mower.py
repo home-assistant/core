@@ -731,8 +731,8 @@ async def test_mqtt_payload_not_a_valid_activity_warning(
     await hass.async_block_till_done()
 
     assert (
-        "Invalid activity for lawn_mower.test_lawn_mower: 'painting' (valid activies: ['error', 'paused', 'mowing', 'docked'])"
-        in caplog.text
+        "Invalid activity for lawn_mower.test_lawn_mower: 'painting' "
+        "(valid activities: ['error', 'paused', 'mowing', 'docked'])" in caplog.text
     )
 
 

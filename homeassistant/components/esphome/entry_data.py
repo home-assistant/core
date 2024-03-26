@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine, Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from functools import partial
 import logging
@@ -19,6 +19,7 @@ from aioesphomeapi import (
     CameraState,
     ClimateInfo,
     CoverInfo,
+    DateInfo,
     DeviceInfo,
     EntityInfo,
     EntityState,
@@ -33,6 +34,7 @@ from aioesphomeapi import (
     SwitchInfo,
     TextInfo,
     TextSensorInfo,
+    TimeInfo,
     UserService,
     build_unique_id,
 )
@@ -63,6 +65,7 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     CameraInfo: Platform.CAMERA,
     ClimateInfo: Platform.CLIMATE,
     CoverInfo: Platform.COVER,
+    DateInfo: Platform.DATE,
     FanInfo: Platform.FAN,
     LightInfo: Platform.LIGHT,
     LockInfo: Platform.LOCK,
@@ -73,6 +76,7 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     SwitchInfo: Platform.SWITCH,
     TextInfo: Platform.TEXT,
     TextSensorInfo: Platform.SENSOR,
+    TimeInfo: Platform.TIME,
 }
 
 
@@ -167,15 +171,6 @@ class RuntimeEntryData:
         callback_: Callable[[list[EntityInfo]], None],
     ) -> None:
         """Unsubscribe to when static info is registered."""
-        callbacks.remove(callback_)
-
-    @callback
-    def _async_unsubscribe_static_key_remove(
-        self,
-        callbacks: list[Callable[[], Coroutine[Any, Any, None]]],
-        callback_: Callable[[], Coroutine[Any, Any, None]],
-    ) -> None:
-        """Unsubscribe to when static info is removed."""
         callbacks.remove(callback_)
 
     @callback
@@ -345,7 +340,7 @@ class RuntimeEntryData:
             and subscription_key not in stale_state
             and state_type is not CameraState
             and not (
-                state_type is SensorState  # noqa: E721
+                state_type is SensorState
                 and (platform_info := self.info.get(SensorInfo))
                 and (entity_info := platform_info.get(state.key))
                 and (cast(SensorInfo, entity_info)).force_update

@@ -31,13 +31,10 @@ def get_supported_entitites(
     descriptions: tuple[EcovacsCapabilityEntityDescription, ...],
 ) -> list[EcovacsEntity]:
     """Return all supported entities for all devices."""
-    entities: list[EcovacsEntity] = []
-
-    for device in controller.devices(Capabilities):
-        for description in descriptions:
-            if isinstance(device.capabilities, description.device_capabilities) and (
-                capability := description.capability_fn(device.capabilities)
-            ):
-                entities.append(entity_class(device, capability, description))
-
-    return entities
+    return [
+        entity_class(device, capability, description)
+        for device in controller.devices(Capabilities)
+        for description in descriptions
+        if isinstance(device.capabilities, description.device_capabilities)
+        if (capability := description.capability_fn(device.capabilities))
+    ]

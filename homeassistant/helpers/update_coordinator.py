@@ -18,14 +18,7 @@ from typing_extensions import TypeVar
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    Event,
-    HassJob,
-    HassJobType,
-    HomeAssistant,
-    callback,
-)
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
@@ -108,18 +101,6 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         )
 
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
-        job_name = "DataUpdateCoordinator"
-        type_name = type(self).__name__
-        if type_name != job_name:
-            job_name += f" {type_name}"
-        job_name += f" {name}"
-        if entry := self.config_entry:
-            job_name += f" {entry.title} {entry.domain} {entry.entry_id}"
-        self._job = HassJob(
-            self.__wrap_handle_refresh_interval,
-            job_name,
-            job_type=HassJobType.Callback,
-        )
         self._unsub_refresh: CALLBACK_TYPE | None = None
         self._unsub_shutdown: CALLBACK_TYPE | None = None
         self._request_refresh_task: asyncio.TimerHandle | None = None
@@ -155,7 +136,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             await self.async_shutdown()
 
         self._unsub_shutdown = self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, _on_hass_stop
+            EVENT_HOMEASSISTANT_STOP, _on_hass_stop, run_immediately=True
         )
 
     @callback
@@ -251,7 +232,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             int(loop.time()) + self._microsecond + self._update_interval_seconds
         )
         self._unsub_refresh = loop.call_at(
-            next_refresh, hass.async_run_hass_job, self._job
+            next_refresh, self.__wrap_handle_refresh_interval
         ).cancel
 
     @callback

@@ -18,6 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
+    SignalTypeFormat,
     async_dispatcher_connect,
     async_dispatcher_send,
 )
@@ -79,10 +80,14 @@ SUPPORTED_COMPONENTS = {
     "water_heater",
 }
 
-MQTT_DISCOVERY_UPDATED = "mqtt_discovery_updated_{}"
-MQTT_DISCOVERY_NEW = "mqtt_discovery_new_{}_{}"
+MQTT_DISCOVERY_UPDATED: SignalTypeFormat[MQTTDiscoveryPayload] = SignalTypeFormat(
+    "mqtt_discovery_updated_{}"
+)
+MQTT_DISCOVERY_NEW: SignalTypeFormat[MQTTDiscoveryPayload] = SignalTypeFormat(
+    "mqtt_discovery_new_{}_{}"
+)
 MQTT_DISCOVERY_NEW_COMPONENT = "mqtt_discovery_new_component"
-MQTT_DISCOVERY_DONE = "mqtt_discovery_done_{}"
+MQTT_DISCOVERY_DONE: SignalTypeFormat[Any] = SignalTypeFormat("mqtt_discovery_done_{}")
 
 TOPIC_BASE = "~"
 
@@ -403,14 +408,17 @@ async def async_start(  # noqa: C901
                 ):
                     mqtt_data.integration_unsubscribe.pop(key)()
 
-        for topic in topics:
-            key = f"{integration}_{topic}"
-            mqtt_data.integration_unsubscribe[key] = await mqtt.async_subscribe(
-                hass,
-                topic,
-                functools.partial(async_integration_message_received, integration),
-                0,
-            )
+        mqtt_data.integration_unsubscribe.update(
+            {
+                f"{integration}_{topic}": await mqtt.async_subscribe(
+                    hass,
+                    topic,
+                    functools.partial(async_integration_message_received, integration),
+                    0,
+                )
+                for topic in topics
+            }
+        )
 
 
 async def async_stop(hass: HomeAssistant) -> None:

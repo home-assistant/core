@@ -469,7 +469,7 @@ class Filter:
 
     def _filter_state(self, new_state: FilterState) -> FilterState:
         """Implement filter."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def filter_state(self, new_state: _State) -> _State:
         """Implement a common interface for filters."""

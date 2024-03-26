@@ -658,7 +658,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         component: EntityComponent[MediaPlayerEntity] = self.hass.data[DOMAIN]
         if entity_id and (entity := component.get_entity(entity_id)):
             return await entity.async_browse_media(media_content_type, media_content_id)
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_update(self) -> None:
         """Update state in HA."""
