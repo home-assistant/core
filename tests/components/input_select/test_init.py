@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.input_select import (
+    ATTR_AVOID_REPEAT,
     ATTR_OPTION,
     ATTR_OPTIONS,
     CONF_INITIAL,
@@ -14,6 +15,7 @@ from homeassistant.components.input_select import (
     SERVICE_SELECT_NEXT,
     SERVICE_SELECT_OPTION,
     SERVICE_SELECT_PREVIOUS,
+    SERVICE_SELECT_RANDOM,
     SERVICE_SET_OPTIONS,
     STORAGE_VERSION,
     STORAGE_VERSION_MINOR,
@@ -228,6 +230,43 @@ async def test_select_first_last(hass: HomeAssistant) -> None:
 
     state = hass.states.get(entity_id)
     assert state.state == "last option"
+
+
+async def test_select_random(hass: HomeAssistant) -> None:
+    """Test select_random method."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "test_1": {
+                    "options": ["first option", "middle option", "last option"],
+                    "initial": "middle option",
+                }
+            }
+        },
+    )
+    entity_id = "input_select.test_1"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_RANDOM,
+        {ATTR_ENTITY_ID: entity_id, ATTR_AVOID_REPEAT: True},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state.state in ["first option", "last option"]
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_RANDOM,
+        {ATTR_ENTITY_ID: entity_id, ATTR_AVOID_REPEAT: False},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state.state in ["first option", "middle option", "last option"]
 
 
 async def test_config_options(hass: HomeAssistant) -> None:

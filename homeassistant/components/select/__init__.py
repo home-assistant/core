@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+import random
 from typing import TYPE_CHECKING, Any, final
 
 import voluptuous as vol
@@ -21,6 +22,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    ATTR_AVOID_REPEAT,
     ATTR_CYCLE,
     ATTR_OPTION,
     ATTR_OPTIONS,
@@ -30,6 +32,7 @@ from .const import (
     SERVICE_SELECT_NEXT,
     SERVICE_SELECT_OPTION,
     SERVICE_SELECT_PREVIOUS,
+    SERVICE_SELECT_RANDOM,
 )
 
 if TYPE_CHECKING:
@@ -46,6 +49,7 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 _LOGGER = logging.getLogger(__name__)
 
 __all__ = [
+    "ATTR_AVOID_REPEAT",
     "ATTR_CYCLE",
     "ATTR_OPTION",
     "ATTR_OPTIONS",
@@ -59,6 +63,7 @@ __all__ = [
     "SERVICE_SELECT_NEXT",
     "SERVICE_SELECT_OPTION",
     "SERVICE_SELECT_PREVIOUS",
+    "SERVICE_SELECT_RANDOM",
 ]
 
 # mypy: disallow-any-generics
@@ -99,6 +104,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_SELECT_PREVIOUS,
         {vol.Optional(ATTR_CYCLE, default=True): bool},
         SelectEntity.async_previous.__name__,
+    )
+
+    component.async_register_entity_service(
+        SERVICE_SELECT_RANDOM,
+        {vol.Optional(ATTR_AVOID_REPEAT, default=True): bool},
+        SelectEntity.async_random.__name__,
     )
 
     return True
@@ -222,6 +233,19 @@ class SelectEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             await self.async_first()
             return
         await self._async_offset_index(1, cycle)
+
+    @final
+    async def async_random(self, avoid_repeat: bool) -> None:
+        """Select a random option."""
+        if avoid_repeat:
+            options = [
+                option for option in self.options if option != self.current_option
+            ]
+        else:
+            options = self.options
+
+        random_option = random.choice(options)
+        await self.async_select_option(random_option)
 
     @final
     async def async_previous(self, cycle: bool) -> None:

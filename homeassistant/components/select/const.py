@@ -2,6 +2,7 @@
 
 DOMAIN = "select"
 
+ATTR_AVOID_REPEAT = "avoid_repeat"
 ATTR_CYCLE = "cycle"
 ATTR_OPTIONS = "options"
 ATTR_OPTION = "option"
@@ -14,3 +15,4 @@ SERVICE_SELECT_LAST = "select_last"
 SERVICE_SELECT_NEXT = "select_next"
 SERVICE_SELECT_OPTION = "select_option"
 SERVICE_SELECT_PREVIOUS = "select_previous"
+SERVICE_SELECT_RANDOM = "select_random"
