@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from enum import StrEnum
+from functools import cached_property
 
 import ollama
 
@@ -31,7 +32,7 @@ class MessageHistory:
         return sum(m["role"] == MessageRole.USER for m in self.messages)
 
 
-@dataclass
+@dataclass(frozen=True)
 class ExposedEntity:
     """Relevant information about an exposed entity."""
 
@@ -40,7 +41,7 @@ class ExposedEntity:
     names: list[str]
     area_names: list[str]
 
-    @property
+    @cached_property
     def domain(self) -> str:
         """Get domain from entity id."""
         return self.entity_id.split(".", maxsplit=1)[0]

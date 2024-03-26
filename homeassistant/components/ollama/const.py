@@ -76,6 +76,39 @@ KEEP_ALIVE_FOREVER = -1
 DEFAULT_TIMEOUT = 5.0  # seconds
 
 CONF_MAX_HISTORY = "max_history"
-MAX_HISTORY_NO_LIMIT = 0  # no limit
+DEFAULT_MAX_HISTORY = 20
 
 MAX_HISTORY_SECONDS = 60 * 60  # 1 hour
+
+MODEL_NAMES = [  # https://ollama.com/library
+    "gemma",
+    "llama2",
+    "mistral",
+    "mixtral",
+    "llava",
+    "neural-chat",
+    "codellama",
+    "dolphin-mixtral",
+    "qwen",
+    "llama2-uncensored",
+    "mistral-openorca",
+    "deepseek-coder",
+    "nous-hermes2",
+    "phi",
+    "orca-mini",
+    "dolphin-mistral",
+    "wizard-vicuna-uncensored",
+    "vicuna",
+    "tinydolphin",
+    "llama2-chinese",
+    "nomic-embed-text",
+    "openhermes",
+    "zephyr",
+    "tinyllama",
+    "openchat",
+    "wizardcoder",
+    "starcoder",
+    "phind-codellama",
+    "starcoder2",
+]
+DEFAULT_MODEL = "llama2:latest"

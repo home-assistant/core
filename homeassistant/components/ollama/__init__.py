@@ -30,11 +30,11 @@ from .const import (
     CONF_MAX_HISTORY,
     CONF_MODEL,
     CONF_PROMPT,
+    DEFAULT_MAX_HISTORY,
     DEFAULT_PROMPT,
     DEFAULT_TIMEOUT,
     DOMAIN,
     KEEP_ALIVE_FOREVER,
-    MAX_HISTORY_NO_LIMIT,
     MAX_HISTORY_SECONDS,
 )
 from .models import ExposedEntity, MessageHistory, MessageRole
@@ -139,7 +139,7 @@ class OllamaAgent(conversation.AbstractConversationAgent):
         self._prune_old_histories()
 
         # Trim this message history to keep a maximum number of *user* messages
-        max_messages = int(settings.get(CONF_MAX_HISTORY, MAX_HISTORY_NO_LIMIT))
+        max_messages = int(settings.get(CONF_MAX_HISTORY, DEFAULT_MAX_HISTORY))
         self._trim_history(message_history, max_messages)
 
         # Add new user message
@@ -151,6 +151,7 @@ class OllamaAgent(conversation.AbstractConversationAgent):
         try:
             response = await client.chat(
                 model=model,
+                # Make a copy of the messages because we mutate the list later
                 messages=list(message_history.messages),
                 stream=False,
                 keep_alive=KEEP_ALIVE_FOREVER,

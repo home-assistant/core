@@ -9,7 +9,6 @@ TEST_USER_DATA = {
 }
 
 TEST_OPTIONS = {
-    ollama.CONF_MODEL: "test model",
     ollama.CONF_PROMPT: DEFAULT_PROMPT,
     ollama.CONF_MAX_HISTORY: 2,
 }
