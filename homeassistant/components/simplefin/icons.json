@@ -1,0 +1,19 @@
+{
+  "entity": {
+    "sensor": {
+      "balance": {
+        "state_attributes": {
+          "inferred_account_type": {
+            "state": {
+              "checking": "mdi:checkbook",
+              "credit_card": "mdi:credit-card",
+              "savings": "mdi:piggy-bank-outline",
+              "investment": "mdi:chart-areaspline",
+              "mortgage": "mdi:home-city-outline"
+            }
+          }
+        }
+      }
+    }
+  }
+}
