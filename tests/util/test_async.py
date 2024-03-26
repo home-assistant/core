@@ -1,7 +1,6 @@
 """Tests for async util methods from Python source."""
 
 import asyncio
-import sys
 import time
 from unittest.mock import MagicMock, Mock, patch
 
@@ -271,7 +270,6 @@ async def test_callback_is_always_scheduled(hass: HomeAssistant) -> None:
     mock_call_soon_threadsafe.assert_called_once()
 
 
-@pytest.mark.skipif(sys.version_info < (3, 12), reason="Test requires Python 3.12+")
 async def test_create_eager_task_312(hass: HomeAssistant) -> None:
     """Test create_eager_task schedules a task eagerly in the event loop.
 
@@ -289,31 +287,6 @@ async def test_create_eager_task_312(hass: HomeAssistant) -> None:
     task2 = asyncio.create_task(_normal_task())
 
     assert events == ["eager"]
-
-    await asyncio.sleep(0)
-    assert events == ["eager", "normal"]
-    await task1
-    await task2
-
-
-@pytest.mark.skipif(sys.version_info >= (3, 12), reason="Test requires < Python 3.12")
-async def test_create_eager_task_pre_312(hass: HomeAssistant) -> None:
-    """Test create_eager_task schedules a task in the event loop.
-
-    For older python versions, the task is scheduled normally.
-    """
-    events = []
-
-    async def _normal_task():
-        events.append("normal")
-
-    async def _eager_task():
-        events.append("eager")
-
-    task1 = hasync.create_eager_task(_eager_task())
-    task2 = asyncio.create_task(_normal_task())
-
-    assert events == []
 
     await asyncio.sleep(0)
     assert events == ["eager", "normal"]
