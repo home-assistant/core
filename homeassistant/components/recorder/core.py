@@ -15,7 +15,7 @@ import time
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 import psutil_home_assistant as ha_psutil
-from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select
+from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select, update
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine.interfaces import DBAPIConnection
 from sqlalchemy.exc import SQLAlchemyError
@@ -1099,9 +1099,8 @@ class Recorder(threading.Thread):
         elif old_state_id := states_manager.pop_committed(entity_id):
             dbstate.old_state_id = old_state_id
             if old_state:
-                session.query(States).filter_by(state_id=old_state_id).update(
-                    {States.last_reported_ts: old_state.last_reported_timestamp},
-                    synchronize_session=False,
+                states_manager.update_pending_last_reported(
+                    old_state_id, old_state.last_reported_timestamp
                 )
         if entity_removed:
             dbstate.state = None
@@ -1197,7 +1196,23 @@ class Recorder(threading.Thread):
         session = self.event_session
         self._commits_without_expire += 1
 
+        if (
+            pending_last_reported
+            := self.states_manager.get_pending_last_reported_timestamp()
+        ):
+            with session.no_autoflush:
+                session.execute(
+                    update(States),
+                    [
+                        {
+                            "state_id": state_id,
+                            "last_reported_timestamp": last_reported_timestamp,
+                        }
+                        for state_id, last_reported_timestamp in pending_last_reported.items()
+                    ],
+                )
         session.commit()
+
         self._event_session_has_pending_writes = False
         # We just committed the state attributes to the database
         # and we now know the attributes_ids.  We can save
