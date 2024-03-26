@@ -1,4 +1,5 @@
 """Collection of helper methods and classes for cover tests."""
+
 from typing import Any
 
 from homeassistant.components.cover import CoverEntity, CoverEntityFeature
