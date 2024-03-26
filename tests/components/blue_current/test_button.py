@@ -25,29 +25,28 @@ async def test_buttons_created(
 
 
 @pytest.mark.freeze_time("2023-01-13 12:00:00+00:00")
+@pytest.mark.parametrize("button", (button for button in charge_point_buttons))
 async def test_charge_point_buttons(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant, config_entry: MockConfigEntry, button: str
 ) -> None:
     """Test the underlying charge point buttons."""
     await init_integration(hass, config_entry, "button")
 
     entity_registry = er.async_get(hass)
 
-    for button in charge_point_buttons:
-        state = hass.states.get(f"button.101_{button}")
-        assert state is not None
-        assert state.state == "unknown"
-        entry = entity_registry.async_get(f"button.101_{button}")
-        assert entry and entry.unique_id == f"{button}_101"
+    state = hass.states.get(f"button.101_{button}")
+    assert state is not None
+    assert state.state == "unknown"
+    entry = entity_registry.async_get(f"button.101_{button}")
+    assert entry and entry.unique_id == f"{button}_101"
 
-        await hass.services.async_call(
-            "button",
-            "press",
-            {"entity_id": f"button.101_{button}"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
+    await hass.services.async_call(
+        "button",
+        "press",
+        {"entity_id": f"button.101_{button}"},
+        blocking=True,
+    )
 
-        state = hass.states.get(f"button.101_{button}")
-        assert state
-        assert state.state == "2023-01-13T12:00:00+00:00"
+    state = hass.states.get(f"button.101_{button}")
+    assert state
+    assert state.state == "2023-01-13T12:00:00+00:00"

@@ -22,18 +22,11 @@ from .const import DOMAIN
 from .entity import ChargepointEntity
 
 
-@dataclass(frozen=True)
-class ChargePointButtonEntityDescriptionMixin:
-    """Mixin for the called functions."""
+@dataclass(kw_only=True, frozen=True)
+class ChargePointButtonEntityDescription(ButtonEntityDescription):
+    """Describes a Blue Current button entity."""
 
     function: Callable[[Client, str], Coroutine[Any, Any, None]]
-
-
-@dataclass(frozen=True)
-class ChargePointButtonEntityDescription(
-    ButtonEntityDescription, ChargePointButtonEntityDescriptionMixin
-):
-    """Describes a Blue Current button entity."""
 
 
 CHARGE_POINT_BUTTONS = (
@@ -62,7 +55,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Blue Current buttons."""
     connector: Connector = hass.data[DOMAIN][entry.entry_id]
-    button_list: list[ButtonEntity] = [
+    async_add_entities(
         ChargePointButton(
             connector,
             button,
@@ -70,9 +63,7 @@ async def async_setup_entry(
         )
         for evse_id in connector.charge_points
         for button in CHARGE_POINT_BUTTONS
-    ]
-
-    async_add_entities(button_list)
+    )
 
 
 class ChargePointButton(ChargepointEntity, ButtonEntity):
@@ -81,20 +72,19 @@ class ChargePointButton(ChargepointEntity, ButtonEntity):
     def __init__(
         self,
         connector: Connector,
-        button: ChargePointButtonEntityDescription,
+        description: ChargePointButtonEntityDescription,
         evse_id: str,
     ) -> None:
         """Initialize the button."""
         super().__init__(connector, evse_id)
 
         self.has_value = True
-        self.function = button.function
-        self.entity_description = button
-        self._attr_unique_id = f"{button.key}_{evse_id}"
+        self.entity_description: ChargePointButtonEntityDescription = description
+        self._attr_unique_id = f"{description.key}_{evse_id}"
 
     async def async_press(self) -> None:
         """Handle the button press."""
-        await self.function(self.connector.client, self.evse_id)
+        await self.entity_description.function(self.connector.client, self.evse_id)
 
     @callback
     def update_from_latest_data(self) -> None:
