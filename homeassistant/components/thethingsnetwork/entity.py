@@ -38,12 +38,7 @@ class TTNEntity(CoordinatorEntity[TTNCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{app_id}_{self.device_id}")},
             name=self.device_id,
-            # TBD - add more info in the TTN upstream message such as signal strength, transmission time, etc
         )
-
-    # ---------------
-    # Coordinator method
-    # ---------------
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -64,9 +59,6 @@ class TTNEntity(CoordinatorEntity[TTNCoordinator]):
             self._ttn_value = my_entity_update
             self.async_write_ha_state()
 
-    # ---------------
-    # TTN integration additional methods
-    # ---------------
     @property
     def device_id(self) -> str:
         """Return device_id."""

@@ -37,7 +37,8 @@ async def async_setup_entry(
             if (device_id, field_id) not in sensors
             and isinstance(ttn_value, TTNSensorValue)
         }
-        async_add_entities(new_sensors.values())
+        if len(new_sensors):
+            async_add_entities(new_sensors.values())
         sensors.update(new_sensors.keys())
 
     coordinator.async_add_listener(_async_measurement_listener)
