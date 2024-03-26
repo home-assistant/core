@@ -92,7 +92,7 @@ class Searcher:
         self._device_registry = dr.async_get(hass)
         self._entity_registry = er.async_get(hass)
         self._entity_sources = entity_sources
-        self.results: defaultdict[str, set[str]] = defaultdict(set)
+        self.results: defaultdict[ItemType, set[str]] = defaultdict(set)
 
     @callback
     def async_search(self, item_type: ItemType, item_id: str) -> dict[str, set[str]]:
@@ -259,7 +259,7 @@ class Searcher:
 
     @callback
     def _async_search_automation_blueprint(self, blueprint_path: str) -> None:
-        """Find results for a automation blueprint."""
+        """Find results for an automation blueprint."""
         self._add(
             ItemType.AUTOMATION,
             automation.automations_with_blueprint(self.hass, blueprint_path),
@@ -283,33 +283,20 @@ class Searcher:
     @callback
     def _async_search_device(self, device_id: str) -> None:
         """Find results for a device."""
-        # If the device isn't in the registry (should not be possible),
-        # we can't find any results.
-        if not (device_entry := self._device_registry.async_get(device_id)):
-            return
-
-        # The area (and floor) assigned to this device
-        if device_entry.area_id:
-            self._add(ItemType.AREA, device_entry.area_id)
-            self._async_resolve_up_area(device_entry.area_id)
-
-        # Config entry/entries that provided this device
-        self._add(ItemType.CONFIG_ENTRY, device_entry.config_entries)
+        self._async_resolve_up_device(device_id)
 
         # Automations referencing this device
         self._add(
             ItemType.AUTOMATION,
-            automation.automations_with_device(self.hass, device_entry.id),
+            automation.automations_with_device(self.hass, device_id),
         )
 
         # Scripts referencing this device
-        self._add(
-            ItemType.SCRIPT, script.scripts_with_device(self.hass, device_entry.id)
-        )
+        self._add(ItemType.SCRIPT, script.scripts_with_device(self.hass, device_id))
 
         # Entities of this device
         for entity_entry in er.async_entries_for_device(
-            self._entity_registry, device_entry.id
+            self._entity_registry, device_id
         ):
             self._add(ItemType.ENTITY, entity_entry.entity_id)
             # Add all entity information as well
@@ -551,11 +538,9 @@ class Searcher:
 
             # Add config entry that provided this entity
             self._add(ItemType.CONFIG_ENTRY, entity_entry.config_entry_id)
-        elif (
-            source := self._entity_sources.get(entity_id)
-        ) and "config_entry" in source:
+        elif source := self._entity_sources.get(entity_id):
             # Add config entry that provided this entity
-            self._add(ItemType.CONFIG_ENTRY, source["config_entry"])
+            self._add(ItemType.CONFIG_ENTRY, source.get("config_entry"))
 
     @callback
     def _async_resolve_up_area(self, area_id: str) -> None:

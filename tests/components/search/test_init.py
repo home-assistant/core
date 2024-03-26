@@ -619,7 +619,7 @@ async def test_search(
         },
         ItemType.FLOOR: {first_floor.floor_id, second_floor.floor_id},
         ItemType.GROUP: {"group.wled", "group.wled_hue"},
-        ItemType.LABEL: {label_other.label_id},
+        ItemType.LABEL: {label_christmas.label_id, label_other.label_id},
         ItemType.SCENE: {"scene.scene_wled_seg_1", scene_wled_hue_entity.entity_id},
         ItemType.SCRIPT: {"script.wled"},
     }
@@ -635,7 +635,7 @@ async def test_search(
         },
         ItemType.FLOOR: {first_floor.floor_id, second_floor.floor_id},
         ItemType.GROUP: {"group.wled", "group.wled_hue"},
-        ItemType.LABEL: {label_other.label_id},
+        ItemType.LABEL: {label_christmas.label_id, label_other.label_id},
         ItemType.SCENE: {"scene.scene_wled_seg_1", scene_wled_hue_entity.entity_id},
         ItemType.SCRIPT: {"script.wled"},
     }
