@@ -2039,7 +2039,7 @@ def _fast_build_sum_list(
     ]
 
 
-def _sorted_statistics_to_dict(  # noqa: C901
+def _sorted_statistics_to_dict(
     hass: HomeAssistant,
     session: Session,
     stats: Sequence[Row[Any]],

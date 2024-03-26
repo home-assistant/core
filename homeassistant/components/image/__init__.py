@@ -33,7 +33,7 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
-from .const import DOMAIN, IMAGE_TIMEOUT  # noqa: F401
+from .const import DOMAIN, IMAGE_TIMEOUT
 
 if TYPE_CHECKING:
     from functools import cached_property
@@ -190,7 +190,7 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def image(self) -> bytes | None:
         """Return bytes of image."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def _fetch_url(self, url: str) -> httpx.Response | None:
         """Fetch a URL."""
@@ -278,7 +278,7 @@ class ImageView(HomeAssistantView):
     async def get(self, request: web.Request, entity_id: str) -> web.StreamResponse:
         """Start a GET request."""
         if (image_entity := self.component.get_entity(entity_id)) is None:
-            raise web.HTTPNotFound()
+            raise web.HTTPNotFound
 
         authenticated = (
             request[KEY_AUTHENTICATED]
@@ -289,9 +289,9 @@ class ImageView(HomeAssistantView):
             # Attempt with invalid bearer token, raise unauthorized
             # so ban middleware can handle it.
             if hdrs.AUTHORIZATION in request.headers:
-                raise web.HTTPUnauthorized()
+                raise web.HTTPUnauthorized
             # Invalid sigAuth or image entity access token
-            raise web.HTTPForbidden()
+            raise web.HTTPForbidden
 
         return await self.handle(request, image_entity)
 
@@ -302,7 +302,7 @@ class ImageView(HomeAssistantView):
         try:
             image = await _async_get_image(image_entity, IMAGE_TIMEOUT)
         except (HomeAssistantError, ValueError) as ex:
-            raise web.HTTPInternalServerError() from ex
+            raise web.HTTPInternalServerError from ex
 
         return web.Response(body=image.content, content_type=image.content_type)
 
@@ -339,25 +339,43 @@ async def async_get_still_stream(
         return True
 
     event = asyncio.Event()
+    timed_out = False
 
     @callback
     def _async_image_state_update(_event: Event[EventStateChangedData]) -> None:
         """Write image to stream."""
         event.set()
 
+    @callback
+    def _async_timeout_reached() -> None:
+        """Handle timeout."""
+        nonlocal timed_out
+        timed_out = True
+        event.set()
+
     hass = request.app[KEY_HASS]
+    loop = hass.loop
     remove = async_track_state_change_event(
         hass,
         image_entity.entity_id,
         _async_image_state_update,
     )
+    timeout_handle = None
     try:
         while True:
             if not await _write_frame():
                 return response
+            # Ensure that an image is sent at least every 55 seconds
+            # Otherwise some devices go blank
+            timeout_handle = loop.call_later(55, _async_timeout_reached)
             await event.wait()
             event.clear()
+            if not timed_out:
+                timeout_handle.cancel()
+            timed_out = False
     finally:
+        if timeout_handle:
+            timeout_handle.cancel()
         remove()
 
 

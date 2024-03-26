@@ -201,13 +201,13 @@ async def test_system_groups_store_id_and_name(
 async def test_loading_only_once(hass: HomeAssistant) -> None:
     """Test only one storage load is allowed."""
     store = auth_store.AuthStore(hass)
-    with patch(
-        "homeassistant.helpers.entity_registry.async_get"
-    ) as mock_ent_registry, patch(
-        "homeassistant.helpers.device_registry.async_get"
-    ) as mock_dev_registry, patch(
-        "homeassistant.helpers.storage.Store.async_load", return_value=None
-    ) as mock_load:
+    with (
+        patch("homeassistant.helpers.entity_registry.async_get") as mock_ent_registry,
+        patch("homeassistant.helpers.device_registry.async_get") as mock_dev_registry,
+        patch(
+            "homeassistant.helpers.storage.Store.async_load", return_value=None
+        ) as mock_load,
+    ):
         await store.async_load()
         with pytest.raises(RuntimeError, match="Auth storage is already loaded"):
             await store.async_load()

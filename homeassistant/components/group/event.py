@@ -34,7 +34,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import GroupEntity
+from .entity import GroupEntity
 
 DEFAULT_NAME = "Event group"
 

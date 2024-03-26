@@ -200,6 +200,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.12_111111111111_sensed_a',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -212,6 +213,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.12_111111111111_sensed_b',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -820,6 +822,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.29_111111111111_sensed_0',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -832,6 +835,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.29_111111111111_sensed_1',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -844,6 +848,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.29_111111111111_sensed_2',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -851,13 +856,14 @@
       'attributes': ReadOnlyDict({
         'device_file': '/29.111111111111/sensed.3',
         'friendly_name': '29.111111111111 Sensed 3',
-        'raw_value': 0.0,
+        'raw_value': None,
       }),
       'context': <ANY>,
       'entity_id': 'binary_sensor.29_111111111111_sensed_3',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': 'off',
+      'state': 'unknown',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -868,6 +874,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.29_111111111111_sensed_4',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -880,6 +887,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.29_111111111111_sensed_5',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -892,6 +900,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.29_111111111111_sensed_6',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -904,6 +913,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.29_111111111111_sensed_7',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -1058,6 +1068,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.3a_111111111111_sensed_a',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -1070,6 +1081,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.3a_111111111111_sensed_b',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -1232,6 +1244,46 @@
   ])
 # ---
 # name: test_binary_sensors[7E.222222222222].2
+  list([
+  ])
+# ---
+# name: test_binary_sensors[A6.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          'A6.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS2438',
+      'name': 'A6.111111111111',
+      'name_by_user': None,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_binary_sensors[A6.111111111111].1
+  list([
+  ])
+# ---
+# name: test_binary_sensors[A6.111111111111].2
   list([
   ])
 # ---
@@ -1487,6 +1539,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.ef_111111111113_hub_short_on_branch_0',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -1500,6 +1553,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.ef_111111111113_hub_short_on_branch_1',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -1513,6 +1567,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.ef_111111111113_hub_short_on_branch_2',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -1526,6 +1581,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.ef_111111111113_hub_short_on_branch_3',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
