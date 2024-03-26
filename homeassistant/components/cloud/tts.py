@@ -179,6 +179,15 @@ class CloudTTSEntity(TextToSpeechEntity):
         gender = handle_deprecated_gender(self.hass, gender)
         original_voice: str | None = options.get(ATTR_VOICE)
         voice = handle_deprecated_voice(self.hass, original_voice)
+        if voice not in TTS_VOICES[language]:
+            default_voice = TTS_VOICES[language][0]
+            _LOGGER.debug(
+                "Unsupported voice %s detected, falling back to default %s for %s",
+                voice,
+                default_voice,
+                language,
+            )
+            voice = default_voice
         # Process TTS
         try:
             data = await self.cloud.voice.process_tts(
@@ -249,6 +258,15 @@ class CloudProvider(Provider):
         gender = handle_deprecated_gender(self.hass, gender)
         original_voice: str | None = options.get(ATTR_VOICE)
         voice = handle_deprecated_voice(self.hass, original_voice)
+        if voice not in TTS_VOICES[language]:
+            default_voice = TTS_VOICES[language][0]
+            _LOGGER.debug(
+                "Unsupported voice %s detected, falling back to default %s for %s",
+                voice,
+                default_voice,
+                language,
+            )
+            voice = default_voice
         # Process TTS
         try:
             data = await self.cloud.voice.process_tts(
