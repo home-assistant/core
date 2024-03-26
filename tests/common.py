@@ -38,7 +38,7 @@ from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
 from homeassistant.config import async_process_component_config
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_CLOSE,
@@ -76,6 +76,7 @@ from homeassistant.helpers import (
     translation,
 )
 from homeassistant.helpers.dispatcher import (
+    SignalType,
     async_dispatcher_connect,
     async_dispatcher_send,
 )
@@ -1497,7 +1498,9 @@ def async_capture_events(hass: HomeAssistant, event_name: str) -> list[Event]:
 
 
 @callback
-def async_mock_signal(hass: HomeAssistant, signal: str) -> list[tuple[Any]]:
+def async_mock_signal(
+    hass: HomeAssistant, signal: SignalType[Any] | str
+) -> list[tuple[Any]]:
     """Catch all dispatches to a signal."""
     calls = []
 
@@ -1683,9 +1686,8 @@ def setup_test_component_platform(
         async_setup_platform=_async_setup_platform,
     )
 
-    # avoid loading config_entry if not needed
+    # avoid creating config entry setup if not needed
     if from_config_entry:
-        from homeassistant.config_entries import ConfigEntry
 
         async def _async_setup_entry(
             hass: HomeAssistant,

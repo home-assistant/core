@@ -20,8 +20,8 @@ DATA_DISPATCHER = "dispatcher"
 
 
 @dataclass(frozen=True)
-class SignalType(Generic[*_Ts]):
-    """Generic string class for signal to improve typing."""
+class _SignalTypeBase(Generic[*_Ts]):
+    """Generic base class for SignalType."""
 
     name: str
 
@@ -38,6 +38,20 @@ class SignalType(Generic[*_Ts]):
         if isinstance(other, SignalType):
             return self.name == other.name
         return False
+
+
+@dataclass(frozen=True, eq=False)
+class SignalType(_SignalTypeBase[*_Ts]):
+    """Generic string class for signal to improve typing."""
+
+
+@dataclass(frozen=True, eq=False)
+class SignalTypeFormat(_SignalTypeBase[*_Ts]):
+    """Generic string class for signal. Requires call to 'format' before use."""
+
+    def format(self, *args: Any, **kwargs: Any) -> SignalType[*_Ts]:
+        """Format name and return new SignalType instance."""
+        return SignalType(self.name.format(*args, **kwargs))
 
 
 _DispatcherDataType = dict[
