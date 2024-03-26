@@ -6,9 +6,9 @@ from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from functools import partial
+from functools import cached_property, partial
 import logging
-from typing import TYPE_CHECKING, Any, Protocol, cast
+from typing import Any, Protocol, cast
 
 import voluptuous as vol
 
@@ -111,12 +111,6 @@ from .const import (
 )
 from .helpers import async_get_blueprints
 from .trace import trace_automation
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 

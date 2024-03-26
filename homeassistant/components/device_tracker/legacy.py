@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine, Sequence
 from datetime import datetime, timedelta
+from functools import cached_property
 import hashlib
 from types import ModuleType
 from typing import Any, Final, Protocol, final
@@ -13,7 +14,6 @@ import attr
 import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.backports.functools import cached_property
 from homeassistant.components import zone
 from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config import (

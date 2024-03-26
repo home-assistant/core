@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from functools import cached_property
 import logging
-from typing import TYPE_CHECKING, final
+from typing import final
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -24,12 +25,6 @@ from .const import (
     LawnMowerActivity,
     LawnMowerEntityFeature,
 )
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 
 SCAN_INTERVAL = timedelta(seconds=60)
 

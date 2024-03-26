@@ -6,8 +6,9 @@ from collections.abc import Callable
 from datetime import timedelta
 from enum import IntFlag, StrEnum
 import functools as ft
+from functools import cached_property
 import logging
-from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar, final
+from typing import Any, ParamSpec, TypeVar, final
 
 import voluptuous as vol
 
@@ -45,11 +46,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from . import group as group_pre_import  # noqa: F401
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
 
 _LOGGER = logging.getLogger(__name__)
 

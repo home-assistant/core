@@ -6,8 +6,9 @@ from collections.abc import Mapping
 from datetime import timedelta
 from enum import IntFlag
 import functools as ft
+from functools import cached_property
 import logging
-from typing import TYPE_CHECKING, Any, final
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -43,12 +44,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import group as group_pre_import  # noqa: F401
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 
 DEFAULT_MIN_TEMP = 110
 DEFAULT_MAX_TEMP = 140

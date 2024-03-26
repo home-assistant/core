@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 from enum import IntFlag
 import functools as ft
+from functools import cached_property
 import logging
 import re
 from typing import TYPE_CHECKING, Any, final
@@ -43,11 +44,6 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, StateType
 
 from . import group as group_pre_import  # noqa: F401
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
