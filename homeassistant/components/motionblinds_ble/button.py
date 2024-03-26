@@ -60,15 +60,13 @@ async def async_setup_entry(
     device: MotionDevice = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        [
-            MotionblindsBLEButtonEntity(
-                device,
-                entry,
-                entity_description,
-                unique_id_suffix=entity_description.key,
-            )
-            for entity_description in BUTTON_TYPES
-        ]
+        MotionblindsBLEButtonEntity(
+            device,
+            entry,
+            entity_description,
+            unique_id_suffix=entity_description.key,
+        )
+        for entity_description in BUTTON_TYPES
     )
 
 
