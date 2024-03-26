@@ -87,9 +87,9 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
         self.boot_time: datetime | None = None
 
         self._initial_update: bool = True
-        self.update_subscribers: dict[
-            tuple[str, str], set[str]
-        ] = self.set_subscribers_tuples(arguments)
+        self.update_subscribers: dict[tuple[str, str], set[str]] = (
+            self.set_subscribers_tuples(arguments)
+        )
 
     def set_subscribers_tuples(
         self, arguments: list[str]

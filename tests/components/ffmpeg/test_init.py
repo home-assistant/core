@@ -8,6 +8,7 @@ from homeassistant.components.ffmpeg import (
     SERVICE_RESTART,
     SERVICE_START,
     SERVICE_STOP,
+    get_ffmpeg_manager,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -251,3 +252,45 @@ async def test_async_get_image_with_extra_cmd_width_height(hass: HomeAssistant) 
     assert get_image_mock.call_args_list == [
         call("rtsp://fake", output_format="mjpeg", extra_cmd="-vf any -s 640x480")
     ]
+
+
+async def test_modern_ffmpeg(
+    hass: HomeAssistant,
+) -> None:
+    """Test modern ffmpeg uses the new ffmpeg content type."""
+    with assert_setup_component(1):
+        await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+
+    manager = get_ffmpeg_manager(hass)
+    assert "ffmpeg" in manager.ffmpeg_stream_content_type
+
+
+async def test_legacy_ffmpeg(
+    hass: HomeAssistant,
+) -> None:
+    """Test legacy ffmpeg uses the old ffserver content type."""
+    with (
+        assert_setup_component(1),
+        patch(
+            "homeassistant.components.ffmpeg.FFVersion.get_version", return_value="3.0"
+        ),
+        patch("homeassistant.components.ffmpeg.is_official_image", return_value=False),
+    ):
+        await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+
+    manager = get_ffmpeg_manager(hass)
+    assert "ffserver" in manager.ffmpeg_stream_content_type
+
+
+async def test_ffmpeg_using_official_image(
+    hass: HomeAssistant,
+) -> None:
+    """Test ffmpeg using official image is the new ffmpeg content type."""
+    with (
+        assert_setup_component(1),
+        patch("homeassistant.components.ffmpeg.is_official_image", return_value=True),
+    ):
+        await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+
+    manager = get_ffmpeg_manager(hass)
+    assert "ffmpeg" in manager.ffmpeg_stream_content_type

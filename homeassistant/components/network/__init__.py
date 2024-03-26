@@ -140,7 +140,7 @@ async def async_get_announce_addresses(hass: HomeAssistant) -> list[str]:
     if default_ip := await async_get_source_ip(hass, target_ip=MDNS_TARGET_IP):
         if default_ip in addresses:
             addresses.remove(default_ip)
-        return [default_ip] + list(addresses)
+        return [default_ip, *addresses]
     return list(addresses)
 
 

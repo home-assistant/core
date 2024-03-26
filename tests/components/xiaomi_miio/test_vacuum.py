@@ -372,13 +372,7 @@ async def test_xiaomi_vacuum_services(
                 "velocity": -0.1,
             },
             "manual_control",
-            mock.call(
-                **{
-                    "duration": 1000,
-                    "rotation": -40,
-                    "velocity": -0.1,
-                }
-            ),
+            mock.call(duration=1000, rotation=-40, velocity=-0.1),
         ),
         (
             SERVICE_STOP_REMOTE_CONTROL,
@@ -397,13 +391,7 @@ async def test_xiaomi_vacuum_services(
                 "velocity": 0.1,
             },
             "manual_control_once",
-            mock.call(
-                **{
-                    "duration": 2000,
-                    "rotation": 120,
-                    "velocity": 0.1,
-                }
-            ),
+            mock.call(duration=2000, rotation=120, velocity=0.1),
         ),
         (
             SERVICE_CLEAN_ZONE,

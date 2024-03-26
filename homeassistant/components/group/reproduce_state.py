@@ -25,6 +25,7 @@ async def async_reproduce_states(
             state.state,
             state.attributes,
             last_changed=state.last_changed,
+            last_reported=state.last_reported,
             last_updated=state.last_updated,
             context=state.context,
         )

@@ -1,6 +1,5 @@
 """Tests for the flux_led number platform."""
 
-
 from datetime import timedelta
 
 from flux_led.const import COLOR_MODE_RGB as FLUX_COLOR_MODE_RGB

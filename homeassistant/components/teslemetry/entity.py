@@ -48,6 +48,11 @@ class TeslemetryVehicleEntity(CoordinatorEntity[TeslemetryVehicleDataCoordinator
             serial_number=vehicle.vin,
         )
 
+    @property
+    def _value(self) -> Any | None:
+        """Return a specific value from coordinator data."""
+        return self.coordinator.data.get(self.key)
+
     async def wake_up_if_asleep(self) -> None:
         """Wake up the vehicle if its asleep."""
         async with self._wakelock:
