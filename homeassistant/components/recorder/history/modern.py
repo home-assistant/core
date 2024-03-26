@@ -52,32 +52,43 @@ _FIELD_MAP = {
 
 
 def _stmt_and_join_attributes(
-    no_attributes: bool, include_last_changed: bool
+    no_attributes: bool,
+    include_last_changed: bool,
+    include_last_reported: bool,
 ) -> Select:
     """Return the statement and if StateAttributes should be joined."""
     _select = select(States.metadata_id, States.state, States.last_updated_ts)
     if include_last_changed:
         _select = _select.add_columns(States.last_changed_ts)
+    if include_last_reported:
+        _select = _select.add_columns(States.last_reported_ts)
     if not no_attributes:
         _select = _select.add_columns(SHARED_ATTR_OR_LEGACY_ATTRIBUTES)
     return _select
 
 
 def _stmt_and_join_attributes_for_start_state(
-    no_attributes: bool, include_last_changed: bool
+    no_attributes: bool,
+    include_last_changed: bool,
+    include_last_reported: bool,
 ) -> Select:
     """Return the statement and if StateAttributes should be joined."""
     _select = select(States.metadata_id, States.state)
     _select = _select.add_columns(literal(value=0).label("last_updated_ts"))
     if include_last_changed:
         _select = _select.add_columns(literal(value=0).label("last_changed_ts"))
+    if include_last_reported:
+        _select = _select.add_columns(literal(value=0).label("last_reported_ts"))
     if not no_attributes:
         _select = _select.add_columns(SHARED_ATTR_OR_LEGACY_ATTRIBUTES)
     return _select
 
 
 def _select_from_subquery(
-    subquery: Subquery | CompoundSelect, no_attributes: bool, include_last_changed: bool
+    subquery: Subquery | CompoundSelect,
+    no_attributes: bool,
+    include_last_changed: bool,
+    include_last_reported: bool,
 ) -> Select:
     """Return the statement to select from the union."""
     base_select = select(
@@ -87,6 +98,8 @@ def _select_from_subquery(
     )
     if include_last_changed:
         base_select = base_select.add_columns(subquery.c.last_changed_ts)
+    if include_last_reported:
+        base_select = base_select.add_columns(subquery.c.last_reported_ts)
     if no_attributes:
         return base_select
     return base_select.add_columns(subquery.c.attributes)
@@ -134,7 +147,7 @@ def _significant_states_stmt(
 ) -> Select | CompoundSelect:
     """Query the database for significant state changes."""
     include_last_changed = not significant_changes_only
-    stmt = _stmt_and_join_attributes(no_attributes, include_last_changed)
+    stmt = _stmt_and_join_attributes(no_attributes, include_last_changed, False)
     if significant_changes_only:
         # Since we are filtering on entity_id (metadata_id) we can avoid
         # the join of the states_meta table since we already know which
@@ -174,13 +187,17 @@ def _significant_states_stmt(
             ).subquery(),
             no_attributes,
             include_last_changed,
+            False,
         ),
-        _select_from_subquery(stmt.subquery(), no_attributes, include_last_changed),
+        _select_from_subquery(
+            stmt.subquery(), no_attributes, include_last_changed, False
+        ),
     ).subquery()
     return _select_from_subquery(
         unioned_subquery,
         no_attributes,
         include_last_changed,
+        False,
     ).order_by(unioned_subquery.c.metadata_id, unioned_subquery.c.last_updated_ts)
 
 
@@ -312,7 +329,7 @@ def _state_changed_during_period_stmt(
     run_start_ts: float | None,
 ) -> Select | CompoundSelect:
     stmt = (
-        _stmt_and_join_attributes(no_attributes, False)
+        _stmt_and_join_attributes(no_attributes, False, True)
         .filter(
             (
                 (States.last_changed_ts == States.last_updated_ts)
@@ -344,18 +361,22 @@ def _state_changed_during_period_stmt(
                     single_metadata_id,
                     no_attributes,
                     False,
+                    True,
                 ).subquery(),
                 no_attributes,
                 False,
+                True,
             ),
             _select_from_subquery(
                 stmt.subquery(),
                 no_attributes,
                 False,
+                True,
             ),
         ).subquery(),
         no_attributes,
         False,
+        True,
     )
 
 
@@ -427,7 +448,7 @@ def state_changes_during_period(
 
 def _get_last_state_changes_single_stmt(metadata_id: int) -> Select:
     return (
-        _stmt_and_join_attributes(False, False)
+        _stmt_and_join_attributes(False, False, False)
         .join(
             (
                 lastest_state_for_metadata_id := (
@@ -457,7 +478,7 @@ def _get_last_state_changes_multiple_stmt(
     number_of_states: int, metadata_id: int
 ) -> Select:
     return (
-        _stmt_and_join_attributes(False, False)
+        _stmt_and_join_attributes(False, False, True)
         .where(
             States.state_id
             == (
@@ -530,7 +551,9 @@ def _get_start_time_state_for_entities_stmt(
     # We got an include-list of entities, accelerate the query by filtering already
     # in the inner and the outer query.
     stmt = (
-        _stmt_and_join_attributes_for_start_state(no_attributes, include_last_changed)
+        _stmt_and_join_attributes_for_start_state(
+            no_attributes, include_last_changed, False
+        )
         .join(
             (
                 most_recent_states_for_entities_by_date := (
@@ -598,6 +621,7 @@ def _get_start_time_state_stmt(
             single_metadata_id,
             no_attributes,
             include_last_changed,
+            False,
         )
     # We have more than one entity to look at so we need to do a query on states
     # since the last recorder run started.
@@ -615,11 +639,14 @@ def _get_single_entity_start_time_stmt(
     metadata_id: int,
     no_attributes: bool,
     include_last_changed: bool,
+    include_last_reported: bool,
 ) -> Select:
     # Use an entirely different (and extremely fast) query if we only
     # have a single entity id
     stmt = (
-        _stmt_and_join_attributes_for_start_state(no_attributes, include_last_changed)
+        _stmt_and_join_attributes_for_start_state(
+            no_attributes, include_last_changed, include_last_reported
+        )
         .filter(
             States.last_updated_ts < epoch_time,
             States.metadata_id == metadata_id,

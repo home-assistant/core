@@ -193,6 +193,7 @@ def assert_states_equal_without_context(state: State, other: State) -> None:
     """Assert that two states are equal, ignoring context."""
     assert_states_equal_without_context_and_last_changed(state, other)
     assert state.last_changed == other.last_changed
+    assert state.last_reported == other.last_reported
 
 
 def assert_states_equal_without_context_and_last_changed(

@@ -529,13 +529,18 @@ class States(Base):
             # When json_loads fails
             _LOGGER.exception("Error converting row to state: %s", self)
             return None
+        last_updated = dt_util.utc_from_timestamp(self.last_updated_ts or 0)
         if self.last_changed_ts is None or self.last_changed_ts == self.last_updated_ts:
-            last_changed = last_updated = dt_util.utc_from_timestamp(
-                self.last_updated_ts or 0
-            )
+            last_changed = dt_util.utc_from_timestamp(self.last_updated_ts or 0)
         else:
-            last_updated = dt_util.utc_from_timestamp(self.last_updated_ts or 0)
             last_changed = dt_util.utc_from_timestamp(self.last_changed_ts or 0)
+        if (
+            self.last_reported_ts is None
+            or self.last_reported_ts == self.last_updated_ts
+        ):
+            last_reported = dt_util.utc_from_timestamp(self.last_updated_ts or 0)
+        else:
+            last_reported = dt_util.utc_from_timestamp(self.last_reported_ts or 0)
         return State(
             self.entity_id or "",
             self.state,  # type: ignore[arg-type]
@@ -543,7 +548,7 @@ class States(Base):
             # for newer states
             attrs,
             last_changed=last_changed,
-            last_reported=last_updated,  # Recorder does not yet record last_reported
+            last_reported=last_reported,
             last_updated=last_updated,
             context=context,
             validate_entity_id=validate_entity_id,
