@@ -37,6 +37,7 @@ create_event:
       selector:
         text:
 list_events:
+  status: deprecated
   target:
     entity:
       domain: calendar
