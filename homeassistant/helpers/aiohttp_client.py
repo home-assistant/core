@@ -310,6 +310,7 @@ def _async_get_connector(
         ssl=ssl_context,
         limit=MAXIMUM_CONNECTIONS,
         limit_per_host=MAXIMUM_CONNECTIONS_PER_HOST,
+        resolver=aiohttp.AsyncResolver(),
     )
     connectors[connector_key] = connector
 
