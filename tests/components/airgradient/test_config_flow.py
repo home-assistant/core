@@ -1,4 +1,5 @@
 """Tests for the AirGradient config flow."""
+
 from ipaddress import ip_address
 from unittest.mock import AsyncMock
 

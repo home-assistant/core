@@ -23,15 +23,18 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
         yield mock_setup_entry
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def mock_airgradient_client() -> Generator[AsyncMock, None, None]:
     """Mock an AirGradient client."""
-    with patch(
-        "homeassistant.components.airgradient.coordinator.AirGradientClient",
-        autospec=True,
-    ) as mock_client, patch(
-        "homeassistant.components.airgradient.config_flow.AirGradientClient",
-        new=mock_client,
+    with (
+        patch(
+            "homeassistant.components.airgradient.coordinator.AirGradientClient",
+            autospec=True,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.airgradient.config_flow.AirGradientClient",
+            new=mock_client,
+        ),
     ):
         client = mock_client.return_value
         client.get_current_measures.return_value = Measures.from_json(

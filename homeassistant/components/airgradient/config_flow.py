@@ -1,4 +1,5 @@
 """Config flow for Airgradient."""
+
 from typing import Any
 
 from airgradient import AirGradientClient, AirGradientError
