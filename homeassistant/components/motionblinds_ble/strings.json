@@ -40,7 +40,7 @@
         "name": "[%key:common::action::connect%]"
       },
       "disconnect": {
-        "name": "Disconnect"
+        "name": "[%key:common::action::disconnect%]"
       },
       "favorite": {
         "name": "Favorite"
