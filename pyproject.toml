@@ -18,10 +18,10 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Home Automation",
 ]
-requires-python = ">=3.11.0"
+requires-python = ">=3.12.0"
 dependencies    = [
     "aiohttp==3.9.3",
     "aiohttp_cors==0.7.0",
@@ -90,7 +90,7 @@ include-package-data = true
 include = ["homeassistant*"]
 
 [tool.pylint.MAIN]
-py-version = "3.11"
+py-version = "3.12"
 ignore = [
     "tests",
 ]
@@ -705,6 +705,8 @@ ignore = [
     "UP007", # keep type annotation style as is
     # Ignored due to performance: https://github.com/charliermarsh/ruff/issues/2923
     "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
+    # Ignored due to incompatible with mypy: https://github.com/python/mypy/issues/15238
+    "UP040", # Checks for use of TypeAlias annotation for declaring type aliases.
 
     # May conflict with the formatter, https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
     "W191",
