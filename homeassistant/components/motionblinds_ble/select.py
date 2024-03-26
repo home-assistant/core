@@ -13,7 +13,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_SPEED, CONF_MAC_CODE, DOMAIN, ICON_SPEED
+from .const import ATTR_SPEED, CONF_MAC_CODE, DOMAIN
 from .entity import MotionblindsBLEEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +25,6 @@ SELECT_TYPES: dict[str, SelectEntityDescription] = {
     ATTR_SPEED: SelectEntityDescription(
         key=ATTR_SPEED,
         translation_key=ATTR_SPEED,
-        icon=ICON_SPEED,
         entity_category=EntityCategory.CONFIG,
         options=[str(speed_level.value) for speed_level in MotionSpeedLevel],
     )
