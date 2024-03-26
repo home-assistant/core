@@ -45,5 +45,41 @@
         "name": "Uptime"
       }
     }
+  },
+  "services": {
+    "dump": {
+      "name": "Dump IPP Response",
+      "description": "Sends a request payload to the IPP server and dumps its raw binary output as base64-encoded string.",
+      "fields": {
+        "host": {
+          "name": "[%key:common::config_flow::data::host%]",
+          "description": "The hostname or IP address of the IPP server."
+        },
+        "port": {
+          "name": "[%key:common::config_flow::data::port%]",
+          "description": "The port of the IPP server."
+        },
+        "base_path": {
+          "name": "Base Path",
+          "description": "The relative path to the printer on the IPP server."
+        },
+        "ssl": {
+          "name": "[%key:common::config_flow::data::ssl%]",
+          "description": "Use SSL when connecting to the IPP server."
+        },
+        "verify_ssl": {
+          "name": "[%key:common::config_flow::data::verify_ssl%]",
+          "description": "Enable SSL certificate verification when connecting to the IPP server."
+        },
+        "operation": {
+          "name": "IPP Operation",
+          "description": "The IPP Operation to request of the IPP server."
+        },
+        "payload": {
+          "name": "Payload",
+          "description": "The payload to send to the IPP server."
+        }
+      }
+    }
   }
 }

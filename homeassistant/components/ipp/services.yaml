@@ -1,0 +1,35 @@
+dump:
+  fields:
+    host:
+      example: "192.168.1.50"
+      selector:
+        text:
+    port:
+      default: 631
+      example: 631
+      selector:
+        number:
+          min: 1
+          max: 65535
+    base_path:
+      default: "/ipp/print"
+      example: "/ipp/print"
+      selector:
+        text:
+    ssl:
+      selector:
+        boolean:
+    verify_ssl:
+      selector:
+        boolean:
+    operation:
+      selector:
+        select:
+          options:
+            - "GET_JOB_ATTRIBUTES"
+            - "GET_JOBS"
+            - "GET_PRINTER_ATTRIBUTES"
+    payload:
+      example: "{}"
+      selector:
+        object:

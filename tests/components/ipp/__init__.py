@@ -6,6 +6,8 @@ from homeassistant.components import zeroconf
 from homeassistant.components.ipp.const import CONF_BASE_PATH
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
 
+from tests.common import get_fixture_path
+
 ATTR_HOSTNAME = "hostname"
 ATTR_PROPERTIES = "properties"
 
@@ -49,3 +51,8 @@ MOCK_ZEROCONF_IPPS_SERVICE_INFO = zeroconf.ZeroconfServiceInfo(
     port=ZEROCONF_PORT,
     properties={"rp": ZEROCONF_RP},
 )
+
+
+def load_binary_fixture(filename: str) -> bytes:
+    """Load a binary fixture."""
+    return get_fixture_path(filename, "ipp").read_bytes()
