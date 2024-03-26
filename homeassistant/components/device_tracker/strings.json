@@ -36,7 +36,8 @@
             "bluetooth_le": "Bluetooth LE",
             "bluetooth": "Bluetooth",
             "gps": "GPS",
-            "router": "Router"
+            "router": "Router",
+            "wifi": "Wi-Fi"
           }
         }
       }

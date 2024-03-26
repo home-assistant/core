@@ -535,7 +535,10 @@ class Person(collection.CollectionEntity, RestoreEntity):
             if not state or state.state in IGNORE_STATES:
                 continue
 
-            if state.attributes.get(ATTR_SOURCE_TYPE) == SourceType.GPS:
+            if state.attributes.get(ATTR_SOURCE_TYPE) in [
+                SourceType.GPS,
+                SourceType.WIFI,
+            ]:
                 latest_gps = _get_latest(latest_gps, state)
             elif state.state == STATE_HOME:
                 latest_non_gps_home = _get_latest(latest_non_gps_home, state)

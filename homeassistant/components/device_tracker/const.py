@@ -31,6 +31,7 @@ class SourceType(StrEnum):
     ROUTER = "router"
     BLUETOOTH = "bluetooth"
     BLUETOOTH_LE = "bluetooth_le"
+    WIFI = "wifi"
 
 
 # SOURCE_TYPE_* below are deprecated as of 2022.9
