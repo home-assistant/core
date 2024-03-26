@@ -47,6 +47,7 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
+    _attr_code_arm_required = False
 
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize the alarm control panel."""
