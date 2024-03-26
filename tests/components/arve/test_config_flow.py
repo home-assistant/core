@@ -37,7 +37,7 @@ async def test_form_cannot_connect(
     )
 
     with patch(
-        "asyncarve.Arve.get_sensor_info",
+        "asyncarve.Arve.get_devices",
         side_effect=ArveConnectionError,
     ):
         result2 = await hass.config_entries.flow.async_configure(

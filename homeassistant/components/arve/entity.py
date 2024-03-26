@@ -17,23 +17,23 @@ class ArveDeviceEntity(CoordinatorEntity[ArveCoordinator]):
     _attr_available = True
 
     def __init__(
-        self, coordinator: ArveCoordinator, description: EntityDescription
+        self, coordinator: ArveCoordinator, description: EntityDescription, sn: str
     ) -> None:
         """Initialize the Arve device entity."""
         super().__init__(coordinator)
 
+        self.device_sn = sn
+
+        self.device_name = coordinator.data[self.device_sn]["info"].name
+
         self.entity_description = description
 
-        self._attr_unique_id = (
-            f"{coordinator.arve.device_sn}_{self.entity_description.translation_key}"
-        )
-
-        self.name = self.entity_description.key
+        self._attr_unique_id = f"{self.device_sn}_{self.entity_description.key}"
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.arve.device_sn)},
+            identifiers={(DOMAIN, self.device_sn)},
             manufacturer="Calanda Air AG",
             model="Arve Sens Pro",
-            serial_number=coordinator.arve.device_sn,
-            name=coordinator.config_entry.title,
+            serial_number=self.device_sn,
+            name=self.device_name,
         )

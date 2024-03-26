@@ -4,9 +4,8 @@
       "user": {
         "description": "Set up your Arve device",
         "data": {
-          "access_token": "Arve token for HA",
-          "client_secret": "Arve customer token",
-          "name": "Device serial number"
+          "access_token": "Arve token",
+          "client_secret": "Arve customer token"
         }
       }
     },
@@ -22,7 +21,7 @@
   "entity": {
     "sensor": {
       "tvoc": {
-        "name": "tvoc"
+        "name": "Total Volatile Organic Compounds"
       }
     }
   }

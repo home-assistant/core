@@ -442,7 +442,7 @@ asterisk_mbox==0.5.0
 async-upnp-client==0.38.2
 
 # homeassistant.components.arve
-asyncarve==0.0.4
+asyncarve==0.0.7
 
 # homeassistant.components.sleepiq
 asyncsleepiq==1.5.2

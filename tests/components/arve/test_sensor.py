@@ -18,7 +18,7 @@ SENSORS = (
     "pm10",
     "pm2_5",
     "temperature",
-    "tvoc",
+    "total_volatile_organic_compounds",
 )
 
 
@@ -36,9 +36,9 @@ async def test_sensors(
     await async_init_integration(hass, mock_config_entry)
 
     for sensor in SENSORS:
-        state = hass.states.get(f"sensor.my_arve_{sensor}")
+        state = hass.states.get(f"sensor.arve_{sensor}")
         assert state
-        assert state == snapshot(name=f"my_arve_{sensor}")
+        assert state == snapshot(name=f"arve_{sensor}")
 
         entry = entity_registry.async_get(state.entity_id)
         assert entry

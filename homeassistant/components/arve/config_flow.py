@@ -5,12 +5,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from asyncarve import Arve, ArveConnectionError, ArveSensPro
+from asyncarve import Arve, ArveConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_SECRET, CONF_NAME
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_SECRET
 
 from .const import DOMAIN
 
@@ -31,15 +31,14 @@ class ArveConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             arve = Arve(
                 user_input[CONF_ACCESS_TOKEN],
                 user_input[CONF_CLIENT_SECRET],
-                user_input[CONF_NAME],
             )
             try:
-                info: ArveSensPro = await arve.get_sensor_info()
+                await arve.get_devices()
             except ArveConnectionError:
                 errors["base"] = "cannot_connect"
-            if not errors:
+            else:
                 return self.async_create_entry(
-                    title=info.name,
+                    title="Arve",
                     data=user_input,
                 )
         return self.async_show_form(
@@ -48,7 +47,6 @@ class ArveConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_ACCESS_TOKEN): str,
                     vol.Required(CONF_CLIENT_SECRET): str,
-                    vol.Required(CONF_NAME): str,
                 }
             ),
             errors=errors,
