@@ -1146,14 +1146,14 @@ def test_qr_code_selector_schema(schema, valid_selections, invalid_selections) -
 
 @pytest.mark.parametrize(
     ("schema", "valid_selections", "invalid_selections"),
-    (
+    [
         ({}, ("abc123",), (None,)),
         (
             {"multiple": True},
             ((["abc123", "def456"],)),
             (None, "abc123", ["abc123", None]),
         ),
-    ),
+    ],
 )
 def test_label_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test label selector."""
