@@ -1,4 +1,5 @@
 """YoLink Valve."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -99,7 +100,7 @@ class YoLinkValveEntity(YoLinkEntity, ValveEntity):
         self._attr_is_closed = attr_val
         self.async_write_ha_state()
 
-    async def _invoke_device(self, state: str) -> None:
+    async def _async_invoke_device(self, state: str) -> None:
         """Call setState api to change valve state."""
         await self.call_device(ClientRequest("setState", {"valve": state}))
         self._attr_is_closed = state == "close"
@@ -107,8 +108,8 @@ class YoLinkValveEntity(YoLinkEntity, ValveEntity):
 
     async def async_open_valve(self) -> None:
         """Open the valve."""
-        await self._invoke_device("open")
+        await self._async_invoke_device("open")
 
     async def async_close_valve(self) -> None:
         """Close valve."""
-        await self._invoke_device("close")
+        await self._async_invoke_device("close")
