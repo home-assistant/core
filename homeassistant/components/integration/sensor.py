@@ -312,7 +312,7 @@ class IntegrationSensor(RestoreSensor):
         self._last_valid_state: Decimal | None = None
         self._attr_device_info = device_info
 
-    def _multiply_unit_with_time(self, source_unit: str) -> str:
+    def _calculate_unit(self, source_unit: str) -> str:
         """Multiply source_unit with time unit of the integral.
 
         Possibly cancelling out a time unit in the denominator of the source_unit.
@@ -330,12 +330,12 @@ class IntegrationSensor(RestoreSensor):
         else:
             integral_unit = f"{source_unit}{unit_time}"
 
-        return integral_unit
+        return f"{self._unit_prefix_string}{integral_unit}"
 
     def _derive_and_set_attributes_from_state(self, source_state: State) -> None:
         source_unit = source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         if source_unit is not None:
-            self._unit_of_measurement = (
+            self._unit_of_measurement = self._calculate_unit(source_unit)
                 f"{self._unit_prefix_string}"
                 f"{self._multiply_unit_with_time(source_unit)}"
             )
