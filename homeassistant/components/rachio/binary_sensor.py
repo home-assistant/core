@@ -15,8 +15,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DOMAIN as DOMAIN_RACHIO,
+    KEY_BATTERY_STATUS,
     KEY_DEVICE_ID,
+    KEY_GOOD,
+    KEY_ID,
     KEY_RAIN_SENSOR_TRIPPED,
+    KEY_REPORTED_STATE,
+    KEY_STATE,
     KEY_STATUS,
     KEY_SUBTYPE,
     SIGNAL_RACHIO_CONTROLLER_UPDATE,
@@ -24,7 +29,7 @@ from .const import (
     STATUS_ONLINE,
 )
 from .device import RachioPerson
-from .entity import RachioDevice
+from .entity import RachioDevice, RachioHoseTimerDevice
 from .webhooks import (
     SUBTYPE_COLD_REBOOT,
     SUBTYPE_OFFLINE,
@@ -52,6 +57,11 @@ def _create_entities(hass: HomeAssistant, config_entry: ConfigEntry) -> list[Ent
     for controller in person.controllers:
         entities.append(RachioControllerOnlineBinarySensor(controller))
         entities.append(RachioRainSensor(controller))
+    entities.extend(
+        RachioHoseTimerBattery(valve, base_station.coordinator)
+        for base_station in person.base_stations
+        for valve in base_station.coordinator.data.values()
+    )
     return entities
 
 
@@ -140,3 +150,28 @@ class RachioRainSensor(RachioControllerBinarySensor):
                 self._async_handle_any_update,
             )
         )
+
+
+class RachioHoseTimerBattery(RachioHoseTimerDevice, BinarySensorEntity):
+    """Represents a battery sensor for a smart hose timer."""
+
+    _attr_device_class = BinarySensorDeviceClass.BATTERY
+
+    def __init__(self, data, coordinator) -> None:
+        """Initialize a smart hose timer battery sensor."""
+        super().__init__(coordinator, data)
+        self.id = data[KEY_ID]
+        self._attr_unique_id = f"{self.id}-battery"
+        self._attr_is_on = (
+            data[KEY_STATE][KEY_REPORTED_STATE][KEY_BATTERY_STATUS] != KEY_GOOD
+        )
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated coordinator data."""
+        data = self.coordinator.data[self.id]
+
+        self._attr_is_on = (
+            data[KEY_STATE][KEY_REPORTED_STATE][KEY_BATTERY_STATUS] != KEY_GOOD
+        )
+        super()._handle_coordinator_update()
