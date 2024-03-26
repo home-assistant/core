@@ -1,4 +1,5 @@
 """The tests for the Template Weather platform."""
+
 from typing import Any
 
 import pytest
@@ -506,6 +507,7 @@ async def test_forecast_format_error(
             }
         },
     )
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         WEATHER_DOMAIN,

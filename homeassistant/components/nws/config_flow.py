@@ -1,4 +1,5 @@
 """Config flow for National Weather Service (NWS) integration."""
+
 from __future__ import annotations
 
 import logging
@@ -8,9 +9,10 @@ import aiohttp
 from pynws import SimpleNWS
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -20,9 +22,7 @@ from .const import CONF_STATION, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(
-    hass: core.HomeAssistant, data: dict[str, Any]
-) -> dict[str, str]:
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -45,14 +45,14 @@ async def validate_input(
     return {"title": nws.station}
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for National Weather Service (NWS)."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -88,5 +88,5 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""

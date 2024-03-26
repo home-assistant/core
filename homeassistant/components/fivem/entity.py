@@ -1,4 +1,5 @@
 """The FiveM entity."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping

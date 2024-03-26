@@ -1,4 +1,5 @@
 """Test for Trafikverket Train component Init."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -30,12 +31,15 @@ async def test_unload_entry(hass: HomeAssistant, get_trains: list[TrainStop]) ->
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.trafikverket_train.TrafikverketTrain.async_get_train_station",
-    ), patch(
-        "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_next_train_stops",
-        return_value=get_trains,
-    ) as mock_tv_train:
+    with (
+        patch(
+            "homeassistant.components.trafikverket_train.TrafikverketTrain.async_get_train_station",
+        ),
+        patch(
+            "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_next_train_stops",
+            return_value=get_trains,
+        ) as mock_tv_train,
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -128,11 +132,14 @@ async def test_migrate_entity_unique_id(
         original_name="Stockholm C to Uppsala C",
     )
 
-    with patch(
-        "homeassistant.components.trafikverket_train.TrafikverketTrain.async_get_train_station",
-    ), patch(
-        "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_next_train_stops",
-        return_value=get_trains,
+    with (
+        patch(
+            "homeassistant.components.trafikverket_train.TrafikverketTrain.async_get_train_station",
+        ),
+        patch(
+            "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_next_train_stops",
+            return_value=get_trains,
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

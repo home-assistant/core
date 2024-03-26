@@ -468,7 +468,7 @@ async def test_config_schema_via_packages(hass: HomeAssistant) -> None:
         "pack_11": {"rest": {"resource": "http://url1"}},
         "pack_list": {"rest": [{"resource": "http://url2"}]},
     }
-    config = {hass_config.CONF_CORE: {hass_config.CONF_PACKAGES: packages}}
+    config = {hass_config.HA_DOMAIN: {hass_config.CONF_PACKAGES: packages}}
     await hass_config.merge_packages_config(hass, config, packages)
 
     assert len(config) == 2

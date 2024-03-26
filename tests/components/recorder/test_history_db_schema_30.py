@@ -1,4 +1,5 @@
 """The tests the History component."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -44,8 +45,9 @@ def test_get_full_significant_states_with_session_entity_no_matches(
     now = dt_util.utcnow()
     time_before_recorder_ran = now - timedelta(days=1000)
     instance = recorder.get_instance(hass)
-    with session_scope(hass=hass) as session, patch.object(
-        instance.states_meta_manager, "active", False
+    with (
+        session_scope(hass=hass) as session,
+        patch.object(instance.states_meta_manager, "active", False),
     ):
         assert (
             history.get_full_significant_states_with_session(
@@ -73,8 +75,9 @@ def test_significant_states_with_session_entity_minimal_response_no_matches(
     now = dt_util.utcnow()
     time_before_recorder_ran = now - timedelta(days=1000)
     instance = recorder.get_instance(hass)
-    with session_scope(hass=hass) as session, patch.object(
-        instance.states_meta_manager, "active", False
+    with (
+        session_scope(hass=hass) as session,
+        patch.object(instance.states_meta_manager, "active", False),
     ):
         assert (
             history.get_significant_states_with_session(
@@ -516,9 +519,7 @@ def test_get_significant_states_only(
             return hass.states.get(entity_id)
 
         start = dt_util.utcnow() - timedelta(minutes=4)
-        points = []
-        for i in range(1, 4):
-            points.append(start + timedelta(minutes=i))
+        points = [start + timedelta(minutes=i) for i in range(1, 4)]
 
         states = []
         with freeze_time(start) as freezer:

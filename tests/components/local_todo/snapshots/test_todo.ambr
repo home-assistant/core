@@ -22,6 +22,16 @@
   list([
   ])
 # ---
+# name: test_parse_existing_ics[invalid_dtstart_tzname]
+  list([
+    dict({
+      'due': '2023-10-24T11:30:00',
+      'status': 'needs_action',
+      'summary': 'Task',
+      'uid': '077cb7f2-6c89-11ee-b2a9-0242ac110002',
+    }),
+  ])
+# ---
 # name: test_parse_existing_ics[migrate_legacy_due]
   list([
     dict({

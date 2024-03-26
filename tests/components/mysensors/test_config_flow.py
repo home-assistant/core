@@ -1,4 +1,5 @@
 """Test the MySensors config flow."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -112,15 +113,20 @@ async def test_config_serial(hass: HomeAssistant) -> None:
     step = await get_form(hass, CONF_GATEWAY_TYPE_SERIAL, "gw_serial")
     flow_id = step["flow_id"]
 
-    with patch(  # mock is_serial_port because otherwise the test will be platform dependent (/dev/ttyACMx vs COMx)
-        "homeassistant.components.mysensors.config_flow.is_serial_port",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.mysensors.config_flow.try_connect", return_value=True
-    ), patch(
-        "homeassistant.components.mysensors.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(  # mock is_serial_port because otherwise the test will be platform dependent (/dev/ttyACMx vs COMx)
+            "homeassistant.components.mysensors.config_flow.is_serial_port",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.mysensors.config_flow.try_connect",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.mysensors.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             flow_id,
             {
@@ -149,12 +155,16 @@ async def test_config_tcp(hass: HomeAssistant) -> None:
     step = await get_form(hass, CONF_GATEWAY_TYPE_TCP, "gw_tcp")
     flow_id = step["flow_id"]
 
-    with patch(
-        "homeassistant.components.mysensors.config_flow.try_connect", return_value=True
-    ), patch(
-        "homeassistant.components.mysensors.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.mysensors.config_flow.try_connect",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.mysensors.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             flow_id,
             {
@@ -183,12 +193,16 @@ async def test_fail_to_connect(hass: HomeAssistant) -> None:
     step = await get_form(hass, CONF_GATEWAY_TYPE_TCP, "gw_tcp")
     flow_id = step["flow_id"]
 
-    with patch(
-        "homeassistant.components.mysensors.config_flow.try_connect", return_value=False
-    ), patch(
-        "homeassistant.components.mysensors.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.mysensors.config_flow.try_connect",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.mysensors.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             flow_id,
             {
@@ -340,15 +354,20 @@ async def test_config_invalid(
     step = await get_form(hass, gateway_type, expected_step_id)
     flow_id = step["flow_id"]
 
-    with patch(
-        "homeassistant.components.mysensors.config_flow.try_connect", return_value=True
-    ), patch(
-        "homeassistant.components.mysensors.gateway.socket.getaddrinfo",
-        side_effect=OSError,
-    ), patch(
-        "homeassistant.components.mysensors.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.mysensors.config_flow.try_connect",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.mysensors.gateway.socket.getaddrinfo",
+            side_effect=OSError,
+        ),
+        patch(
+            "homeassistant.components.mysensors.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             flow_id,
             user_input,
@@ -652,11 +671,16 @@ async def test_duplicate(
 ) -> None:
     """Test duplicate detection."""
 
-    with patch("sys.platform", "win32"), patch(
-        "homeassistant.components.mysensors.config_flow.try_connect", return_value=True
-    ), patch(
-        "homeassistant.components.mysensors.async_setup_entry",
-        return_value=True,
+    with (
+        patch("sys.platform", "win32"),
+        patch(
+            "homeassistant.components.mysensors.config_flow.try_connect",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.mysensors.async_setup_entry",
+            return_value=True,
+        ),
     ):
         MockConfigEntry(domain=DOMAIN, data=first_input).add_to_hass(hass)
 

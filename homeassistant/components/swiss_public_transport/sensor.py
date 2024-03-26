@@ -1,4 +1,5 @@
 """Support for transport.opendata.ch."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -147,7 +148,6 @@ class SwissPublicTransportSensor(
 
     entity_description: SwissPublicTransportSensorEntityDescription
     _attr_attribution = "Data provided by transport.opendata.ch"
-    _attr_icon = "mdi:bus"
     _attr_has_entity_name = True
 
     def __init__(

@@ -1,4 +1,5 @@
 """The Environment Canada (EC) component."""
+
 from datetime import timedelta
 import logging
 import xml.etree.ElementTree as et

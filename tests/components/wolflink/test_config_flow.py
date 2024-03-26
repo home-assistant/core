@@ -1,9 +1,10 @@
 """Test the Wolf SmartSet Service config flow."""
+
 from unittest.mock import patch
 
 from httpcore import ConnectError
-from wolf_smartset.models import Device
-from wolf_smartset.token_auth import InvalidAuth
+from wolf_comm.models import Device
+from wolf_comm.token_auth import InvalidAuth
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.wolflink.const import (
@@ -59,10 +60,13 @@ async def test_device_step_form(hass: HomeAssistant) -> None:
 
 async def test_create_entry(hass: HomeAssistant) -> None:
     """Test entity creation from device step."""
-    with patch(
-        "homeassistant.components.wolflink.config_flow.WolfClient.fetch_system_list",
-        return_value=[DEVICE],
-    ), patch("homeassistant.components.wolflink.async_setup_entry", return_value=True):
+    with (
+        patch(
+            "homeassistant.components.wolflink.config_flow.WolfClient.fetch_system_list",
+            return_value=[DEVICE],
+        ),
+        patch("homeassistant.components.wolflink.async_setup_entry", return_value=True),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=INPUT_CONFIG
         )
@@ -121,10 +125,13 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
 
 async def test_already_configured_error(hass: HomeAssistant) -> None:
     """Test already configured while creating entry."""
-    with patch(
-        "homeassistant.components.wolflink.config_flow.WolfClient.fetch_system_list",
-        return_value=[DEVICE],
-    ), patch("homeassistant.components.wolflink.async_setup_entry", return_value=True):
+    with (
+        patch(
+            "homeassistant.components.wolflink.config_flow.WolfClient.fetch_system_list",
+            return_value=[DEVICE],
+        ),
+        patch("homeassistant.components.wolflink.async_setup_entry", return_value=True),
+    ):
         MockConfigEntry(
             domain=DOMAIN, unique_id=CONFIG[DEVICE_ID], data=CONFIG
         ).add_to_hass(hass)

@@ -1,4 +1,5 @@
 """Test Local Media Source."""
+
 import logging
 from unittest.mock import AsyncMock, Mock, call
 

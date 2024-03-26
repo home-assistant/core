@@ -1,4 +1,5 @@
 """The tests for the Update component."""
+
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
@@ -635,16 +636,21 @@ async def test_entity_without_progress_support_raising(
         hass, "update.update_available", callback(lambda event: events.append(event))
     )
 
-    with patch(
-        "homeassistant.components.update.UpdateEntity.async_install",
-        side_effect=RuntimeError,
-    ), pytest.raises(RuntimeError):
+    with (
+        patch(
+            "homeassistant.components.update.UpdateEntity.async_install",
+            side_effect=RuntimeError,
+        ),
+        pytest.raises(RuntimeError),
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_INSTALL,
             {ATTR_ENTITY_ID: "update.update_available"},
             blocking=True,
         )
+
+    await hass.async_block_till_done()
 
     assert len(events) == 2
     assert events[0].data.get("old_state").attributes[ATTR_IN_PROGRESS] is False

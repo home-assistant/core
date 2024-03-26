@@ -22,7 +22,7 @@
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
-    'original_icon': 'mdi:ev-station',
+    'original_icon': None,
     'original_name': 'Charge',
     'platform': 'tessie',
     'previous_unique_id': None,
@@ -37,11 +37,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
       'friendly_name': 'Test Charge',
-      'icon': 'mdi:ev-station',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_charge',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -69,7 +69,7 @@
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
-    'original_icon': 'mdi:snowflake',
+    'original_icon': None,
     'original_name': 'Defrost mode',
     'platform': 'tessie',
     'previous_unique_id': None,
@@ -84,11 +84,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
       'friendly_name': 'Test Defrost mode',
-      'icon': 'mdi:snowflake',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_defrost_mode',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -116,7 +116,7 @@
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
-    'original_icon': 'mdi:shield-car',
+    'original_icon': None,
     'original_name': 'Sentry mode',
     'platform': 'tessie',
     'previous_unique_id': None,
@@ -131,11 +131,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
       'friendly_name': 'Test Sentry mode',
-      'icon': 'mdi:shield-car',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_sentry_mode',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -163,7 +163,7 @@
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
-    'original_icon': 'mdi:steering',
+    'original_icon': None,
     'original_name': 'Steering wheel heater',
     'platform': 'tessie',
     'previous_unique_id': None,
@@ -178,11 +178,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
       'friendly_name': 'Test Steering wheel heater',
-      'icon': 'mdi:steering',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_steering_wheel_heater',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -210,7 +210,7 @@
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
-    'original_icon': 'mdi:car-key',
+    'original_icon': None,
     'original_name': 'Valet mode',
     'platform': 'tessie',
     'previous_unique_id': None,
@@ -225,11 +225,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
       'friendly_name': 'Test Valet mode',
-      'icon': 'mdi:car-key',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_valet_mode',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -239,11 +239,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
       'friendly_name': 'Test Charge',
-      'icon': 'mdi:ev-station',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_charge',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -253,11 +253,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
       'friendly_name': 'Test Charge',
-      'icon': 'mdi:ev-station',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_charge',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })

@@ -1,4 +1,5 @@
 """Test the Anthem A/V Receivers config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from anthemav.device_error import DeviceError

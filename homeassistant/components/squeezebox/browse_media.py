@@ -1,4 +1,5 @@
 """Support for media browsing."""
+
 import contextlib
 
 from homeassistant.components import media_source

@@ -224,9 +224,13 @@ async def test_udp_server_queue(
 
     voice_assistant_udp_server_v1.close()
 
-    with pytest.raises(RuntimeError):
-        async for data in voice_assistant_udp_server_v1._iterate_packets():
-            assert data == bytes(1024)
+    # Stopping the UDP server should cause _iterate_packets to break out
+    # immediately without yielding any data.
+    has_data = False
+    async for _data in voice_assistant_udp_server_v1._iterate_packets():
+        has_data = True
+
+    assert not has_data, "Server was stopped"
 
 
 async def test_error_calls_handle_finished(

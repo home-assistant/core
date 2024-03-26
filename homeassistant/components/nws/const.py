@@ -1,4 +1,5 @@
 """Constants for National Weather Service Integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta

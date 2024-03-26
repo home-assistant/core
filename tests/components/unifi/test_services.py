@@ -1,13 +1,14 @@
 """deCONZ service tests."""
+
 from unittest.mock import patch
 
-from homeassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
+from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN as UNIFI_DOMAIN
 from homeassistant.components.unifi.services import (
     SERVICE_RECONNECT_CLIENT,
     SERVICE_REMOVE_CLIENTS,
     SUPPORTED_SERVICES,
 )
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import ATTR_DEVICE_ID, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -66,11 +67,11 @@ async def test_reconnect_client(
     config_entry = await setup_unifi_integration(
         hass, aioclient_mock, clients_response=clients
     )
-    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        f"https://{hub.host}:1234/api/s/{hub.site}/cmd/stamgr",
+        f"https://{config_entry.data[CONF_HOST]}:1234"
+        f"/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/stamgr",
     )
 
     device_entry = device_registry.async_get_or_create(
@@ -144,11 +145,12 @@ async def test_reconnect_client_hub_unavailable(
         hass, aioclient_mock, clients_response=clients
     )
     hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-    hub.available = False
+    hub.websocket.available = False
 
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        f"https://{hub.host}:1234/api/s/{hub.site}/cmd/stamgr",
+        f"https://{config_entry.data[CONF_HOST]}:1234"
+        f"/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/stamgr",
     )
 
     device_entry = device_registry.async_get_or_create(
@@ -261,11 +263,11 @@ async def test_remove_clients(
     config_entry = await setup_unifi_integration(
         hass, aioclient_mock, clients_all_response=clients
     )
-    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        f"https://{hub.host}:1234/api/s/{hub.site}/cmd/stamgr",
+        f"https://{config_entry.data[CONF_HOST]}:1234"
+        f"/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/stamgr",
     )
 
     await hass.services.async_call(UNIFI_DOMAIN, SERVICE_REMOVE_CLIENTS, blocking=True)
@@ -292,7 +294,7 @@ async def test_remove_clients_hub_unavailable(
         hass, aioclient_mock, clients_all_response=clients
     )
     hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-    hub.available = False
+    hub.websocket.available = False
 
     aioclient_mock.clear_requests()
 

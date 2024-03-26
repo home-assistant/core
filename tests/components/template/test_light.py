@@ -1,4 +1,5 @@
 """The tests for the  Template light platform."""
+
 import pytest
 
 import homeassistant.components.light as light

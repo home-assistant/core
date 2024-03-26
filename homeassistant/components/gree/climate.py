@@ -1,4 +1,5 @@
 """Support for interface with a Gree climate systems."""
+
 from __future__ import annotations
 
 import logging

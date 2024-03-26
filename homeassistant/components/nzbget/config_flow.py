@@ -1,4 +1,5 @@
 """Config flow for NZBGet."""
+
 from __future__ import annotations
 
 import logging
@@ -6,7 +7,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -16,7 +17,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_NAME, DEFAULT_PORT, DEFAULT_SSL, DEFAULT_VERIFY_SSL, DOMAIN
 from .coordinator import NZBGetAPI, NZBGetAPIException
@@ -48,7 +48,7 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -82,9 +82,9 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
         }
 
         if self.show_advanced_options:
-            data_schema[
-                vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL)
-            ] = bool
+            data_schema[vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL)] = (
+                bool
+            )
 
         return self.async_show_form(
             step_id="user",

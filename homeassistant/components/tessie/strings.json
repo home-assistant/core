@@ -389,6 +389,24 @@
     }
   },
   "exceptions": {
+    "unknown": {
+      "message": "An unknown issue occured changing {name}."
+    },
+    "not_supported": {
+      "message": "{name} is not supported."
+    },
+    "cable_connected": {
+      "message": "Charge cable is connected."
+    },
+    "already_active": {
+      "message": "{name} is already active."
+    },
+    "already_inactive": {
+      "message": "{name} is already inactive."
+    },
+    "incorrect_pin": {
+      "message": "Incorrect pin for {name}."
+    },
     "no_cable": {
       "message": "Insert cable to lock"
     }

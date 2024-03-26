@@ -1,7 +1,9 @@
 """Test the Z-Wave JS update entities."""
+
 import asyncio
 from datetime import timedelta
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from zwave_js_server.event import Event
 from zwave_js_server.exceptions import FailedZWaveCommand
@@ -310,7 +312,7 @@ async def test_update_entity_ha_not_running(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test update occurs only after HA is running."""
-    await hass.async_stop()
+    hass.set_state(CoreState.not_running)
 
     client.async_send_command.return_value = {"updates": []}
 
@@ -628,11 +630,12 @@ async def test_update_entity_delay(
     ge_in_wall_dimmer_switch,
     zen_31,
     hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test update occurs on a delay after HA starts."""
     client.async_send_command.reset_mock()
     client.async_send_command.return_value = {"updates": []}
-    await hass.async_stop()
+    hass.set_state(CoreState.not_running)
 
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)

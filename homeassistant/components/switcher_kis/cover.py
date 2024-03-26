@@ -1,4 +1,5 @@
 """Switcher integration Cover platform."""
+
 from __future__ import annotations
 
 import logging

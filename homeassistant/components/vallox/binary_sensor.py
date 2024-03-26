@@ -1,4 +1,5 @@
 """Support for Vallox ventilation unit binary sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -41,25 +42,17 @@ class ValloxBinarySensorEntity(ValloxEntity, BinarySensorEntity):
         return self.coordinator.data.get(self.entity_description.metric_key) == 1
 
 
-@dataclass(frozen=True)
-class ValloxMetricKeyMixin:
-    """Dataclass to allow defining metric_key without a default value."""
+@dataclass(frozen=True, kw_only=True)
+class ValloxBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes Vallox binary sensor entity."""
 
     metric_key: str
-
-
-@dataclass(frozen=True)
-class ValloxBinarySensorEntityDescription(
-    BinarySensorEntityDescription, ValloxMetricKeyMixin
-):
-    """Describes Vallox binary sensor entity."""
 
 
 BINARY_SENSOR_ENTITIES: tuple[ValloxBinarySensorEntityDescription, ...] = (
     ValloxBinarySensorEntityDescription(
         key="post_heater",
         translation_key="post_heater",
-        icon="mdi:radiator",
         metric_key="A_CYC_IO_HEATER",
     ),
 )
@@ -75,8 +68,6 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        [
-            ValloxBinarySensorEntity(data["name"], data["coordinator"], description)
-            for description in BINARY_SENSOR_ENTITIES
-        ]
+        ValloxBinarySensorEntity(data["name"], data["coordinator"], description)
+        for description in BINARY_SENSOR_ENTITIES
     )

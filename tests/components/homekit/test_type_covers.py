@@ -1,4 +1,5 @@
 """Test different accessory types: Covers."""
+
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,

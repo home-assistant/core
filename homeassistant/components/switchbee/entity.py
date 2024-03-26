@@ -1,4 +1,5 @@
 """Support for SwitchBee entity."""
+
 import logging
 from typing import Generic, TypeVar, cast
 

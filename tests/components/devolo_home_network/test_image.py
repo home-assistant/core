@@ -1,4 +1,5 @@
 """Tests for the devolo Home Network images."""
+
 from http import HTTPStatus
 from unittest.mock import AsyncMock
 

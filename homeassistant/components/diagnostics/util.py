@@ -1,4 +1,5 @@
 """Diagnostic utilities."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
@@ -17,8 +18,7 @@ def async_redact_data(data: Mapping, to_redact: Iterable[Any]) -> dict:  # type:
 
 
 @overload
-def async_redact_data(data: _T, to_redact: Iterable[Any]) -> _T:
-    ...
+def async_redact_data(data: _T, to_redact: Iterable[Any]) -> _T: ...
 
 
 @callback

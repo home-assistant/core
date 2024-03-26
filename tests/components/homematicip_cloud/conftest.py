@@ -1,4 +1,5 @@
 """Initializer helpers for HomematicIP fake server."""
+
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from homematicip.aio.auth import AsyncAuth
@@ -144,12 +145,15 @@ def simple_mock_home_fixture():
 def mock_connection_init_fixture():
     """Return a simple mocked connection."""
 
-    with patch(
-        "homeassistant.components.homematicip_cloud.hap.AsyncHome.init",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.homematicip_cloud.hap.AsyncAuth.init",
-        return_value=None,
+    with (
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.AsyncHome.init",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.AsyncAuth.init",
+            return_value=None,
+        ),
     ):
         yield
 

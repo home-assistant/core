@@ -1,4 +1,5 @@
 """Expose Synology DSM as a media source."""
+
 from __future__ import annotations
 
 import mimetypes
@@ -90,20 +91,18 @@ class SynologyPhotosMediaSource(MediaSource):
     ) -> list[BrowseMediaSource]:
         """Handle browsing different diskstations."""
         if not item.identifier:
-            ret = []
-            for entry in self.entries:
-                ret.append(
-                    BrowseMediaSource(
-                        domain=DOMAIN,
-                        identifier=entry.unique_id,
-                        media_class=MediaClass.DIRECTORY,
-                        media_content_type=MediaClass.IMAGE,
-                        title=f"{entry.title} - {entry.unique_id}",
-                        can_play=False,
-                        can_expand=True,
-                    )
+            return [
+                BrowseMediaSource(
+                    domain=DOMAIN,
+                    identifier=entry.unique_id,
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_type=MediaClass.IMAGE,
+                    title=f"{entry.title} - {entry.unique_id}",
+                    can_play=False,
+                    can_expand=True,
                 )
-            return ret
+                for entry in self.entries
+            ]
         identifier = SynologyPhotosMediaSourceIdentifier(item.identifier)
         diskstation: SynologyDSMData = self.hass.data[DOMAIN][identifier.unique_id]
 
@@ -125,18 +124,18 @@ class SynologyPhotosMediaSource(MediaSource):
                     can_expand=True,
                 )
             ]
-            for album in albums:
-                ret.append(
-                    BrowseMediaSource(
-                        domain=DOMAIN,
-                        identifier=f"{item.identifier}/{album.album_id}",
-                        media_class=MediaClass.DIRECTORY,
-                        media_content_type=MediaClass.IMAGE,
-                        title=album.name,
-                        can_play=False,
-                        can_expand=True,
-                    )
+            ret.extend(
+                BrowseMediaSource(
+                    domain=DOMAIN,
+                    identifier=f"{item.identifier}/{album.album_id}",
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_type=MediaClass.IMAGE,
+                    title=album.name,
+                    can_play=False,
+                    can_expand=True,
                 )
+                for album in albums
+            )
 
             return ret
 
@@ -213,18 +212,18 @@ class SynologyDsmMediaView(http.HomeAssistantView):
     ) -> web.Response:
         """Start a GET request."""
         if not self.hass.data.get(DOMAIN):
-            raise web.HTTPNotFound()
+            raise web.HTTPNotFound
         # location: {cache_key}/{filename}
         cache_key, file_name = location.split("/")
         image_id = cache_key.split("_")[0]
         mime_type, _ = mimetypes.guess_type(file_name)
         if not isinstance(mime_type, str):
-            raise web.HTTPNotFound()
+            raise web.HTTPNotFound
         diskstation: SynologyDSMData = self.hass.data[DOMAIN][source_dir_id]
 
         item = SynoPhotosItem(image_id, "", "", "", cache_key, "")
         try:
             image = await diskstation.api.photos.download_item(item)
         except SynologyDSMException as exc:
-            raise web.HTTPNotFound() from exc
+            raise web.HTTPNotFound from exc
         return web.Response(body=image, content_type=mime_type)

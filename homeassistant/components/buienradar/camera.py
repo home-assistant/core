@@ -1,4 +1,5 @@
 """Provide animated GIF loops of Buienradar imagery."""
+
 from __future__ import annotations
 
 import asyncio

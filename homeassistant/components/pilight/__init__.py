@@ -1,4 +1,5 @@
 """Component to create an interface to a Pilight daemon."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -116,11 +117,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             {"protocol": data["protocol"], "uuid": data["uuid"]}, **data["message"]
         )
 
-        # No whitelist defined, put data on event bus
-        if not whitelist:
-            hass.bus.fire(EVENT, data)
-        # Check if data matches the defined whitelist
-        elif all(str(data[key]) in whitelist[key] for key in whitelist):
+        # No whitelist defined or data matches whitelist, put data on event bus
+        if not whitelist or all(str(data[key]) in whitelist[key] for key in whitelist):
             hass.bus.fire(EVENT, data)
 
     pilight_client.set_callback(handle_received_code)

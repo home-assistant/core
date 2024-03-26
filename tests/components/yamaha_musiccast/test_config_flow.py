@@ -1,4 +1,5 @@
 """Test config flow."""
+
 from unittest.mock import patch
 
 from aiomusiccast import MusicCastConnectionException
@@ -17,14 +18,16 @@ from tests.common import MockConfigEntry
 @pytest.fixture(autouse=True)
 async def silent_ssdp_scanner(hass):
     """Start SSDP component and get Scanner, prevent actual SSDP traffic."""
-    with patch(
-        "homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"
-    ), patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"), patch(
-        "homeassistant.components.ssdp.Scanner.async_scan"
-    ), patch(
-        "homeassistant.components.ssdp.Server._async_start_upnp_servers",
-    ), patch(
-        "homeassistant.components.ssdp.Server._async_stop_upnp_servers",
+    with (
+        patch("homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"),
+        patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"),
+        patch("homeassistant.components.ssdp.Scanner.async_scan"),
+        patch(
+            "homeassistant.components.ssdp.Server._async_start_upnp_servers",
+        ),
+        patch(
+            "homeassistant.components.ssdp.Server._async_stop_upnp_servers",
+        ),
     ):
         yield
 

@@ -1,8 +1,8 @@
 """The Recorder websocket API."""
+
 from __future__ import annotations
 
 from datetime import datetime as dt
-import logging
 from typing import Any, Literal, cast
 
 import voluptuous as vol
@@ -46,8 +46,6 @@ from .statistics import (
 )
 from .util import PERIOD_SCHEMA, get_instance, resolve_period
 
-_LOGGER: logging.Logger = logging.getLogger(__package__)
-
 UNIT_SCHEMA = vol.Schema(
     {
         vol.Optional("data_rate"): vol.In(DataRateConverter.VALID_UNITS),
@@ -73,8 +71,6 @@ UNIT_SCHEMA = vol.Schema(
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the recorder websocket API."""
     websocket_api.async_register_command(hass, ws_adjust_sum_statistics)
-    websocket_api.async_register_command(hass, ws_backup_end)
-    websocket_api.async_register_command(hass, ws_backup_start)
     websocket_api.async_register_command(hass, ws_change_statistics_unit)
     websocket_api.async_register_command(hass, ws_clear_statistics)
     websocket_api.async_register_command(hass, ws_get_statistic_during_period)
@@ -517,38 +513,3 @@ def ws_info(
         "thread_running": is_running,
     }
     connection.send_result(msg["id"], recorder_info)
-
-
-@websocket_api.ws_require_user(only_supervisor=True)
-@websocket_api.websocket_command({vol.Required("type"): "backup/start"})
-@websocket_api.async_response
-async def ws_backup_start(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
-) -> None:
-    """Backup start notification."""
-
-    _LOGGER.info("Backup start notification, locking database for writes")
-    instance = get_instance(hass)
-    try:
-        await instance.lock_database()
-    except TimeoutError as err:
-        connection.send_error(msg["id"], "timeout_error", str(err))
-        return
-    connection.send_result(msg["id"])
-
-
-@websocket_api.ws_require_user(only_supervisor=True)
-@websocket_api.websocket_command({vol.Required("type"): "backup/end"})
-@websocket_api.async_response
-async def ws_backup_end(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
-) -> None:
-    """Backup end notification."""
-
-    instance = get_instance(hass)
-    _LOGGER.info("Backup end notification, releasing write lock")
-    if not instance.unlock_database():
-        connection.send_error(
-            msg["id"], "database_unlock_failed", "Failed to unlock database."
-        )
-    connection.send_result(msg["id"])

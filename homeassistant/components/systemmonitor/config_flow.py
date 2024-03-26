@@ -1,4 +1,5 @@
 """Adds config flow for System Monitor."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -8,8 +9,8 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -86,7 +87,7 @@ async def validate_import_sensor_setup(
 async def get_sensor_setup_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     """Return process sensor setup schema."""
     hass = handler.parent_handler.hass
-    processes = list(await hass.async_add_executor_job(get_all_running_processes))
+    processes = list(await hass.async_add_executor_job(get_all_running_processes, hass))
     return vol.Schema(
         {
             vol.Required(CONF_PROCESS): SelectSelector(
@@ -138,7 +139,9 @@ class SystemMonitorConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
         return "System Monitor"
 
     @callback
-    def async_create_entry(self, data: Mapping[str, Any], **kwargs: Any) -> FlowResult:
+    def async_create_entry(
+        self, data: Mapping[str, Any], **kwargs: Any
+    ) -> ConfigFlowResult:
         """Finish config flow and create a config entry."""
         if self._async_current_entries():
             return self.async_abort(reason="already_configured")

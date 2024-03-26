@@ -1,4 +1,5 @@
 """Test the Fully Kiosk Browser number entities."""
+
 from unittest.mock import MagicMock
 
 from homeassistant.components.fully_kiosk.const import DOMAIN, UPDATE_INTERVAL
@@ -52,7 +53,7 @@ async def test_numbers(
     # Test invalid numeric data
     mock_fully_kiosk.getSettings.return_value = {"screenBrightness": "invalid"}
     async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("number.amazon_fire_screen_brightness")
     assert state
@@ -61,7 +62,7 @@ async def test_numbers(
     # Test unknown/missing data
     mock_fully_kiosk.getSettings.return_value = {}
     async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("number.amazon_fire_screensaver_timer")
     assert state

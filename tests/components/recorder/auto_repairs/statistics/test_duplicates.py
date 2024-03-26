@@ -1,4 +1,5 @@
 """Test removing statistics duplicates."""
+
 from collections.abc import Callable
 import importlib
 from pathlib import Path
@@ -77,11 +78,12 @@ def test_duplicate_statistics_handle_integrity_error(
         }
     ]
 
-    with patch.object(
-        statistics, "_statistics_exists", return_value=False
-    ), patch.object(
-        statistics, "_insert_statistics", wraps=statistics._insert_statistics
-    ) as insert_statistics_mock:
+    with (
+        patch.object(statistics, "_statistics_exists", return_value=False),
+        patch.object(
+            statistics, "_insert_statistics", wraps=statistics._insert_statistics
+        ) as insert_statistics_mock,
+    ):
         async_add_external_statistics(
             hass, external_energy_metadata_1, external_energy_statistics_1
         )
@@ -163,11 +165,17 @@ def test_delete_metadata_duplicates(
     }
 
     # Create some duplicated statistics_meta with schema version 28
-    with patch.object(recorder, "db_schema", old_db_schema), patch.object(
-        recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-    ), patch(
-        "homeassistant.components.recorder.core.create_engine", new=_create_engine_28
-    ), get_test_home_assistant() as hass:
+    with (
+        patch.object(recorder, "db_schema", old_db_schema),
+        patch.object(
+            recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
+        ),
+        patch(
+            "homeassistant.components.recorder.core.create_engine",
+            new=_create_engine_28,
+        ),
+        get_test_home_assistant() as hass,
+    ):
         recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
         wait_recording_done(hass)
@@ -255,11 +263,17 @@ def test_delete_metadata_duplicates_many(
     }
 
     # Create some duplicated statistics with schema version 28
-    with patch.object(recorder, "db_schema", old_db_schema), patch.object(
-        recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-    ), patch(
-        "homeassistant.components.recorder.core.create_engine", new=_create_engine_28
-    ), get_test_home_assistant() as hass:
+    with (
+        patch.object(recorder, "db_schema", old_db_schema),
+        patch.object(
+            recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
+        ),
+        patch(
+            "homeassistant.components.recorder.core.create_engine",
+            new=_create_engine_28,
+        ),
+        get_test_home_assistant() as hass,
+    ):
         recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
         wait_recording_done(hass)
