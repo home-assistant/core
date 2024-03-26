@@ -41,9 +41,9 @@ PARALLEL_UPDATES = 0
 
 @dataclass(frozen=True, kw_only=True)
 class MotionblindsBLESensorEntityDescription(SensorEntityDescription):
-    """Entity description of a sensor entity with native_value attribute."""
+    """Entity description of a sensor entity with initial_value attribute."""
 
-    native_value: str | None = None
+    initial_value: str | None = None
 
 
 SENSOR_TYPES: dict[str, MotionblindsBLESensorEntityDescription] = {
@@ -61,7 +61,7 @@ SENSOR_TYPES: dict[str, MotionblindsBLESensorEntityDescription] = {
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=[connection_type.value for connection_type in MotionConnectionType],
-        native_value=MotionConnectionType.DISCONNECTED.value,
+        initial_value=MotionConnectionType.DISCONNECTED.value,
     ),
     ATTR_CALIBRATION: MotionblindsBLESensorEntityDescription(
         key=ATTR_CALIBRATION,
@@ -111,7 +111,7 @@ class MotionblindsBLESensorEntity(MotionblindsBLEEntity, SensorEntity):
         super().__init__(
             device, entry, entity_description, unique_id_suffix=entity_description.key
         )
-        self._attr_native_value = entity_description.native_value
+        self._attr_native_value = entity_description.initial_value
 
     async def async_added_to_hass(self) -> None:
         """Log sensor entity information."""
