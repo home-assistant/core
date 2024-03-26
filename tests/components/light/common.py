@@ -4,7 +4,6 @@ All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
 
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
