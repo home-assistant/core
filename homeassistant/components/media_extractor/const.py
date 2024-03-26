@@ -6,4 +6,4 @@ DOMAIN = "media_extractor"
 ATTR_URL = "url"
 ATTR_FORMAT_QUERY = "format_query"
 
-SERVICE_EXTRACT_MEDIA = "extract_media"
+SERVICE_EXTRACT_MEDIA_URL = "extract_media_url"

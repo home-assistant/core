@@ -1,6 +1,6 @@
 {
   "services": {
     "play_media": "mdi:play",
-    "extract_media": "mdi:multimedia"
+    "extract_media_url": "mdi:link"
   }
 }

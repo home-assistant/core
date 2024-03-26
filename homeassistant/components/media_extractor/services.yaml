@@ -19,7 +19,7 @@ play_media:
             - "MUSIC"
             - "TVSHOW"
             - "VIDEO"
-extract_media:
+extract_media_url:
   fields:
     url:
       required: true

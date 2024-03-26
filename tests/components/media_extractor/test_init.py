@@ -12,7 +12,7 @@ from yt_dlp import DownloadError
 from homeassistant.components.media_extractor.const import (
     ATTR_URL,
     DOMAIN,
-    SERVICE_EXTRACT_MEDIA,
+    SERVICE_EXTRACT_MEDIA_URL,
 )
 from homeassistant.components.media_player import SERVICE_PLAY_MEDIA
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -35,7 +35,7 @@ async def test_play_media_service_is_registered(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert hass.services.has_service(DOMAIN, SERVICE_PLAY_MEDIA)
-    assert hass.services.has_service(DOMAIN, SERVICE_EXTRACT_MEDIA)
+    assert hass.services.has_service(DOMAIN, SERVICE_EXTRACT_MEDIA_URL)
 
 
 @pytest.mark.parametrize(
@@ -61,7 +61,7 @@ async def test_extract_media_service(
     assert (
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_EXTRACT_MEDIA,
+            SERVICE_EXTRACT_MEDIA_URL,
             {ATTR_URL: url},
             blocking=True,
             return_response=True,
@@ -82,7 +82,7 @@ async def test_extracting_playlist_no_entries(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_EXTRACT_MEDIA,
+            SERVICE_EXTRACT_MEDIA_URL,
             {ATTR_URL: YOUTUBE_EMPTY_PLAYLIST},
             blocking=True,
             return_response=True,

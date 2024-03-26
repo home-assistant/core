@@ -32,14 +32,13 @@ from .const import (
     ATTR_URL,
     DEFAULT_STREAM_QUERY,
     DOMAIN,
-    SERVICE_EXTRACT_MEDIA,
+    SERVICE_EXTRACT_MEDIA_URL,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_CUSTOMIZE_ENTITIES = "customize"
 CONF_DEFAULT_STREAM_QUERY = "default_query"
-
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -53,13 +52,6 @@ CONFIG_SCHEMA = vol.Schema(
         )
     },
     extra=vol.ALLOW_EXTRA,
-)
-
-EXTRACT_MEDIA_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_URL): cv.string,
-        vol.Optional(ATTR_FORMAT_QUERY, default=DEFAULT_STREAM_QUERY): cv.string,
-    }
 )
 
 
@@ -103,11 +95,22 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Get stream URL and send it to the play_media service."""
         MediaExtractor(hass, config[DOMAIN], call.data).extract_and_send()
 
+    default_format_query = config.get(DOMAIN, {}).get(
+        CONF_DEFAULT_STREAM_QUERY, DEFAULT_STREAM_QUERY
+    )
+
     hass.services.async_register(
         DOMAIN,
-        SERVICE_EXTRACT_MEDIA,
+        SERVICE_EXTRACT_MEDIA_URL,
         extract_media,
-        schema=EXTRACT_MEDIA_SCHEMA,
+        schema=vol.Schema(
+            {
+                vol.Required(ATTR_URL): cv.string,
+                vol.Optional(
+                    ATTR_FORMAT_QUERY, default=default_format_query
+                ): cv.string,
+            }
+        ),
         supports_response=SupportsResponse.ONLY,
     )
 
