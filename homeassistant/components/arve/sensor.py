@@ -37,43 +37,41 @@ SENSORS: tuple[ArveDeviceEntityDescription, ...] = (
         key="CO2",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         device_class=SensorDeviceClass.CO2,
-        value_fn=lambda arve_data: getattr(arve_data, "co2"),
+        value_fn=lambda arve_data: arve_data.co2,
     ),
     ArveDeviceEntityDescription(
         key="AQI",
-        native_unit_of_measurement=None,
         device_class=SensorDeviceClass.AQI,
-        value_fn=lambda arve_data: getattr(arve_data, "aqi"),
+        value_fn=lambda arve_data: arve_data.aqi,
     ),
     ArveDeviceEntityDescription(
         key="Humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
-        value_fn=lambda arve_data: getattr(arve_data, "humidity"),
+        value_fn=lambda arve_data: arve_data.humidity,
     ),
     ArveDeviceEntityDescription(
         key="PM10",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM10,
-        value_fn=lambda arve_data: getattr(arve_data, "pm10"),
+        value_fn=lambda arve_data: arve_data.pm10,
     ),
     ArveDeviceEntityDescription(
         key="PM25",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
-        value_fn=lambda arve_data: getattr(arve_data, "pm25"),
+        value_fn=lambda arve_data: arve_data.pm25,
     ),
     ArveDeviceEntityDescription(
         key="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
-        value_fn=lambda arve_data: getattr(arve_data, "temperature"),
+        value_fn=lambda arve_data: arve_data.temperature,
     ),
     ArveDeviceEntityDescription(
         key="TVOC",
         translation_key="tvoc",
-        native_unit_of_measurement=None,
-        value_fn=lambda arve_data: getattr(arve_data, "tvoc"),
+        value_fn=lambda arve_data: arve_data.tvoc,
     ),
 )
 
@@ -101,5 +99,5 @@ class ArveDevice(ArveDeviceEntity, SensorEntity):
     def native_value(self) -> int | float:
         """State of the sensor."""
         return self.entity_description.value_fn(
-            self.coordinator.data[self.device_sn]["sensors"]
+            self.coordinator.data[self.device_serial_number].sensors
         )

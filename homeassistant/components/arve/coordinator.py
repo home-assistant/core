@@ -4,7 +4,14 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from asyncarve import Arve, ArveConnectionError, ArveDevices, ArveError, ArveSensProData
+from asyncarve import (
+    Arve,
+    ArveConnectionError,
+    ArveDeviceInfo,
+    ArveDevices,
+    ArveError,
+    ArveSensProData,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_SECRET
@@ -30,17 +37,15 @@ class ArveCoordinator(DataUpdateCoordinator[ArveSensProData]):
             update_interval=timedelta(seconds=60),
         )
 
-        self._client_session = async_get_clientsession(hass)
-
         self.arve = Arve(
             self.config_entry.data[CONF_ACCESS_TOKEN],
             self.config_entry.data[CONF_CLIENT_SECRET],
-            session=self._client_session,
+            session=async_get_clientsession(hass),
         )
 
         self.first_start = True
 
-    async def _async_update_data(self) -> dict[str, ArveSensProData]:
+    async def _async_update_data(self) -> dict[str, ArveDeviceInfo]:
         """Fetch data from API endpoint."""
         try:
             if self.first_start:
@@ -48,10 +53,10 @@ class ArveCoordinator(DataUpdateCoordinator[ArveSensProData]):
                 self.first_start = False
 
             response_data = {
-                sn: {
-                    "sensors": await self.arve.device_sensor_data(sn),
-                    "info": await self.arve.get_sensor_info(sn),
-                }
+                sn: ArveDeviceInfo(
+                    await self.arve.device_sensor_data(sn),
+                    await self.arve.get_sensor_info(sn),
+                )
                 for sn in self.devices.sn
             }
         except ArveConnectionError as err:

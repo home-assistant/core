@@ -21,7 +21,7 @@
   "entity": {
     "sensor": {
       "tvoc": {
-        "name": "Total Volatile Organic Compounds"
+        "name": "Total volatile organic compounds"
       }
     }
   }
