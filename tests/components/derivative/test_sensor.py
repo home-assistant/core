@@ -162,7 +162,7 @@ async def test_data_moving_average_for_discrete_sensor(hass: HomeAssistant) -> N
     for temperature in range(30):
         temperature_values += [temperature] * 2  # two values per minute
     time_window = 600
-    times = list(range(0, 1800 + 30, 30))
+    times = list(range(0, 1800, 30))
 
     config, entity_id = await _setup_sensor(
         hass,
