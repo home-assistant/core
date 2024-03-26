@@ -336,7 +336,6 @@ class IntegrationSensor(RestoreSensor):
         source_unit = source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         if source_unit is not None:
             self._unit_of_measurement = self._calculate_unit(source_unit)
-                f"{self._multiply_unit_with_time(source_unit)}"
         else:
             # If the source has no defined unit we cannot derive a unit for the integral
             self._unit_of_measurement = None
