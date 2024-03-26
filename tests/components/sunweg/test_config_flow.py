@@ -110,7 +110,9 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+
     entries = hass.config_entries.async_entries()
+
     assert len(entries) == 1
     assert entries[0].data[CONF_USERNAME] == SUNWEG_USER_INPUT[CONF_USERNAME]
     assert entries[0].data[CONF_PASSWORD] == SUNWEG_USER_INPUT[CONF_PASSWORD]
@@ -131,8 +133,9 @@ async def test_no_plants_on_account(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_auth"}
 
-    with patch.object(APIHelper, "authenticate", return_value=True), patch.object(
-        APIHelper, "listPlants", return_value=[]
+    with (
+        patch.object(APIHelper, "authenticate", return_value=True),
+        patch.object(APIHelper, "listPlants", return_value=[]),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], SUNWEG_USER_INPUT
@@ -148,8 +151,11 @@ async def test_multiple_plant_ids(hass: HomeAssistant, plant_fixture) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch.object(APIHelper, "authenticate", return_value=True), patch.object(
-        APIHelper, "listPlants", return_value=[plant_fixture, plant_fixture]
+    with (
+        patch.object(APIHelper, "authenticate", return_value=True),
+        patch.object(
+            APIHelper, "listPlants", return_value=[plant_fixture, plant_fixture]
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], SUNWEG_USER_INPUT
