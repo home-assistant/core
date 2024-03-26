@@ -20,18 +20,23 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch(
-        "homeassistant.components.linear_garage_door.config_flow.Linear.login",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.linear_garage_door.config_flow.Linear.get_sites",
-        return_value=[{"id": "test-site-id", "name": "test-site-name"}],
-    ), patch(
-        "homeassistant.components.linear_garage_door.config_flow.Linear.close",
-        return_value=None,
-    ), patch(
-        "uuid.uuid4",
-        return_value="test-uuid",
+    with (
+        patch(
+            "homeassistant.components.linear_garage_door.config_flow.Linear.login",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.linear_garage_door.config_flow.Linear.get_sites",
+            return_value=[{"id": "test-site-id", "name": "test-site-name"}],
+        ),
+        patch(
+            "homeassistant.components.linear_garage_door.config_flow.Linear.close",
+            return_value=None,
+        ),
+        patch(
+            "uuid.uuid4",
+            return_value="test-uuid",
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -84,18 +89,23 @@ async def test_reauth(hass: HomeAssistant) -> None:
         assert result1["type"] == FlowResultType.FORM
         assert result1["step_id"] == "user"
 
-        with patch(
-            "homeassistant.components.linear_garage_door.config_flow.Linear.login",
-            return_value=True,
-        ), patch(
-            "homeassistant.components.linear_garage_door.config_flow.Linear.get_sites",
-            return_value=[{"id": "test-site-id", "name": "test-site-name"}],
-        ), patch(
-            "homeassistant.components.linear_garage_door.config_flow.Linear.close",
-            return_value=None,
-        ), patch(
-            "uuid.uuid4",
-            return_value="test-uuid",
+        with (
+            patch(
+                "homeassistant.components.linear_garage_door.config_flow.Linear.login",
+                return_value=True,
+            ),
+            patch(
+                "homeassistant.components.linear_garage_door.config_flow.Linear.get_sites",
+                return_value=[{"id": "test-site-id", "name": "test-site-name"}],
+            ),
+            patch(
+                "homeassistant.components.linear_garage_door.config_flow.Linear.close",
+                return_value=None,
+            ),
+            patch(
+                "uuid.uuid4",
+                return_value="test-uuid",
+            ),
         ):
             result2 = await hass.config_entries.flow.async_configure(
                 result1["flow_id"],
@@ -125,12 +135,15 @@ async def test_form_invalid_login(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.linear_garage_door.config_flow.Linear.login",
-        side_effect=InvalidLoginError,
-    ), patch(
-        "homeassistant.components.linear_garage_door.config_flow.Linear.close",
-        return_value=None,
+    with (
+        patch(
+            "homeassistant.components.linear_garage_door.config_flow.Linear.login",
+            side_effect=InvalidLoginError,
+        ),
+        patch(
+            "homeassistant.components.linear_garage_door.config_flow.Linear.close",
+            return_value=None,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

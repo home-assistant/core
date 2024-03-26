@@ -754,9 +754,9 @@ class PipelineRun:
                     raise DuplicateWakeUpDetectedError(result.wake_word_phrase)
 
             # Record last wake up time to block duplicate detections
-            self.hass.data[DATA_LAST_WAKE_UP][
-                result.wake_word_phrase
-            ] = time.monotonic()
+            self.hass.data[DATA_LAST_WAKE_UP][result.wake_word_phrase] = (
+                time.monotonic()
+            )
 
             if result.queued_audio:
                 # Add audio that was pending at detection.
@@ -1375,9 +1375,9 @@ class PipelineInput:
                             raise DuplicateWakeUpDetectedError(self.wake_word_phrase)
 
                     # Record last wake up time to block duplicate detections
-                    self.run.hass.data[DATA_LAST_WAKE_UP][
-                        self.wake_word_phrase
-                    ] = time.monotonic()
+                    self.run.hass.data[DATA_LAST_WAKE_UP][self.wake_word_phrase] = (
+                        time.monotonic()
+                    )
 
                 stt_input_stream = stt_processed_stream
 
