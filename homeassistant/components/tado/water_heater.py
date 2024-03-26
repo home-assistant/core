@@ -279,12 +279,10 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
             self._tado.set_zone_off(self.zone_id, CONST_OVERLAY_MANUAL, TYPE_HOT_WATER)
             return
 
-        overlay_mode = CONST_OVERLAY_MANUAL
-        if duration:
-            overlay_mode = CONST_OVERLAY_TIMER
-        elif self._tado.fallback:
-            # Fallback to Smart Schedule at next Schedule switch if we have fallback enabled
-            overlay_mode = CONST_OVERLAY_TADO_MODE
+        overlay_mode = self._tado.decide_overlay_mode(
+            duration=duration,
+            zone_id=self.zone_id,
+        )
 
         _LOGGER.debug(
             "Switching to %s for zone %s (%d) with temperature %s",
