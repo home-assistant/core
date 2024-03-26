@@ -1,7 +1,6 @@
 """Support for Denon AVR additional sensors."""
 
 import logging
-from typing import Any
 
 from denonavr import DenonAVR
 from denonavr.const import POWER_ON
@@ -54,21 +53,20 @@ async def async_setup_entry(
     entities = []
     data = hass.data[DOMAIN][config_entry.entry_id]
     receiver = data[CONF_RECEIVER]
-    for receiver_zone in receiver.zones.values():
-        if config_entry.data[CONF_SERIAL_NUMBER] is not None:
-            unique_id = f"{config_entry.unique_id}-{receiver_zone.zone}"
-        else:
-            unique_id = f"{config_entry.entry_id}-{receiver_zone.zone}"
-        for sensor in SENSOR_ENTITIES:
-            sensor_unique_id = f"{unique_id}-{sensor}"
-            entities.append(
-                DenonSensor(
-                    receiver_zone,
-                    sensor_unique_id,
-                    config_entry,
-                    sensor,
-                )
+    if config_entry.data[CONF_SERIAL_NUMBER] is not None:
+        unique_id = config_entry.unique_id
+    else:
+        unique_id = config_entry.entry_id
+    for sensor in SENSOR_ENTITIES:
+        sensor_unique_id = f"{unique_id}-{sensor}"
+        entities.append(
+            DenonSensor(
+                receiver,
+                sensor_unique_id,
+                config_entry,
+                sensor,
             )
+        )
     _LOGGER.debug(
         "Sensor entities for %s receiver at host %s initialized",
         receiver.manufacturer,
@@ -93,11 +91,6 @@ class DenonSensor(DenonDeviceEntity, SensorEntity):
 
         self._attribute = attribute
         self.translation_key = attribute
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return device specific state attributes."""
-        return {ATTR_ZONE: getattr(self._receiver, ATTR_ZONE, None)}
 
     @property
     def native_value(self) -> StateType:
