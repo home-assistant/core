@@ -11,6 +11,6 @@ send_message:
       selector:
         text:
     data:
-      example: "{'images': ['/tmp/test.jpg'], 'format': 'text'}"
+      example: "{'images': ['/tmp/test.jpg'], 'format': 'text', 'image_urls': ['http://example.com'], 'verify_ssl': true}"
       selector:
         object:

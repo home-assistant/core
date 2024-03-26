@@ -7,6 +7,7 @@ from collections.abc import Sequence
 import logging
 import mimetypes
 import os
+import pathlib
 import re
 from typing import Final, NewType, Required, TypedDict
 
@@ -39,6 +40,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event as HassEvent, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
@@ -62,12 +64,15 @@ CONF_ROOMS_REGEX = "^[!|#][^:]*:.*"
 EVENT_MATRIX_COMMAND = "matrix_command"
 
 DEFAULT_CONTENT_TYPE = "application/octet-stream"
+MAX_ALLOWED_DOWNLOAD_SIZE_BYTES = 52428800
 
 MESSAGE_FORMATS = [FORMAT_HTML, FORMAT_TEXT]
 DEFAULT_MESSAGE_FORMAT = FORMAT_TEXT
 
 ATTR_FORMAT = "format"  # optional message format
 ATTR_IMAGES = "images"  # optional images
+ATTR_IMAGE_URLS = "image_urls"  # optional images from url
+ATTR_VERIFY_SSL = "verify_ssl"  # optional verify ssl
 
 WordCommand = NewType("WordCommand", str)
 ExpressionCommand = NewType("ExpressionCommand", re.Pattern)
@@ -125,6 +130,8 @@ SERVICE_SCHEMA_SEND_MESSAGE = vol.Schema(
                 MESSAGE_FORMATS
             ),
             vol.Optional(ATTR_IMAGES): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(ATTR_IMAGE_URLS): vol.All(cv.ensure_list, [cv.url]),
+            vol.Optional(ATTR_VERIFY_SSL, default=True): cv.boolean,
         },
         vol.Required(ATTR_TARGET): vol.All(
             cv.ensure_list, [cv.matches_regex(CONF_ROOMS_REGEX)]
@@ -409,6 +416,7 @@ class MatrixBot:
             )
 
         await self._store_auth_token(self._client.access_token)
+        self._client.load_store()
 
     async def _handle_room_send(
         self, target_room: RoomAnyID, message_type: str, content: dict
@@ -443,16 +451,57 @@ class MatrixBot:
             for target_room in target_rooms
         )
 
+    async def _send_image_url(
+        self, image_url: str, target_rooms: Sequence[RoomAnyID], verify_ssl: bool
+    ) -> None:
+        """Upload an image from a URL, then send it to all target_rooms."""
+        # Get required image metadata.
+        if not self.hass.config.is_allowed_external_url(image_url):
+            _LOGGER.error("URL '%s' not in allow list", image_url)
+            return
+        session = aiohttp_client.async_get_clientsession(self.hass)
+        resp = await session.get(
+            image_url, raise_for_status=True, verify_ssl=verify_ssl
+        )
+        image_type = (
+            resp.headers.get("Content-Type")
+            or mimetypes.guess_type(image_url)[0]
+            or "image/jpeg"
+        )
+        if (
+            int(resp.headers.get("Content-Length", "0"))
+            > MAX_ALLOWED_DOWNLOAD_SIZE_BYTES
+        ):
+            _LOGGER.error(
+                "Attachment too large (Content-Length reports %s). Max size: %s"
+                " bytes",
+                int(str(resp.headers.get("Content-Length"))),
+                MAX_ALLOWED_DOWNLOAD_SIZE_BYTES,
+            )
+            return
+        async with aiofiles.tempfile.TemporaryDirectory() as tempdir:
+            image_extension = mimetypes.guess_extension(image_type)
+            path = pathlib.Path(tempdir) / f"image{image_extension}"
+            async with aiofiles.open(path, "wb") as f:
+                await f.write(await resp.read())
+            await self._send_image(
+                str(path.absolute()), target_rooms, skip_check_allowed=True
+            )
+
     async def _send_image(
-        self, image_path: str, target_rooms: Sequence[RoomAnyID]
+        self,
+        image_path: str,
+        target_rooms: Sequence[RoomAnyID],
+        skip_check_allowed: bool = False,
     ) -> None:
         """Upload an image, then send it to all target_rooms."""
-        _is_allowed_path = await self.hass.async_add_executor_job(
-            self.hass.config.is_allowed_path, image_path
-        )
-        if not _is_allowed_path:
-            _LOGGER.error("Path not allowed: %s", image_path)
-            return
+        if not skip_check_allowed:
+            _is_allowed_path = await self.hass.async_add_executor_job(
+                self.hass.config.is_allowed_path, image_path
+            )
+            if not _is_allowed_path:
+                _LOGGER.error("Path not allowed: %s", image_path)
+                return
 
         # Get required image metadata.
         image = await self.hass.async_add_executor_job(Image.open, image_path)
@@ -508,16 +557,28 @@ class MatrixBot:
             target_rooms=target_rooms, message_type="m.room.message", content=content
         )
 
-        if (
-            data is not None
-            and (image_paths := data.get(ATTR_IMAGES, []))
-            and len(target_rooms) > 0
-        ):
-            image_tasks = [
-                self.hass.async_create_task(self._send_image(image_path, target_rooms))
-                for image_path in image_paths
-            ]
-            await asyncio.wait(image_tasks)
+        if data is not None and len(target_rooms) > 0:
+            tasks = []
+            if image_paths := data.get(ATTR_IMAGES, []):
+                image_tasks = [
+                    self.hass.async_create_task(
+                        self._send_image(image_path, target_rooms)
+                    )
+                    for image_path in image_paths
+                ]
+                tasks.extend(image_tasks)
+            if image_urls := data.get(ATTR_IMAGE_URLS, []):
+                image_url_tasks = [
+                    self.hass.async_create_task(
+                        self._send_image_url(
+                            image_url, target_rooms, data[ATTR_VERIFY_SSL]
+                        )
+                    )
+                    for image_url in image_urls
+                ]
+                tasks.extend(image_url_tasks)
+            if tasks:
+                await asyncio.wait(tasks)
 
     async def handle_send_message(self, service: ServiceCall) -> None:
         """Handle the send_message service."""
