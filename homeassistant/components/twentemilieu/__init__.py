@@ -34,14 +34,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session=session,
     )
 
-    coordinator: DataUpdateCoordinator[
-        dict[WasteType, list[date]]
-    ] = DataUpdateCoordinator(
-        hass,
-        LOGGER,
-        name=DOMAIN,
-        update_interval=SCAN_INTERVAL,
-        update_method=twentemilieu.update,
+    coordinator: DataUpdateCoordinator[dict[WasteType, list[date]]] = (
+        DataUpdateCoordinator(
+            hass,
+            LOGGER,
+            name=DOMAIN,
+            update_interval=SCAN_INTERVAL,
+            update_method=twentemilieu.update,
+        )
     )
     await coordinator.async_config_entry_first_refresh()
 

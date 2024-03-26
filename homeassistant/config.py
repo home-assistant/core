@@ -1112,9 +1112,9 @@ async def merge_packages_config(
                 continue
 
             try:
-                config_platform: ModuleType | None = (
-                    await integration.async_get_platform("config")
-                )
+                config_platform: (
+                    ModuleType | None
+                ) = await integration.async_get_platform("config")
                 # Test if config platform has a config validator
                 if not hasattr(config_platform, "async_validate_config"):
                     config_platform = None
