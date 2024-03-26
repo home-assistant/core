@@ -86,40 +86,63 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
         # Because Opower provides historical usage/cost with a delay of a couple of days
         # we need to insert data into statistics.
         await self._insert_statistics()
-        return {forecast.account.utility_account_id: forecast for forecast in forecasts}
+        return {forecast.account.uuid: forecast for forecast in forecasts}
 
     async def _insert_statistics(self) -> None:
         """Insert Opower statistics."""
-        for account in await self.api.async_get_accounts():
+        accounts = await self.api.async_get_accounts()
+
+        # Utility account id is not necessarily unique if there are multiple
+        # meters for a single account.  If there are 2 meters that have the
+        # same utility account id, then it is a multi-meter account.
+        utility_account_ids = [account.utility_account_id for account in accounts]
+        multi_meter_utility_account_ids = [
+            i for i in set(utility_account_ids) if utility_account_ids.count(i) > 1
+        ]
+
+        for account in accounts:
+            is_multi_meter = (
+                account.utility_account_id in multi_meter_utility_account_ids
+            )
+
+            # For backwards compatibility, use the utility_account_id
+            # if there is only a single meter for the account.
+            meter_id = account.uuid if is_multi_meter else account.utility_account_id
             id_prefix = "_".join(
                 (
                     self.api.utility.subdomain(),
                     account.meter_type.name.lower(),
-                    # Some utilities like AEP have "-" in their account id.
+                    # Some utilities like AEP have "-" in their uuid/utility_account_id.
                     # Replace it with "_" to avoid "Invalid statistic_id"
-                    account.utility_account_id.replace("-", "_"),
+                    meter_id.replace("-", "_"),
                 )
             )
             cost_statistic_id = f"{DOMAIN}:{id_prefix}_energy_cost"
-            consumption_statistic_id = f"{DOMAIN}:{id_prefix}_energy_consumption"
+
+            # For backwards compatibility, if the account doesn't have multiple meters,
+            # assume that the reading is a consumption reading.
+            reading_statistic_type = "reading" if is_multi_meter else "consumption"
+            reading_statistic_id = (
+                f"{DOMAIN}:{id_prefix}_energy_{reading_statistic_type}"
+            )
             _LOGGER.debug(
                 "Updating Statistics for %s and %s",
                 cost_statistic_id,
-                consumption_statistic_id,
+                reading_statistic_id,
             )
 
             last_stat = await get_instance(self.hass).async_add_executor_job(
-                get_last_statistics, self.hass, 1, consumption_statistic_id, True, set()
+                get_last_statistics, self.hass, 1, reading_statistic_id, True, set()
             )
             if not last_stat:
                 _LOGGER.debug("Updating statistic for the first time")
                 cost_reads = await self._async_get_all_cost_reads(account)
                 cost_sum = 0.0
-                consumption_sum = 0.0
+                reading_sum = 0.0
                 last_stats_time = None
             else:
                 cost_reads = await self._async_get_recent_cost_reads(
-                    account, last_stat[consumption_statistic_id][0]["start"]
+                    account, last_stat[reading_statistic_id][0]["start"]
                 )
                 if not cost_reads:
                     _LOGGER.debug("No recent usage/cost data. Skipping update")
@@ -129,33 +152,33 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                     self.hass,
                     cost_reads[0].start_time,
                     None,
-                    {cost_statistic_id, consumption_statistic_id},
+                    {cost_statistic_id, reading_statistic_id},
                     "hour" if account.meter_type == MeterType.ELEC else "day",
                     None,
                     {"sum"},
                 )
                 cost_sum = cast(float, stats[cost_statistic_id][0]["sum"])
-                consumption_sum = cast(float, stats[consumption_statistic_id][0]["sum"])
+                reading_sum = cast(float, stats[reading_statistic_id][0]["sum"])
                 last_stats_time = stats[cost_statistic_id][0]["start"]
 
             cost_statistics = []
-            consumption_statistics = []
+            reading_statistics = []
 
             for cost_read in cost_reads:
                 start = cost_read.start_time
                 if last_stats_time is not None and start.timestamp() <= last_stats_time:
                     continue
                 cost_sum += cost_read.provided_cost
-                consumption_sum += cost_read.consumption
+                reading_sum += cost_read.consumption
 
                 cost_statistics.append(
                     StatisticData(
                         start=start, state=cost_read.provided_cost, sum=cost_sum
                     )
                 )
-                consumption_statistics.append(
+                reading_statistics.append(
                     StatisticData(
-                        start=start, state=cost_read.consumption, sum=consumption_sum
+                        start=start, state=cost_read.consumption, sum=reading_sum
                     )
                 )
 
@@ -164,7 +187,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                     "Opower",
                     self.api.utility.subdomain(),
                     account.meter_type.name.lower(),
-                    account.utility_account_id,
+                    meter_id,
                 )
             )
             cost_metadata = StatisticMetaData(
@@ -175,12 +198,12 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 statistic_id=cost_statistic_id,
                 unit_of_measurement=None,
             )
-            consumption_metadata = StatisticMetaData(
+            reading_metadata = StatisticMetaData(
                 has_mean=False,
                 has_sum=True,
-                name=f"{name_prefix} consumption",
+                name=f"{name_prefix} {reading_statistic_type}",
                 source=DOMAIN,
-                statistic_id=consumption_statistic_id,
+                statistic_id=reading_statistic_id,
                 unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR
                 if account.meter_type == MeterType.ELEC
                 else UnitOfVolume.CENTUM_CUBIC_FEET,
@@ -188,7 +211,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
 
             async_add_external_statistics(self.hass, cost_metadata, cost_statistics)
             async_add_external_statistics(
-                self.hass, consumption_metadata, consumption_statistics
+                self.hass, reading_metadata, reading_statistics
             )
 
     async def _async_get_all_cost_reads(self, account: Account) -> list[CostRead]:
