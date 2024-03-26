@@ -45,7 +45,7 @@ async def async_setup_entry(
     _async_measurement_listener()
 
 
-class TtnDataSensor(TTNEntity, SensorEntity):
+class TtnDataSensor(TTNEntity[TTNSensorValue], SensorEntity):
     """Represents a TTN Home Assistant Sensor."""
 
     @property
