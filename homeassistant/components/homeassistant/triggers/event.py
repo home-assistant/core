@@ -64,7 +64,7 @@ async def async_attach_trigger(
     event_types = template.render_complex(
         config[CONF_EVENT_TYPE], variables, limited=True
     )
-    if any(evt == EVENT_STATE_REPORTED for evt in event_types):
+    if EVENT_STATE_REPORTED in event_types:
         raise HomeAssistantError(
             f"Can't listen to {EVENT_STATE_REPORTED} in event trigger"
         )
