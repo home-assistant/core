@@ -1,0 +1,4 @@
+{
+  "code": "UnprocessableEntity",
+  "message": "Parameter boxId is not parseable as datatype id"
+}

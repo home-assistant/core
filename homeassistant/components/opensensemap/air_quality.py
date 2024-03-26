@@ -2,29 +2,24 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
-from opensensemap_api import OpenSenseMap
-from opensensemap_api.exceptions import OpenSenseMapError
 import voluptuous as vol
 
 from homeassistant.components.air_quality import PLATFORM_SCHEMA, AirQualityEntity
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import CONF_STATION_ID, DOMAIN, MANUFACTURER
+from .coordinator import OpenSenseMapDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-
-CONF_STATION_ID = "station_id"
-
-SCAN_INTERVAL = timedelta(minutes=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_STATION_ID): cv.string, vol.Optional(CONF_NAME): cv.string}
@@ -39,65 +34,56 @@ async def async_setup_platform(
 ) -> None:
     """Set up the openSenseMap air quality platform."""
 
-    name = config.get(CONF_NAME)
-    station_id = config[CONF_STATION_ID]
-
-    session = async_get_clientsession(hass)
-    osm_api = OpenSenseMapData(OpenSenseMap(station_id, session))
-
-    await osm_api.async_update()
-
-    if "name" not in osm_api.api.data:
-        _LOGGER.error("Station %s is not available", station_id)
-        raise PlatformNotReady
-
-    station_name = osm_api.api.data["name"] if name is None else name
-
-    async_add_entities([OpenSenseMapQuality(station_name, osm_api)], True)
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
 
 
-class OpenSenseMapQuality(AirQualityEntity):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize the entries."""
+
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities(
+        [OpenSenseMapQuality(coordinator, entry)],
+    )
+
+
+class OpenSenseMapQuality(
+    CoordinatorEntity[OpenSenseMapDataUpdateCoordinator], AirQualityEntity
+):
     """Implementation of an openSenseMap air quality entity."""
 
     _attr_attribution = "Data provided by openSenseMap"
+    _attr_has_entity_name = True
+    _attr_name = None
 
-    def __init__(self, name, osm):
+    def __init__(
+        self, coordinator: OpenSenseMapDataUpdateCoordinator, config_entry: ConfigEntry
+    ) -> None:
         """Initialize the air quality entity."""
-        self._name = name
-        self._osm = osm
+        super().__init__(coordinator)
+
+        self._name = config_entry.data[CONF_NAME]
+        self._station_id = config_entry.data[CONF_STATION_ID]
+        self._attr_unique_id = f"{self._station_id}_air_quality"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._station_id)},
+            manufacturer=MANUFACTURER,
+            name=self._name,
+        )
 
     @property
-    def name(self):
-        """Return the name of the air quality entity."""
-        return self._name
-
-    @property
-    def particulate_matter_2_5(self):
+    def particulate_matter_2_5(self) -> float | None:
         """Return the particulate matter 2.5 level."""
-        return self._osm.api.pm2_5
+        return self.coordinator.data.pm2_5
 
     @property
-    def particulate_matter_10(self):
+    def particulate_matter_10(self) -> float | None:
         """Return the particulate matter 10 level."""
-        return self._osm.api.pm10
-
-    async def async_update(self):
-        """Get the latest data from the openSenseMap API."""
-        await self._osm.async_update()
-
-
-class OpenSenseMapData:
-    """Get the latest data and update the states."""
-
-    def __init__(self, api):
-        """Initialize the data object."""
-        self.api = api
-
-    @Throttle(SCAN_INTERVAL)
-    async def async_update(self):
-        """Get the latest data from the Pi-hole."""
-
-        try:
-            await self.api.get_data()
-        except OpenSenseMapError as err:
-            _LOGGER.error("Unable to fetch data: %s", err)
+        return self.coordinator.data.pm10

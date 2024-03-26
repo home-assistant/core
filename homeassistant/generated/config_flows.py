@@ -370,6 +370,7 @@ FLOWS = {
         "openexchangerates",
         "opengarage",
         "openhome",
+        "opensensemap",
         "opensky",
         "opentherm_gw",
         "openuv",
