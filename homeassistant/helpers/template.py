@@ -1611,16 +1611,18 @@ def label_name(hass: HomeAssistant, lookup_value: str) -> str | None:
     return None
 
 
-def label_areas(hass: HomeAssistant, label_id_or_name: str) -> Iterable[str]:
-    """Return areas for a given label ID or name."""
-    _label_id: str | None
+def _label_id_or_name(hass: HomeAssistant, label_id_or_name: str) -> str | None:
+    """Get the label ID from a label name or ID."""
     # If label_name returns a value, we know the input was an ID, otherwise we
     # assume it's a name, and if it's neither, we return early.
     if label_name(hass, label_id_or_name) is not None:
-        _label_id = label_id_or_name
-    else:
-        _label_id = label_id(hass, label_id_or_name)
-    if _label_id is None:
+        return label_id_or_name
+    return label_id(hass, label_id_or_name)
+
+
+def label_areas(hass: HomeAssistant, label_id_or_name: str) -> Iterable[str]:
+    """Return areas for a given label ID or name."""
+    if (_label_id := _label_id_or_name(hass, label_id_or_name)) is None:
         return []
     area_reg = area_registry.async_get(hass)
     entries = area_registry.async_entries_for_label(area_reg, _label_id)
@@ -1629,14 +1631,7 @@ def label_areas(hass: HomeAssistant, label_id_or_name: str) -> Iterable[str]:
 
 def label_devices(hass: HomeAssistant, label_id_or_name: str) -> Iterable[str]:
     """Return device IDs for a given label ID or name."""
-    _label_id: str | None
-    # If label_name returns a value, we know the input was an ID, otherwise we
-    # assume it's a name, and if it's neither, we return early.
-    if label_name(hass, label_id_or_name) is not None:
-        _label_id = label_id_or_name
-    else:
-        _label_id = label_id(hass, label_id_or_name)
-    if _label_id is None:
+    if (_label_id := _label_id_or_name(hass, label_id_or_name)) is None:
         return []
     dev_reg = device_registry.async_get(hass)
     entries = device_registry.async_entries_for_label(dev_reg, _label_id)
@@ -1645,14 +1640,7 @@ def label_devices(hass: HomeAssistant, label_id_or_name: str) -> Iterable[str]:
 
 def label_entities(hass: HomeAssistant, label_id_or_name: str) -> Iterable[str]:
     """Return entities for a given label ID or name."""
-    _label_id: str | None
-    # If label_name returns a value, we know the input was an ID, otherwise we
-    # assume it's a name, and if it's neither, we return early.
-    if label_name(hass, label_id_or_name) is not None:
-        _label_id = label_id_or_name
-    else:
-        _label_id = label_id(hass, label_id_or_name)
-    if _label_id is None:
+    if (_label_id := _label_id_or_name(hass, label_id_or_name)) is None:
         return []
     ent_reg = entity_registry.async_get(hass)
     entries = entity_registry.async_entries_for_label(ent_reg, _label_id)
