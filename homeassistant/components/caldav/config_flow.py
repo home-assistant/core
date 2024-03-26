@@ -9,11 +9,28 @@ from caldav.lib.error import AuthorizationError, DAVError
 import requests
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_URL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+    UnitOfTime,
+)
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+)
 
-from .const import DOMAIN
+from .const import CONF_DAYS, DEFAULT_DAYS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +51,12 @@ class CalDavConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     _reauth_entry: ConfigEntry | None = None
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Get the options flow for this handler."""
+        return OptionsFlowHandler(config_entry)
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -50,7 +73,9 @@ class CalDavConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = error
             else:
                 return self.async_create_entry(
-                    title=user_input[CONF_USERNAME], data=user_input
+                    title=user_input[CONF_USERNAME],
+                    data=user_input,
+                    options={CONF_DAYS: DEFAULT_DAYS},
                 )
 
         return self.async_show_form(
@@ -125,4 +150,41 @@ class CalDavConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+        )
+
+
+class OptionsFlowHandler(OptionsFlow):
+    """Handle an options flow."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle options flow."""
+        if user_input is not None:
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, options={CONF_DAYS: user_input[CONF_DAYS]}
+            )
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_DAYS, default=self.config_entry.options[CONF_DAYS]
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=1,
+                            max=366,
+                            step=1,
+                            unit_of_measurement=UnitOfTime.DAYS,
+                            mode=NumberSelectorMode.BOX,
+                        ),
+                    ),
+                }
+            ),
         )

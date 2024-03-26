@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.components.caldav.const import DOMAIN
+from homeassistant.components.caldav.const import CONF_DAYS, DEFAULT_DAYS, DOMAIN
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_URL,
@@ -62,4 +62,5 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_PASSWORD: TEST_PASSWORD,
             CONF_VERIFY_SSL: True,
         },
+        options={CONF_DAYS: DEFAULT_DAYS},
     )

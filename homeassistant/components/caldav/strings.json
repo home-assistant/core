@@ -30,5 +30,14 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "days": "Number of days for the search for upcoming appointments"
+        }
+      }
+    }
   }
 }
