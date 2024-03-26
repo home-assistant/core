@@ -39,29 +39,29 @@ class MotionblindsBLEButtonEntityDescription(ButtonEntityDescription):
     command: Callable[[MotionDevice], Coroutine[Any, Any, None]]
 
 
-BUTTON_TYPES: dict[str, MotionblindsBLEButtonEntityDescription] = {
-    ATTR_CONNECT: MotionblindsBLEButtonEntityDescription(
+BUTTON_TYPES: list[MotionblindsBLEButtonEntityDescription] = [
+    MotionblindsBLEButtonEntityDescription(
         key=ATTR_CONNECT,
         translation_key=ATTR_CONNECT,
         icon=ICON_CONNECT,
         entity_category=EntityCategory.CONFIG,
         command=lambda device: device.connect(),
     ),
-    ATTR_DISCONNECT: MotionblindsBLEButtonEntityDescription(
+    MotionblindsBLEButtonEntityDescription(
         key=ATTR_DISCONNECT,
         translation_key=ATTR_DISCONNECT,
         icon=ICON_DISCONNECT,
         entity_category=EntityCategory.CONFIG,
         command=lambda device: device.disconnect(),
     ),
-    ATTR_FAVORITE: MotionblindsBLEButtonEntityDescription(
+    MotionblindsBLEButtonEntityDescription(
         key=ATTR_FAVORITE,
         translation_key=ATTR_FAVORITE,
         icon=ICON_FAVORITE,
         entity_category=EntityCategory.CONFIG,
         command=lambda device: device.favorite(),
     ),
-}
+]
 
 
 async def async_setup_entry(
@@ -79,7 +79,7 @@ async def async_setup_entry(
                 entity_description,
                 unique_id_suffix=entity_description.key,
             )
-            for entity_description in BUTTON_TYPES.values()
+            for entity_description in BUTTON_TYPES
         ]
     )
 
