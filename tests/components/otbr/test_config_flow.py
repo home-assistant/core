@@ -105,13 +105,16 @@ async def test_user_flow_router_not_setup(
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.otbr.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.otbr.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -249,11 +252,12 @@ async def test_hassio_discovery_flow_yellow(
         "version": None,
     }
 
-    with patch(
-        "homeassistant.components.otbr.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.otbr.config_flow.yellow_hardware.async_info"
+    with (
+        patch(
+            "homeassistant.components.otbr.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch("homeassistant.components.otbr.config_flow.yellow_hardware.async_info"),
     ):
         result = await hass.config_entries.flow.async_init(
             otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
@@ -414,13 +418,16 @@ async def test_hassio_discovery_flow_router_not_setup(
     aioclient_mock.put(f"{url}/node/dataset/active", status=HTTPStatus.CREATED)
     aioclient_mock.put(f"{url}/node/state", status=HTTPStatus.OK)
 
-    with patch(
-        "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.otbr.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.otbr.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_init(
             otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
         )
@@ -468,13 +475,16 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred(
     aioclient_mock.put(f"{url}/node/dataset/active", status=HTTPStatus.CREATED)
     aioclient_mock.put(f"{url}/node/state", status=HTTPStatus.OK)
 
-    with patch(
-        "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
-        return_value=DATASET_CH15.hex(),
-    ), patch(
-        "homeassistant.components.otbr.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+            return_value=DATASET_CH15.hex(),
+        ),
+        patch(
+            "homeassistant.components.otbr.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_init(
             otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
         )
@@ -523,13 +533,16 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
 
     multiprotocol_addon_manager_mock.async_get_channel.return_value = 15
 
-    with patch(
-        "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
-        return_value=DATASET_CH16.hex(),
-    ), patch(
-        "homeassistant.components.otbr.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+            return_value=DATASET_CH16.hex(),
+        ),
+        patch(
+            "homeassistant.components.otbr.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_init(
             otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
         )

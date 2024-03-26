@@ -33,11 +33,15 @@ async def test_setup_entry(
         title="Home Assistant Yellow",
     )
     config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.homeassistant_yellow.get_os_info",
-        return_value={"board": "yellow"},
-    ) as mock_get_os_info, patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=onboarded
+    with (
+        patch(
+            "homeassistant.components.homeassistant_yellow.get_os_info",
+            return_value={"board": "yellow"},
+        ) as mock_get_os_info,
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded",
+            return_value=onboarded,
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -76,11 +80,14 @@ async def test_setup_zha(hass: HomeAssistant, addon_store_info) -> None:
         title="Home Assistant Yellow",
     )
     config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.homeassistant_yellow.get_os_info",
-        return_value={"board": "yellow"},
-    ) as mock_get_os_info, patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    with (
+        patch(
+            "homeassistant.components.homeassistant_yellow.get_os_info",
+            return_value={"board": "yellow"},
+        ) as mock_get_os_info,
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -127,11 +134,14 @@ async def test_setup_zha_multipan(
         title="Home Assistant Yellow",
     )
     config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.homeassistant_yellow.get_os_info",
-        return_value={"board": "yellow"},
-    ) as mock_get_os_info, patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    with (
+        patch(
+            "homeassistant.components.homeassistant_yellow.get_os_info",
+            return_value={"board": "yellow"},
+        ) as mock_get_os_info,
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -178,11 +188,14 @@ async def test_setup_zha_multipan_other_device(
         title="Home Assistant Yellow",
     )
     config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.homeassistant_yellow.get_os_info",
-        return_value={"board": "yellow"},
-    ) as mock_get_os_info, patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    with (
+        patch(
+            "homeassistant.components.homeassistant_yellow.get_os_info",
+            return_value={"board": "yellow"},
+        ) as mock_get_os_info,
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -300,11 +313,14 @@ async def test_setup_entry_addon_info_fails(
         title="Home Assistant Yellow",
     )
     config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.homeassistant_yellow.get_os_info",
-        return_value={"board": "yellow"},
-    ), patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    with (
+        patch(
+            "homeassistant.components.homeassistant_yellow.get_os_info",
+            return_value={"board": "yellow"},
+        ),
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+        ),
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
 
@@ -327,11 +343,14 @@ async def test_setup_entry_addon_not_running(
         title="Home Assistant Yellow",
     )
     config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.homeassistant_yellow.get_os_info",
-        return_value={"board": "yellow"},
-    ), patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    with (
+        patch(
+            "homeassistant.components.homeassistant_yellow.get_os_info",
+            return_value={"board": "yellow"},
+        ),
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+        ),
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
