@@ -21,6 +21,7 @@
     'context': <ANY>,
     'entity_id': 'water_heater.my_water_heater',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'heat_pump',
   })
@@ -41,6 +42,7 @@
     'context': <ANY>,
     'entity_id': 'water_heater.my_water_heater',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'electric',
   })

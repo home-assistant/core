@@ -1,4 +1,5 @@
 """Test the cloud component."""
+
 from collections.abc import Callable, Coroutine
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -71,12 +72,14 @@ async def test_remote_services(
 
     with patch("hass_nabucasa.remote.RemoteUI.connect") as mock_connect:
         await hass.services.async_call(DOMAIN, "remote_connect", blocking=True)
+        await hass.async_block_till_done()
 
     assert mock_connect.called
     assert cloud.client.remote_autostart
 
     with patch("hass_nabucasa.remote.RemoteUI.disconnect") as mock_disconnect:
         await hass.services.async_call(DOMAIN, "remote_disconnect", blocking=True)
+        await hass.async_block_till_done()
 
     assert mock_disconnect.called
     assert not cloud.client.remote_autostart
@@ -84,8 +87,9 @@ async def test_remote_services(
     # Test admin access required
     non_admin_context = Context(user_id=hass_read_only_user.id)
 
-    with patch("hass_nabucasa.remote.RemoteUI.connect") as mock_connect, pytest.raises(
-        Unauthorized
+    with (
+        patch("hass_nabucasa.remote.RemoteUI.connect") as mock_connect,
+        pytest.raises(Unauthorized),
     ):
         await hass.services.async_call(
             DOMAIN, "remote_connect", blocking=True, context=non_admin_context
@@ -93,9 +97,10 @@ async def test_remote_services(
 
     assert mock_connect.called is False
 
-    with patch(
-        "hass_nabucasa.remote.RemoteUI.disconnect"
-    ) as mock_disconnect, pytest.raises(Unauthorized):
+    with (
+        patch("hass_nabucasa.remote.RemoteUI.disconnect") as mock_disconnect,
+        pytest.raises(Unauthorized),
+    ):
         await hass.services.async_call(
             DOMAIN, "remote_disconnect", blocking=True, context=non_admin_context
         )

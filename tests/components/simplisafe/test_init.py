@@ -1,4 +1,5 @@
 """Define tests for SimpliSafe setup."""
+
 from unittest.mock import patch
 
 from homeassistant.components.simplisafe import DOMAIN
@@ -22,20 +23,26 @@ async def test_base_station_migration(
         name="old",
     )
 
-    with patch(
-        "homeassistant.components.simplisafe.config_flow.API.async_from_auth",
-        return_value=api,
-    ), patch(
-        "homeassistant.components.simplisafe.API.async_from_auth",
-        return_value=api,
-    ), patch(
-        "homeassistant.components.simplisafe.API.async_from_refresh_token",
-        return_value=api,
-    ), patch(
-        "homeassistant.components.simplisafe.SimpliSafe._async_start_websocket_loop"
-    ), patch(
-        "homeassistant.components.simplisafe.PLATFORMS",
-        [],
+    with (
+        patch(
+            "homeassistant.components.simplisafe.config_flow.API.async_from_auth",
+            return_value=api,
+        ),
+        patch(
+            "homeassistant.components.simplisafe.API.async_from_auth",
+            return_value=api,
+        ),
+        patch(
+            "homeassistant.components.simplisafe.API.async_from_refresh_token",
+            return_value=api,
+        ),
+        patch(
+            "homeassistant.components.simplisafe.SimpliSafe._async_start_websocket_loop"
+        ),
+        patch(
+            "homeassistant.components.simplisafe.PLATFORMS",
+            [],
+        ),
     ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()

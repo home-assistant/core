@@ -1,4 +1,5 @@
 """Support for ESPHome lights."""
+
 from __future__ import annotations
 
 from functools import lru_cache
@@ -32,7 +33,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+from .entity import (
+    EsphomeEntity,
+    convert_api_error_ha_error,
+    esphome_state_property,
+    platform_async_setup_entry,
+)
 
 FLASH_LENGTHS = {FLASH_SHORT: 2, FLASH_LONG: 10}
 
@@ -172,6 +178,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
         """Return true if the light is on."""
         return self._state.state
 
+    @convert_api_error_ha_error
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         data: dict[str, Any] = {"key": self._key, "state": True}
@@ -285,8 +292,9 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
                 # (fewest capabilities set)
                 data["color_mode"] = _least_complex_color_mode(color_modes)
 
-        await self._client.light_command(**data)
+        self._client.light_command(**data)
 
+    @convert_api_error_ha_error
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         data: dict[str, Any] = {"key": self._key, "state": False}
@@ -294,7 +302,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
             data["flash_length"] = FLASH_LENGTHS[kwargs[ATTR_FLASH]]
         if ATTR_TRANSITION in kwargs:
             data["transition_length"] = kwargs[ATTR_TRANSITION]
-        await self._client.light_command(**data)
+        self._client.light_command(**data)
 
     @property
     @esphome_state_property

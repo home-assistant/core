@@ -1,4 +1,5 @@
 """Pytest module configuration."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 

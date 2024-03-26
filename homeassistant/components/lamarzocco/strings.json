@@ -42,6 +42,16 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "title": "Update Configuration",
+          "use_bluetooth": "Use Bluetooth"
+        }
+      }
+    }
+  },
   "entity": {
     "binary_sensor": {
       "brew_active": {
@@ -56,9 +66,35 @@
         "name": "Start backflush"
       }
     },
+    "calendar": {
+      "auto_on_off_schedule": {
+        "name": "Auto on/off schedule"
+      }
+    },
     "number": {
       "coffee_temp": {
         "name": "Coffee target temperature"
+      },
+      "dose_key": {
+        "name": "Dose Key {key}"
+      },
+      "prebrew_on": {
+        "name": "Prebrew on time"
+      },
+      "prebrew_on_key": {
+        "name": "Prebrew on time Key {key}"
+      },
+      "prebrew_off": {
+        "name": "Prebrew off time"
+      },
+      "prebrew_off_key": {
+        "name": "Prebrew off time Key {key}"
+      },
+      "preinfusion_off": {
+        "name": "Preinfusion time"
+      },
+      "preinfusion_off_key": {
+        "name": "Preinfusion time Key {key}"
       },
       "steam_temp": {
         "name": "Steam target temperature"

@@ -1,4 +1,5 @@
 """Support for Xiaomi Aqara locks."""
+
 from __future__ import annotations
 
 from homeassistant.components.lock import LockEntity
@@ -27,12 +28,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Perform the setup for Xiaomi devices."""
-    entities = []
     gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]
-    for device in gateway.devices["lock"]:
-        if device["model"] == "lock.aq1":
-            entities.append(XiaomiAqaraLock(device, "Lock", gateway, config_entry))
-    async_add_entities(entities)
+    async_add_entities(
+        XiaomiAqaraLock(device, "Lock", gateway, config_entry)
+        for device in gateway.devices["lock"]
+        if device["model"] == "lock.aq1"
+    )
 
 
 class XiaomiAqaraLock(LockEntity, XiaomiDevice):

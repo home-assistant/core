@@ -1,4 +1,5 @@
 """Test Alexa config."""
+
 import contextlib
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -330,9 +331,12 @@ def patch_sync_helper():
         to_remove.extend([ent_id for ent_id in to_rem if ent_id not in to_remove])
         return True
 
-    with patch("homeassistant.components.cloud.alexa_config.SYNC_DELAY", 0), patch(
-        "homeassistant.components.cloud.alexa_config.CloudAlexaConfig._sync_helper",
-        side_effect=sync_helper,
+    with (
+        patch("homeassistant.components.cloud.alexa_config.SYNC_DELAY", 0),
+        patch(
+            "homeassistant.components.cloud.alexa_config.CloudAlexaConfig._sync_helper",
+            side_effect=sync_helper,
+        ),
     ):
         yield to_update, to_remove
 
@@ -484,10 +488,13 @@ async def test_alexa_update_report_state(
     await conf.async_initialize()
     await conf.set_authorized(True)
 
-    with patch(
-        "homeassistant.components.cloud.alexa_config.CloudAlexaConfig.async_sync_entities",
-    ) as mock_sync, patch(
-        "homeassistant.components.cloud.alexa_config.CloudAlexaConfig.async_enable_proactive_mode",
+    with (
+        patch(
+            "homeassistant.components.cloud.alexa_config.CloudAlexaConfig.async_sync_entities",
+        ) as mock_sync,
+        patch(
+            "homeassistant.components.cloud.alexa_config.CloudAlexaConfig.async_enable_proactive_mode",
+        ),
     ):
         await cloud_prefs.async_update(alexa_report_state=True)
         await hass.async_block_till_done()

@@ -1,4 +1,5 @@
 """The tests for the Geofency device tracker platform."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 

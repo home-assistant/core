@@ -1,4 +1,5 @@
 """The tests for the Home Assistant API component."""
+
 import asyncio
 from http import HTTPStatus
 import json

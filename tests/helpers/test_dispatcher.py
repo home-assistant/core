@@ -1,4 +1,5 @@
 """Test dispatcher helpers."""
+
 from functools import partial
 
 import pytest

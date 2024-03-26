@@ -1,4 +1,5 @@
 """KNX Telegram handler."""
+
 from __future__ import annotations
 
 from collections import deque

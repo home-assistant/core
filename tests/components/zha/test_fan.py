@@ -1,4 +1,5 @@
 """Test ZHA fan."""
+
 from unittest.mock import AsyncMock, call, patch
 
 import pytest
@@ -374,6 +375,7 @@ async def test_zha_group_fan_entity(
     # test some of the group logic to make sure we key off states correctly
     await send_attributes_report(hass, dev1_fan_cluster, {0: 0})
     await send_attributes_report(hass, dev2_fan_cluster, {0: 0})
+    await hass.async_block_till_done()
 
     # test that group fan is off
     assert hass.states.get(entity_id).state == STATE_OFF
@@ -462,13 +464,13 @@ async def test_zha_group_fan_entity_failure_state(
 
 @pytest.mark.parametrize(
     ("plug_read", "expected_state", "expected_percentage"),
-    (
+    [
         (None, STATE_OFF, None),
         ({"fan_mode": 0}, STATE_OFF, 0),
         ({"fan_mode": 1}, STATE_ON, 33),
         ({"fan_mode": 2}, STATE_ON, 66),
         ({"fan_mode": 3}, STATE_ON, 100),
-    ),
+    ],
 )
 async def test_fan_init(
     hass: HomeAssistant,
@@ -643,7 +645,7 @@ async def test_fan_ikea(
         "ikea_expected_percentage",
         "ikea_preset_mode",
     ),
-    (
+    [
         (None, STATE_OFF, None, None),
         ({"fan_mode": 0}, STATE_OFF, 0, None),
         ({"fan_mode": 1}, STATE_ON, 10, PRESET_MODE_AUTO),
@@ -656,7 +658,7 @@ async def test_fan_ikea(
         ({"fan_mode": 40}, STATE_ON, 80, "Speed 4"),
         ({"fan_mode": 45}, STATE_ON, 90, "Speed 4.5"),
         ({"fan_mode": 50}, STATE_ON, 100, "Speed 5"),
-    ),
+    ],
 )
 async def test_fan_ikea_init(
     hass: HomeAssistant,
@@ -826,7 +828,7 @@ async def test_fan_kof(
 
 @pytest.mark.parametrize(
     ("plug_read", "expected_state", "expected_percentage", "expected_preset"),
-    (
+    [
         (None, STATE_OFF, None, None),
         ({"fan_mode": 0}, STATE_OFF, 0, None),
         ({"fan_mode": 1}, STATE_ON, 25, None),
@@ -834,7 +836,7 @@ async def test_fan_kof(
         ({"fan_mode": 3}, STATE_ON, 75, None),
         ({"fan_mode": 4}, STATE_ON, 100, None),
         ({"fan_mode": 6}, STATE_ON, None, PRESET_MODE_SMART),
-    ),
+    ],
 )
 async def test_fan_kof_init(
     hass: HomeAssistant,

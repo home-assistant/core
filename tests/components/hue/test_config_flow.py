@@ -1,4 +1,5 @@
 """Tests for Philips Hue config flow."""
+
 from ipaddress import ip_address
 from unittest.mock import Mock, patch
 
@@ -125,8 +126,9 @@ async def test_manual_flow_works(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["step_id"] == "link"
 
-    with patch.object(config_flow, "create_app_key", return_value="123456789"), patch(
-        "homeassistant.components.hue.async_unload_entry", return_value=True
+    with (
+        patch.object(config_flow, "create_app_key", return_value="123456789"),
+        patch("homeassistant.components.hue.async_unload_entry", return_value=True),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
@@ -259,8 +261,8 @@ async def test_flow_timeout_discovery(hass: HomeAssistant) -> None:
             const.DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-    assert result["type"] == "abort"
-    assert result["reason"] == "discover_timeout"
+    assert result["type"] == "form"
+    assert result["step_id"] == "manual"
 
 
 async def test_flow_link_unknown_error(hass: HomeAssistant) -> None:
@@ -386,10 +388,13 @@ async def test_creating_entry_removes_entries_for_same_host_or_bridge(
     assert result["type"] == "form"
     assert result["step_id"] == "link"
 
-    with patch(
-        "homeassistant.components.hue.config_flow.create_app_key",
-        return_value="123456789",
-    ), patch("homeassistant.components.hue.async_unload_entry", return_value=True):
+    with (
+        patch(
+            "homeassistant.components.hue.config_flow.create_app_key",
+            return_value="123456789",
+        ),
+        patch("homeassistant.components.hue.async_unload_entry", return_value=True),
+    ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] == "create_entry"

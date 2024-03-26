@@ -1,4 +1,5 @@
 """Tests for light platform."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock
 

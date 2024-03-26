@@ -1,4 +1,5 @@
 """Test the Suez Water config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from pysuez.client import PySuezError
@@ -48,12 +49,15 @@ async def test_form_invalid_auth(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.suez_water.config_flow.SuezClient.__init__",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.suez_water.config_flow.SuezClient.check_credentials",
-        return_value=False,
+    with (
+        patch(
+            "homeassistant.components.suez_water.config_flow.SuezClient.__init__",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.suez_water.config_flow.SuezClient.check_credentials",
+            return_value=False,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -178,12 +182,15 @@ async def test_import_error(
 async def test_importing_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth when importing."""
 
-    with patch(
-        "homeassistant.components.suez_water.config_flow.SuezClient.__init__",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.suez_water.config_flow.SuezClient.check_credentials",
-        return_value=False,
+    with (
+        patch(
+            "homeassistant.components.suez_water.config_flow.SuezClient.__init__",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.suez_water.config_flow.SuezClient.check_credentials",
+            return_value=False,
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=MOCK_DATA

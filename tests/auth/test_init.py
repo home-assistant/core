@@ -1,4 +1,5 @@
 """Tests for the Home Assistant auth module."""
+
 from datetime import timedelta
 import time
 from typing import Any
@@ -555,10 +556,13 @@ async def test_refresh_token_provider_validation(mock_hass) -> None:
 
     assert manager.async_create_access_token(refresh_token, ip) is not None
 
-    with patch(
-        "homeassistant.auth.providers.insecure_example.ExampleAuthProvider.async_validate_refresh_token",
-        side_effect=InvalidAuthError("Invalid access"),
-    ) as call, pytest.raises(InvalidAuthError):
+    with (
+        patch(
+            "homeassistant.auth.providers.insecure_example.ExampleAuthProvider.async_validate_refresh_token",
+            side_effect=InvalidAuthError("Invalid access"),
+        ) as call,
+        pytest.raises(InvalidAuthError),
+    ):
         manager.async_create_access_token(refresh_token, ip)
 
     call.assert_called_with(refresh_token, ip)
@@ -1102,9 +1106,10 @@ async def test_async_remove_user_fail_if_remove_credential_fails(
     """Test removing a user."""
     await hass.auth.async_link_user(hass_admin_user, hass_admin_credential)
 
-    with patch.object(
-        hass.auth, "async_remove_credentials", side_effect=ValueError
-    ), pytest.raises(ValueError):
+    with (
+        patch.object(hass.auth, "async_remove_credentials", side_effect=ValueError),
+        pytest.raises(ValueError),
+    ):
         await hass.auth.async_remove_user(hass_admin_user)
 
 

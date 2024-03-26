@@ -17,6 +17,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Ecovacs',
     'model': 'DEEBOT OZMO 950 Series',
     'name': 'Ozmo 950',

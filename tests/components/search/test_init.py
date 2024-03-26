@@ -1,4 +1,5 @@
 """Tests for Search integration."""
+
 import pytest
 
 from homeassistant.components import search

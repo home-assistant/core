@@ -1,4 +1,5 @@
 """Models for Recorder."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -15,13 +16,11 @@ EMPTY_JSON_OBJECT = "{}"
 
 
 @overload
-def process_timestamp(ts: None) -> None:
-    ...
+def process_timestamp(ts: None) -> None: ...
 
 
 @overload
-def process_timestamp(ts: datetime) -> datetime:
-    ...
+def process_timestamp(ts: datetime) -> datetime: ...
 
 
 def process_timestamp(ts: datetime | None) -> datetime | None:
@@ -35,13 +34,11 @@ def process_timestamp(ts: datetime | None) -> datetime | None:
 
 
 @overload
-def process_timestamp_to_utc_isoformat(ts: None) -> None:
-    ...
+def process_timestamp_to_utc_isoformat(ts: None) -> None: ...
 
 
 @overload
-def process_timestamp_to_utc_isoformat(ts: datetime) -> str:
-    ...
+def process_timestamp_to_utc_isoformat(ts: datetime) -> str: ...
 
 
 def process_timestamp_to_utc_isoformat(ts: datetime | None) -> str | None:

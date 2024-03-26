@@ -1,4 +1,5 @@
 """Define tests for the IQVIA config flow."""
+
 from homeassistant import data_entry_flow
 from homeassistant.components.iqvia import CONF_ZIP_CODE, DOMAIN
 from homeassistant.config_entries import SOURCE_USER

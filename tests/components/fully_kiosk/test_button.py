@@ -1,4 +1,5 @@
 """Test the Fully Kiosk Browser buttons."""
+
 from unittest.mock import MagicMock
 
 import homeassistant.components.button as button

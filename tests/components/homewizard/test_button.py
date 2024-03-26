@@ -1,4 +1,5 @@
 """Test the identify button for HomeWizard."""
+
 from unittest.mock import MagicMock
 
 from homewizard_energy.errors import DisabledError, RequestError

@@ -1,4 +1,5 @@
 """Test the Somfy MyLink config flow."""
+
 from unittest.mock import patch
 
 import pytest
@@ -25,13 +26,16 @@ async def test_form_user(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.somfy_mylink.config_flow.SomfyMyLinkSynergy.status_info",
-        return_value={"any": "data"},
-    ), patch(
-        "homeassistant.components.somfy_mylink.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.somfy_mylink.config_flow.SomfyMyLinkSynergy.status_info",
+            return_value={"any": "data"},
+        ),
+        patch(
+            "homeassistant.components.somfy_mylink.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -66,13 +70,16 @@ async def test_form_user_already_configured(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.somfy_mylink.config_flow.SomfyMyLinkSynergy.status_info",
-        return_value={"any": "data"},
-    ), patch(
-        "homeassistant.components.somfy_mylink.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.somfy_mylink.config_flow.SomfyMyLinkSynergy.status_info",
+            return_value={"any": "data"},
+        ),
+        patch(
+            "homeassistant.components.somfy_mylink.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -242,19 +249,22 @@ async def test_form_user_already_configured_from_dhcp(hass: HomeAssistant) -> No
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.somfy_mylink.config_flow.SomfyMyLinkSynergy.status_info",
-        return_value={"any": "data"},
-    ), patch(
-        "homeassistant.components.somfy_mylink.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.somfy_mylink.config_flow.SomfyMyLinkSynergy.status_info",
+            return_value={"any": "data"},
+        ),
+        patch(
+            "homeassistant.components.somfy_mylink.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.1.1.1",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbccddeeff",
                 hostname="somfy_eeff",
             ),
         )
@@ -278,7 +288,7 @@ async def test_already_configured_with_ignored(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_DHCP},
         data=dhcp.DhcpServiceInfo(
             ip="1.1.1.1",
-            macaddress="AA:BB:CC:DD:EE:FF",
+            macaddress="aabbccddeeff",
             hostname="somfy_eeff",
         ),
     )
@@ -293,20 +303,23 @@ async def test_dhcp_discovery(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_DHCP},
         data=dhcp.DhcpServiceInfo(
             ip="1.1.1.1",
-            macaddress="AA:BB:CC:DD:EE:FF",
+            macaddress="aabbccddeeff",
             hostname="somfy_eeff",
         ),
     )
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.somfy_mylink.config_flow.SomfyMyLinkSynergy.status_info",
-        return_value={"any": "data"},
-    ), patch(
-        "homeassistant.components.somfy_mylink.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.somfy_mylink.config_flow.SomfyMyLinkSynergy.status_info",
+            return_value={"any": "data"},
+        ),
+        patch(
+            "homeassistant.components.somfy_mylink.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

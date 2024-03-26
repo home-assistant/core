@@ -27,11 +27,35 @@ async def test_airzone_create_sensors(
     assert state.state == "-77"
 
     # Zones
+    state = hass.states.get("sensor.dormitorio_air_quality_index")
+    assert state.state == "1"
+
+    state = hass.states.get("sensor.dormitorio_pm1")
+    assert state.state == "3"
+
+    state = hass.states.get("sensor.dormitorio_pm2_5")
+    assert state.state == "4"
+
+    state = hass.states.get("sensor.dormitorio_pm10")
+    assert state.state == "3"
+
     state = hass.states.get("sensor.dormitorio_temperature")
     assert state.state == "25.0"
 
     state = hass.states.get("sensor.dormitorio_humidity")
     assert state.state == "24"
+
+    state = hass.states.get("sensor.dormitorio_air_quality_index")
+    assert state.state == "1"
+
+    state = hass.states.get("sensor.salon_pm1")
+    assert state.state == "3"
+
+    state = hass.states.get("sensor.salon_pm2_5")
+    assert state.state == "4"
+
+    state = hass.states.get("sensor.salon_pm10")
+    assert state.state == "3"
 
     state = hass.states.get("sensor.salon_temperature")
     assert state.state == "20.0"

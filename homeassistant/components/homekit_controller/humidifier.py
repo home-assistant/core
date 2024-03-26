@@ -1,4 +1,5 @@
 """Support for HomeKit Controller humidifier."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
@@ -154,8 +155,9 @@ class HomeKitDehumidifier(HomeKitBaseHumidifier):
 
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
-        return super().get_characteristic_types() + [
-            CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD
+        return [
+            *super().get_characteristic_types(),
+            CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD,
         ]
 
     @property

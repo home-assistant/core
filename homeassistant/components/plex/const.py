@@ -1,4 +1,5 @@
 """Constants for the Plex component."""
+
 from datetime import timedelta
 from typing import Final
 

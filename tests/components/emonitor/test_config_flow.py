@@ -1,4 +1,5 @@
 """Test the SiteSage Emonitor config flow."""
+
 from unittest.mock import MagicMock, patch
 
 from aioemonitor.monitor import EmonitorNetwork, EmonitorStatus
@@ -11,6 +12,12 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+DHCP_SERVICE_INFO = dhcp.DhcpServiceInfo(
+    hostname="emonitor",
+    ip="1.2.3.4",
+    macaddress="aabbccddeeff",
+)
 
 
 def _mock_emonitor():
@@ -28,13 +35,16 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.emonitor.config_flow.Emonitor.async_get_status",
-        return_value=_mock_emonitor(),
-    ), patch(
-        "homeassistant.components.emonitor.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.emonitor.config_flow.Emonitor.async_get_status",
+            return_value=_mock_emonitor(),
+        ),
+        patch(
+            "homeassistant.components.emonitor.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -103,11 +113,7 @@ async def test_dhcp_can_confirm(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
-                hostname="emonitor",
-                ip="1.2.3.4",
-                macaddress="aa:bb:cc:dd:ee:ff",
-            ),
+            data=DHCP_SERVICE_INFO,
         )
         await hass.async_block_till_done()
 
@@ -146,11 +152,7 @@ async def test_dhcp_fails_to_connect(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
-                hostname="emonitor",
-                ip="1.2.3.4",
-                macaddress="aa:bb:cc:dd:ee:ff",
-            ),
+            data=DHCP_SERVICE_INFO,
         )
         await hass.async_block_till_done()
 
@@ -175,11 +177,7 @@ async def test_dhcp_already_exists(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
-                hostname="emonitor",
-                ip="1.2.3.4",
-                macaddress="aa:bb:cc:dd:ee:ff",
-            ),
+            data=DHCP_SERVICE_INFO,
         )
         await hass.async_block_till_done()
 
@@ -203,12 +201,15 @@ async def test_user_unique_id_already_exists(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.emonitor.config_flow.Emonitor.async_get_status",
-        return_value=_mock_emonitor(),
-    ), patch(
-        "homeassistant.components.emonitor.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.emonitor.config_flow.Emonitor.async_get_status",
+            return_value=_mock_emonitor(),
+        ),
+        patch(
+            "homeassistant.components.emonitor.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

@@ -51,7 +51,6 @@ async def test_sensors(
     assert raindelay.state == expected_state
     assert raindelay.attributes == {
         "friendly_name": "Rain Bird Controller Raindelay",
-        "icon": "mdi:water-off",
     }
 
     entity_entry = entity_registry.async_get("sensor.rain_bird_controller_raindelay")

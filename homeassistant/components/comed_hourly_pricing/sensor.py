@@ -1,4 +1,5 @@
 """Support for ComEd Hourly Pricing data."""
+
 from __future__ import annotations
 
 import asyncio

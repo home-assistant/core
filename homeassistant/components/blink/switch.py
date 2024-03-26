@@ -1,4 +1,5 @@
 """Support for Blink Motion detection switches."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -21,7 +22,6 @@ from .coordinator import BlinkUpdateCoordinator
 SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         key=TYPE_CAMERA_ARMED,
-        icon="mdi:motion-sensor",
         translation_key="camera_motion",
         device_class=SwitchDeviceClass.SWITCH,
     ),
