@@ -71,7 +71,6 @@ SENSOR_TYPES: dict[str, MotionblindsBLESensorEntityDescription] = {
     ),
     ATTR_SIGNAL_STRENGTH: MotionblindsBLESensorEntityDescription(
         key=ATTR_SIGNAL_STRENGTH,
-        translation_key=ATTR_SIGNAL_STRENGTH,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement="dBm",
