@@ -8,9 +8,6 @@ import logging
 from universal_silabs_flasher.const import ApplicationType
 from universal_silabs_flasher.flasher import Flasher
 
-from homeassistant.components.homeassistant_connect_zbt1 import (
-    hardware as connect_zbt1_hardware,
-)
 from homeassistant.components.homeassistant_sky_connect import (
     hardware as skyconnect_hardware,
 )
@@ -35,7 +32,6 @@ class HardwareType(enum.StrEnum):
     """Detected Zigbee hardware type."""
 
     SKYCONNECT = "skyconnect"
-    CONNECT_ZBT1 = "connect_zbt1"
     YELLOW = "yellow"
     OTHER = "other"
 
@@ -45,9 +41,6 @@ DISABLE_MULTIPAN_URL = {
         "https://yellow.home-assistant.io/guides/disable-multiprotocol/#flash-the-silicon-labs-radio-firmware"
     ),
     HardwareType.SKYCONNECT: (
-        "https://skyconnect.home-assistant.io/procedures/disable-multiprotocol/#step-flash-the-silicon-labs-radio-firmware"
-    ),
-    HardwareType.CONNECT_ZBT1: (
         "https://skyconnect.home-assistant.io/procedures/disable-multiprotocol/#step-flash-the-silicon-labs-radio-firmware"
     ),
     HardwareType.OTHER: None,
@@ -77,18 +70,6 @@ def _detect_radio_hardware(hass: HomeAssistant, device: str) -> HardwareType:
 
                 if entry is not None and entry.data["device"] == device:
                     return HardwareType.SKYCONNECT
-
-    try:
-        info = connect_zbt1_hardware.async_info(hass)
-    except HomeAssistantError:
-        pass
-    else:
-        for hardware_info in info:
-            for entry_id in hardware_info.config_entries or []:
-                entry = hass.config_entries.async_get_entry(entry_id)
-
-                if entry is not None and entry.data["device"] == device:
-                    return HardwareType.CONNECT_ZBT1
 
     return HardwareType.OTHER
 

@@ -221,7 +221,6 @@ FLOWS = {
         "hlk_sw16",
         "holiday",
         "home_connect",
-        "homeassistant_connect_zbt1",
         "homeassistant_sky_connect",
         "homekit",
         "homekit_controller",

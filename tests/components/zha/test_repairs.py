@@ -12,9 +12,6 @@ from zigpy.application import ControllerApplication
 import zigpy.backups
 from zigpy.exceptions import NetworkSettingsInconsistent
 
-from homeassistant.components.homeassistant_connect_zbt1 import (
-    DOMAIN as CONNECT_ZBT1_DOMAIN,
-)
 from homeassistant.components.homeassistant_sky_connect import (
     DOMAIN as SKYCONNECT_DOMAIN,
 )
@@ -79,15 +76,13 @@ def test_detect_radio_hardware(hass: HomeAssistant) -> None:
             "manufacturer": "Nabu Casa",
             "description": "Home Assistant Connect ZBT-1",
         },
-        domain=CONNECT_ZBT1_DOMAIN,
+        domain=SKYCONNECT_DOMAIN,
         options={},
         title="Home Assistant Connect ZBT-1",
     )
     connect_zbt1_config_entry.add_to_hass(hass)
 
-    assert (
-        _detect_radio_hardware(hass, CONNECT_ZBT1_DEVICE) == HardwareType.CONNECT_ZBT1
-    )
+    assert _detect_radio_hardware(hass, CONNECT_ZBT1_DEVICE) == HardwareType.SKYCONNECT
     assert _detect_radio_hardware(hass, SKYCONNECT_DEVICE) == HardwareType.SKYCONNECT
     assert (
         _detect_radio_hardware(hass, SKYCONNECT_DEVICE + "_foo") == HardwareType.OTHER
@@ -125,7 +120,6 @@ def test_detect_radio_hardware_failure(hass: HomeAssistant) -> None:
     ("detected_hardware", "expected_learn_more_url"),
     [
         (HardwareType.SKYCONNECT, DISABLE_MULTIPAN_URL[HardwareType.SKYCONNECT]),
-        (HardwareType.CONNECT_ZBT1, DISABLE_MULTIPAN_URL[HardwareType.CONNECT_ZBT1]),
         (HardwareType.YELLOW, DISABLE_MULTIPAN_URL[HardwareType.YELLOW]),
         (HardwareType.OTHER, None),
     ],

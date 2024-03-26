@@ -75,7 +75,6 @@ NO_IOT_CLASS = [
     "homeassistant_green",
     "homeassistant_hardware",
     "homeassistant_sky_connect",
-    "homeassistant_connect_zbt1",
     "homeassistant_yellow",
     "image_upload",
     "input_boolean",
