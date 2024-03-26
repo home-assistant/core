@@ -37,7 +37,7 @@
   "entity": {
     "button": {
       "connect": {
-        "name": "Connect"
+        "name": "[%key:common::action::connect%]"
       },
       "disconnect": {
         "name": "Disconnect"
