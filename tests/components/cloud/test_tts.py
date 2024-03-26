@@ -657,7 +657,7 @@ async def test_deprecated_gender(
     assert mock_process_tts.call_args is not None
     assert mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
     assert mock_process_tts.call_args.kwargs["language"] == language
-    assert mock_process_tts.call_args.kwargs["voice"] == "JennyNeural"
+    assert mock_process_tts.call_args.kwargs["voice"] == "XiaoxiaoNeural"
     assert mock_process_tts.call_args.kwargs["output"] == "mp3"
     issue = issue_registry.async_get_issue("cloud", "deprecated_gender")
     assert issue is None
@@ -690,7 +690,7 @@ async def test_deprecated_gender(
     assert mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
     assert mock_process_tts.call_args.kwargs["language"] == language
     assert mock_process_tts.call_args.kwargs["gender"] == gender_option
-    assert mock_process_tts.call_args.kwargs["voice"] == "JennyNeural"
+    assert mock_process_tts.call_args.kwargs["voice"] == "XiaoxiaoNeural"
     assert mock_process_tts.call_args.kwargs["output"] == "mp3"
     issue = issue_registry.async_get_issue("cloud", issue_id)
     assert issue is not None
