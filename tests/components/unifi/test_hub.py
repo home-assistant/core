@@ -167,6 +167,11 @@ def mock_default_unifi_requests(
         json={"data": wlans_response or [], "meta": {"rc": "ok"}},
         headers={"content-type": CONTENT_TYPE_JSON},
     )
+    aioclient_mock.put(
+        f"https://{host}:1234/api/s/{site_id}/rest/wlanconf/12345",
+        json={"data": "password changed successfully", "meta": {"rc": "ok"}},
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
     aioclient_mock.get(
         f"https://{host}:1234/v2/api/site/{site_id}/trafficroutes",
         json=[{}],

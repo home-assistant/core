@@ -93,6 +93,38 @@
     "remove_clients": {
       "name": "Remove clients from the UniFi Network",
       "description": "Cleans up clients that has only been associated with the controller for a short period of time."
+    },
+    "change_wlan_password": {
+      "name": "Change WLAN Password",
+      "description": "Change the password for a given WLAN Name for a given Hub.",
+      "fields": {
+        "hub_name": {
+          "name": "Hub name",
+          "description": "The Hub name"
+        },
+        "wlan_name": {
+          "name": "WLAN name",
+          "description": "The WLAN name"
+        },
+        "new_password": {
+          "name": "New password",
+          "description": "The new password"
+        }
+      }
+    },
+    "get_wlan_password": {
+      "name": "Get WLAN Password",
+      "description": "Retrieve the password for a given WLAN Name for a given Hub.",
+      "fields": {
+        "hub_name": {
+          "name": "Hub name",
+          "description": "The Hub name"
+        },
+        "wlan_name": {
+          "name": "WLAN name",
+          "description": "The WLAN name"
+        }
+      }
     }
   }
 }
