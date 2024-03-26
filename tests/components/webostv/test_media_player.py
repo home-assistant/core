@@ -21,6 +21,7 @@ from homeassistant.components.media_player import (
     SERVICE_SELECT_SOURCE,
     MediaPlayerDeviceClass,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
     MediaType,
 )
 from homeassistant.components.webostv.const import (
@@ -811,3 +812,23 @@ async def test_reauth_reconnect(hass: HomeAssistant, client, monkeypatch) -> Non
     assert "context" in flow
     assert flow["context"].get("source") == SOURCE_REAUTH
     assert flow["context"].get("entry_id") == entry.entry_id
+
+
+async def test_update_media_state(hass: HomeAssistant, client, monkeypatch) -> None:
+    """Test updating media state."""
+    await setup_webostv(hass)
+
+    data = {"foregroundAppInfo": [{"playState": "playing"}]}
+    monkeypatch.setattr(client, "media_state", data)
+    await client.mock_state_update()
+    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.PLAYING
+
+    data = {"foregroundAppInfo": [{"playState": "paused"}]}
+    monkeypatch.setattr(client, "media_state", data)
+    await client.mock_state_update()
+    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.PAUSED
+
+    data = {"foregroundAppInfo": [{"playState": "unloaded"}]}
+    monkeypatch.setattr(client, "media_state", data)
+    await client.mock_state_update()
+    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.IDLE

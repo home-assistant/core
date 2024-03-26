@@ -245,6 +245,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             self._client.media_state is not None
             and self._client.media_state.get("foregroundAppInfo") is not None
         ):
+            self._attr_assumed_state = False
             for entry in self._client.media_state.get("foregroundAppInfo"):
                 if entry.get("playState") == "playing":
                     self._attr_state = MediaPlayerState.PLAYING
