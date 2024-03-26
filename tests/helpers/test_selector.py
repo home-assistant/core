@@ -1142,3 +1142,19 @@ def test_trigger_selector_schema(schema, valid_selections, invalid_selections) -
 def test_qr_code_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test QR code selector."""
     _test_selector("qr_code", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    [
+        ({}, ("abc123",), (None,)),
+        (
+            {"multiple": True},
+            ((["abc123", "def456"],)),
+            (None, "abc123", ["abc123", None]),
+        ),
+    ],
+)
+def test_label_selector_schema(schema, valid_selections, invalid_selections) -> None:
+    """Test label selector."""
+    _test_selector("label", schema, valid_selections, invalid_selections)
