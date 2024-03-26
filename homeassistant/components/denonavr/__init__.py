@@ -98,14 +98,10 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     zone2_id = f"{unique_id}-Zone2"
     zone3_id = f"{unique_id}-Zone3"
     for entry in entries:
-        if entry.unique_id.startswith(zone2_id) and not config_entry.options.get(
-            CONF_ZONE2
-        ):
+        if entry.unique_id == zone2_id and not config_entry.options.get(CONF_ZONE2):
             entity_registry.async_remove(entry.entity_id)
             _LOGGER.debug("Removing zone2 from DenonAvr")
-        if entry.unique_id.startswith(zone3_id) and not config_entry.options.get(
-            CONF_ZONE3
-        ):
+        if entry.unique_id == zone3_id and not config_entry.options.get(CONF_ZONE3):
             entity_registry.async_remove(entry.entity_id)
             _LOGGER.debug("Removing zone3 from DenonAvr")
 
