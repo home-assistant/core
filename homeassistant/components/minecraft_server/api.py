@@ -140,8 +140,7 @@ class MinecraftServer:
         players_list: list[str] = []
 
         if players := status_response.players.sample:
-            for player in players:
-                players_list.append(player.name)
+            players_list.extend(player.name for player in players)
             players_list.sort()
 
         return MinecraftServerData(

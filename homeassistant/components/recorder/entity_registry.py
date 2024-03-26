@@ -1,6 +1,8 @@
 """Recorder entity registry helper."""
 
+from collections.abc import Mapping
 import logging
+from typing import Any
 
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -29,9 +31,9 @@ def async_setup(hass: HomeAssistant) -> None:
         )
 
     @callback
-    def entity_registry_changed_filter(event: Event) -> bool:
+    def entity_registry_changed_filter(event_data: Mapping[str, Any]) -> bool:
         """Handle entity_id changed filter."""
-        return event.data["action"] == "update" and "old_entity_id" in event.data
+        return event_data["action"] == "update" and "old_entity_id" in event_data
 
     @callback
     def _setup_entity_registry_event_handler(hass: HomeAssistant) -> None:

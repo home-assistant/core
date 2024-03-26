@@ -133,17 +133,5 @@ def _find(regions, region_id):
 
 
 def _make_regions_object(regions):
-    regions_list = []
-    for region in regions:
-        regions_list.append(
-            {
-                "id": region["regionId"],
-                "name": region["regionName"],
-            }
-        )
-    regions_list = sorted(regions_list, key=lambda region: region["name"].lower())
-    regions_object = {}
-    for region in regions_list:
-        regions_object[region["id"]] = region["name"]
-
-    return regions_object
+    regions = sorted(regions, key=lambda region: region["regionName"].lower())
+    return {region["regionId"]: region["regionName"] for region in regions}

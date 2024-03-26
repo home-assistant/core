@@ -70,10 +70,7 @@ IGNORE_SUFFIXES = [
 
 def contains_ignored_suffix(unique_id: str) -> bool:
     """Return true if the unique_id ends with an ignored suffix."""
-    for suffix in IGNORE_SUFFIXES:
-        if suffix.lower() in unique_id.lower():
-            return True
-    return False
+    return any(suffix.lower() in unique_id.lower() for suffix in IGNORE_SUFFIXES)
 
 
 @patch(
@@ -255,10 +252,13 @@ def test_discover_by_device_type_override() -> None:
     get_entity_mock = mock.MagicMock(
         return_value=(mock.sentinel.entity_cls, mock.sentinel.claimed)
     )
-    with mock.patch(
-        "homeassistant.components.zha.core.registries.ZHA_ENTITIES.get_entity",
-        get_entity_mock,
-    ), mock.patch.dict(disc.PROBE._device_configs, overrides, clear=True):
+    with (
+        mock.patch(
+            "homeassistant.components.zha.core.registries.ZHA_ENTITIES.get_entity",
+            get_entity_mock,
+        ),
+        mock.patch.dict(disc.PROBE._device_configs, overrides, clear=True),
+    ):
         disc.PROBE.discover_by_device_type(endpoint)
         assert get_entity_mock.call_count == 1
         assert endpoint.claim_cluster_handlers.call_count == 1

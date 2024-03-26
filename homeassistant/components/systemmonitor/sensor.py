@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import contextlib
 from dataclasses import dataclass
 from datetime import datetime
 from functools import lru_cache
+import ipaddress
 import logging
 import socket
 import sys
@@ -69,13 +71,6 @@ def get_cpu_icon() -> Literal["mdi:cpu-64-bit", "mdi:cpu-32-bit"]:
     if sys.maxsize > 2**32:
         return "mdi:cpu-64-bit"
     return "mdi:cpu-32-bit"
-
-
-def get_processor_temperature(
-    entity: SystemMonitorSensor,
-) -> float | None:
-    """Return processor temperature."""
-    return read_cpu_temperature(entity.hass, entity.coordinator.data.temperatures)
 
 
 def get_process(entity: SystemMonitorSensor) -> str:
@@ -142,6 +137,11 @@ def get_ip_address(
     if entity.argument in addresses:
         for addr in addresses[entity.argument]:
             if addr.family == IF_ADDRS_FAMILY[entity.entity_description.key]:
+                address = ipaddress.ip_address(addr.address)
+                if address.version == 6 and (
+                    address.is_link_local or address.is_loopback
+                ):
+                    continue
                 return addr.address
     return None
 
@@ -374,7 +374,9 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=get_processor_temperature,
+        value_fn=lambda entity: read_cpu_temperature(
+            entity.coordinator.data.temperatures
+        ),
         none_is_unavailable=True,
         add_to_update=lambda entity: ("temperatures", ""),
     ),
@@ -498,7 +500,7 @@ async def async_setup_platform(
     )
 
 
-async def async_setup_entry(  # noqa: C901
+async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up System Montor sensors based on a config entry."""
@@ -506,22 +508,21 @@ async def async_setup_entry(  # noqa: C901
     legacy_resources: set[str] = set(entry.options.get("resources", []))
     loaded_resources: set[str] = set()
     coordinator: SystemMonitorCoordinator = hass.data[DOMAIN_COORDINATOR]
+    sensor_data = coordinator.data
 
     def get_arguments() -> dict[str, Any]:
         """Return startup information."""
-        disk_arguments = get_all_disk_mounts(hass)
-        network_arguments = get_all_network_interfaces(hass)
-        try:
-            cpu_temperature = read_cpu_temperature(hass)
-        except AttributeError:
-            cpu_temperature = 0.0
         return {
-            "disk_arguments": disk_arguments,
-            "network_arguments": network_arguments,
-            "cpu_temperature": cpu_temperature,
+            "disk_arguments": get_all_disk_mounts(hass),
+            "network_arguments": get_all_network_interfaces(hass),
         }
 
+    cpu_temperature: float | None = None
+    with contextlib.suppress(AttributeError):
+        cpu_temperature = read_cpu_temperature(sensor_data.temperatures)
+
     startup_arguments = await hass.async_add_executor_job(get_arguments)
+    startup_arguments["cpu_temperature"] = cpu_temperature
 
     _LOGGER.debug("Setup from options %s", entry.options)
 
@@ -781,6 +782,7 @@ class SystemMonitorSensor(CoordinatorEntity[SystemMonitorCoordinator], SensorEnt
         self.argument = argument
         self.value: int | None = None
         self.update_time: float | None = None
+        self._attr_native_value = self.entity_description.value_fn(self)
 
     async def async_added_to_hass(self) -> None:
         """When added to hass."""
@@ -796,16 +798,19 @@ class SystemMonitorSensor(CoordinatorEntity[SystemMonitorCoordinator], SensorEnt
         ].remove(self.entity_id)
         return await super().async_will_remove_from_hass()
 
-    @property
-    def native_value(self) -> StateType | datetime:
-        """Return the state."""
-        return self.entity_description.value_fn(self)
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        # Set the native value here so we can use it in available property
+        # without having to recalculate it
+        self._attr_native_value = self.entity_description.value_fn(self)
+        super()._handle_coordinator_update()
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
         if self.entity_description.none_is_unavailable:
-            return bool(
+            return (
                 self.coordinator.last_update_success is True
                 and self.native_value is not None
             )

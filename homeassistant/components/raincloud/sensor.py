@@ -48,8 +48,10 @@ def setup_platform(
             sensors.append(RainCloudSensor(raincloud.controller.faucet, sensor_type))
         else:
             # create a sensor for each zone managed by a faucet
-            for zone in raincloud.controller.faucet.zones:
-                sensors.append(RainCloudSensor(zone, sensor_type))
+            sensors.extend(
+                RainCloudSensor(zone, sensor_type)
+                for zone in raincloud.controller.faucet.zones
+            )
 
     add_entities(sensors, True)
 

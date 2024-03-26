@@ -245,19 +245,17 @@ def get_forecast(ec_data, hourly) -> list[Forecast] | None:
             )
 
     else:
-        for hour in ec_data.hourly_forecasts:
-            forecast_array.append(
-                {
-                    ATTR_FORECAST_TIME: hour["period"].isoformat(),
-                    ATTR_FORECAST_NATIVE_TEMP: int(hour["temperature"]),
-                    ATTR_FORECAST_CONDITION: icon_code_to_condition(
-                        int(hour["icon_code"])
-                    ),
-                    ATTR_FORECAST_PRECIPITATION_PROBABILITY: int(
-                        hour["precip_probability"]
-                    ),
-                }
-            )
+        forecast_array.extend(
+            {
+                ATTR_FORECAST_TIME: hour["period"].isoformat(),
+                ATTR_FORECAST_NATIVE_TEMP: int(hour["temperature"]),
+                ATTR_FORECAST_CONDITION: icon_code_to_condition(int(hour["icon_code"])),
+                ATTR_FORECAST_PRECIPITATION_PROBABILITY: int(
+                    hour["precip_probability"]
+                ),
+            }
+            for hour in ec_data.hourly_forecasts
+        )
 
     return forecast_array
 

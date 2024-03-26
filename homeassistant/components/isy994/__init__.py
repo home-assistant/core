@@ -166,7 +166,9 @@ async def async_setup_entry(
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_auto_update)
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, _async_stop_auto_update, run_immediately=True
+        )
     )
 
     # Register Integration-wide Services:

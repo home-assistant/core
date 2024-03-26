@@ -92,7 +92,8 @@ VERSION_SOURCE_MAP: Final[dict[str, str]] = {
     VERSION_SOURCE_PYPI: "pypi",
 }
 
-VALID_SOURCES: Final[list[str]] = HA_VERSION_SOURCES + [
+VALID_SOURCES: Final[list[str]] = [
+    *HA_VERSION_SOURCES,
     "hassio",  # Kept to not break existing configurations
     "docker",  # Kept to not break existing configurations
 ]

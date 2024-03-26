@@ -54,13 +54,13 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Iterate through all MAX! Devices and add thermostats."""
-    devices = []
-    for handler in hass.data[DATA_KEY].values():
-        for device in handler.cube.devices:
-            if device.is_thermostat() or device.is_wallthermostat():
-                devices.append(MaxCubeClimate(handler, device))
 
-    add_entities(devices)
+    add_entities(
+        MaxCubeClimate(handler, device)
+        for handler in hass.data[DATA_KEY].values()
+        for device in handler.cube.devices
+        if device.is_thermostat() or device.is_wallthermostat()
+    )
 
 
 class MaxCubeClimate(ClimateEntity):
