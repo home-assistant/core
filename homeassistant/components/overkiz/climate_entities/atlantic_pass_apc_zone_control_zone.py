@@ -24,7 +24,7 @@ OVERKIZ_MODE_TO_PRESET_MODES: dict[str, str] = {
 
 PRESET_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_MODE_TO_PRESET_MODES.items()}
 
-TEMPERATURE_ZONECONTROL_DEVICE_INDEX = 1
+TEMPERATURE_ZONECONTROL_DEVICE_INDEX = 20
 
 
 # Those device depends on a main probe that choose the operating mode (heating, cooling, ...)
@@ -65,10 +65,15 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         """Return hvac operation ie. heat, cool, dry, off mode."""
 
         if (
-            state := self.zone_control_device.states[
-                OverkizState.IO_PASS_APC_OPERATING_MODE
-            ]
-        ) is not None and (value := state.value_as_str) is not None:
+            self.zone_control_device is not None
+            and (
+                state := self.zone_control_device.states[
+                    OverkizState.IO_PASS_APC_OPERATING_MODE
+                ]
+            )
+            is not None
+            and (value := state.value_as_str) is not None
+        ):
             return OVERKIZ_TO_HVAC_MODE[value]
         return HVACMode.OFF
 

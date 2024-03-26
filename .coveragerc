@@ -776,9 +776,11 @@ omit =
     homeassistant/components/microbees/__init__.py
     homeassistant/components/microbees/api.py
     homeassistant/components/microbees/application_credentials.py
+    homeassistant/components/microbees/binary_sensor.py
     homeassistant/components/microbees/button.py
     homeassistant/components/microbees/const.py
     homeassistant/components/microbees/coordinator.py
+    homeassistant/components/microbees/cover.py
     homeassistant/components/microbees/entity.py
     homeassistant/components/microbees/light.py
     homeassistant/components/microbees/sensor.py
@@ -1064,6 +1066,7 @@ omit =
     homeassistant/components/rabbitair/fan.py
     homeassistant/components/rachio/__init__.py
     homeassistant/components/rachio/binary_sensor.py
+    homeassistant/components/rachio/coordinator.py
     homeassistant/components/rachio/device.py
     homeassistant/components/rachio/entity.py
     homeassistant/components/rachio/switch.py
@@ -1136,6 +1139,7 @@ omit =
     homeassistant/components/rocketchat/notify.py
     homeassistant/components/romy/__init__.py
     homeassistant/components/romy/coordinator.py
+    homeassistant/components/romy/entity.py
     homeassistant/components/romy/vacuum.py
     homeassistant/components/roomba/__init__.py
     homeassistant/components/roomba/binary_sensor.py
@@ -1687,6 +1691,7 @@ omit =
     homeassistant/components/yolink/services.py
     homeassistant/components/yolink/siren.py
     homeassistant/components/yolink/switch.py
+    homeassistant/components/yolink/valve.py
     homeassistant/components/youless/__init__.py
     homeassistant/components/youless/sensor.py
     homeassistant/components/zabbix/*

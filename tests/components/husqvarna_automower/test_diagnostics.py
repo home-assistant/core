@@ -1,4 +1,5 @@
 """Test the Husqvarna Automower Diagnostics."""
+
 import datetime
 from unittest.mock import AsyncMock
 

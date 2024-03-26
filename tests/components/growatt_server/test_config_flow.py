@@ -84,9 +84,10 @@ async def test_no_plants_on_account(hass: HomeAssistant) -> None:
     plant_list = deepcopy(GROWATT_PLANT_LIST_RESPONSE)
     plant_list["data"] = []
 
-    with patch(
-        "growattServer.GrowattApi.login", return_value=GROWATT_LOGIN_RESPONSE
-    ), patch("growattServer.GrowattApi.plant_list", return_value=plant_list):
+    with (
+        patch("growattServer.GrowattApi.login", return_value=GROWATT_LOGIN_RESPONSE),
+        patch("growattServer.GrowattApi.plant_list", return_value=plant_list),
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input
         )
@@ -104,10 +105,13 @@ async def test_multiple_plant_ids(hass: HomeAssistant) -> None:
     plant_list = deepcopy(GROWATT_PLANT_LIST_RESPONSE)
     plant_list["data"].append(plant_list["data"][0])
 
-    with patch(
-        "growattServer.GrowattApi.login", return_value=GROWATT_LOGIN_RESPONSE
-    ), patch("growattServer.GrowattApi.plant_list", return_value=plant_list), patch(
-        "homeassistant.components.growatt_server.async_setup_entry", return_value=True
+    with (
+        patch("growattServer.GrowattApi.login", return_value=GROWATT_LOGIN_RESPONSE),
+        patch("growattServer.GrowattApi.plant_list", return_value=plant_list),
+        patch(
+            "homeassistant.components.growatt_server.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input
@@ -134,13 +138,16 @@ async def test_one_plant_on_account(hass: HomeAssistant) -> None:
     )
     user_input = FIXTURE_USER_INPUT.copy()
 
-    with patch(
-        "growattServer.GrowattApi.login", return_value=GROWATT_LOGIN_RESPONSE
-    ), patch(
-        "growattServer.GrowattApi.plant_list",
-        return_value=GROWATT_PLANT_LIST_RESPONSE,
-    ), patch(
-        "homeassistant.components.growatt_server.async_setup_entry", return_value=True
+    with (
+        patch("growattServer.GrowattApi.login", return_value=GROWATT_LOGIN_RESPONSE),
+        patch(
+            "growattServer.GrowattApi.plant_list",
+            return_value=GROWATT_PLANT_LIST_RESPONSE,
+        ),
+        patch(
+            "homeassistant.components.growatt_server.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input
@@ -161,11 +168,12 @@ async def test_existing_plant_configured(hass: HomeAssistant) -> None:
     )
     user_input = FIXTURE_USER_INPUT.copy()
 
-    with patch(
-        "growattServer.GrowattApi.login", return_value=GROWATT_LOGIN_RESPONSE
-    ), patch(
-        "growattServer.GrowattApi.plant_list",
-        return_value=GROWATT_PLANT_LIST_RESPONSE,
+    with (
+        patch("growattServer.GrowattApi.login", return_value=GROWATT_LOGIN_RESPONSE),
+        patch(
+            "growattServer.GrowattApi.plant_list",
+            return_value=GROWATT_PLANT_LIST_RESPONSE,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input
