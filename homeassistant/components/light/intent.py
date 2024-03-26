@@ -15,11 +15,13 @@ import homeassistant.util.color as color_util
 
 from . import (
     ATTR_BRIGHTNESS_PCT,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN,
     brightness_supported,
     color_supported,
+    color_temp_supported,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,6 +44,9 @@ class SetIntentHandler(intent.IntentHandler):
         vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional("color"): color_util.color_name_to_rgb,
         vol.Optional("brightness"): vol.All(vol.Coerce(int), vol.Range(0, 100)),
+        vol.Optional("color_temp_kelvin"): vol.All(
+            vol.Coerce(int), vol.Range(2000, 7000)
+        ),
     }
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
@@ -90,8 +95,11 @@ class SetIntentHandler(intent.IntentHandler):
         if not states:
             raise intent.IntentHandleError("No entities matched")
 
-        if "color" in slots:
+        if "color" in slots and "color_temp_kelvin" not in slots:
             service_data[ATTR_RGB_COLOR] = slots["color"]["value"]
+
+        if "color_temp_kelvin" in slots and "color" not in slots:
+            service_data[ATTR_COLOR_TEMP_KELVIN] = slots["color_temp_kelvin"]["value"]
 
         if "brightness" in slots:
             service_data[ATTR_BRIGHTNESS_PCT] = slots["brightness"]["value"]
@@ -99,6 +107,7 @@ class SetIntentHandler(intent.IntentHandler):
         response = intent_obj.create_response()
         needs_brightness = ATTR_BRIGHTNESS_PCT in service_data
         needs_color = ATTR_RGB_COLOR in service_data
+        needs_color_temp = ATTR_COLOR_TEMP_KELVIN in service_data
 
         success_results: list[intent.IntentResponseTarget] = []
         failed_results: list[intent.IntentResponseTarget] = []
@@ -122,8 +131,14 @@ class SetIntentHandler(intent.IntentHandler):
 
             # Test brightness/color
             supported_color_modes = state.attributes.get(ATTR_SUPPORTED_COLOR_MODES)
-            if (needs_color and not color_supported(supported_color_modes)) or (
-                needs_brightness and not brightness_supported(supported_color_modes)
+            if (
+                (needs_color and not color_supported(supported_color_modes))
+                or (
+                    needs_color_temp and not color_temp_supported(supported_color_modes)
+                )
+                or (
+                    needs_brightness and not brightness_supported(supported_color_modes)
+                )
             ):
                 failed_results.append(target)
                 continue

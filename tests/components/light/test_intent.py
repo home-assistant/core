@@ -34,6 +34,31 @@ async def test_intent_set_color(hass: HomeAssistant) -> None:
     assert call.data.get(light.ATTR_RGB_COLOR) == (0, 0, 255)
 
 
+async def test_intent_set_color_temperature(hass: HomeAssistant) -> None:
+    """Test the set color intent."""
+    hass.states.async_set(
+        "light.hello_2", "off", {ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP]}
+    )
+    hass.states.async_set("switch.hello", "off")
+    calls = async_mock_service(hass, light.DOMAIN, light.SERVICE_TURN_ON)
+    await intent.async_setup_intents(hass)
+
+    await async_handle(
+        hass,
+        "test",
+        intent.INTENT_SET,
+        {"name": {"value": "Hello 2"}, "color_temp_kelvin": {"value": 5000}},
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == light.DOMAIN
+    assert call.service == SERVICE_TURN_ON
+    assert call.data.get(ATTR_ENTITY_ID) == "light.hello_2"
+    assert call.data.get(light.ATTR_COLOR_TEMP_KELVIN) == 5000
+
+
 async def test_intent_set_color_tests_feature(hass: HomeAssistant) -> None:
     """Test the set color intent."""
     hass.states.async_set("light.hello", "off")
