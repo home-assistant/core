@@ -9,6 +9,7 @@ MANUFACTURER = "Netatmo"
 DEFAULT_ATTRIBUTION = f"Data provided by {MANUFACTURER}"
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.CAMERA,
     Platform.CLIMATE,
     Platform.COVER,
@@ -45,11 +46,16 @@ NETATMO_CREATE_CLIMATE = "netatmo_create_climate"
 NETATMO_CREATE_COVER = "netatmo_create_cover"
 NETATMO_CREATE_FAN = "netatmo_create_fan"
 NETATMO_CREATE_LIGHT = "netatmo_create_light"
+NETATMO_CREATE_OPENING_BINARY_SENSOR = "netatmo_create_opening_binary_sensor"
+NETATMO_CREATE_OPENING_SENSOR = "netatmo_create_opening_sensor"
 NETATMO_CREATE_ROOM_SENSOR = "netatmo_create_room_sensor"
 NETATMO_CREATE_SELECT = "netatmo_create_select"
 NETATMO_CREATE_SENSOR = "netatmo_create_sensor"
+NETATMO_CREATE_SIREN_BINARY_SENSOR = "netatmo_create_siren_binary_sensor"
+NETATMO_CREATE_SIREN_SENSOR = "netatmo_create_siren_sensor"
 NETATMO_CREATE_SWITCH = "netatmo_create_switch"
 NETATMO_CREATE_WEATHER_SENSOR = "netatmo_create_weather_sensor"
+
 
 CONF_AREA_NAME = "area_name"
 CONF_CLOUDHOOK_URL = "cloudhook_url"
@@ -124,6 +130,9 @@ EVENT_TYPE_DOOR_TAG_OPEN = "tag_open"
 EVENT_TYPE_DOOR_TAG_SMALL_MOVE = "tag_small_move"
 EVENT_TYPE_OFF = "off"
 EVENT_TYPE_ON = "on"
+EVENT_TYPE_TAG_UNINSTALLED = "tag_uninstalled"
+# NIS tags
+EVENT_TYPE_HOME_ALARM = "home_alarm"
 
 OUTDOOR_CAMERA_TRIGGERS = [
     EVENT_TYPE_CAMERA_ANIMAL,
@@ -141,6 +150,7 @@ DOOR_TAG_TRIGGERS = [
     EVENT_TYPE_DOOR_TAG_BIG_MOVE,
     EVENT_TYPE_DOOR_TAG_OPEN,
     EVENT_TYPE_DOOR_TAG_SMALL_MOVE,
+    EVENT_TYPE_TAG_UNINSTALLED,
 ]
 CLIMATE_TRIGGERS = [
     EVENT_TYPE_CANCEL_SET_POINT,
@@ -157,11 +167,13 @@ EVENT_ID_MAP = {
     EVENT_TYPE_CAMERA_PERSON: "device_id",
     EVENT_TYPE_CAMERA_VEHICLE: "device_id",
     EVENT_TYPE_CANCEL_SET_POINT: "room_id",
-    EVENT_TYPE_DOOR_TAG_BIG_MOVE: "device_id",
-    EVENT_TYPE_DOOR_TAG_OPEN: "device_id",
-    EVENT_TYPE_DOOR_TAG_SMALL_MOVE: "device_id",
+    EVENT_TYPE_DOOR_TAG_BIG_MOVE: "module_id",
+    EVENT_TYPE_DOOR_TAG_OPEN: "module_id",
+    EVENT_TYPE_DOOR_TAG_SMALL_MOVE: "module_id",
+    EVENT_TYPE_HOME_ALARM: "device_id",
     EVENT_TYPE_LIGHT_MODE: "device_id",
     EVENT_TYPE_SET_POINT: "room_id",
+    EVENT_TYPE_TAG_UNINSTALLED: "module_id",
     EVENT_TYPE_THERM_MODE: "home_id",
 }
 

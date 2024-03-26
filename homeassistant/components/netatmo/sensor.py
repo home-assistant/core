@@ -41,13 +41,16 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     CONF_URL_ENERGY,
     CONF_URL_PUBLIC_WEATHER,
+    CONF_URL_SECURITY,
     CONF_URL_WEATHER,
     CONF_WEATHER_AREAS,
     DATA_HANDLER,
     DOMAIN,
     NETATMO_CREATE_BATTERY,
+    NETATMO_CREATE_OPENING_SENSOR,
     NETATMO_CREATE_ROOM_SENSOR,
     NETATMO_CREATE_SENSOR,
+    NETATMO_CREATE_SIREN_SENSOR,
     NETATMO_CREATE_WEATHER_SENSOR,
     SIGNAL_NAME,
 )
@@ -266,6 +269,52 @@ BATTERY_SENSOR_DESCRIPTION = NetatmoSensorEntityDescription(
     device_class=SensorDeviceClass.BATTERY,
 )
 
+SENSOR_SIREN_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
+    NetatmoSensorEntityDescription(
+        key="status",
+        name="Status",
+        netatmo_name="status",
+        device_class=SensorDeviceClass.ENUM,
+        entity_registry_enabled_default=True,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:alarm-light",
+        options=[
+            "now_news",
+            "no_sound",
+            "warning",
+            "sound",
+            "playing_record_0",
+            "playing_record_1",
+            "playing_record_2",
+            "playing_record_3",
+        ],
+    ),
+)
+SENSOR_SIREN_TYPES_KEYS = [desc.key for desc in SENSOR_SIREN_TYPES]
+
+SENSOR_OPENING_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
+    NetatmoSensorEntityDescription(
+        key="status",
+        name="Status",
+        netatmo_name="status",
+        device_class=SensorDeviceClass.ENUM,
+        entity_registry_enabled_default=True,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:window-closed-variant",
+        options=[
+            "no_news",
+            "calibrating",
+            "undefined",
+            "closed",
+            "open",
+            "calibration_failed",
+            "maintenance",
+            "weak_signal",
+        ],
+    ),
+)
+SENSOR_OPENING_TYPES_KEYS = [desc.key for desc in SENSOR_OPENING_TYPES]
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -294,6 +343,44 @@ async def async_setup_entry(
     entry.async_on_unload(
         async_dispatcher_connect(
             hass, NETATMO_CREATE_WEATHER_SENSOR, _create_weather_sensor_entity
+        )
+    )
+
+    @callback
+    def _create_siren_sensor_entity(netatmo_device: NetatmoDevice) -> None:
+        async_add_entities(
+            NetatmoSirenSensor(netatmo_device, description)
+            for description in SENSOR_TYPES
+            if description.netatmo_name in netatmo_device.device.features
+        )
+        async_add_entities(
+            NetatmoSirenSensor(netatmo_device, description)
+            for description in SENSOR_SIREN_TYPES
+            if description.netatmo_name in netatmo_device.device.features
+        )
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, NETATMO_CREATE_SIREN_SENSOR, _create_siren_sensor_entity
+        )
+    )
+
+    @callback
+    def _create_opening_sensor_entity(netatmo_device: NetatmoDevice) -> None:
+        async_add_entities(
+            NetatmoSirenSensor(netatmo_device, description)
+            for description in SENSOR_TYPES
+            if description.netatmo_name in netatmo_device.device.features
+        )
+        async_add_entities(
+            NetatmoOpeningSensor(netatmo_device, description)
+            for description in SENSOR_OPENING_TYPES
+            if description.netatmo_name in netatmo_device.device.features
+        )
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, NETATMO_CREATE_OPENING_SENSOR, _create_opening_sensor_entity
         )
     )
 
@@ -519,6 +606,124 @@ class NetatmoClimateBatterySensor(NetatmoBaseEntity, SensorEntity):
 
         self._attr_available = True
         self._attr_native_value = self._module.battery
+
+
+class NetatmoSirenSensor(NetatmoBaseEntity, SensorEntity):
+    """Implementation of a Netatmo weather/home coach sensor."""
+
+    _attr_has_entity_name = True
+    entity_description: NetatmoSensorEntityDescription
+
+    def __init__(
+        self,
+        netatmo_device: NetatmoDevice,
+        description: NetatmoSensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(netatmo_device.data_handler)
+        self.entity_description = description
+
+        self._module = netatmo_device.device
+        self._id = self._module.entity_id
+        self._bridge = self._module.bridge if self._module.bridge is not None else None
+        self._device_name = self._module.name
+        self._signal_name = netatmo_device.signal_name
+        self._publishers.extend(
+            [
+                {
+                    "name": HOME,
+                    "home_id": netatmo_device.device.home.entity_id,
+                    SIGNAL_NAME: self._signal_name,
+                },
+            ]
+        )
+
+        self._attr_name = f"{description.name}"
+        self._model = self._module.device_type
+        self._config_url = CONF_URL_SECURITY
+        self._attr_unique_id = f"{self._id}-{description.key}"
+
+    @callback
+    def async_update_callback(self) -> None:
+        """Update the entity's state."""
+        if not self._module.reachable:
+            if self.available:
+                self._attr_available = False
+            return
+
+        if (
+            state := getattr(self._module, self.entity_description.netatmo_name)
+        ) is None:
+            return
+
+        if self.entity_description.netatmo_name == "rf_strength":
+            self._attr_native_value = process_rf(state)
+        elif self.entity_description.netatmo_name == "wifi_strength":
+            self._attr_native_value = process_wifi(state)
+        else:
+            self._attr_native_value = state
+
+        self._attr_available = True
+        self.async_write_ha_state()
+
+
+class NetatmoOpeningSensor(NetatmoBaseEntity, SensorEntity):
+    """Implementation of a Netatmo weather/home coach sensor."""
+
+    _attr_has_entity_name = True
+    entity_description: NetatmoSensorEntityDescription
+
+    def __init__(
+        self,
+        netatmo_device: NetatmoDevice,
+        description: NetatmoSensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(netatmo_device.data_handler)
+        self.entity_description = description
+
+        self._module = netatmo_device.device
+        self._id = self._module.entity_id
+        self._bridge = self._module.bridge if self._module.bridge is not None else None
+        self._device_name = self._module.name
+        self._signal_name = netatmo_device.signal_name
+        self._publishers.extend(
+            [
+                {
+                    "name": HOME,
+                    "home_id": netatmo_device.device.home.entity_id,
+                    SIGNAL_NAME: self._signal_name,
+                },
+            ]
+        )
+
+        self._attr_name = f"{description.name}"
+        self._model = self._module.device_type
+        self._config_url = CONF_URL_SECURITY
+        self._attr_unique_id = f"{self._id}-{description.key}"
+
+    @callback
+    def async_update_callback(self) -> None:
+        """Update the entity's state."""
+        if not self._module.reachable:
+            if self.available:
+                self._attr_available = False
+            return
+
+        if (
+            state := getattr(self._module, self.entity_description.netatmo_name)
+        ) is None:
+            return
+
+        if self.entity_description.netatmo_name == "rf_strength":
+            self._attr_native_value = process_rf(state)
+        elif self.entity_description.netatmo_name == "wifi_strength":
+            self._attr_native_value = process_wifi(state)
+        else:
+            self._attr_native_value = state
+
+        self._attr_available = True
+        self.async_write_ha_state()
 
 
 class NetatmoSensor(NetatmoBaseEntity, SensorEntity):

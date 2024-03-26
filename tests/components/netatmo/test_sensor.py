@@ -248,3 +248,30 @@ async def test_climate_battery_sensor(
     prefix = "sensor.livingroom_"
 
     assert hass.states.get(f"{prefix}battery_percent").state == "75"
+
+
+async def test_window_sensor(
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
+) -> None:
+    """Test opening sensor setup."""
+    with selected_platforms([Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    prefix = "sensor.window_hall_"
+    assert hass.states.get(f"{prefix}battery_percent").state == "75"
+
+
+async def test_siren_sensor(
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
+) -> None:
+    """Test siren sensor setup."""
+    with selected_platforms([Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    prefix = "sensor.sirene_in_hall_"
+    assert hass.states.get(f"{prefix}status").state == "no_sound"
+    assert hass.states.get(f"{prefix}battery_percent").state == "25"
