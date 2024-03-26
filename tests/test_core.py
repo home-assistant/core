@@ -3273,6 +3273,21 @@ async def test_eventbus_lazy_object_creation(hass: HomeAssistant) -> None:
     unsub()
 
 
+async def test_event_filter_sanity_checks(hass: HomeAssistant) -> None:
+    """Test raising on bad event filters."""
+
+    @ha.callback
+    def listener(event):
+        """Mock listener."""
+
+    def bad_filter(event_data):
+        """Mock filter."""
+        return False
+
+    with pytest.raises(HomeAssistantError):
+        hass.bus.async_listen("test", listener, event_filter=bad_filter)
+
+
 async def test_statemachine_report_state(hass: HomeAssistant) -> None:
     """Test report state event."""
 
