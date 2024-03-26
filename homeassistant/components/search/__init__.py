@@ -513,7 +513,7 @@ class Searcher:
     def _async_resolve_up_entity(self, entity_id: str) -> None:
         """Resolve up from an entity.
 
-        Above an entity is an device, area or floor.
+        Above an entity is a device, area or floor.
         Above an entity is also the config entry.
         """
         if entity_entry := self._entity_registry.async_get(entity_id):
