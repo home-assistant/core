@@ -19,6 +19,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     UnitOfIrradiance,
+    UnitOfLength,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
@@ -61,6 +62,7 @@ TYPE_HUMIDITYIN = "humidityin"
 TYPE_LASTRAIN = "lastRain"
 TYPE_LIGHTNING_PER_DAY = "lightning_day"
 TYPE_LIGHTNING_PER_HOUR = "lightning_hour"
+TYPE_LIGHTNING_DISTANCE = "lightning_distance"
 TYPE_MAXDAILYGUST = "maxdailygust"
 TYPE_MONTHLYRAININ = "monthlyrainin"
 TYPE_PM25 = "pm25"
@@ -295,6 +297,12 @@ SENSOR_DESCRIPTIONS = (
         translation_key="lightning_strikes_per_hour",
         native_unit_of_measurement="strikes",
         state_class=SensorStateClass.TOTAL,
+    ),
+    SensorEntityDescription(
+        key=TYPE_LIGHTNING_DISTANCE,
+        translation_key="lightning_strikes_distance",
+        native_unit_of_measurement=UnitOfLength.MILES
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_MAXDAILYGUST,
