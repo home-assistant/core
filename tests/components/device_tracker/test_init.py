@@ -235,7 +235,8 @@ async def test_discover_platform(
     """Test discovery of device_tracker demo platform."""
     await async_setup_component(hass, "homeassistant", {})
     await async_setup_component(hass, device_tracker.DOMAIN, {})
-    await hass.async_block_till_done()
+    # async_block_till_done is intentionally missing here so we
+    # can verify async_load_platform still works without it
     with patch("homeassistant.components.device_tracker.legacy.update_config"):
         await discovery.async_load_platform(
             hass, device_tracker.DOMAIN, "demo", {"test_key": "test_val"}, {"bla": {}}
@@ -249,6 +250,31 @@ async def test_discover_platform(
         mock_see,
         {"test_key": "test_val"},
     )
+
+
+async def test_discover_platform_missing_platform(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test discovery of device_tracker missing platform."""
+    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, device_tracker.DOMAIN, {})
+    # async_block_till_done is intentionally missing here so we
+    # can verify async_load_platform still works without it
+    with patch("homeassistant.components.device_tracker.legacy.update_config"):
+        await discovery.async_load_platform(
+            hass,
+            device_tracker.DOMAIN,
+            "its_not_there",
+            {"test_key": "test_val"},
+            {"bla": {}},
+        )
+        await hass.async_block_till_done()
+    assert device_tracker.DOMAIN in hass.config.components
+    assert (
+        "Unable to prepare setup for platform 'its_not_there.device_tracker'"
+        in caplog.text
+    )
+    # This test should not generate an unhandled exception
 
 
 async def test_update_stale(
@@ -266,10 +292,13 @@ async def test_update_stale(
     register_time = datetime(now.year + 1, 9, 15, 23, tzinfo=dt_util.UTC)
     scan_time = datetime(now.year + 1, 9, 15, 23, 1, tzinfo=dt_util.UTC)
 
-    with patch(
-        "homeassistant.components.device_tracker.legacy.dt_util.utcnow",
-        return_value=register_time,
-    ), assert_setup_component(1, device_tracker.DOMAIN):
+    with (
+        patch(
+            "homeassistant.components.device_tracker.legacy.dt_util.utcnow",
+            return_value=register_time,
+        ),
+        assert_setup_component(1, device_tracker.DOMAIN),
+    ):
         assert await async_setup_component(
             hass,
             device_tracker.DOMAIN,
@@ -522,10 +551,13 @@ async def test_see_passive_zone_state(
     scanner.reset()
     scanner.come_home("dev1")
 
-    with patch(
-        "homeassistant.components.device_tracker.legacy.dt_util.utcnow",
-        return_value=register_time,
-    ), assert_setup_component(1, device_tracker.DOMAIN):
+    with (
+        patch(
+            "homeassistant.components.device_tracker.legacy.dt_util.utcnow",
+            return_value=register_time,
+        ),
+        assert_setup_component(1, device_tracker.DOMAIN),
+    ):
         assert await async_setup_component(
             hass,
             device_tracker.DOMAIN,

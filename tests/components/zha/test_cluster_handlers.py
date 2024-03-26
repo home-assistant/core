@@ -578,9 +578,10 @@ async def test_ep_cluster_handlers_configure(cluster_handler) -> None:
     claimed = {ch_1.id: ch_1, ch_2.id: ch_2, ch_3.id: ch_3}
     client_handlers = {ch_4.id: ch_4, ch_5.id: ch_5}
 
-    with mock.patch.dict(
-        endpoint.claimed_cluster_handlers, claimed, clear=True
-    ), mock.patch.dict(endpoint.client_cluster_handlers, client_handlers, clear=True):
+    with (
+        mock.patch.dict(endpoint.claimed_cluster_handlers, claimed, clear=True),
+        mock.patch.dict(endpoint.client_cluster_handlers, client_handlers, clear=True),
+    ):
         await endpoint.async_configure()
         await endpoint.async_initialize(mock.sentinel.from_cache)
 
@@ -870,10 +871,13 @@ async def test_invalid_cluster_handler(hass: HomeAssistant, caplog) -> None:
         TestZigbeeClusterHandler(cluster, zha_endpoint)
 
     # And one is also logged at runtime
-    with patch.dict(
-        registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY[cluster.cluster_id],
-        {None: TestZigbeeClusterHandler},
-    ), caplog.at_level(logging.WARNING):
+    with (
+        patch.dict(
+            registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY[cluster.cluster_id],
+            {None: TestZigbeeClusterHandler},
+        ),
+        caplog.at_level(logging.WARNING),
+    ):
         zha_endpoint.add_all_cluster_handlers()
 
     assert "missing_attr" in caplog.text

@@ -1055,16 +1055,16 @@ class MqttDiscoveryUpdate(Entity):
         if self._discovery_data is not None:
             discovery_hash: tuple[str, str] = self._discovery_data[ATTR_DISCOVERY_HASH]
             if self.registry_entry is not None:
-                self._registry_hooks[
-                    discovery_hash
-                ] = async_track_entity_registry_updated_event(
-                    self.hass,
-                    self.entity_id,
-                    partial(
-                        async_clear_discovery_topic_if_entity_removed,
+                self._registry_hooks[discovery_hash] = (
+                    async_track_entity_registry_updated_event(
                         self.hass,
-                        self._discovery_data,
-                    ),
+                        self.entity_id,
+                        partial(
+                            async_clear_discovery_topic_if_entity_removed,
+                            self.hass,
+                            self._discovery_data,
+                        ),
+                    )
                 )
             stop_discovery_updates(self.hass, self._discovery_data)
             send_discovery_done(self.hass, self._discovery_data)
