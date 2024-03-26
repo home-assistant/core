@@ -1,7 +1,6 @@
 """Support for The Things Network entities."""
 
 import logging
-from typing import Generic, TypeVar, cast
 
 from ttn_client import TTNBaseValue
 
@@ -14,19 +13,18 @@ from .coordinator import TTNCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-VALUE_T = TypeVar("VALUE_T", bound=TTNBaseValue)
 
-
-class TTNEntity(Generic[VALUE_T], CoordinatorEntity[TTNCoordinator]):
+class TTNEntity(CoordinatorEntity[TTNCoordinator]):
     """Representation of a The Things Network Data Storage sensor."""
 
     _attr_has_entity_name = True
+    _ttn_value: TTNBaseValue
 
     def __init__(
         self,
         coordinator: TTNCoordinator,
         app_id: str,
-        ttn_value: VALUE_T,
+        ttn_value: TTNBaseValue,
     ) -> None:
         """Initialize a The Things Network Data Storage sensor."""
 
@@ -57,8 +55,9 @@ class TTNEntity(Generic[VALUE_T], CoordinatorEntity[TTNCoordinator]):
             _LOGGER.debug(
                 "Received update for %s: %s", self.unique_id, my_entity_update
             )
-            # Assume the type of an entity has not changed since the creation
-            self._ttn_value = cast(VALUE_T, my_entity_update)
+            # Check that the type of an entity has not changed since the creation
+            assert isinstance(my_entity_update, type(self._ttn_value))
+            self._ttn_value = my_entity_update
             self.async_write_ha_state()
 
     @property
