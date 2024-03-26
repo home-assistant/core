@@ -372,9 +372,9 @@ class ConfigEntry:
         self._async_cancel_retry_setup: Callable[[], Any] | None = None
 
         # Hold list for actions to call on unload.
-        self._on_unload: list[
-            Callable[[], Coroutine[Any, Any, None] | None]
-        ] | None = None
+        self._on_unload: list[Callable[[], Coroutine[Any, Any, None] | None]] | None = (
+            None
+        )
 
         # Reload lock to prevent conflicting reloads
         self.reload_lock = asyncio.Lock()
@@ -605,6 +605,7 @@ class ConfigEntry:
                     HassJob(
                         functools.partial(self._async_setup_again, hass),
                         job_type=HassJobType.Callback,
+                        cancel_on_shutdown=True,
                     ),
                 )
             else:
@@ -1137,9 +1138,9 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult, str
         loop = self.hass.loop
 
         if context["source"] == SOURCE_IMPORT:
-            self._pending_import_flows.setdefault(handler, {})[
-                flow_id
-            ] = loop.create_future()
+            self._pending_import_flows.setdefault(handler, {})[flow_id] = (
+                loop.create_future()
+            )
 
         cancel_init_future = loop.create_future()
         self._initialize_futures.setdefault(handler, []).append(cancel_init_future)
@@ -1858,7 +1859,7 @@ class ConfigEntries:
         await asyncio.gather(
             *(
                 create_eager_task(
-                    self.async_forward_entry_setup(entry, platform),
+                    self._async_forward_entry_setup(entry, platform, False),
                     name=f"config entry forward setup {entry.title} {entry.domain} {entry.entry_id} {platform}",
                 )
                 for platform in platforms
@@ -1874,6 +1875,12 @@ class ConfigEntries:
         component also has related platforms, the component will have to
         forward the entry to be setup by that component.
         """
+        return await self._async_forward_entry_setup(entry, domain, True)
+
+    async def _async_forward_entry_setup(
+        self, entry: ConfigEntry, domain: Platform | str, preload_platform: bool
+    ) -> bool:
+        """Forward the setup of an entry to a different component."""
         # Setup Component if not set up yet
         if domain not in self.hass.config.components:
             with async_pause_setup(self.hass, SetupPhases.WAIT_BASE_PLATFORM_SETUP):
@@ -1884,8 +1891,16 @@ class ConfigEntries:
             if not result:
                 return False
 
-        integration = await loader.async_get_integration(self.hass, domain)
+        if preload_platform:
+            # If this is a late setup, we need to make sure the platform is loaded
+            # so we do not end up waiting for when the EntityComponent calls
+            # async_prepare_setup_platform
+            integration = await loader.async_get_integration(self.hass, entry.domain)
+            if not integration.platforms_are_loaded((domain,)):
+                with async_pause_setup(self.hass, SetupPhases.WAIT_IMPORT_PLATFORMS):
+                    await integration.async_get_platform(domain)
 
+        integration = await loader.async_get_integration(self.hass, domain)
         await entry.async_setup(self.hass, integration=integration)
         return True
 

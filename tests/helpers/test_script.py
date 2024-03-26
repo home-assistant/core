@@ -3536,6 +3536,7 @@ async def test_parallel_error(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test parallel action failure handling."""
+    await async_setup_component(hass, "homeassistant", {})
     events = async_capture_events(hass, "test_event")
     sequence = cv.SCRIPT_SCHEMA(
         {
@@ -3552,10 +3553,10 @@ async def test_parallel_error(
     assert len(events) == 0
 
     expected_trace = {
-        "0": [{"error": "Service epic.failure not found."}],
+        "0": [{"error": "Service epic.failure not found"}],
         "0/parallel/0/sequence/0": [
             {
-                "error": "Service epic.failure not found.",
+                "error": "Service epic.failure not found",
                 "result": {
                     "params": {
                         "domain": "epic",
@@ -3589,6 +3590,7 @@ async def test_last_triggered(hass: HomeAssistant) -> None:
 
 async def test_propagate_error_service_not_found(hass: HomeAssistant) -> None:
     """Test that a script aborts when a service is not found."""
+    await async_setup_component(hass, "homeassistant", {})
     event = "test_event"
     events = async_capture_events(hass, event)
     sequence = cv.SCRIPT_SCHEMA([{"service": "test.script"}, {"event": event}])
@@ -3603,7 +3605,7 @@ async def test_propagate_error_service_not_found(hass: HomeAssistant) -> None:
     expected_trace = {
         "0": [
             {
-                "error": "Service test.script not found.",
+                "error": "Service test.script not found",
                 "result": {
                     "params": {
                         "domain": "test",
@@ -4927,10 +4929,13 @@ async def test_validate_action_config(
         assert key in expected_templates or key in script.STATIC_VALIDATION_ACTION_TYPES
 
     # Verify we raise if we don't know the action type
-    with patch(
-        "homeassistant.helpers.config_validation.determine_script_action",
-        return_value="non-existing",
-    ), pytest.raises(ValueError):
+    with (
+        patch(
+            "homeassistant.helpers.config_validation.determine_script_action",
+            return_value="non-existing",
+        ),
+        pytest.raises(ValueError),
+    ):
         await script.async_validate_action_config(hass, {})
 
     # Verify each action can validate
@@ -5419,6 +5424,7 @@ async def test_continue_on_error_with_stop(hass: HomeAssistant) -> None:
 
 async def test_continue_on_error_automation_issue(hass: HomeAssistant) -> None:
     """Test continue on error doesn't block action automation errors."""
+    await async_setup_component(hass, "homeassistant", {})
     sequence = cv.SCRIPT_SCHEMA(
         [
             {
@@ -5436,7 +5442,7 @@ async def test_continue_on_error_automation_issue(hass: HomeAssistant) -> None:
         {
             "0": [
                 {
-                    "error": "Service service.not_found not found.",
+                    "error": "Service service.not_found not found",
                     "result": {
                         "params": {
                             "domain": "service",
@@ -5455,6 +5461,7 @@ async def test_continue_on_error_automation_issue(hass: HomeAssistant) -> None:
 
 async def test_continue_on_error_unknown_error(hass: HomeAssistant) -> None:
     """Test continue on error doesn't block unknown errors from e.g., libraries."""
+    await async_setup_component(hass, "homeassistant", {})
 
     class MyLibraryError(Exception):
         """My custom library error."""

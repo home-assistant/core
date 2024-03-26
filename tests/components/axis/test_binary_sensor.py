@@ -1,52 +1,18 @@
 """Axis binary sensor platform tests."""
 
+from collections.abc import Callable
+
 import pytest
 
-from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .const import NAME
-
-
-async def test_platform_manually_configured(hass: HomeAssistant) -> None:
-    """Test that nothing happens when platform is manually configured."""
-    assert (
-        await async_setup_component(
-            hass,
-            BINARY_SENSOR_DOMAIN,
-            {BINARY_SENSOR_DOMAIN: {"platform": AXIS_DOMAIN}},
-        )
-        is True
-    )
-
-    assert AXIS_DOMAIN not in hass.data
-
-
-async def test_no_binary_sensors(hass: HomeAssistant, setup_config_entry) -> None:
-    """Test that no sensors in Axis results in no sensor entities."""
-    assert not hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)
-
-
-async def test_unsupported_binary_sensors(
-    hass: HomeAssistant, setup_config_entry, mock_rtsp_event
-) -> None:
-    """Test that unsupported sensors are not loaded."""
-    mock_rtsp_event(
-        topic="tns1:PTZController/tnsaxis:PTZPresets/Channel_1",
-        data_type="on_preset",
-        data_value="1",
-        source_name="PresetToken",
-        source_idx="0",
-    )
-    await hass.async_block_till_done()
-
-    assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 0
 
 
 @pytest.mark.parametrize(
@@ -178,10 +144,41 @@ async def test_unsupported_binary_sensors(
                 "device_class": BinarySensorDeviceClass.MOTION,
             },
         ),
+        # Events with names generated from event ID and topic
+        (
+            {
+                "topic": "tnsaxis:CameraApplicationPlatform/VMD/Camera1Profile9",
+                "data_type": "active",
+                "data_value": "1",
+            },
+            {
+                "id": f"{BINARY_SENSOR_DOMAIN}.{NAME}_vmd4_camera1profile9",
+                "state": STATE_ON,
+                "name": f"{NAME} VMD4 Camera1Profile9",
+                "device_class": BinarySensorDeviceClass.MOTION,
+            },
+        ),
+        (
+            {
+                "topic": "tnsaxis:CameraApplicationPlatform/ObjectAnalytics/Device1Scenario8",
+                "data_type": "active",
+                "data_value": "1",
+            },
+            {
+                "id": f"{BINARY_SENSOR_DOMAIN}.{NAME}_object_analytics_device1scenario8",
+                "state": STATE_ON,
+                "name": f"{NAME} Object Analytics Device1Scenario8",
+                "device_class": BinarySensorDeviceClass.MOTION,
+            },
+        ),
     ],
 )
 async def test_binary_sensors(
-    hass: HomeAssistant, setup_config_entry, mock_rtsp_event, event, entity
+    hass: HomeAssistant,
+    setup_config_entry: ConfigEntry,
+    mock_rtsp_event: Callable[[str, str, str, str, str, str], None],
+    event: dict[str, str],
+    entity: dict[str, str],
 ) -> None:
     """Test that sensors are loaded properly."""
     mock_rtsp_event(**event)
@@ -198,6 +195,15 @@ async def test_binary_sensors(
 @pytest.mark.parametrize(
     ("event"),
     [
+        # Event with unsupported topic
+        {
+            "topic": "tns1:PTZController/tnsaxis:PTZPresets/Channel_1",
+            "data_type": "on_preset",
+            "data_value": "1",
+            "source_name": "PresetToken",
+            "source_idx": "0",
+        },
+        # Event with unsupported source_idx
         {
             "topic": "tns1:Device/tnsaxis:IO/Port",
             "data_type": "state",
@@ -206,6 +212,7 @@ async def test_binary_sensors(
             "source_name": "port",
             "source_idx": "-1",
         },
+        # Event with unsupported ID in topic 'ANY'
         {
             "topic": "tnsaxis:CameraApplicationPlatform/VMD/Camera1ProfileANY",
             "data_type": "active",
@@ -219,40 +226,12 @@ async def test_binary_sensors(
     ],
 )
 async def test_unsupported_events(
-    hass: HomeAssistant, setup_config_entry, mock_rtsp_event, event
+    hass: HomeAssistant,
+    setup_config_entry: ConfigEntry,
+    mock_rtsp_event: Callable[[str, str, str, str, str, str], None],
+    event: dict[str, str],
 ) -> None:
     """Validate nothing breaks with unsupported events."""
     mock_rtsp_event(**event)
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 0
-
-
-@pytest.mark.parametrize(
-    ("event", "entity_id"),
-    [
-        (
-            {
-                "topic": "tnsaxis:CameraApplicationPlatform/VMD/Camera1Profile9",
-                "data_type": "active",
-                "data_value": "1",
-            },
-            "binary_sensor.name_vmd4_camera1profile9",
-        ),
-        (
-            {
-                "topic": "tnsaxis:CameraApplicationPlatform/ObjectAnalytics/Device1Scenario8",
-                "data_type": "active",
-                "data_value": "1",
-            },
-            "binary_sensor.name_object_analytics_device1scenario8",
-        ),
-    ],
-)
-async def test_no_primary_name_for_event(
-    hass: HomeAssistant, setup_config_entry, mock_rtsp_event, event, entity_id
-) -> None:
-    """Validate fallback method for getting name works."""
-    mock_rtsp_event(**event)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 1
-    assert hass.states.get(entity_id)
