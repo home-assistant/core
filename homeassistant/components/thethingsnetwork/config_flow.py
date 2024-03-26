@@ -2,7 +2,6 @@
 
 from collections.abc import Mapping
 import logging
-import traceback
 from typing import Any
 
 from ttn_client import TTNAuthError, TTNClient
@@ -36,28 +35,24 @@ class TTNFlowHandler(ConfigFlow, domain=DOMAIN):
 
         errors = {}
         if user_input is not None:
-            connection_error = None
+            client = TTNClient(
+                user_input[CONF_HOSTNAME],
+                user_input[CONF_APP_ID],
+                user_input[CONF_API_KEY],
+                0,
+            )
             try:
-                client = TTNClient(
-                    user_input[CONF_HOSTNAME],
-                    user_input[CONF_APP_ID],
-                    user_input[CONF_API_KEY],
-                    0,
-                )
                 await client.fetch_data()
             except TTNAuthError:
                 # Raising ConfigEntryAuthFailed will cancel future updates
                 # and start a config flow with SOURCE_REAUTH (async_step_reauth)
-                _LOGGER.error("TTNAuthError")
-                connection_error = "invalid_auth"
-            except Exception as err:  # pylint: disable=broad-exception-caught
-                _LOGGER.error(err)
-                _LOGGER.error(traceback.format_exc())
-                connection_error = "unknown"
+                _LOGGER.exception("Error authenticating with The Things Network")
+                errors["base"] = "invalid_auth"
+            except Exception:  # pylint: disable=broad-exception-caught
+                _LOGGER.exception("Unknown error occurred")
+                errors["base"] = "unknown"
 
-            if connection_error:
-                errors["base"] = connection_error
-            else:
+            if len(errors) == 0:
                 # Create entry
                 if self._reauth_entry:
                     return self.async_update_reload_and_abort(
