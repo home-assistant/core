@@ -2,6 +2,7 @@
   "domain": "sinch",
   "name": "Sinch SMS",
   "codeowners": ["@bendikrb"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sinch",
   "iot_class": "cloud_push",
   "loggers": ["clx"],

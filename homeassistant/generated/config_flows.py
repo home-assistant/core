@@ -470,6 +470,7 @@ FLOWS = {
         "sia",
         "simplepush",
         "simplisafe",
+        "sinch",
         "skybell",
         "slack",
         "sleepiq",
