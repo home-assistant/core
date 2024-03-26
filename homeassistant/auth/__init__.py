@@ -28,6 +28,7 @@ from .const import ACCESS_TOKEN_EXPIRATION, GROUP_ID_ADMIN, REFRESH_TOKEN_EXPIRA
 from .mfa_modules import MultiFactorAuthModule, auth_mfa_module_from_config
 from .models import AuthFlowResult
 from .providers import AuthProvider, LoginFlow, auth_provider_from_config
+from .session import SessionManager
 
 EVENT_USER_ADDED = "user_added"
 EVENT_USER_UPDATED = "user_updated"
@@ -85,7 +86,7 @@ async def auth_manager_from_config(
         module_hash[module.id] = module
 
     manager = AuthManager(hass, store, provider_hash, module_hash)
-    manager.async_setup()
+    await manager.async_setup()
     return manager
 
 
@@ -180,9 +181,9 @@ class AuthManager:
         self._remove_expired_job = HassJob(
             self._async_remove_expired_refresh_tokens, job_type=HassJobType.Callback
         )
+        self.session = SessionManager(hass, self)
 
-    @callback
-    def async_setup(self) -> None:
+    async def async_setup(self) -> None:
         """Set up the auth manager."""
         hass = self.hass
         hass.async_add_shutdown_job(
@@ -191,6 +192,7 @@ class AuthManager:
             )
         )
         self._async_track_next_refresh_token_expiration()
+        await self.session.async_setup()
 
     @property
     def auth_providers(self) -> list[AuthProvider]:
