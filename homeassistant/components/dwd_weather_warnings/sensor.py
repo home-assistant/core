@@ -11,6 +11,8 @@ Wetterwarnungen (Stufe 1)
 
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -93,10 +95,10 @@ class DwdWeatherWarningsSensor(
             entry_type=DeviceEntryType.SERVICE,
         )
 
-        self.api = coordinator.api
+        self.api = coordinator._api
 
     @property
-    def native_value(self):
+    def native_value(self) -> int | None:
         """Return the state of the sensor."""
         if self.entity_description.key == CURRENT_WARNING_SENSOR:
             return self.api.current_warning_level
@@ -104,7 +106,7 @@ class DwdWeatherWarningsSensor(
         return self.api.expected_warning_level
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
         data = {
             ATTR_REGION_NAME: self.api.warncell_name,
