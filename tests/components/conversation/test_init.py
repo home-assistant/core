@@ -24,8 +24,13 @@ from homeassistant.setup import async_setup_component
 
 from . import expose_entity, expose_new
 
-from tests.common import MockConfigEntry, MockUser, async_mock_service
-from tests.components.light.common import MockLight, SetupLightPlatformCallable
+from tests.common import (
+    MockConfigEntry,
+    MockUser,
+    async_mock_service,
+    setup_test_component_platform,
+)
+from tests.components.light.common import MockLight
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 AGENT_ID_OPTIONS = [None, conversation.HOME_ASSISTANT_AGENT]
@@ -257,7 +262,6 @@ async def test_http_processing_intent_entity_renamed(
     hass_client: ClientSessionGenerator,
     hass_admin_user: MockUser,
     entity_registry: er.EntityRegistry,
-    setup_light_platform: SetupLightPlatformCallable,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test processing intent via HTTP API with entities renamed later.
@@ -268,7 +272,7 @@ async def test_http_processing_intent_entity_renamed(
     entity = MockLight("kitchen light", "on")
     entity._attr_unique_id = "1234"
     entity.entity_id = "light.kitchen"
-    setup_light_platform(hass, [entity])
+    setup_test_component_platform(hass, LIGHT_DOMAIN, [entity])
 
     assert await async_setup_component(
         hass,
@@ -346,7 +350,6 @@ async def test_http_processing_intent_entity_exposed(
     hass_client: ClientSessionGenerator,
     hass_admin_user: MockUser,
     entity_registry: er.EntityRegistry,
-    setup_light_platform: SetupLightPlatformCallable,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test processing intent via HTTP API with manual expose.
@@ -357,7 +360,7 @@ async def test_http_processing_intent_entity_exposed(
     entity = MockLight("kitchen light", "on")
     entity._attr_unique_id = "1234"
     entity.entity_id = "light.kitchen"
-    setup_light_platform(hass, [entity])
+    setup_test_component_platform(hass, LIGHT_DOMAIN, [entity])
 
     assert await async_setup_component(
         hass,
@@ -449,7 +452,6 @@ async def test_http_processing_intent_conversion_not_expose_new(
     hass_client: ClientSessionGenerator,
     hass_admin_user: MockUser,
     entity_registry: er.EntityRegistry,
-    setup_light_platform: SetupLightPlatformCallable,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test processing intent via HTTP API when not exposing new entities."""
@@ -459,7 +461,7 @@ async def test_http_processing_intent_conversion_not_expose_new(
     entity = MockLight("kitchen light", "on")
     entity._attr_unique_id = "1234"
     entity.entity_id = "light.kitchen"
-    setup_light_platform(hass, [entity])
+    setup_test_component_platform(hass, LIGHT_DOMAIN, [entity])
 
     assert await async_setup_component(
         hass,
