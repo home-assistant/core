@@ -1653,9 +1653,10 @@ async def test_integration_reload_failed(
     caplog.clear()
 
     yaml_path = get_fixture_path("configuration.yaml", "modbus")
-    with mock.patch.object(
-        hass_config, "YAML_CONFIG_FILE", yaml_path
-    ), mock.patch.object(mock_modbus, "connect", side_effect=ModbusException("error")):
+    with (
+        mock.patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path),
+        mock.patch.object(mock_modbus, "connect", side_effect=ModbusException("error")),
+    ):
         await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
         await hass.async_block_till_done()
 

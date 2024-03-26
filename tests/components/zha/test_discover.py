@@ -252,10 +252,13 @@ def test_discover_by_device_type_override() -> None:
     get_entity_mock = mock.MagicMock(
         return_value=(mock.sentinel.entity_cls, mock.sentinel.claimed)
     )
-    with mock.patch(
-        "homeassistant.components.zha.core.registries.ZHA_ENTITIES.get_entity",
-        get_entity_mock,
-    ), mock.patch.dict(disc.PROBE._device_configs, overrides, clear=True):
+    with (
+        mock.patch(
+            "homeassistant.components.zha.core.registries.ZHA_ENTITIES.get_entity",
+            get_entity_mock,
+        ),
+        mock.patch.dict(disc.PROBE._device_configs, overrides, clear=True),
+    ):
         disc.PROBE.discover_by_device_type(endpoint)
         assert get_entity_mock.call_count == 1
         assert endpoint.claim_cluster_handlers.call_count == 1

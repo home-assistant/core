@@ -1,6 +1,5 @@
 """Event module."""
 
-
 from deebot_client.capabilities import Capabilities, CapabilityEvent
 from deebot_client.device import Device
 from deebot_client.events import CleanJobStatus, ReportStatsEvent

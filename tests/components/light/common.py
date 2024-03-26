@@ -4,8 +4,6 @@ All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
 
-from collections.abc import Callable
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
@@ -33,12 +31,9 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.loader import bind_hass
 
-from tests.common import MockPlatform, MockToggleEntity, mock_platform
+from tests.common import MockToggleEntity
 
 
 @bind_hass
@@ -288,25 +283,3 @@ class MockLight(MockToggleEntity, LightEntity):
                 setattr(self, "brightness", value)
             if key in TURN_ON_ARG_TO_COLOR_MODE:
                 self._attr_color_mode = TURN_ON_ARG_TO_COLOR_MODE[key]
-
-
-SetupLightPlatformCallable = Callable[[HomeAssistant, list[MockLight]], None]
-
-
-def setup_light_platform(hass: HomeAssistant, entities: list[MockLight]) -> None:
-    """Set up the mock light entity platform."""
-
-    async def async_setup_platform(
-        hass: HomeAssistant,
-        config: ConfigType,
-        async_add_entities: AddEntitiesCallback,
-        discovery_info: DiscoveryInfoType | None = None,
-    ) -> None:
-        """Set up test light platform."""
-        async_add_entities(entities)
-
-    mock_platform(
-        hass,
-        f"test.{DOMAIN}",
-        MockPlatform(async_setup_platform=async_setup_platform),
-    )
