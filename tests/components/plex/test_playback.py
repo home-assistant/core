@@ -197,10 +197,13 @@ async def test_media_player_playback(
     # Test multiple choices without exact match
     playmedia_mock.reset()
     movies = [movie2, movie3]
-    with pytest.raises(HomeAssistantError) as excinfo, patch(
-        "plexapi.library.LibrarySection.search",
-        return_value=movies,
-        __qualname__="search",
+    with (
+        pytest.raises(HomeAssistantError) as excinfo,
+        patch(
+            "plexapi.library.LibrarySection.search",
+            return_value=movies,
+            __qualname__="search",
+        ),
     ):
         await hass.services.async_call(
             MP_DOMAIN,

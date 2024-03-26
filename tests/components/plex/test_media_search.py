@@ -262,10 +262,13 @@ async def test_media_lookups(
         )
     assert "Must specify 'library_name' for this search" in str(excinfo.value)
 
-    with pytest.raises(MediaNotFound) as excinfo, patch(
-        "plexapi.library.LibrarySection.search",
-        side_effect=BadRequest,
-        __qualname__="search",
+    with (
+        pytest.raises(MediaNotFound) as excinfo,
+        patch(
+            "plexapi.library.LibrarySection.search",
+            side_effect=BadRequest,
+            __qualname__="search",
+        ),
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
