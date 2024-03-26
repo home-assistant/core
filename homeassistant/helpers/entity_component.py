@@ -330,6 +330,19 @@ class EntityComponent(Generic[_EntityT]):
 
         return processed_conf
 
+    def async_get_platforms(
+        self, entity_ids: list[str]
+    ) -> list[tuple[EntityPlatform, list[entity.Entity]]]:
+        """Get the platforms including entity_id in entity_ids."""
+        platforms: list[tuple[EntityPlatform, list[entity.Entity]]] = []
+        for platform in self._platforms.values():
+            intersection = [
+                ent for ent in platform.entities.values() if ent.entity_id in entity_ids
+            ]
+            if intersection:
+                platforms.append((platform, intersection))
+        return platforms
+
     @callback
     def _async_init_entity_platform(
         self,

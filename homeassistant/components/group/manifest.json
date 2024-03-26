@@ -3,6 +3,7 @@
   "name": "Group",
   "codeowners": ["@home-assistant/core"],
   "config_flow": true,
+  "dependencies": ["rasc"],
   "documentation": "https://www.home-assistant.io/integrations/group",
   "integration_type": "helper",
   "iot_class": "calculated",

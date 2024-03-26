@@ -26,6 +26,7 @@ import voluptuous as vol
 import voluptuous_serialize
 
 from homeassistant.const import (
+    ATTR_ACTION_ID,
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
@@ -1203,6 +1204,7 @@ ENTITY_SERVICE_FIELDS = {
         ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
     ),
     vol.Optional(ATTR_GROUP_ID): str,
+    vol.Optional(ATTR_ACTION_ID): str,
 }
 
 TARGET_SERVICE_FIELDS = {

@@ -10,6 +10,7 @@ from typing import Any, Protocol, cast
 
 import voluptuous as vol
 
+from homeassistant.components.rasc.decorator import rasc_push_event
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -17,8 +18,8 @@ from homeassistant.const import (
     ATTR_GROUP_ID,
     ATTR_ICON,
     ATTR_NAME,
-    ATTR_SERVICE,
     CONF_ENTITIES,
+    CONF_EVENT,
     CONF_ICON,
     CONF_NAME,
     ENTITY_MATCH_ALL,
@@ -52,7 +53,6 @@ from homeassistant.helpers.integration_platform import (
     async_process_integration_platform_for_component,
     async_process_integration_platforms,
 )
-from homeassistant.helpers.rasc import rasc_fire
 from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.typing import ConfigType, EventType
 from homeassistant.loader import bind_hass
@@ -483,32 +483,48 @@ class GroupEntity(Entity):
     _attr_should_poll = False
     _entity_ids: list[str]
     _action_tracker: dict[str, str] = {}
+    _attr_rasc_state: str = "unknown"
 
     # rasc
-    def _async_call(self) -> None:
+    @property
+    def rasc_state(self) -> str:
+        """Return rasc state."""
+        return self._attr_rasc_state
+
+    def _preprocessing(self, data: dict[str, Any]) -> None:
+        self._action_tracker = {}
+        self._attr_rasc_state = "unknown"
         for entity_id in self._entity_ids:
             self._action_tracker[entity_id] = RASC_ACK
+        data[ATTR_GROUP_ID] = self.unique_id
 
     @callback
-    def _handle_rasc_response(self, e: Event) -> None:
-        if e.data.get(ATTR_GROUP_ID) != self._attr_unique_id:
+    async def _handle_rasc_response(self, e: Event) -> None:
+        if e.data.get(ATTR_GROUP_ID) != self.unique_id:
             return
-        if e.data[ATTR_ENTITY_ID] in self._action_tracker:
-            self._action_tracker[e.data[ATTR_ENTITY_ID]] = e.data["type"]
+        if isinstance(e.data.get(ATTR_ENTITY_ID), list):
+            for entity_id in e.data.get(ATTR_ENTITY_ID, []):
+                await self._update_rasc_state(entity_id, e.data["type"])
+        else:
+            await self._update_rasc_state(e.data[ATTR_ENTITY_ID], e.data["type"])
 
+    @rasc_push_event
+    async def _update_rasc_state(self, entity_id: str, rasc_type: str) -> None:
+        if entity_id in self._action_tracker:
+            self._action_tracker[entity_id] = rasc_type
         s_cnt = 0
         c_cnt = 0
         for state in self._action_tracker.values():
-            if state != RASC_START:
+            if state != RASC_ACK:
                 s_cnt += 1
             if state == RASC_COMPLETE:
                 c_cnt += 1
         if c_cnt == len(self._action_tracker):
             self._action_tracker.clear()
-            rasc_fire(self.hass, RASC_COMPLETE, self, e.data[ATTR_SERVICE])
+            self._attr_rasc_state = RASC_COMPLETE
             return
         if s_cnt == len(self._action_tracker):
-            rasc_fire(self.hass, RASC_START, self, e.data[ATTR_SERVICE])
+            self._attr_rasc_state = RASC_START
 
     @callback
     def async_start_preview(
@@ -592,6 +608,24 @@ class GroupEntity(Entity):
         new_state: State | None,
     ) -> None:
         """Update dictionaries with supported features."""
+
+    def async_get_action_target_state(
+        self, action: dict[str, Any]
+    ) -> dict[str, Any] | None:
+        """Return expected state when action is complete."""
+
+        def _target_complete_state(current: str) -> Callable[[str], bool]:
+            def match(value: str | None) -> bool:
+                if value is None:
+                    return False
+                return value == current
+
+            return match
+
+        target: dict[str, Any] = {
+            "rasc_state": _target_complete_state(action[CONF_EVENT])
+        }
+        return target
 
 
 class Group(Entity):

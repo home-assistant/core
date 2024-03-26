@@ -22,9 +22,14 @@ CONF_INITIAL_AVAILABILITY = "initial_availability"
 CONF_INITIAL_VALUE = "initial_value"
 CONF_NAME = "name"
 CONF_PERSISTENT = "persistent"
+CONF_COORDINATED = "coordinated"
+CONF_PUSH = "push"
+
 
 DEFAULT_AVAILABILITY = True
 DEFAULT_PERSISTENT = True
+DEFAULT_COORDINATED = False
+DEFAULT_PUSH = False
 
 IMPORTED_GROUP_NAME = "imported"
 IMPORTED_YAML_FILE = "/workspaces/home-assistant-core/config/virtual.yaml"
