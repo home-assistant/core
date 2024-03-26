@@ -6,5 +6,5 @@
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/flexmeasures",
   "iot_class": "cloud_polling",
-  "requirements": ["flexmeasures-client==0.1.9", "isodate==0.6.1"]
+  "requirements": ["flexmeasures-client==0.1.10", "isodate==0.6.1"]
 }

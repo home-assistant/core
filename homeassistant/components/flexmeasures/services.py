@@ -12,6 +12,7 @@ import pandas as pd
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfPower
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 import homeassistant.util.dt as dt_util
@@ -114,6 +115,11 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
         LOGGER.info(schedule_input)
         schedule = await client.trigger_and_get_schedule(**schedule_input)
 
+        schedule["values"] = client.convert_units(
+            schedule["values"],
+            from_unit=schedule["unit"],
+            to_unit=UnitOfPower.KILO_WATT,
+        )
         schedule = [
             {"start": start + resolution * i, "value": value}
             for i, value in enumerate(schedule["values"])
