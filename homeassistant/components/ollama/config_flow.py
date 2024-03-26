@@ -242,4 +242,4 @@ def _get_title(model: str) -> str:
     if model.endswith(":latest"):
         model = model.split(":", maxsplit=1)[0]
 
-    return f"Ollama {model}"
+    return model
