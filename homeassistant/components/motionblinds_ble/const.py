@@ -1,5 +1,7 @@
 """Constants for the Motionblinds BLE integration."""
 
+ATTR_SPEED = "speed"
+
 CONF_LOCAL_NAME = "local_name"
 CONF_MAC_CODE = "mac_code"
 CONF_BLIND_TYPE = "blind_type"
