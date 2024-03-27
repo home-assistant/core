@@ -12,6 +12,7 @@ PLATFORMS = [
     Platform.CAMERA,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.FAN,
     Platform.LIGHT,
     Platform.SELECT,
     Platform.SENSOR,
