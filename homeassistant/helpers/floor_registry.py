@@ -42,7 +42,7 @@ class FloorEntry(NormalizedNameBaseRegistryEntry):
     aliases: set[str]
     floor_id: str
     icon: str | None = None
-    level: int = 0
+    level: int | None = None
 
 
 class FloorRegistry(BaseRegistry):
@@ -99,7 +99,7 @@ class FloorRegistry(BaseRegistry):
         *,
         aliases: set[str] | None = None,
         icon: str | None = None,
-        level: int = 0,
+        level: int | None = None,
     ) -> FloorEntry:
         """Create a new floor."""
         if floor := self.async_get_floor_by_name(name):
