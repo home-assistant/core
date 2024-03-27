@@ -1,4 +1,5 @@
 """Sensor platform for Teslemetry integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -475,7 +476,6 @@ class TeslemetryVehicleTimeSensorEntity(TeslemetryVehicleEntity, SensorEntity):
         )
 
         super().__init__(data, description.key)
-
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
