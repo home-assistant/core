@@ -71,7 +71,6 @@ async def async_setup_entry(
 
     entities: list[ShadeEntity] = []
     for shade in pv_entry.shade_data.values():
-        coordinator.data.update_shade_position(shade.id, shade.current_position)
         room_name = getattr(pv_entry.room_data.get(shade.room_id), ATTR_NAME, "")
         entities.extend(
             create_powerview_shade_entity(
