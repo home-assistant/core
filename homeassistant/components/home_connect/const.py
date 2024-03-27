@@ -21,6 +21,12 @@ BSH_OPERATION_STATE_FINISHED = "BSH.Common.EnumType.OperationState.Finished"
 COOKING_LIGHTING = "Cooking.Common.Setting.Lighting"
 COOKING_LIGHTING_BRIGHTNESS = "Cooking.Common.Setting.LightingBrightness"
 
+REFRIGERATION_SUPERMODEFREEZER = "Refrigeration.FridgeFreezer.Setting.SuperModeFreezer"
+REFRIGERATION_SUPERMODEREFRIGERATOR = (
+    "Refrigeration.FridgeFreezer.Setting.SuperModeRefrigerator"
+)
+REFRIGERATION_DISPENSER = "Refrigeration.Common.Setting.Dispenser.Enabled"
+
 BSH_AMBIENT_LIGHT_ENABLED = "BSH.Common.Setting.AmbientLightEnabled"
 BSH_AMBIENT_LIGHT_BRIGHTNESS = "BSH.Common.Setting.AmbientLightBrightness"
 BSH_AMBIENT_LIGHT_COLOR = "BSH.Common.Setting.AmbientLightColor"
@@ -56,3 +62,11 @@ ATTR_SENSOR_TYPE = "sensor_type"
 ATTR_SIGN = "sign"
 ATTR_UNIT = "unit"
 ATTR_VALUE = "value"
+
+DEVICE_TYPES = {
+    "switch": [
+        REFRIGERATION_SUPERMODEFREEZER,
+        REFRIGERATION_SUPERMODEREFRIGERATOR,
+        REFRIGERATION_DISPENSER,
+    ],
+}

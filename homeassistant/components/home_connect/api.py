@@ -100,7 +100,7 @@ class ConfigEntryAuth(homeconnect.HomeConnectAPI):
             devices.append(
                 {CONF_DEVICE: device, CONF_ENTITIES: device.get_entity_info()}
             )
-        self.devices = devices
+        self.devices.extend(devices)
         return devices
 
 
@@ -429,7 +429,9 @@ class Hood(
         }
 
 
-class FridgeFreezer(DeviceWithDoor):
+class FridgeFreezer(
+    DeviceWithDoor,
+):
     """Fridge/Freezer class."""
 
     def get_entity_info(self):
@@ -438,7 +440,9 @@ class FridgeFreezer(DeviceWithDoor):
         return {"binary_sensor": [door_entity]}
 
 
-class Refrigerator(DeviceWithDoor):
+class Refrigerator(
+    DeviceWithDoor,
+):
     """Refrigerator class."""
 
     def get_entity_info(self):
@@ -447,7 +451,9 @@ class Refrigerator(DeviceWithDoor):
         return {"binary_sensor": [door_entity]}
 
 
-class Freezer(DeviceWithDoor):
+class Freezer(
+    DeviceWithDoor,
+):
     """Freezer class."""
 
     def get_entity_info(self):
