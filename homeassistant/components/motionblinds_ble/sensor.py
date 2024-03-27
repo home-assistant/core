@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 from math import ceil
+from typing import Generic, TypeVar
 
 from motionblindsble.const import (
     MotionBlindType,
@@ -20,9 +22,14 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.const import (
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import (
     ATTR_BATTERY,
@@ -38,12 +45,52 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
+_T = TypeVar("_T")
+
 
 @dataclass(frozen=True, kw_only=True)
-class MotionblindsBLESensorEntityDescription(SensorEntityDescription):
+class MotionblindsBLESensorEntityDescription(SensorEntityDescription, Generic[_T]):
     """Entity description of a sensor entity with initial_value attribute."""
 
     initial_value: str | None = None
+    register_callback_func: Callable[
+        [MotionDevice], Callable[[Callable[[_T | None], None]], None]
+    ]
+    value_func: Callable[[_T | None], StateType]
+    is_supported: Callable[[MotionDevice], bool] = lambda device: True
+
+
+SENSORS: tuple[MotionblindsBLESensorEntityDescription, ...] = (
+    MotionblindsBLESensorEntityDescription[MotionConnectionType](
+        key=ATTR_CONNECTION,
+        translation_key=ATTR_CONNECTION,
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=["connected", "connecting", "disconnected", "disconnecting"],
+        initial_value=MotionConnectionType.DISCONNECTED.value,
+        register_callback_func=lambda device: device.register_connection_callback,
+        value_func=lambda value: value.value if value else None,
+    ),
+    MotionblindsBLESensorEntityDescription[MotionCalibrationType](
+        key=ATTR_CALIBRATION,
+        translation_key=ATTR_CALIBRATION,
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=["calibrated", "uncalibrated", "calibrating"],
+        register_callback_func=lambda device: device.register_calibration_callback,
+        value_func=lambda value: value.value if value else None,
+        is_supported=lambda device: device.blind_type
+        in {MotionBlindType.CURTAIN, MotionBlindType.VERTICAL},
+    ),
+    MotionblindsBLESensorEntityDescription[int](
+        key=ATTR_SIGNAL_STRENGTH,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        register_callback_func=lambda device: device.register_signal_strength_callback,
+        value_func=lambda value: value,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -54,24 +101,24 @@ async def async_setup_entry(
     device: MotionDevice = hass.data[DOMAIN][entry.entry_id]
 
     entities: list[SensorEntity] = [
-        BatterySensor(device, entry),
-        ConnectionSensor(device, entry),
-        SignalStrengthSensor(device, entry),
+        MotionblindsBLESensorEntity(device, entry, description)
+        for description in SENSORS
+        if description.is_supported(device)
     ]
-    if device.blind_type in {MotionBlindType.CURTAIN, MotionBlindType.VERTICAL}:
-        entities.append(CalibrationSensor(device, entry))
-
+    entities.append(BatterySensor(device, entry))
     async_add_entities(entities)
 
 
-class MotionblindsBLESensorEntity(MotionblindsBLEEntity, SensorEntity):
+class MotionblindsBLESensorEntity(MotionblindsBLEEntity, SensorEntity, Generic[_T]):
     """Representation of a sensor entity."""
+
+    entity_description: MotionblindsBLESensorEntityDescription[_T]
 
     def __init__(
         self,
         device: MotionDevice,
         entry: ConfigEntry,
-        entity_description: MotionblindsBLESensorEntityDescription,
+        entity_description: MotionblindsBLESensorEntityDescription[_T],
     ) -> None:
         """Initialize the sensor entity."""
         super().__init__(
@@ -87,8 +134,18 @@ class MotionblindsBLESensorEntity(MotionblindsBLEEntity, SensorEntity):
             self.entity_description.key.replace("_", " "),
         )
 
+        def async_callback(value: _T | None) -> None:
+            """Update the sensor value."""
+            self._attr_native_value = self.entity_description.value_func(value)
+            self.async_write_ha_state()
 
-class BatterySensor(MotionblindsBLESensorEntity):
+        register_callback_func = self.entity_description.register_callback_func(
+            self.device
+        )
+        register_callback_func(async_callback)
+
+
+class BatterySensor(MotionblindsBLEEntity, SensorEntity):
     """Representation of a battery sensor entity."""
 
     def __init__(
@@ -97,7 +154,7 @@ class BatterySensor(MotionblindsBLESensorEntity):
         entry: ConfigEntry,
     ) -> None:
         """Initialize the sensor entity."""
-        entity_description = MotionblindsBLESensorEntityDescription(
+        entity_description = SensorEntityDescription(
             key=ATTR_BATTERY,
             translation_key=ATTR_BATTERY,
             native_unit_of_measurement=PERCENTAGE,
@@ -120,9 +177,7 @@ class BatterySensor(MotionblindsBLESensorEntity):
         is_wired: bool | None,
     ) -> None:
         """Update the battery sensor value and icon."""
-        self._attr_native_value = (
-            str(battery_percentage) if battery_percentage is not None else None
-        )
+        self._attr_native_value = battery_percentage
         if battery_percentage is None:
             # Battery percentage is unknown
             self._attr_icon = "mdi:battery-unknown"
@@ -141,103 +196,4 @@ class BatterySensor(MotionblindsBLESensorEntity):
             )
             battery_percentage_multiple_ten = ceil(battery_percentage / 10) * 10
             self._attr_icon = f"{battery_icon_prefix}-{battery_percentage_multiple_ten}"
-        self.async_write_ha_state()
-
-
-class ConnectionSensor(MotionblindsBLESensorEntity):
-    """Representation of a connection sensor entity."""
-
-    def __init__(
-        self,
-        device: MotionDevice,
-        entry: ConfigEntry,
-    ) -> None:
-        """Initialize the sensor entity."""
-        entity_description = MotionblindsBLESensorEntityDescription(
-            key=ATTR_CONNECTION,
-            translation_key=ATTR_CONNECTION,
-            device_class=SensorDeviceClass.ENUM,
-            entity_category=EntityCategory.DIAGNOSTIC,
-            options=["connected", "connecting", "disconnected", "disconnecting"],
-            initial_value=MotionConnectionType.DISCONNECTED.value,
-        )
-        super().__init__(device, entry, entity_description)
-
-    async def async_added_to_hass(self) -> None:
-        """Register device callbacks."""
-        await super().async_added_to_hass()
-        self.device.register_connection_callback(self.async_update_connection)
-
-    @callback
-    def async_update_connection(
-        self, connection_type: MotionConnectionType | None
-    ) -> None:
-        """Update the connection sensor value."""
-        self._attr_native_value = connection_type.value if connection_type else None
-        self.async_write_ha_state()
-
-
-class CalibrationSensor(MotionblindsBLESensorEntity):
-    """Representation of a calibration sensor entity."""
-
-    def __init__(
-        self,
-        device: MotionDevice,
-        entry: ConfigEntry,
-    ) -> None:
-        """Initialize the sensor entity."""
-        entity_description = MotionblindsBLESensorEntityDescription(
-            key=ATTR_CALIBRATION,
-            translation_key=ATTR_CALIBRATION,
-            device_class=SensorDeviceClass.ENUM,
-            entity_category=EntityCategory.DIAGNOSTIC,
-            options=["calibrated", "uncalibrated", "calibrating"],
-        )
-        super().__init__(device, entry, entity_description)
-
-    async def async_added_to_hass(self) -> None:
-        """Register device callbacks."""
-        await super().async_added_to_hass()
-        self.device.register_calibration_callback(self.async_update_calibration)
-
-    @callback
-    def async_update_calibration(
-        self, calibration_type: MotionCalibrationType | None
-    ) -> None:
-        """Update the calibration sensor value."""
-        self._attr_native_value = (
-            calibration_type.value if calibration_type is not None else None
-        )
-        self.async_write_ha_state()
-
-
-class SignalStrengthSensor(MotionblindsBLESensorEntity):
-    """Representation of a signal strength sensor entity."""
-
-    def __init__(
-        self,
-        device: MotionDevice,
-        entry: ConfigEntry,
-    ) -> None:
-        """Initialize the sensor entity."""
-        entity_description = MotionblindsBLESensorEntityDescription(
-            key=ATTR_SIGNAL_STRENGTH,
-            device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-            entity_category=EntityCategory.DIAGNOSTIC,
-            native_unit_of_measurement="dBm",
-        )
-        super().__init__(device, entry, entity_description)
-
-    async def async_added_to_hass(self) -> None:
-        """Register device callbacks and update signal strength."""
-        await super().async_added_to_hass()
-        self.device.register_signal_strength_callback(self.async_update_signal_strength)
-        self.async_update_signal_strength(self.device.rssi)
-
-    @callback
-    def async_update_signal_strength(self, signal_strength: int | None) -> None:
-        """Update the signal strength sensor value."""
-        self._attr_native_value = (
-            str(signal_strength) if signal_strength is not None else None
-        )
         self.async_write_ha_state()
