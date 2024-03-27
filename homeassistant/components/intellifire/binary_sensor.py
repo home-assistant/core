@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from intellifire4py import IntellifirePollData
+from intellifire4py.model import IntelliFirePollData
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -26,7 +26,7 @@ from .entity import IntellifireEntity
 class IntellifireBinarySensorRequiredKeysMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[IntellifirePollData], bool]
+    value_fn: Callable[[IntelliFirePollData], bool]
 
 
 @dataclass(frozen=True)
