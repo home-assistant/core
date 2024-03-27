@@ -956,7 +956,9 @@ omit =
     homeassistant/components/openuv/binary_sensor.py
     homeassistant/components/openuv/coordinator.py
     homeassistant/components/openuv/sensor.py
+    homeassistant/components/openweathermap/__init__.py
     homeassistant/components/openweathermap/sensor.py
+    homeassistant/components/openweathermap/weather.py
     homeassistant/components/openweathermap/weather_update_coordinator.py
     homeassistant/components/opnsense/__init__.py
     homeassistant/components/opower/__init__.py
@@ -1155,8 +1157,6 @@ omit =
     homeassistant/components/roon/media_player.py
     homeassistant/components/roon/server.py
     homeassistant/components/route53/*
-    homeassistant/components/rova/__init__.py
-    homeassistant/components/rova/sensor.py
     homeassistant/components/rpi_camera/*
     homeassistant/components/rtorrent/sensor.py
     homeassistant/components/ruuvi_gateway/__init__.py

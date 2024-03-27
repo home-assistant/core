@@ -1080,7 +1080,7 @@ holidays==0.45
 home-assistant-frontend==20240307.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.3.12
+home-assistant-intents==2024.3.27
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -2065,7 +2065,7 @@ pyprof2calltree==1.4.5
 pyprosegur==0.0.9
 
 # homeassistant.components.prusalink
-pyprusalink==2.0.0
+pyprusalink==2.1.1
 
 # homeassistant.components.ps4
 pyps4-2ndscreen==1.3.1
@@ -2838,7 +2838,7 @@ watchdog==2.3.1
 waterfurnace==1.1.0
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==0.2.13
+weatherflow4py==0.2.17
 
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.2
