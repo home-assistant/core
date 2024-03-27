@@ -10,7 +10,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .api_responses import TEST_VIN_2_EV
-from .conftest import MOCK_API_FETCH, MOCK_API_GET_DATA, advance_time_to_next_fetch
+from .conftest import (
+    MOCK_API_FETCH,
+    MOCK_API_GET_DATA,
+    MOCK_API_GET_RAW_DATA,
+    advance_time_to_next_fetch,
+)
 
 from tests.common import load_fixture
 from tests.components.diagnostics import (
@@ -52,10 +57,15 @@ async def test_device_diagnostics(
 
     diagnostics_fixture = json.loads(load_fixture("subaru/diagnostics_device.json"))
 
-    assert (
-        await get_diagnostics_for_device(hass, hass_client, config_entry, reg_device)
-        == diagnostics_fixture
-    )
+    raw_data = json.loads(load_fixture("subaru/raw_api_data.json"))
+    with patch(MOCK_API_GET_RAW_DATA, return_value=raw_data) as mock_get_raw_data:
+        assert (
+            await get_diagnostics_for_device(
+                hass, hass_client, config_entry, reg_device
+            )
+            == diagnostics_fixture
+        )
+        mock_get_raw_data.assert_called_once()
 
 
 async def test_device_diagnostics_vehicle_not_found(
