@@ -12,6 +12,8 @@ env:
   BUILD_TYPE: core
   DEFAULT_PYTHON: "3.12"
   PIP_TIMEOUT: 60
+  UV_HTTP_TIMEOUT: 60
+  UV_SYSTEM_PYTHON: "true"
 
 jobs:
   init:
@@ -48,42 +50,6 @@ jobs:
         uses: home-assistant/actions/helpers/verify-version@master
         with:
           ignore-dev: true
-
-  build_python:
-    name: Build PyPi package
-    environment: ${{ needs.init.outputs.channel }}
-    needs: ["init", "build_base"]
-    runs-on: ubuntu-latest
-    if: github.repository_owner == 'home-assistant' && needs.init.outputs.publish == 'true'
-    steps:
-      - name: Checkout the repository
-        uses: actions/checkout@v4.1.2
-
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.0.0
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
-
-      - name: Download Translations
-        run: python3 -m script.translations download
-        env:
-          LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }}
-
-      - name: Build package
-        shell: bash
-        run: |
-          # Remove dist, build, and homeassistant.egg-info
-          # when build locally for testing!
-          pip install twine build
-          python -m build
-
-      - name: Upload package
-        shell: bash
-        run: |
-          export TWINE_USERNAME="__token__"
-          export TWINE_PASSWORD="${{ secrets.TWINE_TOKEN }}"
-
-          twine upload dist/* --skip-existing
 
   build_base:
     name: Build ${{ matrix.arch }} base core image
@@ -133,9 +99,12 @@ jobs:
       - name: Adjust nightly version
         if: needs.init.outputs.channel == 'dev'
         shell: bash
+        env:
+          UV_PRERELEASE: allow
         run: |
-          python3 -m pip install packaging tomli
-          python3 -m pip install .
+          python3 -m pip install "$(grep '^uv' < requirements_test.txt)"
+          uv pip install packaging tomli
+          uv pip install .
           version="$(python3 script/version_bump.py nightly)"
 
           if [[ "$(ls home_assistant_frontend*.whl)" =~ ^home_assistant_frontend-(.*)-py3-none-any.whl$ ]]; then
@@ -463,3 +432,39 @@ jobs:
             v="${{ needs.init.outputs.version }}"
             create_manifest "${v%.*}" "${{ needs.init.outputs.version }}"
           fi
+
+  build_python:
+    name: Build PyPi package
+    environment: ${{ needs.init.outputs.channel }}
+    needs: ["init", "build_base"]
+    runs-on: ubuntu-latest
+    if: github.repository_owner == 'home-assistant' && needs.init.outputs.publish == 'true'
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4.1.2
+
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        uses: actions/setup-python@v5.0.0
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+
+      - name: Download Translations
+        run: python3 -m script.translations download
+        env:
+          LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }}
+
+      - name: Build package
+        shell: bash
+        run: |
+          # Remove dist, build, and homeassistant.egg-info
+          # when build locally for testing!
+          pip install twine build
+          python -m build
+
+      - name: Upload package
+        shell: bash
+        run: |
+          export TWINE_USERNAME="__token__"
+          export TWINE_PASSWORD="${{ secrets.TWINE_TOKEN }}"
+
+          twine upload dist/* --skip-existing

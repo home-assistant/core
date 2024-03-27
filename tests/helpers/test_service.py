@@ -927,12 +927,15 @@ async def test_async_get_all_descriptions_failing_integration(
 
     logger_config = {DOMAIN_LOGGER: {}}
     await async_setup_component(hass, DOMAIN_LOGGER, logger_config)
-    with patch(
-        "homeassistant.helpers.service.async_get_integrations",
-        return_value={"logger": ImportError},
-    ), patch(
-        "homeassistant.helpers.service.translation.async_get_translations",
-        return_value={},
+    with (
+        patch(
+            "homeassistant.helpers.service.async_get_integrations",
+            return_value={"logger": ImportError},
+        ),
+        patch(
+            "homeassistant.helpers.service.translation.async_get_translations",
+            return_value={},
+        ),
     ):
         descriptions = await service.async_get_all_descriptions(hass)
 
@@ -1294,9 +1297,12 @@ async def test_call_context_target_specific_no_auth(
     hass: HomeAssistant, mock_handle_entity_call, mock_entities
 ) -> None:
     """Check targeting specific entities without auth."""
-    with pytest.raises(exceptions.Unauthorized) as err, patch(
-        "homeassistant.auth.AuthManager.async_get_user",
-        return_value=Mock(permissions=PolicyPermissions({}, None), is_admin=False),
+    with (
+        pytest.raises(exceptions.Unauthorized) as err,
+        patch(
+            "homeassistant.auth.AuthManager.async_get_user",
+            return_value=Mock(permissions=PolicyPermissions({}, None), is_admin=False),
+        ),
     ):
         await service.entity_service_call(
             hass,

@@ -78,6 +78,7 @@ from .helpers import (
     translation,
 )
 from .helpers.dispatcher import async_dispatcher_send
+from .helpers.storage import get_internal_store_manager
 from .helpers.system_info import async_get_system_info
 from .helpers.typing import ConfigType
 from .setup import (
@@ -202,6 +203,27 @@ SETUP_ORDER = (
     # Start up debuggers. Start these first in case they want to wait.
     ("debugger", DEBUGGER_INTEGRATIONS),
 )
+
+#
+# Storage keys we are likely to load during startup
+# in order of when we expect to load them.
+#
+# If they do not exist they will not be loaded
+#
+PRELOAD_STORAGE = [
+    "core.network",
+    "http.auth",
+    "image",
+    "lovelace_dashboards",
+    "lovelace_resources",
+    "core.uuid",
+    "lovelace.map",
+    "bluetooth.passive_update_processor",
+    "bluetooth.remote_scanners",
+    "assist_pipeline.pipelines",
+    "core.analytics",
+    "auth_module.totp",
+]
 
 
 async def async_setup_hass(
@@ -346,6 +368,7 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
     entity.async_setup(hass)
     template.async_setup(hass)
     await asyncio.gather(
+        create_eager_task(get_internal_store_manager(hass).async_initialize()),
         create_eager_task(area_registry.async_load(hass)),
         create_eager_task(category_registry.async_load(hass)),
         create_eager_task(device_registry.async_load(hass)),
@@ -734,7 +757,7 @@ async def _async_resolve_domains_to_setup(
         *chain.from_iterable(platform_integrations.values()),
     }
 
-    translations_to_load = {*domains_to_setup, *additional_manifests_to_load}
+    translations_to_load = additional_manifests_to_load.copy()
 
     # Resolve all dependencies so we know all integrations
     # that will have to be loaded and start right-away
@@ -818,6 +841,12 @@ async def _async_resolve_domains_to_setup(
         "check installed requirements",
         eager_start=True,
     )
+
+    #
+    # Only add the domains_to_setup after we finish resolving
+    # as new domains are likely to added in the process
+    #
+    translations_to_load.update(domains_to_setup)
     # Start loading translations for all integrations we are going to set up
     # in the background so they are ready when we need them. This avoids a
     # lot of waiting for the translation load lock and a thundering herd of
@@ -831,6 +860,17 @@ async def _async_resolve_domains_to_setup(
     hass.async_create_background_task(
         translation.async_load_integrations(hass, translations_to_load),
         "load translations",
+        eager_start=True,
+    )
+
+    # Preload storage for all integrations we are going to set up
+    # so we do not have to wait for it to be loaded when we need it
+    # in the setup process.
+    hass.async_create_background_task(
+        get_internal_store_manager(hass).async_preload(
+            [*PRELOAD_STORAGE, *domains_to_setup]
+        ),
+        "preload storage",
         eager_start=True,
     )
 

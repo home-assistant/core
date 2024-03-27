@@ -337,8 +337,9 @@ async def test_log_object_sources(
 
     fake_object2 = FakeObject()
 
-    with patch("gc.collect"), patch(
-        "gc.get_objects", return_value=[fake_object, fake_object2]
+    with (
+        patch("gc.collect"),
+        patch("gc.get_objects", return_value=[fake_object, fake_object2]),
     ):
         caplog.clear()
 

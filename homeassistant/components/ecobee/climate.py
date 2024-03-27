@@ -717,7 +717,7 @@ class Thermostat(ClimateEntity):
 
     def set_humidity(self, humidity: int) -> None:
         """Set the humidity level."""
-        if humidity not in range(101):
+        if not (0 <= humidity <= 100):
             raise ValueError(
                 f"Invalid set_humidity value (must be in range 0-100): {humidity}"
             )

@@ -310,7 +310,7 @@ async def test_ingress_missing_peername(
     aioclient_mock: AiohttpClientMocker,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test hadnling of missing peername."""
+    """Test handling of missing peername."""
     aioclient_mock.get(
         "http://127.0.0.1/ingress/lorem/ipsum",
         text="test",
