@@ -46,39 +46,6 @@ class MotionblindsBLESensorEntityDescription(SensorEntityDescription):
     initial_value: str | None = None
 
 
-SENSOR_TYPES: dict[str, MotionblindsBLESensorEntityDescription] = {
-    ATTR_BATTERY: MotionblindsBLESensorEntityDescription(
-        key=ATTR_BATTERY,
-        translation_key=ATTR_BATTERY,
-        native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.BATTERY,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    ATTR_CONNECTION: MotionblindsBLESensorEntityDescription(
-        key=ATTR_CONNECTION,
-        translation_key=ATTR_CONNECTION,
-        device_class=SensorDeviceClass.ENUM,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        options=["connected", "connecting", "disconnected", "disconnecting"],
-        initial_value=MotionConnectionType.DISCONNECTED.value,
-    ),
-    ATTR_CALIBRATION: MotionblindsBLESensorEntityDescription(
-        key=ATTR_CALIBRATION,
-        translation_key=ATTR_CALIBRATION,
-        device_class=SensorDeviceClass.ENUM,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        options=["calibrated", "uncalibrated", "calibrating"],
-    ),
-    ATTR_SIGNAL_STRENGTH: MotionblindsBLESensorEntityDescription(
-        key=ATTR_SIGNAL_STRENGTH,
-        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement="dBm",
-    ),
-}
-
-
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -87,14 +54,12 @@ async def async_setup_entry(
     device: MotionDevice = hass.data[DOMAIN][entry.entry_id]
 
     entities: list[SensorEntity] = [
-        BatterySensor(device, entry, SENSOR_TYPES[ATTR_BATTERY]),
-        ConnectionSensor(device, entry, SENSOR_TYPES[ATTR_CONNECTION]),
-        SignalStrengthSensor(device, entry, SENSOR_TYPES[ATTR_SIGNAL_STRENGTH]),
+        BatterySensor(device, entry),
+        ConnectionSensor(device, entry),
+        SignalStrengthSensor(device, entry),
     ]
     if device.blind_type in {MotionBlindType.CURTAIN, MotionBlindType.VERTICAL}:
-        entities.append(
-            CalibrationSensor(device, entry, SENSOR_TYPES[ATTR_CALIBRATION])
-        )
+        entities.append(CalibrationSensor(device, entry))
 
     async_add_entities(entities)
 
@@ -125,6 +90,22 @@ class MotionblindsBLESensorEntity(MotionblindsBLEEntity, SensorEntity):
 
 class BatterySensor(MotionblindsBLESensorEntity):
     """Representation of a battery sensor entity."""
+
+    def __init__(
+        self,
+        device: MotionDevice,
+        entry: ConfigEntry,
+    ) -> None:
+        """Initialize the sensor entity."""
+        entity_description = MotionblindsBLESensorEntityDescription(
+            key=ATTR_BATTERY,
+            translation_key=ATTR_BATTERY,
+            native_unit_of_measurement=PERCENTAGE,
+            device_class=SensorDeviceClass.BATTERY,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        )
+        super().__init__(device, entry, entity_description)
 
     async def async_added_to_hass(self) -> None:
         """Register device callbacks."""
@@ -166,6 +147,22 @@ class BatterySensor(MotionblindsBLESensorEntity):
 class ConnectionSensor(MotionblindsBLESensorEntity):
     """Representation of a connection sensor entity."""
 
+    def __init__(
+        self,
+        device: MotionDevice,
+        entry: ConfigEntry,
+    ) -> None:
+        """Initialize the sensor entity."""
+        entity_description = MotionblindsBLESensorEntityDescription(
+            key=ATTR_CONNECTION,
+            translation_key=ATTR_CONNECTION,
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            options=["connected", "connecting", "disconnected", "disconnecting"],
+            initial_value=MotionConnectionType.DISCONNECTED.value,
+        )
+        super().__init__(device, entry, entity_description)
+
     async def async_added_to_hass(self) -> None:
         """Register device callbacks."""
         await super().async_added_to_hass()
@@ -182,6 +179,21 @@ class ConnectionSensor(MotionblindsBLESensorEntity):
 
 class CalibrationSensor(MotionblindsBLESensorEntity):
     """Representation of a calibration sensor entity."""
+
+    def __init__(
+        self,
+        device: MotionDevice,
+        entry: ConfigEntry,
+    ) -> None:
+        """Initialize the sensor entity."""
+        entity_description = MotionblindsBLESensorEntityDescription(
+            key=ATTR_CALIBRATION,
+            translation_key=ATTR_CALIBRATION,
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            options=["calibrated", "uncalibrated", "calibrating"],
+        )
+        super().__init__(device, entry, entity_description)
 
     async def async_added_to_hass(self) -> None:
         """Register device callbacks."""
@@ -201,6 +213,20 @@ class CalibrationSensor(MotionblindsBLESensorEntity):
 
 class SignalStrengthSensor(MotionblindsBLESensorEntity):
     """Representation of a signal strength sensor entity."""
+
+    def __init__(
+        self,
+        device: MotionDevice,
+        entry: ConfigEntry,
+    ) -> None:
+        """Initialize the sensor entity."""
+        entity_description = MotionblindsBLESensorEntityDescription(
+            key=ATTR_SIGNAL_STRENGTH,
+            device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement="dBm",
+        )
+        super().__init__(device, entry, entity_description)
 
     async def async_added_to_hass(self) -> None:
         """Register device callbacks and update signal strength."""
