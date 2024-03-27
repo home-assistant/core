@@ -66,7 +66,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import setup_webostv
-from .const import CHANNEL_2, ENTITY_ID, TV_NAME
+from .const import CHANNEL_2, ENTITY_ID, MEDIA_PLAYER_APP_ID, TV_NAME
 
 from tests.common import async_fire_time_changed, mock_restore_cache
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -306,7 +306,12 @@ async def test_entity_attributes(
     assert attrs[ATTR_MEDIA_VOLUME_MUTED] is False
     assert attrs[ATTR_MEDIA_VOLUME_LEVEL] == 0.37
     assert attrs[ATTR_INPUT_SOURCE] == "Live TV"
-    assert attrs[ATTR_INPUT_SOURCE_LIST] == ["Input01", "Input02", "Live TV"]
+    assert attrs[ATTR_INPUT_SOURCE_LIST] == [
+        "Input01",
+        "Input02",
+        "Live TV",
+        "Media Player",
+    ]
     assert attrs[ATTR_MEDIA_CONTENT_TYPE] == MediaType.CHANNEL
     assert attrs[ATTR_MEDIA_TITLE] == "Channel 1"
     assert attrs[ATTR_SOUND_OUTPUT] == "speaker"
@@ -366,7 +371,7 @@ async def test_service_entity_id_none(hass: HomeAssistant, client) -> None:
         ("20", "ch2id"),  # Perfect Match by channel number
     ],
 )
-async def test_play_media(hass: HomeAssistant, client, media_id, ch_id) -> None:
+async def test_play_media_channel(hass: HomeAssistant, client, media_id, ch_id) -> None:
     """Test play media service."""
     await setup_webostv(hass)
     await client.mock_state_update()
@@ -381,6 +386,67 @@ async def test_play_media(hass: HomeAssistant, client, media_id, ch_id) -> None:
     client.set_channel.assert_called_once_with(ch_id)
 
 
+async def test_play_media_video_no_media_player(
+    hass: HomeAssistant, client, monkeypatch
+) -> None:
+    """Test play media service."""
+    await setup_webostv(hass)
+    await client.mock_state_update()
+
+    # remove media player app
+    apps = {
+        LIVE_TV_APP_ID: {
+            "title": "Live TV",
+            "id": "some_id",
+        }
+    }
+    monkeypatch.setattr(client, "apps", apps)
+    monkeypatch.setattr(client, "current_app_id", "some_id")
+    await client.mock_state_update()
+
+    data = {
+        ATTR_ENTITY_ID: ENTITY_ID,
+        ATTR_MEDIA_CONTENT_TYPE: MediaType.VIDEO,
+        ATTR_MEDIA_CONTENT_ID: "file:///some/path",
+    }
+    await hass.services.async_call(MP_DOMAIN, SERVICE_PLAY_MEDIA, data, True)
+
+    client.launch_app_with_params.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("fullPath"),
+    [
+        ("file:///tmp/usb/sda/sda1/video.mp4"),  # path
+    ],
+)
+async def test_play_media_video(hass: HomeAssistant, client, fullPath) -> None:
+    """Test play media service."""
+    await setup_webostv(hass)
+    await client.mock_state_update()
+
+    data = {
+        ATTR_ENTITY_ID: ENTITY_ID,
+        ATTR_MEDIA_CONTENT_TYPE: MediaType.VIDEO,
+        ATTR_MEDIA_CONTENT_ID: fullPath,
+    }
+    await hass.services.async_call(MP_DOMAIN, SERVICE_PLAY_MEDIA, data, True)
+
+    client.launch_app_with_params.assert_called_once_with(
+        MEDIA_PLAYER_APP_ID,
+        {
+            "payload": [
+                {
+                    "fullPath": fullPath,
+                    "mediaType": "VIDEO",
+                    "deviceType": "DMR",
+                    "fileName": "video",
+                }
+            ]
+        },
+    )
+
+
 async def test_update_sources_live_tv_find(
     hass: HomeAssistant, client, monkeypatch
 ) -> None:
@@ -392,14 +458,14 @@ async def test_update_sources_live_tv_find(
     sources = hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE_LIST]
 
     assert "Live TV" in sources
-    assert len(sources) == 3
+    assert len(sources) == 4
 
     # Live TV is current app
     apps = {
         LIVE_TV_APP_ID: {
             "title": "Live TV",
             "id": "some_id",
-        },
+        }
     }
     monkeypatch.setattr(client, "apps", apps)
     monkeypatch.setattr(client, "current_app_id", "some_id")

@@ -393,7 +393,29 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         """Play a piece of media."""
         _LOGGER.debug("Call play media type <%s>, Id <%s>", media_type, media_id)
 
-        if media_type == MediaType.CHANNEL:
+        if media_type == MediaType.VIDEO:
+            if (source_dict := self._source_list.get("Media Player")) is None:
+                _LOGGER.warning(
+                    "Source 'Media Player' not found for %s",
+                    self._friendly_name_internal(),
+                )
+                return
+
+            await self._client.launch_app_with_params(
+                source_dict["id"],
+                {
+                    "payload": [
+                        {
+                            "fullPath": media_id,
+                            "mediaType": "VIDEO",
+                            "deviceType": "DMR",
+                            "fileName": "video",
+                        }
+                    ]
+                },
+            )
+
+        elif media_type == MediaType.CHANNEL:
             _LOGGER.debug("Searching channel")
             partial_match_channel_id = None
             perfect_match_channel_id = None
