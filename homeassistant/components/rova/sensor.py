@@ -22,8 +22,8 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import RovaCoordinator
 from .const import CONF_HOUSE_NUMBER, CONF_HOUSE_NUMBER_SUFFIX, CONF_ZIP_CODE, DOMAIN
+from .coordinator import RovaCoordinator
 
 ISSUE_PLACEHOLDER = {"url": "/config/integrations/dashboard/add?domain=rova"}
 
