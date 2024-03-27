@@ -53,6 +53,12 @@ TEST_IMPORT_FULL = {
 
 TEST_IMPORT_REQUIRED = {CONF_HOST: "1.1.1.1"}
 
+EXPECTED_OPTIONS = {
+    CONF_DEEP_STANDBY: DEFAULT_DEEP_STANDBY,
+    CONF_SOURCE_BOUQUET: "Favourites",
+    CONF_USE_CHANNEL_ICON: False,
+}
+
 
 class MockDevice:
     """A mock Enigma2 device."""
@@ -82,4 +88,3 @@ class MockDevice:
 
     async def close(self):
         """Mock close."""
-        pass

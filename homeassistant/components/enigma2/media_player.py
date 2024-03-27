@@ -10,7 +10,6 @@ from openwebif.api import OpenWebIfDevice
 from openwebif.enums import PowerState, RemoteControlCodes, SetVolumeOption
 import voluptuous as vol
 
-from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -31,7 +30,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -74,26 +72,6 @@ async def async_setup_platform(
     """Set up of an enigma2 media player."""
 
     host = config[CONF_HOST]
-
-    async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2024.7.0",
-        is_fixable=False,
-        is_persistent=False,
-        issue_domain=DOMAIN,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "Enigma2",
-        },
-    )
-
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.options[CONF_HOST] == host:
-            return
 
     entry_data = {
         CONF_NAME: config.get(CONF_NAME),
@@ -162,7 +140,7 @@ class Enigma2Device(MediaPlayerEntity):
             manufacturer=about["info"]["brand"],
             model=about["info"]["model"],
             configuration_url=device.base,
-            name=entry.options[CONF_HOST],
+            name=entry.data[CONF_HOST],
         )
 
     async def async_turn_off(self) -> None:

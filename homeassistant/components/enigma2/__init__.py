@@ -27,15 +27,15 @@ PLATFORMS = [Platform.MEDIA_PLAYER]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Enigma2 from a config entry."""
     base_url = URL.build(
-        scheme="http" if not entry.options[CONF_SSL] else "https",
-        host=entry.options[CONF_HOST],
-        port=entry.options[CONF_PORT],
-        user=entry.options.get(CONF_USERNAME),
-        password=entry.options.get(CONF_PASSWORD),
+        scheme="http" if not entry.data[CONF_SSL] else "https",
+        host=entry.data[CONF_HOST],
+        port=entry.data[CONF_PORT],
+        user=entry.data.get(CONF_USERNAME),
+        password=entry.data.get(CONF_PASSWORD),
     )
 
     session = async_create_clientsession(
-        hass, verify_ssl=entry.options[CONF_VERIFY_SSL], base_url=base_url
+        hass, verify_ssl=entry.data[CONF_VERIFY_SSL], base_url=base_url
     )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = OpenWebIfDevice(session)
