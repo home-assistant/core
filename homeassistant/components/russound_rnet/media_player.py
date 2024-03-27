@@ -58,9 +58,7 @@ def setup_platform(
     russ = russound.Russound(host, port)
     russ.connect()
 
-    sources = []
-    for source in config[CONF_SOURCES]:
-        sources.append(source["name"])
+    sources = [source["name"] for source in config[CONF_SOURCES]]
 
     if russ.is_connected():
         for zone_id, extra in config[CONF_ZONES].items():

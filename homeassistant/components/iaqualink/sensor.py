@@ -22,10 +22,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up discovered sensors."""
-    devs = []
-    for dev in hass.data[AQUALINK_DOMAIN][DOMAIN]:
-        devs.append(HassAqualinkSensor(dev))
-    async_add_entities(devs, True)
+    async_add_entities(
+        (HassAqualinkSensor(dev) for dev in hass.data[AQUALINK_DOMAIN][DOMAIN]), True
+    )
 
 
 class HassAqualinkSensor(AqualinkEntity, SensorEntity):
