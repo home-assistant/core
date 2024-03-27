@@ -92,9 +92,12 @@ async def test_config_entry_fills_unique_id_with_directed_discovery(
     mock_aio_discovery.async_scan = _async_scan
     type(mock_aio_discovery).found_devices = found_devices
 
-    with _patch_status(MOCK_ASYNC_GET_STATUS_ACTIVE), patch(
-        "homeassistant.components.steamist.discovery.AIODiscovery30303",
-        return_value=mock_aio_discovery,
+    with (
+        _patch_status(MOCK_ASYNC_GET_STATUS_ACTIVE),
+        patch(
+            "homeassistant.components.steamist.discovery.AIODiscovery30303",
+            return_value=mock_aio_discovery,
+        ),
     ):
         await async_setup_component(hass, steamist.DOMAIN, {steamist.DOMAIN: {}})
         await hass.async_block_till_done()
@@ -124,10 +127,13 @@ async def test_discovery_happens_at_interval(
     config_entry.add_to_hass(hass)
     mock_aio_discovery = MagicMock(auto_spec=AIODiscovery30303)
     mock_aio_discovery.async_scan = AsyncMock()
-    with patch(
-        "homeassistant.components.steamist.discovery.AIODiscovery30303",
-        return_value=mock_aio_discovery,
-    ), _patch_status(MOCK_ASYNC_GET_STATUS_ACTIVE):
+    with (
+        patch(
+            "homeassistant.components.steamist.discovery.AIODiscovery30303",
+            return_value=mock_aio_discovery,
+        ),
+        _patch_status(MOCK_ASYNC_GET_STATUS_ACTIVE),
+    ):
         await async_setup_component(hass, steamist.DOMAIN, {steamist.DOMAIN: {}})
         await hass.async_block_till_done(wait_background_tasks=True)
 

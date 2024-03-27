@@ -72,6 +72,7 @@ from .const import (
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
     DEFAULT_LOW_BATTERY_THRESHOLD,
+    EMPTY_MAC,
     EVENT_HOMEKIT_CHANGED,
     HK_CHARGING,
     HK_NOT_CHARGABLE,
@@ -683,7 +684,9 @@ class HomeDriver(AccessoryDriver):  # type: ignore[misc]
         **kwargs: Any,
     ) -> None:
         """Initialize a AccessoryDriver object."""
-        super().__init__(**kwargs)
+        # Always set an empty mac of pyhap will incur
+        # the cost of generating a new one for every driver
+        super().__init__(**kwargs, mac=EMPTY_MAC)
         self.hass = hass
         self.entry_id = entry_id
         self._bridge_name = bridge_name

@@ -21,11 +21,13 @@ async def test_methods(hass: HomeAssistant, plant_fixture, inverter_fixture) -> 
     mock_entry = SUNWEG_MOCK_ENTRY
     mock_entry.add_to_hass(hass)
 
-    with patch.object(APIHelper, "authenticate", return_value=True), patch.object(
-        APIHelper, "listPlants", return_value=[plant_fixture]
-    ), patch.object(APIHelper, "plant", return_value=plant_fixture), patch.object(
-        APIHelper, "inverter", return_value=inverter_fixture
-    ), patch.object(APIHelper, "complete_inverter"):
+    with (
+        patch.object(APIHelper, "authenticate", return_value=True),
+        patch.object(APIHelper, "listPlants", return_value=[plant_fixture]),
+        patch.object(APIHelper, "plant", return_value=plant_fixture),
+        patch.object(APIHelper, "inverter", return_value=inverter_fixture),
+        patch.object(APIHelper, "complete_inverter"),
+    ):
         assert await async_setup_component(hass, DOMAIN, mock_entry.data)
         await hass.async_block_till_done()
         assert await hass.config_entries.async_unload(mock_entry.entry_id)

@@ -118,7 +118,7 @@ class MockBinaryValveEntity(ValveEntity):
         self._attr_is_closed = False
 
     def close_valve(self) -> None:
-        """Mock implementantion for sync close function."""
+        """Mock implementation for sync close function."""
         self._attr_is_closed = True
 
 

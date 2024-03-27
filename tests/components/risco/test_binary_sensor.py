@@ -237,17 +237,22 @@ def mock_system_handler():
 def system_only_local():
     """Fixture to mock a system with no zones or partitions."""
     system = system_mock()
-    with patch.object(
-        system, "name", new_callable=PropertyMock(return_value=TEST_SITE_NAME)
-    ), patch(
-        "homeassistant.components.risco.RiscoLocal.zones",
-        new_callable=PropertyMock(return_value={}),
-    ), patch(
-        "homeassistant.components.risco.RiscoLocal.partitions",
-        new_callable=PropertyMock(return_value={}),
-    ), patch(
-        "homeassistant.components.risco.RiscoLocal.system",
-        new_callable=PropertyMock(return_value=system),
+    with (
+        patch.object(
+            system, "name", new_callable=PropertyMock(return_value=TEST_SITE_NAME)
+        ),
+        patch(
+            "homeassistant.components.risco.RiscoLocal.zones",
+            new_callable=PropertyMock(return_value={}),
+        ),
+        patch(
+            "homeassistant.components.risco.RiscoLocal.partitions",
+            new_callable=PropertyMock(return_value={}),
+        ),
+        patch(
+            "homeassistant.components.risco.RiscoLocal.system",
+            new_callable=PropertyMock(return_value=system),
+        ),
     ):
         yield system
 

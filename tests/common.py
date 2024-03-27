@@ -38,7 +38,7 @@ from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
 from homeassistant.config import async_process_component_config
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_CLOSE,
@@ -76,11 +76,14 @@ from homeassistant.helpers import (
     translation,
 )
 from homeassistant.helpers.dispatcher import (
+    SignalType,
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.json import JSONEncoder, _orjson_default_encoder, json_dumps
-from homeassistant.helpers.typing import ConfigType, StateType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.setup import setup_component
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as dt_util
@@ -220,12 +223,10 @@ class StoreWithoutWriteLoad(storage.Store[_T]):
 async def async_test_home_assistant(
     event_loop: asyncio.AbstractEventLoop | None = None,
     load_registries: bool = True,
-    storage_dir: str | None = None,
+    config_dir: str | None = None,
 ) -> AsyncGenerator[HomeAssistant, None]:
     """Return a Home Assistant object pointing at test config dir."""
-    hass = HomeAssistant(get_test_config_dir())
-    if storage_dir:
-        hass.config.config_dir = storage_dir
+    hass = HomeAssistant(config_dir or get_test_config_dir())
     store = auth_store.AuthStore(hass)
     hass.auth = auth.AuthManager(hass, store, {}, {})
     ensure_auth_manager_loaded(hass.auth)
@@ -311,28 +312,35 @@ async def async_test_home_assistant(
         hass
     )
     if load_registries:
-        with patch.object(
-            StoreWithoutWriteLoad, "async_load", return_value=None
-        ), patch(
-            "homeassistant.helpers.area_registry.AreaRegistryStore",
-            StoreWithoutWriteLoad,
-        ), patch(
-            "homeassistant.helpers.device_registry.DeviceRegistryStore",
-            StoreWithoutWriteLoad,
-        ), patch(
-            "homeassistant.helpers.entity_registry.EntityRegistryStore",
-            StoreWithoutWriteLoad,
-        ), patch(
-            "homeassistant.helpers.storage.Store",  # Floor & label registry are different
-            StoreWithoutWriteLoad,
-        ), patch(
-            "homeassistant.helpers.issue_registry.IssueRegistryStore",
-            StoreWithoutWriteLoad,
-        ), patch(
-            "homeassistant.helpers.restore_state.RestoreStateData.async_setup_dump",
-            return_value=None,
-        ), patch(
-            "homeassistant.helpers.restore_state.start.async_at_start",
+        with (
+            patch.object(StoreWithoutWriteLoad, "async_load", return_value=None),
+            patch(
+                "homeassistant.helpers.area_registry.AreaRegistryStore",
+                StoreWithoutWriteLoad,
+            ),
+            patch(
+                "homeassistant.helpers.device_registry.DeviceRegistryStore",
+                StoreWithoutWriteLoad,
+            ),
+            patch(
+                "homeassistant.helpers.entity_registry.EntityRegistryStore",
+                StoreWithoutWriteLoad,
+            ),
+            patch(
+                "homeassistant.helpers.storage.Store",  # Floor & label registry are different
+                StoreWithoutWriteLoad,
+            ),
+            patch(
+                "homeassistant.helpers.issue_registry.IssueRegistryStore",
+                StoreWithoutWriteLoad,
+            ),
+            patch(
+                "homeassistant.helpers.restore_state.RestoreStateData.async_setup_dump",
+                return_value=None,
+            ),
+            patch(
+                "homeassistant.helpers.restore_state.start.async_at_start",
+            ),
         ):
             await ar.async_load(hass)
             await cr.async_load(hass)
@@ -515,12 +523,15 @@ def _async_fire_time_changed(
         future_seconds = task.when() - (hass.loop.time() + _MONOTONIC_RESOLUTION)
 
         if fire_all or mock_seconds_into_future >= future_seconds:
-            with patch(
-                "homeassistant.helpers.event.time_tracker_utcnow",
-                return_value=utc_datetime,
-            ), patch(
-                "homeassistant.helpers.event.time_tracker_timestamp",
-                return_value=timestamp,
+            with (
+                patch(
+                    "homeassistant.helpers.event.time_tracker_utcnow",
+                    return_value=utc_datetime,
+                ),
+                patch(
+                    "homeassistant.helpers.event.time_tracker_timestamp",
+                    return_value=timestamp,
+                ),
             ):
                 task._run()
                 task.cancel()
@@ -1375,18 +1386,22 @@ def mock_storage(
         """Remove data."""
         data.pop(store.key, None)
 
-    with patch(
-        "homeassistant.helpers.storage.Store._async_load",
-        side_effect=mock_async_load,
-        autospec=True,
-    ), patch(
-        "homeassistant.helpers.storage.Store._async_write_data",
-        side_effect=mock_write_data,
-        autospec=True,
-    ), patch(
-        "homeassistant.helpers.storage.Store.async_remove",
-        side_effect=mock_remove,
-        autospec=True,
+    with (
+        patch(
+            "homeassistant.helpers.storage.Store._async_load",
+            side_effect=mock_async_load,
+            autospec=True,
+        ),
+        patch(
+            "homeassistant.helpers.storage.Store._async_write_data",
+            side_effect=mock_write_data,
+            autospec=True,
+        ),
+        patch(
+            "homeassistant.helpers.storage.Store.async_remove",
+            side_effect=mock_remove,
+            autospec=True,
+        ),
     ):
         yield data
 
@@ -1483,7 +1498,9 @@ def async_capture_events(hass: HomeAssistant, event_name: str) -> list[Event]:
 
 
 @callback
-def async_mock_signal(hass: HomeAssistant, signal: str) -> list[tuple[Any]]:
+def async_mock_signal(
+    hass: HomeAssistant, signal: SignalType[Any] | str
+) -> list[tuple[Any]]:
     """Catch all dispatches to a signal."""
     calls = []
 
@@ -1646,3 +1663,46 @@ def extract_stack_to_frame(extract_stack: list[Mock]) -> FrameType:
         current_frame = next_frame
 
     return top_frame
+
+
+def setup_test_component_platform(
+    hass: HomeAssistant,
+    domain: str,
+    entities: Sequence[Entity],
+    from_config_entry: bool = False,
+) -> MockPlatform:
+    """Mock a test component platform for tests."""
+
+    async def _async_setup_platform(
+        hass: HomeAssistant,
+        config: ConfigType,
+        async_add_entities: AddEntitiesCallback,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> None:
+        """Set up a test component platform."""
+        async_add_entities(entities)
+
+    platform = MockPlatform(
+        async_setup_platform=_async_setup_platform,
+    )
+
+    # avoid creating config entry setup if not needed
+    if from_config_entry:
+
+        async def _async_setup_entry(
+            hass: HomeAssistant,
+            entry: ConfigEntry,
+            async_add_entities: AddEntitiesCallback,
+        ) -> None:
+            """Set up a test component platform."""
+            async_add_entities(entities)
+
+        platform.async_setup_entry = _async_setup_entry
+        platform.async_setup_platform = None
+
+    mock_platform(
+        hass,
+        f"test.{domain}",
+        platform,
+    )
+    return platform
