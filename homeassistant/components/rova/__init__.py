@@ -9,6 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import CONF_HOUSE_NUMBER, CONF_HOUSE_NUMBER_SUFFIX, CONF_ZIP_CODE, DOMAIN
 from .coordinator import RovaCoordinator
@@ -31,6 +32,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from ex
 
     if not rova_area:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"no_rova_area_{entry.data[CONF_ZIP_CODE]}",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.ERROR,
+            translation_key="no_rova_area",
+            translation_placeholders={
+                CONF_ZIP_CODE: entry.data[CONF_ZIP_CODE],
+            },
+        )
         raise ConfigEntryError("Rova does not collect garbage in this area")
 
     coordinator = RovaCoordinator(hass, api)
