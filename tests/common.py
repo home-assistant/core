@@ -83,7 +83,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.json import JSONEncoder, _orjson_default_encoder, json_dumps
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import setup_component
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as dt_util
@@ -1290,11 +1290,6 @@ class MockEntity(entity.Entity):
     def should_poll(self) -> bool:
         """Return the ste of the polling."""
         return self._handle("should_poll")
-
-    @property
-    def state(self) -> StateType:
-        """Return the state of the entity."""
-        return self._handle("state")
 
     @property
     def supported_features(self) -> int | None:
