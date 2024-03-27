@@ -474,6 +474,7 @@ bellows==0.38.1
 # homeassistant.components.bmw_connected_drive
 bimmer-connected[china]==0.14.6
 
+# homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
 bleak-esphome==1.0.0
 
@@ -670,6 +671,9 @@ epion==0.0.3
 
 # homeassistant.components.epson
 epson-projector==0.5.1
+
+# homeassistant.components.eq3btsmart
+eq3btsmart==1.1.6
 
 # homeassistant.components.esphome
 esphome-dashboard-api==1.2.3
