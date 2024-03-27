@@ -1,9 +1,14 @@
 """The tests for the Group Climate platform."""
-import asyncio
 from unittest.mock import patch
 
 from homeassistant import config as hass_config
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
+from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
+    ATTR_TEMPERATURE,
+    DOMAIN as CLIMATE_DOMAIN,
+    SERVICE_SET_HVAC_MODE,
+    SERVICE_SET_TEMPERATURE,
+)
 from homeassistant.components.climate.const import (
     ATTR_FAN_MODES,
     ATTR_HVAC_MODES,
@@ -15,17 +20,17 @@ from homeassistant.components.group import DOMAIN, SERVICE_RELOAD
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
-    SERVICE_TURN_OFF,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
 
 
-async def test_default_state(hass):
+async def test_default_state(hass: HomeAssistant) -> None:
     """Test component group default state."""
     hass.states.async_set("climate.kitchen", HVACMode.AUTO)
     await async_setup_component(
@@ -62,7 +67,7 @@ async def test_default_state(hass):
     assert entry.unique_id == "unique_identifier"
 
 
-async def test_state_reporting(hass):
+async def test_state_reporting(hass: HomeAssistant) -> None:
     """Test the state reporting.
 
     The group state is unavailable if all group members are unavailable.
@@ -149,7 +154,7 @@ async def test_state_reporting(hass):
     assert hass.states.get("climate.climate_group").state == STATE_UNAVAILABLE
 
 
-async def test_supported_features(hass):
+async def test_supported_features(hass: HomeAssistant) -> None:
     """Test supported features reporting."""
     await async_setup_component(
         hass,
@@ -210,7 +215,7 @@ async def test_supported_features(hass):
     )
 
 
-async def test_reload(hass):
+async def test_reload(hass: HomeAssistant) -> None:
     """Test the ability to reload lights."""
     await async_setup_component(
         hass,
@@ -251,7 +256,7 @@ async def test_reload(hass):
     assert hass.states.get("climate.downstairs_g") is not None
 
 
-async def test_reload_with_platform_not_setup(hass):
+async def test_reload_with_platform_not_setup(hass: HomeAssistant) -> None:
     """Test the ability to reload climate."""
     hass.states.async_set("climate.bowl", HVACMode.AUTO)
     await async_setup_component(
@@ -289,7 +294,9 @@ async def test_reload_with_platform_not_setup(hass):
     assert hass.states.get("climate.downstairs_g") is not None
 
 
-async def test_reload_with_base_integration_platform_not_setup(hass):
+async def test_reload_with_base_integration_platform_not_setup(
+    hass: HomeAssistant,
+) -> None:
     """Test the ability to reload climate."""
     assert await async_setup_component(
         hass,
@@ -324,7 +331,7 @@ async def test_reload_with_base_integration_platform_not_setup(hass):
     assert hass.states.get("climate.downstairs_g").state == HVACMode.OFF
 
 
-async def test_nested_group(hass):
+async def test_nested_group(hass: HomeAssistant) -> None:
     """Test nested light group."""
     await async_setup_component(
         hass,
@@ -349,8 +356,8 @@ async def test_nested_group(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    state_hvav = hass.states.get("climate.hvac")
-    assert state_hvav.state == HVACMode.COOL
+    state_hvac = hass.states.get("climate.hvac")
+    assert state_hvac.state == HVACMode.COOL
     state_ecobee = hass.states.get("climate.ecobee")
     assert state_ecobee.state == HVACMode.HEAT_COOL
     state_group = hass.states.get("climate.bedroom_group")
@@ -368,14 +375,33 @@ async def test_nested_group(hass):
     assert state_nested.attributes.get(ATTR_ENTITY_ID) == ["climate.bedroom_group"]
 
     # Test controlling the nested group
-    async with asyncio.timeout(0.5):
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "climate.nested_group"},
-            blocking=True,
-        )
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: "climate.nested_group", ATTR_HVAC_MODE: HVACMode.OFF},
+        blocking=True,
+    )
     assert hass.states.get("climate.ecobee").state == HVACMode.OFF
     assert hass.states.get("climate.hvac").state == HVACMode.OFF
     assert hass.states.get("climate.bedroom_group").state == HVACMode.OFF
     assert hass.states.get("climate.nested_group").state == HVACMode.OFF
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: "climate.nested_group",
+            ATTR_TEMPERATURE: 21.0,
+        },
+        blocking=True,
+    )
+    # Ecobee does not support setting a target temperature.
+    assert hass.states.get("climate.ecobee").attributes.get(ATTR_TEMPERATURE) is None
+    assert hass.states.get("climate.hvac").attributes.get(ATTR_TEMPERATURE) == 21.0
+    assert (
+        hass.states.get("climate.bedroom_group").attributes.get(ATTR_TEMPERATURE)
+        == 21.0
+    )
+    assert (
+        hass.states.get("climate.nested_group").attributes.get(ATTR_TEMPERATURE) == 21.0
+    )
