@@ -23,11 +23,14 @@ from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_ON_CHANGE = "on_change"
+
 TRIGGER_SCHEMA = IF_ACTION_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): "template",
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_FOR): cv.positive_time_period_template,
+        vol.Optional(CONF_ON_CHANGE): cv.boolean,
     }
 )
 
@@ -45,6 +48,7 @@ async def async_attach_trigger(
     value_template: Template = config[CONF_VALUE_TEMPLATE]
     value_template.hass = hass
     time_delta = config.get(CONF_FOR)
+    trigger_on_change = config.get(CONF_ON_CHANGE, False)
     template.attach(hass, time_delta)
     delay_cancel = None
     job = HassJob(action)
@@ -52,7 +56,7 @@ async def async_attach_trigger(
 
     # Arm at setup if the template is already false.
     try:
-        if not result_as_boolean(
+        if trigger_on_change or not result_as_boolean(
             value_template.async_render(trigger_info["variables"])
         ):
             armed = True
@@ -84,7 +88,7 @@ async def async_attach_trigger(
             delay_cancel()
             delay_cancel = None
 
-        if not result_as_boolean(result):
+        if not trigger_on_change and not result_as_boolean(result):
             armed = True
             return
 
@@ -93,7 +97,8 @@ async def async_attach_trigger(
             return
 
         # Fire!
-        armed = False
+        if not trigger_on_change:
+            armed = False
 
         entity_id = event and event.data["entity_id"]
         from_s = event and event.data["old_state"]
@@ -109,6 +114,7 @@ async def async_attach_trigger(
             "entity_id": entity_id,
             "from_state": from_s,
             "to_state": to_s,
+            "value": result,
         }
         trigger_variables = {
             **trigger_data,
