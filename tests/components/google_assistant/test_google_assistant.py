@@ -254,7 +254,7 @@ async def test_query_climate_request(
         "thermostatTemperatureSetpoint": 21,
         "thermostatTemperatureAmbient": 22,
         "thermostatMode": "cool",
-        "thermostatHumidityAmbient": 54,
+        "thermostatHumidityAmbient": 54.2,
         "currentFanSpeedSetting": "on_high",
     }
 
@@ -318,7 +318,7 @@ async def test_query_climate_request_f(
         "thermostatTemperatureSetpoint": -6.1,
         "thermostatTemperatureAmbient": -5.6,
         "thermostatMode": "cool",
-        "thermostatHumidityAmbient": 54,
+        "thermostatHumidityAmbient": 54.2,
         "currentFanSpeedSetting": "on_high",
     }
     hass_fixture.config.units.temperature_unit = UnitOfTemperature.CELSIUS
@@ -363,8 +363,8 @@ async def test_query_humidifier_request(
     assert devices["humidifier.dehumidifier"] == {
         "on": True,
         "online": True,
-        "humiditySetpointPercent": 54,
-        "humidityAmbientPercent": 59,
+        "humiditySetpointPercent": 54.2,
+        "humidityAmbientPercent": 59.4,
     }
     assert devices["humidifier.hygrostat"] == {
         "on": True,

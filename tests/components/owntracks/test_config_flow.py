@@ -153,15 +153,17 @@ async def test_with_cloud_sub(hass: HomeAssistant) -> None:
     """Test creating a config flow while subscribed."""
     assert await async_setup_component(hass, "cloud", {})
 
-    with patch(
-        "homeassistant.components.cloud.async_active_subscription", return_value=True
-    ), patch(
-        "homeassistant.components.cloud.async_is_logged_in", return_value=True
-    ), patch(
-        "homeassistant.components.cloud.async_is_connected", return_value=True
-    ), patch(
-        "hass_nabucasa.cloudhooks.Cloudhooks.async_create",
-        return_value={"cloudhook_url": "https://hooks.nabu.casa/ABCD"},
+    with (
+        patch(
+            "homeassistant.components.cloud.async_active_subscription",
+            return_value=True,
+        ),
+        patch("homeassistant.components.cloud.async_is_logged_in", return_value=True),
+        patch("homeassistant.components.cloud.async_is_connected", return_value=True),
+        patch(
+            "hass_nabucasa.cloudhooks.Cloudhooks.async_create",
+            return_value={"cloudhook_url": "https://hooks.nabu.casa/ABCD"},
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data={}
@@ -180,15 +182,17 @@ async def test_with_cloud_sub_not_connected(hass: HomeAssistant) -> None:
     """Test creating a config flow while subscribed."""
     assert await async_setup_component(hass, "cloud", {})
 
-    with patch(
-        "homeassistant.components.cloud.async_active_subscription", return_value=True
-    ), patch(
-        "homeassistant.components.cloud.async_is_logged_in", return_value=True
-    ), patch(
-        "homeassistant.components.cloud.async_is_connected", return_value=False
-    ), patch(
-        "hass_nabucasa.cloudhooks.Cloudhooks.async_create",
-        return_value={"cloudhook_url": "https://hooks.nabu.casa/ABCD"},
+    with (
+        patch(
+            "homeassistant.components.cloud.async_active_subscription",
+            return_value=True,
+        ),
+        patch("homeassistant.components.cloud.async_is_logged_in", return_value=True),
+        patch("homeassistant.components.cloud.async_is_connected", return_value=False),
+        patch(
+            "hass_nabucasa.cloudhooks.Cloudhooks.async_create",
+            return_value={"cloudhook_url": "https://hooks.nabu.casa/ABCD"},
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data={}

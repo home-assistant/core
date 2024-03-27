@@ -47,7 +47,7 @@ from .exceptions import (
 )
 from .helpers import device_registry, entity_registry, issue_registry as ir, storage
 from .helpers.debounce import Debouncer
-from .helpers.dispatcher import async_dispatcher_send
+from .helpers.dispatcher import SignalType, async_dispatcher_send
 from .helpers.event import (
     RANDOM_MICROSECOND_MAX,
     RANDOM_MICROSECOND_MIN,
@@ -189,7 +189,9 @@ RECONFIGURE_NOTIFICATION_ID = "config_entry_reconfigure"
 
 EVENT_FLOW_DISCOVERED = "config_entry_discovered"
 
-SIGNAL_CONFIG_ENTRY_CHANGED = "config_entry_changed"
+SIGNAL_CONFIG_ENTRY_CHANGED = SignalType["ConfigEntryChange", "ConfigEntry"](
+    "config_entry_changed"
+)
 
 NO_RESET_TRIES_STATES = {
     ConfigEntryState.SETUP_RETRY,
@@ -372,9 +374,9 @@ class ConfigEntry:
         self._async_cancel_retry_setup: Callable[[], Any] | None = None
 
         # Hold list for actions to call on unload.
-        self._on_unload: list[
-            Callable[[], Coroutine[Any, Any, None] | None]
-        ] | None = None
+        self._on_unload: list[Callable[[], Coroutine[Any, Any, None] | None]] | None = (
+            None
+        )
 
         # Reload lock to prevent conflicting reloads
         self.reload_lock = asyncio.Lock()
@@ -605,6 +607,7 @@ class ConfigEntry:
                     HassJob(
                         functools.partial(self._async_setup_again, hass),
                         job_type=HassJobType.Callback,
+                        cancel_on_shutdown=True,
                     ),
                 )
             else:
@@ -1137,9 +1140,9 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult, str
         loop = self.hass.loop
 
         if context["source"] == SOURCE_IMPORT:
-            self._pending_import_flows.setdefault(handler, {})[
-                flow_id
-            ] = loop.create_future()
+            self._pending_import_flows.setdefault(handler, {})[flow_id] = (
+                loop.create_future()
+            )
 
         cancel_init_future = loop.create_future()
         self._initialize_futures.setdefault(handler, []).append(cancel_init_future)

@@ -168,9 +168,9 @@ async def async_setup_entry(
             for player in players:
                 hass.async_create_task(_discovered_player(player))
 
-        hass.data[DOMAIN][config_entry.entry_id][
-            PLAYER_DISCOVERY_UNSUB
-        ] = async_call_later(hass, DISCOVERY_INTERVAL, _discovery)
+        hass.data[DOMAIN][config_entry.entry_id][PLAYER_DISCOVERY_UNSUB] = (
+            async_call_later(hass, DISCOVERY_INTERVAL, _discovery)
+        )
 
     _LOGGER.debug("Adding player discovery job for LMS server: %s", host)
     config_entry.async_create_background_task(

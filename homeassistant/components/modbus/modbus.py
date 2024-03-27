@@ -258,7 +258,9 @@ class ModbusHub:
         """Initialize the Modbus hub."""
 
         # generic configuration
-        self._client: AsyncModbusSerialClient | AsyncModbusTcpClient | AsyncModbusUdpClient | None = None
+        self._client: (
+            AsyncModbusSerialClient | AsyncModbusTcpClient | AsyncModbusUdpClient | None
+        ) = None
         self._async_cancel_listener: Callable[[], None] | None = None
         self._in_error = False
         self._lock = asyncio.Lock()

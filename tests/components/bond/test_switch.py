@@ -112,9 +112,11 @@ async def test_switch_set_power_belief_api_error(hass: HomeAssistant) -> None:
         hass, SWITCH_DOMAIN, generic_device("name-1"), bond_device_id="test-device-id"
     )
 
-    with pytest.raises(
-        HomeAssistantError
-    ), patch_bond_action_returns_clientresponseerror(), patch_bond_device_state():
+    with (
+        pytest.raises(HomeAssistantError),
+        patch_bond_action_returns_clientresponseerror(),
+        patch_bond_device_state(),
+    ):
         await hass.services.async_call(
             BOND_DOMAIN,
             SERVICE_SET_POWER_TRACKED_STATE,
