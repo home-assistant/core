@@ -1,6 +1,6 @@
 """Test config flow for Twitch."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from twitchAPI.object.api import TwitchUser
 from twitchAPI.type import InvalidTokenException
@@ -19,7 +19,6 @@ from homeassistant.helpers import config_entry_oauth2_flow, issue_registry as ir
 from . import get_generator, setup_integration
 
 from tests.common import MockConfigEntry
-from tests.components.twitch import TwitchMock
 from tests.components.twitch.conftest import CLIENT_ID, TITLE
 from tests.typing import ClientSessionGenerator
 
@@ -94,13 +93,10 @@ async def test_already_configured(
     )
     await _do_get_token(hass, result, hass_client_no_auth, scopes)
 
-    with patch(
-        "homeassistant.components.twitch.config_flow.Twitch", return_value=TwitchMock()
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-        assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == "already_configured"
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_reauth(

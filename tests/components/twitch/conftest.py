@@ -1,11 +1,11 @@
 """Configure tests for the Twitch integration."""
 
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import Generator
 import time
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from twitchAPI.object.api import FollowedChannel, TwitchUser
+from twitchAPI.object.api import FollowedChannel, Stream, TwitchUser
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -16,10 +16,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
-from tests.components.twitch import TwitchIterObject, TwitchMock, get_generator
+from tests.components.twitch import TwitchIterObject, get_generator
 from tests.test_util.aiohttp import AiohttpClientMocker
-
-ComponentSetup = Callable[[TwitchMock | None], Awaitable[None]]
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -112,4 +110,8 @@ def twitch_mock() -> AsyncMock:
         mock_client.return_value.get_followed_channels.return_value = TwitchIterObject(
             "get_followed_channels.json", FollowedChannel
         )
+        mock_client.return_value.get_streams.return_value = get_generator(
+            "get_streams.json", Stream
+        )
+        mock_client.return_value.has_required_auth.return_value = True
         yield mock_client
