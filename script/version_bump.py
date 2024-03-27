@@ -24,7 +24,7 @@ def _bump_release(release, bump_type):
     return major, minor, patch
 
 
-def bump_version(version, bump_type):
+def bump_version(version: Version, bump_type: str) -> Version:
     """Return a new version given a current version and action."""
     to_change = {}
 
@@ -82,12 +82,16 @@ def bump_version(version, bump_type):
             to_change["release"] = _bump_release(version.release, "patch")
             to_change["pre"] = ("b", 0)
 
-    elif bump_type == "nightly":
-        # Convert 0.70.0d0 to 0.70.0d20190424, fails when run on non dev release
+    elif bump_type.startswith("nightly"):
+        # Convert 0.70.0d0 to 0.70.0d20190424 or 0.70.0d201904241254 (if nightly_datetime), fails when run on non dev release
         if not version.is_devrelease:
             raise ValueError("Can only be run on dev release")
 
-        to_change["dev"] = ("dev", dt_util.utcnow().strftime("%Y%m%d"))
+        value = dt_util.utcnow().strftime("%Y%m%d")
+        if bump_type == "nightly_datetime":
+            value += dt_util.utcnow().strftime("%H%M")
+
+        to_change["dev"] = ("dev", value)
 
     else:
         raise ValueError(f"Unsupported type: {bump_type}")
@@ -146,13 +150,13 @@ def write_ci_workflow(version: Version) -> None:
         fp.write(content)
 
 
-def main():
+def main() -> None:
     """Execute script."""
     parser = argparse.ArgumentParser(description="Bump version of Home Assistant")
     parser.add_argument(
         "type",
         help="The type of the bump the version to.",
-        choices=["beta", "dev", "patch", "minor", "nightly"],
+        choices=["beta", "dev", "patch", "minor", "nightly", "nigthly_datetime"],
     )
     parser.add_argument(
         "--commit", action="store_true", help="Create a version bump commit."
@@ -181,7 +185,7 @@ def main():
     subprocess.run(["git", "commit", "-nam", f"Bump version to {bumped}"], check=True)
 
 
-def test_bump_version():
+def test_bump_version() -> None:
     """Make sure it all works."""
     import pytest
 
@@ -207,6 +211,10 @@ def test_bump_version():
     today = dt_util.utcnow().strftime("%Y%m%d")
     assert bump_version(Version("0.56.0.dev0"), "nightly") == Version(
         f"0.56.0.dev{today}"
+    )
+    now = dt_util.utcnow().strftime("%Y%m%d%H%M")
+    assert bump_version(Version("0.56.0.dev0"), "nightly_datetime") == Version(
+        f"0.56.0.dev{now}"
     )
     with pytest.raises(ValueError):
         assert bump_version(Version("0.56.0"), "nightly")
