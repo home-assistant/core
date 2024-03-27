@@ -45,7 +45,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.dt import utcnow
 
-from ..sensor.common import MockSensor
 from .test_common import help_all_subscribe_calls
 
 from tests.common import (
@@ -56,6 +55,7 @@ from tests.common import (
     mock_restore_cache,
     setup_test_component_platform,
 )
+from tests.components.sensor.common import MockSensor
 from tests.typing import (
     MqttMockHAClient,
     MqttMockHAClientGenerator,
