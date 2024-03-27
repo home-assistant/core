@@ -531,17 +531,12 @@ def get_last_state_changes(
             stmt = lambda_stmt(
                 lambda: _get_last_state_changes_single_stmt(metadata_id),
             )
-        elif has_last_reported:
-            stmt = lambda_stmt(
-                lambda: _get_last_state_changes_multiple_stmt(
-                    number_of_states, metadata_id, True
-                ),
-            )
         else:
             stmt = lambda_stmt(
                 lambda: _get_last_state_changes_multiple_stmt(
-                    number_of_states, metadata_id, False
+                    number_of_states, metadata_id, has_last_reported
                 ),
+                track_on=[has_last_reported],
             )
         states = list(execute_stmt_lambda_element(session, stmt, orm_rows=False))
         return cast(
