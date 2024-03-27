@@ -90,6 +90,7 @@ ATTR_ANSWERS = "answers"
 ATTR_OPEN_PERIOD = "open_period"
 ATTR_IS_ANONYMOUS = "is_anonymous"
 ATTR_ALLOWS_MULTIPLE_ANSWERS = "allows_multiple_answers"
+ATTR_MESSAGE_THREAD_ID = "message_thread_id"
 
 CONF_ALLOWED_CHAT_IDS = "allowed_chat_ids"
 CONF_PROXY_URL = "proxy_url"
@@ -623,6 +624,7 @@ class TelegramNotificationService:
             ATTR_REPLYMARKUP: None,
             ATTR_TIMEOUT: None,
             ATTR_MESSAGE_TAG: None,
+            ATTR_MESSAGE_THREAD_ID: None,
         }
         if data is not None:
             if ATTR_PARSER in data:
@@ -639,6 +641,8 @@ class TelegramNotificationService:
                 params[ATTR_REPLY_TO_MSGID] = data[ATTR_REPLY_TO_MSGID]
             if ATTR_MESSAGE_TAG in data:
                 params[ATTR_MESSAGE_TAG] = data[ATTR_MESSAGE_TAG]
+            if ATTR_MESSAGE_THREAD_ID in data:
+                params[ATTR_MESSAGE_THREAD_ID] = data[ATTR_MESSAGE_THREAD_ID]
             # Keyboards:
             if ATTR_KEYBOARD in data:
                 keys = data.get(ATTR_KEYBOARD)
@@ -712,6 +716,7 @@ class TelegramNotificationService:
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
                 read_timeout=params[ATTR_TIMEOUT],
+                message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
             )
 
     async def delete_message(self, chat_id=None, **kwargs):
@@ -833,6 +838,7 @@ class TelegramNotificationService:
                         reply_markup=params[ATTR_REPLYMARKUP],
                         read_timeout=params[ATTR_TIMEOUT],
                         parse_mode=params[ATTR_PARSER],
+                        message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                     )
 
                 elif file_type == SERVICE_SEND_STICKER:
@@ -846,6 +852,7 @@ class TelegramNotificationService:
                         reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                         reply_markup=params[ATTR_REPLYMARKUP],
                         read_timeout=params[ATTR_TIMEOUT],
+                        message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                     )
 
                 elif file_type == SERVICE_SEND_VIDEO:
@@ -861,6 +868,7 @@ class TelegramNotificationService:
                         reply_markup=params[ATTR_REPLYMARKUP],
                         read_timeout=params[ATTR_TIMEOUT],
                         parse_mode=params[ATTR_PARSER],
+                        message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                     )
                 elif file_type == SERVICE_SEND_DOCUMENT:
                     await self._send_msg(
@@ -875,6 +883,7 @@ class TelegramNotificationService:
                         reply_markup=params[ATTR_REPLYMARKUP],
                         read_timeout=params[ATTR_TIMEOUT],
                         parse_mode=params[ATTR_PARSER],
+                        message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                     )
                 elif file_type == SERVICE_SEND_VOICE:
                     await self._send_msg(
@@ -888,6 +897,7 @@ class TelegramNotificationService:
                         reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                         reply_markup=params[ATTR_REPLYMARKUP],
                         read_timeout=params[ATTR_TIMEOUT],
+                        message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                     )
                 elif file_type == SERVICE_SEND_ANIMATION:
                     await self._send_msg(
@@ -902,6 +912,7 @@ class TelegramNotificationService:
                         reply_markup=params[ATTR_REPLYMARKUP],
                         read_timeout=params[ATTR_TIMEOUT],
                         parse_mode=params[ATTR_PARSER],
+                        message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                     )
 
                 file_content.seek(0)
@@ -924,6 +935,7 @@ class TelegramNotificationService:
                     reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                     reply_markup=params[ATTR_REPLYMARKUP],
                     read_timeout=params[ATTR_TIMEOUT],
+                    message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 )
         else:
             await self.send_file(SERVICE_SEND_STICKER, target, **kwargs)
@@ -947,6 +959,7 @@ class TelegramNotificationService:
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 read_timeout=params[ATTR_TIMEOUT],
+                message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
             )
 
     async def send_poll(
@@ -976,6 +989,7 @@ class TelegramNotificationService:
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 read_timeout=params[ATTR_TIMEOUT],
+                message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
             )
 
     async def leave_chat(self, chat_id=None):
