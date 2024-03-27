@@ -1,0 +1,209 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Authenticate with Viam",
+        "description": "Select which credential type to use.",
+        "data": {
+          "credential_type": "Credential Type"
+        }
+      },
+      "auth": {
+        "title": "[%key:component::viam::config::step::user::title%]",
+        "description": "Provide the credentials for communicating with the Viam service.",
+        "data": {
+          "api_id": "API Key ID",
+          "api_key": "API Key Value",
+          "address": "Robot Address",
+          "secret": "Robot Secret"
+        },
+        "data_description": {
+          "address": "Find this under the Code Sample tab in the app.",
+          "secret": "Find this under the Code Sample tab in the app when 'include secret' is enabled."
+        }
+      },
+      "robot": {
+        "data": {
+          "robot": "Select a robot"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "selector": {
+    "credential_type": {
+      "options": {
+        "api-key": "Org API Key",
+        "robot-location-secret": "Robot Location Secret"
+      }
+    }
+  },
+  "exceptions": {
+    "entry_not_found": {
+      "message": "No Viam config entries found"
+    },
+    "entry_not_loaded": {
+      "message": "{config_entry_title} is not loaded"
+    },
+    "invalid_config_entry": {
+      "message": "Invalid config entry provided. Got {config_entry}"
+    },
+    "unloaded_config_entry": {
+      "message": "Invalid config entry provided. {config_entry} is not loaded."
+    },
+    "robot_credentials_required": {
+      "message": "The robot location and secret are required for this connection type."
+    },
+    "robot_credentials_not_found": {
+      "message": "The necessary credentials for the RobotClient could not be found."
+    }
+  },
+  "services": {
+    "common": {
+      "name": "Common fields for Viam integration services",
+      "description": "Only used for string translations",
+      "fields": {
+        "camera": {
+          "name": "Camera Entity",
+          "description": "The camera entity from which an image is captured."
+        },
+        "component_name": {
+          "name": "Component Name",
+          "description": "The name of the configured robot component to use."
+        },
+        "component_type": {
+          "name": "Component Type",
+          "description": "The type of the associated component."
+        },
+        "confidence": {
+          "name": "Confidence",
+          "description": "Threshold for filtering results returned by the service"
+        },
+        "file_name": {
+          "name": "File Name",
+          "description": "The name of the file that will be displayed in the metadata within Viam."
+        },
+        "filepath": {
+          "name": "Filepath",
+          "description": "Local file path to the image you wish to reference."
+        },
+        "robot_address": {
+          "name": "Robot Address",
+          "description": "If authenticated using an Org API key, provide the robot address associated with the configured vision service."
+        },
+        "robot_secret": {
+          "name": "Robot Secret",
+          "description": "If authenticated using an Org API key, provide the robot location secret associated with the configured vision service."
+        }
+      }
+    },
+    "capture_data": {
+      "name": "Capture data",
+      "description": "Send arbitrary tabular data to Viam for analytics and model training.",
+      "fields": {
+        "values": {
+          "name": "Values",
+          "description": "List of tabular data to send to Viam."
+        },
+        "component_name": {
+          "name": "[%key:component::viam::services::common::fields::component_name::name%]",
+          "description": "[%key:component::viam::services::common::fields::component_name::description%]"
+        },
+        "component_type": {
+          "name": "[%key:component::viam::services::common::fields::component_type::name%]",
+          "description": "[%key:component::viam::services::common::fields::component_type::description%]"
+        }
+      }
+    },
+    "capture_image": {
+      "name": "Capture image",
+      "description": "Send images to Viam for analytics and model training.",
+      "fields": {
+        "filepath": {
+          "name": "[%key:component::viam::services::common::fields::filepath::name%]",
+          "description": "[%key:component::viam::services::common::fields::filepath::description%]"
+        },
+        "camera": {
+          "name": "[%key:component::viam::services::common::fields::camera::name%]",
+          "description": "[%key:component::viam::services::common::fields::camera::description%]"
+        },
+        "file_name": {
+          "name": "[%key:component::viam::services::common::fields::file_name::name%]",
+          "description": "[%key:component::viam::services::common::fields::file_name::description%]"
+        },
+        "component_name": {
+          "name": "[%key:component::viam::services::common::fields::component_name::name%]",
+          "description": "[%key:component::viam::services::common::fields::component_name::description%]"
+        }
+      }
+    },
+    "get_classifications": {
+      "name": "Classify Images",
+      "description": "Get a list of classifications from an image.",
+      "fields": {
+        "classifier_name": {
+          "name": "Classifier Name",
+          "description": "Name of classifier vision service configured in Viam"
+        },
+        "confidence": {
+          "name": "[%key:component::viam::services::common::fields::confidence::name%]",
+          "description": "[%key:component::viam::services::common::fields::confidence::description%]"
+        },
+        "count": {
+          "name": "Classification count",
+          "description": "Number of classifications to return from the service"
+        },
+        "robot_address": {
+          "name": "[%key:component::viam::services::common::fields::robot_address::name%]",
+          "description": "[%key:component::viam::services::common::fields::robot_address::description%]"
+        },
+        "robot_secret": {
+          "name": "[%key:component::viam::services::common::fields::robot_secret::name%]",
+          "description": "[%key:component::viam::services::common::fields::robot_secret::description%]"
+        },
+        "filepath": {
+          "name": "[%key:component::viam::services::common::fields::filepath::name%]",
+          "description": "[%key:component::viam::services::common::fields::filepath::description%]"
+        },
+        "camera": {
+          "name": "[%key:component::viam::services::common::fields::camera::name%]",
+          "description": "[%key:component::viam::services::common::fields::camera::description%]"
+        }
+      }
+    },
+    "get_detections": {
+      "name": "Detect Objects in Images",
+      "description": "Get a list of detected objects from an image.",
+      "fields": {
+        "detector_name": {
+          "name": "Detector Name",
+          "description": "Name of detector vision service configured in Viam"
+        },
+        "confidence": {
+          "name": "[%key:component::viam::services::common::fields::confidence::name%]",
+          "description": "[%key:component::viam::services::common::fields::confidence::description%]"
+        },
+        "robot_address": {
+          "name": "[%key:component::viam::services::common::fields::robot_address::name%]",
+          "description": "[%key:component::viam::services::common::fields::robot_address::description%]"
+        },
+        "robot_secret": {
+          "name": "[%key:component::viam::services::common::fields::robot_secret::name%]",
+          "description": "[%key:component::viam::services::common::fields::robot_secret::description%]"
+        },
+        "filepath": {
+          "name": "[%key:component::viam::services::common::fields::filepath::name%]",
+          "description": "[%key:component::viam::services::common::fields::filepath::description%]"
+        },
+        "camera": {
+          "name": "[%key:component::viam::services::common::fields::camera::name%]",
+          "description": "[%key:component::viam::services::common::fields::camera::description%]"
+        }
+      }
+    }
+  }
+}
