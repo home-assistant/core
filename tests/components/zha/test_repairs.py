@@ -1,4 +1,5 @@
 """Test ZHA repairs."""
+
 from collections.abc import Callable
 from http import HTTPStatus
 import logging
@@ -85,12 +86,15 @@ def test_detect_radio_hardware(hass: HomeAssistant) -> None:
 def test_detect_radio_hardware_failure(hass: HomeAssistant) -> None:
     """Test radio hardware detection failure."""
 
-    with patch(
-        "homeassistant.components.homeassistant_yellow.hardware.async_info",
-        side_effect=HomeAssistantError(),
-    ), patch(
-        "homeassistant.components.homeassistant_sky_connect.hardware.async_info",
-        side_effect=HomeAssistantError(),
+    with (
+        patch(
+            "homeassistant.components.homeassistant_yellow.hardware.async_info",
+            side_effect=HomeAssistantError(),
+        ),
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.hardware.async_info",
+            side_effect=HomeAssistantError(),
+        ),
     ):
         assert _detect_radio_hardware(hass, SKYCONNECT_DEVICE) == HardwareType.OTHER
 
@@ -115,16 +119,20 @@ async def test_multipan_firmware_repair(
     config_entry.add_to_hass(hass)
 
     # ZHA fails to set up
-    with patch(
-        "homeassistant.components.zha.repairs.wrong_silabs_firmware.Flasher.probe_app_type",
-        side_effect=set_flasher_app_type(ApplicationType.CPC),
-        autospec=True,
-    ), patch(
-        "homeassistant.components.zha.core.gateway.ZHAGateway.async_initialize",
-        side_effect=RuntimeError(),
-    ), patch(
-        "homeassistant.components.zha.repairs.wrong_silabs_firmware._detect_radio_hardware",
-        return_value=detected_hardware,
+    with (
+        patch(
+            "homeassistant.components.zha.repairs.wrong_silabs_firmware.Flasher.probe_app_type",
+            side_effect=set_flasher_app_type(ApplicationType.CPC),
+            autospec=True,
+        ),
+        patch(
+            "homeassistant.components.zha.core.gateway.ZHAGateway.async_initialize",
+            side_effect=RuntimeError(),
+        ),
+        patch(
+            "homeassistant.components.zha.repairs.wrong_silabs_firmware._detect_radio_hardware",
+            return_value=detected_hardware,
+        ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -164,13 +172,16 @@ async def test_multipan_firmware_no_repair_on_probe_failure(
     config_entry.add_to_hass(hass)
 
     # ZHA fails to set up
-    with patch(
-        "homeassistant.components.zha.repairs.wrong_silabs_firmware.Flasher.probe_app_type",
-        side_effect=set_flasher_app_type(None),
-        autospec=True,
-    ), patch(
-        "homeassistant.components.zha.core.gateway.ZHAGateway.async_initialize",
-        side_effect=RuntimeError(),
+    with (
+        patch(
+            "homeassistant.components.zha.repairs.wrong_silabs_firmware.Flasher.probe_app_type",
+            side_effect=set_flasher_app_type(None),
+            autospec=True,
+        ),
+        patch(
+            "homeassistant.components.zha.core.gateway.ZHAGateway.async_initialize",
+            side_effect=RuntimeError(),
+        ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -198,13 +209,16 @@ async def test_multipan_firmware_retry_on_probe_ezsp(
     config_entry.add_to_hass(hass)
 
     # ZHA fails to set up
-    with patch(
-        "homeassistant.components.zha.repairs.wrong_silabs_firmware.Flasher.probe_app_type",
-        side_effect=set_flasher_app_type(ApplicationType.EZSP),
-        autospec=True,
-    ), patch(
-        "homeassistant.components.zha.core.gateway.ZHAGateway.async_initialize",
-        side_effect=RuntimeError(),
+    with (
+        patch(
+            "homeassistant.components.zha.repairs.wrong_silabs_firmware.Flasher.probe_app_type",
+            side_effect=set_flasher_app_type(ApplicationType.EZSP),
+            autospec=True,
+        ),
+        patch(
+            "homeassistant.components.zha.core.gateway.ZHAGateway.async_initialize",
+            side_effect=RuntimeError(),
+        ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -236,10 +250,13 @@ async def test_no_warn_on_socket(hass: HomeAssistant) -> None:
 
 async def test_probe_failure_exception_handling(caplog) -> None:
     """Test that probe failures are handled gracefully."""
-    with patch(
-        "homeassistant.components.zha.repairs.wrong_silabs_firmware.Flasher.probe_app_type",
-        side_effect=RuntimeError(),
-    ), caplog.at_level(logging.DEBUG):
+    with (
+        patch(
+            "homeassistant.components.zha.repairs.wrong_silabs_firmware.Flasher.probe_app_type",
+            side_effect=RuntimeError(),
+        ),
+        caplog.at_level(logging.DEBUG),
+    ):
         await probe_silabs_firmware_type("/dev/ttyZigbee")
 
     assert "Failed to probe application type" in caplog.text

@@ -1,4 +1,5 @@
 """The tests for the Home Assistant SpaceAPI component."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -116,7 +117,7 @@ async def test_spaceapi_get(hass: HomeAssistant, mock_client) -> None:
     assert data["location"]["lon"] == -117.22743
     assert data["state"]["open"] == "null"
     assert data["state"]["icon"]["open"] == "https://home-assistant.io/open.png"
-    assert data["state"]["icon"]["close"] == "https://home-assistant.io/close.png"
+    assert data["state"]["icon"]["closed"] == "https://home-assistant.io/close.png"
     assert data["spacefed"]["spacenet"] == bool(1)
     assert data["spacefed"]["spacesaml"] == bool(0)
     assert data["spacefed"]["spacephone"] == bool(1)

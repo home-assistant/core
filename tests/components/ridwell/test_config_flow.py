@@ -1,4 +1,5 @@
 """Test the Ridwell config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from aioridwell.errors import InvalidCredentialsError, RidwellError

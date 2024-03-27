@@ -1,4 +1,5 @@
 """Blebox binary_sensor entities test."""
+
 from unittest.mock import AsyncMock, PropertyMock
 
 import blebox_uniapi

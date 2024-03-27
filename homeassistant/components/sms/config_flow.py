@@ -1,4 +1,5 @@
 """Config flow for SMS integration."""
+
 import logging
 
 import gammu

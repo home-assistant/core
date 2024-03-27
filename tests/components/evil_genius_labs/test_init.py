@@ -1,4 +1,5 @@
 """Test evil genius labs init."""
+
 import pytest
 
 from homeassistant import config_entries

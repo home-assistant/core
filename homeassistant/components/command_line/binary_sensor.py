@@ -1,4 +1,5 @@
 """Support for custom shell commands to retrieve values."""
+
 from __future__ import annotations
 
 import asyncio

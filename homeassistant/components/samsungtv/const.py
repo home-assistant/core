@@ -1,4 +1,5 @@
 """Constants for the Samsung TV integration."""
+
 import logging
 
 LOGGER = logging.getLogger(__package__)

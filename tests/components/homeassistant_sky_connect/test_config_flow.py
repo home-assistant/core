@@ -1,4 +1,5 @@
 """Test the Home Assistant SkyConnect config flow."""
+
 from collections.abc import Generator
 import copy
 from unittest.mock import Mock, patch
@@ -145,13 +146,16 @@ async def test_config_flow_update_device(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     assert len(mock_setup_entry.mock_calls) == 1
 
-    with patch(
-        "homeassistant.components.homeassistant_sky_connect.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.homeassistant_sky_connect.async_unload_entry",
-        wraps=homeassistant_sky_connect.async_unload_entry,
-    ) as mock_unload_entry:
+    with (
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.async_unload_entry",
+            wraps=homeassistant_sky_connect.async_unload_entry,
+        ) as mock_unload_entry,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "usb"}, data=usb_data
         )

@@ -1,4 +1,5 @@
 """Test the Ring config flow."""
+
 from unittest.mock import AsyncMock, Mock
 
 import pytest

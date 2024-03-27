@@ -1,4 +1,5 @@
 """The generic_hygrostat component."""
+
 import voluptuous as vol
 
 from homeassistant.components.humidifier import HumidifierDeviceClass

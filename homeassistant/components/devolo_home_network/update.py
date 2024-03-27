@@ -1,4 +1,5 @@
 """Platform for update integration."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -26,19 +27,12 @@ from .const import DOMAIN, REGULAR_FIRMWARE
 from .entity import DevoloCoordinatorEntity
 
 
-@dataclass(frozen=True)
-class DevoloUpdateRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class DevoloUpdateEntityDescription(UpdateEntityDescription):
+    """Describes devolo update entity."""
 
     latest_version: Callable[[UpdateFirmwareCheck], str]
     update_func: Callable[[Device], Awaitable[bool]]
-
-
-@dataclass(frozen=True)
-class DevoloUpdateEntityDescription(
-    UpdateEntityDescription, DevoloUpdateRequiredKeysMixin
-):
-    """Describes devolo update entity."""
 
 
 UPDATE_TYPES: dict[str, DevoloUpdateEntityDescription] = {
@@ -123,9 +117,13 @@ class DevoloUpdateEntity(DevoloCoordinatorEntity, UpdateEntity):
         except DevicePasswordProtected as ex:
             self.entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
-                f"Device {self.entry.title} require re-authentication to set or change the password"
+                translation_domain=DOMAIN,
+                translation_key="password_protected",
+                translation_placeholders={"title": self.entry.title},
             ) from ex
         except DeviceUnavailable as ex:
             raise HomeAssistantError(
-                f"Device {self.entry.title} did not respond"
+                translation_domain=DOMAIN,
+                translation_key="no_response",
+                translation_placeholders={"title": self.entry.title},
             ) from ex

@@ -1,4 +1,5 @@
 """Tests for Shelly valve platform."""
+
 from unittest.mock import Mock
 
 from aioshelly.const import MODEL_GAS

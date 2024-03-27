@@ -1,4 +1,5 @@
 """Tests for the Reolink media_source platform."""
+
 from datetime import datetime, timedelta
 import logging
 from unittest.mock import AsyncMock, MagicMock, patch

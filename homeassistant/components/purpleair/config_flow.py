@@ -1,4 +1,5 @@
 """Config flow for PurpleAir integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -24,7 +25,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_SHOW_ON_MAP,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     aiohttp_client,
     config_validation as cv,
@@ -41,7 +42,6 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     SelectSelectorMode,
 )
-from homeassistant.helpers.typing import EventType
 
 from .const import CONF_SENSOR_INDICES, DOMAIN, LOGGER
 
@@ -435,7 +435,7 @@ class PurpleAirOptionsFlowHandler(OptionsFlow):
 
         @callback
         def async_device_entity_state_changed(
-            _: EventType[EventStateChangedData],
+            _: Event[EventStateChangedData],
         ) -> None:
             """Listen and respond when all device entities are removed."""
             if all(

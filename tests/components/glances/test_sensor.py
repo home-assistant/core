@@ -1,4 +1,5 @@
 """Tests for glances sensors."""
+
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.glances.const import DOMAIN

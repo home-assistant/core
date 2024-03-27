@@ -1,4 +1,5 @@
 """Support for Ness D8X/D16X devices."""
+
 from collections import namedtuple
 import datetime
 import logging

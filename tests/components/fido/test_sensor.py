@@ -1,4 +1,5 @@
 """The test for the fido sensor platform."""
+
 import logging
 from unittest.mock import MagicMock, patch
 

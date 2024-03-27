@@ -1,4 +1,5 @@
 """Support for Axis devices."""
+
 import logging
 
 from homeassistant.config_entries import ConfigEntry
@@ -28,9 +29,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data[AXIS_DOMAIN][config_entry.entry_id] = hub
     await hub.async_update_device_registry()
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-    hub.async_setup_events()
+    hub.setup()
 
     config_entry.add_update_listener(hub.async_new_address_callback)
+    config_entry.async_on_unload(hub.teardown)
     config_entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, hub.shutdown)
     )
@@ -40,8 +42,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload Axis device config entry."""
-    hub: AxisHub = hass.data[AXIS_DOMAIN].pop(config_entry.entry_id)
-    return await hub.async_reset()
+    hass.data[AXIS_DOMAIN].pop(config_entry.entry_id)
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:

@@ -1,4 +1,5 @@
 """Test the Canary config flow."""
+
 from unittest.mock import patch
 
 from requests import ConnectTimeout, HTTPError
@@ -26,7 +27,10 @@ async def test_user_form(hass: HomeAssistant, canary_config_flow) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    with _patch_async_setup() as mock_setup, _patch_async_setup_entry() as mock_setup_entry:
+    with (
+        _patch_async_setup() as mock_setup,
+        _patch_async_setup_entry() as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             USER_INPUT,

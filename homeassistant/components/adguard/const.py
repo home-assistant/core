@@ -1,4 +1,5 @@
 """Constants for the AdGuard Home integration."""
+
 import logging
 
 DOMAIN = "adguard"

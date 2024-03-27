@@ -1,4 +1,5 @@
 """Representation of Z-Wave sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping

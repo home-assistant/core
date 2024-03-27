@@ -1,4 +1,5 @@
 """API for xbox bound to Home Assistant OAuth."""
+
 from aiohttp import ClientSession
 from xbox.webapi.authentication.manager import AuthenticationManager
 from xbox.webapi.authentication.models import OAuth2TokenResponse

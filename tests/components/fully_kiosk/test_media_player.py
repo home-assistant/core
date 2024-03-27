@@ -1,4 +1,5 @@
 """Test the Fully Kiosk Browser media player."""
+
 from unittest.mock import MagicMock, Mock, patch
 
 from homeassistant.components.fully_kiosk.const import DOMAIN, MEDIA_SUPPORT_FULLYKIOSK

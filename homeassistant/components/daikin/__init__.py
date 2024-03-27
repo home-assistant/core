@@ -1,4 +1,5 @@
 """Platform for the Daikin AC."""
+
 from __future__ import annotations
 
 import asyncio

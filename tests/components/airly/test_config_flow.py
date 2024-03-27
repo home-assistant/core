@@ -1,4 +1,5 @@
 """Define tests for the Airly config flow."""
+
 from http import HTTPStatus
 
 from airly.exceptions import AirlyError

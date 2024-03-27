@@ -1,4 +1,5 @@
 """The tests for mqtt number component."""
+
 import json
 from typing import Any
 from unittest.mock import patch
@@ -25,7 +26,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
     ATTR_UNIT_OF_MEASUREMENT,
-    Platform,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, State
@@ -68,13 +68,6 @@ from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {number.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
 }
-
-
-@pytest.fixture(autouse=True)
-def number_platform_only():
-    """Only setup the number platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.NUMBER]):
-        yield
 
 
 @pytest.mark.parametrize(

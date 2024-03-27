@@ -1,4 +1,5 @@
 """Config flow to configure the Toon component."""
+
 from __future__ import annotations
 
 import logging

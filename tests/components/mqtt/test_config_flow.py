@@ -1,4 +1,5 @@
 """Test config flow."""
+
 from collections.abc import Generator, Iterator
 from contextlib import contextmanager
 from pathlib import Path
@@ -54,13 +55,15 @@ def mock_client_key_check_fail() -> Generator[MagicMock, None, None]:
 @pytest.fixture
 def mock_ssl_context() -> Generator[dict[str, MagicMock], None, None]:
     """Mock the SSL context used to load the cert chain and to load verify locations."""
-    with patch(
-        "homeassistant.components.mqtt.config_flow.SSLContext"
-    ) as mock_context, patch(
-        "homeassistant.components.mqtt.config_flow.load_pem_private_key"
-    ) as mock_key_check, patch(
-        "homeassistant.components.mqtt.config_flow.load_pem_x509_certificate"
-    ) as mock_cert_check:
+    with (
+        patch("homeassistant.components.mqtt.config_flow.SSLContext") as mock_context,
+        patch(
+            "homeassistant.components.mqtt.config_flow.load_pem_private_key"
+        ) as mock_key_check,
+        patch(
+            "homeassistant.components.mqtt.config_flow.load_pem_x509_certificate"
+        ) as mock_cert_check,
+    ):
         yield {
             "context": mock_context,
             "load_pem_x509_certificate": mock_cert_check,
@@ -122,8 +125,9 @@ def mock_try_connection_time_out() -> Generator[MagicMock, None, None]:
     """Mock the try connection method with a time out."""
 
     # Patch prevent waiting 5 sec for a timeout
-    with patch("paho.mqtt.client.Client") as mock_client, patch(
-        "homeassistant.components.mqtt.config_flow.MQTT_TIMEOUT", 0
+    with (
+        patch("paho.mqtt.client.Client") as mock_client,
+        patch("homeassistant.components.mqtt.config_flow.MQTT_TIMEOUT", 0),
     ):
         mock_client().loop_start = lambda *args: 1
         yield mock_client()

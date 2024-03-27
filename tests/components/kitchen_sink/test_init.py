@@ -1,4 +1,5 @@
 """The tests for the Everything but the Kitchen Sink integration."""
+
 import datetime
 from http import HTTPStatus
 from unittest.mock import ANY

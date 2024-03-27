@@ -1,4 +1,5 @@
 """Handle legacy notification platforms."""
+
 from __future__ import annotations
 
 import asyncio
@@ -15,7 +16,11 @@ from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.loader import async_get_integration, bind_hass
-from homeassistant.setup import async_prepare_setup_platform, async_start_setup
+from homeassistant.setup import (
+    SetupPhases,
+    async_prepare_setup_platform,
+    async_start_setup,
+)
 from homeassistant.util import slugify
 from homeassistant.util.yaml import load_yaml_dict
 
@@ -83,7 +88,12 @@ def async_setup_legacy(
 
         full_name = f"{DOMAIN}.{integration_name}"
         LOGGER.info("Setting up %s", full_name)
-        with async_start_setup(hass, [full_name]):
+        with async_start_setup(
+            hass,
+            integration=integration_name,
+            group=str(id(p_config)),
+            phase=SetupPhases.PLATFORM_SETUP,
+        ):
             notify_service: BaseNotificationService | None = None
             try:
                 if hasattr(platform, "async_get_service"):
@@ -231,7 +241,7 @@ class BaseNotificationService:
 
         kwargs can contain ATTR_TITLE to specify a title.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message.

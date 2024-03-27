@@ -1,4 +1,5 @@
 """Manager for esphome devices."""
+
 from __future__ import annotations
 
 import asyncio
@@ -29,7 +30,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     CONF_MODE,
-    EVENT_HOMEASSISTANT_STOP,
+    EVENT_HOMEASSISTANT_CLOSE,
     EVENT_LOGGING_CHANGED,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callback
@@ -49,7 +50,6 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import EventType
 from homeassistant.util.async_ import create_eager_task
 
 from .bluetooth import async_connect_scanner
@@ -282,7 +282,7 @@ class ESPHomeManager:
     def _send_home_assistant_state_event(
         self,
         attribute: str | None,
-        event: EventType[EventStateChangedData],
+        event: Event[EventStateChangedData],
     ) -> None:
         """Forward Home Assistant states updates to ESPHome."""
         event_data = event.data
@@ -455,7 +455,7 @@ class ESPHomeManager:
 
         self.device_id = _async_setup_device_registry(hass, entry, entry_data)
 
-        entry_data.async_update_device_state(hass)
+        entry_data.async_update_device_state()
         await entry_data.async_update_static_infos(
             hass, entry, entity_infos, device_info.mac_address
         )
@@ -510,7 +510,7 @@ class ESPHomeManager:
             # since it generates a lot of state changed events and database
             # writes when we already know we're shutting down and the state
             # will be cleared anyway.
-            entry_data.async_update_device_state(hass)
+            entry_data.async_update_device_state()
 
     async def on_connect_error(self, err: Exception) -> None:
         """Start reauth flow if appropriate connect error type."""
@@ -542,12 +542,19 @@ class ESPHomeManager:
         # the callback twice when shutting down Home Assistant.
         # "Unable to remove unknown listener
         # <function EventBus.async_listen_once.<locals>.onetime_listener>"
+        # We only close the connection at the last possible moment
+        # when the CLOSE event is fired so anything using a Bluetooth
+        # proxy has a chance to shut down properly.
         entry_data.cleanup_callbacks.append(
-            hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, self.on_stop)
+            hass.bus.async_listen(
+                EVENT_HOMEASSISTANT_CLOSE, self.on_stop, run_immediately=True
+            )
         )
         entry_data.cleanup_callbacks.append(
             hass.bus.async_listen(
-                EVENT_LOGGING_CHANGED, self._async_handle_logging_changed
+                EVENT_LOGGING_CHANGED,
+                self._async_handle_logging_changed,
+                run_immediately=True,
             )
         )
 
@@ -773,8 +780,7 @@ def _setup_services(
             # New service
             to_register.append(service)
 
-    for service in old_services.values():
-        to_unregister.append(service)
+    to_unregister.extend(old_services.values())
 
     entry_data.services = {serv.key: serv for serv in services}
 

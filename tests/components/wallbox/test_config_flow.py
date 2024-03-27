@@ -1,4 +1,5 @@
 """Test the Wallbox config flow."""
+
 from http import HTTPStatus
 import json
 

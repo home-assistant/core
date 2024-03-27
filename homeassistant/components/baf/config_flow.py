@@ -1,4 +1,5 @@
 """Config flow for baf."""
+
 from __future__ import annotations
 
 from asyncio import timeout

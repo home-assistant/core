@@ -1,4 +1,5 @@
 """Define tests for the NextDNS config flow."""
+
 from unittest.mock import patch
 
 from nextdns import ApiError, InvalidApiKeyError
@@ -22,11 +23,15 @@ async def test_form_create_entry(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.nextdns.NextDns.get_profiles", return_value=PROFILES
-    ), patch(
-        "homeassistant.components.nextdns.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.nextdns.NextDns.get_profiles",
+            return_value=PROFILES,
+        ),
+        patch(
+            "homeassistant.components.nextdns.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_API_KEY: "fake_api_key"},

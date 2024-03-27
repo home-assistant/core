@@ -1,4 +1,5 @@
 """The tests for Nest device triggers."""
+
 from google_nest_sdm.event import EventMessage
 import pytest
 from pytest_unordered import unordered

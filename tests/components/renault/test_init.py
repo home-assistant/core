@@ -1,4 +1,5 @@
 """Tests for Renault setup process."""
+
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import Mock, patch

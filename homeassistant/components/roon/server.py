@@ -1,4 +1,5 @@
 """Code to handle the api connection to a Roon server."""
+
 import asyncio
 import logging
 

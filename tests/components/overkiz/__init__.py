@@ -1,4 +1,5 @@
 """Tests for the overkiz component."""
+
 import humps
 from pyoverkiz.models import Setup
 

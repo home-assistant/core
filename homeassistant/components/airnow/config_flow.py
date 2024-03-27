@@ -1,4 +1,5 @@
 """Config flow for AirNow integration."""
+
 import logging
 from typing import Any
 

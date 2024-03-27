@@ -1,4 +1,5 @@
 """Test the Trafikverket weatherstation config flow."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -30,12 +31,15 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.trafikverket_weatherstation.config_flow.TrafikverketWeather.async_get_weather",
-    ), patch(
-        "homeassistant.components.trafikverket_weatherstation.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.trafikverket_weatherstation.config_flow.TrafikverketWeather.async_get_weather",
+        ),
+        patch(
+            "homeassistant.components.trafikverket_weatherstation.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -124,11 +128,14 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.trafikverket_weatherstation.config_flow.TrafikverketWeather.async_get_weather",
-    ), patch(
-        "homeassistant.components.trafikverket_weatherstation.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.trafikverket_weatherstation.config_flow.TrafikverketWeather.async_get_weather",
+        ),
+        patch(
+            "homeassistant.components.trafikverket_weatherstation.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

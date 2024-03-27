@@ -1,4 +1,5 @@
 """Test the init file for the Insteon component."""
+
 import asyncio
 from unittest.mock import patch
 
@@ -31,10 +32,10 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT_PLM)
     config_entry.add_to_hass(hass)
 
-    with patch.object(
-        insteon, "async_connect", new=mock_successful_connection
-    ), patch.object(insteon, "async_close") as mock_close, patch.object(
-        insteon, "devices", new=MockDevices()
+    with (
+        patch.object(insteon, "async_connect", new=mock_successful_connection),
+        patch.object(insteon, "async_close") as mock_close,
+        patch.object(insteon, "devices", new=MockDevices()),
     ):
         assert await async_setup_component(
             hass,
@@ -55,9 +56,10 @@ async def test_setup_entry_failed_connection(
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT_PLM)
     config_entry.add_to_hass(hass)
 
-    with patch.object(
-        insteon, "async_connect", new=mock_failed_connection
-    ), patch.object(insteon, "devices", new=MockDevices(connected=False)):
+    with (
+        patch.object(insteon, "async_connect", new=mock_failed_connection),
+        patch.object(insteon, "devices", new=MockDevices(connected=False)),
+    ):
         assert await async_setup_component(
             hass,
             insteon.DOMAIN,
@@ -71,13 +73,14 @@ async def test_import_frontend_dev_url(hass: HomeAssistant) -> None:
     config = {}
     config[DOMAIN] = {CONF_DEV_PATH: "/some/path"}
 
-    with patch.object(
-        insteon, "async_connect", new=mock_successful_connection
-    ), patch.object(insteon, "close_insteon_connection"), patch.object(
-        insteon, "devices", new=MockDevices()
-    ), patch(
-        PATCH_CONNECTION,
-        new=mock_successful_connection,
+    with (
+        patch.object(insteon, "async_connect", new=mock_successful_connection),
+        patch.object(insteon, "close_insteon_connection"),
+        patch.object(insteon, "devices", new=MockDevices()),
+        patch(
+            PATCH_CONNECTION,
+            new=mock_successful_connection,
+        ),
     ):
         assert await async_setup_component(
             hass,
