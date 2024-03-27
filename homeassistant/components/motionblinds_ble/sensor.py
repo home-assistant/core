@@ -60,7 +60,7 @@ SENSOR_TYPES: dict[str, MotionblindsBLESensorEntityDescription] = {
         translation_key=ATTR_CONNECTION,
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        options=[connection_type.value for connection_type in MotionConnectionType],
+        options=["connected", "connecting", "disconnected", "disconnecting"],
         initial_value=MotionConnectionType.DISCONNECTED.value,
     ),
     ATTR_CALIBRATION: MotionblindsBLESensorEntityDescription(
