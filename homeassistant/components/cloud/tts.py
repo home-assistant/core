@@ -177,7 +177,7 @@ class CloudTTSEntity(TextToSpeechEntity):
         gender: Gender | str | None = options.get(ATTR_GENDER)
         gender = handle_deprecated_gender(self.hass, gender)
         original_voice: str | None = options.get(ATTR_VOICE)
-        if original_voice is None:
+        if original_voice is None and language == self._language:
             original_voice = self._voice
         voice = handle_deprecated_voice(self.hass, original_voice)
         if voice not in TTS_VOICES[language]:
@@ -257,7 +257,7 @@ class CloudProvider(Provider):
         gender: Gender | str | None = options.get(ATTR_GENDER)
         gender = handle_deprecated_gender(self.hass, gender)
         original_voice: str | None = options.get(ATTR_VOICE)
-        if original_voice is None:
+        if original_voice is None and language == self._language:
             original_voice = self._voice
         voice = handle_deprecated_voice(self.hass, original_voice)
         if voice not in TTS_VOICES[language]:
