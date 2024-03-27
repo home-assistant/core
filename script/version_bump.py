@@ -89,10 +89,16 @@ def bump_version(
         if not version.is_devrelease:
             raise ValueError("Can only be run on dev release")
 
-        to_change["dev"] = (
-            "dev",
-            nightly_version or dt_util.utcnow().strftime("%Y%m%d%H%M"),
-        )
+        new_dev = dt_util.utcnow().strftime("%Y%m%d%H%M")
+        if nightly_version:
+            new_version = Version(nightly_version)
+            if new_version.release != version.release:
+                raise ValueError("Nightly version must have the same release version")
+            if not new_version.is_devrelease:
+                raise ValueError("Nightly version must be a dev version")
+            new_dev = new_version.dev
+
+        to_change["dev"] = ("dev", new_dev)
 
     else:
         raise ValueError(f"Unsupported type: {bump_type}")
@@ -223,10 +229,22 @@ def test_bump_version() -> None:
         f"0.56.0.dev{now}"
     )
     assert bump_version(
-        Version("0.56.0.dev0"), "nightly", nightly_version="1234"
-    ) == Version("0.56.0.dev1234")
-    with pytest.raises(ValueError):
-        assert bump_version(Version("0.56.0"), "nightly")
+        Version("2024.4.0.dev20240327"),
+        "nightly",
+        nightly_version="2024.4.0.dev202403271315",
+    ) == Version("2024.4.0.dev202403271315")
+    with pytest.raises(ValueError, match="Can only be run on dev release"):
+        bump_version(Version("0.56.0"), "nightly")
+    with pytest.raises(
+        ValueError, match="Nightly version must have the same release version"
+    ):
+        bump_version(
+            Version("0.56.0.dev0"),
+            "nightly",
+            nightly_version="2024.4.0.dev202403271315",
+        )
+    with pytest.raises(ValueError, match="Nightly version must be a dev version"):
+        bump_version(Version("0.56.0.dev0"), "nightly", nightly_version="0.56.0")
 
 
 if __name__ == "__main__":
