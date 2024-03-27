@@ -5,5 +5,8 @@
         "default": "mdi:car"
       }
     }
+  },
+  "services": {
+    "get_travel_times": "mdi:timelapse"
   }
 }
