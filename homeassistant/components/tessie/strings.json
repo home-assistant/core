@@ -412,16 +412,17 @@
     }
   },
   "issues": {
-    "service_deprecation": {
-      "title": "Speed limit lock entity is being removed",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::tessie::issues::service_deprecation::title%]",
-            "description": "The speed limit lock entity has been deprecated, and will be removed in Home Assistant 2024.10.0."
-          }
-        }
-      }
+    "deprecated_speed_limit_entity": {
+      "title": "Detected Tessie speed limit lock entity created",
+      "description": "The Tessie integration's speed limit lock entity has been deprecated and will be remove in 2024.10.0.\nWe detected that entity `{entity}` is being used in `{info}`\n\nYou should remove the speed limit lock entity from `{info}`.\n\nWhen you are done, disable `{entity}` and restart Home Assistant."
+    },
+    "deprecated_speed_limit_locked": {
+      "title": "Detected Tessie speed limit lock entity locked",
+      "description": "The Tessie integration's speed limit lock entity has been deprecated and will be remove in 2024.10.0.\n\nPlease disable the entity and restart Home Assistant.\n\nAn issue will be created each time the entity is used to remind you to migrate."
+    },
+    "deprecated_speed_limit_unlocked": {
+      "title": "Detected Tessie speed limit lock entity unlocked",
+      "description": "The Tessie integration's speed limit lock entity has been deprecated and will be remove in 2024.10.0.\n\nPlease disable the entity and restart Home Assistant.\n\nAn issue will be created each time the entity is used to remind you to migrate."
     }
   }
 }
