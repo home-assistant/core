@@ -1,9 +1,10 @@
 """Viessmann ViCare ventilation device."""
+
 from __future__ import annotations
 
 from contextlib import suppress
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
@@ -32,14 +33,20 @@ from .types import VentilationMode, VentilationProgram, ViCareDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-ORDERED_NAMED_FAN_SPEEDS = [VentilationProgram.LEVEL_ONE, VentilationProgram.LEVEL_TWO, VentilationProgram.LEVEL_THREE, VentilationProgram.LEVEL_FOUR]
+ORDERED_NAMED_FAN_SPEEDS = [
+    VentilationProgram.LEVEL_ONE,
+    VentilationProgram.LEVEL_TWO,
+    VentilationProgram.LEVEL_THREE,
+    VentilationProgram.LEVEL_FOUR,
+]
 
 PRESET_MODES = [
     # VentilationMode.PERMANENT # represents on via level
-    VentilationMode.VENTILATION, # by schedule
-    VentilationMode.SENSOR_DRIVEN, # by sensor
-    VentilationMode.SENSOR_OVERRIDE, # by schedule & sensor
+    VentilationMode.VENTILATION,  # by schedule
+    VentilationMode.SENSOR_DRIVEN,  # by sensor
+    VentilationMode.SENSOR_OVERRIDE,  # by schedule & sensor
 ]
+
 
 def _build_entities(
     device_list: list[ViCareDevice],
@@ -47,10 +54,7 @@ def _build_entities(
     """Create ViCare fan entities for a device."""
 
     return [
-        ViCareFan(
-            device.config,
-            device.api,
-        )
+        ViCareFan(device.config, device.api, "ventilation")
         for device in device_list
         if isinstance(device.api, PyViCareVentilationDevice)
     ]
@@ -76,20 +80,18 @@ async def async_setup_entry(
 class ViCareFan(ViCareEntity, FanEntity):
     """Representation of the ViCare ventilation device."""
 
-    _attr_supported_features = (
-        FanEntityFeature.SET_SPEED
-        | FanEntityFeature.PRESET_MODE
-    )
+    _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
     _attributes: dict[str, Any] = {}
 
     def __init__(
         self,
         device_config: PyViCareDeviceConfig,
         device: PyViCareDevice,
+        translation_key: str,
     ) -> None:
         """Initialize the climate device."""
-        super().__init__(device_config, device, "ventilator")
-        self._attr_translation_key = "ventilator"
+        super().__init__(device_config, device, translation_key)
+        self._attr_translation_key = translation_key
 
     def update(self) -> None:
         """Update state of number."""
@@ -116,22 +118,25 @@ class ViCareFan(ViCareEntity, FanEntity):
         return len(ORDERED_NAMED_FAN_SPEEDS)
 
     @property
-    def percentage(self) -> Optional[int]:
+    def percentage(self) -> int | None:
         """Return the current speed percentage."""
 
         if "active_vicare_program" not in self._attributes:
             return None
 
         if self._attributes["active_vicare_program"] in ORDERED_NAMED_FAN_SPEEDS:
-            return ordered_list_item_to_percentage(ORDERED_NAMED_FAN_SPEEDS, self._attributes["active_vicare_program"])
+            return ordered_list_item_to_percentage(
+                ORDERED_NAMED_FAN_SPEEDS, self._attributes["active_vicare_program"]
+            )
 
         return None
-
 
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
 
-        self._api.setPermanentLevel(percentage_to_ordered_list_item(ORDERED_NAMED_FAN_SPEEDS, percentage))
+        self._api.setPermanentLevel(
+            percentage_to_ordered_list_item(ORDERED_NAMED_FAN_SPEEDS, percentage)
+        )
 
     @property
     def preset_mode(self) -> str | None:
@@ -147,13 +152,13 @@ class ViCareFan(ViCareEntity, FanEntity):
     @property
     def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""
-        return PRESET_MODES
+        return list[str](PRESET_MODES)
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         self._api.setActiveMode(preset_mode)
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Show Device Attributes."""
         return self._attributes
