@@ -151,7 +151,6 @@ async def test_get_action_capabilities(
     """Test we get the expected capabilities from a cover action."""
     ent = MockCover(
         name="Set position cover",
-        is_on=True,
         unique_id="unique_set_pos_cover",
         current_cover_position=50,
         supported_features=CoverEntityFeature.OPEN
@@ -196,7 +195,6 @@ async def test_get_action_capabilities_legacy(
     """Test we get the expected capabilities from a cover action."""
     ent = MockCover(
         name="Set position cover",
-        is_on=True,
         unique_id="unique_set_pos_cover",
         current_cover_position=50,
         supported_features=CoverEntityFeature.OPEN
