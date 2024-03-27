@@ -1768,13 +1768,18 @@ def test_is_area_id(
     assert_result_info(info, None)
     assert info.rate_limit is None
 
+    hass.states.async_set("light.hue_5678", "on")
     tpl = template.Template(
         """
-{{ is_area_id("light.hue_5678", "123abc") }}
+{{ states.light
+    | map(attribute="entity_id")
+    | select("is_area_id", None)
+    | list
+    | count }}
         """,
         hass,
     )
-    assert tpl.async_render() is False
+    assert tpl.async_render() == 1
 
     area_entry_hex = area_registry.async_get_or_create("123abc")
     entity_entry = entity_registry.async_update_entity(
@@ -1787,11 +1792,27 @@ def test_is_area_id(
 
     tpl = template.Template(
         """
-{{ is_area_id("light.hue_5678", "123abc") }}
+{{ states.light
+    | map(attribute="entity_id")
+    | reject("is_area_id", None)
+    | list
+    | count }}
         """,
         hass,
     )
-    assert tpl.async_render() is True
+    assert tpl.async_render() == 1
+
+    tpl = template.Template(
+        """
+{{ states.light
+    | map(attribute="entity_id")
+    | reject("is_area_id", "123abc")
+    | list
+    | count }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == 0
 
     tpl = template.Template(
         """

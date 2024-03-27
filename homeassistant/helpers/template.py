@@ -1363,12 +1363,9 @@ def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
     return None
 
 
-def is_area_id(hass: HomeAssistant, entity_id: str, lookup_value: str) -> bool:
-    """Test if an entity is assigned to a specific area."""
-    ent_reg = entity_registry.async_get(hass)
-    if entity := ent_reg.async_get(entity_id):
-        return entity.area_id == lookup_value
-    return False
+def is_area_id(hass: HomeAssistant, lookup_value: str, test_area_id: str) -> bool:
+    """Test if an area name, device id, or entity id is assigned to a specific area."""
+    return area_id(hass, lookup_value) == test_area_id
 
 
 def _get_area_name(area_reg: area_registry.AreaRegistry, valid_area_id: str) -> str:
