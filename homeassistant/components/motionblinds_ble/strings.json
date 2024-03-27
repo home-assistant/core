@@ -73,19 +73,19 @@
         "name": "Battery"
       },
       "connection": {
-        "name": "Connected",
+        "name": "Connection status",
         "state": {
-          "connected": "Yes",
-          "disconnected": "No",
+          "connected": "Connected",
+          "disconnected": "Disconnected",
           "connecting": "Connecting...",
           "disconnecting": "Disconnecting..."
         }
       },
       "calibration": {
-        "name": "Calibrated",
+        "name": "Calibration status",
         "state": {
-          "calibrated": "Yes",
-          "uncalibrated": "No",
+          "calibrated": "Calibrated",
+          "uncalibrated": "Uncalibrated",
           "calibrating": "Calibrating..."
         }
       }
