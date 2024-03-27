@@ -84,6 +84,7 @@ from .const import (
     MAX_VERSION_LENGTH,
     SERV_ACCESSORY_INFO,
     SERV_BATTERY_SERVICE,
+    SIGNAL_RELOAD_ENTITIES,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
@@ -621,7 +622,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         """Reload and recreate an accessory and update the c# value in the mDNS record."""
         async_dispatcher_send(
             self.hass,
-            f"homekit_reload_entities_{self.driver.entry_id}",
+            SIGNAL_RELOAD_ENTITIES.format(self.driver.entry_id),
             (self.entity_id,),
         )
 
