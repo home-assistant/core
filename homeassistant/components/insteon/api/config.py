@@ -1,4 +1,5 @@
 """API calls to manage Insteon configuration changes."""
+
 from __future__ import annotations
 
 from typing import Any, TypedDict
@@ -92,7 +93,7 @@ def remove_x10_device(hass: HomeAssistant, housecode: str, unitcode: int):
     new_options = {**config_entry.options}
     new_x10 = [
         existing_device
-        for existing_device in config_entry.options[CONF_X10]
+        for existing_device in config_entry.options.get(CONF_X10, [])
         if existing_device[CONF_HOUSECODE].lower() != housecode.lower()
         or existing_device[CONF_UNITCODE] != unitcode
     ]
@@ -128,7 +129,7 @@ def remove_device_override(hass: HomeAssistant, address: Address):
 
     new_overrides = [
         existing_override
-        for existing_override in config_entry.options[CONF_OVERRIDE]
+        for existing_override in config_entry.options.get(CONF_OVERRIDE, [])
         if Address(existing_override[CONF_ADDRESS]) != address
     ]
     new_options[CONF_OVERRIDE] = new_overrides
