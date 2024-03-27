@@ -46,6 +46,20 @@
           }
         }
       }
+    },
+    "binary_sensor": {
+      "dustbin_present": {
+        "name": "Dustbin present"
+      },
+      "docked": {
+        "name": "Robot docked"
+      },
+      "water_tank_present": {
+        "name": "Watertank present"
+      },
+      "water_tank_empty": {
+        "name": "Watertank empty"
+      }
     }
   }
 }
