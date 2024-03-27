@@ -57,7 +57,7 @@ class FakeSchedule:
     """Test fixture class for return events in a specific date range."""
 
     def __init__(self, hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
-        """Initiailize FakeSchedule."""
+        """Initialize FakeSchedule."""
         self.hass = hass
         self.freezer = freezer
 

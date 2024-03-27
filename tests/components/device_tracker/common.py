@@ -50,4 +50,4 @@ def async_see(
     }
     if attributes:
         data[ATTR_ATTRIBUTES] = attributes
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_SEE, data))
+    hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_SEE, data))

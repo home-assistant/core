@@ -8,7 +8,6 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, create_autospec, p
 import uuid
 
 import pytest
-import serial.tools.list_ports
 from zigpy.backups import BackupManager
 import zigpy.config
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH, SCHEMA_DEVICE
@@ -30,6 +29,7 @@ from homeassistant.components.zha.core.const import (
     RadioType,
 )
 from homeassistant.components.zha.radio_manager import ProbeResult
+from homeassistant.components.zha.serial_port import UsbSerialPort
 from homeassistant.config_entries import (
     SOURCE_SSDP,
     SOURCE_USB,
@@ -41,8 +41,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
-
-from homeassistant.components.zha.serial_port import UsbSerialPort
 
 PROBE_FUNCTION_PATH = "zigbee.application.ControllerApplication.probe"
 
@@ -57,12 +55,15 @@ def disable_platform_only():
 @pytest.fixture(autouse=True)
 def mock_multipan_platform():
     """Mock the multipan platform."""
-    with patch(
-        "homeassistant.components.zha.silabs_multiprotocol.async_get_channel",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.zha.silabs_multiprotocol.async_using_multipan",
-        return_value=False,
+    with (
+        patch(
+            "homeassistant.components.zha.silabs_multiprotocol.async_get_channel",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.zha.silabs_multiprotocol.async_using_multipan",
+            return_value=False,
+        ),
     ):
         yield
 
@@ -139,8 +140,6 @@ def usb_serial_port(device="/dev/ttyUSB1234") -> UsbSerialPort:
         description="Some serial port",
         manufacturer="Virtual serial port",
     )
-
-    return port
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
@@ -1027,7 +1026,7 @@ async def test_hardware_already_setup(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "data", (None, {}, {"radio_type": "best_radio"}, {"radio_type": "efr32"})
+    "data", [None, {}, {"radio_type": "best_radio"}, {"radio_type": "efr32"}]
 )
 async def test_hardware_invalid_data(hass: HomeAssistant, data) -> None:
     """Test onboarding flow -- invalid data."""
@@ -1862,11 +1861,12 @@ async def test_config_flow_port_yellow_port_name(hass: HomeAssistant) -> None:
     port.manufacturer = None
     port.description = None
 
-    with patch(
-        "homeassistant.components.zha.config_flow.yellow_hardware.async_info"
-    ), patch(
-        "homeassistant.components.zha.serial_port.async_list_serial_ports",
-        return_value=[port],
+    with (
+        patch("homeassistant.components.zha.config_flow.yellow_hardware.async_info"),
+        patch(
+            "homeassistant.components.zha.serial_port.async_list_serial_ports",
+            return_value=[port],
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -1882,11 +1882,14 @@ async def test_config_flow_port_yellow_port_name(hass: HomeAssistant) -> None:
 async def test_config_flow_port_multiprotocol_port_name(hass: HomeAssistant) -> None:
     """Test config flow serial port name for multiprotocol add-on."""
 
-    with patch(
-        "homeassistant.components.hassio.addon_manager.AddonManager.async_get_addon_info"
-    ) as async_get_addon_info, patch(
-        "homeassistant.components.zha.serial_port.async_list_serial_ports",
-        return_value=[],
+    with (
+        patch(
+            "homeassistant.components.hassio.addon_manager.AddonManager.async_get_addon_info"
+        ) as async_get_addon_info,
+        patch(
+            "homeassistant.components.zha.serial_port.async_list_serial_ports",
+            return_value=[],
+        ),
     ):
         async_get_addon_info.return_value.state = AddonState.RUNNING
         async_get_addon_info.return_value.hostname = "core-silabs-multiprotocol"
@@ -1930,11 +1933,14 @@ async def test_probe_wrong_firmware_installed(hass: HomeAssistant) -> None:
 async def test_discovery_wrong_firmware_installed(hass: HomeAssistant) -> None:
     """Test auto-probing failing because the wrong firmware is installed."""
 
-    with patch(
-        "homeassistant.components.zha.radio_manager.ZhaRadioManager.detect_radio_type",
-        return_value=ProbeResult.WRONG_FIRMWARE_INSTALLED,
-    ), patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    with (
+        patch(
+            "homeassistant.components.zha.radio_manager.ZhaRadioManager.detect_radio_type",
+            return_value=ProbeResult.WRONG_FIRMWARE_INSTALLED,
+        ),
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

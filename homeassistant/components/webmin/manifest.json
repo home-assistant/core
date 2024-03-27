@@ -7,5 +7,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["webmin"],
-  "requirements": ["webmin-xmlrpc==0.0.1"]
+  "requirements": ["webmin-xmlrpc==0.0.2"]
 }
