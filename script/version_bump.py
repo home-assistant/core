@@ -24,7 +24,9 @@ def _bump_release(release, bump_type):
     return major, minor, patch
 
 
-def bump_version(version: Version, bump_type: str) -> Version:
+def bump_version(
+    version: Version, bump_type: str, *, nightly_version: str | None = None
+) -> Version:
     """Return a new version given a current version and action."""
     to_change = {}
 
@@ -82,16 +84,15 @@ def bump_version(version: Version, bump_type: str) -> Version:
             to_change["release"] = _bump_release(version.release, "patch")
             to_change["pre"] = ("b", 0)
 
-    elif bump_type.startswith("nightly"):
-        # Convert 0.70.0d0 to 0.70.0d20190424 or 0.70.0d201904241254 (if nightly_datetime), fails when run on non dev release
+    elif bump_type == "nightly":
+        # Convert 0.70.0d0 to 0.70.0d201904241254, fails when run on non dev release
         if not version.is_devrelease:
             raise ValueError("Can only be run on dev release")
 
-        value = dt_util.utcnow().strftime("%Y%m%d")
-        if bump_type == "nightly_datetime":
-            value += dt_util.utcnow().strftime("%H%M")
-
-        to_change["dev"] = ("dev", value)
+        to_change["dev"] = (
+            "dev",
+            nightly_version or dt_util.utcnow().strftime("%Y%m%d%H%M"),
+        )
 
     else:
         raise ValueError(f"Unsupported type: {bump_type}")
@@ -156,12 +157,19 @@ def main() -> None:
     parser.add_argument(
         "type",
         help="The type of the bump the version to.",
-        choices=["beta", "dev", "patch", "minor", "nightly", "nigthly_datetime"],
+        choices=["beta", "dev", "patch", "minor", "nightly"],
     )
     parser.add_argument(
         "--commit", action="store_true", help="Create a version bump commit."
     )
+    parser.add_argument(
+        "--set-nightly-version", help="Set the nightly version to", type=str
+    )
+
     arguments = parser.parse_args()
+
+    if arguments.set_nightly_version and arguments.type != "nightly":
+        parser.error("--set-nightly-version requires type set to nightly.")
 
     if (
         arguments.commit
@@ -171,7 +179,9 @@ def main() -> None:
         return
 
     current = Version(const.__version__)
-    bumped = bump_version(current, arguments.type)
+    bumped = bump_version(
+        current, arguments.type, nightly_version=arguments.set_nightly_version
+    )
     assert bumped > current, "BUG! New version is not newer than old version"
 
     write_version(bumped)
@@ -208,14 +218,13 @@ def test_bump_version() -> None:
     assert bump_version(Version("0.56.0.dev0"), "minor") == Version("0.56.0")
     assert bump_version(Version("0.56.2.dev0"), "minor") == Version("0.57.0")
 
-    today = dt_util.utcnow().strftime("%Y%m%d")
-    assert bump_version(Version("0.56.0.dev0"), "nightly") == Version(
-        f"0.56.0.dev{today}"
-    )
     now = dt_util.utcnow().strftime("%Y%m%d%H%M")
-    assert bump_version(Version("0.56.0.dev0"), "nightly_datetime") == Version(
+    assert bump_version(Version("0.56.0.dev0"), "nightly") == Version(
         f"0.56.0.dev{now}"
     )
+    assert bump_version(
+        Version("0.56.0.dev0"), "nightly", nightly_version="1234"
+    ) == Version("0.56.0.dev1234")
     with pytest.raises(ValueError):
         assert bump_version(Version("0.56.0"), "nightly")
 
