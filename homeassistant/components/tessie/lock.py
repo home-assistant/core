@@ -45,7 +45,7 @@ async def async_setup_entry(
         entity_id = ent_reg.async_get_entity_id(
             Platform.LOCK,
             DOMAIN,
-            f"{vehicle.state_coordinator.vin}_vehicle_state_speed_limit_mode_active",
+            f"{vehicle.state_coordinator.vin}-vehicle_state_speed_limit_mode_active",
         )
         if entity_id:
             entity_entry = ent_reg.async_get(entity_id)
@@ -126,12 +126,12 @@ class TessieSpeedLimitEntity(TessieEntity, LockEntity):
         ir.async_create_issue(
             self.coordinator.hass,
             DOMAIN,
-            "deprecated_speed_limit_lock",
+            "deprecated_speed_limit_locked",
             breaks_in_ha_version="2024.10.0",
             is_fixable=True,
             is_persistent=True,
             severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_speed_limit_lock",
+            translation_key="deprecated_speed_limit_locked",
         )
         code: str | None = kwargs.get(ATTR_CODE)
         if code:
@@ -143,12 +143,12 @@ class TessieSpeedLimitEntity(TessieEntity, LockEntity):
         ir.async_create_issue(
             self.coordinator.hass,
             DOMAIN,
-            "deprecated_speed_limit_unlock",
+            "deprecated_speed_limit_unlocked",
             breaks_in_ha_version="2024.10.0",
             is_fixable=True,
             is_persistent=True,
             severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_speed_limit_unlock",
+            translation_key="deprecated_speed_limit_unlocked",
         )
         code: str | None = kwargs.get(ATTR_CODE)
         if code:

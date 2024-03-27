@@ -413,7 +413,7 @@
   },
   "issues": {
     "deprecated_speed_limit_entity": {
-      "title": "Detected Tessie speed limit lock entity created",
+      "title": "Detected Tessie speed limit lock entity usage",
       "description": "The Tessie integration's speed limit lock entity has been deprecated and will be remove in 2024.10.0.\nWe detected that entity `{entity}` is being used in `{info}`\n\nYou should remove the speed limit lock entity from `{info}`.\n\nWhen you are done, disable `{entity}` and restart Home Assistant."
     },
     "deprecated_speed_limit_locked": {
