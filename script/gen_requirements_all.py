@@ -180,6 +180,9 @@ chacha20poly1305-reuseable>=0.12.1
 # pycountry<23.12.11 imports setuptools at run time
 # https://github.com/pycountry/pycountry/blob/ea69bab36f00df58624a0e490fdad4ccdc14268b/HISTORY.txt#L39
 pycountry>=23.12.11
+
+# scapy<2.5.0 will not work with python3.12
+scapy>=2.5.0
 """
 
 GENERATED_MESSAGE = (
