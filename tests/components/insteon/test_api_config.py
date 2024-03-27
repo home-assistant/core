@@ -23,6 +23,12 @@ from .mock_setup import async_mock_setup
 from tests.typing import WebSocketGenerator
 
 
+class MockProtocol:
+    """A mock Insteon protocol object."""
+
+    connected = True
+
+
 async def test_get_config(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
@@ -109,6 +115,7 @@ async def test_update_modem_config_hub_v2(
         hass,
         hass_ws_client,
         config_data={**MOCK_USER_INPUT_HUB_V2, CONF_HUB_VERSION: 2},
+        config_options={"dev_path": "/some/path"},
     )
     with (
         patch(
@@ -179,6 +186,36 @@ async def test_update_modem_config_bad(
         patch("homeassistant.components.insteon.api.config.devices", mock_devices),
         patch("homeassistant.components.insteon.api.config.async_close"),
     ):
+        await ws_client.send_json(
+            {
+                ID: 2,
+                TYPE: "insteon/config/update_modem_config",
+                "config": MOCK_USER_INPUT_PLM,
+            }
+        )
+        msg = await ws_client.receive_json()
+        result = msg["error"]
+        assert result["code"] == "connection_failed"
+
+
+async def test_update_modem_config_bad_reconnect(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test updating the Insteon modem configuration with bad connection information so reconnect to old."""
+
+    ws_client, mock_devices, _, _ = await async_mock_setup(
+        hass,
+        hass_ws_client,
+    )
+    with (
+        patch(
+            "homeassistant.components.insteon.api.config.async_connect",
+            new=mock_failed_connection,
+        ),
+        patch("homeassistant.components.insteon.api.config.devices", mock_devices),
+        patch("homeassistant.components.insteon.api.config.async_close"),
+    ):
+        mock_devices.modem.protocol = MockProtocol()
         await ws_client.send_json(
             {
                 ID: 2,
