@@ -75,13 +75,17 @@ async def _init_form(hass, modem_type):
 
 async def _device_form(hass, flow_id, connection, user_input):
     """Test the PLM, Hub v1 or Hub v2 form."""
-    with patch(
-        PATCH_CONNECTION,
-        new=connection,
-    ), patch(PATCH_ASYNC_SETUP, return_value=True) as mock_setup, patch(
-        PATCH_ASYNC_SETUP_ENTRY,
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            PATCH_CONNECTION,
+            new=connection,
+        ),
+        patch(PATCH_ASYNC_SETUP, return_value=True) as mock_setup,
+        patch(
+            PATCH_ASYNC_SETUP_ENTRY,
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(flow_id, user_input)
         await hass.async_block_till_done()
     return result, mock_setup, mock_setup_entry

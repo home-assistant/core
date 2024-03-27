@@ -15,7 +15,7 @@ import time
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 import psutil_home_assistant as ha_psutil
-from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select
+from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select, update
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine.interfaces import DBAPIConnection
 from sqlalchemy.exc import SQLAlchemyError
@@ -476,8 +476,12 @@ class Recorder(threading.Thread):
     def async_register(self) -> None:
         """Post connection initialize."""
         bus = self.hass.bus
-        bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, self._async_close)
-        bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, self._async_shutdown)
+        bus.async_listen_once(
+            EVENT_HOMEASSISTANT_CLOSE, self._async_close, run_immediately=True
+        )
+        bus.async_listen_once(
+            EVENT_HOMEASSISTANT_FINAL_WRITE, self._async_shutdown, run_immediately=True
+        )
         async_at_started(self.hass, self._async_hass_started)
 
     @callback
@@ -1086,12 +1090,22 @@ class Recorder(threading.Thread):
         entity_id = event.data["entity_id"]
 
         dbstate = States.from_event(event)
+        old_state = event.data["old_state"]
+
+        assert self.event_session is not None
+        session = self.event_session
 
         states_manager = self.states_manager
-        if old_state := states_manager.pop_pending(entity_id):
-            dbstate.old_state = old_state
+        if pending_state := states_manager.pop_pending(entity_id):
+            dbstate.old_state = pending_state
+            if old_state:
+                pending_state.last_reported_ts = old_state.last_reported_timestamp
         elif old_state_id := states_manager.pop_committed(entity_id):
             dbstate.old_state_id = old_state_id
+            if old_state:
+                states_manager.update_pending_last_reported(
+                    old_state_id, old_state.last_reported_timestamp
+                )
         if entity_removed:
             dbstate.state = None
         else:
@@ -1105,8 +1119,6 @@ class Recorder(threading.Thread):
         ):
             return
 
-        assert self.event_session is not None
-        session = self.event_session
         # Map the entity_id to the StatesMeta table
         if pending_states_meta := states_meta_manager.get_pending(entity_id):
             dbstate.states_meta_rel = pending_states_meta
@@ -1188,7 +1200,23 @@ class Recorder(threading.Thread):
         session = self.event_session
         self._commits_without_expire += 1
 
+        if (
+            pending_last_reported
+            := self.states_manager.get_pending_last_reported_timestamp()
+        ):
+            with session.no_autoflush:
+                session.execute(
+                    update(States),
+                    [
+                        {
+                            "state_id": state_id,
+                            "last_reported_ts": last_reported_timestamp,
+                        }
+                        for state_id, last_reported_timestamp in pending_last_reported.items()
+                    ],
+                )
         session.commit()
+
         self._event_session_has_pending_writes = False
         # We just committed the state attributes to the database
         # and we now know the attributes_ids.  We can save

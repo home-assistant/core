@@ -9,7 +9,7 @@ import pytest
 from homeassistant.const import STATE_OFF, STATE_ON
 
 if TYPE_CHECKING:
-    from tests.components.light.common import MockLight, SetupLightPlatformCallable
+    from tests.components.light.common import MockLight
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -118,11 +118,3 @@ def mock_light_entities() -> list["MockLight"]:
         MockLight("Ceiling", STATE_OFF),
         MockLight(None, STATE_OFF),
     ]
-
-
-@pytest.fixture
-def setup_light_platform() -> "SetupLightPlatformCallable":
-    """Return a callable to set up the mock light entity component."""
-    from tests.components.light.common import setup_light_platform
-
-    return setup_light_platform

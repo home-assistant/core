@@ -296,9 +296,9 @@ async def async_get_custom_components(
     hass: HomeAssistant,
 ) -> dict[str, Integration]:
     """Return cached list of custom integrations."""
-    comps_or_future: dict[str, Integration] | asyncio.Future[
-        dict[str, Integration]
-    ] | None = hass.data.get(DATA_CUSTOM_COMPONENTS)
+    comps_or_future: (
+        dict[str, Integration] | asyncio.Future[dict[str, Integration]] | None
+    ) = hass.data.get(DATA_CUSTOM_COMPONENTS)
 
     if comps_or_future is None:
         future = hass.data[DATA_CUSTOM_COMPONENTS] = hass.loop.create_future()
