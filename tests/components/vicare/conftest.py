@@ -65,6 +65,12 @@ class MockViCareService:
         """Read a property from json dump."""
         return readFeature(self._test_data["data"], property_name)
 
+    def setProperty(self, property_name: str, action: str, data: str):
+        """Set a property to its internal data structure."""
+        self.setProperty_name = property_name
+        self.setProperty_action = action
+        self.setProperty_data = data
+
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
