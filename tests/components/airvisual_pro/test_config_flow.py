@@ -1,4 +1,5 @@
 """Test the AirVisual Pro config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from pyairvisual.node import (

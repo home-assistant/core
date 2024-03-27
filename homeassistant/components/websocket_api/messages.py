@@ -1,9 +1,10 @@
 """Message templates for websocket commands."""
+
 from __future__ import annotations
 
 from functools import lru_cache
 import logging
-from typing import TYPE_CHECKING, Any, Final, cast
+from typing import Any, Final
 
 import voluptuous as vol
 
@@ -16,6 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, State
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.event import EventStateChangedData
 from homeassistant.helpers.json import (
     JSON_DUMP,
     find_paths_unserializable_data,
@@ -140,7 +142,7 @@ def _partial_cached_event_message(event: Event) -> bytes:
     )
 
 
-def cached_state_diff_message(iden: int, event: Event) -> bytes:
+def cached_state_diff_message(iden: int, event: Event[EventStateChangedData]) -> bytes:
     """Return an event message.
 
     Serialize to json once per message.
@@ -160,7 +162,7 @@ def cached_state_diff_message(iden: int, event: Event) -> bytes:
 
 
 @lru_cache(maxsize=128)
-def _partial_cached_state_diff_message(event: Event) -> bytes:
+def _partial_cached_state_diff_message(event: Event[EventStateChangedData]) -> bytes:
     """Cache and serialize the event to json.
 
     The message is constructed without the id which
@@ -174,7 +176,7 @@ def _partial_cached_state_diff_message(event: Event) -> bytes:
     )
 
 
-def _state_diff_event(event: Event) -> dict:
+def _state_diff_event(event: Event[EventStateChangedData]) -> dict:
     """Convert a state_changed event to the minimal version.
 
     State update example
@@ -187,16 +189,12 @@ def _state_diff_event(event: Event) -> dict:
     """
     if (event_new_state := event.data["new_state"]) is None:
         return {ENTITY_EVENT_REMOVE: [event.data["entity_id"]]}
-    if TYPE_CHECKING:
-        event_new_state = cast(State, event_new_state)
     if (event_old_state := event.data["old_state"]) is None:
         return {
             ENTITY_EVENT_ADD: {
                 event_new_state.entity_id: event_new_state.as_compressed_state
             }
         }
-    if TYPE_CHECKING:
-        event_old_state = cast(State, event_old_state)
     return _state_diff(event_old_state, event_new_state)
 
 

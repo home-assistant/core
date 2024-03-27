@@ -1,4 +1,5 @@
 """Test the HERE Travel Time config flow."""
+
 from unittest.mock import patch
 
 from here_routing import HERERoutingError, HERERoutingUnauthorizedError
@@ -115,7 +116,7 @@ async def origin_step_result_fixture(
 
 @pytest.mark.parametrize(
     "menu_options",
-    (["origin_coordinates", "origin_entity"],),
+    [["origin_coordinates", "origin_entity"]],
 )
 @pytest.mark.usefixtures("valid_response")
 async def test_step_user(hass: HomeAssistant, menu_options) -> None:

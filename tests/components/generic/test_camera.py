@@ -1,4 +1,5 @@
 """The tests for generic camera component."""
+
 import asyncio
 from datetime import timedelta
 from http import HTTPStatus
@@ -70,15 +71,20 @@ async def help_setup_mock_config_entry(
 
 @respx.mock
 async def test_fetching_url(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, fakeimgbytes_png
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    fakeimgbytes_png,
+    caplog: pytest.CaptureFixture,
 ) -> None:
     """Test that it fetches the given url."""
-    respx.get("http://example.com").respond(stream=fakeimgbytes_png)
+    hass.states.async_set("sensor.temp", "http://example.com/0a")
+    respx.get("http://example.com/0a").respond(stream=fakeimgbytes_png)
+    respx.get("http://example.com/1a").respond(stream=fakeimgbytes_png)
 
     options = {
         "name": "config_test",
         "platform": "generic",
-        "still_image_url": "http://example.com",
+        "still_image_url": "{{ states.sensor.temp.state }}",
         "username": "user",
         "password": "pass",
         "authentication": "basic",
@@ -100,6 +106,25 @@ async def test_fetching_url(
 
     resp = await client.get("/api/camera_proxy/camera.config_test")
     assert respx.calls.call_count == 2
+
+    # If the template renders to an invalid URL we return the last image from cache
+    hass.states.async_set("sensor.temp", "invalid url")
+
+    # sleep another .1 seconds to make cached image expire
+    await asyncio.sleep(0.1)
+    resp = await client.get("/api/camera_proxy/camera.config_test")
+    assert resp.status == HTTPStatus.OK
+    assert respx.calls.call_count == 2
+    assert (
+        "Invalid URL 'invalid url': expected a URL, returning last image" in caplog.text
+    )
+
+    # Restore a valid URL
+    hass.states.async_set("sensor.temp", "http://example.com/1a")
+    await asyncio.sleep(0.1)
+    resp = await client.get("/api/camera_proxy/camera.config_test")
+    assert resp.status == HTTPStatus.OK
+    assert respx.calls.call_count == 3
 
 
 @respx.mock
@@ -248,8 +273,9 @@ async def test_limit_refetch(
 
     hass.states.async_set("sensor.temp", "5")
 
-    with pytest.raises(aiohttp.ServerTimeoutError), patch(
-        "asyncio.timeout", side_effect=asyncio.TimeoutError()
+    with (
+        pytest.raises(aiohttp.ServerTimeoutError),
+        patch("asyncio.timeout", side_effect=TimeoutError()),
     ):
         resp = await client.get("/api/camera_proxy/camera.config_test")
 

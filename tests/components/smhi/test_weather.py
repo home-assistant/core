@@ -1,5 +1,5 @@
 """Test for the smhi weather entity."""
-import asyncio
+
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
@@ -165,12 +165,15 @@ async def test_properties_unknown_symbol(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG, version=2)
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.smhi.weather.Smhi.async_get_forecast",
-        return_value=testdata,
-    ), patch(
-        "homeassistant.components.smhi.weather.Smhi.async_get_forecast_hour",
-        return_value=None,
+    with (
+        patch(
+            "homeassistant.components.smhi.weather.Smhi.async_get_forecast",
+            return_value=testdata,
+        ),
+        patch(
+            "homeassistant.components.smhi.weather.Smhi.async_get_forecast_hour",
+            return_value=None,
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -187,7 +190,7 @@ async def test_properties_unknown_symbol(hass: HomeAssistant) -> None:
     )
 
 
-@pytest.mark.parametrize("error", [SmhiForecastException(), asyncio.TimeoutError()])
+@pytest.mark.parametrize("error", [SmhiForecastException(), TimeoutError()])
 async def test_refresh_weather_forecast_retry(
     hass: HomeAssistant, error: Exception
 ) -> None:

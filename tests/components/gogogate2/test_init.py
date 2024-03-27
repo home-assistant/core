@@ -1,5 +1,5 @@
 """Tests for the GogoGate2 component."""
-import asyncio
+
 from unittest.mock import MagicMock, patch
 
 from ismartgate import GogoGate2Api
@@ -92,8 +92,11 @@ async def test_api_failure_on_startup(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.gogogate2.common.ISmartGateApi.async_info",
-        side_effect=asyncio.TimeoutError,
-    ), pytest.raises(ConfigEntryNotReady):
+    with (
+        patch(
+            "homeassistant.components.gogogate2.common.ISmartGateApi.async_info",
+            side_effect=TimeoutError,
+        ),
+        pytest.raises(ConfigEntryNotReady),
+    ):
         await async_setup_entry(hass, config_entry)

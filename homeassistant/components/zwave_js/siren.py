@@ -1,4 +1,5 @@
 """Support for Z-Wave controls using the siren platform."""
+
 from __future__ import annotations
 
 from typing import Any

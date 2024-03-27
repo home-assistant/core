@@ -1,4 +1,5 @@
 """Test pushbullet config flow."""
+
 from unittest.mock import patch
 
 from pushbullet import InvalidKeyError, PushbulletError

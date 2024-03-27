@@ -1,4 +1,5 @@
 """Sensor for checking the status of London Underground tube lines."""
+
 from __future__ import annotations
 
 import logging
@@ -44,11 +45,9 @@ async def async_setup_platform(
     if not coordinator.last_update_success:
         raise PlatformNotReady
 
-    sensors = []
-    for line in config[CONF_LINE]:
-        sensors.append(LondonTubeSensor(coordinator, line))
-
-    async_add_entities(sensors)
+    async_add_entities(
+        LondonTubeSensor(coordinator, line) for line in config[CONF_LINE]
+    )
 
 
 class LondonTubeSensor(CoordinatorEntity[LondonTubeCoordinator], SensorEntity):

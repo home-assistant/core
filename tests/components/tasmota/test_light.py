@@ -1,4 +1,5 @@
 """The tests for the Tasmota light platform."""
+
 import copy
 import json
 from unittest.mock import patch

@@ -1,4 +1,5 @@
 """Alexa message handlers."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -178,6 +179,8 @@ async def async_api_turn_on(
     service = SERVICE_TURN_ON
     if domain == cover.DOMAIN:
         service = cover.SERVICE_OPEN_COVER
+    elif domain == climate.DOMAIN:
+        service = climate.SERVICE_TURN_ON
     elif domain == fan.DOMAIN:
         service = fan.SERVICE_TURN_ON
     elif domain == humidifier.DOMAIN:
@@ -227,6 +230,8 @@ async def async_api_turn_off(
     service = SERVICE_TURN_OFF
     if entity.domain == cover.DOMAIN:
         service = cover.SERVICE_CLOSE_COVER
+    elif domain == climate.DOMAIN:
+        service = climate.SERVICE_TURN_OFF
     elif domain == fan.DOMAIN:
         service = fan.SERVICE_TURN_OFF
     elif domain == humidifier.DOMAIN:

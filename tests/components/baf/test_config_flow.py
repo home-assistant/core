@@ -1,5 +1,5 @@
 """Test the baf config flow."""
-import asyncio
+
 from ipaddress import ip_address
 from unittest.mock import patch
 
@@ -33,10 +33,13 @@ async def test_form_user(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with _patch_device_config_flow(), patch(
-        "homeassistant.components.baf.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        _patch_device_config_flow(),
+        patch(
+            "homeassistant.components.baf.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_IP_ADDRESS: "127.0.0.1"},
@@ -55,7 +58,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with _patch_device_config_flow(asyncio.TimeoutError):
+    with _patch_device_config_flow(TimeoutError):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_IP_ADDRESS: "127.0.0.1"},
@@ -182,10 +185,13 @@ async def test_user_flow_is_not_blocked_by_discovery(hass: HomeAssistant) -> Non
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with _patch_device_config_flow(), patch(
-        "homeassistant.components.baf.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        _patch_device_config_flow(),
+        patch(
+            "homeassistant.components.baf.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_IP_ADDRESS: "127.0.0.1"},

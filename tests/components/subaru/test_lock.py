@@ -1,4 +1,5 @@
 """Test Subaru locks."""
+
 from unittest.mock import patch
 
 import pytest
@@ -52,8 +53,9 @@ async def test_unlock_cmd(hass: HomeAssistant, ev_entry) -> None:
 
 async def test_lock_cmd_fails(hass: HomeAssistant, ev_entry) -> None:
     """Test subaru lock request that initiates but fails."""
-    with patch(MOCK_API_LOCK, return_value=False) as mock_lock, pytest.raises(
-        HomeAssistantError
+    with (
+        patch(MOCK_API_LOCK, return_value=False) as mock_lock,
+        pytest.raises(HomeAssistantError),
     ):
         await hass.services.async_call(
             LOCK_DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True

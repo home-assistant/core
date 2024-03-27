@@ -1,4 +1,5 @@
 """Provide functionality for TTS."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -318,9 +319,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     platform_setups = await async_setup_legacy(hass, config)
 
-    if platform_setups:
-        await asyncio.wait([asyncio.create_task(setup) for setup in platform_setups])
-
     component.async_register_entity_service(
         "speak",
         {
@@ -343,6 +341,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         async_clear_cache_handle,
         schema=SCHEMA_SERVICE_CLEAR_CACHE,
     )
+
+    for setup in platform_setups:
+        # Tasks are created as tracked tasks to ensure startup
+        # waits for them to finish, but we explicitly do not
+        # want to wait for them to finish here because we want
+        # any config entries that use tts as a base platform
+        # to be able to start with out having to wait for the
+        # legacy platforms to finish setting up.
+        hass.async_create_task(setup, eager_start=True)
 
     return True
 
@@ -456,7 +463,7 @@ class TextToSpeechEntity(RestoreEntity):
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load tts audio file from the engine."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
@@ -500,24 +507,21 @@ class SpeechManager:
         self.file_cache: dict[str, str] = {}
         self.mem_cache: dict[str, TTSCache] = {}
 
-    async def async_init_cache(self) -> None:
-        """Init config folder and load file cache."""
+    def _init_cache(self) -> dict[str, str]:
+        """Init cache folder and fetch files."""
         try:
-            self.cache_dir = await self.hass.async_add_executor_job(
-                _init_tts_cache_dir, self.hass, self.cache_dir
-            )
+            self.cache_dir = _init_tts_cache_dir(self.hass, self.cache_dir)
         except OSError as err:
             raise HomeAssistantError(f"Can't init cache dir {err}") from err
 
         try:
-            cache_files = await self.hass.async_add_executor_job(
-                _get_cache_files, self.cache_dir
-            )
+            return _get_cache_files(self.cache_dir)
         except OSError as err:
             raise HomeAssistantError(f"Can't read cache dir {err}") from err
 
-        if cache_files:
-            self.file_cache.update(cache_files)
+    async def async_init_cache(self) -> None:
+        """Init config folder and load file cache."""
+        self.file_cache.update(await self.hass.async_add_executor_job(self._init_cache))
 
     async def async_clear_cache(self) -> None:
         """Read file cache and delete files."""

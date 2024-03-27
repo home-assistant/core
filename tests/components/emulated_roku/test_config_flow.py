@@ -1,4 +1,5 @@
 """Tests for emulated_roku config flow."""
+
 from homeassistant import config_entries
 from homeassistant.components.emulated_roku import config_flow
 from homeassistant.core import HomeAssistant

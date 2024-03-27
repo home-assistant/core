@@ -1,4 +1,5 @@
 """Support for Aurora Forecast sensor."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass

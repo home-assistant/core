@@ -1,4 +1,5 @@
 """Test Dremel 3D Printer integration."""
+
 from datetime import timedelta
 from unittest.mock import patch
 

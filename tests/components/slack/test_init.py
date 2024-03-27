@@ -1,4 +1,5 @@
 """Test Slack integration."""
+
 from homeassistant.components.slack.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant

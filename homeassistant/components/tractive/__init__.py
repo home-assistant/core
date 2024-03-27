@@ -1,4 +1,5 @@
 """The tractive integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -127,6 +128,13 @@ async def _generate_trackables(
 
     # Check that the pet has tracker linked.
     if not trackable["device_id"]:
+        return None
+
+    if "details" not in trackable:
+        _LOGGER.info(
+            "Tracker %s has no details and will be skipped. This happens for shared trackers",
+            trackable["device_id"],
+        )
         return None
 
     tracker = client.tracker(trackable["device_id"])

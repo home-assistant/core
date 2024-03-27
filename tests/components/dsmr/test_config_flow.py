@@ -1,5 +1,5 @@
 """Test the DSMR config flow."""
-import asyncio
+
 from itertools import chain, repeat
 import os
 from typing import Any
@@ -388,13 +388,13 @@ async def test_setup_serial_timeout(
 
     first_timeout_wait_closed = AsyncMock(
         return_value=True,
-        side_effect=chain([asyncio.TimeoutError], repeat(DEFAULT)),
+        side_effect=chain([TimeoutError], repeat(DEFAULT)),
     )
     protocol.wait_closed = first_timeout_wait_closed
 
     first_timeout_wait_closed = AsyncMock(
         return_value=True,
-        side_effect=chain([asyncio.TimeoutError], repeat(DEFAULT)),
+        side_effect=chain([TimeoutError], repeat(DEFAULT)),
     )
     rfxtrx_protocol.wait_closed = first_timeout_wait_closed
 
@@ -495,9 +495,10 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         },
     )
 
-    with patch(
-        "homeassistant.components.dsmr.async_setup_entry", return_value=True
-    ), patch("homeassistant.components.dsmr.async_unload_entry", return_value=True):
+    with (
+        patch("homeassistant.components.dsmr.async_setup_entry", return_value=True),
+        patch("homeassistant.components.dsmr.async_unload_entry", return_value=True),
+    ):
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
         await hass.async_block_till_done()

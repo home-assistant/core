@@ -1,0 +1,206 @@
+{
+  "sceneIds": [
+    49070, 44767, 6789, 3455, 36482, 59968, 19525, 14067, 48756, 59103, 61648,
+    24626, 64679, 22498, 28856, 25458, 51159, 959
+  ],
+  "sceneData": [
+    {
+      "roomId": 58286,
+      "name": "Q2xvc2UgTG91bmdlIFJvb20=",
+      "name_unicode": "Close Lounge Room",
+      "colorId": 14,
+      "iconId": 59,
+      "networkNumber": 8,
+      "id": 49070,
+      "order": 18,
+      "hkAssist": false
+    },
+    {
+      "roomId": 24002,
+      "name": "Q2xvc2UgQmVkIDQ=",
+      "name_unicode": "Close Bed 4",
+      "colorId": 9,
+      "iconId": 91,
+      "networkNumber": 20,
+      "id": 44767,
+      "order": 8,
+      "hkAssist": false
+    },
+    {
+      "roomId": 61856,
+      "name": "Q2xvc2UgQmVkIDI=",
+      "name_unicode": "Close Bed 2",
+      "colorId": 11,
+      "iconId": 91,
+      "networkNumber": 12,
+      "id": 6789,
+      "order": 6,
+      "hkAssist": false
+    },
+    {
+      "roomId": 2030,
+      "name": "Q2xvc2UgTWFzdGVyIEJlZA==",
+      "name_unicode": "Close Master Bed",
+      "colorId": 14,
+      "iconId": 12,
+      "networkNumber": 19,
+      "id": 3455,
+      "order": 5,
+      "hkAssist": false
+    },
+    {
+      "roomId": 34274,
+      "name": "Q2xvc2UgRmFtaWx5",
+      "name_unicode": "Close Family",
+      "colorId": 8,
+      "iconId": 17,
+      "networkNumber": 28,
+      "id": 36482,
+      "order": 15,
+      "hkAssist": false
+    },
+    {
+      "roomId": 24002,
+      "name": "T3BlbiBCZWQgNA==",
+      "name_unicode": "Open Bed 4",
+      "colorId": 9,
+      "iconId": 91,
+      "networkNumber": 16,
+      "id": 59968,
+      "order": 11,
+      "hkAssist": false
+    },
+    {
+      "roomId": 2030,
+      "name": "T3BlbiBNYXN0ZXIgQmVk",
+      "name_unicode": "Open Master Bed",
+      "colorId": 14,
+      "iconId": 12,
+      "networkNumber": 7,
+      "id": 19525,
+      "order": 2,
+      "hkAssist": false
+    },
+    {
+      "roomId": 46225,
+      "name": "T3BlbiBCZWQgMw==",
+      "name_unicode": "Open Bed 3",
+      "colorId": 7,
+      "iconId": 91,
+      "networkNumber": 17,
+      "id": 14067,
+      "order": 12,
+      "hkAssist": false
+    },
+    {
+      "roomId": 34274,
+      "name": "T3BlbiBGYW1pbHk=",
+      "name_unicode": "Open Family",
+      "colorId": 8,
+      "iconId": 17,
+      "networkNumber": 10,
+      "id": 48756,
+      "order": 10,
+      "hkAssist": false
+    },
+    {
+      "roomId": 3304,
+      "name": "Q2xvc2UgU3R1ZHk=",
+      "name_unicode": "Close Study",
+      "colorId": 10,
+      "iconId": 73,
+      "networkNumber": 14,
+      "id": 59103,
+      "order": 17,
+      "hkAssist": false
+    },
+    {
+      "roomId": 23884,
+      "name": "T3BlbiBBbGw=",
+      "name_unicode": "Open All",
+      "colorId": 11,
+      "iconId": 0,
+      "networkNumber": 29,
+      "id": 61648,
+      "order": 3,
+      "hkAssist": false
+    },
+    {
+      "roomId": 23884,
+      "name": "Q2xvc2UgQWxs",
+      "name_unicode": "Close All",
+      "colorId": 0,
+      "iconId": 0,
+      "networkNumber": 24,
+      "id": 24626,
+      "order": 4,
+      "hkAssist": false
+    },
+    {
+      "roomId": 9910,
+      "name": "T3BlbiBLaXRjaGVu",
+      "name_unicode": "Open Kitchen",
+      "colorId": 9,
+      "iconId": 38,
+      "networkNumber": 21,
+      "id": 64679,
+      "order": 9,
+      "hkAssist": false
+    },
+    {
+      "roomId": 58286,
+      "name": "T3BlbiBMb3VuZ2UgUm9vbQ==",
+      "name_unicode": "Open Lounge Room",
+      "colorId": 14,
+      "iconId": 59,
+      "networkNumber": 3,
+      "id": 22498,
+      "order": 19,
+      "hkAssist": false
+    },
+    {
+      "roomId": 61856,
+      "name": "T3BlbiBCZWQgMg==",
+      "name_unicode": "Open Bed 2",
+      "colorId": 11,
+      "iconId": 91,
+      "networkNumber": 30,
+      "id": 28856,
+      "order": 13,
+      "hkAssist": false
+    },
+    {
+      "roomId": 46225,
+      "name": "Q2xvc2UgQmVkIDM=",
+      "name_unicode": "Close Bed 3",
+      "colorId": 7,
+      "iconId": 91,
+      "networkNumber": 5,
+      "id": 25458,
+      "order": 7,
+      "hkAssist": false
+    },
+    {
+      "roomId": 9910,
+      "name": "Q2xvc2UgS2l0Y2hlbg==",
+      "name_unicode": "Close Kitchen",
+      "colorId": 9,
+      "iconId": 38,
+      "networkNumber": 18,
+      "id": 51159,
+      "order": 14,
+      "hkAssist": false
+    },
+    {
+      "roomId": 3304,
+      "name": "T3BlbiBTdHVkeQ==",
+      "name_unicode": "Open Study",
+      "colorId": 10,
+      "iconId": 73,
+      "networkNumber": 23,
+      "id": 959,
+      "order": 16,
+      "hkAssist": false
+    }
+  ]
+}

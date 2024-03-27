@@ -1,4 +1,5 @@
 """Fixtures for PrusaLink."""
+
 from unittest.mock import patch
 
 import pytest

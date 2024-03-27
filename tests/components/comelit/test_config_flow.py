@@ -1,4 +1,5 @@
 """Tests for Comelit SimpleHome config flow."""
+
 from typing import Any
 from unittest.mock import patch
 
@@ -27,11 +28,15 @@ async def test_full_flow(
     hass: HomeAssistant, class_api: str, user_input: dict[str, Any]
 ) -> None:
     """Test starting a flow by user."""
-    with patch(
-        f"aiocomelit.api.{class_api}.login",
-    ), patch(
-        f"aiocomelit.api.{class_api}.logout",
-    ), patch("homeassistant.components.comelit.async_setup_entry") as mock_setup_entry:
+    with (
+        patch(
+            f"aiocomelit.api.{class_api}.login",
+        ),
+        patch(
+            f"aiocomelit.api.{class_api}.logout",
+        ),
+        patch("homeassistant.components.comelit.async_setup_entry") as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -65,16 +70,20 @@ async def test_exception_connection(hass: HomeAssistant, side_effect, error) -> 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result.get("type") == FlowResultType.FORM
+    assert result.get("step_id") == "user"
 
-    with patch(
-        "aiocomelit.api.ComeliteSerialBridgeApi.login",
-        side_effect=side_effect,
-    ), patch(
-        "aiocomelit.api.ComeliteSerialBridgeApi.logout",
-    ), patch(
-        "homeassistant.components.comelit.async_setup_entry",
+    with (
+        patch(
+            "aiocomelit.api.ComeliteSerialBridgeApi.login",
+            side_effect=side_effect,
+        ),
+        patch(
+            "aiocomelit.api.ComeliteSerialBridgeApi.logout",
+        ),
+        patch(
+            "homeassistant.components.comelit.async_setup_entry",
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_BRIDGE_DATA
@@ -82,6 +91,7 @@ async def test_exception_connection(hass: HomeAssistant, side_effect, error) -> 
 
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "user"
+        assert result["errors"] is not None
         assert result["errors"]["base"] == error
 
 
@@ -91,13 +101,16 @@ async def test_reauth_successful(hass: HomeAssistant) -> None:
     mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_BRIDGE_DATA)
     mock_config.add_to_hass(hass)
 
-    with patch(
-        "aiocomelit.api.ComeliteSerialBridgeApi.login",
-    ), patch(
-        "aiocomelit.api.ComeliteSerialBridgeApi.logout",
-    ), patch("homeassistant.components.comelit.async_setup_entry"), patch(
-        "requests.get"
-    ) as mock_request_get:
+    with (
+        patch(
+            "aiocomelit.api.ComeliteSerialBridgeApi.login",
+        ),
+        patch(
+            "aiocomelit.api.ComeliteSerialBridgeApi.logout",
+        ),
+        patch("homeassistant.components.comelit.async_setup_entry"),
+        patch("requests.get") as mock_request_get,
+    ):
         mock_request_get.return_value.status_code = 200
 
         result = await hass.config_entries.flow.async_init(
@@ -135,11 +148,13 @@ async def test_reauth_not_successful(hass: HomeAssistant, side_effect, error) ->
     mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_BRIDGE_DATA)
     mock_config.add_to_hass(hass)
 
-    with patch(
-        "aiocomelit.api.ComeliteSerialBridgeApi.login", side_effect=side_effect
-    ), patch(
-        "aiocomelit.api.ComeliteSerialBridgeApi.logout",
-    ), patch("homeassistant.components.comelit.async_setup_entry"):
+    with (
+        patch("aiocomelit.api.ComeliteSerialBridgeApi.login", side_effect=side_effect),
+        patch(
+            "aiocomelit.api.ComeliteSerialBridgeApi.logout",
+        ),
+        patch("homeassistant.components.comelit.async_setup_entry"),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_REAUTH, "entry_id": mock_config.entry_id},
@@ -158,4 +173,5 @@ async def test_reauth_not_successful(hass: HomeAssistant, side_effect, error) ->
 
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
+        assert result["errors"] is not None
         assert result["errors"]["base"] == error

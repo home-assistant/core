@@ -1,4 +1,5 @@
 """The Z-Wave JS integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -168,7 +169,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 translation_key="invalid_server_version",
             )
         raise ConfigEntryNotReady(f"Invalid server version: {err}") from err
-    except (asyncio.TimeoutError, BaseZwaveJSServerError) as err:
+    except (TimeoutError, BaseZwaveJSServerError) as err:
         raise ConfigEntryNotReady(f"Failed to connect: {err}") from err
 
     async_delete_issue(hass, DOMAIN, "invalid_server_version")
@@ -185,9 +186,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Create a task to allow the config entry to be unloaded before the driver is ready.
     # Unloading the config entry is needed if the client listen task errors.
     start_client_task = hass.async_create_task(start_client(hass, entry, client))
-    hass.data[DOMAIN].setdefault(entry.entry_id, {})[
-        DATA_START_CLIENT_TASK
-    ] = start_client_task
+    hass.data[DOMAIN].setdefault(entry.entry_id, {})[DATA_START_CLIENT_TASK] = (
+        start_client_task
+    )
 
     return True
 
@@ -282,7 +283,8 @@ class DriverEvents:
             for node in controller.nodes.values()
         ]
 
-        # Devices that are in the device registry that are not known by the controller can be removed
+        # Devices that are in the device registry that are not known by the controller
+        # can be removed
         for device in stored_devices:
             if device not in known_devices:
                 self.dev_reg.async_remove_device(device.id)
@@ -509,25 +511,46 @@ class ControllerEvents:
         driver = self.driver_events.driver
         device_id = get_device_id(driver, node)
         device_id_ext = get_device_id_ext(driver, node)
-        device = self.dev_reg.async_get_device(identifiers={device_id})
+        node_id_device = self.dev_reg.async_get_device(identifiers={device_id})
         via_device_id = None
         controller = driver.controller
         # Get the controller node device ID if this node is not the controller
         if controller.own_node and controller.own_node != node:
             via_device_id = get_device_id(driver, controller.own_node)
 
-        # Replace the device if it can be determined that this node is not the
-        # same product as it was previously.
-        if (
-            device_id_ext
-            and device
-            and len(device.identifiers) == 2
-            and device_id_ext not in device.identifiers
-        ):
-            self.remove_device(device)
-            device = None
-
         if device_id_ext:
+            # If there is a device with this node ID but with a different hardware
+            # signature, remove the node ID based identifier from it. The hardware
+            # signature can be different for one of two reasons: 1) in the ideal
+            # scenario, the node was replaced with a different node that's a different
+            # device entirely, or 2) the device erroneously advertised the wrong
+            # hardware identifiers (this is known to happen due to poor RF conditions).
+            # While we would like to remove the old device automatically for case 1, we
+            # have no way to distinguish between these reasons so we leave it up to the
+            # user to remove the old device manually.
+            if (
+                node_id_device
+                and len(node_id_device.identifiers) == 2
+                and device_id_ext not in node_id_device.identifiers
+            ):
+                new_identifiers = node_id_device.identifiers.copy()
+                new_identifiers.remove(device_id)
+                self.dev_reg.async_update_device(
+                    node_id_device.id, new_identifiers=new_identifiers
+                )
+            # If there is an orphaned device that already exists with this hardware
+            # based identifier, add the node ID based identifier to the orphaned
+            # device.
+            if (
+                hardware_device := self.dev_reg.async_get_device(
+                    identifiers={device_id_ext}
+                )
+            ) and len(hardware_device.identifiers) == 1:
+                new_identifiers = hardware_device.identifiers.copy()
+                new_identifiers.add(device_id)
+                self.dev_reg.async_update_device(
+                    hardware_device.id, new_identifiers=new_identifiers
+                )
             ids = {device_id, device_id_ext}
         else:
             ids = {device_id}
@@ -769,9 +792,12 @@ class NodeEvents:
             return
 
         driver = self.controller_events.driver_events.driver
-        notification: EntryControlNotification | NotificationNotification | PowerLevelNotification | MultilevelSwitchNotification = event[
-            "notification"
-        ]
+        notification: (
+            EntryControlNotification
+            | NotificationNotification
+            | PowerLevelNotification
+            | MultilevelSwitchNotification
+        ) = event["notification"]
         device = self.dev_reg.async_get_device(
             identifiers={get_device_id(driver, notification.node)}
         )
@@ -982,6 +1008,39 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         await addon_manager.async_uninstall_addon()
     except AddonError as err:
         LOGGER.error(err)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove a config entry from a device."""
+    entry_hass_data = hass.data[DOMAIN][config_entry.entry_id]
+    client: ZwaveClient = entry_hass_data[DATA_CLIENT]
+
+    # Driver may not be ready yet so we can't allow users to remove a device since
+    # we need to check if the device is still known to the controller
+    if (driver := client.driver) is None:
+        LOGGER.error("Driver for %s is not ready", config_entry.title)
+        return False
+
+    # If a node is found on the controller that matches the hardware based identifier
+    # on the device, prevent the device from being removed.
+    if next(
+        (
+            node
+            for node in driver.controller.nodes.values()
+            if get_device_id_ext(driver, node) in device_entry.identifiers
+        ),
+        None,
+    ):
+        return False
+
+    controller_events: ControllerEvents = entry_hass_data[
+        DATA_DRIVER_EVENTS
+    ].controller_events
+    controller_events.registered_unique_ids.pop(device_entry.id, None)
+    controller_events.discovered_value_ids.pop(device_entry.id, None)
+    return True
 
 
 async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) -> None:

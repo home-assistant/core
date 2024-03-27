@@ -1,4 +1,5 @@
 """The devolo_home_control integration."""
+
 from __future__ import annotations
 
 import asyncio

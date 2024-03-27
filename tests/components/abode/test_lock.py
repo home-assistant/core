@@ -1,4 +1,5 @@
 """Tests for the Abode lock device."""
+
 from unittest.mock import patch
 
 from homeassistant.components.abode import ATTR_DEVICE_ID

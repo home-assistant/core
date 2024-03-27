@@ -1,4 +1,5 @@
 """Common test objects."""
+
 import asyncio
 from datetime import timedelta
 import math
@@ -54,7 +55,6 @@ def patch_cluster(cluster):
     cluster.configure_reporting_multiple = AsyncMock(
         return_value=zcl_f.ConfigureReportingResponse.deserialize(b"\x00")[0]
     )
-    cluster.deserialize = Mock()
     cluster.handle_cluster_request = Mock()
     cluster.read_attributes = AsyncMock(wraps=cluster.read_attributes)
     cluster.read_attributes_raw = AsyncMock(side_effect=_read_attribute_raw)

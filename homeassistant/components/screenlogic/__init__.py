@@ -1,4 +1,5 @@
 """The Screenlogic integration."""
+
 import logging
 from typing import Any
 
@@ -9,13 +10,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
 from .const import DOMAIN
 from .coordinator import ScreenlogicDataUpdateCoordinator, async_get_connect_info
 from .data import ENTITY_MIGRATIONS
-from .services import async_load_screenlogic_services, async_unload_screenlogic_services
+from .services import async_load_screenlogic_services
 from .util import generate_unique_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,6 +37,16 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up Screenlogic."""
+
+    async_load_screenlogic_services(hass)
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -62,8 +74,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    async_load_screenlogic_services(hass, entry)
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -76,8 +86,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator = hass.data[DOMAIN][entry.entry_id]
         await coordinator.gateway.async_disconnect()
         hass.data[DOMAIN].pop(entry.entry_id)
-
-    async_unload_screenlogic_services(hass)
 
     return unload_ok
 

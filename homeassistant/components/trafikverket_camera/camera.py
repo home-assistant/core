@@ -1,4 +1,5 @@
 """Camera for the Trafikverket Camera integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping

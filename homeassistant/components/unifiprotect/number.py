@@ -1,4 +1,5 @@
 """Component providing number entities for UniFi Protect."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -119,6 +120,20 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_set_method="set_chime_duration",
         ufp_perm=PermRequired.WRITE,
     ),
+    ProtectNumberEntityDescription(
+        key="icr_lux",
+        name="Infrared Custom Lux Trigger",
+        icon="mdi:white-balance-sunny",
+        entity_category=EntityCategory.CONFIG,
+        ufp_min=1,
+        ufp_max=30,
+        ufp_step=1,
+        ufp_required_field="feature_flags.has_led_ir",
+        ufp_value="icr_lux_display",
+        ufp_set_method="set_icr_custom_lux",
+        ufp_enabled="is_ir_led_slider_enabled",
+        ufp_perm=PermRequired.WRITE,
+    ),
 )
 
 LIGHT_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
@@ -211,7 +226,8 @@ async def async_setup_entry(
     """Set up number entities for UniFi Protect integration."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
-    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+    @callback
+    def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
         entities = async_all_device_entities(
             data,
             ProtectNumbers,

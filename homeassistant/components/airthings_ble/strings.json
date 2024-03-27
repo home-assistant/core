@@ -33,6 +33,9 @@
       },
       "radon_longterm_level": {
         "name": "Radon longterm level"
+      },
+      "illuminance": {
+        "name": "[%key:component::sensor::entity_component::illuminance::name%]"
       }
     }
   }

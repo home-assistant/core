@@ -1,4 +1,5 @@
 """Base entity for the HomeWizard integration."""
+
 from __future__ import annotations
 
 from homeassistant.const import ATTR_CONNECTIONS, ATTR_IDENTIFIERS

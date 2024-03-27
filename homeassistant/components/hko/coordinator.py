@@ -1,4 +1,5 @@
 """Weather data coordinator for the HKO API."""
+
 from asyncio import timeout
 from datetime import timedelta
 import logging

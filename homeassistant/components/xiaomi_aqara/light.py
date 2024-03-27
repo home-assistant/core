@@ -1,4 +1,5 @@
 """Support for Xiaomi Gateway Light."""
+
 import binascii
 import logging
 import struct
@@ -105,7 +106,7 @@ class XiaomiGatewayLight(XiaomiDevice, LightEntity):
             self._brightness = int(100 * kwargs[ATTR_BRIGHTNESS] / 255)
 
         rgb = color_util.color_hs_to_RGB(*self._hs)
-        rgba = (self._brightness,) + rgb
+        rgba = (self._brightness, *rgb)
         rgbhex = binascii.hexlify(struct.pack("BBBB", *rgba)).decode("ASCII")
         rgbhex = int(rgbhex, 16)
 
