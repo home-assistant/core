@@ -1,8 +1,9 @@
 """Test config flow for Twitch."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
-import pytest
+from twitchAPI.object.api import TwitchUser
+from twitchAPI.type import InvalidTokenException
 
 from homeassistant.components.twitch.const import (
     CONF_CHANNELS,
@@ -15,10 +16,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow, issue_registry as ir
 
-from . import setup_integration
+from . import get_generator, setup_integration
 
 from tests.common import MockConfigEntry
-from tests.components.twitch import TwitchInvalidTokenMock, TwitchMock
+from tests.components.twitch import TwitchMock
 from tests.components.twitch.conftest import CLIENT_ID, TITLE
 from tests.typing import ClientSessionGenerator
 
@@ -54,7 +55,7 @@ async def test_full_flow(
     hass_client_no_auth: ClientSessionGenerator,
     current_request_with_host: None,
     mock_setup_entry,
-    twitch: TwitchMock,
+    twitch_mock: AsyncMock,
     scopes: list[str],
 ) -> None:
     """Check full flow."""
@@ -83,7 +84,7 @@ async def test_already_configured(
     current_request_with_host: None,
     config_entry: MockConfigEntry,
     mock_setup_entry,
-    twitch: TwitchMock,
+    twitch_mock: AsyncMock,
     scopes: list[str],
 ) -> None:
     """Check flow aborts when account already configured."""
@@ -108,7 +109,7 @@ async def test_reauth(
     current_request_with_host: None,
     config_entry: MockConfigEntry,
     mock_setup_entry,
-    twitch: TwitchMock,
+    twitch_mock: AsyncMock,
     scopes: list[str],
 ) -> None:
     """Check reauth flow."""
@@ -139,7 +140,7 @@ async def test_reauth_from_import(
     hass_client_no_auth: ClientSessionGenerator,
     current_request_with_host: None,
     mock_setup_entry,
-    twitch: TwitchMock,
+    twitch_mock: AsyncMock,
     expires_at,
     scopes: list[str],
 ) -> None:
@@ -166,7 +167,7 @@ async def test_reauth_from_import(
         current_request_with_host,
         config_entry,
         mock_setup_entry,
-        twitch,
+        twitch_mock,
         scopes,
     )
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -181,12 +182,14 @@ async def test_reauth_wrong_account(
     current_request_with_host: None,
     config_entry: MockConfigEntry,
     mock_setup_entry,
-    twitch: TwitchMock,
+    twitch_mock: AsyncMock,
     scopes: list[str],
 ) -> None:
     """Check reauth flow."""
     await setup_integration(hass, config_entry)
-    twitch.different_user_id = True
+    twitch_mock.return_value.get_users.return_value = get_generator(
+        "get_users_2.json", TwitchUser
+    )
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
@@ -213,7 +216,7 @@ async def test_import(
     hass_client_no_auth: ClientSessionGenerator,
     current_request_with_host: None,
     mock_setup_entry,
-    twitch: TwitchMock,
+    twitch_mock: AsyncMock,
 ) -> None:
     """Test import flow."""
     result = await hass.config_entries.flow.async_init(
@@ -239,15 +242,15 @@ async def test_import(
     assert result["options"] == {CONF_CHANNELS: ["channel123"]}
 
 
-@pytest.mark.parametrize("twitch_mock", [TwitchInvalidTokenMock()])
 async def test_import_invalid_token(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     current_request_with_host: None,
     mock_setup_entry,
-    twitch: TwitchMock,
+    twitch_mock: AsyncMock,
 ) -> None:
     """Test import flow."""
+    twitch_mock.return_value.set_user_authentication.side_effect = InvalidTokenException
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
@@ -273,7 +276,7 @@ async def test_import_already_imported(
     current_request_with_host: None,
     config_entry: MockConfigEntry,
     mock_setup_entry,
-    twitch: TwitchMock,
+    twitch_mock: AsyncMock,
 ) -> None:
     """Test import flow where the config is already imported."""
     await setup_integration(hass, config_entry)
