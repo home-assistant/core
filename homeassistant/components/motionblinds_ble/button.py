@@ -77,7 +77,7 @@ class MotionblindsBLEButtonEntity(MotionblindsBLEEntity, ButtonEntity):
 
     async def async_added_to_hass(self) -> None:
         """Log button entity information."""
-        _LOGGER.info(
+        _LOGGER.debug(
             "(%s) Setting up %s button entity",
             self.entry.data[CONF_MAC_CODE],
             self.entity_description.key,
