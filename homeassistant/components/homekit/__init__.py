@@ -121,6 +121,7 @@ from .const import (
     SERVICE_HOMEKIT_RESET_ACCESSORY,
     SERVICE_HOMEKIT_UNPAIR,
     SHUTDOWN_TIMEOUT,
+    SIGNAL_RELOAD_ENTITIES,
 )
 from .iidmanager import AccessoryIIDStorage
 from .models import HomeKitEntryData
@@ -846,7 +847,7 @@ class HomeKit:
         self.status = STATUS_WAIT
         self._cancel_reload_dispatcher = async_dispatcher_connect(
             self.hass,
-            f"homekit_reload_entities_{self._entry_id}",
+            SIGNAL_RELOAD_ENTITIES.format(self._entry_id),
             self.async_reload_accessories,
         )
         async_zc_instance = await zeroconf.async_get_async_instance(self.hass)
