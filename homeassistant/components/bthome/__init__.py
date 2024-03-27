@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
 
 from bthome_ble import BTHomeBluetoothDeviceData, SensorUpdate
 from bthome_ble.parser import EncryptionScheme
@@ -22,6 +21,7 @@ from homeassistant.helpers.device_registry import (
     async_get,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.util.signal_type import SignalType
 
 from .const import (
     BTHOME_BLE_EVENT,
@@ -94,7 +94,7 @@ def process_service_info(
                     hass, format_discovered_event_class(address), event_class, ble_event
                 )
 
-            hass.bus.async_fire(BTHOME_BLE_EVENT, cast(dict, ble_event))
+            hass.bus.async_fire(BTHOME_BLE_EVENT, ble_event)
             async_dispatcher_send(
                 hass,
                 format_event_dispatcher_name(address, event_class),
@@ -108,14 +108,16 @@ def process_service_info(
     return update
 
 
-def format_event_dispatcher_name(address: str, event_class: str) -> str:
+def format_event_dispatcher_name(
+    address: str, event_class: str
+) -> SignalType[BTHomeBleEvent]:
     """Format an event dispatcher name."""
-    return f"{DOMAIN}_event_{address}_{event_class}"
+    return SignalType(f"{DOMAIN}_event_{address}_{event_class}")
 
 
-def format_discovered_event_class(address: str) -> str:
+def format_discovered_event_class(address: str) -> SignalType[str, BTHomeBleEvent]:
     """Format a discovered event class."""
-    return f"{DOMAIN}_discovered_event_class_{address}"
+    return SignalType(f"{DOMAIN}_discovered_event_class_{address}")
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
