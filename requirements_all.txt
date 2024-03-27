@@ -1077,7 +1077,7 @@ hole==0.8.0
 holidays==0.45
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240307.0
+home-assistant-frontend==20240327.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.3.27
@@ -2952,7 +2952,7 @@ zigpy-zigate==0.12.0
 zigpy-znp==0.12.1
 
 # homeassistant.components.zha
-zigpy==0.63.4
+zigpy==0.63.5
 
 # homeassistant.components.zoneminder
 zm-py==0.5.4
