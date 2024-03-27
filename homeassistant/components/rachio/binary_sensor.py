@@ -17,8 +17,7 @@ from .const import (
     DOMAIN as DOMAIN_RACHIO,
     KEY_BATTERY_STATUS,
     KEY_DEVICE_ID,
-    KEY_GOOD,
-    KEY_ID,
+    KEY_LOW,
     KEY_RAIN_SENSOR_TRIPPED,
     KEY_REPORTED_STATE,
     KEY_STATE,
@@ -159,19 +158,15 @@ class RachioHoseTimerBattery(RachioHoseTimerDevice, BinarySensorEntity):
 
     def __init__(self, data, coordinator) -> None:
         """Initialize a smart hose timer battery sensor."""
-        super().__init__(coordinator, data)
-        self.id = data[KEY_ID]
+        super().__init__(data, coordinator)
         self._attr_unique_id = f"{self.id}-battery"
-        self._attr_is_on = (
-            data[KEY_STATE][KEY_REPORTED_STATE][KEY_BATTERY_STATUS] != KEY_GOOD
-        )
+        self._static_attrs = data[KEY_STATE][KEY_REPORTED_STATE]
+        self._attr_is_on = self._static_attrs[KEY_BATTERY_STATUS] == KEY_LOW
 
     @callback
-    def _handle_coordinator_update(self) -> None:
+    def _update_attr(self) -> None:
         """Handle updated coordinator data."""
         data = self.coordinator.data[self.id]
 
-        self._attr_is_on = (
-            data[KEY_STATE][KEY_REPORTED_STATE][KEY_BATTERY_STATUS] != KEY_GOOD
-        )
-        super()._handle_coordinator_update()
+        self._static_attrs = data[KEY_STATE][KEY_REPORTED_STATE]
+        self._attr_is_on = self._static_attrs[KEY_BATTERY_STATUS] == KEY_LOW
