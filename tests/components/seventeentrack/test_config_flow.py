@@ -125,7 +125,7 @@ async def test_import_flow(hass: HomeAssistant, mock_seventeentrack: AsyncMock) 
         (
             False,
             None,
-            "invalid_credentials",
+            "invalid_auth",
         ),
         (
             True,
