@@ -33,6 +33,7 @@ class VentilationMode(enum.StrEnum):
     SENSOR_OVERRIDE = "sensorOverride"
     SENSOR_DRIVEN = "sensorDriven"
 
+
 class VentilationProgram(enum.StrEnum):
     """ViCare preset ventilation programs.
 
@@ -52,6 +53,7 @@ class VentilationProgram(enum.StrEnum):
     LEVEL_FOUR = "levelFour"
     # PERMANENT = "permanent"
     # SILENT = "silent"
+
 
 @dataclass(frozen=True)
 class ViCareDevice:
