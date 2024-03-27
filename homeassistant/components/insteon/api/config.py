@@ -62,9 +62,7 @@ class DeviceOverride(TypedDict):
 
 def get_insteon_config_entry(hass: HomeAssistant) -> ConfigEntry:
     """Return the Insteon configuration entry."""
-    if not (insteon_entries := hass.config_entries.async_entries(DOMAIN)):
-        raise ValueError("No Insteon configuration exists")
-    return insteon_entries[0]
+    return hass.config_entries.async_entries(DOMAIN)[0]
 
 
 def add_x10_device(hass: HomeAssistant, x10_device: X10DeviceConfig):
