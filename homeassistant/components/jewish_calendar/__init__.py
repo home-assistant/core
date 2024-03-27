@@ -11,6 +11,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 
+from .service import JewishCalendarServices
+
 DOMAIN = "jewish_calendar"
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -105,4 +107,5 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     for platform in PLATFORMS:
         hass.async_create_task(async_load_platform(hass, platform, DOMAIN, {}, config))
 
+    JewishCalendarServices(hass, config)
     return True

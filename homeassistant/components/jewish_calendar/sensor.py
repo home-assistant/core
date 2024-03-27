@@ -6,7 +6,7 @@ from datetime import date as Date
 import logging
 from typing import Any
 
-from hdate import HDate
+from hdate import HDate, htables
 from hdate.zmanim import Zmanim
 
 from homeassistant.components.sensor import (
@@ -181,7 +181,7 @@ class JewishCalendarSensor(SensorEntity):
         self._candle_lighting_offset = data["candle_lighting_offset"]
         self._havdalah_offset = data["havdalah_offset"]
         self._diaspora = data["diaspora"]
-        self._holiday_attrs: dict[str, str] = {}
+        self._holiday_attrs: dict[str, str | list[str]] = {}
 
     async def async_update(self) -> None:
         """Update the state of the sensor."""
@@ -235,7 +235,7 @@ class JewishCalendarSensor(SensorEntity):
         )
 
     @property
-    def extra_state_attributes(self) -> dict[str, str]:
+    def extra_state_attributes(self) -> dict[str, str | list[str]]:
         """Return the state attributes."""
         if self.entity_description.key != "holiday":
             return {}
@@ -253,10 +253,19 @@ class JewishCalendarSensor(SensorEntity):
             # Compute the weekly portion based on the upcoming shabbat.
             return after_tzais_date.upcoming_shabbat.parasha
         if self.entity_description.key == "holiday":
+            self._attr_device_class = SensorDeviceClass.ENUM
             self._holiday_attrs = {
                 "id": after_shkia_date.holiday_name,
                 "type": after_shkia_date.holiday_type.name,
                 "type_id": after_shkia_date.holiday_type.value,
+                "options": [
+                    (
+                        h.description.hebrew.long
+                        if self._hebrew
+                        else h.description.english
+                    )
+                    for h in htables.HOLIDAYS
+                ],
             }
             return after_shkia_date.holiday_description
         if self.entity_description.key == "omer_count":
