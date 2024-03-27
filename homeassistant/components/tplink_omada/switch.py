@@ -61,7 +61,13 @@ async def async_setup_entry(
         entities.extend(
             OmadaDevicePortSwitchEntity[
                 OmadaSwitchPortCoordinator, OmadaSwitch, OmadaSwitchPortDetails
-            ](coordinator, switch, port.port_id, desc, port_name=_get_switch_port_base_name(port))
+            ](
+                coordinator,
+                switch,
+                port.port_id,
+                desc,
+                port_name=_get_switch_port_base_name(port),
+            )
             for port in coordinator.data.values()
             for desc in SWITCH_PORT_DETAILS_SWITCHES
             if desc.exists_func(switch, port)
@@ -211,7 +217,7 @@ GATEWAY_PORT_CONFIG_SWITCHES: list[OmadaGatewayPortConfigSwitchEntityDescription
         set_func=lambda client, device, port, enable: client.set_gateway_port_settings(
             port.port_number, GatewayPortSettings(enable_poe=enable), device
         ),
-        update_func=lambda p: p.poe_mode == PoEMode.ENABLED,
+        update_func=lambda p: p.poe_mode != PoEMode.DISABLED,
     ),
 ]
 
