@@ -26,12 +26,7 @@ from ..const import (
     TYPE,
 )
 from ..schemas import build_x10_schema
-from .config import (
-    add_x10_device,
-    has_device_override,
-    remove_device_override,
-    remove_x10_device,
-)
+from .config import add_x10_device, remove_device_override, remove_x10_device
 
 X10_DEVICE = "x10_device"
 X10_DEVICE_SCHEMA = build_x10_schema()
@@ -182,8 +177,7 @@ async def websocket_remove_device(
         remove_x10_device(hass, housecode, unitcode)
     else:
         address = Address(address)
-        if has_device_override(hass, address):
-            remove_device_override(hass, address)
+        remove_device_override(hass, address)
         async_dispatcher_send(hass, SIGNAL_REMOVE_HA_DEVICE, address)
         async_dispatcher_send(
             hass, SIGNAL_REMOVE_INSTEON_DEVICE, address, remove_all_refs

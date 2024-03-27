@@ -1,7 +1,7 @@
 """API calls to manage Insteon configuration changes."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, TypedDict
 
 from pyinsteon import async_close, async_connect, devices
 from pyinsteon.address import Address
@@ -42,30 +42,46 @@ DEVICE_OVERRIDE_SCHEMA = build_device_override_schema()
 OVERRIDE = "override"
 
 
+class X10DeviceConfig(TypedDict):
+    """X10 Device Configuration Definition."""
+
+    housecode: str
+    unitcode: int
+    platform: str
+    dim_steps: int
+
+
+class DeviceOverride(TypedDict):
+    """X10 Device Configuration Definition."""
+
+    address: Address | str
+    cat: int
+    subcat: str
+
+
 def get_insteon_config_entry(hass: HomeAssistant) -> ConfigEntry:
     """Return the Insteon configuration entry."""
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        return entry
-    raise ValueError("No Insteon configuration exists")
+    if not (insteon_entries := hass.config_entries.async_entries(DOMAIN)):
+        raise ValueError("No Insteon configuration exists")
+    return insteon_entries[0]
 
 
-def add_x10_device(hass: HomeAssistant, x10_device: dict):
+def add_x10_device(hass: HomeAssistant, x10_device: X10DeviceConfig):
     """Add an X10 device to the Insteon integration."""
+
     config_entry = get_insteon_config_entry(hass)
-    options_config = {**config_entry.options}
     x10_config = config_entry.options.get(CONF_X10, [])
+    if any(
+        device[CONF_HOUSECODE] == x10_device["housecode"]
+        and device[CONF_UNITCODE] == x10_device["unitcode"]
+        for device in x10_config
+    ):
+        raise ValueError("Duplicate X10 device")
 
-    # Check that we are not adding an existing device
-    for curr_device in x10_config:
-        if (
-            curr_device[CONF_HOUSECODE] == x10_device[CONF_HOUSECODE]
-            and curr_device[CONF_UNITCODE] == x10_device[CONF_UNITCODE]
-        ):
-            raise ValueError("Duplicate X10 device")
-
-    x10_config.append(x10_device)
-    options_config[CONF_X10] = x10_config
-    hass.config_entries.async_update_entry(entry=config_entry, options=options_config)
+    hass.config_entries.async_update_entry(
+        entry=config_entry,
+        options=config_entry.options | {CONF_X10: [*x10_config, x10_device]},
+    )
     async_dispatcher_send(hass, SIGNAL_ADD_X10_DEVICE, x10_device)
 
 
@@ -74,12 +90,6 @@ def remove_x10_device(hass: HomeAssistant, housecode: str, unitcode: int):
 
     config_entry = get_insteon_config_entry(hass)
     new_options = {**config_entry.options}
-    try:
-        new_options.pop(CONF_X10)
-    except KeyError:
-        # There are no X10 devices so nothing to do
-        return
-
     new_x10 = [
         existing_device
         for existing_device in config_entry.options[CONF_X10]
@@ -87,35 +97,27 @@ def remove_x10_device(hass: HomeAssistant, housecode: str, unitcode: int):
         or existing_device[CONF_UNITCODE] != unitcode
     ]
 
-    if new_x10:
-        new_options[CONF_X10] = new_x10
+    new_options[CONF_X10] = new_x10
     hass.config_entries.async_update_entry(entry=config_entry, options=new_options)
 
 
-def add_device_overide(hass: HomeAssistant, override: dict[str, str]):
+def add_device_overide(hass: HomeAssistant, override: DeviceOverride):
     """Add an Insteon device override."""
 
-    if has_device_override(hass, Address(override[CONF_ADDRESS])):
+    config_entry = get_insteon_config_entry(hass)
+    override_config = config_entry.options.get(CONF_OVERRIDE, [])
+    address = Address(override[CONF_ADDRESS])
+    if any(
+        Address(existing_override[CONF_ADDRESS]) == address
+        for existing_override in override_config
+    ):
         raise ValueError("Duplicate override")
 
-    config_entry = get_insteon_config_entry(hass)
-    options_config = {**config_entry.options}
-    override_config = config_entry.options.get(CONF_OVERRIDE, [])
-    override_config.append(override)
-    options_config[CONF_OVERRIDE] = override_config
-    hass.config_entries.async_update_entry(entry=config_entry, options=options_config)
+    hass.config_entries.async_update_entry(
+        entry=config_entry,
+        options=config_entry.options | {CONF_OVERRIDE: [*override_config, override]},
+    )
     async_dispatcher_send(hass, SIGNAL_ADD_DEVICE_OVERRIDE, override)
-
-
-def has_device_override(hass: HomeAssistant, address: Address):
-    """Test if a device has a device override."""
-
-    config_entry = get_insteon_config_entry(hass)
-    override_config = config_entry.options.get(CONF_OVERRIDE, [])
-    for existing_override in override_config:
-        if Address(existing_override[CONF_ADDRESS]) == address:
-            return True
-    return False
 
 
 def remove_device_override(hass: HomeAssistant, address: Address):
@@ -123,19 +125,13 @@ def remove_device_override(hass: HomeAssistant, address: Address):
 
     config_entry = get_insteon_config_entry(hass)
     new_options = {**config_entry.options}
-    try:
-        new_options.pop(CONF_OVERRIDE)
-    except KeyError:
-        # There are no overrides so nothing to do
-        return
 
     new_overrides = [
         existing_override
         for existing_override in config_entry.options[CONF_OVERRIDE]
         if Address(existing_override[CONF_ADDRESS]) != address
     ]
-    if new_overrides:
-        new_options[CONF_OVERRIDE] = new_overrides
+    new_options[CONF_OVERRIDE] = new_overrides
     hass.config_entries.async_update_entry(entry=config_entry, options=new_options)
 
 
