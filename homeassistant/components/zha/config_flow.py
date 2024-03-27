@@ -45,7 +45,7 @@ from .radio_manager import (
 )
 from .serial_port import (
     UsbSerialPort,
-    async_list_serial_ports,
+    async_list_zha_serial_ports,
     async_serial_port_from_path,
 )
 
@@ -137,8 +137,8 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Choose a serial port."""
-        ports = await async_list_serial_ports(self.hass)
-        port_names = [p.display_name for p in ports]
+        ports = await async_list_zha_serial_ports(self.hass)
+        port_names = [p.display_name(hide_device=False) for p in ports]
 
         if not port_names:
             return await self.async_step_manual_pick_radio_type()
@@ -164,7 +164,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
                 # Did not autodetect anything, proceed to manual selection
                 return await self.async_step_manual_pick_radio_type()
 
-            self._title = port.display_name
+            self._title = port.display_name(hide_device=True)
 
             return await self.async_step_verify_radio()
 
@@ -221,7 +221,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
                 self.hass, user_input[CONF_DEVICE_PATH]
             )
 
-            self._title = port.display_name
+            self._title = port.display_name(hide_device=True)
             self._radio_mgr.device_path = port.path
             self._radio_mgr.device_settings = user_input.copy()
 
@@ -532,8 +532,9 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         self, discovery_info: usb.UsbServiceInfo
     ) -> ConfigFlowResult:
         """Handle usb discovery."""
-        port: UsbSerialPort = await async_serial_port_from_path(
-            self.hass, discovery_info.device
+        port = cast(
+            UsbSerialPort,
+            await async_serial_port_from_path(self.hass, discovery_info.device),
         )
 
         await self._set_unique_id_or_update_path(port.unique_id, port.path)
@@ -548,15 +549,16 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="not_zha_device")
 
         self._radio_mgr.device_path = port.path
-        self._title = port.description or usb.human_readable_device_name(
+        self._title = port.product or usb.human_readable_device_name(
             port.path,
             port.serial_number,
             port.manufacturer,
-            port.description,
+            port.product,
             port.vid,
             port.pid,
         )
         self.context["title_placeholders"] = {CONF_NAME: self._title}
+
         return await self.async_step_confirm()
 
     async def async_step_zeroconf(

@@ -5,6 +5,7 @@ from __future__ import annotations
 import dataclasses
 import ipaddress
 import pathlib
+from typing import cast
 
 import serial.tools.list_ports
 
@@ -25,7 +26,7 @@ class SystemSerialPort:
     """System serial port that is not associated with any USB device."""
 
     device: pathlib.Path
-    description: str | None = None
+    product: str | None = None
     manufacturer: str | None = None
 
     @property
@@ -37,14 +38,28 @@ class SystemSerialPort:
     def unique_id(self) -> str:
         """Unique ID of the serial port."""
         # We use `device` here because it is assumed to be 100% stable
-        return f"SystemSerialPort:{self.device}_{self.manufacturer}_{self.description}"
+        return f"SystemSerialPort:{self.device}_{self.manufacturer}_{self.product}"
 
-    @property
-    def display_name(self) -> str:
+    def display_name(self, *, hide_device: bool = True) -> str:
         """Human-readable display name of the serial port."""
-        return f"{self.device}" + (
-            f" - {self.manufacturer}" if self.manufacturer else ""
-        )
+        name = ""
+
+        if self.product:
+            name += self.product
+
+        if self.manufacturer:
+            if name:
+                name += f" - {self.manufacturer}"
+            else:
+                name += self.manufacturer
+
+        if (name and not hide_device) or not name:
+            if name:
+                name += f" ({self.device})"
+            else:
+                name += str(self.device)
+
+        return name
 
 
 @dataclasses.dataclass
@@ -58,7 +73,7 @@ class UsbSerialPort:
     pid: str
     serial_number: str | None = None
 
-    description: str | None = None
+    product: str | None = None
     manufacturer: str | None = None
 
     @property
@@ -71,17 +86,35 @@ class UsbSerialPort:
         """Unique ID of the serial port."""
         return (
             f"UsbSerialPort:{self.vid}:{self.pid}_{self.serial_number}"
-            f"_{self.manufacturer}_{self.description}"
+            f"_{self.manufacturer}_{self.product}"
         )
 
-    @property
-    def display_name(self) -> str:
+    def display_name(self, *, hide_device: bool = True) -> str:
         """Human-readable display name of the serial port."""
-        return (
-            f"{self.resolved_device}"
-            + (f", s/n: {self.serial_number}" if self.serial_number else "")
-            + (f" - {self.manufacturer}" if self.manufacturer else "")
-        )
+        name = ""
+
+        if self.product:
+            name += self.product
+
+        if self.manufacturer:
+            if name:
+                name += f" - {self.manufacturer}"
+            else:
+                name += self.manufacturer
+
+        if self.serial_number:
+            if name:
+                name += f", s/n: {self.serial_number}"
+            else:
+                name += f"s/n: {self.serial_number}"
+
+        if (name and not hide_device) or not name:
+            if name:
+                name += f" ({self.resolved_device})"
+            else:
+                name += str(self.resolved_device)
+
+        return name
 
 
 @dataclasses.dataclass
@@ -91,7 +124,7 @@ class NetworkSerialPort:
     host: ipaddress.IPv4Address | ipaddress.IPv6Address | str
     port: int
 
-    description: str | None = None
+    product: str | None = None
     manufacturer: str | None = None
 
     @property
@@ -108,18 +141,33 @@ class NetworkSerialPort:
 
         return f"NetworkSerialPort:{self.host}:{self.port}"
 
-    @property
-    def display_name(self) -> str:
+    def display_name(self, *, hide_device: bool = True) -> str:
         """Human-readable display name of the serial port."""
-        return f"{self.path}" + (f" - {self.manufacturer}" if self.manufacturer else "")
+
+        name = ""
+
+        if self.product:
+            name += self.product
+
+        if self.manufacturer:
+            if name:
+                name += f" - {self.manufacturer}"
+            else:
+                name += self.manufacturer
+
+        if (name and not hide_device) or not name:
+            if name:
+                name += f" ({self.host}:{self.port})"
+            else:
+                name += f"{self.host}:{self.port}"
+
+        return name
 
 
 async def async_list_serial_ports(
     hass: HomeAssistant,
-) -> list[SystemSerialPort]:
+) -> list[SystemSerialPort | UsbSerialPort | NetworkSerialPort]:
     """List all serial ports, including the Yellow radio."""
-    comports = await hass.async_add_executor_job(serial.tools.list_ports.comports)
-
     try:
         yellow_hardware.async_info(hass)
     except HomeAssistantError:
@@ -127,8 +175,8 @@ async def async_list_serial_ports(
     else:
         is_yellow = True
 
-    ports: list[SystemSerialPort | UsbSerialPort | NetworkSerialPort] = []
     comports = await hass.async_add_executor_job(serial.tools.list_ports.comports)
+    ports: list[SystemSerialPort | UsbSerialPort | NetworkSerialPort] = []
 
     for port in comports:
         if is_yellow and port.device == "/dev/ttyAMA1":
@@ -136,7 +184,7 @@ async def async_list_serial_ports(
                 SystemSerialPort(
                     device=port.device,
                     manufacturer="Nabu Casa",
-                    description="Yellow Zigbee Module",
+                    product="Yellow Zigbee Module",
                 )
             )
         elif port.vid is not None:
@@ -155,7 +203,7 @@ async def async_list_serial_ports(
                     pid=port.pid,
                     serial_number=port.serial_number,
                     manufacturer=port.manufacturer,
-                    description=port.description,
+                    product=port.product,
                 )
             )
         else:
@@ -192,7 +240,7 @@ async def async_list_zha_serial_ports(
             NetworkSerialPort(
                 host=host,
                 port=int(port),
-                description="Multiprotocol add-on",
+                product="Multiprotocol add-on",
                 manufacturer="Nabu Casa",
             )
         )
@@ -207,13 +255,18 @@ async def async_find_unique_port(
     ports = await async_list_serial_ports(hass)
     resolved_path = await hass.async_add_executor_job(pathlib.Path(path).resolve)
 
-    candidates: list[SystemSerialPort | UsbSerialPort] = []
-
-    for port in ports:
-        if port.path == path or (
-            isinstance(port, UsbSerialPort) and port.resolved_device == resolved_path
-        ):
-            candidates.append(port)
+    candidates = cast(
+        list[SystemSerialPort | UsbSerialPort],
+        [
+            port
+            for port in ports
+            if port.path == path
+            or (
+                isinstance(port, UsbSerialPort)
+                and port.resolved_device == resolved_path
+            )
+        ],
+    )
 
     if len(candidates) > 1:
         raise ValueError(f"Serial port {path} is not unique: {candidates}")
