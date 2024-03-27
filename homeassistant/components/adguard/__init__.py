@@ -44,7 +44,7 @@ SERVICE_REFRESH_SCHEMA = vol.Schema(
 )
 
 PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
-ADGUARD_HASS_KEY = HassEntryKey["AdGuardData"]()
+ADGUARD_HASS_KEY = HassEntryKey["AdGuardData"](DOMAIN)
 
 
 @dataclass

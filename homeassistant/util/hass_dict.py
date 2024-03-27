@@ -2,20 +2,40 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Generic, TypeVar, assert_type, overload
 
 _T = TypeVar("_T")
 _U = TypeVar("_U")
 
 
+@dataclass(frozen=True)
 class _Key(Generic[_T]):
     """Base class for Hass key types."""
 
+    name: str
 
+    def __hash__(self) -> int:
+        """Return hash of name."""
+
+        return hash(self.name)
+
+    def __eq__(self, other: Any) -> bool:
+        """Check equality for dict keys to be compatible with str."""
+
+        if isinstance(other, str):
+            return self.name == other
+        if isinstance(other, _Key):
+            return self.name == other.name
+        return False
+
+
+@dataclass(frozen=True, eq=False)
 class HassEntryKey(_Key[_T]):
     """Key type for integrations with config entries."""
 
 
+@dataclass(frozen=True, eq=False)
 class HassKey(_Key[_T]):
     """Generic Hass key type."""
 
@@ -132,10 +152,10 @@ if TYPE_CHECKING:
         This is tested during the mypy run. Do not move it to 'tests'!
         """
         d = HassDict()
-        entry_key = HassEntryKey[int]()
-        key = HassKey[int]()
-        key2 = HassKey[dict[int, bool]]()
-        key3 = HassKey[set[str]]()
+        entry_key = HassEntryKey[int]("entry_key")
+        key = HassKey[int]("key")
+        key2 = HassKey[dict[int, bool]]("key2")
+        key3 = HassKey[set[str]]("key3")
         other_key = "domain"
 
         # __getitem__
