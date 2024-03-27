@@ -57,6 +57,8 @@ from .const import (
 )
 from .helpers import has_unique_host_names, is_address
 
+ADDRESS_SCHEMA = vol.Coerce(tuple)
+
 #
 # Domain data
 #
@@ -168,23 +170,48 @@ CONNECTION_SCHEMA = vol.Schema(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_CONNECTIONS): vol.All(
-                    cv.ensure_list, has_unique_host_names, [CONNECTION_SCHEMA]
-                ),
-                vol.Optional(CONF_BINARY_SENSORS): vol.All(
-                    cv.ensure_list, [BINARY_SENSORS_SCHEMA]
-                ),
-                vol.Optional(CONF_CLIMATES): vol.All(cv.ensure_list, [CLIMATES_SCHEMA]),
-                vol.Optional(CONF_COVERS): vol.All(cv.ensure_list, [COVERS_SCHEMA]),
-                vol.Optional(CONF_LIGHTS): vol.All(cv.ensure_list, [LIGHTS_SCHEMA]),
-                vol.Optional(CONF_SCENES): vol.All(cv.ensure_list, [SCENES_SCHEMA]),
-                vol.Optional(CONF_SENSORS): vol.All(cv.ensure_list, [SENSORS_SCHEMA]),
-                vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [SWITCHES_SCHEMA]),
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                vol.All(
+                    {
+                        vol.Required(CONF_CONNECTIONS): vol.All(
+                            cv.ensure_list, has_unique_host_names, [CONNECTION_SCHEMA]
+                        ),
+                        vol.Optional(CONF_BINARY_SENSORS): vol.All(
+                            cv.ensure_list, [BINARY_SENSORS_SCHEMA]
+                        ),
+                        vol.Optional(CONF_CLIMATES): vol.All(
+                            cv.ensure_list, [CLIMATES_SCHEMA]
+                        ),
+                        vol.Optional(CONF_COVERS): vol.All(
+                            cv.ensure_list, [COVERS_SCHEMA]
+                        ),
+                        vol.Optional(CONF_LIGHTS): vol.All(
+                            cv.ensure_list, [LIGHTS_SCHEMA]
+                        ),
+                        vol.Optional(CONF_SCENES): vol.All(
+                            cv.ensure_list, [SCENES_SCHEMA]
+                        ),
+                        vol.Optional(CONF_SENSORS): vol.All(
+                            cv.ensure_list, [SENSORS_SCHEMA]
+                        ),
+                        vol.Optional(CONF_SWITCHES): vol.All(
+                            cv.ensure_list, [SWITCHES_SCHEMA]
+                        ),
+                    },
+                    cv.deprecated(CONF_CONNECTIONS),
+                    cv.deprecated(CONF_BINARY_SENSORS),
+                    cv.deprecated(CONF_CLIMATES),
+                    cv.deprecated(CONF_COVERS),
+                    cv.deprecated(CONF_LIGHTS),
+                    cv.deprecated(CONF_SCENES),
+                    cv.deprecated(CONF_SENSORS),
+                    cv.deprecated(CONF_SWITCHES),
+                )
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
