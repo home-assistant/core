@@ -26,7 +26,7 @@ SELECT_TYPES: dict[str, SelectEntityDescription] = {
         key=ATTR_SPEED,
         translation_key=ATTR_SPEED,
         entity_category=EntityCategory.CONFIG,
-        options=[str(speed_level.value) for speed_level in MotionSpeedLevel],
+        options=["1", "2", "3"],
     )
 }
 
