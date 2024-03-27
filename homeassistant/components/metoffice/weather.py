@@ -181,14 +181,6 @@ class MetOfficeWeather(
             return str(value) if value is not None else None
         return None
 
-    @property
-    def forecast(self) -> list[Forecast] | None:
-        """Return the forecast array."""
-        return [
-            _build_forecast_data(timestep)
-            for timestep in self.coordinator.data.forecast
-        ]
-
     @callback
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the twice daily forecast in native units."""
