@@ -28,7 +28,7 @@ from .const import CONF_BLIND_TYPE, CONF_MAC_CODE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.COVER, Platform.SELECT]
+PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.COVER, Platform.SELECT]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 

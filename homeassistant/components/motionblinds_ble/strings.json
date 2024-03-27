@@ -35,6 +35,17 @@
     }
   },
   "entity": {
+    "button": {
+      "connect": {
+        "name": "[%key:common::action::connect%]"
+      },
+      "disconnect": {
+        "name": "[%key:common::action::disconnect%]"
+      },
+      "favorite": {
+        "name": "Favorite"
+      }
+    },
     "select": {
       "speed": {
         "name": "Speed",
