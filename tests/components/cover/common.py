@@ -67,11 +67,6 @@ class MockCover(MockEntity, CoverEntity):
         self._values["state"] = STATE_CLOSED if self.is_closed else STATE_OPEN
 
     @property
-    def state(self):
-        """Fake State."""
-        return CoverEntity.state.fget(self)
-
-    @property
     def current_cover_position(self):
         """Return current position of cover."""
         return self._handle("current_cover_position")
