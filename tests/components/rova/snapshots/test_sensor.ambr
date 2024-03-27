@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[sensor.8381be13_gft-entry]
+# name: test_all_entities[sensor.8381be_13_bio-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11,8 +11,8 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.8381be13_gft',
-    'has_entity_name': False,
+    'entity_id': 'sensor.8381be_13_bio',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -22,32 +22,31 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': 'mdi:recycle',
-    'original_name': '8381BE13_gft',
+    'original_icon': None,
+    'original_name': 'Bio',
     'platform': 'rova',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'bio',
     'unique_id': '8381BE13_gft',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.8381be13_gft-state]
+# name: test_all_entities[sensor.8381be_13_bio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': '8381BE13_gft',
-      'icon': 'mdi:recycle',
+      'friendly_name': '8381BE 13 Bio',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.8381be13_gft',
+    'entity_id': 'sensor.8381be_13_bio',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2024-02-20T23:00:00+00:00',
   })
 # ---
-# name: test_all_entities[sensor.8381be13_papier-entry]
+# name: test_all_entities[sensor.8381be_13_paper-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -59,8 +58,8 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.8381be13_papier',
-    'has_entity_name': False,
+    'entity_id': 'sensor.8381be_13_paper',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -70,32 +69,31 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': 'mdi:recycle',
-    'original_name': '8381BE13_papier',
+    'original_icon': None,
+    'original_name': 'Paper',
     'platform': 'rova',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'paper',
     'unique_id': '8381BE13_papier',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.8381be13_papier-state]
+# name: test_all_entities[sensor.8381be_13_paper-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': '8381BE13_papier',
-      'icon': 'mdi:recycle',
+      'friendly_name': '8381BE 13 Paper',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.8381be13_papier',
+    'entity_id': 'sensor.8381be_13_paper',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2024-03-05T23:00:00+00:00',
   })
 # ---
-# name: test_all_entities[sensor.8381be13_pmd-entry]
+# name: test_all_entities[sensor.8381be_13_plastic-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -107,8 +105,8 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.8381be13_pmd',
-    'has_entity_name': False,
+    'entity_id': 'sensor.8381be_13_plastic',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -118,32 +116,31 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': 'mdi:recycle',
-    'original_name': '8381BE13_pmd',
+    'original_icon': None,
+    'original_name': 'Plastic',
     'platform': 'rova',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'plastic',
     'unique_id': '8381BE13_pmd',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.8381be13_pmd-state]
+# name: test_all_entities[sensor.8381be_13_plastic-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': '8381BE13_pmd',
-      'icon': 'mdi:recycle',
+      'friendly_name': '8381BE 13 Plastic',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.8381be13_pmd',
+    'entity_id': 'sensor.8381be_13_plastic',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2024-03-11T23:00:00+00:00',
   })
 # ---
-# name: test_all_entities[sensor.8381be13_restafval-entry]
+# name: test_all_entities[sensor.8381be_13_residual-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -155,8 +152,8 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.8381be13_restafval',
-    'has_entity_name': False,
+    'entity_id': 'sensor.8381be_13_residual',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -166,25 +163,24 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': 'mdi:recycle',
-    'original_name': '8381BE13_restafval',
+    'original_icon': None,
+    'original_name': 'Residual',
     'platform': 'rova',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'residual',
     'unique_id': '8381BE13_restafval',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.8381be13_restafval-state]
+# name: test_all_entities[sensor.8381be_13_residual-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': '8381BE13_restafval',
-      'icon': 'mdi:recycle',
+      'friendly_name': '8381BE 13 Residual',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.8381be13_restafval',
+    'entity_id': 'sensor.8381be_13_residual',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
