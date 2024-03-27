@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any, Protocol
 
 from tuya_sharing import CustomerDevice, Manager
 from tuya_sharing.device import DeviceStatusRange
@@ -28,7 +29,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import HomeAssistantTuyaData
-from .base import ElectricityTypeData, EnumTypeData, IntegerTypeData, TuyaEntity
+from .base import (
+    ElectricityTypeData,
+    EnumTypeData,
+    InkbirdB64TypeData,
+    IntegerTypeData,
+    TuyaEntity,
+)
 from .const import (
     DEVICE_CLASS_UNITS,
     DOMAIN,
@@ -36,7 +43,15 @@ from .const import (
     DPCode,
     DPType,
     UnitOfMeasurement,
+    UnitOfTemperature,
 )
+
+
+class ValueFunction(Protocol):
+    """Value Parsing Function Definition."""
+
+    def __call__(self, sensor: TuyaSensorEntity, value: Any) -> StateType:
+        """Given a sensor and it's incoming value, return the appropriate state."""
 
 
 @dataclass(frozen=True)
@@ -44,6 +59,7 @@ class TuyaSensorEntityDescription(SensorEntityDescription):
     """Describes Tuya sensor entity."""
 
     subkey: str | None = None
+    value_fn: ValueFunction | None = None
 
 
 # Commonly used battery sensors, that are re-used in the sensors down below.
@@ -599,6 +615,67 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     # Temperature and Humidity Sensor
     # https://developer.tuya.com/en/docs/iot/categorywsdcg?id=Kaiuz3hinij34
     "wsdcg": (
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_UNIT_CONVERT,
+            translation_key="temp_unit_convert",
+            name="temp_unit_convert",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CHANNEL_0,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+            name="base_station_temperature",
+            subkey="temperature",
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            value_fn=lambda _, value: InkbirdB64TypeData.from_raw(value).temperature,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CHANNEL_0,
+            device_class=SensorDeviceClass.HUMIDITY,
+            state_class=SensorStateClass.MEASUREMENT,
+            name="base_station_humidity",
+            subkey="humidity",
+            value_fn=lambda _, value: InkbirdB64TypeData.from_raw(value).humidity,
+        ),
+        *[
+            i
+            for dp_code in (
+                DPCode.CHANNEL_1,
+                DPCode.CHANNEL_2,
+                DPCode.CHANNEL_3,
+                DPCode.CHANNEL_4,
+                DPCode.CHANNEL_5,
+                DPCode.CHANNEL_6,
+                DPCode.CHANNEL_7,
+                DPCode.CHANNEL_8,
+                DPCode.CHANNEL_9,
+            )
+            for i in (
+                TuyaSensorEntityDescription(
+                    key=dp_code,
+                    device_class=SensorDeviceClass.TEMPERATURE,
+                    state_class=SensorStateClass.MEASUREMENT,
+                    name=f"{dp_code.value}_temperature",
+                    subkey="temperature",
+                    native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+                    value_fn=lambda _, value: InkbirdB64TypeData.from_raw(
+                        value
+                    ).temperature,
+                ),
+                TuyaSensorEntityDescription(
+                    key=dp_code,
+                    native_unit_of_measurement=PERCENTAGE,
+                    device_class=SensorDeviceClass.BATTERY,
+                    state_class=SensorStateClass.MEASUREMENT,
+                    entity_category=EntityCategory.DIAGNOSTIC,
+                    name=f"{dp_code.value}_battery",
+                    subkey="battery",
+                    value_fn=lambda _, value: InkbirdB64TypeData.from_raw(
+                        value
+                    ).battery,
+                ),
+            )
+        ],
         TuyaSensorEntityDescription(
             key=DPCode.VA_TEMPERATURE,
             translation_key="temperature",
@@ -1183,6 +1260,11 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         ):
             return None
 
+        if self.entity_description.value_fn is not None:
+            return self.entity_description.value_fn(
+                self.device, self.device.status.get(self.entity_description.key)
+            )
+
         # Raw value
         value = self.device.status.get(self.entity_description.key)
         if value is None:
@@ -1202,6 +1284,8 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         ):
             return None
 
+        values: None | ElectricityTypeData | InkbirdB64TypeData = None
+
         # Get subkey value from Json string.
         if self._type is DPType.JSON:
             if self.entity_description.subkey is None:
@@ -1212,6 +1296,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         if self._type is DPType.RAW:
             if self.entity_description.subkey is None:
                 return None
+
             values = ElectricityTypeData.from_raw(value)
             return getattr(values, self.entity_description.subkey)
 
