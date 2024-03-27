@@ -486,8 +486,7 @@ def validate_device_class(
     metadata_value,
     platform: str,
     logger: logging.Logger,
-) -> BinarySensorDeviceClass | None:
-    ...
+) -> BinarySensorDeviceClass | None: ...
 
 
 @overload
@@ -496,8 +495,7 @@ def validate_device_class(
     metadata_value,
     platform: str,
     logger: logging.Logger,
-) -> SensorDeviceClass | None:
-    ...
+) -> SensorDeviceClass | None: ...
 
 
 @overload
@@ -506,8 +504,7 @@ def validate_device_class(
     metadata_value,
     platform: str,
     logger: logging.Logger,
-) -> NumberDeviceClass | None:
-    ...
+) -> NumberDeviceClass | None: ...
 
 
 def validate_device_class(
