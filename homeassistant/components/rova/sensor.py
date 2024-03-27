@@ -17,6 +17,7 @@ from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -27,28 +28,24 @@ from .coordinator import RovaCoordinator
 
 ISSUE_PLACEHOLDER = {"url": "/config/integrations/dashboard/add?domain=rova"}
 
-SENSOR_TYPES = {
-    "bio": SensorEntityDescription(
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
         key="gft",
-        name="bio",
-        icon="mdi:recycle",
+        translation_key="bio",
     ),
-    "paper": SensorEntityDescription(
+    SensorEntityDescription(
         key="papier",
-        name="paper",
-        icon="mdi:recycle",
+        translation_key="paper",
     ),
-    "plastic": SensorEntityDescription(
+    SensorEntityDescription(
         key="pmd",
-        name="plastic",
-        icon="mdi:recycle",
+        translation_key="plastic",
     ),
-    "residual": SensorEntityDescription(
+    SensorEntityDescription(
         key="restafval",
-        name="residual",
-        icon="mdi:recycle",
+        translation_key="residual",
     ),
-}
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -119,13 +116,15 @@ async def async_setup_entry(
     unique_id = entry.unique_id
 
     async_add_entities(
-        RovaSensor(unique_id, description, coordinator)
-        for key, description in SENSOR_TYPES.items()
+        RovaSensor(unique_id, description, coordinator) for description in SENSOR_TYPES
     )
 
 
 class RovaSensor(CoordinatorEntity[RovaCoordinator], SensorEntity):
     """Representation of a Rova sensor."""
+
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -136,10 +135,11 @@ class RovaSensor(CoordinatorEntity[RovaCoordinator], SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-
-        self._attr_name = f"{unique_id}_{description.key}"
         self._attr_unique_id = f"{unique_id}_{description.key}"
-        self._attr_device_class = SensorDeviceClass.TIMESTAMP
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
     @property
     def native_value(self) -> datetime | None:
