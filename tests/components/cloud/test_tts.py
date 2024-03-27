@@ -132,13 +132,13 @@ async def test_prefs_default_voice(
     assert engine is not None
     # The platform config provider will be overridden by the discovery info provider.
     assert engine.default_language == "en-US"
-    assert engine.default_options == {"audio_output": "mp3", "voice": "JennyNeural"}
+    assert engine.default_options == {"audio_output": "mp3"}
 
     await set_cloud_prefs({"tts_default_voice": ("nl-NL", "MaartenNeural")})
     await hass.async_block_till_done()
 
     assert engine.default_language == "nl-NL"
-    assert engine.default_options == {"audio_output": "mp3", "voice": "MaartenNeural"}
+    assert engine.default_options == {"audio_output": "mp3"}
 
 
 async def test_deprecated_platform_config(
@@ -240,11 +240,11 @@ async def test_get_tts_audio(
         "url": (
             "http://example.local:8123/api/tts_proxy/"
             "42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_en-us_5c97d21c48_{expected_url_suffix}.mp3"
+            f"_en-us_6e8b81ac47_{expected_url_suffix}.mp3"
         ),
         "path": (
             "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_en-us_5c97d21c48_{expected_url_suffix}.mp3"
+            f"_en-us_6e8b81ac47_{expected_url_suffix}.mp3"
         ),
     }
     await hass.async_block_till_done()
@@ -254,6 +254,7 @@ async def test_get_tts_audio(
     assert mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
     assert mock_process_tts.call_args.kwargs["language"] == "en-US"
     assert mock_process_tts.call_args.kwargs["gender"] is None
+    assert mock_process_tts.call_args.kwargs["voice"] == "JennyNeural"
     assert mock_process_tts.call_args.kwargs["output"] == "mp3"
 
 
@@ -292,11 +293,11 @@ async def test_get_tts_audio_logged_out(
         "url": (
             "http://example.local:8123/api/tts_proxy/"
             "42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_en-us_5c97d21c48_{expected_url_suffix}.mp3"
+            f"_en-us_6e8b81ac47_{expected_url_suffix}.mp3"
         ),
         "path": (
             "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_en-us_5c97d21c48_{expected_url_suffix}.mp3"
+            f"_en-us_6e8b81ac47_{expected_url_suffix}.mp3"
         ),
     }
     await hass.async_block_till_done()
@@ -306,6 +307,7 @@ async def test_get_tts_audio_logged_out(
     assert mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
     assert mock_process_tts.call_args.kwargs["language"] == "en-US"
     assert mock_process_tts.call_args.kwargs["gender"] is None
+    assert mock_process_tts.call_args.kwargs["voice"] == "JennyNeural"
     assert mock_process_tts.call_args.kwargs["output"] == "mp3"
 
 
@@ -356,11 +358,11 @@ async def test_tts_entity(
         "url": (
             "http://example.local:8123/api/tts_proxy/"
             "42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_en-us_5c97d21c48_{entity_id}.mp3"
+            f"_en-us_6e8b81ac47_{entity_id}.mp3"
         ),
         "path": (
             "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_en-us_5c97d21c48_{entity_id}.mp3"
+            f"_en-us_6e8b81ac47_{entity_id}.mp3"
         ),
     }
     await hass.async_block_till_done()
@@ -370,6 +372,7 @@ async def test_tts_entity(
     assert mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
     assert mock_process_tts.call_args.kwargs["language"] == "en-US"
     assert mock_process_tts.call_args.kwargs["gender"] is None
+    assert mock_process_tts.call_args.kwargs["voice"] == "JennyNeural"
     assert mock_process_tts.call_args.kwargs["output"] == "mp3"
 
     state = hass.states.get(entity_id)
@@ -644,11 +647,11 @@ async def test_deprecated_gender(
         "url": (
             "http://example.local:8123/api/tts_proxy/"
             "42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_{language.lower()}_5c97d21c48_{expected_url_suffix}.mp3"
+            f"_{language.lower()}_6e8b81ac47_{expected_url_suffix}.mp3"
         ),
         "path": (
             "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_{language.lower()}_5c97d21c48_{expected_url_suffix}.mp3"
+            f"_{language.lower()}_6e8b81ac47_{expected_url_suffix}.mp3"
         ),
     }
     await hass.async_block_till_done()
@@ -674,11 +677,11 @@ async def test_deprecated_gender(
         "url": (
             "http://example.local:8123/api/tts_proxy/"
             "42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_{language.lower()}_5dded72256_{expected_url_suffix}.mp3"
+            f"_{language.lower()}_dd0e95eb04_{expected_url_suffix}.mp3"
         ),
         "path": (
             "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_{language.lower()}_5dded72256_{expected_url_suffix}.mp3"
+            f"_{language.lower()}_dd0e95eb04_{expected_url_suffix}.mp3"
         ),
     }
     await hass.async_block_till_done()
