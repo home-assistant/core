@@ -126,6 +126,9 @@ class ViCareFan(ViCareEntity, FanEntity):
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
 
+        if self._attributes["active_vicare_mode"] is not VentilationMode.PERMANENT:
+            return None
+
         if self._attributes["active_vicare_program"] in ORDERED_NAMED_FAN_SPEEDS:
             return ordered_list_item_to_percentage(
                 ORDERED_NAMED_FAN_SPEEDS, self._attributes["active_vicare_program"]
