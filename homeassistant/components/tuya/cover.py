@@ -36,6 +36,10 @@ class TuyaCoverEntityDescription(CoverEntityDescription):
     open_instruction_value: str = "open"
     close_instruction_value: str = "close"
     stop_instruction_value: str = "stop"
+    product_id: str | None = None
+    work_state: str | None = None
+    reverse: bool = True
+    set_position_open_close: bool = True
 
 
 COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
@@ -43,6 +47,18 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
     # Note: Multiple curtains isn't documented
     # https://developer.tuya.com/en/docs/iot/categorycl?id=Kaiuz1hnpo7df
     "cl": (
+        # AM43 Blind drive motor
+        # Note: Only product_id is "zah67ekd"
+        TuyaCoverEntityDescription(
+            key=DPCode.CONTROL,
+            product_id="zah67ekd",
+            current_position=DPCode.PERCENT_STATE,
+            set_position=DPCode.PERCENT_CONTROL,
+            device_class=CoverDeviceClass.BLIND,
+            work_state=DPCode.WORK_STATE,
+            reverse=False,
+            set_position_open_close=False,
+        ),
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL,
             translation_key="curtain",
@@ -159,8 +175,14 @@ async def async_setup_entry(
                     TuyaCoverEntity(device, hass_data.manager, description)
                     for description in descriptions
                     if (
-                        description.key in device.function
-                        or description.key in device.status_range
+                        (
+                            description.key in device.function
+                            or description.key in device.status_range
+                        )
+                        and (
+                            description.product_id is None
+                            or description.product_id == device.product_id
+                        )
                     )
                 )
 
@@ -179,6 +201,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
     _current_position: IntegerTypeData | None = None
     _set_position: IntegerTypeData | None = None
     _tilt: IntegerTypeData | None = None
+    _send_position: int | None = None
     entity_description: TuyaCoverEntityDescription
 
     def __init__(
@@ -243,7 +266,9 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             return None
 
         return round(
-            self._current_position.remap_value_to(position, 0, 100, reverse=True)
+            self._current_position.remap_value_to(
+                position, 0, 100, reverse=self.entity_description.reverse
+            )
         )
 
     @property
@@ -259,6 +284,46 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             return None
 
         return round(self._tilt.remap_value_to(angle, 0, 100))
+
+    @property
+    def is_opening(self):
+        """Return if cover is opening."""
+        if self.entity_description.work_state is None:
+            return None
+
+        control = self.device.status.get(self.entity_description.key)
+        set_position = self.device.status.get(
+            self._set_position.dpcode
+            if self._send_position is None
+            else self._send_position
+        )
+        state = self.device.status.get(self.entity_description.work_state)
+
+        return (
+            control == "open"
+            and state == "opening"
+            and (set_position is None or set_position != self.current_cover_position)
+        )
+
+    @property
+    def is_closing(self):
+        """Return if cover is closing."""
+        if self.entity_description.work_state is None:
+            return None
+
+        control = self.device.status.get(self.entity_description.key)
+        set_position = self.device.status.get(
+            self._set_position.dpcode
+            if self._send_position is None
+            else self._send_position
+        )
+        state = self.device.status.get(self.entity_description.work_state)
+
+        return (
+            control == "close"
+            and state == "closing"
+            and (set_position is None or set_position != self.current_cover_position)
+        )
 
     @property
     def is_closed(self) -> bool | None:
@@ -292,14 +357,19 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         commands: list[dict[str, str | int]] = [
             {"code": self.entity_description.key, "value": value}
         ]
-
-        if self._set_position is not None:
+        if (
+            self._set_position is not None
+            and self.entity_description.set_position_open_close
+        ):
+            self._send_position = round(
+                self._set_position.remap_value_from(
+                    100, 0, 100, reverse=self.entity_description.reverse
+                ),
+            )
             commands.append(
                 {
                     "code": self._set_position.dpcode,
-                    "value": round(
-                        self._set_position.remap_value_from(100, 0, 100, reverse=True),
-                    ),
+                    "value": self._send_position,
                 }
             )
 
@@ -317,13 +387,19 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             {"code": self.entity_description.key, "value": value}
         ]
 
-        if self._set_position is not None:
+        if (
+            self._set_position is not None
+            and self.entity_description.set_position_open_close
+        ):
+            self._send_position = round(
+                self._set_position.remap_value_from(
+                    0, 0, 100, reverse=self.entity_description.reverse
+                ),
+            )
             commands.append(
                 {
                     "code": self._set_position.dpcode,
-                    "value": round(
-                        self._set_position.remap_value_from(0, 0, 100, reverse=True),
-                    ),
+                    "value": self._send_position,
                 }
             )
 
@@ -336,15 +412,16 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
                 "Cannot set position, device doesn't provide methods to set it"
             )
 
+        self._send_position = round(
+            self._set_position.remap_value_from(
+                kwargs[ATTR_POSITION], 0, 100, reverse=self.entity_description.reverse
+            )
+        )
         self._send_command(
             [
                 {
                     "code": self._set_position.dpcode,
-                    "value": round(
-                        self._set_position.remap_value_from(
-                            kwargs[ATTR_POSITION], 0, 100, reverse=True
-                        )
-                    ),
+                    "value": self._send_position,
                 }
             ]
         )
@@ -373,7 +450,10 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
                     "code": self._tilt.dpcode,
                     "value": round(
                         self._tilt.remap_value_from(
-                            kwargs[ATTR_TILT_POSITION], 0, 100, reverse=True
+                            kwargs[ATTR_TILT_POSITION],
+                            0,
+                            100,
+                            reverse=self.entity_description.reverse,
                         )
                     ),
                 }
