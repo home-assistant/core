@@ -119,13 +119,14 @@ class Searcher:
             self.results[item_type].update(item_id)
 
     @callback
-    def _async_search_area(self, area_id: str) -> None:
+    def _async_search_area(self, area_id: str, *, entry_point: bool = True) -> None:
         """Find results for an area."""
         if not (area_entry := self._async_resolve_up_area(area_id)):
             return
 
-        # Add labels of this area
-        self._add(ItemType.LABEL, area_entry.labels)
+        if entry_point:
+            # Add labels of this area
+            self._add(ItemType.LABEL, area_entry.labels)
 
         # Automations referencing this area
         self._add(
@@ -261,7 +262,7 @@ class Searcher:
             # Fully search the script if it is part of an automation.
             # This makes the automation return all results of the embedded script.
             if domain == "script":
-                self._async_search_script(entity_id)
+                self._async_search_script(entity_id, entry_point=False)
 
     @callback
     def _async_search_automation_blueprint(self, blueprint_path: str) -> None:
@@ -278,22 +279,23 @@ class Searcher:
             self._device_registry, config_entry_id
         ):
             self._add(ItemType.DEVICE, device_entry.id)
-            self._async_search_device(device_entry.id)
+            self._async_search_device(device_entry.id, entry_point=False)
 
         for entity_entry in er.async_entries_for_config_entry(
             self._entity_registry, config_entry_id
         ):
             self._add(ItemType.ENTITY, entity_entry.entity_id)
-            self._async_search_entity(entity_entry.entity_id)
+            self._async_search_entity(entity_entry.entity_id, entry_point=False)
 
     @callback
-    def _async_search_device(self, device_id: str) -> None:
+    def _async_search_device(self, device_id: str, *, entry_point: bool = True) -> None:
         """Find results for a device."""
         if not (device_entry := self._async_resolve_up_device(device_id)):
             return
 
-        # Add labels of this device
-        self._add(ItemType.LABEL, device_entry.labels)
+        if entry_point:
+            # Add labels of this device
+            self._add(ItemType.LABEL, device_entry.labels)
 
         # Automations referencing this device
         self._add(
@@ -310,12 +312,15 @@ class Searcher:
         ):
             self._add(ItemType.ENTITY, entity_entry.entity_id)
             # Add all entity information as well
-            self._async_search_entity(entity_entry.entity_id)
+            self._async_search_entity(entity_entry.entity_id, entry_point=False)
 
     @callback
-    def _async_search_entity(self, entity_id: str) -> None:
+    def _async_search_entity(self, entity_id: str, *, entry_point: bool = True) -> None:
         """Find results for an entity."""
-        if entity_entry := self._async_resolve_up_entity(entity_id):
+        # Resolve up the entity itself
+        entity_entry = self._async_resolve_up_entity(entity_id)
+
+        if entity_entry and entry_point:
             # Add labels of this entity
             self._add(ItemType.LABEL, entity_entry.labels)
 
@@ -340,9 +345,18 @@ class Searcher:
     @callback
     def _async_search_floor(self, floor_id: str) -> None:
         """Find results for a floor."""
+        # Automations referencing this floor
+        self._add(
+            ItemType.AUTOMATION,
+            automation.automations_with_floor(self.hass, floor_id),
+        )
+
+        # Scripts referencing this floor
+        self._add(ItemType.SCRIPT, script.scripts_with_floor(self.hass, floor_id))
+
         for area_entry in ar.async_entries_for_floor(self._area_registry, floor_id):
             self._add(ItemType.AREA, area_entry.id)
-            self._async_search_area(area_entry.id)
+            self._async_search_area(area_entry.id, entry_point=False)
 
     @callback
     def _async_search_group(self, group_entity_id: str) -> None:
@@ -449,10 +463,14 @@ class Searcher:
             self._async_resolve_up_entity(entity)
 
     @callback
-    def _async_search_script(self, script_entity_id: str) -> None:
+    def _async_search_script(
+        self, script_entity_id: str, *, entry_point: bool = True
+    ) -> None:
         """Find results for a script."""
         # Up resolve the script entity itself
-        if entity_entry := self._async_resolve_up_entity(script_entity_id):
+        entity_entry = self._async_resolve_up_entity(script_entity_id)
+
+        if entity_entry and entry_point:
             # Add labels of this script entity
             self._add(ItemType.LABEL, entity_entry.labels)
 
@@ -502,7 +520,7 @@ class Searcher:
             # Fully search the script if it is nested.
             # This makes the script return all results of the embedded script.
             if domain == "script":
-                self._async_search_script(entity_id)
+                self._async_search_script(entity_id, entry_point=False)
 
     @callback
     def _async_search_script_blueprint(self, blueprint_path: str) -> None:
