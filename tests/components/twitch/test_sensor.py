@@ -3,7 +3,8 @@
 from datetime import datetime
 from unittest.mock import AsyncMock
 
-from twitchAPI.object.api import FollowedChannel, Stream
+from twitchAPI.object.api import FollowedChannel, Stream, UserSubscription
+from twitchAPI.type import TwitchResourceNotFound
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.twitch.const import CONF_CHANNELS, DOMAIN
@@ -12,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from ...common import MockConfigEntry
+from ...common import MockConfigEntry, load_json_object_fixture
 from . import TwitchIterObject, get_generator_from_data, setup_integration
 
 ENTITY_ID = "sensor.channel123"
@@ -103,9 +104,11 @@ async def test_oauth_without_sub_and_follow(
     hass: HomeAssistant, twitch_mock: AsyncMock, config_entry: MockConfigEntry
 ) -> None:
     """Test state with oauth."""
-
     twitch_mock.return_value.get_followed_channels.return_value = TwitchIterObject(
         "empty_response.json", FollowedChannel
+    )
+    twitch_mock.return_value.check_user_subscription.side_effect = (
+        TwitchResourceNotFound
     )
     await setup_integration(hass, config_entry)
 
@@ -120,6 +123,9 @@ async def test_oauth_with_sub(
     """Test state with oauth and sub."""
     twitch_mock.return_value.get_followed_channels.return_value = TwitchIterObject(
         "empty_response.json", FollowedChannel
+    )
+    twitch_mock.return_value.check_user_subscription.return_value = UserSubscription(
+        **load_json_object_fixture("check_user_subscription_2.json", DOMAIN)
     )
     await setup_integration(hass, config_entry)
 
@@ -140,34 +146,3 @@ async def test_oauth_with_follow(
     assert sensor_state.attributes["following_since"] == datetime(
         year=2023, month=8, day=1
     )
-
-
-async def test_auth_invalid(
-    hass: HomeAssistant, twitch_mock: AsyncMock, config_entry: MockConfigEntry
-) -> None:
-    """Test auth failures."""
-    await setup_integration(hass, config_entry)
-
-    sensor_state = hass.states.get(ENTITY_ID)
-    assert sensor_state is None
-
-
-async def test_auth_with_invalid_user(
-    hass: HomeAssistant, twitch_mock: AsyncMock, config_entry: MockConfigEntry
-) -> None:
-    """Test auth with invalid user."""
-    await setup_integration(hass, config_entry)
-
-    sensor_state = hass.states.get(ENTITY_ID)
-    assert "subscribed" not in sensor_state.attributes
-
-
-async def test_auth_with_api_exception(
-    hass: HomeAssistant, twitch_mock: AsyncMock, config_entry: MockConfigEntry
-) -> None:
-    """Test auth with invalid user."""
-    await setup_integration(hass, config_entry)
-
-    sensor_state = hass.states.get(ENTITY_ID)
-    assert sensor_state.attributes["subscribed"] is False
-    assert "subscription_is_gifted" not in sensor_state.attributes

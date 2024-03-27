@@ -183,7 +183,7 @@ async def test_reauth_wrong_account(
 ) -> None:
     """Check reauth flow."""
     await setup_integration(hass, config_entry)
-    twitch_mock.return_value.get_users.return_value = get_generator(
+    twitch_mock.return_value.get_users = lambda *args, **kwargs: get_generator(
         "get_users_2.json", TwitchUser
     )
     result = await hass.config_entries.flow.async_init(

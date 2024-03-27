@@ -27,13 +27,14 @@ class TwitchIterObject:
 
     def __init__(self, fixture: str, target_type: TwitchType) -> None:
         """Initialize object."""
-        self.data = load_json_array_fixture(fixture, DOMAIN)
-        self.total = len(self.data)
+        self.raw_data = load_json_array_fixture(fixture, DOMAIN)
+        self.data = [target_type(**item) for item in self.raw_data]
+        self.total = len(self.raw_data)
         self.target_type = target_type
 
     async def __aiter__(self) -> AsyncIterator:
         """Return async iterator."""
-        async for item in get_generator_from_data(self.data, self.target_type):
+        async for item in get_generator_from_data(self.raw_data, self.target_type):
             yield item
 
 

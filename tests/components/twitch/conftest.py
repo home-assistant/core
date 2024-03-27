@@ -5,7 +5,7 @@ import time
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from twitchAPI.object.api import FollowedChannel, Stream, TwitchUser
+from twitchAPI.object.api import FollowedChannel, Stream, TwitchUser, UserSubscription
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -15,7 +15,7 @@ from homeassistant.components.twitch.const import DOMAIN, OAUTH2_TOKEN, OAUTH_SC
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 from tests.components.twitch import TwitchIterObject, get_generator
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -104,7 +104,7 @@ def twitch_mock() -> AsyncMock:
             new=mock_client,
         ),
     ):
-        mock_client.return_value.get_users.return_value = get_generator(
+        mock_client.return_value.get_users = lambda *args, **kwargs: get_generator(
             "get_users.json", TwitchUser
         )
         mock_client.return_value.get_followed_channels.return_value = TwitchIterObject(
@@ -112,6 +112,11 @@ def twitch_mock() -> AsyncMock:
         )
         mock_client.return_value.get_streams.return_value = get_generator(
             "get_streams.json", Stream
+        )
+        mock_client.return_value.check_user_subscription.return_value = (
+            UserSubscription(
+                **load_json_object_fixture("check_user_subscription.json", DOMAIN)
+            )
         )
         mock_client.return_value.has_required_auth.return_value = True
         yield mock_client
