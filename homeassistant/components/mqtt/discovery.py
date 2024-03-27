@@ -18,7 +18,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
-    SignalTypeFormat,
     async_dispatcher_connect,
     async_dispatcher_send,
 )
@@ -26,6 +25,7 @@ from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.loader import async_get_mqtt
 from homeassistant.util.json import json_loads_object
+from homeassistant.util.signal_type import SignalTypeFormat
 
 from .. import mqtt
 from .abbreviations import ABBREVIATIONS, DEVICE_ABBREVIATIONS, ORIGIN_ABBREVIATIONS
