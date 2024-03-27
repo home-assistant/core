@@ -702,7 +702,7 @@ fitbit==0.3.1
 fivem-api==0.1.2
 
 # homeassistant.components.fjaraskupan
-fjaraskupan==2.2.0
+fjaraskupan==2.3.0
 
 # homeassistant.components.flexit_bacnet
 flexit_bacnet==2.1.0
