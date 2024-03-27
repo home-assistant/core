@@ -253,7 +253,8 @@ class GoogleCloudTTSProvider(Provider):
                 vol.Optional(CONF_GAIN, default=self._gain): GAIN_SCHEMA,
                 vol.Optional(CONF_PROFILES, default=self._profiles): PROFILES_SCHEMA,
                 vol.Optional(CONF_TEXT_TYPE, default=self._text_type): TEXT_TYPE_SCHEMA,
-            }
+            },
+            extra=vol.ALLOW_EXTRA,
         )
         options = options_schema(options)
 
