@@ -1,4 +1,23 @@
 # serializer version: 1
 # name: test_fan
-  None
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'model0 None',
+      'percentage': None,
+      'percentage_step': 25.0,
+      'preset_mode': None,
+      'preset_modes': list([
+        <VentilationMode.VENTILATION: 'ventilation'>,
+        <VentilationMode.SENSOR_DRIVEN: 'sensorDriven'>,
+        <VentilationMode.SENSOR_OVERRIDE: 'sensorOverride'>,
+      ]),
+      'supported_features': <FanEntityFeature: 9>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.model0_none',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
 # ---

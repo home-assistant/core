@@ -13,4 +13,4 @@ async def test_fan(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the ViCare fan."""
-    assert hass.states.get("fan.model0_ventilation") == snapshot
+    assert hass.states.get("fan.model0_none") == snapshot
