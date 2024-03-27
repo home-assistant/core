@@ -7,13 +7,12 @@ from functools import partial
 import os
 from typing import Any
 
-from dsmr_parser import obis_references as obis_ref
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
 from dsmr_parser.clients.rfxtrx_protocol import (
     create_rfxtrx_dsmr_reader,
     create_rfxtrx_tcp_dsmr_reader,
 )
-from dsmr_parser.objects import DSMRObject
+from dsmr_parser.objects import Telegram
 import serial
 import serial.tools.list_ports
 import voluptuous as vol
@@ -55,27 +54,27 @@ class DSMRConnection:
         self._port = port
         self._dsmr_version = dsmr_version
         self._protocol = protocol
-        self._telegram: dict[str, DSMRObject] = {}
-        self._equipment_identifier = obis_ref.EQUIPMENT_IDENTIFIER
+        self._telegram: Telegram = None
+        self._equipment_identifier = "EQUIPMENT_IDENTIFIER"
         if dsmr_version == "5B":
-            self._equipment_identifier = obis_ref.BELGIUM_EQUIPMENT_IDENTIFIER
+            self._equipment_identifier = "BELGIUM_EQUIPMENT_IDENTIFIER"
         if dsmr_version == "5L":
-            self._equipment_identifier = obis_ref.LUXEMBOURG_EQUIPMENT_IDENTIFIER
+            self._equipment_identifier = "LUXEMBOURG_EQUIPMENT_IDENTIFIER"
         if dsmr_version == "Q3D":
-            self._equipment_identifier = obis_ref.Q3D_EQUIPMENT_IDENTIFIER
+            self._equipment_identifier = "Q3D_EQUIPMENT_IDENTIFIER"
 
     def equipment_identifier(self) -> str | None:
         """Equipment identifier."""
-        if self._equipment_identifier in self._telegram:
-            dsmr_object = self._telegram[self._equipment_identifier]
+        if hasattr(self._telegram, self._equipment_identifier):
+            dsmr_object = getattr(self._telegram, self._equipment_identifier)
             identifier: str | None = getattr(dsmr_object, "value", None)
             return identifier
         return None
 
     def equipment_identifier_gas(self) -> str | None:
         """Equipment identifier gas."""
-        if obis_ref.EQUIPMENT_IDENTIFIER_GAS in self._telegram:
-            dsmr_object = self._telegram[obis_ref.EQUIPMENT_IDENTIFIER_GAS]
+        if hasattr(self._telegram, "EQUIPMENT_IDENTIFIER_GAS"):
+            dsmr_object = getattr(self._telegram, "EQUIPMENT_IDENTIFIER_GAS")
             identifier: str | None = getattr(dsmr_object, "value", None)
             return identifier
         return None
@@ -83,12 +82,12 @@ class DSMRConnection:
     async def validate_connect(self, hass: HomeAssistant) -> bool:
         """Test if we can validate connection with the device."""
 
-        def update_telegram(telegram: dict[str, DSMRObject]) -> None:
+        def update_telegram(telegram: Telegram) -> None:
             if self._equipment_identifier in telegram:
                 self._telegram = telegram
                 transport.close()
             # Swedish meters have no equipment identifier
-            if self._dsmr_version == "5S" and obis_ref.P1_MESSAGE_TIMESTAMP in telegram:
+            if self._dsmr_version == "5S" and hasattr(telegram, "P1_MESSAGE_TIMESTAMP"):
                 self._telegram = telegram
                 transport.close()
 
