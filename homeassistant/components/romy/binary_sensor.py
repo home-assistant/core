@@ -18,24 +18,20 @@ BINARY_SENSORS: list[BinarySensorEntityDescription] = [
     BinarySensorEntityDescription(
         key="dustbin",
         translation_key="dustbin_present",
-        entity_registry_enabled_default=False,
     ),
     BinarySensorEntityDescription(
         key="dock",
         translation_key="docked",
-        entity_registry_enabled_default=False,
         device_class=BinarySensorDeviceClass.PLUG,
     ),
     BinarySensorEntityDescription(
         key="water_tank",
         translation_key="water_tank_present",
-        entity_registry_enabled_default=False,
         device_class=BinarySensorDeviceClass.MOISTURE,
     ),
     BinarySensorEntityDescription(
         key="water_tank_empty",
         translation_key="water_tank_empty",
-        entity_registry_enabled_default=False,
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
 ]
