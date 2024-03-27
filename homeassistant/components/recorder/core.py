@@ -47,6 +47,7 @@ from .const import (
     DOMAIN,
     ESTIMATED_QUEUE_ITEM_SIZE,
     KEEPALIVE_TIME,
+    LAST_REPORTED_SCHEMA_VERSION,
     LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION,
     MARIADB_PYMYSQL_URL_PREFIX,
     MARIADB_URL_PREFIX,
@@ -1203,7 +1204,7 @@ class Recorder(threading.Thread):
         if (
             pending_last_reported
             := self.states_manager.get_pending_last_reported_timestamp()
-        ):
+        ) and self.schema_version >= LAST_REPORTED_SCHEMA_VERSION:
             with session.no_autoflush:
                 session.execute(
                     update(States),
