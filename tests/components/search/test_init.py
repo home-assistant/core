@@ -483,7 +483,7 @@ async def test_search(
         ItemType.AUTOMATION: {"automation.scene", "automation.script"},
         ItemType.CONFIG_ENTRY: {wled_config_entry.entry_id},
         ItemType.ENTITY: {
-            "light.wled_segment_2",
+            wled_segment_2_entity.entity_id,
             scene_wled_hue_entity.entity_id,
             script_scene_entity.entity_id,
             person_paulus_entity.entity_id,
