@@ -16,7 +16,7 @@
         "default": "mdi:run-fast"
       }
     },
-    "button": {
+    "sensor": {
       "calibration": {
         "default": "mdi:tune"
       },
