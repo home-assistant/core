@@ -515,6 +515,10 @@ ZEROCONF = {
                 "vendor": "tailwind",
             },
         },
+        {
+            "domain": "velux",
+            "name": "velux_klf_lan*",
+        },
     ],
     "_hue._tcp.local.": [
         {
