@@ -59,7 +59,7 @@ class SpeedSelect(MotionblindsBLEEntity, SelectEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register device callbacks."""
-        _LOGGER.info(
+        _LOGGER.debug(
             "(%s) Setting up speed select entity",
             self.entry.data[CONF_MAC_CODE],
         )
