@@ -65,6 +65,11 @@
         "name": "Heating"
       }
     },
+    "fan": {
+      "ventilation": {
+        "name": "Ventilation"
+      }
+    },
     "number": {
       "heating_curve_shift": {
         "name": "Heating curve shift"
