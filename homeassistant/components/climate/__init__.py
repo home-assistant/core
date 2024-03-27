@@ -292,9 +292,9 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_hvac_mode: HVACMode | None
     _attr_hvac_modes: list[HVACMode]
     _attr_is_aux_heat: bool | None
-    _attr_max_humidity: int = DEFAULT_MAX_HUMIDITY
+    _attr_max_humidity: float = DEFAULT_MAX_HUMIDITY
     _attr_max_temp: float
-    _attr_min_humidity: int = DEFAULT_MIN_HUMIDITY
+    _attr_min_humidity: float = DEFAULT_MIN_HUMIDITY
     _attr_min_temp: float
     _attr_precision: float
     _attr_preset_mode: str | None
@@ -302,7 +302,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_supported_features: ClimateEntityFeature = ClimateEntityFeature(0)
     _attr_swing_mode: str | None
     _attr_swing_modes: list[str] | None
-    _attr_target_humidity: int | None = None
+    _attr_target_humidity: float | None = None
     _attr_target_temperature_high: float | None
     _attr_target_temperature_low: float | None
     _attr_target_temperature_step: float | None = None
@@ -517,12 +517,12 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_temperature_unit
 
     @cached_property
-    def current_humidity(self) -> int | None:
+    def current_humidity(self) -> float | None:
         """Return the current humidity."""
         return self._attr_current_humidity
 
     @cached_property
-    def target_humidity(self) -> int | None:
+    def target_humidity(self) -> float | None:
         """Return the humidity we try to reach."""
         return self._attr_target_humidity
 
@@ -826,12 +826,12 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_max_temp
 
     @cached_property
-    def min_humidity(self) -> int:
+    def min_humidity(self) -> float:
         """Return the minimum humidity."""
         return self._attr_min_humidity
 
     @cached_property
-    def max_humidity(self) -> int:
+    def max_humidity(self) -> float:
         """Return the maximum humidity."""
         return self._attr_max_humidity
 
