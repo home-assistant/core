@@ -2,7 +2,9 @@
 # name: test_fan
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model0 None',
+      'active_vicare_mode': None,
+      'active_vicare_program': None,
+      'friendly_name': 'model0 Ventilation',
       'percentage': None,
       'percentage_step': 25.0,
       'preset_mode': None,
@@ -12,9 +14,11 @@
         <VentilationMode.SENSOR_OVERRIDE: 'sensorOverride'>,
       ]),
       'supported_features': <FanEntityFeature: 9>,
+      'vicare_modes': None,
+      'vicare_programs': None,
     }),
     'context': <ANY>,
-    'entity_id': 'fan.model0_none',
+    'entity_id': 'fan.model0_ventilation',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
