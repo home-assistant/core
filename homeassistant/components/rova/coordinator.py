@@ -1,7 +1,6 @@
 """Coordinator for Rova."""
 
 from datetime import datetime, timedelta
-from typing import Any
 
 from rova.rova import Rova
 
@@ -12,7 +11,7 @@ from homeassistant.util.dt import get_time_zone
 from .const import DOMAIN, LOGGER
 
 
-class RovaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class RovaCoordinator(DataUpdateCoordinator[dict[str, datetime]]):
     """Class to manage fetching Rova data."""
 
     def __init__(self, hass: HomeAssistant, api: Rova) -> None:
@@ -25,7 +24,7 @@ class RovaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.api = api
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> dict[str, datetime]:
         """Fetch data from Rova API."""
 
         items = await self.hass.async_add_executor_job(self.api.get_calendar_items)
