@@ -43,10 +43,9 @@ def ensure_printer_is_supported(version: VersionInfo) -> None:
 
         # Workaround to allow PrusaLink 0.7.2 on MK3 and MK2.5 that supports
         # the 2.0.0 API, but doesn't advertise it yet
-        if (
-            version.get("original", "").startswith(("PrusaLink I3MK3","PrusaLink I3MK2"))
-            and AwesomeVersion("0.7.2") <= AwesomeVersion(version["server"])
-        ):
+        if version.get("original", "").startswith(
+            ("PrusaLink I3MK3", "PrusaLink I3MK2")
+        ) and AwesomeVersion("0.7.2") <= AwesomeVersion(version["server"]):
             return
 
     except AwesomeVersionException as err:
