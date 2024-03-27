@@ -81,7 +81,12 @@ class ViCareFan(ViCareEntity, FanEntity):
     """Representation of the ViCare ventilation device."""
 
     _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
-    _attributes: dict[str, Any] = {}
+    _attributes: dict[str, Any] = {
+        "active_vicare_mode": None,
+        "active_vicare_program": None,
+        "vicare_modes": None,
+        "vicare_programs": None,
+    }
 
     def __init__(
         self,
@@ -89,12 +94,12 @@ class ViCareFan(ViCareEntity, FanEntity):
         device: PyViCareDevice,
         translation_key: str,
     ) -> None:
-        """Initialize the climate device."""
+        """Initialize the fan entity."""
         super().__init__(device_config, device, translation_key)
         self._attr_translation_key = translation_key
 
     def update(self) -> None:
-        """Update state of number."""
+        """Update state of fan."""
         try:
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attributes["active_vicare_mode"] = self._api.getActiveMode()
@@ -121,9 +126,6 @@ class ViCareFan(ViCareEntity, FanEntity):
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
 
-        if "active_vicare_program" not in self._attributes:
-            return None
-
         if self._attributes["active_vicare_program"] in ORDERED_NAMED_FAN_SPEEDS:
             return ordered_list_item_to_percentage(
                 ORDERED_NAMED_FAN_SPEEDS, self._attributes["active_vicare_program"]
@@ -134,9 +136,12 @@ class ViCareFan(ViCareEntity, FanEntity):
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
 
-        self._api.setPermanentLevel(
-            percentage_to_ordered_list_item(ORDERED_NAMED_FAN_SPEEDS, percentage)
-        )
+        if self._attributes["active_vicare_mode"] is not VentilationMode.PERMANENT:
+            self.set_preset_mode(VentilationMode.PERMANENT)
+
+        level = percentage_to_ordered_list_item(ORDERED_NAMED_FAN_SPEEDS, percentage)
+        _LOGGER.debug("changing ventilation level to %s", level)
+        self._api.setPermanentLevel(level)
 
     @property
     def preset_mode(self) -> str | None:
@@ -156,6 +161,7 @@ class ViCareFan(ViCareEntity, FanEntity):
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
+        _LOGGER.debug("changing ventilation mode to %s", preset_mode)
         self._api.setActiveMode(preset_mode)
 
     @property
