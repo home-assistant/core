@@ -139,10 +139,7 @@ class MotionblindsBLESensorEntity(MotionblindsBLEEntity, SensorEntity, Generic[_
             self._attr_native_value = self.entity_description.value_func(value)
             self.async_write_ha_state()
 
-        register_callback_func = self.entity_description.register_callback_func(
-            self.device
-        )
-        register_callback_func(async_callback)
+        self.entity_description.register_callback_func(self.device)(async_callback)
 
 
 class BatterySensor(MotionblindsBLEEntity, SensorEntity):
