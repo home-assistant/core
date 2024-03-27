@@ -24,5 +24,45 @@
         "description": "Confirm the configuration of the {model}-{serial_number} @ {host}."
       }
     }
+  },
+  "services": {
+    "beolink_join": {
+      "name": "Beolink join",
+      "description": "Join a Beolink experience.",
+      "fields": {
+        "beolink_jid": {
+          "name": "Beolink JID",
+          "description": "Manually specify Beolink JID to join."
+        }
+      }
+    },
+    "beolink_expand": {
+      "name": "Beolink expand",
+      "description": "Expand current Beolink experience.",
+      "fields": {
+        "beolink_jids": {
+          "name": "Beolink JIDs",
+          "description": "Specify which Beolink JIDs will join current Beolink experience."
+        }
+      }
+    },
+    "beolink_unexpand": {
+      "name": "Beolink unexpand",
+      "description": "Unexpand from current Beolink experience.",
+      "fields": {
+        "beolink_jids": {
+          "name": "Beolink JIDs",
+          "description": "Specify which Beolink JIDs will leave from current Beolink experience."
+        }
+      }
+    },
+    "beolink_leave": {
+      "name": "Beolink leave",
+      "description": "Leave a Beolink experience."
+    },
+    "beolink_allstandby": {
+      "name": "Beolink allstandby",
+      "description": "Set all Connected Beolink devices to standby."
+    }
   }
 }

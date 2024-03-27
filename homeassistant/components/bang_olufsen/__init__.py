@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from aiohttp.client_exceptions import ClientConnectorError
-from mozart_api.exceptions import ApiException
 from mozart_api.mozart_client import MozartClient
 
 from homeassistant.config_entries import ConfigEntry
@@ -44,14 +42,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         model=entry.data[CONF_MODEL],
     )
 
-    client = MozartClient(host=entry.data[CONF_HOST], websocket_reconnect=True)
+    client = MozartClient(host=entry.data[CONF_HOST])
 
-    # Check connection and try to initialize it.
-    try:
-        await client.get_battery_state(_request_timeout=3)
-    except (ApiException, ClientConnectorError, TimeoutError) as error:
+    # Check API and WebSocket connection
+    if not await client.check_device_connection():
         await client.close_api_client()
-        raise ConfigEntryNotReady(f"Unable to connect to {entry.title}") from error
+        raise ConfigEntryNotReady(f"Unable to connect to {entry.title}")
 
     websocket = BangOlufsenWebsocket(hass, entry, client)
 
@@ -61,11 +57,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         client,
     )
 
-    # Check and start WebSocket connection
-    if not await client.connect_notifications(remote_control=True):
-        raise ConfigEntryNotReady(
-            f"Unable to connect to {entry.title} WebSocket notification channel"
-        )
+    # Start WebSocket connection
+    await client.connect_notifications(remote_control=True, reconnect=True)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
