@@ -1,4 +1,5 @@
 """Provides device triggers for LG Netcast."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -17,10 +18,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import trigger
 from .const import DOMAIN
-from .helpers import (
-    async_get_client_by_device_entry,
-    async_get_device_entry_by_device_id,
-)
+from .helpers import async_get_device_entry_by_device_id
 from .triggers.turn_on import (
     PLATFORM_TYPE as TURN_ON_PLATFORM_TYPE,
     async_get_turn_on_trigger,
@@ -43,12 +41,20 @@ async def async_validate_trigger_config(
 
     if config[CONF_TYPE] == TURN_ON_PLATFORM_TYPE:
         device_id = config[CONF_DEVICE_ID]
+
         try:
             device = async_get_device_entry_by_device_id(hass, device_id)
-            if DOMAIN in hass.data:
-                async_get_client_by_device_entry(hass, device)
         except ValueError as err:
             raise InvalidDeviceAutomationConfig(err) from err
+
+        if DOMAIN in hass.data:
+            for config_entry_id in device.config_entries:
+                if hass.data[DOMAIN].get(config_entry_id):
+                    break
+            else:
+                raise InvalidDeviceAutomationConfig(
+                    f"Device {device.id} is not from an existing {DOMAIN} config entry"
+                )
 
     return config
 

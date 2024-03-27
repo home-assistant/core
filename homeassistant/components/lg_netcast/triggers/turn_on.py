@@ -11,7 +11,7 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.trigger import (
     PluggableAction,
     TriggerActionType,
@@ -20,10 +20,7 @@ from homeassistant.helpers.trigger import (
 from homeassistant.helpers.typing import ConfigType
 
 from ..const import DOMAIN
-from ..helpers import (
-    async_get_device_entry_by_device_id,
-    async_get_device_id_from_entity_id,
-)
+from ..helpers import async_get_device_entry_by_device_id
 
 PLATFORM_TYPE = f"{DOMAIN}.{__name__.rsplit('.', maxsplit=1)[-1]}"
 
@@ -64,9 +61,23 @@ async def async_attach_trigger(
         device_ids.update(config.get(ATTR_DEVICE_ID, []))
 
     if ATTR_ENTITY_ID in config:
+        ent_reg = er.async_get(hass)
+
+        def _get_device_id_from_entity_id(entity_id):
+            entity_entry = ent_reg.async_get(entity_id)
+
+            if (
+                entity_entry is None
+                or entity_entry.device_id is None
+                or entity_entry.platform != DOMAIN
+            ):
+                raise ValueError(f"Entity {entity_id} is not a valid {DOMAIN} entity.")
+
+            return entity_entry.device_id
+
         device_ids.update(
             {
-                async_get_device_id_from_entity_id(hass, entity_id)
+                _get_device_id_from_entity_id(entity_id)
                 for entity_id in config.get(ATTR_ENTITY_ID, [])
             }
         )
