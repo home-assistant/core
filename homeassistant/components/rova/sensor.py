@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import voluptuous as vol
 
@@ -26,9 +26,6 @@ from . import RovaCoordinator
 from .const import CONF_HOUSE_NUMBER, CONF_HOUSE_NUMBER_SUFFIX, CONF_ZIP_CODE, DOMAIN
 
 ISSUE_PLACEHOLDER = {"url": "/config/integrations/dashboard/add?domain=rova"}
-
-UPDATE_DELAY = timedelta(hours=12)
-SCAN_INTERVAL = timedelta(hours=12)
 
 SENSOR_TYPES = {
     "bio": SensorEntityDescription(

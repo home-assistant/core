@@ -28,7 +28,7 @@ class RovaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from Rova API."""
 
-        items = self.hass.async_add_executor_job(self.api.get_calendar_items)
+        items = await self.hass.async_add_executor_job(self.api.get_calendar_items)
 
         data = {}
 
