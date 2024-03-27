@@ -101,14 +101,14 @@
     "connection_failed": {
       "message": "A connection error occurred for {title} ({host})"
     },
-    "process_not_found": {
-      "message": "Could not find process with id {id}."
-    },
     "device_not_found": {
       "message": "Could not find device {device}"
     },
     "no_data_received": {
       "message": "No data received from {host}"
+    },
+    "process_not_found": {
+      "message": "Could not find process with id {id}."
     },
     "timeout": {
       "message": "A timeout occurred for {title} ({host})"
