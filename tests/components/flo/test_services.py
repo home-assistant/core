@@ -106,5 +106,5 @@ async def test_services(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
-        assert aioclient_mock.call_count == 13
+    await hass.async_block_till_done()
+    assert aioclient_mock.call_count == 13

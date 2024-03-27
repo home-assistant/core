@@ -34,12 +34,12 @@ def test_validate_version_no_key(integration: Integration) -> None:
 def test_validate_custom_integration_manifest(integration: Integration) -> None:
     """Test validate custom integration manifest."""
 
+    integration.manifest["version"] = "lorem_ipsum"
     with pytest.raises(vol.Invalid):
-        integration.manifest["version"] = "lorem_ipsum"
         CUSTOM_INTEGRATION_MANIFEST_SCHEMA(integration.manifest)
 
+    integration.manifest["version"] = None
     with pytest.raises(vol.Invalid):
-        integration.manifest["version"] = None
         CUSTOM_INTEGRATION_MANIFEST_SCHEMA(integration.manifest)
 
     integration.manifest["version"] = "1"

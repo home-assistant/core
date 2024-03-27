@@ -189,7 +189,7 @@ async def test_turn_on_with_preset_mode_only(
             {ATTR_ENTITY_ID: fan_entity_id, fan.ATTR_PRESET_MODE: "invalid"},
             blocking=True,
         )
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert exc.value.translation_domain == fan.DOMAIN
     assert exc.value.translation_key == "not_valid_preset_mode"
     assert exc.value.translation_placeholders == {
@@ -263,7 +263,7 @@ async def test_turn_on_with_preset_mode_and_speed(
             {ATTR_ENTITY_ID: fan_entity_id, fan.ATTR_PRESET_MODE: "invalid"},
             blocking=True,
         )
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert exc.value.translation_domain == fan.DOMAIN
     assert exc.value.translation_key == "not_valid_preset_mode"
     assert exc.value.translation_placeholders == {
@@ -362,7 +362,7 @@ async def test_set_preset_mode_invalid(hass: HomeAssistant, fan_entity_id) -> No
             {ATTR_ENTITY_ID: fan_entity_id, fan.ATTR_PRESET_MODE: "invalid"},
             blocking=True,
         )
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert exc.value.translation_domain == fan.DOMAIN
     assert exc.value.translation_key == "not_valid_preset_mode"
 
@@ -373,7 +373,7 @@ async def test_set_preset_mode_invalid(hass: HomeAssistant, fan_entity_id) -> No
             {ATTR_ENTITY_ID: fan_entity_id, fan.ATTR_PRESET_MODE: "invalid"},
             blocking=True,
         )
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert exc.value.translation_domain == fan.DOMAIN
     assert exc.value.translation_key == "not_valid_preset_mode"
 

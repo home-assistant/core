@@ -313,6 +313,6 @@ async def test_set_invalid_hvac_mode(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert mock_connection.write_coil.mock_calls == []

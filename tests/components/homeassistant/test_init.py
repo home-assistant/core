@@ -355,7 +355,6 @@ async def test_require_admin(
                 context=ha.Context(user_id=hass_read_only_user.id),
                 blocking=True,
             )
-            pytest.fail(f"Should have raises for {service}")
 
     with pytest.raises(Unauthorized):
         await hass.services.async_call(
@@ -485,8 +484,8 @@ async def test_raises_when_db_upgrade_in_progress(
             service,
             blocking=True,
         )
-        assert "The system cannot" in caplog.text
-        assert "while a database upgrade in progress" in caplog.text
+    assert "The system cannot" in caplog.text
+    assert "while a database upgrade is in progress" in caplog.text
 
     assert mock_async_migration_in_progress.called
     caplog.clear()
@@ -530,9 +529,9 @@ async def test_raises_when_config_is_invalid(
             SERVICE_HOMEASSISTANT_RESTART,
             blocking=True,
         )
-        assert "The system cannot" in caplog.text
-        assert "because the configuration is not valid" in caplog.text
-        assert "Error 1" in caplog.text
+    assert "The system cannot" in caplog.text
+    assert "because the configuration is not valid" in caplog.text
+    assert "Error 1" in caplog.text
 
     assert mock_async_check_ha_config_file.called
     caplog.clear()

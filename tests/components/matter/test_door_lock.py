@@ -115,9 +115,9 @@ async def test_lock_requires_pin(
     # set door state to unlocked
     set_node_attribute(door_lock, 1, 257, 0, 2)
 
+    await trigger_subscription_callback(hass, matter_client)
     with pytest.raises(ServiceValidationError):
         # Lock door using invalid code format
-        await trigger_subscription_callback(hass, matter_client)
         await hass.services.async_call(
             "lock",
             "lock",
