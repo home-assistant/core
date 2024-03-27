@@ -1,4 +1,5 @@
 """Tests for the AdGuard Home config flow."""
+
 import aiohttp
 
 from homeassistant import config_entries, data_entry_flow

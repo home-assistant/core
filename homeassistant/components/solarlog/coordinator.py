@@ -1,4 +1,5 @@
 """DataUpdateCoordinator for solarlog integration."""
+
 from datetime import timedelta
 import logging
 from urllib.parse import ParseResult, urlparse

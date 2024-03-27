@@ -1,4 +1,5 @@
 """Test Mikrotik setup process."""
+
 from unittest.mock import MagicMock, patch
 
 from librouteros.exceptions import ConnectionClosed, LibRouterosError
@@ -17,9 +18,10 @@ from tests.common import MockConfigEntry
 @pytest.fixture(autouse=True)
 def mock_api():
     """Mock api."""
-    with patch("librouteros.create_transport"), patch(
-        "librouteros.Api.readResponse"
-    ) as mock_api:
+    with (
+        patch("librouteros.create_transport"),
+        patch("librouteros.Api.readResponse") as mock_api,
+    ):
         yield mock_api
 
 

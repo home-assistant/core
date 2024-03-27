@@ -1,4 +1,5 @@
 """Test Roborock Image platform."""
+
 import copy
 from datetime import timedelta
 from http import HTTPStatus
@@ -30,16 +31,20 @@ async def test_floorplan_image(
     assert body is not None
     # Call a third time - this time forcing it to update
     now = dt_util.utcnow() + timedelta(seconds=91)
-    async_fire_time_changed(hass, now)
+
     # Copy the device prop so we don't override it
     prop = copy.deepcopy(PROP)
     prop.status.in_cleaning = 1
-    with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
-        return_value=prop,
-    ), patch(
-        "homeassistant.components.roborock.image.dt_util.utcnow", return_value=now
+    with (
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
+            return_value=prop,
+        ),
+        patch(
+            "homeassistant.components.roborock.image.dt_util.utcnow", return_value=now
+        ),
     ):
+        async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
         resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
     assert resp.status == HTTPStatus.OK
@@ -57,19 +62,23 @@ async def test_floorplan_image_failed_parse(
     map_data = copy.deepcopy(MAP_DATA)
     map_data.image = None
     now = dt_util.utcnow() + timedelta(seconds=91)
-    async_fire_time_changed(hass, now)
     # Copy the device prop so we don't override it
     prop = copy.deepcopy(PROP)
     prop.status.in_cleaning = 1
     # Update image, but get none for parse image.
-    with patch(
-        "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
-        return_value=map_data,
-    ), patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
-        return_value=prop,
-    ), patch(
-        "homeassistant.components.roborock.image.dt_util.utcnow", return_value=now
+    with (
+        patch(
+            "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+            return_value=map_data,
+        ),
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
+            return_value=prop,
+        ),
+        patch(
+            "homeassistant.components.roborock.image.dt_util.utcnow", return_value=now
+        ),
     ):
+        async_fire_time_changed(hass, now)
         resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
     assert not resp.ok

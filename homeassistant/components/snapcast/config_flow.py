@@ -9,9 +9,8 @@ import snapcast.control
 from snapcast.control.server import CONTROL_PORT
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_TITLE, DOMAIN
 
@@ -28,7 +27,7 @@ SNAPCAST_SCHEMA = vol.Schema(
 class SnapcastConfigFlow(ConfigFlow, domain=DOMAIN):
     """Snapcast config flow."""
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle first step."""
         errors = {}
         if user_input:

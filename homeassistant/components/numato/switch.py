@@ -1,4 +1,5 @@
 """Switch platform integration for Numato USB GPIO expanders."""
+
 from __future__ import annotations
 
 import logging

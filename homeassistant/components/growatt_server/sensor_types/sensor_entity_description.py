@@ -1,4 +1,5 @@
 """Sensor Entity Description for the Growatt integration."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

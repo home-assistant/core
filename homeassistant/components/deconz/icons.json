@@ -1,0 +1,7 @@
+{
+  "services": {
+    "configure": "mdi:cog",
+    "device_refresh": "mdi:refresh",
+    "remove_orphaned_entries": "mdi:bookmark-remove"
+  }
+}

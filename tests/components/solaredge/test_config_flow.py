@@ -1,4 +1,5 @@
 """Tests for the SolarEdge config flow."""
+
 from unittest.mock import Mock, patch
 
 import pytest

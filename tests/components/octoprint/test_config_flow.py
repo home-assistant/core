@@ -1,4 +1,5 @@
 """Test the OctoPrint config flow."""
+
 from ipaddress import ip_address
 from unittest.mock import patch
 
@@ -37,18 +38,23 @@ async def test_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
     assert result["type"] == "progress"
 
-    with patch(
-        "pyoctoprintapi.OctoprintClient.get_server_info",
-        return_value=True,
-    ), patch(
-        "pyoctoprintapi.OctoprintClient.get_discovery_info",
-        return_value=DiscoverySettings({"upnpUuid": "uuid"}),
-    ), patch(
-        "homeassistant.components.octoprint.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.octoprint.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "pyoctoprintapi.OctoprintClient.get_server_info",
+            return_value=True,
+        ),
+        patch(
+            "pyoctoprintapi.OctoprintClient.get_discovery_info",
+            return_value=DiscoverySettings({"upnpUuid": "uuid"}),
+        ),
+        patch(
+            "homeassistant.components.octoprint.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.octoprint.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
         )
@@ -207,17 +213,20 @@ async def test_show_zerconf_form(hass: HomeAssistant) -> None:
 
     assert result["type"] == "progress"
 
-    with patch(
-        "pyoctoprintapi.OctoprintClient.get_server_info",
-        return_value=True,
-    ), patch(
-        "pyoctoprintapi.OctoprintClient.get_discovery_info",
-        return_value=DiscoverySettings({"upnpUuid": "uuid"}),
-    ), patch(
-        "homeassistant.components.octoprint.async_setup", return_value=True
-    ), patch(
-        "homeassistant.components.octoprint.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "pyoctoprintapi.OctoprintClient.get_server_info",
+            return_value=True,
+        ),
+        patch(
+            "pyoctoprintapi.OctoprintClient.get_discovery_info",
+            return_value=DiscoverySettings({"upnpUuid": "uuid"}),
+        ),
+        patch("homeassistant.components.octoprint.async_setup", return_value=True),
+        patch(
+            "homeassistant.components.octoprint.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -273,17 +282,20 @@ async def test_show_ssdp_form(hass: HomeAssistant) -> None:
 
     assert result["type"] == "progress"
 
-    with patch(
-        "pyoctoprintapi.OctoprintClient.get_server_info",
-        return_value=True,
-    ), patch(
-        "pyoctoprintapi.OctoprintClient.get_discovery_info",
-        return_value=DiscoverySettings({"upnpUuid": "uuid"}),
-    ), patch(
-        "homeassistant.components.octoprint.async_setup", return_value=True
-    ), patch(
-        "homeassistant.components.octoprint.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "pyoctoprintapi.OctoprintClient.get_server_info",
+            return_value=True,
+        ),
+        patch(
+            "pyoctoprintapi.OctoprintClient.get_discovery_info",
+            return_value=DiscoverySettings({"upnpUuid": "uuid"}),
+        ),
+        patch("homeassistant.components.octoprint.async_setup", return_value=True),
+        patch(
+            "homeassistant.components.octoprint.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -304,19 +316,23 @@ async def test_show_ssdp_form(hass: HomeAssistant) -> None:
 
 async def test_import_yaml(hass: HomeAssistant) -> None:
     """Test that the yaml import works."""
-    with patch(
-        "pyoctoprintapi.OctoprintClient.get_server_info",
-        return_value=True,
-    ), patch(
-        "pyoctoprintapi.OctoprintClient.get_discovery_info",
-        return_value=DiscoverySettings({"upnpUuid": "uuid"}),
-    ), patch(
-        "pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"
-    ), patch(
-        "homeassistant.components.octoprint.async_setup", return_value=True
-    ), patch(
-        "homeassistant.components.octoprint.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "pyoctoprintapi.OctoprintClient.get_server_info",
+            return_value=True,
+        ),
+        patch(
+            "pyoctoprintapi.OctoprintClient.get_discovery_info",
+            return_value=DiscoverySettings({"upnpUuid": "uuid"}),
+        ),
+        patch(
+            "pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"
+        ),
+        patch("homeassistant.components.octoprint.async_setup", return_value=True),
+        patch(
+            "homeassistant.components.octoprint.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -344,12 +360,15 @@ async def test_import_duplicate_yaml(hass: HomeAssistant) -> None:
         unique_id="uuid",
     ).add_to_hass(hass)
 
-    with patch(
-        "pyoctoprintapi.OctoprintClient.get_discovery_info",
-        return_value=DiscoverySettings({"upnpUuid": "uuid"}),
-    ), patch(
-        "pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"
-    ) as request_app_key:
+    with (
+        patch(
+            "pyoctoprintapi.OctoprintClient.get_discovery_info",
+            return_value=DiscoverySettings({"upnpUuid": "uuid"}),
+        ),
+        patch(
+            "pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"
+        ) as request_app_key,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
@@ -465,18 +484,23 @@ async def test_user_duplicate_entry(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
     assert result["type"] == "progress"
 
-    with patch(
-        "pyoctoprintapi.OctoprintClient.get_server_info",
-        return_value=True,
-    ), patch(
-        "pyoctoprintapi.OctoprintClient.get_discovery_info",
-        return_value=DiscoverySettings({"upnpUuid": "uuid"}),
-    ), patch(
-        "homeassistant.components.octoprint.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.octoprint.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "pyoctoprintapi.OctoprintClient.get_server_info",
+            return_value=True,
+        ),
+        patch(
+            "pyoctoprintapi.OctoprintClient.get_discovery_info",
+            return_value=DiscoverySettings({"upnpUuid": "uuid"}),
+        ),
+        patch(
+            "homeassistant.components.octoprint.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.octoprint.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
         )

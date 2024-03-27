@@ -1,4 +1,5 @@
 """The Unify Circuit component."""
+
 import voluptuous as vol
 
 from homeassistant.const import CONF_NAME, CONF_URL, Platform

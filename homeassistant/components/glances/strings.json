@@ -59,7 +59,7 @@
       "swap_free": {
         "name": "Swap free"
       },
-      "cpu_load": {
+      "processor_load": {
         "name": "CPU load"
       },
       "process_running": {

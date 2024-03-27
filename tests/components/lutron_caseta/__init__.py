@@ -1,6 +1,5 @@
 """Tests for the Lutron Caseta integration."""
 
-
 from unittest.mock import patch
 
 from homeassistant.components.lutron_caseta import DOMAIN
@@ -284,7 +283,7 @@ class MockBridge:
         :param domain: one of 'light', 'switch', 'cover', 'fan' or 'sensor'
         :returns list of zero or more of the devices
         """
-        types = _LEAP_DEVICE_TYPES.get(domain, None)
+        types = _LEAP_DEVICE_TYPES.get(domain)
 
         # return immediately if not a supported domain
         if types is None:

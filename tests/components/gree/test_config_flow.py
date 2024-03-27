@@ -1,4 +1,5 @@
 """Tests for the Gree Integration."""
+
 from unittest.mock import AsyncMock, patch
 
 import pytest

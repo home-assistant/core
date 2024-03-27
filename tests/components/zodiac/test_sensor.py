@@ -1,4 +1,5 @@
 """The test for the zodiac sensor platform."""
+
 from datetime import datetime
 from unittest.mock import patch
 

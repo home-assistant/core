@@ -1,4 +1,5 @@
 """Config Flow for Teslemetry integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -6,12 +7,15 @@ from typing import Any
 
 from aiohttp import ClientConnectionError
 from tesla_fleet_api import Teslemetry
-from tesla_fleet_api.exceptions import InvalidToken, PaymentRequired, TeslaFleetError
+from tesla_fleet_api.exceptions import (
+    InvalidToken,
+    SubscriptionRequired,
+    TeslaFleetError,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_ACCESS_TOKEN
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
@@ -30,7 +34,7 @@ class TeslemetryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: Mapping[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Get configuration from the user."""
         errors: dict[str, str] = {}
         if user_input:
@@ -42,7 +46,7 @@ class TeslemetryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await teslemetry.test()
             except InvalidToken:
                 errors[CONF_ACCESS_TOKEN] = "invalid_access_token"
-            except PaymentRequired:
+            except SubscriptionRequired:
                 errors["base"] = "subscription_required"
             except ClientConnectionError:
                 errors["base"] = "cannot_connect"

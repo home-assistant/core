@@ -1,4 +1,5 @@
 """All constants related to the ZHA component."""
+
 from __future__ import annotations
 
 import enum
@@ -63,6 +64,8 @@ ATTR_WARNING_DEVICE_STROBE_INTENSITY = "intensity"
 
 BAUD_RATES = [2400, 4800, 9600, 14400, 19200, 38400, 57600, 115200, 128000, 256000]
 BINDINGS = "bindings"
+
+CLUSTER_DETAILS = "cluster_details"
 
 CLUSTER_HANDLER_ACCELEROMETER = "accelerometer"
 CLUSTER_HANDLER_BINARY_INPUT = "binary_input"
@@ -229,6 +232,10 @@ POWER_BATTERY_OR_UNKNOWN = "Battery or Unknown"
 PRESET_SCHEDULE = "Schedule"
 PRESET_COMPLEX = "Complex"
 PRESET_TEMP_MANUAL = "Temporary manual"
+
+QUIRK_METADATA = "quirk_metadata"
+
+ZCL_INIT_ATTRS = "ZCL_INIT_ATTRS"
 
 ZHA_ALARM_OPTIONS = "zha_alarm_options"
 ZHA_OPTIONS = "zha_options"

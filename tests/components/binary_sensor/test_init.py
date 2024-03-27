@@ -1,4 +1,5 @@
 """The tests for the Binary sensor component."""
+
 from collections.abc import Generator
 from unittest import mock
 

@@ -1,4 +1,5 @@
 """Tests for the Atag config flow."""
+
 from unittest.mock import PropertyMock, patch
 
 import pytest

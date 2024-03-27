@@ -1,4 +1,5 @@
 """Support for EnOcean light sources."""
+
 from __future__ import annotations
 
 import math

@@ -1,4 +1,5 @@
 """Diagnostics support for the BMW Connected Drive integration."""
+
 from __future__ import annotations
 
 from dataclasses import asdict

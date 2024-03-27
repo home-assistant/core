@@ -1,4 +1,5 @@
 """Support for OpenERZ API for Zurich city waste disposal system."""
+
 from __future__ import annotations
 
 from datetime import timedelta

@@ -1,4 +1,5 @@
 """Test binary sensor of NextDNS integration."""
+
 from datetime import timedelta
 from unittest.mock import patch
 

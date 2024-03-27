@@ -1,4 +1,5 @@
 """Support for Netatmo/BTicino/Legrande switches."""
+
 from __future__ import annotations
 
 import logging

@@ -1,4 +1,5 @@
 """Data update coordinator for the Lidarr integration."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

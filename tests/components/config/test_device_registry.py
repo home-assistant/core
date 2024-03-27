@@ -1,5 +1,7 @@
 """Test device_registry API."""
+
 import pytest
+from pytest_unordered import unordered
 
 from homeassistant.components.config import device_registry
 from homeassistant.core import HomeAssistant
@@ -63,6 +65,7 @@ async def test_list_devices(
             "entry_type": None,
             "hw_version": None,
             "identifiers": [["bridgeid", "0123"]],
+            "labels": [],
             "manufacturer": "manufacturer",
             "model": "model",
             "name_by_user": None,
@@ -80,6 +83,7 @@ async def test_list_devices(
             "entry_type": dr.DeviceEntryType.SERVICE,
             "hw_version": None,
             "identifiers": [["bridgeid", "1234"]],
+            "labels": [],
             "manufacturer": "manufacturer",
             "model": "model",
             "name_by_user": None,
@@ -110,6 +114,7 @@ async def test_list_devices(
             "hw_version": None,
             "id": device1.id,
             "identifiers": [["bridgeid", "0123"]],
+            "labels": [],
             "manufacturer": "manufacturer",
             "model": "model",
             "name_by_user": None,
@@ -127,13 +132,13 @@ async def test_list_devices(
 @pytest.mark.parametrize(
     ("payload_key", "payload_value"),
     [
-        ["area_id", "12345A"],
-        ["area_id", None],
-        ["disabled_by", dr.DeviceEntryDisabler.USER],
-        ["disabled_by", "user"],
-        ["disabled_by", None],
-        ["name_by_user", "Test Friendly Name"],
-        ["name_by_user", None],
+        ("area_id", "12345A"),
+        ("area_id", None),
+        ("disabled_by", dr.DeviceEntryDisabler.USER),
+        ("disabled_by", "user"),
+        ("disabled_by", None),
+        ("name_by_user", "Test Friendly Name"),
+        ("name_by_user", None),
     ],
 )
 async def test_update_device(
@@ -177,6 +182,45 @@ async def test_update_device(
     assert getattr(device, payload_key) == payload_value
 
     assert isinstance(device.disabled_by, (dr.DeviceEntryDisabler, type(None)))
+
+
+async def test_update_device_labels(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test update entry labels."""
+    entry = MockConfigEntry(title=None)
+    entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={("ethernet", "12:34:56:78:90:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+
+    assert not device.labels
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/device_registry/update",
+            "device_id": device.id,
+            "labels": ["label1", "label2"],
+        }
+    )
+
+    msg = await client.receive_json()
+    await hass.async_block_till_done()
+    assert len(device_registry.devices) == 1
+
+    device = device_registry.async_get_device(
+        identifiers={("bridgeid", "0123")},
+        connections={("ethernet", "12:34:56:78:90:AB:CD:EF")},
+    )
+
+    assert msg["result"]["labels"] == unordered(["label1", "label2"])
+    assert device.labels == {"label1", "label2"}
 
 
 async def test_remove_config_entry_from_device(

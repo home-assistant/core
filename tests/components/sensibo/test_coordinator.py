@@ -1,4 +1,5 @@
 """The test for the sensibo coordinator."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -34,14 +35,18 @@ async def test_coordinator(
 
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-    ) as mock_data, patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices",
-        return_value={"result": [{"id": "xyzxyz"}, {"id": "abcabc"}]},
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_me",
-        return_value={"result": {"username": "username"}},
+    with (
+        patch(
+            "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        ) as mock_data,
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices",
+            return_value={"result": [{"id": "xyzxyz"}, {"id": "abcabc"}]},
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_me",
+            return_value={"result": {"username": "username"}},
+        ),
     ):
         monkeypatch.setattr(get_data.parsed["ABC999111"], "hvac_mode", "heat")
         monkeypatch.setattr(get_data.parsed["ABC999111"], "device_on", True)

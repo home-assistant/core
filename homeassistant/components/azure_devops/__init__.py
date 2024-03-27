@@ -1,4 +1,5 @@
 """Support for Azure DevOps."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -97,6 +98,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 class AzureDevOpsEntity(CoordinatorEntity[DataUpdateCoordinator[list[DevOpsBuild]]]):
     """Defines a base Azure DevOps entity."""
+
+    _attr_has_entity_name = True
 
     entity_description: AzureDevOpsEntityDescription
 

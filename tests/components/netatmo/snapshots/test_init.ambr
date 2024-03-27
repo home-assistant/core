@@ -17,6 +17,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Bubbendorf',
     'model': 'Roller Shutter',
     'name': 'Entrance Blinds',
@@ -45,6 +47,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Bubbendorf',
     'model': 'Orientable Shutter',
     'name': 'Bubendorff blind',
@@ -73,6 +77,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Legrand',
     'model': '2 wire light switch/dimmer',
     'name': 'Unknown 00:11:22:33:00:11:45:fe',
@@ -101,6 +107,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Smarther',
     'model': 'Smarther with Netatmo',
     'name': '',
@@ -129,6 +137,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Legrand',
     'model': 'Connected Energy Meter',
     'name': '',
@@ -157,6 +167,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Legrand',
     'model': 'Light switch/dimmer with neutral',
     'name': 'Bathroom light',
@@ -185,6 +197,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Legrand',
     'model': 'Connected Ecometer',
     'name': '',
@@ -213,6 +227,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Legrand',
     'model': 'Connected Ecometer',
     'name': '',
@@ -241,6 +257,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Legrand',
     'model': 'Connected Ecometer',
     'name': '',
@@ -269,6 +287,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Legrand',
     'model': 'Connected Ecometer',
     'name': '',
@@ -297,6 +317,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Legrand',
     'model': 'Connected Ecometer',
     'name': '',
@@ -325,6 +347,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Legrand',
     'model': 'Connected Ecometer',
     'name': '',
@@ -353,6 +377,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Legrand',
     'model': 'Connected Ecometer',
     'name': '',
@@ -381,6 +407,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Legrand',
     'model': 'Connected Ecometer',
     'name': '',
@@ -409,6 +437,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Legrand',
     'model': 'Connected Ecometer',
     'name': '',
@@ -437,6 +467,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Legrand',
     'model': 'Connected Ecometer',
     'name': '',
@@ -465,6 +497,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Indoor Camera',
     'name': 'Hall',
@@ -493,6 +527,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Anemometer',
     'name': 'Villa Garden',
@@ -521,6 +557,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Outdoor Camera',
     'name': 'Front',
@@ -549,6 +587,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Video Doorbell',
     'name': 'Netatmo-Doorbell',
@@ -577,6 +617,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Indoor Air Quality Monitor',
     'name': 'Kitchen',
@@ -605,6 +647,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Indoor Air Quality Monitor',
     'name': 'Livingroom',
@@ -633,6 +677,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Indoor Air Quality Monitor',
     'name': 'Baby Bedroom',
@@ -661,6 +707,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Indoor Air Quality Monitor',
     'name': 'Bedroom',
@@ -689,6 +737,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Indoor Air Quality Monitor',
     'name': 'Parents Bedroom',
@@ -717,6 +767,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Legrand',
     'model': 'Plug',
     'name': '',
@@ -745,6 +797,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Outdoor Module',
     'name': 'Villa Outdoor',
@@ -773,6 +827,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Indoor Module',
     'name': 'Villa Bedroom',
@@ -801,6 +857,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Indoor Module',
     'name': 'Villa Bathroom',
@@ -829,6 +887,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Home Weather station',
     'name': 'Villa',
@@ -857,6 +917,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Rain Gauge',
     'name': 'Villa Rain',
@@ -885,6 +947,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Netatmo',
     'model': 'OpenTherm Modulating Thermostat',
     'name': '',
@@ -913,6 +977,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Thermostat',
     'name': '',
@@ -941,6 +1007,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Valve',
     'name': '',
@@ -969,6 +1037,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Valve',
     'name': '',
@@ -997,6 +1067,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Netatmo',
     'model': 'Public Weather station',
     'name': 'Home avg',
@@ -1025,6 +1097,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Netatmo',
     'model': 'Public Weather station',
     'name': 'Home max',
@@ -1053,6 +1127,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Thermostat',
     'name': 'MYHOME',

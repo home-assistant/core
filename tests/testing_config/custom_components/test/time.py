@@ -2,6 +2,7 @@
 
 Call init before using it in your tests to ensure clean test data.
 """
+
 from datetime import time
 
 from homeassistant.components.time import TimeEntity

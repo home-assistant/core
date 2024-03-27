@@ -1,4 +1,5 @@
 """Config flow for Panasonic Viera TV integration."""
+
 from functools import partial
 import logging
 from urllib.error import URLError
@@ -6,7 +7,7 @@ from urllib.error import URLError
 from panasonic_viera import TV_TYPE_ENCRYPTED, RemoteControl, SOAPError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_PORT
 
 from .const import (
@@ -25,7 +26,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for Panasonic Viera."""
 
     VERSION = 1

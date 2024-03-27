@@ -1,4 +1,5 @@
 """Test the Nibe Heat Pump config flow."""
+
 from typing import Any
 from unittest.mock import AsyncMock, Mock
 
@@ -145,10 +146,10 @@ async def test_nibegw_address_inuse(hass: HomeAssistant, mock_connection: Mock) 
 
 @pytest.mark.parametrize(
     ("connection_type", "data"),
-    (
+    [
         ("nibegw", MOCK_FLOW_NIBEGW_USERDATA),
         ("modbus", MOCK_FLOW_MODBUS_USERDATA),
-    ),
+    ],
 )
 async def test_read_timeout(
     hass: HomeAssistant, mock_connection: Mock, connection_type: str, data: dict
@@ -166,10 +167,10 @@ async def test_read_timeout(
 
 @pytest.mark.parametrize(
     ("connection_type", "data"),
-    (
+    [
         ("nibegw", MOCK_FLOW_NIBEGW_USERDATA),
         ("modbus", MOCK_FLOW_MODBUS_USERDATA),
-    ),
+    ],
 )
 async def test_write_timeout(
     hass: HomeAssistant, mock_connection: Mock, connection_type: str, data: dict
@@ -187,10 +188,10 @@ async def test_write_timeout(
 
 @pytest.mark.parametrize(
     ("connection_type", "data"),
-    (
+    [
         ("nibegw", MOCK_FLOW_NIBEGW_USERDATA),
         ("modbus", MOCK_FLOW_MODBUS_USERDATA),
-    ),
+    ],
 )
 async def test_unexpected_exception(
     hass: HomeAssistant, mock_connection: Mock, connection_type: str, data: dict
@@ -208,10 +209,10 @@ async def test_unexpected_exception(
 
 @pytest.mark.parametrize(
     ("connection_type", "data"),
-    (
+    [
         ("nibegw", MOCK_FLOW_NIBEGW_USERDATA),
         ("modbus", MOCK_FLOW_MODBUS_USERDATA),
-    ),
+    ],
 )
 async def test_nibegw_invalid_host(
     hass: HomeAssistant, mock_connection: Mock, connection_type: str, data: dict
@@ -232,10 +233,10 @@ async def test_nibegw_invalid_host(
 
 @pytest.mark.parametrize(
     ("connection_type", "data"),
-    (
+    [
         ("nibegw", MOCK_FLOW_NIBEGW_USERDATA),
         ("modbus", MOCK_FLOW_MODBUS_USERDATA),
-    ),
+    ],
 )
 async def test_model_missing_coil(
     hass: HomeAssistant, mock_connection: Mock, connection_type: str, data: dict

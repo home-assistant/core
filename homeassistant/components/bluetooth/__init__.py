@@ -1,4 +1,5 @@
 """The bluetooth integration."""
+
 from __future__ import annotations
 
 import datetime
@@ -16,6 +17,7 @@ from bluetooth_adapters import (
     DEFAULT_ADDRESS,
     DEFAULT_CONNECTION_SLOTS,
     AdapterDetails,
+    BluetoothAdapters,
     adapter_human_name,
     adapter_model,
     adapter_unique_name,
@@ -135,27 +137,13 @@ async def _async_get_adapter_from_address(
     return await _get_manager(hass).async_get_adapter_from_address(address)
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the bluetooth integration."""
-    await passive_update_processor.async_setup(hass)
-    integration_matcher = IntegrationMatcher(await async_get_bluetooth(hass))
-    integration_matcher.async_setup()
-    bluetooth_adapters = get_adapters()
-    bluetooth_storage = BluetoothStorage(hass)
-    await bluetooth_storage.async_setup()
-    slot_manager = BleakSlotManager()
-    await slot_manager.async_setup()
-    manager = HomeAssistantBluetoothManager(
-        hass, integration_matcher, bluetooth_adapters, bluetooth_storage, slot_manager
-    )
-    set_manager(manager)
-    await manager.async_setup()
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, lambda event: manager.async_stop()
-    )
-    hass.data[DATA_MANAGER] = models.MANAGER = manager
+async def _async_start_adapter_discovery(
+    hass: HomeAssistant,
+    manager: HomeAssistantBluetoothManager,
+    bluetooth_adapters: BluetoothAdapters,
+) -> None:
+    """Start adapter discovery."""
     adapters = await manager.async_get_bluetooth_adapters()
-
     async_migrate_entries(hass, adapters, bluetooth_adapters.default_adapter)
     await async_discover_adapters(hass, adapters)
 
@@ -173,11 +161,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         function=_async_rediscover_adapters,
     )
 
-    async def _async_shutdown_debouncer(_: Event) -> None:
+    @hass_callback
+    def _async_shutdown_debouncer(_: Event) -> None:
         """Shutdown debouncer."""
-        await discovery_debouncer.async_shutdown()
+        discovery_debouncer.async_shutdown()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown_debouncer)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, _async_shutdown_debouncer, run_immediately=True
+    )
 
     async def _async_call_debouncer(now: datetime.datetime) -> None:
         """Call the debouncer at a later time."""
@@ -208,10 +199,47 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     cancel = usb.async_register_scan_request_callback(hass, _async_trigger_discovery)
     hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, hass_callback(lambda event: cancel())
+        EVENT_HOMEASSISTANT_STOP,
+        hass_callback(lambda event: cancel()),
+        run_immediately=True,
     )
 
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the bluetooth integration."""
+    bluetooth_adapters = get_adapters()
+    bluetooth_storage = BluetoothStorage(hass)
+    slot_manager = BleakSlotManager()
+    integration_matcher = IntegrationMatcher(await async_get_bluetooth(hass))
+
+    slot_manager_setup_task = hass.async_create_task(
+        slot_manager.async_setup(), "slot_manager setup", eager_start=True
+    )
+    processor_setup_task = hass.async_create_task(
+        passive_update_processor.async_setup(hass),
+        "passive_update_processor setup",
+        eager_start=True,
+    )
+    storage_setup_task = hass.async_create_task(
+        bluetooth_storage.async_setup(), "bluetooth storage setup", eager_start=True
+    )
+    integration_matcher.async_setup()
+    manager = HomeAssistantBluetoothManager(
+        hass, integration_matcher, bluetooth_adapters, bluetooth_storage, slot_manager
+    )
+    set_manager(manager)
+
+    await storage_setup_task
+    await manager.async_setup()
+    hass.data[DATA_MANAGER] = models.MANAGER = manager
+
+    hass.async_create_background_task(
+        _async_start_adapter_discovery(hass, manager, bluetooth_adapters),
+        "start_adapter_discovery",
+    )
+    await slot_manager_setup_task
     async_delete_issue(hass, DOMAIN, "haos_outdated")
+    await processor_setup_task
     return True
 
 

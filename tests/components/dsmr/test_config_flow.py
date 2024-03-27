@@ -1,4 +1,5 @@
 """Test the DSMR config flow."""
+
 from itertools import chain, repeat
 import os
 from typing import Any
@@ -494,9 +495,10 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         },
     )
 
-    with patch(
-        "homeassistant.components.dsmr.async_setup_entry", return_value=True
-    ), patch("homeassistant.components.dsmr.async_unload_entry", return_value=True):
+    with (
+        patch("homeassistant.components.dsmr.async_setup_entry", return_value=True),
+        patch("homeassistant.components.dsmr.async_unload_entry", return_value=True),
+    ):
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
         await hass.async_block_till_done()
