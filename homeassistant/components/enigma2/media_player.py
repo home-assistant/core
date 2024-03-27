@@ -9,7 +9,6 @@ from aiohttp.client_exceptions import ClientConnectorError, ServerDisconnectedEr
 from openwebif.api import OpenWebIfDevice
 from openwebif.enums import PowerState, RemoteControlCodes, SetVolumeOption
 import voluptuous as vol
-from yarl import URL
 
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
@@ -17,6 +16,7 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -26,10 +26,9 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -38,15 +37,7 @@ from .const import (
     CONF_MAC_ADDRESS,
     CONF_SOURCE_BOUQUET,
     CONF_USE_CHANNEL_ICON,
-    DEFAULT_DEEP_STANDBY,
-    DEFAULT_MAC_ADDRESS,
-    DEFAULT_NAME,
-    DEFAULT_PASSWORD,
-    DEFAULT_PORT,
-    DEFAULT_SOURCE_BOUQUET,
-    DEFAULT_SSL,
-    DEFAULT_USE_CHANNEL_ICON,
-    DEFAULT_USERNAME,
+    DOMAIN,
 )
 
 ATTR_MEDIA_CURRENTLY_RECORDING = "media_currently_recording"
@@ -59,17 +50,15 @@ _LOGGER = getLogger(__name__)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-        vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(
-            CONF_USE_CHANNEL_ICON, default=DEFAULT_USE_CHANNEL_ICON
-        ): cv.boolean,
-        vol.Optional(CONF_DEEP_STANDBY, default=DEFAULT_DEEP_STANDBY): cv.boolean,
-        vol.Optional(CONF_MAC_ADDRESS, default=DEFAULT_MAC_ADDRESS): cv.string,
-        vol.Optional(CONF_SOURCE_BOUQUET, default=DEFAULT_SOURCE_BOUQUET): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_PORT): cv.port,
+        vol.Optional(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_SSL): cv.boolean,
+        vol.Optional(CONF_USE_CHANNEL_ICON): cv.boolean,
+        vol.Optional(CONF_DEEP_STANDBY): cv.boolean,
+        vol.Optional(CONF_MAC_ADDRESS): cv.string,
+        vol.Optional(CONF_SOURCE_BOUQUET): cv.string,
     }
 )
 
@@ -81,49 +70,47 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up of an enigma2 media player."""
-    if discovery_info:
-        # Discovery gives us the streaming service port (8001)
-        # which is not useful as OpenWebif never runs on that port.
-        # So use the default port instead.
-        config[CONF_PORT] = DEFAULT_PORT
-        config[CONF_NAME] = discovery_info["hostname"]
-        config[CONF_HOST] = discovery_info["host"]
-        config[CONF_USERNAME] = DEFAULT_USERNAME
-        config[CONF_PASSWORD] = DEFAULT_PASSWORD
-        config[CONF_SSL] = DEFAULT_SSL
-        config[CONF_USE_CHANNEL_ICON] = DEFAULT_USE_CHANNEL_ICON
-        config[CONF_MAC_ADDRESS] = DEFAULT_MAC_ADDRESS
-        config[CONF_DEEP_STANDBY] = DEFAULT_DEEP_STANDBY
-        config[CONF_SOURCE_BOUQUET] = DEFAULT_SOURCE_BOUQUET
 
-    base_url = URL.build(
-        scheme="https" if config[CONF_SSL] else "http",
-        host=config[CONF_HOST],
-        port=config.get(CONF_PORT),
-        user=config.get(CONF_USERNAME),
-        password=config.get(CONF_PASSWORD),
+    host = config[CONF_HOST]
+
+    entry_data = {
+        CONF_NAME: config.get(CONF_NAME),
+        CONF_HOST: host,
+        CONF_PORT: config.get(CONF_PORT),
+        CONF_USERNAME: config.get(CONF_USERNAME),
+        CONF_PASSWORD: config.get(CONF_PASSWORD),
+        CONF_SSL: config.get(CONF_SSL),
+        CONF_USE_CHANNEL_ICON: config.get(CONF_USE_CHANNEL_ICON),
+        CONF_DEEP_STANDBY: config.get(CONF_DEEP_STANDBY),
+        CONF_SOURCE_BOUQUET: config.get(CONF_SOURCE_BOUQUET),
+    }
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=entry_data
+        )
     )
 
-    session = async_create_clientsession(hass, verify_ssl=False, base_url=base_url)
 
-    device = OpenWebIfDevice(
-        host=session,
-        turn_off_to_deep=config.get(CONF_DEEP_STANDBY, False),
-        source_bouquet=config.get(CONF_SOURCE_BOUQUET),
-    )
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Enigma2 media player platform."""
 
-    try:
-        about = await device.get_about()
-    except ClientConnectorError as err:
-        raise PlatformNotReady from err
-
-    async_add_entities([Enigma2Device(config[CONF_NAME], device, about)])
+    device: OpenWebIfDevice = hass.data[DOMAIN][entry.entry_id]
+    about = await device.get_about()
+    device.mac_address = about["info"]["ifaces"][0]["mac"]
+    entity = Enigma2Device(entry, device, about)
+    async_add_entities([entity])
 
 
 class Enigma2Device(MediaPlayerEntity):
     """Representation of an Enigma2 box."""
 
     _attr_has_entity_name = True
+    _attr_translation_key = "player"
 
     _attr_media_content_type = MediaType.TVSHOW
     _attr_supported_features = (
@@ -139,13 +126,22 @@ class Enigma2Device(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
-    def __init__(self, name: str, device: OpenWebIfDevice, about: dict) -> None:
+    def __init__(
+        self, entry: ConfigEntry, device: OpenWebIfDevice, about: dict
+    ) -> None:
         """Initialize the Enigma2 device."""
         self._device: OpenWebIfDevice = device
-        self._device.mac_address = about["info"]["ifaces"][0]["mac"]
+        self._entry = entry
 
-        self._attr_name = name
         self._attr_unique_id = device.mac_address
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device.mac_address)},
+            manufacturer=about["info"]["brand"],
+            model=about["info"]["model"],
+            configuration_url=device.base,
+            name=entry.data[CONF_HOST],
+        )
 
     async def async_turn_off(self) -> None:
         """Turn off media player."""
