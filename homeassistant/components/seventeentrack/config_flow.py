@@ -67,7 +67,7 @@ class SeventeenTrackConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
         if user_input:
-            client = await self._get_client()
+            client = self._get_client()
 
             try:
                 if not await client.profile.login(
@@ -101,7 +101,7 @@ class SeventeenTrackConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import 17Track config from configuration.yaml."""
 
-        client = await self._get_client()
+        client = self._get_client()
 
         try:
             login_result = await client.profile.login(
