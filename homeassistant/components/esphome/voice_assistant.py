@@ -69,6 +69,9 @@ _VOICE_ASSISTANT_EVENT_TYPES: EsphomeEnumMapper[
 class VoiceAssistantPipeline:
     """Base abstract pipeline class."""
 
+    started = False
+    stop_requested = False
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -88,6 +91,11 @@ class VoiceAssistantPipeline:
         self.handle_finished = handle_finished
         self._tts_done = asyncio.Event()
         self._tts_task: asyncio.Task | None = None
+
+    @property
+    def is_running(self) -> bool:
+        """True if the pipeline is started and hasn't been asked to stop."""
+        return self.started and (not self.stop_requested)
 
     async def _iterate_packets(self) -> AsyncIterable[bytes]:
         """Iterate over incoming packets."""
@@ -253,7 +261,7 @@ class VoiceAssistantPipeline:
         self.handle_event(VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_START, {})
 
         try:
-            if (not self.is_running) or (self.transport is None):
+            if not self.is_running:
                 return
 
             extension, data = await tts.async_get_media_source_audio(
@@ -313,7 +321,6 @@ class VoiceAssistantPipeline:
         """Send bytes to the device."""
         raise NotImplementedError
 
-    @callback
     def stop(self) -> None:
         """Stop the pipeline."""
         self.queue.put_nowait(b"")
@@ -322,15 +329,8 @@ class VoiceAssistantPipeline:
 class VoiceAssistantUDPPipeline(asyncio.DatagramProtocol, VoiceAssistantPipeline):
     """Receive UDP packets and forward them to the voice assistant."""
 
-    started = False
-    stop_requested = False
     transport: asyncio.DatagramTransport | None = None
     remote_addr: tuple[str, int] | None = None
-
-    @property
-    def is_running(self) -> bool:
-        """True if the the UDP server is started and hasn't been asked to stop."""
-        return self.started and (not self.stop_requested)
 
     async def start_server(self) -> int:
         """Start accepting connections."""
@@ -381,7 +381,7 @@ class VoiceAssistantUDPPipeline(asyncio.DatagramProtocol, VoiceAssistantPipeline
     @callback
     def stop(self) -> None:
         """Stop the receiver."""
-        super(VoiceAssistantPipeline, self).stop()
+        super().stop()
         self.close()
 
     def close(self) -> None:
@@ -394,6 +394,9 @@ class VoiceAssistantUDPPipeline(asyncio.DatagramProtocol, VoiceAssistantPipeline
 
     def send_audio_bytes(self, data: bytes) -> None:
         """Send bytes to the device via UDP."""
+        if self.transport is None:
+            _LOGGER.error("No transport to send audio to")
+            return
         self.transport.sendto(data, self.remote_addr)
 
 
@@ -415,3 +418,11 @@ class VoiceAssistantAPIPipeline(VoiceAssistantPipeline):
     def send_audio_bytes(self, data: bytes) -> None:
         """Send bytes to the device via the API."""
         self.api_client.send_voice_assistant_audio(data)
+
+    @callback
+    def stop(self) -> None:
+        """Stop the pipeline."""
+        super().stop()
+
+        self.started = False
+        self.stop_requested = True
