@@ -82,6 +82,18 @@ class LazyState(State):
         )
 
     @cached_property
+    def _last_reported_ts(self) -> float | None:
+        """Last reported timestamp."""
+        return getattr(self._row, "last_reported_ts", None)
+
+    @cached_property
+    def last_reported(self) -> datetime:  # type: ignore[override]
+        """Last reported datetime."""
+        return dt_util.utc_from_timestamp(
+            self._last_reported_ts or self._last_updated_ts
+        )
+
+    @cached_property
     def last_updated(self) -> datetime:  # type: ignore[override]
         """Last updated datetime."""
         if TYPE_CHECKING:
