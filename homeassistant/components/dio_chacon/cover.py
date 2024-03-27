@@ -51,6 +51,7 @@ async def async_setup_entry(
                     device["openlevel"],
                     device["movement"],
                     device["connected"],
+                    device["model"],
                 )
             )
 
@@ -71,7 +72,7 @@ class DioChaconShade(RestoreEntity, CoverEntity):
 
     _attr_should_poll = False
     _attr_assumed_state = True
-    _attr_has_entity_name = True
+    _attr_has_entity_name = False
 
     def __init__(
         self,
@@ -81,6 +82,7 @@ class DioChaconShade(RestoreEntity, CoverEntity):
         openlevel,
         movement,
         connected,
+        model,
         device_class=CoverDeviceClass.SHUTTER,
     ) -> None:
         """Initialize the cover."""
@@ -99,6 +101,7 @@ class DioChaconShade(RestoreEntity, CoverEntity):
             identifiers={(DOMAIN, self._target_id)},
             manufacturer=MANUFACTURER,
             name=name,
+            model=model,
         )
         self._attr_supported_features = (
             CoverEntityFeature.OPEN
