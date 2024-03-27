@@ -716,6 +716,18 @@
       "double_tap_down_level": {
         "name": "Double tap down level"
       },
+      "low_for_bound_control": {
+        "name": "Low for bound control"
+      },
+      "medium_for_bound_control": {
+        "name": "Medium for bound control"
+      },
+      "high_for_bound_control": {
+        "name": "High for bound control"
+      },
+      "led_color_for_bound_control": {
+        "name": "LED color for bound control"
+      },
       "serving_size": {
         "name": "Serving to dispense"
       },
@@ -789,6 +801,12 @@
       },
       "increased_non_neutral_output": {
         "name": "Non neutral output"
+      },
+      "fan_module_binding_control": {
+        "name": "Fan module binding control"
+      },
+      "fan_single_tap_behavior": {
+        "name": "Fan single tap behavior"
       },
       "feeding_mode": {
         "name": "Mode"
@@ -970,6 +988,9 @@
       },
       "disable_clear_notifications_double_tap": {
         "name": "Disable config 2x tap to clear notifications"
+      },
+      "fan_timer_display": {
+        "name": "Fan timer display"
       },
       "led_indicator": {
         "name": "LED indicator"

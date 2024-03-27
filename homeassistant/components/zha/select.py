@@ -607,6 +607,46 @@ class InovelliNonNeutralOutputEntity(ZCLEnumSelectEntity):
     _attr_translation_key: str = "increased_non_neutral_output"
 
 
+class InovelliFanControlMode(types.enum8):
+    """Inovelli fan switch module control selection."""
+
+    Disabled = 0x00
+    Multi_Tap = 0x01
+    Cycle_Tap = 0x02
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_INOVELLI,
+)
+class InovelliFanControlModeEntity(ZCLEnumSelectEntity):
+    """Inovelli fan switch module control."""
+
+    _unique_id_suffix = "fan_module_binding_control"
+    _attribute_name = "fan_module_binding_control"
+    _enum = InovelliFanControlMode
+    _attr_translation_key: str = "fan_module_binding_control"
+
+
+class InovelliSingleTapMode(types.enum8):
+    """Inovelli fan switch single tap selection."""
+
+    Original = 0x00
+    Single_Tap_Cycle = 0x01
+    Tap_Down_Always_Off = 0x02
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_INOVELLI,
+)
+class InovelliSingleTapModeEntity(ZCLEnumSelectEntity):
+    """Inovelli fan switch module control."""
+
+    _unique_id_suffix = "fan_single_tap_behavior"
+    _attribute_name = "fan_single_tap_behavior"
+    _enum = InovelliSingleTapMode
+    _attr_translation_key: str = "fan_single_tap_behavior"
+
+
 class AqaraFeedingMode(types.enum8):
     """Feeding mode."""
 
