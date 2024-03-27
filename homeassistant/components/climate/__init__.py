@@ -24,6 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import issue_registry as ir
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -40,6 +41,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import async_get_issue_tracker, async_suggest_report_issue
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import group as group_pre_import  # noqa: F401
@@ -309,6 +311,8 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_target_temperature: float | None = None
     _attr_temperature_unit: str
 
+    __climate_reported_legacy_aux = False
+
     __mod_supported_features: ClimateEntityFeature = ClimateEntityFeature(0)
     # Integrations should set `_enable_turn_on_off_backwards_compatibility` to False
     # once migrated and set the feature flags TURN_ON/TURN_OFF as needed.
@@ -403,6 +407,50 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             self.__mod_supported_features |= (  # pylint: disable=unused-private-member
                 ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
             )
+
+    def _report_legacy_aux(self) -> None:
+        """Log warning and create an issue if the entity implements legacy auxiliary heater."""
+
+        report_issue = async_suggest_report_issue(
+            self.hass,
+            integration_domain=self.platform.platform_name,
+            module=type(self).__module__,
+        )
+        _LOGGER.warning(
+            (
+                "%s::%s implements the `is_aux_heat` property or uses the auxiliary  "
+                "heater methods in a subclass of ClimateEntity which is "
+                "deprecated and will be unsupported from Home Assistant 2024.10."
+                " Please %s"
+            ),
+            self.platform.platform_name,
+            self.__class__.__name__,
+            report_issue,
+        )
+
+        translation_placeholders = {"platform": self.platform.platform_name}
+        translation_key = "deprecated_climate_aux_no_url"
+        issue_tracker = async_get_issue_tracker(
+            self.hass,
+            integration_domain=self.platform.platform_name,
+            module=type(self).__module__,
+        )
+        if issue_tracker:
+            translation_placeholders["issue_tracker"] = issue_tracker
+            translation_key = "deprecated_climate_aux_url_custom"
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"deprecated_climate_aux_{self.platform.platform_name}",
+            breaks_in_ha_version="2024.10.0",
+            is_fixable=False,
+            is_persistent=False,
+            issue_domain=self.platform.platform_name,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=translation_key,
+            translation_placeholders=translation_placeholders,
+        )
+        self.__climate_reported_legacy_aux = True
 
     @final
     @property
@@ -508,6 +556,11 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         if ClimateEntityFeature.AUX_HEAT in supported_features:
             data[ATTR_AUX_HEAT] = STATE_ON if self.is_aux_heat else STATE_OFF
+            if (
+                self.__climate_reported_legacy_aux is False
+                and "custom_components" in type(self).__module__
+            ):
+                self._report_legacy_aux()
 
         return data
 
