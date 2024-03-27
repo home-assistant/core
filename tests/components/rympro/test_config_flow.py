@@ -44,16 +44,20 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch(
-        "homeassistant.components.rympro.config_flow.RymPro.login",
-        return_value="test-token",
-    ), patch(
-        "homeassistant.components.rympro.config_flow.RymPro.account_info",
-        return_value={"accountNumber": TEST_DATA[CONF_UNIQUE_ID]},
-    ), patch(
-        "homeassistant.components.rympro.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.rympro.config_flow.RymPro.login",
+            return_value="test-token",
+        ),
+        patch(
+            "homeassistant.components.rympro.config_flow.RymPro.account_info",
+            return_value={"accountNumber": TEST_DATA[CONF_UNIQUE_ID]},
+        ),
+        patch(
+            "homeassistant.components.rympro.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -98,16 +102,20 @@ async def test_login_error(hass: HomeAssistant, exception, error) -> None:
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": error}
 
-    with patch(
-        "homeassistant.components.rympro.config_flow.RymPro.login",
-        return_value="test-token",
-    ), patch(
-        "homeassistant.components.rympro.config_flow.RymPro.account_info",
-        return_value={"accountNumber": TEST_DATA[CONF_UNIQUE_ID]},
-    ), patch(
-        "homeassistant.components.rympro.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.rympro.config_flow.RymPro.login",
+            return_value="test-token",
+        ),
+        patch(
+            "homeassistant.components.rympro.config_flow.RymPro.account_info",
+            return_value={"accountNumber": TEST_DATA[CONF_UNIQUE_ID]},
+        ),
+        patch(
+            "homeassistant.components.rympro.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
@@ -129,12 +137,15 @@ async def test_form_already_exists(hass: HomeAssistant, config_entry) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.rympro.config_flow.RymPro.login",
-        return_value="test-token",
-    ), patch(
-        "homeassistant.components.rympro.config_flow.RymPro.account_info",
-        return_value={"accountNumber": TEST_DATA[CONF_UNIQUE_ID]},
+    with (
+        patch(
+            "homeassistant.components.rympro.config_flow.RymPro.login",
+            return_value="test-token",
+        ),
+        patch(
+            "homeassistant.components.rympro.config_flow.RymPro.account_info",
+            return_value={"accountNumber": TEST_DATA[CONF_UNIQUE_ID]},
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -163,16 +174,20 @@ async def test_form_reauth(hass: HomeAssistant, config_entry) -> None:
     assert result["type"] == "form"
     assert result["errors"] is None
 
-    with patch(
-        "homeassistant.components.rympro.config_flow.RymPro.login",
-        return_value="test-token",
-    ), patch(
-        "homeassistant.components.rympro.config_flow.RymPro.account_info",
-        return_value={"accountNumber": TEST_DATA[CONF_UNIQUE_ID]},
-    ), patch(
-        "homeassistant.components.rympro.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.rympro.config_flow.RymPro.login",
+            return_value="test-token",
+        ),
+        patch(
+            "homeassistant.components.rympro.config_flow.RymPro.account_info",
+            return_value={"accountNumber": TEST_DATA[CONF_UNIQUE_ID]},
+        ),
+        patch(
+            "homeassistant.components.rympro.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -202,16 +217,20 @@ async def test_form_reauth_with_new_account(hass: HomeAssistant, config_entry) -
     assert result["type"] == "form"
     assert result["errors"] is None
 
-    with patch(
-        "homeassistant.components.rympro.config_flow.RymPro.login",
-        return_value="test-token",
-    ), patch(
-        "homeassistant.components.rympro.config_flow.RymPro.account_info",
-        return_value={"accountNumber": "new-account-number"},
-    ), patch(
-        "homeassistant.components.rympro.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.rympro.config_flow.RymPro.login",
+            return_value="test-token",
+        ),
+        patch(
+            "homeassistant.components.rympro.config_flow.RymPro.account_info",
+            return_value={"accountNumber": "new-account-number"},
+        ),
+        patch(
+            "homeassistant.components.rympro.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

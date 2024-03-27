@@ -592,11 +592,14 @@ async def test_options_flow_db_url_empty(
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    with patch(
-        "homeassistant.components.sql.async_setup_entry",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.sql.config_flow.sqlalchemy.create_engine",
+    with (
+        patch(
+            "homeassistant.components.sql.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.sql.config_flow.sqlalchemy.create_engine",
+        ),
     ):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -627,11 +630,14 @@ async def test_full_flow_not_recorder_db(
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.sql.async_setup_entry",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.sql.config_flow.sqlalchemy.create_engine",
+    with (
+        patch(
+            "homeassistant.components.sql.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.sql.config_flow.sqlalchemy.create_engine",
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -660,11 +666,14 @@ async def test_full_flow_not_recorder_db(
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    with patch(
-        "homeassistant.components.sql.async_setup_entry",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.sql.config_flow.sqlalchemy.create_engine",
+    with (
+        patch(
+            "homeassistant.components.sql.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.sql.config_flow.sqlalchemy.create_engine",
+        ),
     ):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],

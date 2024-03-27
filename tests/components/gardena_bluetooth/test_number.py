@@ -130,12 +130,12 @@ async def test_bluetooth_error_unavailable(
 ) -> None:
     """Verify that a connectivity error makes all entities unavailable."""
 
-    mock_read_char_raw[
-        Valve.manual_watering_time.uuid
-    ] = Valve.manual_watering_time.encode(0)
-    mock_read_char_raw[
-        Valve.remaining_open_time.uuid
-    ] = Valve.remaining_open_time.encode(0)
+    mock_read_char_raw[Valve.manual_watering_time.uuid] = (
+        Valve.manual_watering_time.encode(0)
+    )
+    mock_read_char_raw[Valve.remaining_open_time.uuid] = (
+        Valve.remaining_open_time.encode(0)
+    )
 
     await setup_entry(hass, mock_entry, [Platform.NUMBER])
     assert hass.states.get("number.mock_title_remaining_open_time") == snapshot

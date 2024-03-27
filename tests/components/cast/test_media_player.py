@@ -191,15 +191,19 @@ async def async_setup_media_player_cast(hass: HomeAssistant, info: ChromecastInf
     chromecast = get_fake_chromecast(info)
     zconf = get_fake_zconf(host=info.cast_info.host, port=info.cast_info.port)
 
-    with patch(
-        "homeassistant.components.cast.discovery.pychromecast.get_chromecast_from_cast_info",
-        return_value=chromecast,
-    ) as get_chromecast, patch(
-        "homeassistant.components.cast.discovery.pychromecast.discovery.CastBrowser",
-        return_value=browser,
-    ) as cast_browser, patch(
-        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
-        return_value=zconf,
+    with (
+        patch(
+            "homeassistant.components.cast.discovery.pychromecast.get_chromecast_from_cast_info",
+            return_value=chromecast,
+        ) as get_chromecast,
+        patch(
+            "homeassistant.components.cast.discovery.pychromecast.discovery.CastBrowser",
+            return_value=browser,
+        ) as cast_browser,
+        patch(
+            "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
+            return_value=zconf,
+        ),
     ):
         data = {"ignore_cec": [], "known_hosts": [], "uuid": [str(info.uuid)]}
         entry = MockConfigEntry(data=data, domain="cast")
@@ -580,13 +584,16 @@ async def test_discover_dynamic_group(
         tasks.append(real_create_task(coroutine))
 
     # Discover cast service
-    with patch(
-        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
-        return_value=zconf_1,
-    ), patch.object(
-        hass,
-        "async_create_background_task",
-        wraps=create_task,
+    with (
+        patch(
+            "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
+            return_value=zconf_1,
+        ),
+        patch.object(
+            hass,
+            "async_create_background_task",
+            wraps=create_task,
+        ),
     ):
         discover_cast(
             pychromecast.discovery.MDNSServiceInfo("service"),
@@ -606,13 +613,16 @@ async def test_discover_dynamic_group(
     )
 
     # Discover other dynamic group cast service
-    with patch(
-        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
-        return_value=zconf_2,
-    ), patch.object(
-        hass,
-        "async_create_background_task",
-        wraps=create_task,
+    with (
+        patch(
+            "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
+            return_value=zconf_2,
+        ),
+        patch.object(
+            hass,
+            "async_create_background_task",
+            wraps=create_task,
+        ),
     ):
         discover_cast(
             pychromecast.discovery.MDNSServiceInfo("service"),
@@ -632,13 +642,16 @@ async def test_discover_dynamic_group(
     )
 
     # Get update for cast service
-    with patch(
-        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
-        return_value=zconf_1,
-    ), patch.object(
-        hass,
-        "async_create_background_task",
-        wraps=create_task,
+    with (
+        patch(
+            "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
+            return_value=zconf_1,
+        ),
+        patch.object(
+            hass,
+            "async_create_background_task",
+            wraps=create_task,
+        ),
     ):
         discover_cast(
             pychromecast.discovery.MDNSServiceInfo("service"),

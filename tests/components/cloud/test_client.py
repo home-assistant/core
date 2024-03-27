@@ -368,9 +368,10 @@ async def test_system_msg(hass: HomeAssistant) -> None:
 
 async def test_cloud_connection_info(hass: HomeAssistant) -> None:
     """Test connection info msg."""
-    with patch("hass_nabucasa.Cloud.initialize"), patch(
-        "uuid.UUID.hex", new_callable=PropertyMock
-    ) as hexmock:
+    with (
+        patch("hass_nabucasa.Cloud.initialize"),
+        patch("uuid.UUID.hex", new_callable=PropertyMock) as hexmock,
+    ):
         hexmock.return_value = "12345678901234567890"
         setup = await async_setup_component(hass, "cloud", {"cloud": {}})
         assert setup

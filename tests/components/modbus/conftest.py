@@ -52,18 +52,22 @@ def mock_pymodbus_fixture():
     """Mock pymodbus."""
     mock_pb = mock.AsyncMock()
     mock_pb.close = mock.MagicMock()
-    with mock.patch(
-        "homeassistant.components.modbus.modbus.AsyncModbusTcpClient",
-        return_value=mock_pb,
-        autospec=True,
-    ), mock.patch(
-        "homeassistant.components.modbus.modbus.AsyncModbusSerialClient",
-        return_value=mock_pb,
-        autospec=True,
-    ), mock.patch(
-        "homeassistant.components.modbus.modbus.AsyncModbusUdpClient",
-        return_value=mock_pb,
-        autospec=True,
+    with (
+        mock.patch(
+            "homeassistant.components.modbus.modbus.AsyncModbusTcpClient",
+            return_value=mock_pb,
+            autospec=True,
+        ),
+        mock.patch(
+            "homeassistant.components.modbus.modbus.AsyncModbusSerialClient",
+            return_value=mock_pb,
+            autospec=True,
+        ),
+        mock.patch(
+            "homeassistant.components.modbus.modbus.AsyncModbusUdpClient",
+            return_value=mock_pb,
+            autospec=True,
+        ),
     ):
         yield mock_pb
 

@@ -398,9 +398,9 @@ class MQTTOptionsFlowHandler(OptionsFlow):
         # build form
         fields: OrderedDict[vol.Marker, Any] = OrderedDict()
         fields[vol.Optional(CONF_DISCOVERY, default=discovery)] = BOOLEAN_SELECTOR
-        fields[
-            vol.Optional(CONF_DISCOVERY_PREFIX, default=discovery_prefix)
-        ] = PUBLISH_TOPIC_SELECTOR
+        fields[vol.Optional(CONF_DISCOVERY_PREFIX, default=discovery_prefix)] = (
+            PUBLISH_TOPIC_SELECTOR
+        )
 
         # Birth message is disabled if CONF_BIRTH_MESSAGE = {}
         fields[
@@ -421,9 +421,9 @@ class MQTTOptionsFlowHandler(OptionsFlow):
             )
         ] = TEXT_SELECTOR
         fields[vol.Optional("birth_qos", default=birth[ATTR_QOS])] = QOS_SELECTOR
-        fields[
-            vol.Optional("birth_retain", default=birth[ATTR_RETAIN])
-        ] = BOOLEAN_SELECTOR
+        fields[vol.Optional("birth_retain", default=birth[ATTR_RETAIN])] = (
+            BOOLEAN_SELECTOR
+        )
 
         # Will message is disabled if CONF_WILL_MESSAGE = {}
         fields[
@@ -444,9 +444,9 @@ class MQTTOptionsFlowHandler(OptionsFlow):
             )
         ] = TEXT_SELECTOR
         fields[vol.Optional("will_qos", default=will[ATTR_QOS])] = QOS_SELECTOR
-        fields[
-            vol.Optional("will_retain", default=will[ATTR_RETAIN])
-        ] = BOOLEAN_SELECTOR
+        fields[vol.Optional("will_retain", default=will[ATTR_RETAIN])] = (
+            BOOLEAN_SELECTOR
+        )
 
         return self.async_show_form(
             step_id="options",

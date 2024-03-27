@@ -26,10 +26,13 @@ async def test_web_full_flow(hass: HomeAssistant) -> None:
     assert result.get("step_id") == "user"
     assert result.get("data_schema").schema.get("server_url") == str
     assert not result.get("errors")
-    with patch("rtsp_to_webrtc.client.Client.heartbeat"), patch(
-        "homeassistant.components.rtsp_to_webrtc.async_setup_entry",
-        return_value=True,
-    ) as mock_setup:
+    with (
+        patch("rtsp_to_webrtc.client.Client.heartbeat"),
+        patch(
+            "homeassistant.components.rtsp_to_webrtc.async_setup_entry",
+            return_value=True,
+        ) as mock_setup,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"server_url": "https://example.com"}
         )
@@ -131,10 +134,13 @@ async def test_hassio_discovery(hass: HomeAssistant) -> None:
     assert result.get("step_id") == "hassio_confirm"
     assert result.get("description_placeholders") == {"addon": "RTSPtoWebRTC"}
 
-    with patch("rtsp_to_webrtc.client.Client.heartbeat"), patch(
-        "homeassistant.components.rtsp_to_webrtc.async_setup_entry",
-        return_value=True,
-    ) as mock_setup:
+    with (
+        patch("rtsp_to_webrtc.client.Client.heartbeat"),
+        patch(
+            "homeassistant.components.rtsp_to_webrtc.async_setup_entry",
+            return_value=True,
+        ) as mock_setup,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )

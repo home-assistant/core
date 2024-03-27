@@ -102,8 +102,8 @@ class BMWLock(BMWBaseEntity, LockEntity):
                 LockState.LOCKED,
                 LockState.SECURED,
             }
-            self._attr_extra_state_attributes[
-                "door_lock_state"
-            ] = self.vehicle.doors_and_windows.door_lock_state.value
+            self._attr_extra_state_attributes["door_lock_state"] = (
+                self.vehicle.doors_and_windows.door_lock_state.value
+            )
 
         super()._handle_coordinator_update()

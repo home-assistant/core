@@ -544,7 +544,9 @@
         'serial': '**REDACTED**',
       }),
       'state': None,
-      'system': None,
+      'system': dict({
+        'cloud_enabled': True,
+      }),
     }),
     'entry': dict({
       'ip_address': '**REDACTED**',

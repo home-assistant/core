@@ -23,14 +23,18 @@ async def test_validate_db_schema_fix_float_issue(
 
     Note: The test uses SQLite, the purpose is only to exercise the code.
     """
-    with patch(
-        "homeassistant.components.recorder.core.Recorder.dialect_name", db_engine
-    ), patch(
-        "homeassistant.components.recorder.auto_repairs.schema._validate_db_schema_precision",
-        return_value={"states.double precision"},
-    ), patch(
-        "homeassistant.components.recorder.migration._modify_columns"
-    ) as modify_columns_mock:
+    with (
+        patch(
+            "homeassistant.components.recorder.core.Recorder.dialect_name", db_engine
+        ),
+        patch(
+            "homeassistant.components.recorder.auto_repairs.schema._validate_db_schema_precision",
+            return_value={"states.double precision"},
+        ),
+        patch(
+            "homeassistant.components.recorder.migration._modify_columns"
+        ) as modify_columns_mock,
+    ):
         await async_setup_recorder_instance(hass)
         await async_wait_recording_done(hass)
 
@@ -56,11 +60,12 @@ async def test_validate_db_schema_fix_utf8_issue_states(
 
     Note: The test uses SQLite, the purpose is only to exercise the code.
     """
-    with patch(
-        "homeassistant.components.recorder.core.Recorder.dialect_name", "mysql"
-    ), patch(
-        "homeassistant.components.recorder.auto_repairs.schema._validate_table_schema_supports_utf8",
-        return_value={"states.4-byte UTF-8"},
+    with (
+        patch("homeassistant.components.recorder.core.Recorder.dialect_name", "mysql"),
+        patch(
+            "homeassistant.components.recorder.auto_repairs.schema._validate_table_schema_supports_utf8",
+            return_value={"states.4-byte UTF-8"},
+        ),
     ):
         await async_setup_recorder_instance(hass)
         await async_wait_recording_done(hass)
@@ -85,11 +90,12 @@ async def test_validate_db_schema_fix_utf8_issue_state_attributes(
 
     Note: The test uses SQLite, the purpose is only to exercise the code.
     """
-    with patch(
-        "homeassistant.components.recorder.core.Recorder.dialect_name", "mysql"
-    ), patch(
-        "homeassistant.components.recorder.auto_repairs.schema._validate_table_schema_supports_utf8",
-        return_value={"state_attributes.4-byte UTF-8"},
+    with (
+        patch("homeassistant.components.recorder.core.Recorder.dialect_name", "mysql"),
+        patch(
+            "homeassistant.components.recorder.auto_repairs.schema._validate_table_schema_supports_utf8",
+            return_value={"state_attributes.4-byte UTF-8"},
+        ),
     ):
         await async_setup_recorder_instance(hass)
         await async_wait_recording_done(hass)
@@ -115,11 +121,12 @@ async def test_validate_db_schema_fix_collation_issue(
 
     Note: The test uses SQLite, the purpose is only to exercise the code.
     """
-    with patch(
-        "homeassistant.components.recorder.core.Recorder.dialect_name", "mysql"
-    ), patch(
-        "homeassistant.components.recorder.auto_repairs.schema._validate_table_schema_has_correct_collation",
-        return_value={"states.utf8mb4_unicode_ci"},
+    with (
+        patch("homeassistant.components.recorder.core.Recorder.dialect_name", "mysql"),
+        patch(
+            "homeassistant.components.recorder.auto_repairs.schema._validate_table_schema_has_correct_collation",
+            return_value={"states.utf8mb4_unicode_ci"},
+        ),
     ):
         await async_setup_recorder_instance(hass)
         await async_wait_recording_done(hass)

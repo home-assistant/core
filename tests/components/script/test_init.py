@@ -1164,7 +1164,7 @@ async def test_script_variables(
 async def test_script_this_var_always(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test script always has reference to this, even with no variabls are configured."""
+    """Test script always has reference to this, even with no variables are configured."""
 
     assert await async_setup_component(
         hass,

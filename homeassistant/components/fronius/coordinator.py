@@ -78,9 +78,9 @@ class FroniusCoordinatorBase(
             for solar_net_id in data:
                 if solar_net_id not in self.unregistered_descriptors:
                     # id seen for the first time
-                    self.unregistered_descriptors[
-                        solar_net_id
-                    ] = self.valid_descriptions.copy()
+                    self.unregistered_descriptors[solar_net_id] = (
+                        self.valid_descriptions.copy()
+                    )
             return data
 
     @callback
@@ -115,9 +115,9 @@ class FroniusCoordinatorBase(
                             solar_net_id=solar_net_id,
                         )
                     )
-                self.unregistered_descriptors[
-                    solar_net_id
-                ] = remaining_unregistered_descriptors
+                self.unregistered_descriptors[solar_net_id] = (
+                    remaining_unregistered_descriptors
+                )
             async_add_entities(new_entities)
 
         _add_entities_for_unregistered_descriptors()

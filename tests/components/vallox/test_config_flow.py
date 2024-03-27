@@ -33,13 +33,16 @@ async def test_form_create_entry(hass: HomeAssistant) -> None:
     assert init["type"] == FlowResultType.FORM
     assert init["errors"] is None
 
-    with patch(
-        "homeassistant.components.vallox.config_flow.Vallox.fetch_metric_data",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.vallox.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.vallox.config_flow.Vallox.fetch_metric_data",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.vallox.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             init["flow_id"],
             {"host": "1.2.3.4"},

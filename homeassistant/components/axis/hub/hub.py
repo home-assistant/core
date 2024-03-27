@@ -6,9 +6,9 @@ from typing import Any
 
 import axis
 from axis.errors import Unauthorized
+from axis.interfaces.mqtt import mqtt_json_to_event
+from axis.models.mqtt import ClientState
 from axis.stream_manager import Signal, State
-from axis.vapix.interfaces.mqtt import mqtt_json_to_event
-from axis.vapix.models.mqtt import ClientState
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN

@@ -146,12 +146,15 @@ def satellite_config_entry(hass: HomeAssistant) -> ConfigEntry:
 @pytest.fixture
 async def init_satellite(hass: HomeAssistant, satellite_config_entry: ConfigEntry):
     """Initialize Wyoming satellite."""
-    with patch(
-        "homeassistant.components.wyoming.data.load_wyoming_info",
-        return_value=SATELLITE_INFO,
-    ), patch(
-        "homeassistant.components.wyoming.satellite.WyomingSatellite.run"
-    ) as _run_mock:
+    with (
+        patch(
+            "homeassistant.components.wyoming.data.load_wyoming_info",
+            return_value=SATELLITE_INFO,
+        ),
+        patch(
+            "homeassistant.components.wyoming.satellite.WyomingSatellite.run"
+        ) as _run_mock,
+    ):
         # _run_mock: satellite task does not actually run
         await hass.config_entries.async_setup(satellite_config_entry.entry_id)
 

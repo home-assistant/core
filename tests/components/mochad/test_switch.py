@@ -13,8 +13,9 @@ from homeassistant.setup import async_setup_component
 @pytest.fixture(autouse=True)
 def pymochad_mock():
     """Mock pymochad."""
-    with mock.patch("homeassistant.components.mochad.switch.device"), mock.patch(
-        "homeassistant.components.mochad.switch.MochadException"
+    with (
+        mock.patch("homeassistant.components.mochad.switch.device"),
+        mock.patch("homeassistant.components.mochad.switch.MochadException"),
     ):
         yield
 

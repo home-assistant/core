@@ -34,11 +34,14 @@ def mock_config_entry():
 def mock_mozart_client() -> Generator[AsyncMock, None, None]:
     """Mock MozartClient."""
 
-    with patch(
-        "homeassistant.components.bang_olufsen.MozartClient", autospec=True
-    ) as mock_client, patch(
-        "homeassistant.components.bang_olufsen.config_flow.MozartClient",
-        new=mock_client,
+    with (
+        patch(
+            "homeassistant.components.bang_olufsen.MozartClient", autospec=True
+        ) as mock_client,
+        patch(
+            "homeassistant.components.bang_olufsen.config_flow.MozartClient",
+            new=mock_client,
+        ),
     ):
         client = mock_client.return_value
         client.get_beolink_self = AsyncMock()

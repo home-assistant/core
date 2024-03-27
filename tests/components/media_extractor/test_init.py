@@ -190,12 +190,17 @@ async def test_query_error(
 ) -> None:
     """Test handling error with query."""
 
-    with patch(
-        "homeassistant.components.media_extractor.YoutubeDL.extract_info",
-        return_value=load_json_object_fixture("media_extractor/youtube_1_info.json"),
-    ), patch(
-        "homeassistant.components.media_extractor.YoutubeDL.process_ie_result",
-        side_effect=DownloadError("Message"),
+    with (
+        patch(
+            "homeassistant.components.media_extractor.YoutubeDL.extract_info",
+            return_value=load_json_object_fixture(
+                "media_extractor/youtube_1_info.json"
+            ),
+        ),
+        patch(
+            "homeassistant.components.media_extractor.YoutubeDL.process_ie_result",
+            side_effect=DownloadError("Message"),
+        ),
     ):
         await async_setup_component(hass, DOMAIN, empty_media_extractor_config)
         await hass.async_block_till_done()

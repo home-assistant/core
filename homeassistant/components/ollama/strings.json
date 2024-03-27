@@ -1,0 +1,33 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]",
+          "model": "Model"
+        }
+      },
+      "download": {
+        "title": "Downloading model"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "download_failed": "Model downloading failed",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "progress": {
+      "download": "Please wait while the model is downloaded, which may take a very long time. Check your Ollama server logs for more details."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "prompt": "Prompt template",
+          "max_history": "Max history messages"
+        }
+      }
+    }
+  }
+}

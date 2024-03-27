@@ -155,9 +155,10 @@ class RecorderOutput(StreamOutput):
 
         def write_transform_matrix_and_rename(video_path: str) -> None:
             """Update the transform matrix and write to the desired filename."""
-            with open(video_path + ".tmp", mode="rb") as in_file, open(
-                video_path, mode="wb"
-            ) as out_file:
+            with (
+                open(video_path + ".tmp", mode="rb") as in_file,
+                open(video_path, mode="wb") as out_file,
+            ):
                 init = transform_init(
                     read_init(in_file), self.dynamic_stream_settings.orientation
                 )

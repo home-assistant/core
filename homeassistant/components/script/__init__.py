@@ -223,8 +223,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await _async_process_config(hass, config, component)
 
     # Add some default blueprints to blueprints/script, does nothing
-    # if blueprints/script already exists
-    await async_get_blueprints(hass).async_populate()
+    # if blueprints/script already exists but still has to create
+    # an executor job to check if the folder exists so we run it in a
+    # separate task to avoid waiting for it to finish setting up
+    # since a tracked task will be waited at the end of startup
+    hass.async_create_task(
+        async_get_blueprints(hass).async_populate(), eager_start=True
+    )
 
     async def reload_service(service: ServiceCall) -> None:
         """Call a service to reload scripts."""
@@ -447,7 +452,7 @@ class BaseScriptEntity(ToggleEntity, ABC):
 class UnavailableScriptEntity(BaseScriptEntity):
     """A non-functional script entity with its state set to unavailable.
 
-    This class is instatiated when an script fails to validate.
+    This class is instantiated when an script fails to validate.
     """
 
     _attr_should_poll = False

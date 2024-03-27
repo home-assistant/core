@@ -10,6 +10,7 @@ PERSIST_LOCK_DATA = f"{DOMAIN}_persist_lock"
 HOMEKIT_FILE = ".homekit.state"
 SHUTDOWN_TIMEOUT = 30
 CONF_ENTRY_INDEX = "index"
+EMPTY_MAC = "00:00:00:00:00:00"
 
 # ### Codecs ####
 VIDEO_CODEC_COPY = "copy"

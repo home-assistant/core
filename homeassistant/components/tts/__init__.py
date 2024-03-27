@@ -507,24 +507,21 @@ class SpeechManager:
         self.file_cache: dict[str, str] = {}
         self.mem_cache: dict[str, TTSCache] = {}
 
-    async def async_init_cache(self) -> None:
-        """Init config folder and load file cache."""
+    def _init_cache(self) -> dict[str, str]:
+        """Init cache folder and fetch files."""
         try:
-            self.cache_dir = await self.hass.async_add_executor_job(
-                _init_tts_cache_dir, self.hass, self.cache_dir
-            )
+            self.cache_dir = _init_tts_cache_dir(self.hass, self.cache_dir)
         except OSError as err:
             raise HomeAssistantError(f"Can't init cache dir {err}") from err
 
         try:
-            cache_files = await self.hass.async_add_executor_job(
-                _get_cache_files, self.cache_dir
-            )
+            return _get_cache_files(self.cache_dir)
         except OSError as err:
             raise HomeAssistantError(f"Can't read cache dir {err}") from err
 
-        if cache_files:
-            self.file_cache.update(cache_files)
+    async def async_init_cache(self) -> None:
+        """Init config folder and load file cache."""
+        self.file_cache.update(await self.hass.async_add_executor_job(self._init_cache))
 
     async def async_clear_cache(self) -> None:
         """Read file cache and delete files."""

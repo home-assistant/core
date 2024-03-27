@@ -7,7 +7,7 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
 
-from aionut import AIONUTClient, NUTError
+from aionut import AIONUTClient, NUTError, NUTLoginError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -21,7 +21,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -70,6 +70,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Fetch data from NUT."""
         try:
             return await data.async_update()
+        except NUTLoginError as err:
+            raise ConfigEntryAuthFailed from err
         except NUTError as err:
             raise UpdateFailed(f"Error fetching UPS state: {err}") from err
 
@@ -249,16 +251,9 @@ class PyNUTData:
 
     async def _async_get_alias(self) -> str | None:
         """Get the ups alias from NUT."""
-        try:
-            ups_list = await self._client.list_ups()
-        except NUTError as err:
-            _LOGGER.error("Failure getting NUT ups alias, %s", err)
-            return None
-
-        if not ups_list:
+        if not (ups_list := await self._client.list_ups()):
             _LOGGER.error("Empty list while getting NUT ups aliases")
             return None
-
         self.ups_list = ups_list
         return list(ups_list)[0]
 

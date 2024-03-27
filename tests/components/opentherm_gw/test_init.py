@@ -36,10 +36,13 @@ async def test_device_registry_insert(hass: HomeAssistant) -> None:
     """Test that the device registry is initialized correctly."""
     MOCK_CONFIG_ENTRY.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.opentherm_gw.OpenThermGatewayDevice.cleanup",
-        return_value=None,
-    ), patch("pyotgw.OpenThermGateway.connect", return_value=MINIMAL_STATUS):
+    with (
+        patch(
+            "homeassistant.components.opentherm_gw.OpenThermGatewayDevice.cleanup",
+            return_value=None,
+        ),
+        patch("pyotgw.OpenThermGateway.connect", return_value=MINIMAL_STATUS),
+    ):
         await setup.async_setup_component(hass, DOMAIN, {})
 
     await hass.async_block_till_done()
@@ -67,10 +70,13 @@ async def test_device_registry_update(
         sw_version=VERSION_OLD,
     )
 
-    with patch(
-        "homeassistant.components.opentherm_gw.OpenThermGatewayDevice.cleanup",
-        return_value=None,
-    ), patch("pyotgw.OpenThermGateway.connect", return_value=MINIMAL_STATUS_UPD):
+    with (
+        patch(
+            "homeassistant.components.opentherm_gw.OpenThermGatewayDevice.cleanup",
+            return_value=None,
+        ),
+        patch("pyotgw.OpenThermGateway.connect", return_value=MINIMAL_STATUS_UPD),
+    ):
         await setup.async_setup_component(hass, DOMAIN, {})
 
     await hass.async_block_till_done()

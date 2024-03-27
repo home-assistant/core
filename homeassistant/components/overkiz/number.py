@@ -37,9 +37,9 @@ class OverkizNumberDescription(NumberEntityDescription):
     min_value_state_name: str | None = None
     max_value_state_name: str | None = None
     inverted: bool = False
-    set_native_value: Callable[
-        [float, Callable[..., Awaitable[None]]], Awaitable[None]
-    ] | None = None
+    set_native_value: (
+        Callable[[float, Callable[..., Awaitable[None]]], Awaitable[None]] | None
+    ) = None
 
 
 async def _async_set_native_value_boost_mode_duration(

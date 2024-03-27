@@ -382,9 +382,9 @@ async def test_motion_recording_mode_properties(
     assert state
     assert state.state != STATE_RECORDING
 
-    mock_remote.return_value.get_camera.return_value[
-        "recordingIndicator"
-    ] = "MOTION_INPROGRESS"
+    mock_remote.return_value.get_camera.return_value["recordingIndicator"] = (
+        "MOTION_INPROGRESS"
+    )
 
     async_fire_time_changed(hass, now + timedelta(seconds=91))
     await hass.async_block_till_done()
@@ -394,9 +394,9 @@ async def test_motion_recording_mode_properties(
     assert state
     assert state.state == STATE_RECORDING
 
-    mock_remote.return_value.get_camera.return_value[
-        "recordingIndicator"
-    ] = "MOTION_FINISHED"
+    mock_remote.return_value.get_camera.return_value["recordingIndicator"] = (
+        "MOTION_FINISHED"
+    )
 
     async_fire_time_changed(hass, now + timedelta(seconds=121))
     await hass.async_block_till_done()

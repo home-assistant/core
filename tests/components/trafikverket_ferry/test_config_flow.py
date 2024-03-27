@@ -30,12 +30,15 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.trafikverket_ferry.config_flow.TrafikverketFerry.async_get_next_ferry_stop",
-    ), patch(
-        "homeassistant.components.trafikverket_ferry.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.trafikverket_ferry.config_flow.TrafikverketFerry.async_get_next_ferry_stop",
+        ),
+        patch(
+            "homeassistant.components.trafikverket_ferry.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -138,11 +141,14 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.trafikverket_ferry.config_flow.TrafikverketFerry.async_get_next_ferry_stop",
-    ), patch(
-        "homeassistant.components.trafikverket_ferry.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.trafikverket_ferry.config_flow.TrafikverketFerry.async_get_next_ferry_stop",
+        ),
+        patch(
+            "homeassistant.components.trafikverket_ferry.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -221,11 +227,14 @@ async def test_reauth_flow_error(
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": p_error}
 
-    with patch(
-        "homeassistant.components.trafikverket_ferry.config_flow.TrafikverketFerry.async_get_next_ferry_stop",
-    ), patch(
-        "homeassistant.components.trafikverket_ferry.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.trafikverket_ferry.config_flow.TrafikverketFerry.async_get_next_ferry_stop",
+        ),
+        patch(
+            "homeassistant.components.trafikverket_ferry.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

@@ -42,7 +42,7 @@ class FloorEntry(NormalizedNameBaseRegistryEntry):
     aliases: set[str]
     floor_id: str
     icon: str | None = None
-    level: int = 0
+    level: int | None = None
 
 
 class FloorRegistry(BaseRegistry):
@@ -54,13 +54,13 @@ class FloorRegistry(BaseRegistry):
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the floor registry."""
         self.hass = hass
-        self._store: Store[
-            dict[str, list[dict[str, str | int | list[str] | None]]]
-        ] = Store(
-            hass,
-            STORAGE_VERSION_MAJOR,
-            STORAGE_KEY,
-            atomic_writes=True,
+        self._store: Store[dict[str, list[dict[str, str | int | list[str] | None]]]] = (
+            Store(
+                hass,
+                STORAGE_VERSION_MAJOR,
+                STORAGE_KEY,
+                atomic_writes=True,
+            )
         )
 
     @callback
@@ -99,7 +99,7 @@ class FloorRegistry(BaseRegistry):
         *,
         aliases: set[str] | None = None,
         icon: str | None = None,
-        level: int = 0,
+        level: int | None = None,
     ) -> FloorEntry:
         """Create a new floor."""
         if floor := self.async_get_floor_by_name(name):

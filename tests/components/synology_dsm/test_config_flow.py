@@ -381,12 +381,15 @@ async def test_reconfig_user(hass: HomeAssistant, service: MagicMock) -> None:
         unique_id=SERIAL,
     ).add_to_hass(hass)
 
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
-        return_value=service,
+    with (
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_reload",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
+            return_value=service,
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

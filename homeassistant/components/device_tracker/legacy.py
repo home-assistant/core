@@ -201,9 +201,47 @@ def see(
     hass.services.call(DOMAIN, SERVICE_SEE, data)
 
 
-async def async_setup_integration(hass: HomeAssistant, config: ConfigType) -> None:
+@callback
+def async_setup_integration(hass: HomeAssistant, config: ConfigType) -> None:
+    """Set up the legacy integration."""
+    # The tracker is loaded in the _async_setup_integration task so
+    # we create a future to avoid waiting on it here so that only
+    # async_platform_discovered will have to wait in the rare event
+    # a custom component still uses the legacy device tracker discovery.
+    tracker_future: asyncio.Future[DeviceTracker] = hass.loop.create_future()
+
+    async def async_platform_discovered(
+        p_type: str, info: dict[str, Any] | None
+    ) -> None:
+        """Load a platform."""
+        platform = await async_create_platform_type(hass, config, p_type, {})
+
+        if platform is None or platform.type != PLATFORM_TYPE_LEGACY:
+            return
+
+        tracker = await tracker_future
+        await platform.async_setup_legacy(hass, tracker, info)
+
+    discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
+    #
+    # Legacy and platforms load in a non-awaited tracked task
+    # to ensure device tracker setup can continue and config
+    # entry integrations are not waiting for legacy device
+    # tracker platforms to be set up.
+    #
+    hass.async_create_task(
+        _async_setup_integration(hass, config, tracker_future), eager_start=True
+    )
+
+
+async def _async_setup_integration(
+    hass: HomeAssistant,
+    config: ConfigType,
+    tracker_future: asyncio.Future[DeviceTracker],
+) -> None:
     """Set up the legacy integration."""
     tracker = await get_tracker(hass, config)
+    tracker_future.set_result(tracker)
 
     async def async_see_service(call: ServiceCall) -> None:
         """Service to see a device."""
@@ -226,19 +264,6 @@ async def async_setup_integration(hass: HomeAssistant, config: ConfigType) -> No
 
     if setup_tasks:
         await asyncio.wait(setup_tasks)
-
-    async def async_platform_discovered(
-        p_type: str, info: dict[str, Any] | None
-    ) -> None:
-        """Load a platform."""
-        platform = await async_create_platform_type(hass, config, p_type, {})
-
-        if platform is None or platform.type != PLATFORM_TYPE_LEGACY:
-            return
-
-        await platform.async_setup_legacy(hass, tracker, info)
-
-    discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
 
     # Clean up stale devices
     cancel_update_stale = async_track_utc_time_change(

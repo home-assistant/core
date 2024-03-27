@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine, Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from functools import partial
 import logging
@@ -171,15 +171,6 @@ class RuntimeEntryData:
         callback_: Callable[[list[EntityInfo]], None],
     ) -> None:
         """Unsubscribe to when static info is registered."""
-        callbacks.remove(callback_)
-
-    @callback
-    def _async_unsubscribe_static_key_remove(
-        self,
-        callbacks: list[Callable[[], Coroutine[Any, Any, None]]],
-        callback_: Callable[[], Coroutine[Any, Any, None]],
-    ) -> None:
-        """Unsubscribe to when static info is removed."""
         callbacks.remove(callback_)
 
     @callback

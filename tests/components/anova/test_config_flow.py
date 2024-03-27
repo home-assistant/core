@@ -16,15 +16,16 @@ async def test_flow_user(
     hass: HomeAssistant,
 ) -> None:
     """Test user initialized flow."""
-    with patch(
-        "homeassistant.components.anova.config_flow.AnovaApi.authenticate",
-    ) as auth_patch, patch(
-        "homeassistant.components.anova.AnovaApi.get_devices"
-    ) as device_patch, patch(
-        "homeassistant.components.anova.AnovaApi.authenticate"
-    ), patch(
-        "homeassistant.components.anova.config_flow.AnovaApi.get_devices"
-    ) as config_flow_device_patch:
+    with (
+        patch(
+            "homeassistant.components.anova.config_flow.AnovaApi.authenticate",
+        ) as auth_patch,
+        patch("homeassistant.components.anova.AnovaApi.get_devices") as device_patch,
+        patch("homeassistant.components.anova.AnovaApi.authenticate"),
+        patch(
+            "homeassistant.components.anova.config_flow.AnovaApi.get_devices"
+        ) as config_flow_device_patch,
+    ):
         auth_patch.return_value = True
         device_patch.return_value = [
             AnovaPrecisionCooker(None, DEVICE_UNIQUE_ID, "type_sample", None)
@@ -50,13 +51,15 @@ async def test_flow_user(
 
 async def test_flow_user_already_configured(hass: HomeAssistant) -> None:
     """Test user initialized flow with duplicate device."""
-    with patch(
-        "homeassistant.components.anova.config_flow.AnovaApi.authenticate",
-    ) as auth_patch, patch(
-        "homeassistant.components.anova.AnovaApi.get_devices"
-    ) as device_patch, patch(
-        "homeassistant.components.anova.config_flow.AnovaApi.get_devices"
-    ) as config_flow_device_patch:
+    with (
+        patch(
+            "homeassistant.components.anova.config_flow.AnovaApi.authenticate",
+        ) as auth_patch,
+        patch("homeassistant.components.anova.AnovaApi.get_devices") as device_patch,
+        patch(
+            "homeassistant.components.anova.config_flow.AnovaApi.get_devices"
+        ) as config_flow_device_patch,
+    ):
         auth_patch.return_value = True
         device_patch.return_value = [
             AnovaPrecisionCooker(None, DEVICE_UNIQUE_ID, "type_sample", None)
@@ -115,11 +118,12 @@ async def test_flow_unknown_error(hass: HomeAssistant) -> None:
 
 async def test_flow_no_devices(hass: HomeAssistant) -> None:
     """Test unknown error throwing error."""
-    with patch(
-        "homeassistant.components.anova.config_flow.AnovaApi.authenticate"
-    ), patch(
-        "homeassistant.components.anova.config_flow.AnovaApi.get_devices",
-        side_effect=NoDevicesFound(),
+    with (
+        patch("homeassistant.components.anova.config_flow.AnovaApi.authenticate"),
+        patch(
+            "homeassistant.components.anova.config_flow.AnovaApi.get_devices",
+            side_effect=NoDevicesFound(),
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

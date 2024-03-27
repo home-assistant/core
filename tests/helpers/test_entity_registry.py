@@ -704,9 +704,10 @@ async def test_update_entity_unique_id_conflict(
     entry2 = entity_registry.async_get_or_create(
         "light", "hue", "1234", config_entry=mock_config
     )
-    with patch.object(
-        entity_registry, "async_schedule_save"
-    ) as mock_schedule_save, pytest.raises(ValueError):
+    with (
+        patch.object(entity_registry, "async_schedule_save") as mock_schedule_save,
+        pytest.raises(ValueError),
+    ):
         entity_registry.async_update_entity(
             entry.entity_id, new_unique_id=entry2.unique_id
         )
@@ -752,9 +753,10 @@ async def test_update_entity_entity_id_entity_id(
     assert entry2.entity_id != state_entity_id
 
     # Try updating to a registered entity_id
-    with patch.object(
-        entity_registry, "async_schedule_save"
-    ) as mock_schedule_save, pytest.raises(ValueError):
+    with (
+        patch.object(entity_registry, "async_schedule_save") as mock_schedule_save,
+        pytest.raises(ValueError),
+    ):
         entity_registry.async_update_entity(
             entry.entity_id, new_entity_id=entry2.entity_id
         )
@@ -769,9 +771,10 @@ async def test_update_entity_entity_id_entity_id(
     assert entity_registry.async_get(entry2.entity_id) is entry2
 
     # Try updating to an entity_id which is in the state machine
-    with patch.object(
-        entity_registry, "async_schedule_save"
-    ) as mock_schedule_save, pytest.raises(ValueError):
+    with (
+        patch.object(entity_registry, "async_schedule_save") as mock_schedule_save,
+        pytest.raises(ValueError),
+    ):
         entity_registry.async_update_entity(
             entry.entity_id, new_entity_id=state_entity_id
         )
@@ -949,85 +952,6 @@ async def test_restore_states(
     assert hass.states.get("light.simple") is None
     assert hass.states.get("light.disabled") is None
     assert hass.states.get("light.all_info_set") is None
-
-
-async def test_async_get_device_class_lookup(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
-    """Test registry device class lookup."""
-    hass.set_state(CoreState.not_running)
-
-    entity_registry.async_get_or_create(
-        "binary_sensor",
-        "light",
-        "battery_charging",
-        device_id="light_device_entry_id",
-        original_device_class="battery_charging",
-    )
-    entity_registry.async_get_or_create(
-        "sensor",
-        "light",
-        "battery",
-        device_id="light_device_entry_id",
-        original_device_class="battery",
-    )
-    entity_registry.async_get_or_create(
-        "light", "light", "demo", device_id="light_device_entry_id"
-    )
-    entity_registry.async_get_or_create(
-        "binary_sensor",
-        "vacuum",
-        "battery_charging",
-        device_id="vacuum_device_entry_id",
-        original_device_class="battery_charging",
-    )
-    entity_registry.async_get_or_create(
-        "sensor",
-        "vacuum",
-        "battery",
-        device_id="vacuum_device_entry_id",
-        original_device_class="battery",
-    )
-    entity_registry.async_get_or_create(
-        "vacuum", "vacuum", "demo", device_id="vacuum_device_entry_id"
-    )
-    entity_registry.async_get_or_create(
-        "binary_sensor",
-        "remote",
-        "battery_charging",
-        device_id="remote_device_entry_id",
-        original_device_class="battery_charging",
-    )
-    entity_registry.async_get_or_create(
-        "remote", "remote", "demo", device_id="remote_device_entry_id"
-    )
-
-    device_lookup = entity_registry.async_get_device_class_lookup(
-        {("binary_sensor", "battery_charging"), ("sensor", "battery")}
-    )
-
-    assert device_lookup == {
-        "remote_device_entry_id": {
-            (
-                "binary_sensor",
-                "battery_charging",
-            ): "binary_sensor.remote_battery_charging"
-        },
-        "light_device_entry_id": {
-            (
-                "binary_sensor",
-                "battery_charging",
-            ): "binary_sensor.light_battery_charging",
-            ("sensor", "battery"): "sensor.light_battery",
-        },
-        "vacuum_device_entry_id": {
-            (
-                "binary_sensor",
-                "battery_charging",
-            ): "binary_sensor.vacuum_battery_charging",
-            ("sensor", "battery"): "sensor.vacuum_battery",
-        },
-    }
 
 
 async def test_remove_device_removes_entities(

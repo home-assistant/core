@@ -1,6 +1,6 @@
 """Constants for Axis integration tests."""
 
-from axis.vapix.models.api import CONTEXT
+from axis.models.api import CONTEXT
 
 MAC = "00408C123456"
 FORMATTED_MAC = "00:40:8c:12:34:56"

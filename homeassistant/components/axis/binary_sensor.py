@@ -6,11 +6,11 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
+from axis.interfaces.applications.fence_guard import FenceGuardHandler
+from axis.interfaces.applications.loitering_guard import LoiteringGuardHandler
+from axis.interfaces.applications.motion_guard import MotionGuardHandler
+from axis.interfaces.applications.vmd4 import Vmd4Handler
 from axis.models.event import Event, EventTopic
-from axis.vapix.interfaces.applications.fence_guard import FenceGuardHandler
-from axis.vapix.interfaces.applications.loitering_guard import LoiteringGuardHandler
-from axis.vapix.interfaces.applications.motion_guard import MotionGuardHandler
-from axis.vapix.interfaces.applications.vmd4 import Vmd4Handler
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,

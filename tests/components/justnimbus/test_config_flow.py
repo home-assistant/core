@@ -95,10 +95,13 @@ async def test_abort_already_configured(hass: HomeAssistant) -> None:
 
 async def _set_up_justnimbus(hass: HomeAssistant, flow_id: str) -> None:
     """Reusable successful setup of JustNimbus sensor."""
-    with patch("justnimbus.JustNimbusClient.get_data"), patch(
-        "homeassistant.components.justnimbus.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch("justnimbus.JustNimbusClient.get_data"),
+        patch(
+            "homeassistant.components.justnimbus.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             flow_id=flow_id,
             user_input=FIXTURE_USER_INPUT,

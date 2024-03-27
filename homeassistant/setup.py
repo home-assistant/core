@@ -33,9 +33,9 @@ from .helpers.issue_registry import IssueSeverity, async_create_issue
 from .helpers.typing import ConfigType
 from .util.async_ import create_eager_task
 
-current_setup_group: contextvars.ContextVar[
-    tuple[str, str | None] | None
-] = contextvars.ContextVar("current_setup_group", default=None)
+current_setup_group: contextvars.ContextVar[tuple[str, str | None] | None] = (
+    contextvars.ContextVar("current_setup_group", default=None)
+)
 
 
 _LOGGER = logging.getLogger(__name__)

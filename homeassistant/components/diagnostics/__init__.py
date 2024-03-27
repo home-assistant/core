@@ -41,13 +41,17 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 class DiagnosticsPlatformData:
     """Diagnostic platform data."""
 
-    config_entry_diagnostics: Callable[
-        [HomeAssistant, ConfigEntry], Coroutine[Any, Any, Mapping[str, Any]]
-    ] | None
-    device_diagnostics: Callable[
-        [HomeAssistant, ConfigEntry, DeviceEntry],
-        Coroutine[Any, Any, Mapping[str, Any]],
-    ] | None
+    config_entry_diagnostics: (
+        Callable[[HomeAssistant, ConfigEntry], Coroutine[Any, Any, Mapping[str, Any]]]
+        | None
+    )
+    device_diagnostics: (
+        Callable[
+            [HomeAssistant, ConfigEntry, DeviceEntry],
+            Coroutine[Any, Any, Mapping[str, Any]],
+        ]
+        | None
+    )
 
 
 @dataclass(slots=True)

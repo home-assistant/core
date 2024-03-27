@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from unittest.mock import patch
 
-from axis.vapix.models.api import CONTEXT
+from axis.models.api import CONTEXT
 import pytest
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -65,7 +65,7 @@ async def test_switches_with_port_cgi(
     assert relay_0.state == STATE_OFF
     assert relay_0.name == f"{NAME} Doorbell"
 
-    with patch("axis.vapix.vapix.Ports.close") as mock_turn_on:
+    with patch("axis.interfaces.vapix.Ports.close") as mock_turn_on:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
@@ -74,7 +74,7 @@ async def test_switches_with_port_cgi(
         )
         mock_turn_on.assert_called_once_with("0")
 
-    with patch("axis.vapix.vapix.Ports.open") as mock_turn_off:
+    with patch("axis.interfaces.vapix.Ports.open") as mock_turn_off:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
@@ -163,7 +163,7 @@ async def test_switches_with_port_management(
 
     assert hass.states.get(f"{SWITCH_DOMAIN}.{NAME}_relay_1").state == STATE_ON
 
-    with patch("axis.vapix.vapix.IoPortManagement.close") as mock_turn_on:
+    with patch("axis.interfaces.vapix.IoPortManagement.close") as mock_turn_on:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
@@ -172,7 +172,7 @@ async def test_switches_with_port_management(
         )
         mock_turn_on.assert_called_once_with("0")
 
-    with patch("axis.vapix.vapix.IoPortManagement.open") as mock_turn_off:
+    with patch("axis.interfaces.vapix.IoPortManagement.open") as mock_turn_off:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,

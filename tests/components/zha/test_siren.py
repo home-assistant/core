@@ -86,13 +86,16 @@ async def test_siren(hass: HomeAssistant, siren) -> None:
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # turn on from HA
-    with patch(
-        "zigpy.device.Device.request",
-        return_value=[0x00, zcl_f.Status.SUCCESS],
-    ), patch(
-        "zigpy.zcl.Cluster.request",
-        side_effect=zigpy.zcl.Cluster.request,
-        autospec=True,
+    with (
+        patch(
+            "zigpy.device.Device.request",
+            return_value=[0x00, zcl_f.Status.SUCCESS],
+        ),
+        patch(
+            "zigpy.zcl.Cluster.request",
+            side_effect=zigpy.zcl.Cluster.request,
+            autospec=True,
+        ),
     ):
         # turn on via UI
         await hass.services.async_call(
@@ -118,13 +121,16 @@ async def test_siren(hass: HomeAssistant, siren) -> None:
     assert hass.states.get(entity_id).state == STATE_ON
 
     # turn off from HA
-    with patch(
-        "zigpy.device.Device.request",
-        return_value=[0x01, zcl_f.Status.SUCCESS],
-    ), patch(
-        "zigpy.zcl.Cluster.request",
-        side_effect=zigpy.zcl.Cluster.request,
-        autospec=True,
+    with (
+        patch(
+            "zigpy.device.Device.request",
+            return_value=[0x01, zcl_f.Status.SUCCESS],
+        ),
+        patch(
+            "zigpy.zcl.Cluster.request",
+            side_effect=zigpy.zcl.Cluster.request,
+            autospec=True,
+        ),
     ):
         # turn off via UI
         await hass.services.async_call(
@@ -150,13 +156,16 @@ async def test_siren(hass: HomeAssistant, siren) -> None:
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # turn on from HA
-    with patch(
-        "zigpy.device.Device.request",
-        return_value=[0x00, zcl_f.Status.SUCCESS],
-    ), patch(
-        "zigpy.zcl.Cluster.request",
-        side_effect=zigpy.zcl.Cluster.request,
-        autospec=True,
+    with (
+        patch(
+            "zigpy.device.Device.request",
+            return_value=[0x00, zcl_f.Status.SUCCESS],
+        ),
+        patch(
+            "zigpy.zcl.Cluster.request",
+            side_effect=zigpy.zcl.Cluster.request,
+            autospec=True,
+        ),
     ):
         # turn on via UI
         await hass.services.async_call(

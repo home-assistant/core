@@ -24,7 +24,13 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MAC,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
@@ -84,6 +90,7 @@ async def validate_input(
         ip_address=host,
         username=data.get(CONF_USERNAME),
         password=data.get(CONF_PASSWORD),
+        device_mac=info[CONF_MAC],
         port=port,
     )
 
@@ -153,7 +160,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(self.info["mac"])
+                await self.async_set_unique_id(self.info[CONF_MAC])
                 self._abort_if_unique_id_configured({CONF_HOST: host})
                 self.host = host
                 self.port = port
@@ -286,7 +293,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         if not mac:
             # We could not get the mac address from the name
             # so need to check here since we just got the info
-            await self._async_discovered_mac(self.info["mac"], host)
+            await self._async_discovered_mac(self.info[CONF_MAC], host)
 
         self.host = host
         self.context.update(

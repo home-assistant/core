@@ -476,8 +476,12 @@ class Recorder(threading.Thread):
     def async_register(self) -> None:
         """Post connection initialize."""
         bus = self.hass.bus
-        bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, self._async_close)
-        bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, self._async_shutdown)
+        bus.async_listen_once(
+            EVENT_HOMEASSISTANT_CLOSE, self._async_close, run_immediately=True
+        )
+        bus.async_listen_once(
+            EVENT_HOMEASSISTANT_FINAL_WRITE, self._async_shutdown, run_immediately=True
+        )
         async_at_started(self.hass, self._async_hass_started)
 
     @callback

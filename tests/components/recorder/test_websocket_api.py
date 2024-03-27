@@ -2166,16 +2166,19 @@ async def test_recorder_info_migration_queue_exhausted(
         migration_done.wait()
         return real_migration(*args)
 
-    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
-        "homeassistant.components.recorder.Recorder.async_periodic_statistics"
-    ), patch(
-        "homeassistant.components.recorder.core.create_engine",
-        new=create_engine_test,
-    ), patch.object(recorder.core, "MAX_QUEUE_BACKLOG_MIN_VALUE", 1), patch.object(
-        recorder.core, "QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY", 0
-    ), patch(
-        "homeassistant.components.recorder.migration._apply_update",
-        wraps=stalled_migration,
+    with (
+        patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True),
+        patch("homeassistant.components.recorder.Recorder.async_periodic_statistics"),
+        patch(
+            "homeassistant.components.recorder.core.create_engine",
+            new=create_engine_test,
+        ),
+        patch.object(recorder.core, "MAX_QUEUE_BACKLOG_MIN_VALUE", 1),
+        patch.object(recorder.core, "QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY", 0),
+        patch(
+            "homeassistant.components.recorder.migration._apply_update",
+            wraps=stalled_migration,
+        ),
     ):
         recorder_helper.async_initialize_recorder(hass)
         hass.create_task(

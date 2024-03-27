@@ -90,10 +90,14 @@ def mock_empty_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_homeworks() -> Generator[None, MagicMock, None]:
     """Return a mocked Homeworks client."""
-    with patch(
-        "homeassistant.components.homeworks.Homeworks", autospec=True
-    ) as homeworks_mock, patch(
-        "homeassistant.components.homeworks.config_flow.Homeworks", new=homeworks_mock
+    with (
+        patch(
+            "homeassistant.components.homeworks.Homeworks", autospec=True
+        ) as homeworks_mock,
+        patch(
+            "homeassistant.components.homeworks.config_flow.Homeworks",
+            new=homeworks_mock,
+        ),
     ):
         yield homeworks_mock
 

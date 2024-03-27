@@ -262,10 +262,13 @@ async def test_zeroconf_discovery_no_port(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test discovery when the zeroconf service does not have a port."""
-    with patch(
-        "homeassistant.components.wyoming.data.load_wyoming_info",
-        return_value=SATELLITE_INFO,
-    ), patch.object(ZEROCONF_DISCOVERY, "port", None):
+    with (
+        patch(
+            "homeassistant.components.wyoming.data.load_wyoming_info",
+            return_value=SATELLITE_INFO,
+        ),
+        patch.object(ZEROCONF_DISCOVERY, "port", None),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             data=ZEROCONF_DISCOVERY,
