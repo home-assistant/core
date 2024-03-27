@@ -254,9 +254,9 @@ class EnergyCostSensor(SensorEntity):
         self._last_energy_sensor_state: State | None = None
         # add_finished is set when either of async_added_to_hass or add_to_platform_abort
         # is called
-        self.add_finished: asyncio.Future[
-            None
-        ] = asyncio.get_running_loop().create_future()
+        self.add_finished: asyncio.Future[None] = (
+            asyncio.get_running_loop().create_future()
+        )
 
     def _reset(self, energy_state: State) -> None:
         """Reset the cost sensor."""
