@@ -41,7 +41,6 @@ DEVICE_TRACKER = "device"
 
 CLIENT_CONNECTED_ATTRIBUTES = [
     "_is_guest_by_uap",
-    "ap_mac",
     "authorized",
     "essid",
     "ip",
@@ -52,6 +51,14 @@ CLIENT_CONNECTED_ATTRIBUTES = [
     "radio",
     "radio_proto",
     "vlan",
+    "rssi",
+    "signal",
+]
+
+CLIENT_UNRECORDED_ATTRIBUTES = [
+    "ap_mac",
+    "signal",
+    "rssi",
 ]
 
 CLIENT_STATIC_ATTRIBUTES = [
@@ -61,7 +68,7 @@ CLIENT_STATIC_ATTRIBUTES = [
 ]
 
 
-CLIENT_CONNECTED_ALL_ATTRIBUTES = CLIENT_CONNECTED_ATTRIBUTES + CLIENT_STATIC_ATTRIBUTES
+CLIENT_CONNECTED_ALL_ATTRIBUTES = CLIENT_CONNECTED_ATTRIBUTES + CLIENT_STATIC_ATTRIBUTES + CLIENT_UNRECORDED_ATTRIBUTES
 
 WIRED_CONNECTION = (EventKey.WIRED_CLIENT_CONNECTED,)
 WIRED_DISCONNECTION = (EventKey.WIRED_CLIENT_DISCONNECTED,)
@@ -228,6 +235,8 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, ApiItemT], ScannerEntity):
     _event_is_on: tuple[EventKey, ...]
     _ignore_events: bool
     _is_connected: bool
+
+    _unrecorded_attributes = frozenset(CLIENT_UNRECORDED_ATTRIBUTES)
 
     @callback
     def async_initiate_state(self) -> None:
