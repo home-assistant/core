@@ -360,6 +360,7 @@ FLOWS = {
         "nzbget",
         "obihai",
         "octoprint",
+        "ollama",
         "omnilogic",
         "oncue",
         "ondilo_ico",

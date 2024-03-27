@@ -392,7 +392,7 @@ aiotankerkoenig==0.4.1
 aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==72
+aiounifi==73
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -603,7 +603,7 @@ boschshcpy==0.2.82
 boto3==1.33.13
 
 # homeassistant.components.bring
-bring-api==0.5.6
+bring-api==0.5.7
 
 # homeassistant.components.broadlink
 broadlink==0.18.3
@@ -1436,11 +1436,14 @@ odp-amsterdam==6.0.1
 # homeassistant.components.oem
 oemthermostat==1.1.1
 
+# homeassistant.components.ollama
+ollama-hass==0.1.7
+
 # homeassistant.components.omnilogic
 omnilogic==0.4.5
 
 # homeassistant.components.ondilo_ico
-ondilo==0.2.0
+ondilo==0.4.0
 
 # homeassistant.components.onkyo
 onkyo-eiscp==1.2.7
