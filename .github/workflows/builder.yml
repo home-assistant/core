@@ -51,6 +51,32 @@ jobs:
         with:
           ignore-dev: true
 
+      - name: Fail if translations files are checked in
+        run: |
+          files=$(find homeassistant/components/*/translations -type f)
+
+          if [ -n "$files" ]; then
+              echo "Translations files are checked in, please remove the following files:"
+              echo "$files"
+              exit 1
+          fi
+
+      - name: Download Translations
+        run: python3 -m script.translations download
+        env:
+          LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }}
+
+      - name: Archive translations
+        shell: bash
+        run: find ./homeassistant/components/*/translations -name "*.json" | tar zcvf translations.tar.gz -T -
+
+      - name: Upload translations
+        uses: actions/upload-artifact@v4.3.1
+        with:
+          name: translations
+          path: translations.tar.gz
+          if-no-files-found: error
+
   build_base:
     name: Build ${{ matrix.arch }} base core image
     if: github.repository_owner == 'home-assistant'
@@ -159,10 +185,15 @@ jobs:
           # are not available.
           sed -i "s|aiohttp-zlib-ng|aiohttp-zlib-ng\[isal\]|g" requirements_all.txt
 
-      - name: Download Translations
-        run: python3 -m script.translations download
-        env:
-          LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }}
+      - name: Download translations
+        uses: actions/download-artifact@v4.1.4
+        with:
+          name: translations
+
+      - name: Extract translations
+        run: |
+          tar xvf translations.tar.gz
+          rm translations.tar.gz
 
       - name: Write meta info file
         shell: bash
@@ -185,17 +216,6 @@ jobs:
             --cosign \
             --target /data \
             --generic ${{ needs.init.outputs.version }}
-
-      - name: Archive translations
-        shell: bash
-        run: find ./homeassistant/components/*/translations -name "*.json" | tar zcvf translations.tar.gz -T -
-
-      - name: Upload translations
-        uses: actions/upload-artifact@v3
-        with:
-          name: translations
-          path: translations.tar.gz
-          if-no-files-found: error
 
   build_machine:
     name: Build ${{ matrix.machine }} machine core image
@@ -448,10 +468,15 @@ jobs:
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
-      - name: Download Translations
-        run: python3 -m script.translations download
-        env:
-          LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }}
+      - name: Download translations
+        uses: actions/download-artifact@v4.1.4
+        with:
+          name: translations
+
+      - name: Extract translations
+        run: |
+          tar xvf translations.tar.gz
+          rm translations.tar.gz
 
       - name: Build package
         shell: bash
