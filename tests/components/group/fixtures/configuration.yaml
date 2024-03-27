@@ -1,3 +1,15 @@
+climate:
+  - platform: group
+    name: Downstairs G
+    entities:
+      - climate.downstairs
+      - climate.downstairs_2
+  - platform: group
+    name: Upstairs G
+    entities:
+      - climate.upstairs
+      - climate.upstairs_2
+
 light:
   - platform: group
     name: Master Hall Lights G
