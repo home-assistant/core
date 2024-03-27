@@ -514,7 +514,7 @@ bond-async==0.2.1
 boschshcpy==0.2.82
 
 # homeassistant.components.bring
-bring-api==0.5.6
+bring-api==0.5.7
 
 # homeassistant.components.broadlink
 broadlink==0.18.3
@@ -1148,11 +1148,14 @@ objgraph==3.5.0
 # homeassistant.components.garages_amsterdam
 odp-amsterdam==6.0.1
 
+# homeassistant.components.ollama
+ollama-hass==0.1.7
+
 # homeassistant.components.omnilogic
 omnilogic==0.4.5
 
 # homeassistant.components.ondilo_ico
-ondilo==0.2.0
+ondilo==0.4.0
 
 # homeassistant.components.onvif
 onvif-zeep-async==3.1.12

@@ -38,7 +38,7 @@ from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
 from homeassistant.config import async_process_component_config
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_CLOSE,
@@ -1688,9 +1688,8 @@ def setup_test_component_platform(
         async_setup_platform=_async_setup_platform,
     )
 
-    # avoid loading config_entry if not needed
+    # avoid creating config entry setup if not needed
     if from_config_entry:
-        from homeassistant.config_entries import ConfigEntry
 
         async def _async_setup_entry(
             hass: HomeAssistant,
