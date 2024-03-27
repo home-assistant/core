@@ -1206,7 +1206,7 @@ class Recorder(threading.Thread):
                     [
                         {
                             "state_id": state_id,
-                            "last_reported_timestamp": last_reported_timestamp,
+                            "last_reported_ts": last_reported_timestamp,
                         }
                         for state_id, last_reported_timestamp in pending_last_reported.items()
                     ],
