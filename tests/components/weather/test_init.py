@@ -24,6 +24,7 @@ from homeassistant.components.weather import (
     DOMAIN,
     LEGACY_SERVICE_GET_FORECAST,
     ROUNDING_PRECISION,
+    SERVICE_GET_FORECAST_ATTRIBUTE,
     SERVICE_GET_FORECASTS,
     Forecast,
     WeatherEntity,
@@ -45,7 +46,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.issue_registry as ir
 from homeassistant.util import dt as dt_util
@@ -57,7 +58,13 @@ from homeassistant.util.unit_conversion import (
 )
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
-from . import MockWeatherTest, create_entity
+from . import (
+    DAILY_FORECAST_LIST,
+    HOURLY_FORECAST_LIST,
+    TWICE_DAILY_FORECAST_LIST,
+    MockWeatherTest,
+    create_entity,
+)
 
 from tests.typing import WebSocketGenerator
 
@@ -835,3 +842,262 @@ async def test_issue_deprecated_service_weather_get_forecast(
         "This is deprecated and will stop working in Home Assistant 2024.6. "
         "Use 'weather.get_forecasts' instead which supports multiple entities"
     ) in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("forecast_type", "forecast_attribute", "forecast_list"),
+    [
+        (
+            "daily",
+            ATTR_WEATHER_TEMPERATURE,
+            DAILY_FORECAST_LIST,
+        ),
+        (
+            "hourly",
+            ATTR_WEATHER_TEMPERATURE,
+            HOURLY_FORECAST_LIST,
+        ),
+        (
+            "twice_daily",
+            ATTR_WEATHER_TEMPERATURE,
+            TWICE_DAILY_FORECAST_LIST,
+        ),
+    ],
+)
+async def test_get_forecast_attribute(
+    hass: HomeAssistant,
+    config_flow_fixture: None,
+    forecast_type: str,
+    forecast_attribute: str,
+    forecast_list: list[Forecast],
+) -> None:
+    """Test get forecast attribute service."""
+
+    class MockWeatherMockForecast(MockWeatherTest):
+        """Mock weather class with mocked new method and legacy forecast."""
+
+        async def async_forecast_daily(self) -> list[Forecast] | None:
+            """Return the daily forecast."""
+            return forecast_list
+
+        async def async_forecast_hourly(self) -> list[Forecast] | None:
+            """Return the hourly forecast."""
+            return forecast_list
+
+        async def async_forecast_twice_daily(self) -> list[Forecast] | None:
+            """Return the twice daily forecast."""
+            return forecast_list
+
+    kwargs = {
+        "native_temperature": 38,
+        "native_temperature_unit": UnitOfTemperature.CELSIUS,
+        "supported_features": WeatherEntityFeature.FORECAST_DAILY
+        | WeatherEntityFeature.FORECAST_HOURLY
+        | WeatherEntityFeature.FORECAST_TWICE_DAILY,
+    }
+
+    entity0 = await create_entity(hass, MockWeatherMockForecast, None, **kwargs)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_FORECAST_ATTRIBUTE,
+        {
+            "entity_id": entity0.entity_id,
+            "type": forecast_type,
+            "attribute": forecast_attribute,
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {
+        "weather.testing": {forecast_attribute: [10.0, 11.0, 12.0, 13.0]}
+    }
+
+
+@pytest.mark.parametrize(
+    ("forecast_type", "forecast_attribute", "forecast_limit", "forecast_list"),
+    [
+        ("daily", ATTR_WEATHER_TEMPERATURE, 3, DAILY_FORECAST_LIST),
+        ("hourly", ATTR_WEATHER_TEMPERATURE, 3, HOURLY_FORECAST_LIST),
+        ("twice_daily", ATTR_WEATHER_TEMPERATURE, 3, TWICE_DAILY_FORECAST_LIST),
+    ],
+)
+async def test_get_forecast_attribute_limit(
+    hass: HomeAssistant,
+    config_flow_fixture: None,
+    forecast_type: str,
+    forecast_attribute: str,
+    forecast_limit: int,
+    forecast_list: list[Forecast],
+) -> None:
+    """Test get forecast attribute service with limit."""
+
+    class MockWeatherMockForecast(MockWeatherTest):
+        """Mock weather class with mocked new method and legacy forecast."""
+
+        async def async_forecast_daily(self) -> list[Forecast] | None:
+            """Return the daily forecast."""
+            return forecast_list
+
+        async def async_forecast_hourly(self) -> list[Forecast] | None:
+            """Return the hourly forecast."""
+            return forecast_list
+
+        async def async_forecast_twice_daily(self) -> list[Forecast] | None:
+            """Return the twice daily forecast."""
+            return forecast_list
+
+    kwargs = {
+        "native_temperature": 38,
+        "native_temperature_unit": UnitOfTemperature.CELSIUS,
+        "supported_features": WeatherEntityFeature.FORECAST_DAILY
+        | WeatherEntityFeature.FORECAST_HOURLY
+        | WeatherEntityFeature.FORECAST_TWICE_DAILY,
+    }
+
+    entity0 = await create_entity(hass, MockWeatherMockForecast, None, **kwargs)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_FORECAST_ATTRIBUTE,
+        {
+            "entity_id": entity0.entity_id,
+            "type": forecast_type,
+            "attribute": forecast_attribute,
+            "limit": forecast_limit,
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {"weather.testing": {forecast_attribute: [10.0, 11.0, 12.0]}}
+
+
+@pytest.mark.parametrize(
+    (
+        "forecast_type",
+        "forecast_attribute",
+        "forecast_list",
+        "supported_feature",
+        "raises",
+        "match",
+    ),
+    [
+        (
+            "daily",
+            ATTR_WEATHER_TEMPERATURE,
+            DAILY_FORECAST_LIST,
+            WeatherEntityFeature.FORECAST_HOURLY,
+            HomeAssistantError,
+            "Weather entity 'weather.testing' does not support 'daily' forecast",
+        ),
+        (
+            "hourly",
+            ATTR_WEATHER_TEMPERATURE,
+            HOURLY_FORECAST_LIST,
+            WeatherEntityFeature.FORECAST_TWICE_DAILY,
+            HomeAssistantError,
+            "Weather entity 'weather.testing' does not support 'hourly' forecast",
+        ),
+        (
+            "twice_daily",
+            ATTR_WEATHER_TEMPERATURE,
+            TWICE_DAILY_FORECAST_LIST,
+            WeatherEntityFeature.FORECAST_DAILY,
+            HomeAssistantError,
+            "Weather entity 'weather.testing' does not support 'twice_daily' forecast",
+        ),
+        (
+            "daily",
+            ATTR_WEATHER_HUMIDITY,
+            DAILY_FORECAST_LIST,
+            WeatherEntityFeature.FORECAST_DAILY,
+            ServiceValidationError,
+            "Forecast attribute humidity does not exist in forecast",
+        ),
+    ],
+)
+async def test_get_forecast_attribute_unsupported(
+    hass: HomeAssistant,
+    config_flow_fixture: None,
+    forecast_type: str,
+    forecast_attribute: str,
+    forecast_list: list[Forecast],
+    supported_feature: WeatherEntityFeature,
+    raises: Exception,
+    match: str,
+) -> None:
+    """Test get forecast attribute service raises exceptions."""
+
+    class MockWeatherMockForecast(MockWeatherTest):
+        """Mock weather class with mocked new method and legacy forecast."""
+
+        async def async_forecast_daily(self) -> list[Forecast] | None:
+            """Return the daily forecast."""
+            return forecast_list
+
+        async def async_forecast_hourly(self) -> list[Forecast] | None:
+            """Return the hourly forecast."""
+            return forecast_list
+
+        async def async_forecast_twice_daily(self) -> list[Forecast] | None:
+            """Return the twice daily forecast."""
+            return forecast_list
+
+    kwargs = {
+        "native_temperature": 38,
+        "native_temperature_unit": UnitOfTemperature.CELSIUS,
+        "supported_features": supported_feature,
+    }
+
+    entity0 = await create_entity(hass, MockWeatherMockForecast, None, **kwargs)
+
+    with pytest.raises(
+        raises,
+        match=match,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_FORECAST_ATTRIBUTE,
+            {
+                "entity_id": entity0.entity_id,
+                "type": forecast_type,
+                "attribute": forecast_attribute,
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+
+async def test_get_forecast_attribute_empty_forecast(
+    hass: HomeAssistant,
+    config_flow_fixture: None,
+) -> None:
+    """Test get forecast attribute service."""
+
+    class MockWeatherMockForecast(MockWeatherTest):
+        """Mock weather class with mocked new method and legacy forecast."""
+
+        async def async_forecast_daily(self) -> list[Forecast] | None:
+            """Return the daily forecast."""
+            return None
+
+    kwargs = {
+        "native_temperature": 38,
+        "native_temperature_unit": UnitOfTemperature.CELSIUS,
+        "supported_features": WeatherEntityFeature.FORECAST_DAILY,
+    }
+
+    entity0 = await create_entity(hass, MockWeatherMockForecast, None, **kwargs)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_FORECAST_ATTRIBUTE,
+        {
+            "entity_id": entity0.entity_id,
+            "type": "daily",
+            "attribute": "temperature",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {"weather.testing": {"temperature": []}}
