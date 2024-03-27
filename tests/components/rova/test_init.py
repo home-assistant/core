@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock
 
+import pytest
+from requests import ConnectTimeout
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.rova import DOMAIN
@@ -45,6 +47,28 @@ async def test_service(
     )
     assert device_entry is not None
     assert device_entry == snapshot
+
+
+@pytest.mark.parametrize(
+    "method",
+    [
+        "is_rova_area",
+        "get_calendar_items",
+    ],
+)
+async def test_retry_after_failure(
+    hass: HomeAssistant,
+    mock_rova: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    method: str,
+) -> None:
+    """Test we retry after a failure."""
+    getattr(mock_rova, method).side_effect = ConnectTimeout
+    mock_config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
 async def test_issue_if_not_rova_area(
