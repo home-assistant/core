@@ -149,10 +149,10 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
         vol.Optional(CONF_TARGET_HUMIDITY_COMMAND_TEMPLATE): cv.template,
         vol.Optional(
             CONF_TARGET_HUMIDITY_MAX, default=DEFAULT_MAX_HUMIDITY
-        ): cv.positive_int,
+        ): cv.positive_float,
         vol.Optional(
             CONF_TARGET_HUMIDITY_MIN, default=DEFAULT_MIN_HUMIDITY
-        ): cv.positive_int,
+        ): cv.positive_float,
         vol.Optional(CONF_TARGET_HUMIDITY_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_TARGET_HUMIDITY_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(
@@ -485,7 +485,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             self._attr_is_on = False
             self.async_write_ha_state()
 
-    async def async_set_humidity(self, humidity: int) -> None:
+    async def async_set_humidity(self, humidity: float) -> None:
         """Set the target humidity of the humidifier.
 
         This method is a coroutine.
