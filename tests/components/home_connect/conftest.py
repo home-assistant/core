@@ -93,7 +93,7 @@ class MockConfigEntryAuth(CallableMixin, NonCallableMock):
 
 
 @pytest.fixture(name="token_expiration_time")
-def mcok_token_expiration_time() -> float:
+def mock_token_expiration_time() -> float:
     """Fixture for expiration time of the config entry auth token."""
     return time.time() + 86400
 
