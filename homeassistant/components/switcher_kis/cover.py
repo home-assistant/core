@@ -24,12 +24,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SwitcherDataUpdateCoordinator
-from .const import SIGNAL_DEVICE_ADD
+from .const import CONF_TOKEN, SIGNAL_DEVICE_ADD
 
 _LOGGER = logging.getLogger(__name__)
 
 API_SET_POSITON = "set_position"
-API_STOP = "stop"
+API_STOP = "stop_shutter"
+COVER1_ID = "runner"
+COVER2_ID = "runner2"
 
 
 async def async_setup_entry(
@@ -43,7 +45,26 @@ async def async_setup_entry(
     def async_add_cover(coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Add cover from Switcher device."""
         if coordinator.data.device_type.category == DeviceCategory.SHUTTER:
-            async_add_entities([SwitcherCoverEntity(coordinator)])
+            async_add_entities(
+                [SwitcherCoverEntity(coordinator, config_entry, COVER1_ID)]
+            )
+        elif (
+            coordinator.data.device_type.category
+            == DeviceCategory.SHUTTER_SINGLE_LIGHT_DUAL
+        ):
+            async_add_entities(
+                [SwitcherCoverEntity(coordinator, config_entry, COVER1_ID)]
+            )
+        elif (
+            coordinator.data.device_type.category
+            == DeviceCategory.SHUTTER_DUAL_LIGHT_SINGLE
+        ):
+            async_add_entities(
+                [
+                    SwitcherCoverEntity(coordinator, config_entry, COVER1_ID),
+                    SwitcherCoverEntity(coordinator, config_entry, COVER2_ID),
+                ]
+            )
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_DEVICE_ADD, async_add_cover)
@@ -56,7 +77,6 @@ class SwitcherCoverEntity(
     """Representation of a Switcher cover entity."""
 
     _attr_has_entity_name = True
-    _attr_name = None
     _attr_device_class = CoverDeviceClass.SHUTTER
     _attr_supported_features = (
         CoverEntityFeature.OPEN
@@ -65,11 +85,26 @@ class SwitcherCoverEntity(
         | CoverEntityFeature.STOP
     )
 
-    def __init__(self, coordinator: SwitcherDataUpdateCoordinator) -> None:
+    @property
+    def name(self) -> str:
+        """Name of the entity."""
+        return self._cover_id.capitalize()
+
+    def __init__(
+        self,
+        coordinator: SwitcherDataUpdateCoordinator,
+        config_entry: ConfigEntry,
+        cover_id: str,
+    ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
+        self._config = config_entry
+        self._token: str = self._config.options.get(CONF_TOKEN, "")
+        self._cover_id = cover_id
 
-        self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
+        self._attr_unique_id = (
+            f"{coordinator.device_id}-{coordinator.mac_address}-{self._cover_id}"
+        )
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}
         )
@@ -85,10 +120,20 @@ class SwitcherCoverEntity(
     def _update_data(self) -> None:
         """Update data from device."""
         data: SwitcherShutter = self.coordinator.data
-        self._attr_current_cover_position = data.position
-        self._attr_is_closed = data.position == 0
-        self._attr_is_closing = data.direction == ShutterDirection.SHUTTER_DOWN
-        self._attr_is_opening = data.direction == ShutterDirection.SHUTTER_UP
+        self._token = self._config.options.get(CONF_TOKEN, "")
+        if not (
+            data.device_type.category == DeviceCategory.SHUTTER_DUAL_LIGHT_SINGLE
+            and self._cover_id == COVER2_ID
+        ):
+            self._attr_current_cover_position = data.position
+            self._attr_is_closed = data.position == 0
+            self._attr_is_closing = data.direction == ShutterDirection.SHUTTER_DOWN
+            self._attr_is_opening = data.direction == ShutterDirection.SHUTTER_UP
+        else:
+            self._attr_current_cover_position = data.position2
+            self._attr_is_closed = data.position2 == 0
+            self._attr_is_closing = data.direction2 == ShutterDirection.SHUTTER_DOWN
+            self._attr_is_opening = data.direction2 == ShutterDirection.SHUTTER_UP
 
     async def _async_call_api(self, api: str, *args: Any) -> None:
         """Call Switcher API."""
@@ -98,9 +143,11 @@ class SwitcherCoverEntity(
 
         try:
             async with SwitcherType2Api(
+                self.coordinator.data.device_type,
                 self.coordinator.data.ip_address,
                 self.coordinator.data.device_id,
                 self.coordinator.data.device_key,
+                self._token,
             ) as swapi:
                 response = await getattr(swapi, api)(*args)
         except (TimeoutError, OSError, RuntimeError) as err:
@@ -114,18 +161,30 @@ class SwitcherCoverEntity(
                 f"args: {args}, response/error: {response or error}"
             )
 
+    def _get_shutter_index(self) -> int:
+        """Return the current shutter index used for the API Call."""
+        if self._cover_id == COVER1_ID:
+            return 1
+        if self._cover_id == COVER2_ID:
+            return 2
+        return 0
+
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        await self._async_call_api(API_SET_POSITON, 0)
+        index = self._get_shutter_index()
+        await self._async_call_api(API_SET_POSITON, 0, index)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
-        await self._async_call_api(API_SET_POSITON, 100)
+        index = self._get_shutter_index()
+        await self._async_call_api(API_SET_POSITON, 100, index)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        await self._async_call_api(API_SET_POSITON, kwargs[ATTR_POSITION])
+        index = self._get_shutter_index()
+        await self._async_call_api(API_SET_POSITON, kwargs[ATTR_POSITION], index)
 
-    async def async_stop_cover(self, **_kwargs: Any) -> None:
+    async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        await self._async_call_api(API_STOP)
+        index = self._get_shutter_index()
+        await self._async_call_api(API_STOP, index)

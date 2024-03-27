@@ -36,7 +36,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SwitcherDataUpdateCoordinator
-from .const import SIGNAL_DEVICE_ADD
+from .const import CONF_TOKEN, SIGNAL_DEVICE_ADD
 from .utils import get_breeze_remote_manager
 
 DEVICE_MODE_TO_HA = {
@@ -72,7 +72,9 @@ async def async_setup_entry(
             remote: SwitcherBreezeRemote = await hass.async_add_executor_job(
                 get_breeze_remote_manager(hass).get_remote, coordinator.data.remote_id
             )
-            async_add_entities([SwitcherClimateEntity(coordinator, remote)])
+            async_add_entities(
+                [SwitcherClimateEntity(coordinator, config_entry, remote)]
+            )
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_DEVICE_ADD, async_add_climate)
@@ -89,10 +91,15 @@ class SwitcherClimateEntity(
     _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
-        self, coordinator: SwitcherDataUpdateCoordinator, remote: SwitcherBreezeRemote
+        self,
+        coordinator: SwitcherDataUpdateCoordinator,
+        config_entry: ConfigEntry,
+        remote: SwitcherBreezeRemote,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
+        self._config = config_entry
+        self._token: str = self._config.options.get(CONF_TOKEN, "")
         self._remote = remote
 
         self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
@@ -134,6 +141,7 @@ class SwitcherClimateEntity(
     def _update_data(self, force_update: bool = False) -> None:
         """Update data from device."""
         data = self.coordinator.data
+        self._token = self._config.options.get(CONF_TOKEN, "")
         features = self._remote.modes_features[data.mode]
 
         if data.target_temperature == 0 and not force_update:
@@ -167,9 +175,11 @@ class SwitcherClimateEntity(
 
         try:
             async with SwitcherType2Api(
+                self.coordinator.data.device_type,
                 self.coordinator.data.ip_address,
                 self.coordinator.data.device_id,
                 self.coordinator.data.device_key,
+                self._token,
             ) as swapi:
                 response = await swapi.control_breeze_device(self._remote, **kwargs)
         except (TimeoutError, OSError, RuntimeError) as err:

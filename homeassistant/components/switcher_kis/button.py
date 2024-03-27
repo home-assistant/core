@@ -17,7 +17,7 @@ from aioswitcher.device import DeviceCategory
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -26,7 +26,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SwitcherDataUpdateCoordinator
-from .const import SIGNAL_DEVICE_ADD
+from .const import CONF_TOKEN, SIGNAL_DEVICE_ADD
 from .utils import get_breeze_remote_manager
 
 
@@ -90,7 +90,9 @@ async def async_setup_entry(
                 get_breeze_remote_manager(hass).get_remote, coordinator.data.remote_id
             )
             async_add_entities(
-                SwitcherThermostatButtonEntity(coordinator, description, remote)
+                SwitcherThermostatButtonEntity(
+                    coordinator, config_entry, description, remote
+                )
                 for description in THERMOSTAT_BUTTONS
                 if description.supported(remote)
             )
@@ -111,11 +113,14 @@ class SwitcherThermostatButtonEntity(
     def __init__(
         self,
         coordinator: SwitcherDataUpdateCoordinator,
+        config_entry: ConfigEntry,
         description: SwitcherThermostatButtonEntityDescription,
         remote: SwitcherBreezeRemote,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
+        self._config = config_entry
+        self._token: str = self._config.options.get(CONF_TOKEN, "")
         self.entity_description = description
         self._remote = remote
 
@@ -124,6 +129,11 @@ class SwitcherThermostatButtonEntity(
             connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}
         )
 
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._token = self._config.options.get(CONF_TOKEN, "")
+
     async def async_press(self) -> None:
         """Press the button."""
         response: SwitcherBaseResponse = None
@@ -131,9 +141,11 @@ class SwitcherThermostatButtonEntity(
 
         try:
             async with SwitcherType2Api(
+                self.coordinator.data.device_type,
                 self.coordinator.data.ip_address,
                 self.coordinator.data.device_id,
                 self.coordinator.data.device_key,
+                self._token,
             ) as swapi:
                 response = await self.entity_description.press_fn(swapi, self._remote)
         except (TimeoutError, OSError, RuntimeError) as err:
