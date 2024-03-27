@@ -17,7 +17,7 @@ POSITION_FIELDS = fields(ShadePosition)
 
 
 def copy_position_data(source: ShadePosition, target: ShadePosition) -> ShadePosition:
-    """Copy position data from source to target for none None values only."""
+    """Copy position data from source to target for None values only."""
     # the hub will always return a velocity of 0 on initial connect,
     # separate definition to store consistent value in HA
     # this value is purely driven from HA
