@@ -68,6 +68,7 @@ SENSOR_TYPES: dict[str, MotionblindsBLESensorEntityDescription] = {
         translation_key=ATTR_CALIBRATION,
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
+        options=["calibrated", "uncalibrated", "calibrating"],
     ),
     ATTR_SIGNAL_STRENGTH: MotionblindsBLESensorEntityDescription(
         key=ATTR_SIGNAL_STRENGTH,
