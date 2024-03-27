@@ -213,9 +213,9 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             self._attr_is_streaming = self.device.monitoring
             self._attr_motion_detection_enabled = self.device.monitoring
 
-        self.hass.data[DOMAIN][DATA_EVENTS][
-            self.device.entity_id
-        ] = self.process_events(self.device.events)
+        self.hass.data[DOMAIN][DATA_EVENTS][self.device.entity_id] = (
+            self.process_events(self.device.events)
+        )
 
         self._attr_extra_state_attributes.update(
             {

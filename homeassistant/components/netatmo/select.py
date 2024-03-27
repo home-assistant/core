@@ -124,9 +124,9 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
     def async_update_callback(self) -> None:
         """Update the entity's state."""
         self._attr_current_option = getattr(self.home.get_selected_schedule(), "name")
-        self.hass.data[DOMAIN][DATA_SCHEDULES][
-            self.home.entity_id
-        ] = self.home.schedules
+        self.hass.data[DOMAIN][DATA_SCHEDULES][self.home.entity_id] = (
+            self.home.schedules
+        )
         self._attr_options = [
             schedule.name for schedule in self.home.schedules.values()
         ]
