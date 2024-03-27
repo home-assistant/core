@@ -1,0 +1,172 @@
+# serializer version: 1
+# name: test_bluetooth
+  FlowResultSnapshot({
+    'data_schema': None,
+    'description_placeholders': dict({
+      'name': 'Husqvarna Automower',
+    }),
+    'errors': None,
+    'flow_id': <ANY>,
+    'handler': 'husqvarna_automower_ble',
+    'last_step': None,
+    'preview': None,
+    'step_id': 'confirm',
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_bluetooth.1
+  FlowResultSnapshot({
+    'context': dict({
+      'confirm_only': True,
+      'source': 'bluetooth',
+      'title_placeholders': dict({
+        'name': 'Husqvarna Automower',
+      }),
+      'unique_id': '00000000-0000-0000-0000-000000000001',
+    }),
+    'data': dict({
+      'address': '00000000-0000-0000-0000-000000000001',
+      'client_id': <ANY>,
+    }),
+    'description': None,
+    'description_placeholders': None,
+    'flow_id': <ANY>,
+    'handler': 'husqvarna_automower_ble',
+    'minor_version': 1,
+    'options': dict({
+    }),
+    'result': ConfigEntrySnapshot({
+      'data': dict({
+        'address': '00000000-0000-0000-0000-000000000001',
+        'client_id': <ANY>,
+      }),
+      'disabled_by': None,
+      'domain': 'husqvarna_automower_ble',
+      'entry_id': <ANY>,
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'bluetooth',
+      'title': 'Husqvarna Automower',
+      'unique_id': '00000000-0000-0000-0000-000000000001',
+      'version': 1,
+    }),
+    'title': 'Husqvarna Automower',
+    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
+    'version': 1,
+  })
+# ---
+# name: test_bluetooth_invalid
+  FlowResultSnapshot({
+    'data_schema': None,
+    'description_placeholders': dict({
+      'name': 'Husqvarna Automower',
+    }),
+    'errors': None,
+    'flow_id': <ANY>,
+    'handler': 'husqvarna_automower_ble',
+    'last_step': None,
+    'preview': None,
+    'step_id': 'confirm',
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_no_devices
+  FlowResultSnapshot({
+    'data_schema': list([
+      dict({
+        'name': 'address',
+        'required': True,
+        'type': 'string',
+      }),
+    ]),
+    'description_placeholders': None,
+    'errors': None,
+    'flow_id': <ANY>,
+    'handler': 'husqvarna_automower_ble',
+    'last_step': None,
+    'preview': None,
+    'step_id': 'user',
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_user_selection
+  FlowResultSnapshot({
+    'data_schema': list([
+      dict({
+        'name': 'address',
+        'required': True,
+        'type': 'string',
+      }),
+    ]),
+    'description_placeholders': None,
+    'errors': None,
+    'flow_id': <ANY>,
+    'handler': 'husqvarna_automower_ble',
+    'last_step': None,
+    'preview': None,
+    'step_id': 'user',
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_user_selection.1
+  FlowResultSnapshot({
+    'data_schema': None,
+    'description_placeholders': dict({
+      'name': 'Husqvarna Automower',
+    }),
+    'errors': None,
+    'flow_id': <ANY>,
+    'handler': 'husqvarna_automower_ble',
+    'last_step': None,
+    'preview': None,
+    'step_id': 'confirm',
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_user_selection.2
+  FlowResultSnapshot({
+    'context': dict({
+      'confirm_only': True,
+      'source': 'user',
+      'title_placeholders': dict({
+        'name': 'Husqvarna Automower',
+      }),
+      'unique_id': '00000000-0000-0000-0000-000000000001',
+    }),
+    'data': dict({
+      'address': '00000000-0000-0000-0000-000000000001',
+      'client_id': <ANY>,
+    }),
+    'description': None,
+    'description_placeholders': None,
+    'flow_id': <ANY>,
+    'handler': 'husqvarna_automower_ble',
+    'minor_version': 1,
+    'options': dict({
+    }),
+    'result': ConfigEntrySnapshot({
+      'data': dict({
+        'address': '00000000-0000-0000-0000-000000000001',
+        'client_id': <ANY>,
+      }),
+      'disabled_by': None,
+      'domain': 'husqvarna_automower_ble',
+      'entry_id': <ANY>,
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Husqvarna Automower',
+      'unique_id': '00000000-0000-0000-0000-000000000001',
+      'version': 1,
+    }),
+    'title': 'Husqvarna Automower',
+    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
+    'version': 1,
+  })
+# ---

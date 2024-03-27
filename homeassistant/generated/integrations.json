@@ -2642,6 +2642,12 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "husqvarna_automower_ble": {
+      "name": "Husqvarna Automower BLE",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "huum": {
       "name": "Huum",
       "integration_type": "hub",

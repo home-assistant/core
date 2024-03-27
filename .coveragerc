@@ -568,6 +568,7 @@ omit =
     homeassistant/components/hunterdouglas_powerview/sensor.py
     homeassistant/components/hunterdouglas_powerview/shade_data.py
     homeassistant/components/hunterdouglas_powerview/util.py
+    homeassistant/components/husqvarna_automower_ble/lawn_mower.py
     homeassistant/components/hvv_departures/__init__.py
     homeassistant/components/huum/__init__.py
     homeassistant/components/huum/climate.py
