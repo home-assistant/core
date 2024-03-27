@@ -311,7 +311,7 @@ class VoiceAssistantPipeline:
 
     def send_audio_bytes(self, data: bytes) -> None:
         """Send bytes to the device."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @callback
     def stop(self) -> None:

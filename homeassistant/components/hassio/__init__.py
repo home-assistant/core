@@ -83,14 +83,14 @@ from .const import (
 from .data import (
     HassioDataUpdateCoordinator,
     get_addons_changelogs,  # noqa: F401
-    get_addons_info,  # noqa: F401
+    get_addons_info,
     get_addons_stats,  # noqa: F401
     get_core_info,  # noqa: F401
     get_core_stats,  # noqa: F401
     get_host_info,  # noqa: F401
     get_info,  # noqa: F401
     get_issues_info,  # noqa: F401
-    get_os_info,  # noqa: F401
+    get_os_info,
     get_store,  # noqa: F401
     get_supervisor_info,  # noqa: F401
     get_supervisor_stats,  # noqa: F401

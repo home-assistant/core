@@ -32,15 +32,19 @@ async def test_setup_entry(hass: HomeAssistant, get_data: SensiboData) -> None:
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices",
-        return_value={"result": [{"id": "xyzxyz"}, {"id": "abcabc"}]},
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_me",
-        return_value={"result": {"username": "username"}},
+    with (
+        patch(
+            "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+            return_value=get_data,
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices",
+            return_value={"result": [{"id": "xyzxyz"}, {"id": "abcabc"}]},
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_me",
+            return_value={"result": {"username": "username"}},
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -60,15 +64,19 @@ async def test_migrate_entry(hass: HomeAssistant, get_data: SensiboData) -> None
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices",
-        return_value={"result": [{"id": "xyzxyz"}, {"id": "abcabc"}]},
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_me",
-        return_value={"result": {"username": "username"}},
+    with (
+        patch(
+            "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+            return_value=get_data,
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices",
+            return_value={"result": [{"id": "xyzxyz"}, {"id": "abcabc"}]},
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_me",
+            return_value={"result": {"username": "username"}},
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -90,13 +98,17 @@ async def test_migrate_entry_fails(hass: HomeAssistant, get_data: SensiboData) -
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices",
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_me",
-        side_effect=NoUsernameError("No username returned"),
+    with (
+        patch(
+            "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices",
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_me",
+            side_effect=NoUsernameError("No username returned"),
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -118,15 +130,19 @@ async def test_unload_entry(hass: HomeAssistant, get_data: SensiboData) -> None:
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices",
-        return_value={"result": [{"id": "xyzxyz"}, {"id": "abcabc"}]},
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_me",
-        return_value={"result": {"username": "username"}},
+    with (
+        patch(
+            "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+            return_value=get_data,
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices",
+            return_value={"result": [{"id": "xyzxyz"}, {"id": "abcabc"}]},
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_me",
+            return_value={"result": {"username": "username"}},
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
