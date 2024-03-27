@@ -400,7 +400,11 @@ class CloudGoogleConfig(AbstractConfig):
     @callback
     def async_get_agent_users(self) -> tuple:
         """Return known agent users."""
-        if not self._prefs.google_connected or not self._cloud.username:
+        if (
+            not self._cloud.is_logged_in  # Can't call Cloud.username if not logged in
+            or not self._prefs.google_connected
+            or not self._cloud.username
+        ):
             return ()
         return (self._cloud.username,)
 
