@@ -3,10 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import Any
 
-from requests.exceptions import ConnectTimeout, HTTPError
-from rova.rova import Rova
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -23,16 +20,10 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle
-from homeassistant.util.dt import get_time_zone
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    CONF_HOUSE_NUMBER,
-    CONF_HOUSE_NUMBER_SUFFIX,
-    CONF_ZIP_CODE,
-    DOMAIN,
-    LOGGER,
-)
+from . import RovaCoordinator
+from .const import CONF_HOUSE_NUMBER, CONF_HOUSE_NUMBER_SUFFIX, CONF_ZIP_CODE, DOMAIN
 
 ISSUE_PLACEHOLDER = {"url": "/config/integrations/dashboard/add?domain=rova"}
 
@@ -125,71 +116,35 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add Rova entry."""
-    # get api from hass
-    api: Rova = hass.data[DOMAIN][entry.entry_id]
+    coordinator: RovaCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    # Create rova data service which will retrieve and update the data.
-    data_service = RovaData(api)
+    assert entry.unique_id
+    unique_id = entry.unique_id
 
-    # generate unique name for rova integration
-    name = f"{entry.data[CONF_ZIP_CODE]}{entry.data[CONF_HOUSE_NUMBER]}{entry.data[CONF_HOUSE_NUMBER_SUFFIX]}"
-
-    # Create a new sensor for each garbage type.
-    entities = [
-        RovaSensor(name, description, data_service)
+    async_add_entities(
+        RovaSensor(unique_id, description, coordinator)
         for key, description in SENSOR_TYPES.items()
-    ]
-    async_add_entities(entities, True)
+    )
 
 
-class RovaSensor(SensorEntity):
+class RovaSensor(CoordinatorEntity[RovaCoordinator], SensorEntity):
     """Representation of a Rova sensor."""
 
     def __init__(
-        self, platform_name, description: SensorEntityDescription, data_service
+        self,
+        unique_id: str,
+        description: SensorEntityDescription,
+        coordinator: RovaCoordinator,
     ) -> None:
         """Initialize the sensor."""
+        super().__init__(coordinator)
         self.entity_description = description
-        self.data_service = data_service
 
-        self._attr_name = f"{platform_name}_{description.key}"
-        self._attr_unique_id = f"{platform_name}_{description.key}"
+        self._attr_name = f"{unique_id}_{description.key}"
+        self._attr_unique_id = f"{unique_id}_{description.key}"
         self._attr_device_class = SensorDeviceClass.TIMESTAMP
 
-    def update(self) -> None:
-        """Get the latest data from the sensor and update the state."""
-        self.data_service.update()
-        pickup_date = self.data_service.data.get(self.entity_description.key)
-        if pickup_date is not None:
-            self._attr_native_value = pickup_date
-
-
-class RovaData:
-    """Get and update the latest data from the Rova API."""
-
-    def __init__(self, api) -> None:
-        """Initialize the data object."""
-        self.api = api
-        self.data: dict[str, Any] = {}
-
-    @Throttle(UPDATE_DELAY)
-    def update(self):
-        """Update the data from the Rova API."""
-
-        try:
-            items = self.api.get_calendar_items()
-        except (ConnectTimeout, HTTPError):
-            LOGGER.error("Could not retrieve data, retry again later")
-            return
-
-        self.data = {}
-
-        for item in items:
-            date = datetime.strptime(item["Date"], "%Y-%m-%dT%H:%M:%S").replace(
-                tzinfo=get_time_zone("Europe/Amsterdam")
-            )
-            code = item["GarbageTypeCode"].lower()
-            if code not in self.data:
-                self.data[code] = date
-
-        LOGGER.debug("Updated Rova calendar: %s", self.data)
+    @property
+    def native_value(self) -> datetime | None:
+        """Return the state of the sensor."""
+        return self.coordinator.data.get(self.entity_description.key)
