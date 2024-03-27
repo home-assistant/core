@@ -29,7 +29,7 @@ async def thermostat_fixture(
 async def room_airconditioner(
     hass: HomeAssistant, matter_client: MagicMock
 ) -> MatterNode:
-    """Fixture for a thermostat node."""
+    """Fixture for a room air conditioner node."""
     return await setup_integration_with_node_fixture(
         hass, "room-airconditioner", matter_client
     )
