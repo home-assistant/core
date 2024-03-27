@@ -429,6 +429,9 @@ omit =
     homeassistant/components/fleetgo/device_tracker.py
     homeassistant/components/flexit/climate.py
     homeassistant/components/flexit_bacnet/climate.py
+    homeassistant/components/flexmeasures/__init__.py
+    homeassistant/components/flexmeasures/const.py
+    homeassistant/components/flexmeasures/exception.py
     homeassistant/components/flic/binary_sensor.py
     homeassistant/components/flick_electric/__init__.py
     homeassistant/components/flick_electric/sensor.py

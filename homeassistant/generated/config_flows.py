@@ -164,6 +164,7 @@ FLOWS = {
         "fivem",
         "fjaraskupan",
         "flexit_bacnet",
+        "flexmeasures",
         "flick_electric",
         "flipr",
         "flo",

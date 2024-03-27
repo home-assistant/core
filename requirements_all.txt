@@ -869,6 +869,9 @@ fjaraskupan==2.2.0
 # homeassistant.components.flexit_bacnet
 flexit_bacnet==2.1.0
 
+# homeassistant.components.flexmeasures
+flexmeasures-client==0.1.10
+
 # homeassistant.components.flipr
 flipr-api==1.5.1
 
@@ -1158,6 +1161,9 @@ iperf3==0.1.11
 
 # homeassistant.components.gogogate2
 ismartgate==5.0.1
+
+# homeassistant.components.flexmeasures
+isodate==0.6.1
 
 # homeassistant.components.abode
 jaraco.abode==3.3.0
