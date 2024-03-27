@@ -841,6 +841,8 @@ build.json @home-assistant/supervisor
 /tests/components/mopeka/ @bdraco
 /homeassistant/components/motion_blinds/ @starkillerOG
 /tests/components/motion_blinds/ @starkillerOG
+/homeassistant/components/motionblinds_ble/ @LennP @jerrybboy
+/tests/components/motionblinds_ble/ @LennP @jerrybboy
 /homeassistant/components/motioneye/ @dermotduffy
 /tests/components/motioneye/ @dermotduffy
 /homeassistant/components/motionmount/ @RJPoelstra
@@ -931,6 +933,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/octoprint/ @rfleming71
 /tests/components/octoprint/ @rfleming71
 /homeassistant/components/ohmconnect/ @robbiet480
+/homeassistant/components/ollama/ @synesthesiam
+/tests/components/ollama/ @synesthesiam
 /homeassistant/components/ombi/ @larssont
 /homeassistant/components/omnilogic/ @oliver84 @djtimca @gentoosu
 /tests/components/omnilogic/ @oliver84 @djtimca @gentoosu

@@ -9,7 +9,6 @@ import functools
 import gc
 import logging
 import os
-import sys
 from tempfile import TemporaryDirectory
 import threading
 import time
@@ -334,9 +333,6 @@ async def test_async_create_task_schedule_coroutine() -> None:
     assert len(hass.add_job.mock_calls) == 0
 
 
-@pytest.mark.skipif(
-    sys.version_info < (3, 12), reason="eager_start is only supported for Python 3.12"
-)
 async def test_async_create_task_eager_start_schedule_coroutine() -> None:
     """Test that we schedule coroutines and add jobs to the job pool."""
     hass = MagicMock(loop=MagicMock(wraps=asyncio.get_running_loop()))
@@ -346,24 +342,6 @@ async def test_async_create_task_eager_start_schedule_coroutine() -> None:
 
     ha.HomeAssistant.async_create_task(hass, job(), eager_start=True)
     # Should create the task directly since 3.12 supports eager_start
-    assert len(hass.loop.create_task.mock_calls) == 0
-    assert len(hass.add_job.mock_calls) == 0
-
-
-@pytest.mark.skipif(
-    sys.version_info >= (3, 12), reason="eager_start is not supported on < 3.12"
-)
-async def test_async_create_task_eager_start_fallback_schedule_coroutine() -> None:
-    """Test that we schedule coroutines and add jobs to the job pool."""
-    hass = MagicMock(loop=MagicMock(wraps=asyncio.get_running_loop()))
-
-    async def job():
-        pass
-
-    ha.HomeAssistant.async_create_task(hass, job(), eager_start=True)
-    assert len(hass.loop.call_soon.mock_calls) == 1
-    # Should fallback to loop.create_task since 3.11 does
-    # not support eager_start
     assert len(hass.loop.create_task.mock_calls) == 0
     assert len(hass.add_job.mock_calls) == 0
 
@@ -3271,6 +3249,21 @@ async def test_eventbus_lazy_object_creation(hass: HomeAssistant) -> None:
         assert len(calls) == 1
 
     unsub()
+
+
+async def test_event_filter_sanity_checks(hass: HomeAssistant) -> None:
+    """Test raising on bad event filters."""
+
+    @ha.callback
+    def listener(event):
+        """Mock listener."""
+
+    def bad_filter(event_data):
+        """Mock filter."""
+        return False
+
+    with pytest.raises(HomeAssistantError):
+        hass.bus.async_listen("test", listener, event_filter=bad_filter)
 
 
 async def test_statemachine_report_state(hass: HomeAssistant) -> None:
