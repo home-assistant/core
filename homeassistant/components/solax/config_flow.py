@@ -5,26 +5,39 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from solax import real_time_api
-from solax.discovery import DiscoveryError
+from solax import discover
+from solax.discovery import REGISTRY, DiscoveryError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT
+from homeassistant.helpers import selector
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN
+from .const import CONF_SOLAX_INVERTER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_PORT = 80
 DEFAULT_PASSWORD = ""
+DEFAULT_INVERTER = ""
+
+REGISTRY_HASH = {cls.__name__: cls for cls in REGISTRY}
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_IP_ADDRESS): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+        vol.Optional(
+            CONF_SOLAX_INVERTER, default=DEFAULT_INVERTER
+        ): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=list(REGISTRY_HASH.keys()),
+                mode=selector.SelectSelectorMode.DROPDOWN,
+                multiple=True,
+            )
+        ),
     }
 )
 
@@ -32,10 +45,19 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 async def validate_api(data) -> str:
     """Validate the credentials."""
 
-    api = await real_time_api(
-        data[CONF_IP_ADDRESS], data[CONF_PORT], data[CONF_PASSWORD]
+    _LOGGER.debug("CONF_SOLAX_INVERTER entry: %s", data[CONF_SOLAX_INVERTER])
+
+    invset = set()
+    for cls_name in data[CONF_SOLAX_INVERTER]:
+        invset.add(REGISTRY_HASH[cls_name])
+    inverter = await discover(
+        data[CONF_IP_ADDRESS],
+        data[CONF_PORT],
+        data[CONF_PASSWORD],
+        inverters=invset,
     )
-    response = await api.get_data()
+    response = await inverter.get_data()
+    _LOGGER.debug("Solax serial number %s", response.serial_number)
     return response.serial_number
 
 

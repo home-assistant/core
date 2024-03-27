@@ -2,19 +2,18 @@
 
 from unittest.mock import patch
 
-from solax import RealTimeAPI
 from solax.inverter import InverterResponse
 from solax.inverters import X1MiniV34
 
 from homeassistant import config_entries
-from homeassistant.components.solax.const import DOMAIN
+from homeassistant.components.solax.const import CONF_SOLAX_INVERTER, DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
-def __mock_real_time_api_success():
-    return RealTimeAPI(X1MiniV34)
+def __mock_discover_success():
+    return X1MiniV34
 
 
 def __mock_get_data():
@@ -37,10 +36,10 @@ async def test_form_success(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.solax.config_flow.real_time_api",
-            return_value=__mock_real_time_api_success(),
+            "homeassistant.components.solax.config_flow.discover",
+            return_value=__mock_discover_success(),
         ),
-        patch("solax.RealTimeAPI.get_data", return_value=__mock_get_data()),
+        patch("solax.Inverter.get_data", return_value=__mock_get_data()),
         patch(
             "homeassistant.components.solax.async_setup_entry",
             return_value=True,
@@ -48,7 +47,12 @@ async def test_form_success(hass: HomeAssistant) -> None:
     ):
         entry_result = await hass.config_entries.flow.async_configure(
             flow["flow_id"],
-            {CONF_IP_ADDRESS: "192.168.1.87", CONF_PORT: 80, CONF_PASSWORD: "password"},
+            {
+                CONF_IP_ADDRESS: "192.168.1.87",
+                CONF_PORT: 80,
+                CONF_PASSWORD: "password",
+                CONF_SOLAX_INVERTER: ["X1MiniV34"],
+            },
         )
         await hass.async_block_till_done()
 
@@ -58,6 +62,7 @@ async def test_form_success(hass: HomeAssistant) -> None:
         CONF_IP_ADDRESS: "192.168.1.87",
         CONF_PORT: 80,
         CONF_PASSWORD: "password",
+        CONF_SOLAX_INVERTER: ["X1MiniV34"],
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -71,12 +76,17 @@ async def test_form_connect_error(hass: HomeAssistant) -> None:
     assert flow["errors"] == {}
 
     with patch(
-        "homeassistant.components.solax.config_flow.real_time_api",
+        "homeassistant.components.solax.config_flow.discover",
         side_effect=ConnectionError,
     ):
         entry_result = await hass.config_entries.flow.async_configure(
             flow["flow_id"],
-            {CONF_IP_ADDRESS: "192.168.1.87", CONF_PORT: 80, CONF_PASSWORD: "password"},
+            {
+                CONF_IP_ADDRESS: "192.168.1.87",
+                CONF_PORT: 80,
+                CONF_PASSWORD: "password",
+                CONF_SOLAX_INVERTER: [],
+            },
         )
 
     assert entry_result["type"] is FlowResultType.FORM
@@ -92,12 +102,17 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
     assert flow["errors"] == {}
 
     with patch(
-        "homeassistant.components.solax.config_flow.real_time_api",
+        "homeassistant.components.solax.config_flow.discover",
         side_effect=Exception,
     ):
         entry_result = await hass.config_entries.flow.async_configure(
             flow["flow_id"],
-            {CONF_IP_ADDRESS: "192.168.1.87", CONF_PORT: 80, CONF_PASSWORD: "password"},
+            {
+                CONF_IP_ADDRESS: "192.168.1.87",
+                CONF_PORT: 80,
+                CONF_PASSWORD: "password",
+                CONF_SOLAX_INVERTER: [],
+            },
         )
 
     assert entry_result["type"] is FlowResultType.FORM
