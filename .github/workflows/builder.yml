@@ -105,7 +105,7 @@ jobs:
           python3 -m pip install "$(grep '^uv' < requirements_test.txt)"
           uv pip install packaging tomli
           uv pip install .
-          version="$(python3 script/version_bump.py nightly)"
+          python3 script/version_bump.py nightly --set-nightly-version "${{ needs.init.outputs.version }}"
 
           if [[ "$(ls home_assistant_frontend*.whl)" =~ ^home_assistant_frontend-(.*)-py3-none-any.whl$ ]]; then
             echo "Found frontend wheel, setting version to: ${BASH_REMATCH[1]}"
