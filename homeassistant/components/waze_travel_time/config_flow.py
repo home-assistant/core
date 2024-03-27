@@ -1,4 +1,5 @@
 """Config flow for Waze Travel Time integration."""
+
 from __future__ import annotations
 
 import voluptuous as vol

@@ -1,4 +1,5 @@
 """Helpers for components that manage entities."""
+
 from __future__ import annotations
 
 import asyncio
@@ -22,6 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     Event,
     HassJob,
+    HassJobType,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -118,7 +120,9 @@ class EntityComponent(Generic[_EntityT]):
         Note: this is only required if the integration never calls
         `setup` or `async_setup`.
         """
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, self._async_shutdown, run_immediately=True
+        )
 
     def setup(self, config: ConfigType) -> None:
         """Set up a full entity component.
@@ -152,15 +156,15 @@ class EntityComponent(Generic[_EntityT]):
 
         # Generic discovery listener for loading platform dynamically
         # Refer to: homeassistant.helpers.discovery.async_load_platform()
-        async def component_platform_discovered(
-            platform: str, info: dict[str, Any] | None
-        ) -> None:
-            """Handle the loading of a platform."""
-            await self.async_setup_platform(platform, {}, info)
-
         discovery.async_listen_platform(
-            self.hass, self.domain, component_platform_discovered
+            self.hass, self.domain, self._async_component_platform_discovered
         )
+
+    async def _async_component_platform_discovered(
+        self, platform: str, info: dict[str, Any] | None
+    ) -> None:
+        """Handle the loading of a platform."""
+        await self.async_setup_platform(platform, {}, info)
 
     async def async_setup_entry(self, config_entry: ConfigEntry) -> bool:
         """Set up a config entry."""
@@ -278,6 +282,7 @@ class EntityComponent(Generic[_EntityT]):
             ),
             schema,
             supports_response,
+            job_type=HassJobType.Coroutinefunction,
         )
 
     async def async_setup_platform(

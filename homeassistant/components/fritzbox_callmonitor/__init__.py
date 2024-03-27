@@ -1,4 +1,5 @@
 """The fritzbox_callmonitor integration."""
+
 import logging
 
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError

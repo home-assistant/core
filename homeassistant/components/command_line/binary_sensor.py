@@ -1,4 +1,5 @@
 """Support for custom shell commands to retrieve values."""
+
 from __future__ import annotations
 
 import asyncio
@@ -148,7 +149,7 @@ class CommandBinarySensor(ManualTriggerEntity, BinarySensorEntity):
 
     async def _async_update(self) -> None:
         """Get the latest data and updates the state."""
-        await self.hass.async_add_executor_job(self.data.update)
+        await self.data.async_update()
         value = self.data.value
 
         if self._value_template is not None:

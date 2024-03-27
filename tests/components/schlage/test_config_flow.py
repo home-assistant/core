@@ -1,4 +1,5 @@
 """Test the Schlage config flow."""
+
 from unittest.mock import AsyncMock, Mock
 
 from pyschlage.exceptions import Error as PyschlageError, NotAuthorizedError

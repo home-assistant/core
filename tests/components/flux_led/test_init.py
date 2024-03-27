@@ -1,4 +1,5 @@
 """Tests for the flux_led component."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -46,11 +47,14 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 @pytest.mark.usefixtures("mock_single_broadcast_address")
 async def test_configuring_flux_led_causes_discovery(hass: HomeAssistant) -> None:
     """Test that specifying empty config does discovery."""
-    with patch(
-        "homeassistant.components.flux_led.discovery.AIOBulbScanner.async_scan"
-    ) as scan, patch(
-        "homeassistant.components.flux_led.discovery.AIOBulbScanner.getBulbInfo"
-    ) as discover:
+    with (
+        patch(
+            "homeassistant.components.flux_led.discovery.AIOBulbScanner.async_scan"
+        ) as scan,
+        patch(
+            "homeassistant.components.flux_led.discovery.AIOBulbScanner.getBulbInfo"
+        ) as discover,
+    ):
         discover.return_value = [FLUX_DISCOVERY]
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
@@ -67,11 +71,14 @@ async def test_configuring_flux_led_causes_discovery_multiple_addresses(
     hass: HomeAssistant,
 ) -> None:
     """Test that specifying empty config does discovery."""
-    with patch(
-        "homeassistant.components.flux_led.discovery.AIOBulbScanner.async_scan"
-    ) as scan, patch(
-        "homeassistant.components.flux_led.discovery.AIOBulbScanner.getBulbInfo"
-    ) as discover:
+    with (
+        patch(
+            "homeassistant.components.flux_led.discovery.AIOBulbScanner.async_scan"
+        ) as scan,
+        patch(
+            "homeassistant.components.flux_led.discovery.AIOBulbScanner.getBulbInfo"
+        ) as discover,
+    ):
         discover.return_value = [FLUX_DISCOVERY]
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
@@ -199,13 +206,17 @@ async def test_config_entry_fills_unique_id_with_directed_discovery(
         nonlocal last_address
         return [discovery] if last_address == IP_ADDRESS else []
 
-    with patch(
-        "homeassistant.components.flux_led.discovery.AIOBulbScanner.async_scan",
-        new=_discovery,
-    ), patch(
-        "homeassistant.components.flux_led.discovery.AIOBulbScanner.getBulbInfo",
-        new=_mock_getBulbInfo,
-    ), _patch_wifibulb():
+    with (
+        patch(
+            "homeassistant.components.flux_led.discovery.AIOBulbScanner.async_scan",
+            new=_discovery,
+        ),
+        patch(
+            "homeassistant.components.flux_led.discovery.AIOBulbScanner.getBulbInfo",
+            new=_mock_getBulbInfo,
+        ),
+        _patch_wifibulb(),
+    ):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
         assert config_entry.state == ConfigEntryState.LOADED

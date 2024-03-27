@@ -1,6 +1,5 @@
 """Alexa Resources and Assets."""
 
-
 from typing import Any
 
 
@@ -225,7 +224,7 @@ class AlexaCapabilityResource:
 
         Return ModeResources, PresetResources friendlyNames serialized.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def serialize_labels(self, resources: list[str]) -> dict[str, list[dict[str, Any]]]:
         """Return serialized labels for an API response.

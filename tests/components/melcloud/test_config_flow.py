@@ -1,4 +1,5 @@
 """Test the MELCloud config flow."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 

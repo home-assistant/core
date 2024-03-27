@@ -1,4 +1,5 @@
 """Utils for Spotify."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -20,10 +21,10 @@ def resolve_spotify_media_type(media_content_type: str) -> str:
 
 def fetch_image_url(item: dict[str, Any], key="images") -> str | None:
     """Fetch image url."""
-    try:
-        return item.get(key, [])[0].get("url")
-    except IndexError:
-        return None
+    source = item.get(key, [])
+    if isinstance(source, list) and source:
+        return source[0].get("url")
+    return None
 
 
 def spotify_uri_from_media_browser_url(media_content_id: str) -> str:

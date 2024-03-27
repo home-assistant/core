@@ -1,4 +1,5 @@
 """Support gathering system information of hosts which are running glances."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -27,18 +28,11 @@ from . import GlancesDataUpdateCoordinator
 from .const import CPU_ICON, DOMAIN
 
 
-@dataclass(frozen=True)
-class GlancesSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class GlancesSensorEntityDescription(SensorEntityDescription):
+    """Describe Glances sensor entity."""
 
     type: str
-
-
-@dataclass(frozen=True)
-class GlancesSensorEntityDescription(
-    SensorEntityDescription, GlancesSensorEntityDescriptionMixin
-):
-    """Describe Glances sensor entity."""
 
 
 SENSOR_TYPES = {
@@ -229,29 +223,29 @@ async def async_setup_entry(
     """Set up the Glances sensors."""
 
     coordinator: GlancesDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    entities = []
+    entities: list[GlancesSensor] = []
 
     for sensor_type, sensors in coordinator.data.items():
         if sensor_type in ["fs", "sensors", "raid"]:
-            for sensor_label, params in sensors.items():
-                for param in params:
-                    if sensor_description := SENSOR_TYPES.get((sensor_type, param)):
-                        entities.append(
-                            GlancesSensor(
-                                coordinator,
-                                sensor_description,
-                                sensor_label,
-                            )
-                        )
+            entities.extend(
+                GlancesSensor(
+                    coordinator,
+                    sensor_description,
+                    sensor_label,
+                )
+                for sensor_label, params in sensors.items()
+                for param in params
+                if (sensor_description := SENSOR_TYPES.get((sensor_type, param)))
+            )
         else:
-            for sensor in sensors:
-                if sensor_description := SENSOR_TYPES.get((sensor_type, sensor)):
-                    entities.append(
-                        GlancesSensor(
-                            coordinator,
-                            sensor_description,
-                        )
-                    )
+            entities.extend(
+                GlancesSensor(
+                    coordinator,
+                    sensor_description,
+                )
+                for sensor in sensors
+                if (sensor_description := SENSOR_TYPES.get((sensor_type, sensor)))
+            )
 
     async_add_entities(entities)
 

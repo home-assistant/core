@@ -1,4 +1,5 @@
 """Test the youless config flow."""
+
 from unittest.mock import MagicMock, patch
 from urllib.error import URLError
 

@@ -1,4 +1,5 @@
 """Utility functions to combine state attributes from multiple entities."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Iterator

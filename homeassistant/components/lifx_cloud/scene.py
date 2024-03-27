@@ -1,4 +1,5 @@
 """Support for LIFX Cloud scenes."""
+
 from __future__ import annotations
 
 import asyncio

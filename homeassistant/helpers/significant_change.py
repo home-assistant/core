@@ -26,6 +26,7 @@ The following cases will never be passed to your function:
 - if either state is unknown/unavailable
 - state adding/removing
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable

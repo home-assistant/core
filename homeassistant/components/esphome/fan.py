@@ -1,4 +1,5 @@
 """Support for ESPHome fans."""
+
 from __future__ import annotations
 
 import math
@@ -22,7 +23,12 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from .entity import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+from .entity import (
+    EsphomeEntity,
+    convert_api_error_ha_error,
+    esphome_state_property,
+    platform_async_setup_entry,
+)
 from .enum_mapper import EsphomeEnumMapper
 
 ORDERED_NAMED_FAN_SPEEDS = [FanSpeed.LOW, FanSpeed.MEDIUM, FanSpeed.HIGH]
@@ -59,6 +65,7 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
         """Set the speed percentage of the fan."""
         await self._async_set_percentage(percentage)
 
+    @convert_api_error_ha_error
     async def _async_set_percentage(self, percentage: int | None) -> None:
         if percentage == 0:
             await self.async_turn_off()
@@ -88,20 +95,24 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
         """Turn on the fan."""
         await self._async_set_percentage(percentage)
 
+    @convert_api_error_ha_error
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
         self._client.fan_command(key=self._key, state=False)
 
+    @convert_api_error_ha_error
     async def async_oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
         self._client.fan_command(key=self._key, oscillating=oscillating)
 
+    @convert_api_error_ha_error
     async def async_set_direction(self, direction: str) -> None:
         """Set direction of the fan."""
         self._client.fan_command(
             key=self._key, direction=_FAN_DIRECTIONS.from_hass(direction)
         )
 
+    @convert_api_error_ha_error
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
         self._client.fan_command(key=self._key, preset_mode=preset_mode)

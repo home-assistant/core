@@ -1,4 +1,5 @@
 """The tests for the Netgear LTE notify platform."""
+
 from unittest.mock import patch
 
 from homeassistant.components.notify import (

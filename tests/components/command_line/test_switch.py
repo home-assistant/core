@@ -1,11 +1,11 @@
 """The tests for the Command line switch platform."""
+
 from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
 import json
 import os
-import subprocess
 import tempfile
 from unittest.mock import patch
 
@@ -31,6 +31,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
+
+from . import mock_asyncio_subprocess_run
 
 from tests.common import async_fire_time_changed
 
@@ -348,7 +350,7 @@ async def test_switch_command_state_fail(
     await hass.async_block_till_done()
 
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_state = hass.states.get("switch.test")
     assert entity_state
@@ -374,13 +376,7 @@ async def test_switch_command_state_code_exceptions(
 ) -> None:
     """Test that switch state code exceptions are handled correctly."""
 
-    with patch(
-        "homeassistant.components.command_line.utils.subprocess.check_output",
-        side_effect=[
-            subprocess.TimeoutExpired("cmd", 10),
-            subprocess.SubprocessError(),
-        ],
-    ) as check_output:
+    with mock_asyncio_subprocess_run(exception=asyncio.TimeoutError) as run:
         await setup.async_setup_component(
             hass,
             DOMAIN,
@@ -401,12 +397,13 @@ async def test_switch_command_state_code_exceptions(
 
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
-        assert check_output.called
+        assert run.called
         assert "Timeout for command" in caplog.text
 
+    with mock_asyncio_subprocess_run(returncode=127) as run:
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL * 2)
         await hass.async_block_till_done()
-        assert check_output.called
+        assert run.called
         assert "Error trying to exec command" in caplog.text
 
 
@@ -415,13 +412,7 @@ async def test_switch_command_state_value_exceptions(
 ) -> None:
     """Test that switch state value exceptions are handled correctly."""
 
-    with patch(
-        "homeassistant.components.command_line.utils.subprocess.check_output",
-        side_effect=[
-            subprocess.TimeoutExpired("cmd", 10),
-            subprocess.SubprocessError(),
-        ],
-    ) as check_output:
+    with mock_asyncio_subprocess_run(exception=asyncio.TimeoutError) as run:
         await setup.async_setup_component(
             hass,
             DOMAIN,
@@ -443,13 +434,14 @@ async def test_switch_command_state_value_exceptions(
 
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
-        assert check_output.call_count == 1
+        assert run.call_count == 1
         assert "Timeout for command" in caplog.text
 
+    with mock_asyncio_subprocess_run(returncode=127) as run:
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL * 2)
         await hass.async_block_till_done()
-        assert check_output.call_count == 2
-        assert "Error trying to exec command" in caplog.text
+        assert run.call_count == 1
+        assert "Command failed (with return code 127)" in caplog.text
 
 
 async def test_unique_id(
@@ -742,7 +734,7 @@ async def test_availability(
     hass.states.async_set("sensor.input1", "on")
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_state = hass.states.get("switch.test")
     assert entity_state
@@ -750,13 +742,10 @@ async def test_availability(
 
     hass.states.async_set("sensor.input1", "off")
     await hass.async_block_till_done()
-    with patch(
-        "homeassistant.components.command_line.utils.subprocess.check_output",
-        return_value=b"50\n",
-    ):
+    with mock_asyncio_subprocess_run(b"50\n"):
         freezer.tick(timedelta(minutes=1))
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_state = hass.states.get("switch.test")
     assert entity_state

@@ -1,4 +1,5 @@
 """The tests for the Reddit platform."""
+
 import copy
 from unittest.mock import patch
 

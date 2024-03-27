@@ -1,4 +1,5 @@
 """Test the Rfxtrx config flow."""
+
 import os
 from unittest.mock import MagicMock, patch, sentinel
 

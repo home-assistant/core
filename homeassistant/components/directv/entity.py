@@ -1,4 +1,5 @@
 """Base DirecTV Entity."""
+
 from __future__ import annotations
 
 from directv import DIRECTV

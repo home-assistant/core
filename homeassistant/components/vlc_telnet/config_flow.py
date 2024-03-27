@@ -1,4 +1,5 @@
 """Config flow for VLC media player Telnet integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping

@@ -1,4 +1,5 @@
 """Test the Google Mail config flow."""
+
 from unittest.mock import patch
 
 from httplib2 import Response
@@ -45,13 +46,16 @@ async def test_full_flow(
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
-    with patch(
-        "homeassistant.components.google_mail.async_setup_entry", return_value=True
-    ) as mock_setup, patch(
-        "httplib2.Http.request",
-        return_value=(
-            Response({}),
-            bytes(load_fixture("google_mail/get_profile.json"), encoding="UTF-8"),
+    with (
+        patch(
+            "homeassistant.components.google_mail.async_setup_entry", return_value=True
+        ) as mock_setup,
+        patch(
+            "httplib2.Http.request",
+            return_value=(
+                Response({}),
+                bytes(load_fixture("google_mail/get_profile.json"), encoding="UTF-8"),
+            ),
         ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -140,13 +144,16 @@ async def test_reauth(
         },
     )
 
-    with patch(
-        "homeassistant.components.google_mail.async_setup_entry", return_value=True
-    ) as mock_setup, patch(
-        "httplib2.Http.request",
-        return_value=(
-            Response({}),
-            bytes(load_fixture(f"google_mail/{fixture}.json"), encoding="UTF-8"),
+    with (
+        patch(
+            "homeassistant.components.google_mail.async_setup_entry", return_value=True
+        ) as mock_setup,
+        patch(
+            "httplib2.Http.request",
+            return_value=(
+                Response({}),
+                bytes(load_fixture(f"google_mail/{fixture}.json"), encoding="UTF-8"),
+            ),
         ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])

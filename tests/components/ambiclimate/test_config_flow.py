@@ -1,4 +1,5 @@
 """Tests for the Ambiclimate config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 import ambiclimate
@@ -6,6 +7,7 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.ambiclimate import config_flow
+from homeassistant.components.http import KEY_HASS
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
@@ -127,11 +129,11 @@ async def test_view(hass: HomeAssistant) -> None:
     request = aiohttp.MockRequest(
         b"", query_string="code=test_code", mock_source="test"
     )
-    request.app = {"hass": hass}
+    request.app = {KEY_HASS: hass}
     view = config_flow.AmbiclimateAuthCallbackView()
     assert await view.get(request) == "OK!"
 
     request = aiohttp.MockRequest(b"", query_string="", mock_source="test")
-    request.app = {"hass": hass}
+    request.app = {KEY_HASS: hass}
     view = config_flow.AmbiclimateAuthCallbackView()
     assert await view.get(request) == "No code"

@@ -331,6 +331,7 @@ async def test_device_area_context(
 
     # Create 2 lights in each area
     area_lights = defaultdict(list)
+    all_lights = []
     for area in (area_kitchen, area_bedroom):
         for i in range(2):
             light_entity = entity_registry.async_get_or_create(
@@ -345,6 +346,7 @@ async def test_device_area_context(
                 attributes={ATTR_FRIENDLY_NAME: f"{area.name} light {i}"},
             )
             area_lights[area.id].append(light_entity)
+            all_lights.append(light_entity)
 
     # Create voice satellites in each area
     entry = MockConfigEntry()
@@ -412,7 +414,7 @@ async def test_device_area_context(
     }
     turn_on_calls.clear()
 
-    # Turn off all lights in the area of the otherkj device
+    # Turn off all lights in the area of the other device
     result = await conversation.async_converse(
         hass,
         "turn lights off",
@@ -436,16 +438,18 @@ async def test_device_area_context(
     }
     turn_off_calls.clear()
 
-    # Not providing a device id should not match
+    # Turn on/off all lights also works
     for command in ("on", "off"):
         result = await conversation.async_converse(
             hass, f"turn {command} all lights", None, Context(), None
         )
-        assert result.response.response_type == intent.IntentResponseType.ERROR
-        assert (
-            result.response.error_code
-            == intent.IntentResponseErrorCode.NO_VALID_TARGETS
-        )
+        await hass.async_block_till_done()
+        assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+
+        # All lights should have been targeted
+        assert {s.entity_id for s in result.response.matched_states} == {
+            e.entity_id for e in all_lights
+        }
 
 
 async def test_error_no_device(hass: HomeAssistant, init_components) -> None:

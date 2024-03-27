@@ -1,4 +1,5 @@
 """Class to hold all alarm control panel accessories."""
+
 import logging
 from typing import Any
 

@@ -1,6 +1,5 @@
 """Tests for the Bluetooth integration."""
 
-
 from collections.abc import Iterable
 from contextlib import contextmanager
 import itertools
@@ -59,13 +58,14 @@ BLE_DEVICE_DEFAULTS = {
 @contextmanager
 def patch_bluetooth_time(mock_time: float) -> None:
     """Patch the bluetooth time."""
-    with patch(
-        "homeassistant.components.bluetooth.MONOTONIC_TIME", return_value=mock_time
-    ), patch(
-        "habluetooth.base_scanner.monotonic_time_coarse", return_value=mock_time
-    ), patch(
-        "habluetooth.manager.monotonic_time_coarse", return_value=mock_time
-    ), patch("habluetooth.scanner.monotonic_time_coarse", return_value=mock_time):
+    with (
+        patch(
+            "homeassistant.components.bluetooth.MONOTONIC_TIME", return_value=mock_time
+        ),
+        patch("habluetooth.base_scanner.monotonic_time_coarse", return_value=mock_time),
+        patch("habluetooth.manager.monotonic_time_coarse", return_value=mock_time),
+        patch("habluetooth.scanner.monotonic_time_coarse", return_value=mock_time),
+    ):
         yield
 
 

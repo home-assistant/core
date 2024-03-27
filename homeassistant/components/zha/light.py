@@ -1,4 +1,5 @@
 """Lights on Zigbee Home Automation networks."""
+
 from __future__ import annotations
 
 from collections import Counter

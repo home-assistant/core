@@ -1,4 +1,5 @@
 """Config Flow for Advantage Air integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -44,7 +45,7 @@ class AdvantageAirConfigFlow(ConfigFlow, domain=DOMAIN):
                     port=port,
                     session=async_get_clientsession(self.hass),
                     retry=ADVANTAGE_AIR_RETRY,
-                ).async_get(1)
+                ).async_get()
             except ApiError:
                 errors["base"] = "cannot_connect"
             else:

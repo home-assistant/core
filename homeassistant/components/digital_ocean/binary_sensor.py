@@ -1,4 +1,5 @@
 """Support for monitoring the state of Digital Ocean droplets."""
+
 from __future__ import annotations
 
 import logging
