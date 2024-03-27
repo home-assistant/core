@@ -1,4 +1,5 @@
 """KNX Entity Store Validation."""
+
 from typing import Literal, TypedDict
 
 import voluptuous as vol

@@ -282,7 +282,7 @@ async def ws_create_entity(
         return
     knx: KNXModule = hass.data[DOMAIN]
     try:
-        entity_id = await knx.config_store.create_entitiy(
+        entity_id = await knx.config_store.create_entity(
             # use validation result so defaults are applied
             validated_data["platform"],
             validated_data["data"],

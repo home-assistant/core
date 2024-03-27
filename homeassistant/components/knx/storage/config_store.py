@@ -1,4 +1,5 @@
 """KNX entity configuration store."""
+
 from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING, Any, Final, TypedDict
@@ -61,7 +62,7 @@ class KNXConfigStore:
                 len(self.data["entities"]),
             )
 
-    async def create_entitiy(
+    async def create_entity(
         self, platform: Platform, data: dict[str, Any]
     ) -> str | None:
         """Create a new entity."""
