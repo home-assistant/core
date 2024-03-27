@@ -435,6 +435,7 @@ def state_changes_during_period(
                 no_attributes,
                 bool(limit),
                 include_start_time_state,
+                has_last_reported,
             ],
         )
         return cast(
