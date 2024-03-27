@@ -1,4 +1,5 @@
 """The Sun WEG inverter sensor integration."""
+
 import datetime
 import json
 import logging

@@ -1,4 +1,5 @@
 """Switcher integration Sensor platform."""
+
 from __future__ import annotations
 
 from aioswitcher.device import DeviceCategory
@@ -40,12 +41,10 @@ TIME_SENSORS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="remaining_time",
         translation_key="remaining_time",
-        icon="mdi:av-timer",
     ),
     SensorEntityDescription(
         key="auto_off_set",
         translation_key="auto_shutdown",
-        icon="mdi:progress-clock",
         entity_registry_enabled_default=False,
     ),
 ]

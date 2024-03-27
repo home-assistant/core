@@ -1,4 +1,5 @@
 """The tests for assist_pipeline logbook."""
+
 from homeassistant.components import assist_pipeline, logbook
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant
@@ -15,6 +16,7 @@ async def test_recording_event(
     """Test recording event."""
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
 
     entry = MockConfigEntry()
     entry.add_to_hass(hass)

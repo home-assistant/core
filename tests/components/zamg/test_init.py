@@ -1,4 +1,5 @@
 """Test Zamg component init."""
+
 from unittest.mock import MagicMock
 
 import pytest

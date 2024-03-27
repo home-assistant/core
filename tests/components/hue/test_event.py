@@ -1,4 +1,5 @@
 """Philips Hue Event platform tests for V2 bridge/api."""
+
 from homeassistant.components.event import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
 from homeassistant.core import HomeAssistant
 

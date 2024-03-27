@@ -1,8 +1,13 @@
 """UniFi Network button platform tests."""
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonDeviceClass
-from homeassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
-from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, EntityCategory
+from homeassistant.components.unifi.const import CONF_SITE_ID
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    CONF_HOST,
+    STATE_UNAVAILABLE,
+    EntityCategory,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -36,8 +41,6 @@ async def test_restart_device_button(
             }
         ],
     )
-    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-
     assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 1
 
     ent_reg_entry = entity_registry.async_get("button.switch_restart")
@@ -52,7 +55,8 @@ async def test_restart_device_button(
     # Send restart device command
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        f"https://{hub.host}:1234/api/s/{hub.site}/cmd/devmgr",
+        f"https://{config_entry.data[CONF_HOST]}:1234"
+        f"/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/devmgr",
     )
 
     await hass.services.async_call(
@@ -120,8 +124,6 @@ async def test_power_cycle_poe(
             }
         ],
     )
-    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-
     assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 2
 
     ent_reg_entry = entity_registry.async_get("button.switch_port_1_power_cycle")
@@ -136,7 +138,8 @@ async def test_power_cycle_poe(
     # Send restart device command
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        f"https://{hub.host}:1234/api/s/{hub.site}/cmd/devmgr",
+        f"https://{config_entry.data[CONF_HOST]}:1234"
+        f"/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/devmgr",
     )
 
     await hass.services.async_call(

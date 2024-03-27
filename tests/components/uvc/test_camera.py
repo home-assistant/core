@@ -1,4 +1,5 @@
 """The tests for UVC camera module."""
+
 from datetime import UTC, datetime, timedelta
 from unittest.mock import call, patch
 
@@ -381,9 +382,9 @@ async def test_motion_recording_mode_properties(
     assert state
     assert state.state != STATE_RECORDING
 
-    mock_remote.return_value.get_camera.return_value[
-        "recordingIndicator"
-    ] = "MOTION_INPROGRESS"
+    mock_remote.return_value.get_camera.return_value["recordingIndicator"] = (
+        "MOTION_INPROGRESS"
+    )
 
     async_fire_time_changed(hass, now + timedelta(seconds=91))
     await hass.async_block_till_done()
@@ -393,9 +394,9 @@ async def test_motion_recording_mode_properties(
     assert state
     assert state.state == STATE_RECORDING
 
-    mock_remote.return_value.get_camera.return_value[
-        "recordingIndicator"
-    ] = "MOTION_FINISHED"
+    mock_remote.return_value.get_camera.return_value["recordingIndicator"] = (
+        "MOTION_FINISHED"
+    )
 
     async_fire_time_changed(hass, now + timedelta(seconds=121))
     await hass.async_block_till_done()
@@ -471,7 +472,7 @@ async def test_login_tries_both_addrs_and_caches(
         """Mock get snapshots."""
         try:
             snapshots.pop(0)
-            raise camera.CameraAuthError()
+            raise camera.CameraAuthError
         except IndexError:
             pass
         return "test_image"

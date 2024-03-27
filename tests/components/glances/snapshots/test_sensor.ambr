@@ -24,7 +24,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:docker',
+    'original_icon': None,
     'original_name': 'Containers active',
     'platform': 'glances',
     'previous_unique_id': None,
@@ -38,12 +38,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': '0.0.0.0 Containers active',
-      'icon': 'mdi:docker',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.0_0_0_0_containers_active',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
@@ -73,7 +73,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:docker',
+    'original_icon': None,
     'original_name': 'Containers CPU usage',
     'platform': 'glances',
     'previous_unique_id': None,
@@ -87,13 +87,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': '0.0.0.0 Containers CPU usage',
-      'icon': 'mdi:docker',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.0_0_0_0_containers_cpu_usage',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '77.2',
   })
@@ -123,7 +123,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
-    'original_icon': 'mdi:docker',
+    'original_icon': None,
     'original_name': 'Containers memory used',
     'platform': 'glances',
     'previous_unique_id': None,
@@ -138,13 +138,13 @@
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
       'friendly_name': '0.0.0.0 Containers memory used',
-      'icon': 'mdi:docker',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.0_0_0_0_containers_memory_used',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1149.6',
   })
@@ -195,6 +195,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.0_0_0_0_cpu_thermal_1_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '59',
   })
@@ -245,6 +246,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.0_0_0_0_err_temp_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -274,7 +276,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:harddisk',
+    'original_icon': None,
     'original_name': 'md1 available',
     'platform': 'glances',
     'previous_unique_id': None,
@@ -288,12 +290,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': '0.0.0.0 md1 available',
-      'icon': 'mdi:harddisk',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.0_0_0_0_md1_available',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
@@ -323,7 +325,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:harddisk',
+    'original_icon': None,
     'original_name': 'md1 used',
     'platform': 'glances',
     'previous_unique_id': None,
@@ -337,12 +339,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': '0.0.0.0 md1 used',
-      'icon': 'mdi:harddisk',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.0_0_0_0_md1_used',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
@@ -372,7 +374,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:harddisk',
+    'original_icon': None,
     'original_name': 'md3 available',
     'platform': 'glances',
     'previous_unique_id': None,
@@ -386,12 +388,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': '0.0.0.0 md3 available',
-      'icon': 'mdi:harddisk',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.0_0_0_0_md3_available',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
@@ -421,7 +423,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:harddisk',
+    'original_icon': None,
     'original_name': 'md3 used',
     'platform': 'glances',
     'previous_unique_id': None,
@@ -435,12 +437,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': '0.0.0.0 md3 used',
-      'icon': 'mdi:harddisk',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.0_0_0_0_md3_used',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
@@ -470,7 +472,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
-    'original_icon': 'mdi:harddisk',
+    'original_icon': None,
     'original_name': '/media disk free',
     'platform': 'glances',
     'previous_unique_id': None,
@@ -485,13 +487,13 @@
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
       'friendly_name': '0.0.0.0 /media disk free',
-      'icon': 'mdi:harddisk',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.0_0_0_0_media_disk_free',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '426.5',
   })
@@ -521,7 +523,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:harddisk',
+    'original_icon': None,
     'original_name': '/media disk usage',
     'platform': 'glances',
     'previous_unique_id': None,
@@ -535,13 +537,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': '0.0.0.0 /media disk usage',
-      'icon': 'mdi:harddisk',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.0_0_0_0_media_disk_usage',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '6.7',
   })
@@ -571,7 +573,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
-    'original_icon': 'mdi:harddisk',
+    'original_icon': None,
     'original_name': '/media disk used',
     'platform': 'glances',
     'previous_unique_id': None,
@@ -586,13 +588,13 @@
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
       'friendly_name': '0.0.0.0 /media disk used',
-      'icon': 'mdi:harddisk',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.0_0_0_0_media_disk_used',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30.7',
   })
@@ -622,7 +624,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
-    'original_icon': 'mdi:memory',
+    'original_icon': None,
     'original_name': 'Memory free',
     'platform': 'glances',
     'previous_unique_id': None,
@@ -637,13 +639,13 @@
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
       'friendly_name': '0.0.0.0 Memory free',
-      'icon': 'mdi:memory',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.0_0_0_0_memory_free',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2745.0',
   })
@@ -673,7 +675,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:memory',
+    'original_icon': None,
     'original_name': 'Memory usage',
     'platform': 'glances',
     'previous_unique_id': None,
@@ -687,13 +689,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': '0.0.0.0 Memory usage',
-      'icon': 'mdi:memory',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.0_0_0_0_memory_usage',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '27.6',
   })
@@ -723,7 +725,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
-    'original_icon': 'mdi:memory',
+    'original_icon': None,
     'original_name': 'Memory use',
     'platform': 'glances',
     'previous_unique_id': None,
@@ -738,13 +740,13 @@
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
       'friendly_name': '0.0.0.0 Memory use',
-      'icon': 'mdi:memory',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.0_0_0_0_memory_use',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1047.1',
   })
@@ -795,6 +797,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.0_0_0_0_na_temp_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -824,7 +827,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
-    'original_icon': 'mdi:harddisk',
+    'original_icon': None,
     'original_name': '/ssl disk free',
     'platform': 'glances',
     'previous_unique_id': None,
@@ -839,13 +842,13 @@
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
       'friendly_name': '0.0.0.0 /ssl disk free',
-      'icon': 'mdi:harddisk',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.0_0_0_0_ssl_disk_free',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '426.5',
   })
@@ -875,7 +878,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:harddisk',
+    'original_icon': None,
     'original_name': '/ssl disk usage',
     'platform': 'glances',
     'previous_unique_id': None,
@@ -889,13 +892,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': '0.0.0.0 /ssl disk usage',
-      'icon': 'mdi:harddisk',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.0_0_0_0_ssl_disk_usage',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '6.7',
   })
@@ -925,7 +928,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
-    'original_icon': 'mdi:harddisk',
+    'original_icon': None,
     'original_name': '/ssl disk used',
     'platform': 'glances',
     'previous_unique_id': None,
@@ -940,13 +943,13 @@
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
       'friendly_name': '0.0.0.0 /ssl disk used',
-      'icon': 'mdi:harddisk',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.0_0_0_0_ssl_disk_used',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30.7',
   })

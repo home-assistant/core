@@ -1,4 +1,5 @@
 """The bluetooth integration."""
+
 from __future__ import annotations
 
 import datetime
@@ -165,7 +166,9 @@ async def _async_start_adapter_discovery(
         """Shutdown debouncer."""
         discovery_debouncer.async_shutdown()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown_debouncer)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, _async_shutdown_debouncer, run_immediately=True
+    )
 
     async def _async_call_debouncer(now: datetime.datetime) -> None:
         """Call the debouncer at a later time."""
@@ -196,7 +199,9 @@ async def _async_start_adapter_discovery(
 
     cancel = usb.async_register_scan_request_callback(hass, _async_trigger_discovery)
     hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, hass_callback(lambda event: cancel())
+        EVENT_HOMEASSISTANT_STOP,
+        hass_callback(lambda event: cancel()),
+        run_immediately=True,
     )
 
 
@@ -208,13 +213,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     integration_matcher = IntegrationMatcher(await async_get_bluetooth(hass))
 
     slot_manager_setup_task = hass.async_create_task(
-        slot_manager.async_setup(), "slot_manager setup"
+        slot_manager.async_setup(), "slot_manager setup", eager_start=True
     )
     processor_setup_task = hass.async_create_task(
-        passive_update_processor.async_setup(hass), "passive_update_processor setup"
+        passive_update_processor.async_setup(hass),
+        "passive_update_processor setup",
+        eager_start=True,
     )
     storage_setup_task = hass.async_create_task(
-        bluetooth_storage.async_setup(), "bluetooth storage setup"
+        bluetooth_storage.async_setup(), "bluetooth storage setup", eager_start=True
     )
     integration_matcher.async_setup()
     manager = HomeAssistantBluetoothManager(

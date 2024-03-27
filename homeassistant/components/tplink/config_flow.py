@@ -1,4 +1,5 @@
 """Config flow for TP-Link."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -15,9 +16,14 @@ from kasa import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import dhcp
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntry,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import (
     CONF_ALIAS,
     CONF_DEVICE,
@@ -28,7 +34,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import DiscoveryInfoType
 
@@ -46,7 +51,7 @@ STEP_AUTH_DATA_SCHEMA = vol.Schema(
 )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for tplink."""
 
     VERSION = 1
@@ -58,7 +63,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_devices: dict[str, SmartDevice] = {}
         self._discovered_device: SmartDevice | None = None
 
-    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle discovery via dhcp."""
         return await self._async_handle_discovery(
             discovery_info.ip, dr.format_mac(discovery_info.macaddress)
@@ -66,7 +73,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle integration discovery."""
         return await self._async_handle_discovery(
             discovery_info[CONF_HOST],
@@ -77,7 +84,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def _update_config_if_entry_in_setup_error(
         self, entry: ConfigEntry, host: str, config: dict
-    ) -> FlowResult | None:
+    ) -> ConfigFlowResult | None:
         """If discovery encounters a device that is in SETUP_ERROR or SETUP_RETRY update the device config."""
         if entry.state not in (
             ConfigEntryState.SETUP_ERROR,
@@ -96,7 +103,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_handle_discovery(
         self, host: str, formatted_mac: str, config: dict | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle any discovery."""
         current_entry = await self.async_set_unique_id(
             formatted_mac, raise_on_progress=False
@@ -131,7 +138,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_discovery_auth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Dialog that informs the user that auth is required."""
         assert self._discovered_device is not None
         errors = {}
@@ -190,7 +197,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm discovery."""
         assert self._discovered_device is not None
         if user_input is not None:
@@ -205,7 +212,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         placeholders: dict[str, str] = {}
@@ -237,7 +244,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user_auth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Dialog that informs the user that auth is required."""
         errors: dict[str, str] = {}
         host = self.context[CONF_HOST]
@@ -272,7 +279,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_pick_device(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the step to pick discovered device."""
         if user_input is not None:
             mac = user_input[CONF_DEVICE]
@@ -332,7 +339,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     _config_entries.flow.async_abort(flow["flow_id"])
 
     @callback
-    def _async_create_entry_from_device(self, device: SmartDevice) -> FlowResult:
+    def _async_create_entry_from_device(self, device: SmartDevice) -> ConfigFlowResult:
         """Create a config entry from a smart device."""
         self._abort_if_unique_id_configured(updates={CONF_HOST: device.host})
         return self.async_create_entry(
@@ -401,7 +408,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return self._discovered_device
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Start the reauthentication flow if the device needs updated credentials."""
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -410,7 +419,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         errors: dict[str, str] = {}
         placeholders: dict[str, str] = {}

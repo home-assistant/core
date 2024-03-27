@@ -3,6 +3,7 @@
 This file contains the model definitions for schema version 30.
 It is used to test the schema migration logic.
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -737,13 +738,11 @@ OLD_STATE = aliased(States, name="old_state")
 
 
 @overload
-def process_timestamp(ts: None) -> None:
-    ...
+def process_timestamp(ts: None) -> None: ...
 
 
 @overload
-def process_timestamp(ts: datetime) -> datetime:
-    ...
+def process_timestamp(ts: datetime) -> datetime: ...
 
 
 def process_timestamp(ts: datetime | None) -> datetime | None:

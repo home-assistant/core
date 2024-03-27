@@ -1,4 +1,5 @@
 """Define test fixtures for IQVIA."""
+
 import json
 from unittest.mock import patch
 
@@ -86,18 +87,17 @@ async def setup_iqvia_fixture(
     data_disease_index,
 ):
     """Define a fixture to set up IQVIA."""
-    with patch(
-        "pyiqvia.allergens.Allergens.extended", return_value=data_allergy_forecast
-    ), patch(
-        "pyiqvia.allergens.Allergens.current", return_value=data_allergy_index
-    ), patch(
-        "pyiqvia.allergens.Allergens.outlook", return_value=data_allergy_outlook
-    ), patch(
-        "pyiqvia.asthma.Asthma.extended", return_value=data_asthma_forecast
-    ), patch("pyiqvia.asthma.Asthma.current", return_value=data_asthma_index), patch(
-        "pyiqvia.disease.Disease.extended", return_value=data_disease_forecast
-    ), patch("pyiqvia.disease.Disease.current", return_value=data_disease_index), patch(
-        "homeassistant.components.iqvia.PLATFORMS", []
+    with (
+        patch(
+            "pyiqvia.allergens.Allergens.extended", return_value=data_allergy_forecast
+        ),
+        patch("pyiqvia.allergens.Allergens.current", return_value=data_allergy_index),
+        patch("pyiqvia.allergens.Allergens.outlook", return_value=data_allergy_outlook),
+        patch("pyiqvia.asthma.Asthma.extended", return_value=data_asthma_forecast),
+        patch("pyiqvia.asthma.Asthma.current", return_value=data_asthma_index),
+        patch("pyiqvia.disease.Disease.extended", return_value=data_disease_forecast),
+        patch("pyiqvia.disease.Disease.current", return_value=data_disease_index),
+        patch("homeassistant.components.iqvia.PLATFORMS", []),
     ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()

@@ -1,4 +1,5 @@
 """Provides diagnostics for Sonos."""
+
 from __future__ import annotations
 
 import time

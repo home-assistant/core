@@ -1,4 +1,5 @@
 """The test for binary_sensor device automation."""
+
 from datetime import timedelta
 
 import pytest
@@ -81,12 +82,12 @@ async def test_get_triggers(
 
 @pytest.mark.parametrize(
     ("hidden_by", "entity_category"),
-    (
+    [
         (er.RegistryEntryHider.INTEGRATION, None),
         (er.RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
-    ),
+    ],
 )
 async def test_get_triggers_hidden_auxiliary(
     hass: HomeAssistant,
@@ -478,6 +479,7 @@ async def test_if_fires_on_state_change_legacy(
     hass.states.async_set(entry.entity_id, STATE_OFF)
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert calls[0].data["some"] == "turn_off device - {} - on - off - None".format(
-        entry.entity_id
+    assert (
+        calls[0].data["some"]
+        == f"turn_off device - {entry.entity_id} - on - off - None"
     )

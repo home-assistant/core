@@ -1,4 +1,5 @@
 """KIRA interface to receive UDP packets from an IR-IP bridge."""
+
 from __future__ import annotations
 
 import logging

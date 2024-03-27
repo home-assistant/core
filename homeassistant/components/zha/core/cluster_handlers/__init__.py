@@ -1,4 +1,5 @@
 """Cluster handlers module for Zigbee Home Automation."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine, Iterator
@@ -334,9 +335,9 @@ class ClusterHandler(LogMixin):
             return
 
         for record in res:
-            event_data[self.cluster.find_attribute(record.attrid).name][
-                "status"
-            ] = record.status.name
+            event_data[self.cluster.find_attribute(record.attrid).name]["status"] = (
+                record.status.name
+            )
         failed = [
             self.cluster.find_attribute(record.attrid).name
             for record in res
@@ -555,7 +556,7 @@ class ClusterHandler(LogMixin):
     def log(self, level, msg, *args, **kwargs):
         """Log a message."""
         msg = f"[%s:%s]: {msg}"
-        args = (self._endpoint.device.nwk, self._id) + args
+        args = (self._endpoint.device.nwk, self._id, *args)
         _LOGGER.log(level, msg, *args, **kwargs)
 
     def __getattr__(self, name):
@@ -619,7 +620,7 @@ class ZDOClusterHandler(LogMixin):
     def log(self, level, msg, *args, **kwargs):
         """Log a message."""
         msg = f"[%s:ZDO](%s): {msg}"
-        args = (self._zha_device.nwk, self._zha_device.model) + args
+        args = (self._zha_device.nwk, self._zha_device.model, *args)
         _LOGGER.log(level, msg, *args, **kwargs)
 
 
@@ -627,8 +628,9 @@ class ClientClusterHandler(ClusterHandler):
     """ClusterHandler for Zigbee client (output) clusters."""
 
     @callback
-    def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
+    def attribute_updated(self, attrid: int, value: Any, timestamp: Any) -> None:
         """Handle an attribute updated on this cluster."""
+        super().attribute_updated(attrid, value, timestamp)
 
         try:
             attr_name = self._cluster.attributes[attrid].name

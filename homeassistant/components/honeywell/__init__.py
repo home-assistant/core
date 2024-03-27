@@ -1,4 +1,5 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
+
 from dataclasses import dataclass
 
 import aiosomecomfort

@@ -1,4 +1,5 @@
 """Configuration for GeoJSON Events tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 

@@ -9,10 +9,9 @@ from pyobihai import PyObihai
 import voluptuous as vol
 
 from homeassistant.components import dhcp
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 
 from .connectivity import validate_auth
@@ -59,7 +58,7 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
 
         errors: dict[str, str] = {}
@@ -94,7 +93,9 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(data_schema, user_input),
         )
 
-    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Prepare configuration for a DHCP discovered Obihai."""
 
         self._dhcp_discovery_info = discovery_info
@@ -102,7 +103,7 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Attempt to confirm."""
         assert self._dhcp_discovery_info
         await self.async_set_unique_id(format_mac(self._dhcp_discovery_info.macaddress))

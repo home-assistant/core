@@ -56,12 +56,12 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 
-from . import GroupEntity
-from .const import CONF_SYNC
+from .entity import GroupEntity
 from .util import find_state_attributes, mean_tuple, reduce_attribute
 
 DEFAULT_NAME = "Light Group"
 CONF_ALL = "all"
+CONF_SYNC = "sync"
 
 # No limit on parallel updates to enable a group calling another group
 PARALLEL_UPDATES = 0

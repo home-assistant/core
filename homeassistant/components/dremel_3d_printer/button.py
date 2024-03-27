@@ -1,4 +1,5 @@
 """Support for Dremel 3D Printer buttons."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -16,18 +17,11 @@ from .const import DOMAIN
 from .entity import Dremel3DPrinterEntity
 
 
-@dataclass(frozen=True)
-class Dremel3DPrinterButtonEntityMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class Dremel3DPrinterButtonEntityDescription(ButtonEntityDescription):
+    """Describes a Dremel 3D Printer button entity."""
 
     press_fn: Callable[[Dremel3DPrinter], None]
-
-
-@dataclass(frozen=True)
-class Dremel3DPrinterButtonEntityDescription(
-    ButtonEntityDescription, Dremel3DPrinterButtonEntityMixin
-):
-    """Describes a Dremel 3D Printer button entity."""
 
 
 BUTTON_TYPES: tuple[Dremel3DPrinterButtonEntityDescription, ...] = (

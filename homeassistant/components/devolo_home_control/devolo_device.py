@@ -1,4 +1,5 @@
 """Base class for a device entity integrated in devolo Home Control."""
+
 from __future__ import annotations
 
 import logging

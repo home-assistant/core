@@ -1,7 +1,8 @@
 """Support for tracking people."""
+
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 import logging
 from typing import Any, Self
 
@@ -53,8 +54,10 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType, EventType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+
+from . import group as group_pre_import  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -131,7 +134,7 @@ async def async_add_user_device_tracker(
 
         await coll.async_update_item(
             person[CONF_ID],
-            {CONF_DEVICE_TRACKERS: device_trackers + [device_tracker_entity_id]},
+            {CONF_DEVICE_TRACKERS: [*device_trackers, device_tracker_entity_id]},
         )
         break
 
@@ -241,14 +244,15 @@ class PersonStorageCollection(collection.DictStorageCollection):
             er.EVENT_ENTITY_REGISTRY_UPDATED,
             self._entity_registry_updated,
             event_filter=self._entity_registry_filter,
+            run_immediately=True,
         )
 
     @callback
-    def _entity_registry_filter(self, event: Event) -> bool:
+    def _entity_registry_filter(self, event_data: Mapping[str, Any]) -> bool:
         """Filter entity registry events."""
         return (
-            event.data["action"] == "remove"
-            and split_entity_id(event.data[ATTR_ENTITY_ID])[0] == "device_tracker"
+            event_data["action"] == "remove"
+            and split_entity_id(event_data[ATTR_ENTITY_ID])[0] == "device_tracker"
         )
 
     async def _entity_registry_updated(self, event: Event) -> None:
@@ -482,18 +486,24 @@ class Person(collection.CollectionEntity, RestoreEntity):
 
         if self.hass.is_running:
             # Update person now if hass is already running.
-            await self.async_update_config(self._config)
+            self._async_update_config(self._config)
         else:
             # Wait for hass start to not have race between person
             # and device trackers finishing setup.
-            async def person_start_hass(_: Event) -> None:
-                await self.async_update_config(self._config)
+            @callback
+            def _async_person_start_hass(_: Event) -> None:
+                self._async_update_config(self._config)
 
             self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_START, person_start_hass
+                EVENT_HOMEASSISTANT_START, _async_person_start_hass
             )
 
     async def async_update_config(self, config: ConfigType) -> None:
+        """Handle when the config is updated."""
+        self._async_update_config(config)
+
+    @callback
+    def _async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._config = config
 
@@ -511,9 +521,7 @@ class Person(collection.CollectionEntity, RestoreEntity):
         self._update_state()
 
     @callback
-    def _async_handle_tracker_update(
-        self, event: EventType[EventStateChangedData]
-    ) -> None:
+    def _async_handle_tracker_update(self, event: Event[EventStateChangedData]) -> None:
         """Handle the device tracker state changes."""
         self._update_state()
 

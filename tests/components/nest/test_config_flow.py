@@ -1,4 +1,5 @@
 """Test the Google Nest Device Access config flow."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
