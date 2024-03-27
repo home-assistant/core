@@ -2968,6 +2968,15 @@ def _is_valid_type(
     ):
         return True
 
+    # Special case for int in argument type
+    if (
+        expected_type == "int"
+        and not in_return
+        and isinstance(node, nodes.Name)
+        and node.name in ("float", "int")
+    ):
+        return True
+
     # Name occurs when a namespace is not used, eg. "HomeAssistant"
     if isinstance(node, nodes.Name) and node.name == expected_type:
         return True
