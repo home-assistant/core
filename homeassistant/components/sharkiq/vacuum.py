@@ -117,6 +117,15 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         """Clean a spot. Not yet implemented."""
         raise NotImplementedError
 
+    def send_command(
+        self,
+        command: str,
+        params: dict[str, Any] | list[Any] | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Send a command to the vacuum. Not yet implemented."""
+        raise NotImplementedError
+
     @property
     def is_online(self) -> bool:
         """Tell us if the device is online."""

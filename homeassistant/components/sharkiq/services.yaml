@@ -7,7 +7,7 @@ clean_room:
   fields:
     rooms:
       required: true
-      advanced: true
+      advanced: false
       example: "Kitchen"
       default: ""
       selector:
