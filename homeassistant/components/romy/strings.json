@@ -46,6 +46,23 @@
           }
         }
       }
+    },
+    "sensor": {
+      "dustbin_sensor": {
+        "name": "Dustbin Dirt Level"
+      },
+      "total_cleaning_time": {
+        "name": "Total cleaning time"
+      },
+      "total_number_of_cleaning_runs": {
+        "name": "Total cleaning runs"
+      },
+      "total_area_cleaned": {
+        "name": "Total cleaned area"
+      },
+      "total_distance_driven": {
+        "name": "Total distance driven"
+      }
     }
   }
 }
