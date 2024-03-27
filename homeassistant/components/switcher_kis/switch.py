@@ -35,7 +35,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 API_CONTROL_DEVICE = "control_device"
-API_SET_AUTO_SHUTDOWN ="set_auto_shutdown"
+API_SET_AUTO_SHUTDOWN = "set_auto_shutdown"
 
 SERVICE_SET_AUTO_OFF_SCHEMA = {
     vol.Required(CONF_AUTO_OFF): cv.time_period_str,
