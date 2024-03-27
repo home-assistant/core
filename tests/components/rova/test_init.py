@@ -2,11 +2,49 @@
 
 from unittest.mock import MagicMock
 
+from syrupy import SnapshotAssertion
+
+from homeassistant.components.rova import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from tests.common import MockConfigEntry
+from tests.components.rova import setup_with_selected_platforms
+
+
+async def test_reload(
+    hass: HomeAssistant,
+    mock_rova: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reloading the integration."""
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
+
+    assert mock_config_entry.state == ConfigEntryState.LOADED
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
+
+
+async def test_service(
+    hass: HomeAssistant,
+    mock_rova: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the Rova service."""
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, mock_config_entry.unique_id)}
+    )
+    assert device_entry is not None
+    assert device_entry == snapshot
 
 
 async def test_issue_if_not_rova_area(
