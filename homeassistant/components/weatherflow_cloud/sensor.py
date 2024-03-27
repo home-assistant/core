@@ -8,7 +8,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Any
 
-from weatherflow4py.models.rest.unified import WeatherFlowData
+from weatherflow4py.models.rest.unified import WeatherFlowDataREST
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -39,9 +39,11 @@ class WeatherFlowCloudSensorEntityDescription(
 ):
     """Describes a WF Sensor."""
 
-    value_fn: Callable[[WeatherFlowData], int | str | datetime | None]
-    icon_fn: Callable[[WeatherFlowData], str] | None = None
-    extra_state_attributes_fn: Callable[[WeatherFlowData], dict[str, Any]] | None = None
+    value_fn: Callable[[WeatherFlowDataREST], int | str | datetime | None]
+    icon_fn: Callable[[WeatherFlowDataREST], str] | None = None
+    extra_state_attributes_fn: (
+        Callable[[WeatherFlowDataREST], dict[str, Any]] | None
+    ) = None
 
 
 def wind_direction_icon_fn(degree: int) -> str:
