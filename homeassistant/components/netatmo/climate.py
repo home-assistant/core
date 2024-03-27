@@ -254,9 +254,9 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
                 "name",
                 None,
             )
-            self._attr_extra_state_attributes[
-                ATTR_SELECTED_SCHEDULE
-            ] = self._selected_schedule
+            self._attr_extra_state_attributes[ATTR_SELECTED_SCHEDULE] = (
+                self._selected_schedule
+            )
             self.async_write_ha_state()
             self.data_handler.async_force_update(self._signal_name)
             return
@@ -418,14 +418,14 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         self._selected_schedule = getattr(
             self.home.get_selected_schedule(), "name", None
         )
-        self._attr_extra_state_attributes[
-            ATTR_SELECTED_SCHEDULE
-        ] = self._selected_schedule
+        self._attr_extra_state_attributes[ATTR_SELECTED_SCHEDULE] = (
+            self._selected_schedule
+        )
 
         if self.device_type == NA_VALVE:
-            self._attr_extra_state_attributes[
-                ATTR_HEATING_POWER_REQUEST
-            ] = self.device.heating_power_request
+            self._attr_extra_state_attributes[ATTR_HEATING_POWER_REQUEST] = (
+                self.device.heating_power_request
+            )
         else:
             for module in self.device.modules.values():
                 if hasattr(module, "boiler_status"):

@@ -68,7 +68,7 @@ class Base(DeclarativeBase):
     """Base class for tables."""
 
 
-SCHEMA_VERSION = 42
+SCHEMA_VERSION = 43
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -428,6 +428,7 @@ class States(Base):
     event_id: Mapped[int | None] = mapped_column(UNUSED_LEGACY_INTEGER_COLUMN)
     last_changed: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
     last_changed_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE)
+    last_reported_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE)
     last_updated: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
     last_updated_ts: Mapped[float | None] = mapped_column(
         TIMESTAMP_TYPE, default=time.time, index=True
@@ -499,6 +500,7 @@ class States(Base):
             dbstate.state = ""
             dbstate.last_updated_ts = event.time_fired_timestamp
             dbstate.last_changed_ts = None
+            dbstate.last_reported_ts = None
             return dbstate
 
         dbstate.state = state.state
@@ -507,6 +509,10 @@ class States(Base):
             dbstate.last_changed_ts = None
         else:
             dbstate.last_changed_ts = state.last_changed_timestamp
+        if state.last_updated == state.last_reported:
+            dbstate.last_reported_ts = None
+        else:
+            dbstate.last_reported_ts = state.last_reported_timestamp
 
         return dbstate
 
@@ -523,13 +529,18 @@ class States(Base):
             # When json_loads fails
             _LOGGER.exception("Error converting row to state: %s", self)
             return None
+        last_updated = dt_util.utc_from_timestamp(self.last_updated_ts or 0)
         if self.last_changed_ts is None or self.last_changed_ts == self.last_updated_ts:
-            last_changed = last_updated = dt_util.utc_from_timestamp(
-                self.last_updated_ts or 0
-            )
+            last_changed = dt_util.utc_from_timestamp(self.last_updated_ts or 0)
         else:
-            last_updated = dt_util.utc_from_timestamp(self.last_updated_ts or 0)
             last_changed = dt_util.utc_from_timestamp(self.last_changed_ts or 0)
+        if (
+            self.last_reported_ts is None
+            or self.last_reported_ts == self.last_updated_ts
+        ):
+            last_reported = dt_util.utc_from_timestamp(self.last_updated_ts or 0)
+        else:
+            last_reported = dt_util.utc_from_timestamp(self.last_reported_ts or 0)
         return State(
             self.entity_id or "",
             self.state,  # type: ignore[arg-type]
@@ -537,7 +548,7 @@ class States(Base):
             # for newer states
             attrs,
             last_changed=last_changed,
-            last_reported=last_updated,  # Recorder does not yet record last_reported
+            last_reported=last_reported,
             last_updated=last_updated,
             context=context,
             validate_entity_id=validate_entity_id,

@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "select": {
+      "speed": {
+        "default": "mdi:run-fast"
+      }
+    }
+  }
+}

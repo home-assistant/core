@@ -1,0 +1,193 @@
+# serializer version: 1
+# name: test_all_entities[sensor.8381be13_gft-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.8381be13_gft',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': 'mdi:recycle',
+    'original_name': '8381BE13_gft',
+    'platform': 'rova',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '8381BE13_gft',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.8381be13_gft-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': '8381BE13_gft',
+      'icon': 'mdi:recycle',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.8381be13_gft',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-02-20T23:00:00+00:00',
+  })
+# ---
+# name: test_all_entities[sensor.8381be13_papier-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.8381be13_papier',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': 'mdi:recycle',
+    'original_name': '8381BE13_papier',
+    'platform': 'rova',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '8381BE13_papier',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.8381be13_papier-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': '8381BE13_papier',
+      'icon': 'mdi:recycle',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.8381be13_papier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-03-05T23:00:00+00:00',
+  })
+# ---
+# name: test_all_entities[sensor.8381be13_pmd-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.8381be13_pmd',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': 'mdi:recycle',
+    'original_name': '8381BE13_pmd',
+    'platform': 'rova',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '8381BE13_pmd',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.8381be13_pmd-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': '8381BE13_pmd',
+      'icon': 'mdi:recycle',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.8381be13_pmd',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-03-11T23:00:00+00:00',
+  })
+# ---
+# name: test_all_entities[sensor.8381be13_restafval-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.8381be13_restafval',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': 'mdi:recycle',
+    'original_name': '8381BE13_restafval',
+    'platform': 'rova',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '8381BE13_restafval',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.8381be13_restafval-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': '8381BE13_restafval',
+      'icon': 'mdi:recycle',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.8381be13_restafval',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-03-11T23:00:00+00:00',
+  })
+# ---
