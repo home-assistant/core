@@ -1781,7 +1781,7 @@ python-technove==1.2.2
 python-telegram-bot[socks]==21.0.1
 
 # homeassistant.components.tile
-pytile==2023.04.0
+pytile==2023.12.0
 
 # homeassistant.components.tomorrowio
 pytomorrowio==0.3.6

@@ -498,8 +498,6 @@ filterwarnings = [
     # https://github.com/eclipse/paho.mqtt.python/issues/653 - >=2.0.0
     # https://github.com/eclipse/paho.mqtt.python/pull/665
     "ignore:ssl.PROTOCOL_TLS is deprecated:DeprecationWarning:paho.mqtt.client",
-    # https://github.com/bachya/pytile/pull/280 - >=2023.10.0
-    "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:pytile.tile",
     # https://github.com/rytilahti/python-miio/pull/1809 - >=0.6.0.dev0
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:miio.protocol",
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:miio.miioprotocol",
