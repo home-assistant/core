@@ -112,6 +112,7 @@ SENSOR_TYPES: tuple[AirGradientSensorEntityDescription, ...] = (
         translation_key="raw_nitrogen",
         native_unit_of_measurement="ticks",
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
         value_fn=lambda status: status.raw_nitrogen,
     ),
     AirGradientSensorEntityDescription(
@@ -119,6 +120,7 @@ SENSOR_TYPES: tuple[AirGradientSensorEntityDescription, ...] = (
         translation_key="raw_total_volatile_organic_component",
         native_unit_of_measurement="ticks",
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
         value_fn=lambda status: status.raw_total_volatile_organic_component,
     ),
 )
