@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 import dataclasses
 from itertools import chain
 from typing import Any, TypedDict
@@ -118,6 +118,7 @@ class ExposedEntities:
         self._store: Store[SerializedExposedEntities] = Store(
             hass, STORAGE_VERSION, STORAGE_KEY
         )
+        self._entity_registry = er.async_get(hass)
 
     async def async_initialize(self) -> None:
         """Finish initializing."""
@@ -149,8 +150,7 @@ class ExposedEntities:
 
         Notify listeners if expose flag was changed.
         """
-        entity_registry = er.async_get(self._hass)
-        if not (registry_entry := entity_registry.async_get(entity_id)):
+        if not (registry_entry := self._entity_registry.async_get(entity_id)):
             return self._async_set_legacy_assistant_option(
                 assistant, entity_id, key, value
             )
@@ -162,7 +162,7 @@ class ExposedEntities:
             return
 
         assistant_options = assistant_options | {key: value}
-        entity_registry.async_update_entity_options(
+        self._entity_registry.async_update_entity_options(
             entity_id, assistant, assistant_options
         )
         for listener in self._listeners.get(assistant, []):
@@ -211,7 +211,6 @@ class ExposedEntities:
         self, assistant: str
     ) -> dict[str, Mapping[str, Any]]:
         """Get all entity expose settings for an assistant."""
-        entity_registry = er.async_get(self._hass)
         result: dict[str, Mapping[str, Any]] = {}
 
         options: Mapping | None
@@ -219,7 +218,7 @@ class ExposedEntities:
             if options := exposed_entity.assistants.get(assistant):
                 result[entity_id] = options
 
-        for entity_id, entry in entity_registry.entities.items():
+        for entity_id, entry in self._entity_registry.entities.items():
             if options := entry.options.get(assistant):
                 result[entity_id] = options
 
@@ -228,11 +227,10 @@ class ExposedEntities:
     @callback
     def async_get_entity_settings(self, entity_id: str) -> dict[str, Mapping[str, Any]]:
         """Get assistant expose settings for an entity."""
-        entity_registry = er.async_get(self._hass)
         result: dict[str, Mapping[str, Any]] = {}
 
         assistant_settings: Mapping
-        if registry_entry := entity_registry.async_get(entity_id):
+        if registry_entry := self._entity_registry.async_get(entity_id):
             assistant_settings = registry_entry.options
         elif exposed_entity := self.entities.get(entity_id):
             assistant_settings = exposed_entity.assistants
@@ -248,32 +246,52 @@ class ExposedEntities:
     @callback
     def async_should_expose(self, assistant: str, entity_id: str) -> bool:
         """Return True if an entity should be exposed to an assistant."""
-        should_expose: bool
+        return bool(self.async_should_expose_entities(assistant, (entity_id,)))
 
-        if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
-            return False
+    @callback
+    def async_should_expose_entities(
+        self, assistant: str, entity_ids: Iterable[str]
+    ) -> set[str]:
+        """Return a dictionary of entity IDs and if they should be exposed."""
+        result: set[str] = set()
+        for entity_id in entity_ids:
+            if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
+                continue
 
-        entity_registry = er.async_get(self._hass)
-        if not (registry_entry := entity_registry.async_get(entity_id)):
-            return self._async_should_expose_legacy_entity(assistant, entity_id)
-        if assistant in registry_entry.options:
-            if "should_expose" in registry_entry.options[assistant]:
-                should_expose = registry_entry.options[assistant]["should_expose"]
-                return should_expose
+            # Legacy fallback
+            if not (registry_entry := self._entity_registry.async_get(entity_id)):
+                if self._async_should_expose_legacy_entity(assistant, entity_id):
+                    result.add(entity_id)
+                continue
 
-        if self.async_get_expose_new_entities(assistant):
-            should_expose = self._is_default_exposed(entity_id, registry_entry)
-        else:
-            should_expose = False
+            # Already in the registry
+            if (
+                assistant in registry_entry.options
+                and "should_expose" in registry_entry.options[assistant]
+            ):
+                if registry_entry.options[assistant]["should_expose"]:
+                    result.add(entity_id)
+                continue
 
-        assistant_options: ReadOnlyDict[str, Any] | dict[str, Any]
-        assistant_options = registry_entry.options.get(assistant, {})
-        assistant_options = assistant_options | {"should_expose": should_expose}
-        entity_registry.async_update_entity_options(
-            entity_id, assistant, assistant_options
-        )
+            # Not in the registry, calculate it and store it
+            if self.async_get_expose_new_entities(assistant):
+                should_expose: bool = self._is_default_exposed(
+                    entity_id, registry_entry
+                )
+            else:
+                should_expose = False
 
-        return should_expose
+            assistant_options: ReadOnlyDict[str, Any] | dict[str, Any]
+            assistant_options = registry_entry.options.get(assistant, {})
+            assistant_options = assistant_options | {"should_expose": should_expose}
+            self._entity_registry.async_update_entity_options(
+                entity_id, assistant, assistant_options
+            )
+
+            if should_expose:
+                result.add(entity_id)
+
+        return result
 
     def _async_should_expose_legacy_entity(
         self, assistant: str, entity_id: str
@@ -534,6 +552,15 @@ def async_should_expose(hass: HomeAssistant, assistant: str, entity_id: str) -> 
     """Return True if an entity should be exposed to an assistant."""
     exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
     return exposed_entities.async_should_expose(assistant, entity_id)
+
+
+@callback
+def async_should_expose_entities(
+    hass: HomeAssistant, assistant: str, entity_ids: Iterable[str]
+) -> set[str]:
+    """Return a set of entities that should be exposed to an assistant."""
+    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
+    return exposed_entities.async_should_expose_entities(assistant, entity_ids)
 
 
 @callback
