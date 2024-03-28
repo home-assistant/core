@@ -30,7 +30,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -278,8 +278,8 @@ def async_handle_schema_error(
 async def _async_discover(
     hass: HomeAssistant,
     domain: str,
-    setup: partial[CALLBACK_TYPE] | None,
-    async_setup: partial[Coroutine[Any, Any, None]] | None,
+    setup: Callable[[MQTTDiscoveryPayload], None] | None,
+    async_setup: Callable[[MQTTDiscoveryPayload], Coroutine[Any, Any, None]] | None,
     discovery_payload: MQTTDiscoveryPayload,
 ) -> None:
     """Discover and add an MQTT entity, automation or tag.
@@ -314,10 +314,18 @@ async def _async_discover(
         raise
 
 
+class _SetupNonEntityHelperCallbackProtocol(Protocol):  # pragma: no cover
+    """Callback protocol for async_setup in async_setup_non_entity_entry_helper."""
+
+    async def __call__(
+        self, config: ConfigType, discovery_data: DiscoveryInfoType
+    ) -> None: ...
+
+
 async def async_setup_non_entity_entry_helper(
     hass: HomeAssistant,
     domain: str,
-    async_setup: partial[Coroutine[Any, Any, None]],
+    async_setup: _SetupNonEntityHelperCallbackProtocol,
     discovery_schema: vol.Schema,
 ) -> None:
     """Set up automation or tag creation dynamically through MQTT discovery."""
@@ -327,7 +335,7 @@ async def async_setup_non_entity_entry_helper(
         discovery_payload: MQTTDiscoveryPayload,
     ) -> None:
         """Set up an MQTT entity, automation or tag from discovery."""
-        config: DiscoveryInfoType = discovery_schema(discovery_payload)
+        config: ConfigType = discovery_schema(discovery_payload)
         await async_setup(config, discovery_data=discovery_payload.discovery_data)
 
     mqtt_data.reload_dispatchers.append(
