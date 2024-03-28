@@ -13,6 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
+    DEVICE_CLASS_STATE_CLASSES,
     RestoreSensor,
     SensorDeviceClass,
     SensorExtraStoredData,
@@ -29,6 +30,7 @@ from homeassistant.const import (
     UnitOfEnergy,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     device_registry as dr,
     entity_platform,
@@ -36,6 +38,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import get_device_class
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     EventStateChangedData,
@@ -47,6 +50,7 @@ from homeassistant.helpers.template import is_number
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
+from homeassistant.util.enum import try_parse_enum
 
 from .const import (
     ATTR_CRON_PATTERN,
@@ -693,7 +697,25 @@ class UtilityMeterSensor(RestoreSensor):
     @property
     def device_class(self):
         """Return the device class of the sensor."""
-        return DEVICE_CLASS_MAP.get(self._unit_of_measurement)
+        try:
+            device_class_source = get_device_class(self.hass, self._sensor_source_id)
+        except HomeAssistantError:
+            # The entity no longer exists
+            device_class_source = None
+
+        if device_class_source is None:
+            return DEVICE_CLASS_MAP.get(self._unit_of_measurement)
+
+        # Inherits the source entity's class if it is compatible with the utility
+        # meter entity's state class
+        device_class = try_parse_enum(SensorDeviceClass, device_class_source)
+        if (
+            device_class is not None
+            and (classes := DEVICE_CLASS_STATE_CLASSES.get(device_class)) is not None
+            and self.state_class in classes
+        ):
+            return device_class_source
+        return None
 
     @property
     def state_class(self):
