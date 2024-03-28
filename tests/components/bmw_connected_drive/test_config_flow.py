@@ -101,14 +101,17 @@ async def test_api_error(hass: HomeAssistant) -> None:
 
 async def test_full_user_flow_implementation(hass: HomeAssistant) -> None:
     """Test registering an integration and finishing flow works."""
-    with patch(
-        "bimmer_connected.api.authentication.MyBMWAuthentication.login",
-        side_effect=login_sideeffect,
-        autospec=True,
-    ), patch(
-        "homeassistant.components.bmw_connected_drive.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "bimmer_connected.api.authentication.MyBMWAuthentication.login",
+            side_effect=login_sideeffect,
+            autospec=True,
+        ),
+        patch(
+            "homeassistant.components.bmw_connected_drive.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
@@ -123,13 +126,16 @@ async def test_full_user_flow_implementation(hass: HomeAssistant) -> None:
 
 async def test_options_flow_implementation(hass: HomeAssistant) -> None:
     """Test config flow options."""
-    with patch(
-        "bimmer_connected.account.MyBMWAccount.get_vehicles",
-        return_value=[],
-    ), patch(
-        "homeassistant.components.bmw_connected_drive.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "bimmer_connected.account.MyBMWAccount.get_vehicles",
+            return_value=[],
+        ),
+        patch(
+            "homeassistant.components.bmw_connected_drive.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
         config_entry.add_to_hass(hass)
 
@@ -156,14 +162,17 @@ async def test_options_flow_implementation(hass: HomeAssistant) -> None:
 
 async def test_reauth(hass: HomeAssistant) -> None:
     """Test the reauth form."""
-    with patch(
-        "bimmer_connected.api.authentication.MyBMWAuthentication.login",
-        side_effect=login_sideeffect,
-        autospec=True,
-    ), patch(
-        "homeassistant.components.bmw_connected_drive.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "bimmer_connected.api.authentication.MyBMWAuthentication.login",
+            side_effect=login_sideeffect,
+            autospec=True,
+        ),
+        patch(
+            "homeassistant.components.bmw_connected_drive.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         wrong_password = "wrong"
 
         config_entry_with_wrong_password = deepcopy(FIXTURE_CONFIG_ENTRY)
