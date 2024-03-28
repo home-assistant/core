@@ -156,7 +156,6 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             if TYPE_CHECKING:
                 assert self.code_format
             raise ServiceValidationError(
-                f"The code for {self.entity_id} doesn't match pattern {self.code_format}",
                 translation_domain=DOMAIN,
                 translation_key="add_default_code",
                 translation_placeholders={

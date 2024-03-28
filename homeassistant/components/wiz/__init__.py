@@ -113,9 +113,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await coordinator.async_config_entry_first_refresh()
-    except ConfigEntryNotReady as err:
+    except ConfigEntryNotReady:
         await bulb.async_close()
-        raise err
+        raise
 
     async def _async_shutdown_on_stop(event: Event) -> None:
         await bulb.async_close()

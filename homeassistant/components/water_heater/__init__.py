@@ -368,8 +368,6 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Handle a set target operation mode service call."""
         if self.operation_list is None:
             raise ServiceValidationError(
-                f"Operation mode {operation_mode} not valid for "
-                f"entity {self.entity_id}. The operation list is not defined",
                 translation_domain=DOMAIN,
                 translation_key="operation_list_not_defined",
                 translation_placeholders={
@@ -380,9 +378,6 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if operation_mode not in self.operation_list:
             operation_list = ", ".join(self.operation_list)
             raise ServiceValidationError(
-                f"Operation mode {operation_mode} not valid for "
-                f"entity {self.entity_id}. Valid "
-                f"operation modes are: {operation_list}",
                 translation_domain=DOMAIN,
                 translation_key="not_valid_operation_mode",
                 translation_placeholders={

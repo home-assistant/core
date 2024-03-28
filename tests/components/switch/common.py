@@ -10,8 +10,12 @@ from homeassistant.const import (
     ENTITY_MATCH_ALL,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
 )
 from homeassistant.loader import bind_hass
+
+from tests.common import MockToggleEntity
 
 
 @bind_hass
@@ -36,3 +40,12 @@ async def async_turn_off(hass, entity_id=ENTITY_MATCH_ALL):
     """Turn all or specified switch off."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     await hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data, blocking=True)
+
+
+def get_mock_toggle_entities() -> list[MockToggleEntity]:
+    """Return a list of mock toggle entities."""
+    return [
+        MockToggleEntity("AC", STATE_ON),
+        MockToggleEntity("AC", STATE_OFF),
+        MockToggleEntity(None, STATE_OFF),
+    ]
