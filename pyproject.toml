@@ -479,8 +479,6 @@ filterwarnings = [
     # -- fixed, waiting for release / update
     # https://github.com/mkmer/AIOAladdinConnect/commit/8851fff4473d80d70ac518db2533f0fbef63b69c - >=0.2.0
     "ignore:module 'sre_constants' is deprecated:DeprecationWarning:AIOAladdinConnect",
-    # https://github.com/timmo001/aioazuredevops/commit/7c6a41bed45805396cd96e0696372c79b5416612 - >=1.4.0
-    "ignore:\"(is|is not)\" with 'int' literal. Did you mean \"(==|!=)\"?:SyntaxWarning:.*aioazuredevops.client",
     # https://github.com/ludeeus/aiogithubapi/pull/208 - >=23.9.0
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:aiogithubapi.namespaces.events",
     # https://github.com/bachya/aiopurpleair/pull/200 - >=2023.10.0
