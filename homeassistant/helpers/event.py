@@ -16,6 +16,7 @@ from typing import (
     Any,
     Concatenate,
     Generic,
+    NotRequired,
     ParamSpec,
     TypedDict,
     TypeVar,
@@ -168,6 +169,15 @@ class EventStateChangedData(TypedDict):
 
     entity_id: str
     old_state: State | None
+    new_state: State | None
+
+
+class EventStateReportedData(TypedDict):
+    """EventStateChanged data."""
+
+    entity_id: str
+    old_last_reported: NotRequired[datetime]
+    old_state: NotRequired[State | None]
     new_state: State | None
 
 

@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from decimal import Decimal, DecimalException, InvalidOperation
 import logging
-from typing import Any, Final, Self
+from typing import TYPE_CHECKING, Any, Final, Self
 
 import voluptuous as vol
 
@@ -24,6 +24,7 @@ from homeassistant.const import (
     CONF_METHOD,
     CONF_NAME,
     CONF_UNIQUE_ID,
+    EVENT_STATE_REPORTED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfTime,
@@ -37,10 +38,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
+from homeassistant.helpers.event import EventStateReportedData
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -97,54 +95,54 @@ class _IntegrationMethod(ABC):
         return _NAME_TO_INTEGRATION_METHOD[method_name]()
 
     @abstractmethod
-    def validate_states(self, left: State, right: State) -> bool:
+    def validate_states(self, left: str, right: str) -> bool:
         """Check state requirements for integration."""
 
     @abstractmethod
     def calculate_area_with_two_states(
-        self, elapsed_time: float, left: State, right: State
+        self, elapsed_time: float, left: str, right: str
     ) -> Decimal:
         """Calculate area given two states."""
 
     def calculate_area_with_one_state(
-        self, elapsed_time: float, constant_state: State
+        self, elapsed_time: float, constant_state: str
     ) -> Decimal:
-        return Decimal(constant_state.state) * Decimal(elapsed_time)
+        return Decimal(constant_state) * Decimal(elapsed_time)
 
 
 class _Trapezoidal(_IntegrationMethod):
     def calculate_area_with_two_states(
-        self, elapsed_time: float, left: State, right: State
+        self, elapsed_time: float, left: str, right: str
     ) -> Decimal:
-        return Decimal(elapsed_time) * (Decimal(left.state) + Decimal(right.state)) / 2
+        return Decimal(elapsed_time) * (Decimal(left) + Decimal(right)) / 2
 
-    def validate_states(self, left: State, right: State) -> bool:
+    def validate_states(self, left: str, right: str) -> bool:
         return _is_numeric_state(left) and _is_numeric_state(right)
 
 
 class _Left(_IntegrationMethod):
     def calculate_area_with_two_states(
-        self, elapsed_time: float, left: State, right: State
+        self, elapsed_time: float, left: str, right: str
     ) -> Decimal:
         return self.calculate_area_with_one_state(elapsed_time, left)
 
-    def validate_states(self, left: State, right: State) -> bool:
+    def validate_states(self, left: str, right: str) -> bool:
         return _is_numeric_state(left)
 
 
 class _Right(_IntegrationMethod):
     def calculate_area_with_two_states(
-        self, elapsed_time: float, left: State, right: State
+        self, elapsed_time: float, left: str, right: str
     ) -> Decimal:
         return self.calculate_area_with_one_state(elapsed_time, right)
 
-    def validate_states(self, left: State, right: State) -> bool:
+    def validate_states(self, left: str, right: str) -> bool:
         return _is_numeric_state(right)
 
 
-def _is_numeric_state(state: State) -> bool:
+def _is_numeric_state(state: str) -> bool:
     try:
-        float(state.state)
+        float(state)
         return True
     except (ValueError, TypeError):
         return False
@@ -398,19 +396,23 @@ class IntegrationSensor(RestoreSensor):
             self._unit_of_measurement = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         self.async_on_remove(
-            async_track_state_change_event(
-                self.hass,
-                [self._sensor_source_id],
+            self.hass.bus.async_listen(
+                EVENT_STATE_REPORTED,
                 self._handle_state_change,
+                event_filter=callback(
+                    lambda event_data: event_data["entity_id"] == self._sensor_source_id
+                ),
+                run_immediately=True,
             )
         )
 
     @callback
-    def _handle_state_change(self, event: Event[EventStateChangedData]) -> None:
-        old_state = event.data["old_state"]
+    def _handle_state_change(self, event: Event[EventStateReportedData]) -> None:
+        old_last_reported = event.data.get("old_last_reported")
+        old_state = event.data.get("old_state")
         new_state = event.data["new_state"]
 
-        if old_state is None or new_state is None:
+        if (old_last_reported is None and old_state is None) or new_state is None:
             return
 
         if condition.state(self.hass, new_state, [STATE_UNAVAILABLE]):
@@ -418,19 +420,27 @@ class IntegrationSensor(RestoreSensor):
             self.async_write_ha_state()
             return
 
+        if old_state:
+            # state has changed, we recover old_state from the event
+            old_state_state = old_state.state
+            old_last_reported = old_state.last_reported
+        else:
+            # event state reported without any state change
+            old_state_state = new_state.state
+
         self._attr_available = True
         self._derive_and_set_attributes_from_state(new_state)
 
-        if not self._method.validate_states(old_state, new_state):
+        if not self._method.validate_states(old_state_state, new_state.state):
             self.async_write_ha_state()
             return
 
-        elapsed_seconds = (
-            new_state.last_updated - old_state.last_updated
-        ).total_seconds()
+        if TYPE_CHECKING:
+            assert old_last_reported is not None
+        elapsed_seconds = (new_state.last_reported - old_last_reported).total_seconds()
 
         area = self._method.calculate_area_with_two_states(
-            elapsed_seconds, old_state, new_state
+            elapsed_seconds, old_state_state, new_state.state
         )
 
         self._update_integral(area)
