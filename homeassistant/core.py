@@ -102,6 +102,7 @@ from .util.async_ import (
     shutdown_run_callback_threadsafe,
 )
 from .util.executor import InterruptibleThreadPoolExecutor
+from .util.hass_dict import HassDict
 from .util.json import JsonObjectType
 from .util.read_only_dict import ReadOnlyDict
 from .util.timeout import TimeoutManager
@@ -393,7 +394,7 @@ class HomeAssistant:
         from . import loader
 
         # This is a dictionary that any component can store any data on.
-        self.data: dict[str, Any] = {}
+        self.data = HassDict()
         self.loop = asyncio.get_running_loop()
         self._tasks: set[asyncio.Future[Any]] = set()
         self._background_tasks: set[asyncio.Future[Any]] = set()

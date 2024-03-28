@@ -881,8 +881,7 @@ async def _async_set_up_integrations(
     hass: core.HomeAssistant, config: dict[str, Any]
 ) -> None:
     """Set up all the integrations."""
-    setup_started: dict[tuple[str, str | None], float] = {}
-    hass.data[DATA_SETUP_STARTED] = setup_started
+    setup_started = hass.data.setdefault(DATA_SETUP_STARTED, {})
     watcher = _WatchPendingSetups(hass, setup_started)
     watcher.async_start()
 

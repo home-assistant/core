@@ -1,0 +1,231 @@
+"""Implementation for HassDict and custom HassKey types."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any, Generic, TypeVar, assert_type, overload
+
+_T = TypeVar("_T")
+_U = TypeVar("_U")
+
+
+@dataclass(frozen=True)
+class _Key(Generic[_T]):
+    """Base class for Hass key types."""
+
+    name: str
+
+    def __hash__(self) -> int:
+        """Return hash of name."""
+
+        return hash(self.name)
+
+    def __eq__(self, other: Any) -> bool:
+        """Check equality for dict keys to be compatible with str."""
+
+        if isinstance(other, str):
+            return self.name == other
+        if isinstance(other, _Key):
+            return self.name == other.name
+        return False
+
+
+@dataclass(frozen=True, eq=False)
+class HassEntryKey(_Key[_T]):
+    """Key type for integrations with config entries."""
+
+
+@dataclass(frozen=True, eq=False)
+class HassKey(_Key[_T]):
+    """Generic Hass key type."""
+
+
+class HassDict(dict[_Key[Any] | str, Any]):
+    """Custom dict type to provide better value type hints for Hass key types."""
+
+    @overload  # type: ignore[override]
+    def __getitem__(self, key: HassEntryKey[_T], /) -> dict[str, _T]: ...
+
+    @overload
+    def __getitem__(self, key: HassKey[_T], /) -> _T: ...
+
+    @overload
+    def __getitem__(self, key: str, /) -> Any: ...
+
+    def __getitem__(self, key: _Key[Any] | str, /) -> Any:
+        """Forward to super implementation."""
+        return super().__getitem__(key)
+
+    # ------
+    @overload  # type: ignore[override]
+    def __setitem__(self, key: HassEntryKey[_T], value: dict[str, _T], /) -> None: ...
+
+    @overload
+    def __setitem__(self, key: HassKey[_T], value: _T, /) -> None: ...
+
+    @overload
+    def __setitem__(self, key: str, value: Any, /) -> None: ...
+
+    def __setitem__(self, key: _Key[Any] | str, value: Any, /) -> None:
+        """Forward to super implementation."""
+        return super().__setitem__(key, value)
+
+    # ------
+    @overload  # type: ignore[override]
+    def setdefault(
+        self, key: HassEntryKey[_T], default: dict[str, _T], /
+    ) -> dict[str, _T]: ...
+
+    @overload
+    def setdefault(self, key: HassKey[_T], default: _T, /) -> _T: ...
+
+    @overload
+    def setdefault(self, key: str, default: None = None, /) -> Any | None: ...
+
+    @overload
+    def setdefault(self, key: str, default: Any, /) -> Any: ...
+
+    def setdefault(self, key: _Key[Any] | str, default: Any = None, /) -> Any:
+        """Forward to super implementation."""
+        return super().setdefault(key, default)
+
+    # ------
+    @overload  # type: ignore[override]
+    def get(self, key: HassEntryKey[_T], /) -> dict[str, _T] | None: ...
+
+    @overload
+    def get(self, key: HassEntryKey[_T], default: _U, /) -> dict[str, _T] | _U: ...
+
+    @overload
+    def get(self, key: HassKey[_T], /) -> _T | None: ...
+
+    @overload
+    def get(self, key: HassKey[_T], default: _U, /) -> _T | _U: ...
+
+    @overload
+    def get(self, key: str, /) -> Any | None: ...
+
+    @overload
+    def get(self, key: str, default: Any, /) -> Any: ...
+
+    def get(self, key: _Key[Any] | str, default: Any = None, /) -> Any:
+        """Forward to super implementation."""
+        return super().get(key, default)
+
+    # ------
+    @overload  # type: ignore[override]
+    def pop(self, key: HassEntryKey[_T], /) -> dict[str, _T]: ...
+
+    @overload
+    def pop(
+        self, key: HassEntryKey[_T], default: dict[str, _T], /
+    ) -> dict[str, _T]: ...
+
+    @overload
+    def pop(self, key: HassEntryKey[_T], default: _U, /) -> dict[str, _T] | _U: ...
+
+    @overload
+    def pop(self, key: HassKey[_T], /) -> _T: ...
+
+    @overload
+    def pop(self, key: HassKey[_T], default: _T, /) -> _T: ...
+
+    @overload
+    def pop(self, key: HassKey[_T], default: _U, /) -> _T | _U: ...
+
+    @overload
+    def pop(self, key: str, /) -> Any: ...
+
+    @overload
+    def pop(self, key: str, default: _U, /) -> Any | _U: ...
+
+    def pop(self, key: _Key[Any] | str, default: Any = None, /) -> Any:
+        """Forward to super implementation."""
+        return super().pop(key, default)
+
+
+if TYPE_CHECKING:
+
+    def test_hass_dict_typing() -> None:
+        """Test HassDict overloads work as intended.
+
+        This is tested during the mypy run. Do not move it to 'tests'!
+        """
+        d = HassDict()
+        entry_key = HassEntryKey[int]("entry_key")
+        key = HassKey[int]("key")
+        key2 = HassKey[dict[int, bool]]("key2")
+        key3 = HassKey[set[str]]("key3")
+        other_key = "domain"
+
+        # __getitem__
+        assert_type(d[entry_key], dict[str, int])
+        assert_type(d[entry_key]["entry_id"], int)
+        assert_type(d[key], int)
+        assert_type(d[key2], dict[int, bool])
+
+        # __setitem__
+        d[entry_key] = {}
+        d[entry_key] = 2  # type: ignore[call-overload]
+        d[entry_key]["entry_id"] = 2
+        d[entry_key]["entry_id"] = "Hello World"  # type: ignore[assignment]
+        d[key] = 2
+        d[key] = "Hello World"  # type: ignore[misc]
+        d[key] = {}  # type: ignore[misc]
+        d[key2] = {}
+        d[key2] = 2  # type: ignore[misc]
+        d[key3] = set()
+        d[key3] = 2  # type: ignore[misc]
+        d[other_key] = 2
+        d[other_key] = "Hello World"
+
+        # get
+        assert_type(d.get(entry_key), dict[str, int] | None)
+        assert_type(d.get(entry_key, True), dict[str, int] | bool)
+        assert_type(d.get(key), int | None)
+        assert_type(d.get(key, True), int | bool)
+        assert_type(d.get(key2), dict[int, bool] | None)
+        assert_type(d.get(key2, {}), dict[int, bool])
+        assert_type(d.get(key3), set[str] | None)
+        assert_type(d.get(key3, set()), set[str])
+        assert_type(d.get(other_key), Any | None)
+        assert_type(d.get(other_key, True), Any)
+        assert_type(d.get(other_key, {})["id"], Any)
+
+        # setdefault
+        assert_type(d.setdefault(entry_key, {}), dict[str, int])
+        assert_type(d.setdefault(entry_key, {})["entry_id"], int)
+        assert_type(d.setdefault(key, 2), int)
+        assert_type(d.setdefault(key2, {}), dict[int, bool])
+        assert_type(d.setdefault(key2, {})[2], bool)
+        assert_type(d.setdefault(key3, set()), set[str])
+        assert_type(d.setdefault(other_key, 2), Any)
+        assert_type(d.setdefault(other_key), Any | None)
+        d.setdefault(entry_key, {})["entry_id"] = 2
+        d.setdefault(entry_key, {})["entry_id"] = "Hello World"  # type: ignore[assignment]
+        d.setdefault(key, 2)
+        d.setdefault(key, "Error")  # type: ignore[misc]
+        d.setdefault(key2, {})[2] = True
+        d.setdefault(key2, {})[2] = "Error"  # type: ignore[assignment]
+        d.setdefault(key3, set()).add("Hello World")
+        d.setdefault(key3, set()).add(2)  # type: ignore[arg-type]
+        d.setdefault(other_key, {})["id"] = 2
+        d.setdefault(other_key, {})["id"] = "Hello World"
+        d.setdefault(entry_key)  # type: ignore[call-overload]
+        d.setdefault(key)  # type: ignore[call-overload]
+        d.setdefault(key2)  # type: ignore[call-overload]
+
+        # pop
+        assert_type(d.pop(entry_key), dict[str, int])
+        assert_type(d.pop(entry_key, {}), dict[str, int])
+        assert_type(d.pop(entry_key, 2), dict[str, int] | int)
+        assert_type(d.pop(key), int)
+        assert_type(d.pop(key, 2), int)
+        assert_type(d.pop(key, "Hello World"), int | str)
+        assert_type(d.pop(key2), dict[int, bool])
+        assert_type(d.pop(key2, {}), dict[int, bool])
+        assert_type(d.pop(key2, 2), dict[int, bool] | int)
+        assert_type(d.pop(key3), set[str])
+        assert_type(d.pop(key3, set()), set[str])
+        assert_type(d.pop(other_key), Any)
+        assert_type(d.pop(other_key, True), Any | bool)
