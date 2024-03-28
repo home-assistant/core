@@ -547,9 +547,9 @@ class ReolinkHost:
                 self._long_poll_error = True
                 await asyncio.sleep(LONG_POLL_ERROR_COOLDOWN)
                 continue
-            except Exception as ex:
+            except Exception:
                 _LOGGER.exception(
-                    "Unexpected exception while requesting ONVIF pull point: %s", ex
+                    "Unexpected exception while requesting ONVIF pull point"
                 )
                 await self._api.unsubscribe(sub_type=SubType.long_poll)
                 raise
@@ -652,11 +652,9 @@ class ReolinkHost:
 
             message = data.decode("utf-8")
             channels = await self._api.ONVIF_event_callback(message)
-        except Exception as ex:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
-                "Error processing ONVIF event for Reolink %s: %s",
-                self._api.nvr_name,
-                ex,
+                "Error processing ONVIF event for Reolink %s", self._api.nvr_name
             )
             return
 

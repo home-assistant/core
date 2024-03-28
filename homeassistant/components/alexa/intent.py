@@ -94,8 +94,8 @@ class AlexaIntentsView(http.HomeAssistantView):
                 )
             )
 
-        except intent.IntentError as err:
-            _LOGGER.exception(str(err))
+        except intent.IntentError:
+            _LOGGER.exception("Error handling intent")
             return self.json(
                 intent_error_response(hass, message, "Error handling intent.")
             )

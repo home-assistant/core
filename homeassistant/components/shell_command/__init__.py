@@ -58,8 +58,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 rendered_args = args_compiled.async_render(
                     variables=service.data, parse_result=False
                 )
-            except TemplateError as ex:
-                _LOGGER.exception("Error rendering command template: %s", ex)
+            except TemplateError:
+                _LOGGER.exception("Error rendering command template")
                 raise
         else:
             rendered_args = None

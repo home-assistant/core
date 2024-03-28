@@ -115,11 +115,11 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await self.api_key_task
-        except OctoprintException as err:
-            _LOGGER.exception("Failed to get an application key: %s", err)
+        except OctoprintException:
+            _LOGGER.exception("Failed to get an application key")
             return self.async_show_progress_done(next_step_id="auth_failed")
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.exception("Failed to get an application key : %s", err)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Failed to get an application key")
             return self.async_show_progress_done(next_step_id="auth_failed")
         finally:
             self.api_key_task = None
