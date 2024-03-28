@@ -215,7 +215,7 @@ def get_suggested(schema, key):
         ("cover", "open", {}, {}),
         ("event", "2021-01-01T23:59:59.123+00:00", {}, {}),
         ("fan", "on", {}, {}),
-        ("light", "on", {"all": False}, {}),
+        ("light", "on", {"all": False, "sync": False}, {}),
         ("lock", "locked", {}, {}),
         ("media_player", "on", {}, {}),
         (

@@ -42,6 +42,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -49,13 +50,18 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 
 from .entity import GroupEntity
 from .util import find_state_attributes, mean_tuple, reduce_attribute
 
 DEFAULT_NAME = "Light Group"
 CONF_ALL = "all"
+CONF_SYNC = "sync"
 
 # No limit on parallel updates to enable a group calling another group
 PARALLEL_UPDATES = 0
@@ -66,6 +72,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Required(CONF_ENTITIES): cv.entities_domain(light.DOMAIN),
         vol.Optional(CONF_ALL): cv.boolean,
+        vol.Optional(CONF_SYNC): cv.boolean,
     }
 )
 
@@ -86,10 +93,12 @@ async def async_setup_platform(
     async_add_entities(
         [
             LightGroup(
+                hass,
                 config.get(CONF_UNIQUE_ID),
                 config[CONF_NAME],
                 config[CONF_ENTITIES],
                 config.get(CONF_ALL),
+                config.get(CONF_SYNC),
             )
         ]
     )
@@ -106,9 +115,14 @@ async def async_setup_entry(
         registry, config_entry.options[CONF_ENTITIES]
     )
     mode = config_entry.options.get(CONF_ALL, False)
+    sync = config_entry.options.get(CONF_SYNC, False)
 
     async_add_entities(
-        [LightGroup(config_entry.entry_id, config_entry.title, entities, mode)]
+        [
+            LightGroup(
+                hass, config_entry.entry_id, config_entry.title, entities, mode, sync
+            )
+        ]
     )
 
 
@@ -118,10 +132,12 @@ def async_create_preview_light(
 ) -> LightGroup:
     """Create a preview sensor."""
     return LightGroup(
+        hass,
         None,
         name,
         validated_config[CONF_ENTITIES],
         validated_config.get(CONF_ALL, False),
+        False,
     )
 
 
@@ -152,7 +168,13 @@ class LightGroup(GroupEntity, LightEntity):
     _attr_should_poll = False
 
     def __init__(
-        self, unique_id: str | None, name: str, entity_ids: list[str], mode: bool | None
+        self,
+        hass: HomeAssistant,
+        unique_id: str | None,
+        name: str,
+        entity_ids: list[str],
+        mode: bool | None,
+        sync: bool | None,
     ) -> None:
         """Initialize a light group."""
         self._entity_ids = entity_ids
@@ -163,9 +185,19 @@ class LightGroup(GroupEntity, LightEntity):
         self.mode = any
         if mode:
             self.mode = all
+        self.sync = sync or False
 
         self._attr_color_mode = ColorMode.UNKNOWN
         self._attr_supported_color_modes = {ColorMode.ONOFF}
+
+        # Only install the state listener if synchronization is enabled
+        if self.sync:
+            unsub = async_track_state_change_event(
+                hass, entity_ids, self._watched_entity_change
+            )
+            self.async_on_remove(unsub)
+
+        self._target_sync_state: str | None = None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Forward the turn_on command to all lights in the light group."""
@@ -173,6 +205,7 @@ class LightGroup(GroupEntity, LightEntity):
             key: value for key, value in kwargs.items() if key in FORWARDED_ATTRIBUTES
         }
         data[ATTR_ENTITY_ID] = self._entity_ids
+        self._target_sync_state = STATE_ON
 
         _LOGGER.debug("Forwarded turn_on command: %s", data)
 
@@ -187,6 +220,7 @@ class LightGroup(GroupEntity, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Forward the turn_off command to all lights in the light group."""
         data = {ATTR_ENTITY_ID: self._entity_ids}
+        self._target_sync_state = STATE_OFF
 
         if ATTR_TRANSITION in kwargs:
             data[ATTR_TRANSITION] = kwargs[ATTR_TRANSITION]
@@ -305,3 +339,28 @@ class LightGroup(GroupEntity, LightEntity):
         # Bitwise-and the supported features with the GroupedLight's features
         # so that we don't break in the future when a new feature is added.
         self._attr_supported_features &= SUPPORT_GROUP_LIGHT
+
+    @callback
+    async def _watched_entity_change(
+        self, event: EventType[EventStateChangedData]
+    ) -> None:
+        nst = event.data["new_state"]
+        if nst is not None:
+            state = nst.state
+            if state in (STATE_ON, STATE_OFF) and state != self._target_sync_state:
+                self._target_sync_state = state
+
+                # Call the appropriate service for all the other lights in the group
+                data = {
+                    ATTR_ENTITY_ID: [
+                        entity for entity in self._entity_ids if entity != nst.entity_id
+                    ]
+                }
+
+                await self.hass.services.async_call(
+                    light.DOMAIN,
+                    SERVICE_TURN_ON if state == STATE_ON else SERVICE_TURN_OFF,
+                    data,
+                    blocking=True,
+                    context=self._context,
+                )

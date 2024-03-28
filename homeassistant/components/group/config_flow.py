@@ -28,7 +28,7 @@ from .cover import async_create_preview_cover
 from .entity import GroupEntity
 from .event import async_create_preview_event
 from .fan import async_create_preview_fan
-from .light import async_create_preview_light
+from .light import CONF_SYNC, async_create_preview_light
 from .lock import async_create_preview_lock
 from .media_player import MediaPlayerGroup, async_create_preview_media_player
 from .sensor import async_create_preview_sensor
@@ -129,11 +129,23 @@ SENSOR_CONFIG_SCHEMA = basic_group_config_schema(
 ).extend(SENSOR_CONFIG_EXTENDS)
 
 
-async def light_switch_options_schema(
-    domain: str, handler: SchemaCommonFlowHandler | None
-) -> vol.Schema:
+async def light_options_schema(handler: SchemaCommonFlowHandler | None) -> vol.Schema:
     """Generate options schema."""
-    return (await basic_group_options_schema(domain, handler)).extend(
+    return (await basic_group_options_schema("light", handler)).extend(
+        {
+            vol.Required(
+                CONF_ALL, default=False, description={"advanced": True}
+            ): selector.BooleanSelector(),
+            vol.Required(
+                CONF_SYNC, default=False, description={"advanced": True}
+            ): selector.BooleanSelector(),
+        }
+    )
+
+
+async def switch_options_schema(handler: SchemaCommonFlowHandler | None) -> vol.Schema:
+    """Generate options schema."""
+    return (await basic_group_options_schema("switch", handler)).extend(
         {
             vol.Required(
                 CONF_ALL, default=False, description={"advanced": True}
@@ -245,7 +257,7 @@ OPTIONS_FLOW = {
         preview="group",
     ),
     "light": SchemaFlowFormStep(
-        partial(light_switch_options_schema, "light"),
+        light_options_schema,
         preview="group",
     ),
     "lock": SchemaFlowFormStep(
@@ -261,7 +273,7 @@ OPTIONS_FLOW = {
         preview="group",
     ),
     "switch": SchemaFlowFormStep(
-        partial(light_switch_options_schema, "switch"),
+        switch_options_schema,
         preview="group",
     ),
 }
