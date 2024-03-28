@@ -55,6 +55,28 @@
           "3": "High"
         }
       }
+    },
+    "sensor": {
+      "battery": {
+        "name": "Battery"
+      },
+      "connection": {
+        "name": "Connection status",
+        "state": {
+          "connected": "Connected",
+          "disconnected": "Disconnected",
+          "connecting": "Connecting...",
+          "disconnecting": "Disconnecting..."
+        }
+      },
+      "calibration": {
+        "name": "Calibration status",
+        "state": {
+          "calibrated": "Calibrated",
+          "uncalibrated": "Uncalibrated",
+          "calibrating": "Calibrating..."
+        }
+      }
     }
   }
 }
