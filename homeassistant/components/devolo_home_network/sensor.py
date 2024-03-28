@@ -1,4 +1,5 @@
 """Platform for sensor integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -49,18 +50,13 @@ class DataRateDirection(StrEnum):
     TX = "tx_rate"
 
 
-@dataclass(frozen=True)
-class DevoloSensorRequiredKeysMixin(Generic[_CoordinatorDataT]):
-    """Mixin for required keys."""
-
-    value_func: Callable[[_CoordinatorDataT], float]
-
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class DevoloSensorEntityDescription(
-    SensorEntityDescription, DevoloSensorRequiredKeysMixin[_CoordinatorDataT]
+    SensorEntityDescription, Generic[_CoordinatorDataT]
 ):
     """Describes devolo sensor entity."""
+
+    value_func: Callable[[_CoordinatorDataT], float]
 
 
 SENSOR_TYPES: dict[str, DevoloSensorEntityDescription[Any]] = {
@@ -68,14 +64,12 @@ SENSOR_TYPES: dict[str, DevoloSensorEntityDescription[Any]] = {
         key=CONNECTED_PLC_DEVICES,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:lan",
         value_func=lambda data: len(
             {device.mac_address_from for device in data.data_rates}
         ),
     ),
     CONNECTED_WIFI_CLIENTS: DevoloSensorEntityDescription[list[ConnectedStationInfo]](
         key=CONNECTED_WIFI_CLIENTS,
-        icon="mdi:wifi",
         state_class=SensorStateClass.MEASUREMENT,
         value_func=len,
     ),
@@ -83,7 +77,6 @@ SENSOR_TYPES: dict[str, DevoloSensorEntityDescription[Any]] = {
         key=NEIGHBORING_WIFI_NETWORKS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:wifi-marker",
         value_func=len,
     ),
     PLC_RX_RATE: DevoloSensorEntityDescription[DataRate](

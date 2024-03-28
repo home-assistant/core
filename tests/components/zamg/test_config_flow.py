@@ -1,4 +1,5 @@
 """Tests for the Zamg config flow."""
+
 from unittest.mock import MagicMock
 
 from zamg.exceptions import ZamgApiError

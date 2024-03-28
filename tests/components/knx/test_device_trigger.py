@@ -1,4 +1,5 @@
 """Tests for KNX device triggers."""
+
 import pytest
 import voluptuous_serialize
 

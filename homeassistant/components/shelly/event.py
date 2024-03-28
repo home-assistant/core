@@ -1,4 +1,5 @@
 """Event for Shelly."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -37,14 +38,14 @@ from .utils import (
 )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ShellyBlockEventDescription(EventEntityDescription):
     """Class to describe Shelly event."""
 
     removal_condition: Callable[[dict, Block], bool] | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ShellyRpcEventDescription(EventEntityDescription):
     """Class to describe Shelly event."""
 

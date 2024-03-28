@@ -1,4 +1,5 @@
 """The ViCare integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -26,6 +27,7 @@ from .const import (
     DEVICE_LIST,
     DOMAIN,
     PLATFORMS,
+    UNSUPPORTED_DEVICES,
 )
 from .types import ViCareDevice
 from .utils import get_device
@@ -132,5 +134,5 @@ def get_supported_devices(
     return [
         device_config
         for device_config in devices
-        if device_config.getModel() not in ["Heatbox1", "Heatbox2_SRC"]
+        if device_config.getModel() not in UNSUPPORTED_DEVICES
     ]

@@ -1,4 +1,5 @@
 """Test Discovergy component setup."""
+
 from unittest.mock import AsyncMock
 
 from pydiscovergy.error import DiscovergyClientError, HTTPError, InvalidLogin

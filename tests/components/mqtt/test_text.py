@@ -1,4 +1,5 @@
 """The tests for the MQTT text platform."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -7,12 +8,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import mqtt, text
-from homeassistant.const import (
-    ATTR_ASSUMED_STATE,
-    ATTR_ENTITY_ID,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from .test_common import (
@@ -52,13 +48,6 @@ from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {text.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
 }
-
-
-@pytest.fixture(autouse=True)
-def text_platform_only():
-    """Only setup the text platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.TEXT]):
-        yield
 
 
 async def async_set_value(

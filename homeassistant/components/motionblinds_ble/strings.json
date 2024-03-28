@@ -1,0 +1,60 @@
+{
+  "config": {
+    "abort": {
+      "no_bluetooth_adapter": "No bluetooth adapter found",
+      "no_devices_found": "Could not find any bluetooth devices"
+    },
+    "error": {
+      "could_not_find_motor": "Could not find a motor with that MAC code",
+      "invalid_mac_code": "Invalid MAC code"
+    },
+    "step": {
+      "user": {
+        "description": "Fill in the 4-character MAC code of your motor, for example F3ED or E3A6",
+        "data": {
+          "mac_code": "MAC code"
+        }
+      },
+      "confirm": {
+        "description": "What kind of blind is {display_name}?"
+      }
+    }
+  },
+  "selector": {
+    "blind_type": {
+      "options": {
+        "roller": "Roller blind",
+        "honeycomb": "Honeycomb blind",
+        "roman": "Roman blind",
+        "venetian": "Venetian blind",
+        "venetian_tilt_only": "Venetian blind (tilt-only)",
+        "double_roller": "Double roller blind",
+        "curtain": "Curtain blind",
+        "vertical": "Vertical blind"
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "connect": {
+        "name": "[%key:common::action::connect%]"
+      },
+      "disconnect": {
+        "name": "[%key:common::action::disconnect%]"
+      },
+      "favorite": {
+        "name": "Favorite"
+      }
+    },
+    "select": {
+      "speed": {
+        "name": "Speed",
+        "state": {
+          "1": "Low",
+          "2": "Medium",
+          "3": "High"
+        }
+      }
+    }
+  }
+}

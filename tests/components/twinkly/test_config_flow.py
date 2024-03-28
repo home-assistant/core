@@ -1,4 +1,5 @@
 """Tests for the config_flow of the twinly component."""
+
 from unittest.mock import patch
 
 from homeassistant import config_entries
@@ -38,9 +39,12 @@ async def test_invalid_host(hass: HomeAssistant) -> None:
 async def test_success_flow(hass: HomeAssistant) -> None:
     """Test that an entity is created when the flow completes."""
     client = ClientMock()
-    with patch(
-        "homeassistant.components.twinkly.config_flow.Twinkly", return_value=client
-    ), patch("homeassistant.components.twinkly.async_setup_entry", return_value=True):
+    with (
+        patch(
+            "homeassistant.components.twinkly.config_flow.Twinkly", return_value=client
+        ),
+        patch("homeassistant.components.twinkly.async_setup_entry", return_value=True),
+    ):
         result = await hass.config_entries.flow.async_init(
             TWINKLY_DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -88,9 +92,12 @@ async def test_dhcp_can_confirm(hass: HomeAssistant) -> None:
 async def test_dhcp_success(hass: HomeAssistant) -> None:
     """Test DHCP discovery flow success."""
     client = ClientMock()
-    with patch(
-        "homeassistant.components.twinkly.config_flow.Twinkly", return_value=client
-    ), patch("homeassistant.components.twinkly.async_setup_entry", return_value=True):
+    with (
+        patch(
+            "homeassistant.components.twinkly.config_flow.Twinkly", return_value=client
+        ),
+        patch("homeassistant.components.twinkly.async_setup_entry", return_value=True),
+    ):
         result = await hass.config_entries.flow.async_init(
             TWINKLY_DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},

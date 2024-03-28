@@ -1,4 +1,5 @@
 """An abstract class common to all Bond entities."""
+
 from __future__ import annotations
 
 from abc import abstractmethod

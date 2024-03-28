@@ -1,5 +1,5 @@
-# flake8: noqa pylint: skip-file
 """Tests for the TelldusLive config flow."""
+
 from unittest.mock import Mock, patch
 
 import pytest
@@ -43,11 +43,12 @@ def authorize():
 @pytest.fixture
 def mock_tellduslive(supports_local_api, authorize):
     """Mock tellduslive."""
-    with patch(
-        "homeassistant.components.tellduslive.config_flow.Session"
-    ) as Session, patch(
-        "homeassistant.components.tellduslive.config_flow.supports_local_api"
-    ) as tellduslive_supports_local_api:
+    with (
+        patch("homeassistant.components.tellduslive.config_flow.Session") as Session,
+        patch(
+            "homeassistant.components.tellduslive.config_flow.supports_local_api"
+        ) as tellduslive_supports_local_api,
+    ):
         tellduslive_supports_local_api.return_value = supports_local_api
         Session().authorize.return_value = authorize
         Session().access_token = "token"
@@ -139,10 +140,13 @@ async def test_step_import_load_json_matching_host(
     """Test that we add host and trigger user when configuring from import."""
     flow = init_config_flow(hass)
 
-    with patch(
-        "homeassistant.components.tellduslive.config_flow.load_json_object",
-        return_value={"tellduslive": {}},
-    ), patch("os.path.isfile"):
+    with (
+        patch(
+            "homeassistant.components.tellduslive.config_flow.load_json_object",
+            return_value={"tellduslive": {}},
+        ),
+        patch("os.path.isfile"),
+    ):
         result = await flow.async_step_import(
             {CONF_HOST: "Cloud API", KEY_SCAN_INTERVAL: 0}
         )
@@ -154,10 +158,13 @@ async def test_step_import_load_json(hass: HomeAssistant, mock_tellduslive) -> N
     """Test that we create entry when configuring from import."""
     flow = init_config_flow(hass)
 
-    with patch(
-        "homeassistant.components.tellduslive.config_flow.load_json_object",
-        return_value={"localhost": {}},
-    ), patch("os.path.isfile"):
+    with (
+        patch(
+            "homeassistant.components.tellduslive.config_flow.load_json_object",
+            return_value={"localhost": {}},
+        ),
+        patch("os.path.isfile"),
+    ):
         result = await flow.async_step_import(
             {CONF_HOST: "localhost", KEY_SCAN_INTERVAL: SCAN_INTERVAL}
         )

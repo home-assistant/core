@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Merge all translation sources into a single JSON file."""
+
 import json
 import os
 import pathlib

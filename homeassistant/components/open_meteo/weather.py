@@ -1,4 +1,5 @@
 """Support for Open-Meteo weather."""
+
 from __future__ import annotations
 
 from open_meteo import Forecast as OpenMeteoForecast
@@ -87,9 +88,9 @@ class OpenMeteoWeatherEntity(
             return None
         return self.coordinator.data.current_weather.wind_direction
 
-    @property
-    def forecast(self) -> list[Forecast] | None:
-        """Return the forecast in native units."""
+    @callback
+    def _async_forecast_daily(self) -> list[Forecast] | None:
+        """Return the daily forecast in native units."""
         if self.coordinator.data.daily is None:
             return None
 
@@ -123,8 +124,3 @@ class OpenMeteoWeatherEntity(
             forecasts.append(forecast)
 
         return forecasts
-
-    @callback
-    def _async_forecast_daily(self) -> list[Forecast] | None:
-        """Return the daily forecast in native units."""
-        return self.forecast

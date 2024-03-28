@@ -1,4 +1,5 @@
 """Test Wallbox Switch component."""
+
 import json
 
 import pytest

@@ -1,4 +1,5 @@
 """Support for Radarr binary sensors."""
+
 from __future__ import annotations
 
 from aiopyarr import Health

@@ -1,6 +1,5 @@
 """Test websocket commands for the panel."""
 
-
 from unittest.mock import patch
 
 from homeassistant.components import dynalite

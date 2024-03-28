@@ -22,19 +22,13 @@ from .coordinator import BMWDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class BMWRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class BMWSwitchEntityDescription(SwitchEntityDescription):
+    """Describes BMW switch entity."""
 
     value_fn: Callable[[MyBMWVehicle], bool]
     remote_service_on: Callable[[MyBMWVehicle], Coroutine[Any, Any, Any]]
     remote_service_off: Callable[[MyBMWVehicle], Coroutine[Any, Any, Any]]
-
-
-@dataclass(frozen=True)
-class BMWSwitchEntityDescription(SwitchEntityDescription, BMWRequiredKeysMixin):
-    """Describes BMW switch entity."""
-
     is_available: Callable[[MyBMWVehicle], bool] = lambda _: False
     dynamic_options: Callable[[MyBMWVehicle], list[str]] | None = None
 
@@ -56,7 +50,6 @@ NUMBER_TYPES: list[BMWSwitchEntityDescription] = [
         value_fn=lambda v: v.climate.is_climate_on,
         remote_service_on=lambda v: v.remote_services.trigger_remote_air_conditioning(),
         remote_service_off=lambda v: v.remote_services.trigger_remote_air_conditioning_stop(),
-        icon="mdi:fan",
     ),
     BMWSwitchEntityDescription(
         key="charging",
@@ -65,7 +58,6 @@ NUMBER_TYPES: list[BMWSwitchEntityDescription] = [
         value_fn=lambda v: v.fuel_and_battery.charging_status in CHARGING_STATE_ON,
         remote_service_on=lambda v: v.remote_services.trigger_charge_start(),
         remote_service_off=lambda v: v.remote_services.trigger_charge_stop(),
-        icon="mdi:ev-station",
     ),
 ]
 

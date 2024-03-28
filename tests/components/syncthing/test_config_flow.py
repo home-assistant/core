@@ -1,4 +1,5 @@
 """Tests for syncthing config flow."""
+
 from unittest.mock import patch
 
 from aiosyncthing.exceptions import UnauthorizedError
@@ -36,12 +37,13 @@ async def test_show_setup_form(hass: HomeAssistant) -> None:
 
 async def test_flow_successful(hass: HomeAssistant) -> None:
     """Test with required fields only."""
-    with patch(
-        "aiosyncthing.system.System.status", return_value={"myID": "server-id"}
-    ), patch(
-        "homeassistant.components.syncthing.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch("aiosyncthing.system.System.status", return_value={"myID": "server-id"}),
+        patch(
+            "homeassistant.components.syncthing.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": "user"},

@@ -1,4 +1,5 @@
 """Configuration flow tests for the Tailwind integration."""
+
 from ipaddress import ip_address
 from unittest.mock import MagicMock
 

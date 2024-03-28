@@ -1,4 +1,5 @@
 """Support for exposing a templated binary sensor."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
