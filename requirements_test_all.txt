@@ -788,7 +788,7 @@ google-cloud-pubsub==2.13.11
 google-generativeai==0.3.1
 
 # homeassistant.components.nest
-google-nest-sdm==3.0.3
+google-nest-sdm==3.0.4
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
