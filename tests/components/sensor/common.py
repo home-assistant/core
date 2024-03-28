@@ -118,5 +118,5 @@ def get_mock_sensor_entities() -> dict[str, MockSensor]:
             device_class=device_class,
             native_unit_of_measurement=UNITS_OF_MEASUREMENT.get(device_class),
         )
-        for device_class in ("none", *SensorDeviceClass)
+        for device_class in SensorDeviceClass
     }

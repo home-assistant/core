@@ -374,10 +374,13 @@ async def test_get_trigger_capabilities_legacy(
 async def test_get_trigger_capabilities_none(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_sensor_entities: dict[str, MockSensor],
 ) -> None:
     """Test we get the expected capabilities from a sensor trigger."""
-    setup_test_component_platform(hass, DOMAIN, mock_sensor_entities)
+    entity = MockSensor(
+        name="none sensor",
+        unique_id="unique_none",
+    )
+    setup_test_component_platform(hass, DOMAIN, [entity])
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -385,7 +388,7 @@ async def test_get_trigger_capabilities_none(
     entry_none = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
-        mock_sensor_entities["none"].unique_id,
+        entity.unique_id,
     )
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
