@@ -501,8 +501,6 @@ filterwarnings = [
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:onvif.client",
     # https://github.com/okunishinishi/python-stringcase/commit/6a5c5bbd3fe5337862abc7fd0853a0f36e18b2e1 - >1.2.0
     "ignore:invalid escape sequence:SyntaxWarning:.*stringcase",
-    # https://github.com/xeniter/romy/pull/1 - >=0.0.8
-    "ignore:with timeout\\(\\) is deprecated, use async with timeout\\(\\) instead:DeprecationWarning:romy.utils",
     # https://github.com/grahamwetzler/smart-meter-texas/pull/143 - >0.5.3
     "ignore:ssl.OP_NO_SSL\\*/ssl.OP_NO_TLS\\* options are deprecated:DeprecationWarning:smart_meter_texas",
     # https://github.com/mvantellingen/python-zeep/pull/1364 - >4.2.1
