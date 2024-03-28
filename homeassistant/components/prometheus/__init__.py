@@ -289,16 +289,15 @@ class PrometheusMetrics:
                 pass
 
     def _get_label_keys(
-            self,
-            extra_labels: list[str] | None = None,
+        self,
+        extra_labels: list[str] | None = None,
     ) -> list[str]:
         labels = [
             "entity",
             "friendly_name",
             "domain",
             "area",
-            # "zone",
-            "entity_id",
+            "object_id",
             "device_class",
         ]
         if extra_labels is not None:
@@ -361,11 +360,9 @@ class PrometheusMetrics:
             "entity": state.entity_id,
             "domain": state.domain,
             "friendly_name": state.attributes.get(ATTR_FRIENDLY_NAME),
-            "area": state.attributes.get(ATTR_AREA_ID),
-            # TODO: how to get zone here?
-            # "zone": state.attributes.get(ATTR_AREA_ID),
-            "entity_id": state.object_id,
-            "device_class": state.attributes.get(ATTR_DEVICE_CLASS),
+            "area": state.attributes.get(ATTR_AREA_ID) or "",
+            "object_id": state.object_id,
+            "device_class": state.attributes.get(ATTR_DEVICE_CLASS) or "",
         }
 
     def _battery(self, state: State) -> None:
