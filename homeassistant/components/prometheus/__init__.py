@@ -31,6 +31,7 @@ from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES, ATTR_HUMID
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
+    ATTR_AREA_ID,
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -287,6 +288,22 @@ class PrometheusMetrics:
             except (ValueError, TypeError):
                 pass
 
+    def _get_label_keys(
+        self,
+        extra_labels: list[str] | None = None,
+    ) -> list[str]:
+        labels = [
+            "entity",
+            "friendly_name",
+            "domain",
+            "area",
+            "object_id",
+            "device_class",
+        ]
+        if extra_labels is not None:
+            labels.extend(extra_labels)
+        return list(labels)
+
     def _metric(
         self,
         metric: str,
@@ -294,9 +311,7 @@ class PrometheusMetrics:
         documentation: str,
         extra_labels: list[str] | None = None,
     ) -> _MetricBaseT:
-        labels = ["entity", "friendly_name", "domain"]
-        if extra_labels is not None:
-            labels.extend(extra_labels)
+        labels = self._get_label_keys(extra_labels=extra_labels)
 
         try:
             return cast(_MetricBaseT, self._metrics[metric])
@@ -345,6 +360,9 @@ class PrometheusMetrics:
             "entity": state.entity_id,
             "domain": state.domain,
             "friendly_name": state.attributes.get(ATTR_FRIENDLY_NAME),
+            "area": state.attributes.get(ATTR_AREA_ID) or "",
+            "object_id": state.object_id,
+            "device_class": state.attributes.get(ATTR_DEVICE_CLASS) or "",
         }
 
     def _battery(self, state: State) -> None:
