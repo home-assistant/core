@@ -672,8 +672,7 @@ select = [
     "T100", # Trace found: {name} used
     "T20", # flake8-print
     "TID251", # Banned imports
-    "TRY004", # Prefer TypeError exception for invalid type
-    "TRY302", # Remove exception handler; error is immediately re-raised
+    "TRY", # tryceratops
     "UP", # pyupgrade
     "W", # pycodestyle
 ]
@@ -701,6 +700,8 @@ ignore = [
     "SIM102", # Use a single if statement instead of nested if statements
     "SIM108", # Use ternary operator {contents} instead of if-else-block
     "SIM115", # Use context handler for opening files
+    "TRY003", # Avoid specifying long messages outside the exception class
+    "TRY400", # Use `logging.exception` instead of `logging.error`
     "UP006", # keep type annotation style as is
     "UP007", # keep type annotation style as is
     # Ignored due to performance: https://github.com/charliermarsh/ruff/issues/2923
@@ -724,7 +725,11 @@ ignore = [
     "PLE0605",
 
     # temporarily disabled
-    "PT019"
+    "PT019",
+    "TRY002",
+    "TRY301",
+    "TRY300",
+    "TRY401"
 ]
 
 [tool.ruff.lint.flake8-import-conventions.extend-aliases]
