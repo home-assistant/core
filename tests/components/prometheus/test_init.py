@@ -80,7 +80,7 @@ class FilterTest:
 
 
 class MetricsTestHelper:
-    """Initialize an hass_client with Prometheus component."""
+    """Helps with formatting prometheus metrics and future-proof label changes."""
 
     @classmethod
     def _perform_metric_assert(
