@@ -179,7 +179,6 @@ async def test_manual_already_configured(
     assert setup_entry.call_count == 1
 
 
-@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_zeroconf_discovery(
     hass: HomeAssistant,
     client_connect: AsyncMock,
