@@ -212,7 +212,7 @@ aioazuredevops==1.4.3
 aiobafi6==0.9.0
 
 # homeassistant.components.aws
-aiobotocore==2.9.1
+aiobotocore==2.12.1
 
 # homeassistant.components.comelit
 aiocomelit==0.9.0
@@ -600,7 +600,7 @@ boschshcpy==0.2.91
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
-boto3==1.33.13
+boto3==1.34.51
 
 # homeassistant.components.bring
 bring-api==0.5.7
