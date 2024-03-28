@@ -99,7 +99,7 @@ SENSOR_TYPES: tuple[AirGradientSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda status: status.rco2 / 1000000,
+        value_fn=lambda status: status.rco2,
     ),
     AirGradientSensorEntityDescription(
         key="pm003",

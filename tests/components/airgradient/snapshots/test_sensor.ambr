@@ -47,7 +47,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000778',
+    'state': '778',
   })
 # ---
 # name: test_all_entities[sensor.airgradient_humidity-entry]
