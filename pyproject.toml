@@ -598,6 +598,9 @@ filterwarnings = [
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning:webrtcvad",
 ]
 
+[tool.ruff]
+required-version = ">=0.3.4"
+
 [tool.ruff.lint]
 select = [
     "B002", # Python does not support the unary prefix increment
