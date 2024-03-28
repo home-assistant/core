@@ -20,24 +20,23 @@ class EGPSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initiate user flow."""
 
         if user_input is not None:
-            if CONF_DEVICE_API_ID in user_input:
-                devId = user_input[CONF_DEVICE_API_ID]
-                dev = await self.hass.async_add_executor_job(get_device, devId)
-                if dev is not None:
-                    await self.async_set_unique_id(dev.device_id)
-                    self._abort_if_unique_id_configured()
+            dev_id = user_input[CONF_DEVICE_API_ID]
+            dev = await self.hass.async_add_executor_job(get_device, dev_id)
+            if dev is not None:
+                await self.async_set_unique_id(dev.device_id)
+                self._abort_if_unique_id_configured()
 
-                    return self.async_create_entry(
-                        title=f"{devId}",
-                        data={CONF_DEVICE_API_ID: devId},
-                    )
+                return self.async_create_entry(
+                    title=f"{dev_id}",
+                    data={CONF_DEVICE_API_ID: dev_id},
+                )
             return self.async_abort(reason="device_not_found")
 
         currently_configured = self._async_current_ids(include_ignore=True)
         try:
             found_devices = await self.hass.async_add_executor_job(search_for_devices)
-        except (MissingLibrary, UsbError) as err:
-            LOGGER.error("Unable to access USB devices: %s", err)
+        except (MissingLibrary, UsbError):
+            LOGGER.exception("Unable to access USB devices")
             return self.async_abort(reason="usb_error")
 
         devices = [

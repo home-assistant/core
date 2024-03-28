@@ -8,7 +8,6 @@ from pyegps.powerstrip import PowerStrip
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -26,10 +25,10 @@ async def async_setup_entry(
     powerstrip: PowerStrip = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
-        [
+        (
             EGPowerStripSocket(powerstrip, socket)
             for socket in range(powerstrip.numberOfSockets)
-        ],
+        ),
         update_before_add=True,
     )
 
@@ -38,7 +37,6 @@ class EGPowerStripSocket(SwitchEntity):
     """Represents a socket of an Energenie-Socket-Strip."""
 
     _attr_device_class = SwitchDeviceClass.OUTLET
-    _attr_should_poll = True
     _attr_has_entity_name = True
     _attr_translation_key = "socket"
 
@@ -46,7 +44,6 @@ class EGPowerStripSocket(SwitchEntity):
         """Initiate a new socket."""
         self._dev = dev
         self._socket = socket
-        self._state = STATE_OFF
         self._attr_translation_placeholders = {"socket_id": str(socket)}
 
         self._attr_unique_id = f"{dev.device_id}_{socket}"
@@ -57,11 +54,6 @@ class EGPowerStripSocket(SwitchEntity):
             model=dev.name,
             sw_version=PYEGPS_VERSION,
         )
-
-    @property
-    def is_on(self) -> bool:
-        """Return True if socket is on, else False."""
-        return self._state == STATE_ON
 
     def turn_on(self, **kwargs: Any) -> None:
         """Switch the socket on."""
@@ -80,6 +72,6 @@ class EGPowerStripSocket(SwitchEntity):
     def update(self) -> None:
         """Read the current state from the device."""
         try:
-            self._state = STATE_ON if self._dev.get_status(self._socket) else STATE_OFF
+            self._attr_is_on = self._dev.get_status(self._socket)
         except EgpsException as err:
             raise HomeAssistantError(f"Couldn't access USB device: {err}") from err
