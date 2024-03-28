@@ -130,9 +130,9 @@ class OpenMeteoWeatherEntity(
                 ]
 
             if daily.wind_direction_10m_dominant is not None:
-                forecast[
-                    ATTR_FORECAST_WIND_BEARING
-                ] = daily.wind_direction_10m_dominant[index]
+                forecast[ATTR_FORECAST_WIND_BEARING] = (
+                    daily.wind_direction_10m_dominant[index]
+                )
 
             if daily.wind_speed_10m_max is not None:
                 forecast[ATTR_FORECAST_NATIVE_WIND_SPEED] = daily.wind_speed_10m_max[
