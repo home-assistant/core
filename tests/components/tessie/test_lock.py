@@ -25,7 +25,11 @@ async def test_locks(
 ) -> None:
     """Tests that the lock entity is correct."""
 
-    entry = await setup_platform(hass, [Platform.LOCK])
+    with patch(
+        "homeassistant.components.tessie.lock.automations_with_entity",
+        return_value=["item"],
+    ):
+        entry = await setup_platform(hass, [Platform.LOCK])
 
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
