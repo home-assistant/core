@@ -1,0 +1,10 @@
+{
+  "domain": "azure_data_explorer",
+  "name": "Azure Data Explorer",
+  "codeowners": ["@kaareseras"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/azure_data_explorer",
+  "iot_class": "cloud_push",
+  "loggers": ["azure"],
+  "requirements": ["azure-kusto-ingest==3.1.0", "azure-kusto-data[aio]==3.1.0"]
+}
