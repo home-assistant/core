@@ -16,7 +16,7 @@ from tests.common import setup_test_component_platform
 from tests.components.date.common import MockDateEntity
 
 
-async def test_date(hass: HomeAssistant, enable_custom_integrations: None) -> None:
+async def test_date(hass: HomeAssistant) -> None:
     """Test date entity."""
     entity = MockDateEntity(
         name="test",
