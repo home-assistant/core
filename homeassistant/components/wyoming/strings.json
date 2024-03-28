@@ -53,6 +53,11 @@
         "name": "Mute"
       }
     },
+    "button": {
+      "activat": {
+        "name": "Activate"
+      }
+    },
     "number": {
       "auto_gain": {
         "name": "Auto gain"
