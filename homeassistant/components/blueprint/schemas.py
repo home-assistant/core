@@ -8,6 +8,7 @@ from homeassistant.const import (
     CONF_DEFAULT,
     CONF_DESCRIPTION,
     CONF_DOMAIN,
+    CONF_ICON,
     CONF_NAME,
     CONF_PATH,
     CONF_SELECTOR,
@@ -18,9 +19,12 @@ from homeassistant.helpers import config_validation as cv, selector
 from .const import (
     CONF_AUTHOR,
     CONF_BLUEPRINT,
+    CONF_COLLAPSED,
     CONF_HOMEASSISTANT,
     CONF_INPUT,
+    CONF_INPUT_SECTIONS,
     CONF_MIN_VERSION,
+    CONF_SECTION,
     CONF_SOURCE_URL,
     CONF_USE_BLUEPRINT,
 )
@@ -64,6 +68,16 @@ BLUEPRINT_INPUT_SCHEMA = vol.Schema(
         vol.Optional(CONF_DESCRIPTION): str,
         vol.Optional(CONF_DEFAULT): cv.match_all,
         vol.Optional(CONF_SELECTOR): selector.validate_selector,
+        vol.Optional(CONF_SECTION): str,
+    }
+)
+
+BLUEPRINT_INPUT_SECTION_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_NAME): str,
+        vol.Optional(CONF_ICON): str,
+        vol.Optional(CONF_DESCRIPTION): str,
+        vol.Optional(CONF_COLLAPSED): bool,
     }
 )
 
@@ -84,6 +98,9 @@ BLUEPRINT_SCHEMA = vol.Schema(
                         None,
                         BLUEPRINT_INPUT_SCHEMA,
                     )
+                },
+                vol.Optional(CONF_INPUT_SECTIONS): {
+                    str: BLUEPRINT_INPUT_SECTION_SCHEMA,
                 },
             }
         ),
