@@ -97,6 +97,4 @@ class ArveDevice(ArveDeviceEntity, SensorEntity):
     @property
     def native_value(self) -> int | float:
         """State of the sensor."""
-        return self.entity_description.value_fn(
-            self.coordinator.data[self.device_serial_number].sensors
-        )
+        return self.entity_description.value_fn(self.device.sensors)
