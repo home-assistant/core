@@ -13,14 +13,11 @@ from .util import async_map_data_by_id
 
 _LOGGER = logging.getLogger(__name__)
 
-POSITION_FIELDS = fields(ShadePosition)
+POSITION_FIELDS = [field for field in fields(ShadePosition) if field.name != "velocity"]
 
 
 def copy_position_data(source: ShadePosition, target: ShadePosition) -> ShadePosition:
     """Copy position data from source to target for None values only."""
-    # the hub will always return a velocity of 0 on initial connect,
-    # separate definition to store consistent value in HA
-    # this value is purely driven from HA
     for field in POSITION_FIELDS:
         if (value := getattr(source, field.name)) is not None:
             setattr(target, field.name, value)
@@ -76,3 +73,11 @@ class PowerviewShadeData:
     def update_shade_position(self, shade_id: int, new_position: ShadePosition) -> None:
         """Update a single shades position."""
         copy_position_data(new_position, self.get_shade_position(shade_id))
+
+    def update_shade_velocity(self, shade_id: int, shade_data: ShadePosition) -> None:
+        """Update a single shades velocity."""
+        # the hub will always return a velocity of 0 on initial connect,
+        # separate definition to store consistent value in HA
+        # this value is purely driven from HA
+        if shade_data.velocity is not None:
+            self.get_shade_position(shade_id).velocity = shade_data.velocity
