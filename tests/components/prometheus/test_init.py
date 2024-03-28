@@ -79,6 +79,89 @@ class FilterTest:
     should_pass: bool
 
 
+class MetricsTestHelper:
+    """Initialize an hass_client with Prometheus component."""
+
+    @classmethod
+    def _perform_metric_assert(
+        cls,
+        metric_name,
+        domain,
+        friendly_name,
+        object_id,
+        device_class,
+        metric_value,
+        body,
+        area=None,
+    ):
+        # assert (
+        #         "homeassistant_sensor_temperature_celsius{"
+        #         'area="",'
+        #         'device_class="temperature",'
+        #         'domain="sensor",'
+        #         'entity="sensor.outside_temperature",'
+        #         'friendly_name="Outside Temperature",'
+        #         'object_id="outside_temperature"'
+        #         "} 12.3" in body
+        # )
+        assert (
+            f"{metric_name}{{"
+            f'area="{area or ""}",'
+            f'device_class="{device_class}",'
+            f'domain="{domain}",'
+            f'entity="{domain}.{object_id}",'
+            f'friendly_name="{friendly_name}",'
+            f'object_id="{object_id}"'
+            f"}} {metric_value}" in body
+        )
+
+    @classmethod
+    def _perform_sensor_metric_assert(
+        cls,
+        metric_name,
+        metric_value,
+        friendly_name,
+        device_class,
+        object_id,
+        body,
+        area=None,
+    ):
+        cls._perform_metric_assert(
+            metric_name,
+            "sensor",
+            friendly_name,
+            object_id,
+            device_class,
+            metric_value,
+            body,
+            area=area,
+        )
+
+    @classmethod
+    def _perform_temperature_metric_assert(
+        cls, metric_value, friendly_name, object_id, body, area=None
+    ):
+        cls._perform_sensor_metric_assert(
+            "homeassistant_sensor_temperature_celsius",
+            friendly_name,
+            object_id,
+            "temperature",
+            metric_value,
+            body,
+            area=area,
+        )
+
+    @classmethod
+    def _perform_default_temperature_metric_assert(cls, metric_value, body):
+        cls._perform_temperature_metric_assert(
+            metric_value,
+            "sensor.outside_temperature",
+            "Outside Temperature",
+            "outside_temperature",
+            body,
+        )
+
+
 @pytest.fixture(name="client")
 async def setup_prometheus_client(
     hass: HomeAssistant,
@@ -137,21 +220,23 @@ async def test_setup_enumeration(
         suggested_object_id="outside_temperature",
         original_name="Outside Temperature",
     )
-    set_state_with_entry(hass, sensor_1, 12.3, {})
+    state = 12.3
+    set_state_with_entry(hass, sensor_1, state, {})
     assert await async_setup_component(hass, prometheus.DOMAIN, {prometheus.DOMAIN: {}})
 
     client = await hass_client()
     body = await generate_latest_metrics(client)
-    assert (
-        "homeassistant_sensor_temperature_celsius{"
-        'area="",'
-        'device_class="temperature",'
-        'domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature",'
-        'object_id="outside_temperature"'
-        "} 12.3" in body
-    )
+    MetricsTestHelper._perform_default_temperature_metric_assert(state, body)
+    # assert (
+    #     "homeassistant_sensor_temperature_celsius{"
+    #     'area="",'
+    #     'device_class="temperature",'
+    #     'domain="sensor",'
+    #     'entity="sensor.outside_temperature",'
+    #     'friendly_name="Outside Temperature",'
+    #     'object_id="outside_temperature"'
+    #     "} 12.3" in body
+    # )
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -167,26 +252,37 @@ async def test_view_empty_namespace(
         "Objects collected during gc" in body
     )
 
-    assert (
-        "entity_available{"
-        'area="",'
-        'device_class="temperature",'
-        'domain="sensor",'
-        'entity="sensor.radio_energy",'
-        'friendly_name="Radio Energy",'
-        'object_id="radio_energy"'
-        "} 1.0" in body
+    MetricsTestHelper._perform_sensor_metric_assert(
+        "entity_available", "1.0", "Radio Energy", "temperature", "radio_energy", body
     )
+    # assert (
+    #     "entity_available{"
+    #     'area="",'
+    #     'device_class="temperature",'
+    #     'domain="sensor",'
+    #     'entity="sensor.radio_energy",'
+    #     'friendly_name="Radio Energy",'
+    #     'object_id="radio_energy"'
+    #     "} 1.0" in body
+    # )
 
-    assert (
-        "last_updated_time_seconds{"
-        'area="",'
-        'device_class="temperature",'
-        'domain="sensor",'
-        'entity="sensor.radio_energy",'
-        'friendly_name="Radio Energy",'
-        'object_id="radio_energy'
-        "} 86400.0" in body
+    # assert (
+    #     "last_updated_time_seconds{"
+    #     'area="",'
+    #     'device_class="temperature",'
+    #     'domain="sensor",'
+    #     'entity="sensor.radio_energy",'
+    #     'friendly_name="Radio Energy",'
+    #     'object_id="radio_energy'
+    #     "} 86400.0" in body
+    # )
+    MetricsTestHelper._perform_sensor_metric_assert(
+        "last_updated_time_seconds",
+        "86400.0",
+        "Radio Energy",
+        "temperature",
+        "radio_energy",
+        body,
     )
 
 
@@ -203,16 +299,17 @@ async def test_view_default_namespace(
         "Objects collected during gc" in body
     )
 
-    assert (
-        "homeassistant_sensor_temperature_celsius{"
-        'area="",'
-        'device_class="temperature",'
-        'domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature",'
-        'object_id="outside_temperature"'
-        "} 15.6" in body
-    )
+    MetricsTestHelper._perform_default_temperature_metric_assert("15.6", body)
+    # assert (
+    #     "homeassistant_sensor_temperature_celsius{"
+    #     'area="",'
+    #     'device_class="temperature",'
+    #     'domain="sensor",'
+    #     'entity="sensor.outside_temperature",'
+    #     'friendly_name="Outside Temperature",'
+    #     'object_id="outside_temperature"'
+    #     "} 15.6" in body
+    # )
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -318,14 +415,15 @@ async def test_sensor_device_class(
         'friendly_name="Fahrenheit"} 10.0' in body
     )
 
-    assert (
-        "sensor_temperature_celsius{"
-        'area="",'
-        'device_class="temperature",'
-        'domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 15.6' in body
-    )
+    # assert (
+    #     "sensor_temperature_celsius{"
+    #     'area="",'
+    #     'device_class="temperature",'
+    #     'domain="sensor",'
+    #     'entity="sensor.outside_temperature",'
+    #     'friendly_name="Outside Temperature"} 15.6' in body
+    # )
+    MetricsTestHelper._perform_default_temperature_metric_assert("15.6", body)
 
     assert (
         "sensor_humidity_percent{"
