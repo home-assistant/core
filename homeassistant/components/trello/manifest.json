@@ -1,0 +1,11 @@
+{
+  "domain": "trello",
+  "name": "Trello",
+  "codeowners": ["@scottg489"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/trello",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["trello"],
+  "requirements": ["ha-py-trello==0.23.1"]
+}
