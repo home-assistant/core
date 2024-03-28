@@ -227,7 +227,7 @@ aioesphomeapi==23.2.0
 aioflo==2021.11.0
 
 # homeassistant.components.github
-aiogithubapi==22.10.1
+aiogithubapi==23.11.0
 
 # homeassistant.components.guardian
 aioguardian==2022.07.0
