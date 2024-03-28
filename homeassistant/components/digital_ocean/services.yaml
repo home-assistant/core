@@ -1,0 +1,27 @@
+update_domain_record:
+  fields:
+    domain:
+      required: true
+      example: "example.com"
+      selector:
+        text:
+    record:
+      required: true
+      example: |
+        Using "home" on "example.com" will update home.example.com
+        Using "@" on "example.com" will update example.com
+      selector:
+        text:
+    value:
+      required: true
+      example: "123.456.789.10"
+      selector:
+        text:
+    type:
+      required: true
+      example: "A"
+      selector:
+        select:
+          options:
+            - "A"
+            - "CNAME"

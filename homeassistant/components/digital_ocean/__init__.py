@@ -1,6 +1,7 @@
 """Support for Digital Ocean."""
 
 from datetime import timedelta
+import functools
 import logging
 
 import digitalocean
@@ -8,9 +9,15 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
+
+from .constants import MIN_TIME_BETWEEN_DOMAIN_UPDATES
+from .exceptions import DomainRecordAlreadySet, DomainRecordsNotFound
+from .schemas import UPDATE_DOMAIN_RECORD_SCHEMA
+from .services import handle_update_domain_record
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +64,12 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return False
 
     hass.data[DATA_DIGITAL_OCEAN] = digital
-
+    hass.services.register(
+        DOMAIN,
+        "update_domain_record",
+        functools.partial(handle_update_domain_record, hass=hass),
+        schema=UPDATE_DOMAIN_RECORD_SCHEMA,
+    )
     return True
 
 
@@ -81,6 +93,45 @@ class DigitalOcean:
                 droplet_id = droplet.id
 
         return droplet_id
+
+    @Throttle(MIN_TIME_BETWEEN_DOMAIN_UPDATES)
+    def update_domain_record(
+        self, domain_name, record_name, record_value, record_type="A"
+    ):
+        """Update the appointed DNS record with the desired value."""
+
+        try:
+            domain = digitalocean.Domain(token=self._access_token, name=domain_name)
+            records = domain.get_records()
+        except digitalocean.baseapi.NotFoundError as exc:  # pragma: no cover
+            raise DomainRecordsNotFound(
+                f"Could not find records in domain {domain_name}"
+            ) from exc
+        except digitalocean.baseapi.Error as e:
+            raise HomeAssistantError(
+                f"Unexpected error taking to DigitalOcean's API: {e}"
+            ) from e
+
+        for record in records:
+            if record.name == record_name and record.type == record_type:
+                if record.data == record_value:
+                    raise DomainRecordAlreadySet(
+                        f"Skipping update record {record_name} ({record_type}) "
+                        f"of domain {domain_name}: value already set",
+                    )
+                record.data = record_value
+                try:
+                    record.save()
+                    return True
+                except digitalocean.baseapi.Error as e:
+                    raise HomeAssistantError(
+                        f"Unexpected error taking to DigitalOcean's API: {e}"
+                    ) from e
+
+        raise DomainRecordsNotFound(
+            f"Cold not find record {record_name} ({record_type}) "
+            f"in domain {domain_name}"
+        )
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):

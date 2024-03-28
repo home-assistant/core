@@ -1,0 +1,86 @@
+[
+  {
+    "id": 12349871234,
+    "type": "SOA",
+    "name": "@",
+    "data": "1800",
+    "priority": null,
+    "port": null,
+    "ttl": 1800,
+    "weight": null,
+    "flags": null,
+    "tag": null
+  },
+  {
+    "id": 12349871235,
+    "type": "NS",
+    "name": "@",
+    "data": "ns1.digitalocean.com",
+    "priority": null,
+    "port": null,
+    "ttl": 1800,
+    "weight": null,
+    "flags": null,
+    "tag": null
+  },
+  {
+    "id": 12349871236,
+    "type": "NS",
+    "name": "@",
+    "data": "ns2.digitalocean.com",
+    "priority": null,
+    "port": null,
+    "ttl": 1800,
+    "weight": null,
+    "flags": null,
+    "tag": null
+  },
+  {
+    "id": 12349871237,
+    "type": "NS",
+    "name": "@",
+    "data": "ns3.digitalocean.com",
+    "priority": null,
+    "port": null,
+    "ttl": 1800,
+    "weight": null,
+    "flags": null,
+    "tag": null
+  },
+  {
+    "id": 12349871238,
+    "type": "A",
+    "name": "@",
+    "data": "1.1.1.1",
+    "priority": null,
+    "port": null,
+    "ttl": 3600,
+    "weight": null,
+    "flags": null,
+    "tag": null
+  },
+  {
+    "id": 12349871239,
+    "type": "CNAME",
+    "name": "ha",
+    "data": "@",
+    "priority": null,
+    "port": null,
+    "ttl": 43200,
+    "weight": null,
+    "flags": null,
+    "tag": null
+  },
+  {
+    "id": 12349871240,
+    "type": "A",
+    "name": "test",
+    "data": "8.8.4.4",
+    "priority": null,
+    "port": null,
+    "ttl": 3600,
+    "weight": null,
+    "flags": null,
+    "tag": null
+  }
+]

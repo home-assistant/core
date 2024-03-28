@@ -1,0 +1,21 @@
+{
+  "droplet_limit": 25,
+  "floating_ip_limit": 3,
+  "email": "pedro.peixoto@example.com",
+  "uuid": "8c9c71208ba04543aa3soij2a8a6a929f02235a2",
+  "email_verified": true,
+  "status": "active",
+  "status_message": "",
+  "token": "REDACTED",
+  "end_point": "https://api.digitalocean.com/v2/",
+  "ratelimit_limit": "5000",
+  "ratelimit_remaining": "4996",
+  "ratelimit_reset": "1701705158",
+  "reserved_ip_limit": 3,
+  "volume_limit": 100,
+  "name": "Pedro Henrique Peixoto",
+  "team": {
+    "uuid": "472a4a672349812l03814295a1aa9a7cf0cd350c",
+    "name": "My Team"
+  }
+}
