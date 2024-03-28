@@ -100,7 +100,7 @@ def get_time_zone(time_zone_str: str) -> dt.tzinfo | None:
 
 # We use a partial here since it is implemented in native code
 # and avoids the global lookup of UTC
-utcnow: partial[dt.datetime] = partial(dt.datetime.now, UTC)
+utcnow = partial(dt.datetime.now, UTC)
 utcnow.__doc__ = "Get now in UTC time."
 
 
