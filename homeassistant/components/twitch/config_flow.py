@@ -54,7 +54,7 @@ class OAuth2FlowHandler(
             self.flow_impl,
         )
 
-        client = await Twitch(
+        client = Twitch(
             app_id=implementation.client_id,
             authenticate_app=False,
         )
@@ -124,7 +124,7 @@ class OAuth2FlowHandler(
 
     async def async_step_import(self, config: dict[str, Any]) -> ConfigFlowResult:
         """Import from yaml."""
-        client = await Twitch(
+        client = Twitch(
             app_id=config[CONF_CLIENT_ID],
             authenticate_app=False,
         )
