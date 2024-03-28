@@ -93,6 +93,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "airgradient": {
+      "name": "Airgradient",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "airly": {
       "name": "Airly",
       "integration_type": "service",
