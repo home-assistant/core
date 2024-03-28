@@ -1,7 +1,7 @@
 """Platform for allowing several climate devices to be grouped into one climate device."""
+
 from __future__ import annotations
 
-import logging
 from statistics import mean
 from typing import Any
 
@@ -11,6 +11,7 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
+    ATTR_HUMIDITY,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
@@ -26,6 +27,7 @@ from homeassistant.components.climate import (
     DOMAIN,
     PLATFORM_SCHEMA,
     SERVICE_SET_FAN_MODE,
+    SERVICE_SET_HUMIDITY,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_SWING_MODE,
@@ -47,7 +49,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -59,8 +61,6 @@ from .util import (
     reduce_attribute,
     states_equal,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Climate Group"
 
@@ -143,7 +143,22 @@ class ClimateGroup(GroupEntity, ClimateEntity):
         temperature_unit: str,
     ) -> None:
         """Initialize a climate group."""
+        self._name = name
         self._entity_ids = entity_ids
+
+        self._features: dict[ClimateEntityFeature, set[str]] = {
+            (
+                ClimateEntityFeature.TARGET_TEMPERATURE
+                | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            ): set(),
+            ClimateEntityFeature.TARGET_HUMIDITY: set(),
+            ClimateEntityFeature.FAN_MODE: set(),
+            ClimateEntityFeature.PRESET_MODE: set(),
+            ClimateEntityFeature.SWING_MODE: set(),
+            ClimateEntityFeature.AUX_HEAT: set(),
+            ClimateEntityFeature.TURN_ON: set(),
+            ClimateEntityFeature.TURN_OFF: set(),
+        }
 
         self._attr_name = name
         self._attr_unique_id = unique_id
@@ -152,19 +167,38 @@ class ClimateGroup(GroupEntity, ClimateEntity):
         self._attr_temperature_unit = temperature_unit
 
         # Set some defaults (will be overwritten on update)
-        self._attr_supported_features = ClimateEntityFeature(0)
-        self._attr_hvac_modes = [HVACMode.OFF]
-        self._attr_hvac_mode = None
-        self._attr_hvac_action = None
+        self._attr_supported_features: ClimateEntityFeature = ClimateEntityFeature(0)
+        self._attr_hvac_modes: list[HVACMode] = [HVACMode.OFF]
+        self._attr_hvac_mode: HVACMode | None = None
+        self._attr_hvac_action: HVACAction | None = None
 
-        self._attr_swing_modes = None
-        self._attr_swing_mode = None
+        self._attr_swing_modes: list[str] | None = None
+        self._attr_swing_mode: str | None = None
 
-        self._attr_fan_modes = None
-        self._attr_fan_mode = None
+        self._attr_fan_modes: list[str] | None = None
+        self._attr_fan_mode: str | None = None
 
-        self._attr_preset_modes = None
-        self._attr_preset_mode = None
+        self._attr_preset_modes: list[str] | None = None
+        self._attr_preset_mode: str | None = None
+
+    @callback
+    def async_update_supported_features(
+        self,
+        entity_id: str,
+        new_state: State | None,
+    ) -> None:
+        """Update dictionaries with supported features."""
+        if not new_state:
+            for climate in self._features.values():
+                climate.discard(entity_id)
+            return
+
+        new_features = new_state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        for feature_flag, entity_set in self._features.items():
+            if new_features & feature_flag:
+                entity_set.add(entity_id)
+            else:
+                entity_set.discard(entity_id)
 
     @callback
     def async_update_group_state(self) -> None:
@@ -205,11 +239,15 @@ class ClimateGroup(GroupEntity, ClimateEntity):
         self._attr_max_temp = reduce_attribute(states, ATTR_MAX_TEMP, reduce=min)
         # End temperature settings
 
+        # Build util that will help with the computation of intersection of modes
+        # across all the entity states.
+        def intersect_modes(modes: list[list[Any]]) -> list[Any]:
+            return list(set().union(*modes).intersection(*modes))
+
         # available HVAC modes
         all_hvac_modes = list(find_state_attributes(states, ATTR_HVAC_MODES))
         if all_hvac_modes:
-            # Merge all effects from all effect_lists with a union merge.
-            self._attr_hvac_modes = list(set().union(*all_hvac_modes))
+            self._attr_hvac_modes = intersect_modes(all_hvac_modes)
 
         current_hvac_modes = [
             x.state
@@ -245,7 +283,7 @@ class ClimateGroup(GroupEntity, ClimateEntity):
         # available swing modes
         all_swing_modes = list(find_state_attributes(states, ATTR_SWING_MODES))
         if all_swing_modes:
-            self._attr_swing_modes = list(set().union(*all_swing_modes))
+            self._attr_swing_modes = intersect_modes(all_swing_modes)
 
         # Report the most common swing_mode.
         self._attr_swing_mode = most_frequent_attribute(states, ATTR_SWING_MODE)
@@ -253,8 +291,7 @@ class ClimateGroup(GroupEntity, ClimateEntity):
         # available fan modes
         all_fan_modes = list(find_state_attributes(states, ATTR_FAN_MODES))
         if all_fan_modes:
-            # Merge all effects from all effect_lists with a union merge.
-            self._attr_fan_modes = list(set().union(*all_fan_modes))
+            self._attr_fan_modes = intersect_modes(all_fan_modes)
 
         # Report the most common fan_mode.
         self._attr_fan_mode = most_frequent_attribute(states, ATTR_FAN_MODE)
@@ -262,8 +299,7 @@ class ClimateGroup(GroupEntity, ClimateEntity):
         # available preset modes
         all_preset_modes = list(find_state_attributes(states, ATTR_PRESET_MODES))
         if all_preset_modes:
-            # Merge all effects from all effect_lists with a union merge.
-            self._attr_preset_modes = list(set().union(*all_preset_modes))
+            self._attr_preset_modes = intersect_modes(all_preset_modes)
 
         # Report the most common fan_mode.
         self._attr_preset_mode = most_frequent_attribute(states, ATTR_PRESET_MODE)
@@ -276,16 +312,22 @@ class ClimateGroup(GroupEntity, ClimateEntity):
 
         # Bitwise-and the supported features with the Grouped climate's features
         # so that we don't break in the future when a new feature is added.
-        self._attr_supported_features &= SUPPORT_FLAGS
-
-        _LOGGER.debug("State update complete")
+        supported_features = ClimateEntityFeature(0)
+        for feature_flags, entity_set in self._features.items():
+            if entity_set:
+                supported_features |= feature_flags
+        self._attr_supported_features = supported_features
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
-        """Forward the turn_on command to all climate in the climate group."""
-        data = {ATTR_ENTITY_ID: self._entity_ids}
+        """Forward the temperature command to all climate in the climate group."""
+        data = {
+            ATTR_ENTITY_ID: self._features[
+                ClimateEntityFeature.TARGET_TEMPERATURE
+                | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            ]
+        }
 
         if ATTR_HVAC_MODE in kwargs:
-            _LOGGER.debug("Set temperature with HVAC MODE")
             await self.async_set_hvac_mode(kwargs[ATTR_HVAC_MODE])
 
         if ATTR_TEMPERATURE in kwargs:
@@ -295,44 +337,56 @@ class ClimateGroup(GroupEntity, ClimateEntity):
         if ATTR_TARGET_TEMP_HIGH in kwargs:
             data[ATTR_TARGET_TEMP_HIGH] = kwargs[ATTR_TARGET_TEMP_HIGH]
 
-        _LOGGER.debug("Setting temperature: %s", data)
-
         await self.hass.services.async_call(
-            DOMAIN, SERVICE_SET_TEMPERATURE, data, blocking=True, context=self._context
+            DOMAIN, SERVICE_SET_TEMPERATURE, data, context=self._context
+        )
+
+    async def async_set_humidity(self, humidity: int) -> None:
+        """Forward the humidity to all supported climate in the climate group."""
+        data = {
+            ATTR_ENTITY_ID: self._features[ClimateEntityFeature.TARGET_HUMIDITY],
+            ATTR_HUMIDITY: humidity,
+        }
+        await self.hass.services.async_call(
+            DOMAIN, SERVICE_SET_HUMIDITY, data, context=self._context
         )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Forward the turn_on command to all climate in the climate group."""
+        """Forward the HVAC mode all climate in the climate group."""
         data = {ATTR_ENTITY_ID: self._entity_ids, ATTR_HVAC_MODE: hvac_mode}
-        _LOGGER.debug("Setting hvac mode: %s", data)
         await self.hass.services.async_call(
-            DOMAIN, SERVICE_SET_HVAC_MODE, data, blocking=True, context=self._context
+            DOMAIN, SERVICE_SET_HVAC_MODE, data, context=self._context
         )
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Forward the fan_mode to all climate in the climate group."""
-        data = {ATTR_ENTITY_ID: self._entity_ids, ATTR_FAN_MODE: fan_mode}
-        _LOGGER.debug("Setting fan mode: %s", data)
+        data = {
+            ATTR_ENTITY_ID: self._features[ClimateEntityFeature.FAN_MODE],
+            ATTR_FAN_MODE: fan_mode,
+        }
         await self.hass.services.async_call(
-            DOMAIN, SERVICE_SET_FAN_MODE, data, blocking=True, context=self._context
+            DOMAIN, SERVICE_SET_FAN_MODE, data, context=self._context
         )
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Forward the swing_mode to all climate in the climate group."""
-        data = {ATTR_ENTITY_ID: self._entity_ids, ATTR_SWING_MODE: swing_mode}
-        _LOGGER.debug("Setting swing mode: %s", data)
+        data = {
+            ATTR_ENTITY_ID: self._features[ClimateEntityFeature.SWING_MODE],
+            ATTR_SWING_MODE: swing_mode,
+        }
         await self.hass.services.async_call(
             DOMAIN,
             SERVICE_SET_SWING_MODE,
             data,
-            blocking=True,
             context=self._context,
         )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Forward the preset_mode to all climate in the climate group."""
-        data = {ATTR_ENTITY_ID: self._entity_ids, ATTR_PRESET_MODE: preset_mode}
-        _LOGGER.debug("Setting preset mode: %s", data)
+        data = {
+            ATTR_ENTITY_ID: self._features[ClimateEntityFeature.PRESET_MODE],
+            ATTR_PRESET_MODE: preset_mode,
+        }
         await self.hass.services.async_call(
             DOMAIN,
             SERVICE_SET_PRESET_MODE,
