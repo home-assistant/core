@@ -18,7 +18,7 @@
   "loggers": ["pyinsteon", "pypubsub"],
   "requirements": [
     "pyinsteon==1.5.3",
-    "insteon-frontend-home-assistant==0.4.0"
+    "insteon-frontend-home-assistant==0.5.0"
   ],
   "usb": [
     {

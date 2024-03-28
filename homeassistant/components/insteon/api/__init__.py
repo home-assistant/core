@@ -16,10 +16,19 @@ from .aldb import (
     websocket_reset_aldb,
     websocket_write_aldb,
 )
+from .config import (
+    websocket_add_device_override,
+    websocket_get_config,
+    websocket_get_modem_schema,
+    websocket_remove_device_override,
+    websocket_update_modem_config,
+)
 from .device import (
     websocket_add_device,
+    websocket_add_x10_device,
     websocket_cancel_add_device,
     websocket_get_device,
+    websocket_remove_device,
 )
 from .properties import (
     websocket_change_properties_record,
@@ -58,12 +67,20 @@ def async_load_api(hass):
     websocket_api.async_register_command(hass, websocket_reset_aldb)
     websocket_api.async_register_command(hass, websocket_add_default_links)
     websocket_api.async_register_command(hass, websocket_notify_on_aldb_status)
+    websocket_api.async_register_command(hass, websocket_add_x10_device)
+    websocket_api.async_register_command(hass, websocket_remove_device)
 
     websocket_api.async_register_command(hass, websocket_get_properties)
     websocket_api.async_register_command(hass, websocket_change_properties_record)
     websocket_api.async_register_command(hass, websocket_write_properties)
     websocket_api.async_register_command(hass, websocket_load_properties)
     websocket_api.async_register_command(hass, websocket_reset_properties)
+
+    websocket_api.async_register_command(hass, websocket_get_config)
+    websocket_api.async_register_command(hass, websocket_get_modem_schema)
+    websocket_api.async_register_command(hass, websocket_update_modem_config)
+    websocket_api.async_register_command(hass, websocket_add_device_override)
+    websocket_api.async_register_command(hass, websocket_remove_device_override)
 
 
 async def async_register_insteon_frontend(hass: HomeAssistant):
@@ -80,8 +97,7 @@ async def async_register_insteon_frontend(hass: HomeAssistant):
             hass=hass,
             frontend_url_path=DOMAIN,
             webcomponent_name="insteon-frontend",
-            sidebar_title=DOMAIN.capitalize(),
-            sidebar_icon="mdi:power",
+            config_panel_domain=DOMAIN,
             module_url=f"{URL_BASE}/entrypoint-{build_id}.js",
             embed_iframe=True,
             require_admin=True,
