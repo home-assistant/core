@@ -420,7 +420,7 @@ def _test_single_input_cluster_device_class(probe_mock):
         (Platform.BINARY_SENSOR, ias_ch),
         (Platform.SENSOR, analog_ch),
     )
-    for call, details in zip(probe_mock.call_args_list, probes):
+    for call, details in zip(probe_mock.call_args_list, probes, strict=False):
         platform, ch = details
         assert call[0][0] == platform
         assert call[0][1] == ch
