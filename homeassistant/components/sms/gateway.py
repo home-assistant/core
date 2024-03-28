@@ -92,7 +92,6 @@ class Gateway:
         start = True
         entries = []
         all_parts = -1
-        all_parts_arrived = False
         _LOGGER.debug("Start remaining:%i", start_remaining)
 
         try:
@@ -101,32 +100,30 @@ class Gateway:
                     entry = state_machine.GetNextSMS(Folder=0, Start=True)
                     all_parts = entry[0]["UDH"]["AllParts"]
                     part_number = entry[0]["UDH"]["PartNumber"]
-                    is_single_part = all_parts == 0
-                    is_multi_part = 0 <= all_parts < start_remaining
+                    part_is_missing = all_parts > start_remaining
                     _LOGGER.debug("All parts:%i", all_parts)
                     _LOGGER.debug("Part Number:%i", part_number)
                     _LOGGER.debug("Remaining:%i", remaining)
-                    all_parts_arrived = is_multi_part or is_single_part
-                    _LOGGER.debug("Start all_parts_arrived:%s", all_parts_arrived)
+                    _LOGGER.debug("Start is_part_missing:%s", part_is_missing)
                     start = False
                 else:
                     entry = state_machine.GetNextSMS(
                         Folder=0, Location=entry[0]["Location"]
                     )
 
-                if all_parts_arrived or force:
-                    remaining = remaining - 1
-                    entries.append(entry)
-
-                    # delete retrieved sms
-                    _LOGGER.debug("Deleting message")
-                    try:
-                        state_machine.DeleteSMS(Folder=0, Location=entry[0]["Location"])
-                    except gammu.ERR_MEMORY_NOT_AVAILABLE:
-                        _LOGGER.error("Error deleting SMS, memory not available")
-                else:
+                if part_is_missing and not force:
                     _LOGGER.debug("Not all parts have arrived")
                     break
+
+                remaining = remaining - 1
+                entries.append(entry)
+
+                # delete retrieved sms
+                _LOGGER.debug("Deleting message")
+                try:
+                    state_machine.DeleteSMS(Folder=0, Location=entry[0]["Location"])
+                except gammu.ERR_MEMORY_NOT_AVAILABLE:
+                    _LOGGER.error("Error deleting SMS, memory not available")
 
         except gammu.ERR_EMPTY:
             # error is raised if memory is empty (this induces wrong reported
