@@ -1893,7 +1893,7 @@ ring-doorbell[listen]==0.8.9
 rokuecp==0.19.2
 
 # homeassistant.components.romy
-romy==0.0.7
+romy==0.0.9
 
 # homeassistant.components.roomba
 roombapy==1.8.1
