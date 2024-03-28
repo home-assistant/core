@@ -3720,7 +3720,8 @@
     "moon": {
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "calculated"
+      "iot_class": "calculated",
+      "single_config_entry": true
     },
     "mopeka": {
       "name": "Mopeka",
