@@ -29,7 +29,7 @@ class MockDateEntity(MockEntity, DateEntity):
 
 def init(empty=False):
     """Initialize the platform with entities."""
-    global ENTITIES
+    global ENTITIES  # noqa: PLW0603
 
     ENTITIES = (
         []

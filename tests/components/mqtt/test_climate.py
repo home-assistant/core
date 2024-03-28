@@ -213,7 +213,7 @@ async def test_preset_modes_deprecation_guard(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, parameter: str
 ) -> None:
     """Test the configuration for invalid legacy parameters."""
-    assert f"[{parameter}] is an invalid option for [mqtt]. Check: mqtt->mqtt->climate->0->{parameter}"
+    # assert f"[{parameter}] is an invalid option for [mqtt]. Check: mqtt->mqtt->climate->0->{parameter}"
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])

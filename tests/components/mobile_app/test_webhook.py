@@ -24,10 +24,8 @@ from homeassistant.setup import async_setup_component
 from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE, UPDATE
 
 from tests.common import async_capture_events, async_mock_service
-from tests.components.conversation.conftest import mock_agent
 
-# To avoid autoflake8 removing the import
-mock_agent = mock_agent
+pytest_plugins = "tests.components.conversation.conftest"
 
 
 @pytest.fixture
