@@ -29,6 +29,7 @@ VICARE_NAME = "ViCare"
 
 CONF_CIRCUIT = "circuit"
 CONF_HEATING_TYPE = "heating_type"
+CONF_EXTENDED_API = "extended_api"
 
 DEFAULT_CACHE_DURATION = 60
 

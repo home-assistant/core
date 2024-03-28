@@ -22,6 +22,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
+    CONF_EXTENDED_API,
     DEFAULT_CACHE_DURATION,
     DEVICE_LIST,
     DOMAIN,
@@ -33,6 +34,18 @@ from .utils import get_device
 
 _LOGGER = logging.getLogger(__name__)
 _TOKEN_FILENAME = "vicare_token.save"
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    if entry.version == 1:
+        _LOGGER.debug("Migrating from version %s", entry.version)
+        entry.version = 2
+        hass.config_entries.async_update_entry(
+            entry, options={**entry.options, CONF_EXTENDED_API: False}
+        )
+        _LOGGER.debug("Migration to version %s successful", entry.version)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -71,11 +84,16 @@ def vicare_login(
 
 def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up PyVicare API."""
-    vicare_api = vicare_login(hass, entry.data)
+    cache_duration = DEFAULT_CACHE_DURATION
+    if entry.options.get(CONF_EXTENDED_API, False) is True:
+        # halve cache duration due to extended API rate limit
+        _LOGGER.debug("Decreasing cache duration due to extended API rate limit")
+        cache_duration = int(DEFAULT_CACHE_DURATION / 2)
+    vicare_api = vicare_login(hass, entry.data, cache_duration)
 
     device_config_list = get_supported_devices(vicare_api.devices)
     if (number_of_devices := len(device_config_list)) > 1:
-        cache_duration = DEFAULT_CACHE_DURATION * number_of_devices
+        cache_duration = cache_duration * number_of_devices
         _LOGGER.debug(
             "Found %s devices, adjusting cache duration to %s",
             number_of_devices,

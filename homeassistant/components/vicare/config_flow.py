@@ -20,6 +20,7 @@ from homeassistant.helpers.device_registry import format_mac
 
 from . import vicare_login
 from .const import (
+    CONF_EXTENDED_API,
     CONF_HEATING_TYPE,
     DEFAULT_HEATING_TYPE,
     DOMAIN,
@@ -45,11 +46,17 @@ USER_SCHEMA = REAUTH_SCHEMA.extend(
     }
 )
 
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_EXTENDED_API): bool,
+    }
+)
+
 
 class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ViCare."""
 
-    VERSION = 1
+    VERSION = 2
     entry: ConfigEntry | None
 
     async def async_step_user(
@@ -131,3 +138,36 @@ class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
 
         return await self.async_step_user()
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
+        """Create the options flow."""
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Options flow handler."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the options."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA,
+                user_input or dict(self.entry.options),
+            ),
+            errors=errors,
+        )
