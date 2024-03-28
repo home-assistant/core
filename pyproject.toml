@@ -479,8 +479,6 @@ filterwarnings = [
     # -- fixed, waiting for release / update
     # https://github.com/mkmer/AIOAladdinConnect/commit/8851fff4473d80d70ac518db2533f0fbef63b69c - >=0.2.0
     "ignore:module 'sre_constants' is deprecated:DeprecationWarning:AIOAladdinConnect",
-    # https://github.com/ludeeus/aiogithubapi/pull/208 - >=23.9.0
-    "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:aiogithubapi.namespaces.events",
     # https://github.com/bachya/aiopurpleair/pull/200 - >=2023.10.0
     "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:aiopurpleair.helpers.validators",
     # https://github.com/tschamm/boschshcpy/pull/39 - >=0.2.89
