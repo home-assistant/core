@@ -124,7 +124,7 @@ backoff>=2.0
 
 # Required to avoid breaking (#101042).
 # v2 has breaking changes (#99218).
-pydantic==1.10.12
+pydantic==1.10.14
 
 # Breaks asyncio
 # https://github.com/pubnub/python/issues/130
