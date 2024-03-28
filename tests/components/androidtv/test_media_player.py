@@ -1,5 +1,6 @@
 """The tests for the androidtv platform."""
 
+from collections.abc import Generator
 from datetime import timedelta
 import logging
 from typing import Any
@@ -170,7 +171,7 @@ CONFIG_FIRETV_DEFAULT = CONFIG_FIRETV_PYTHON_ADB
 
 
 @pytest.fixture(autouse=True)
-def adb_device_tcp_fixture() -> None:
+def adb_device_tcp_fixture() -> Generator[None, patchers.AdbDeviceTcpAsyncFake, None]:
     """Patch ADB Device TCP."""
     with patch(
         "androidtv.adb_manager.adb_manager_async.AdbDeviceTcpAsync",
@@ -180,7 +181,7 @@ def adb_device_tcp_fixture() -> None:
 
 
 @pytest.fixture(autouse=True)
-def load_adbkey_fixture() -> None:
+def load_adbkey_fixture() -> Generator[None, str, None]:
     """Patch load_adbkey."""
     with patch(
         "homeassistant.components.androidtv.ADBPythonSync.load_adbkey",
@@ -190,7 +191,7 @@ def load_adbkey_fixture() -> None:
 
 
 @pytest.fixture(autouse=True)
-def keygen_fixture() -> None:
+def keygen_fixture() -> Generator[None, Mock, None]:
     """Patch keygen."""
     with patch(
         "homeassistant.components.androidtv.keygen",
@@ -1202,11 +1203,12 @@ async def test_exception(hass: HomeAssistant) -> None:
         assert state.state == STATE_OFF
 
         # When an unforeseen exception occurs, we close the ADB connection and raise the exception
-        with patchers.PATCH_ANDROIDTV_UPDATE_EXCEPTION, pytest.raises(Exception):
+        with patchers.PATCH_ANDROIDTV_UPDATE_EXCEPTION:
             await async_update_entity(hass, entity_id)
-            state = hass.states.get(entity_id)
-            assert state is not None
-            assert state.state == STATE_UNAVAILABLE
+
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_UNAVAILABLE
 
         # On the next update, HA will reconnect to the device
         await async_update_entity(hass, entity_id)
