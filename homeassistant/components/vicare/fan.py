@@ -126,6 +126,7 @@ class ViCareFan(ViCareEntity, FanEntity):
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
 
+        # if fan mode is something else than *permanent*, speed is controlled by sensor/schedule
         if self._attributes["active_vicare_mode"] is not VentilationMode.PERMANENT:
             return None
 
