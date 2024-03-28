@@ -7,6 +7,7 @@ from contextlib import suppress
 from functools import partial
 import logging
 from typing import cast
+import urllib.parse
 
 from soco.data_structures import DidlObject
 from soco.ms_data_structures import MusicServiceItem
@@ -201,7 +202,7 @@ def build_item_response(
 
     if not title:
         try:
-            title = payload["idstring"].split("/")[1]
+            title = urllib.parse.unquote(payload["idstring"].split("/")[1])
         except IndexError:
             title = LIBRARY_TITLES_MAPPING[payload["idstring"]]
 
