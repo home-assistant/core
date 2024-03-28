@@ -27,7 +27,7 @@ class EGPSConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=f"{dev_id}",
+                    title=dev_id,
                     data={CONF_DEVICE_API_ID: dev_id},
                 )
             return self.async_abort(reason="device_not_found")
