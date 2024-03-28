@@ -16,11 +16,6 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN, NASWEB_SCHEMA_IMG_URL
 from .coordinator import NASwebCoordinator
-from .helper import (
-    deinitialize_nasweb_data_if_empty,
-    get_integration_webhook_url,
-    initialize_nasweb_data,
-)
 from .nasweb_data import NASwebData
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,31 +39,33 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     except AuthError as e:
         raise InvalidAuth from e
 
-    hass.data.setdefault(DOMAIN, NASwebData())
-    nasweb_data: NASwebData = hass.data[DOMAIN]
-    if not nasweb_data.is_initialized():
-        initialize_nasweb_data(hass)
+    nasweb_data = NASwebData()
+    nasweb_data.initialize(hass)
+    try:
+        webio_serial = webio_api.get_serial_number()
+        if webio_serial is None:
+            raise MissingNASwebData("Device serial number is not available")
 
-    webio_serial = webio_api.get_serial_number()
-    if webio_serial is None:
-        raise MissingNASwebData("Device serial number is not available")
+        coordinator = NASwebCoordinator(hass, webio_api)
+        webhook_url = nasweb_data.get_webhook_url(hass)
+        nasweb_data.notify_coordinator.add_coordinator(webio_serial, coordinator)
+        subscription = await webio_api.status_subscription(webhook_url, True)
+        if not subscription:
+            nasweb_data.notify_coordinator.remove_coordinator(webio_serial)
+            raise MissingNASwebData(
+                "Failed to subscribe for status updates from device"
+            )
 
-    coordinator = NASwebCoordinator(hass, webio_api)
-    webhook_url = get_integration_webhook_url(hass)
-    nasweb_data.notify_coordinator.add_coordinator(webio_serial, coordinator)
-    subscription = await webio_api.status_subscription(webhook_url, True)
-    if not subscription:
+        result = await nasweb_data.notify_coordinator.check_connection(webio_serial)
         nasweb_data.notify_coordinator.remove_coordinator(webio_serial)
-        raise MissingNASwebData("Failed to subscribe for status updates from device")
+        if not result:
+            if subscription:
+                await webio_api.status_subscription(webhook_url, False)
+            raise MissingNASwebData("Did not receive status from device")
 
-    result = await nasweb_data.notify_coordinator.check_connection(webio_serial)
-    nasweb_data.notify_coordinator.remove_coordinator(webio_serial)
-    if not result:
-        if subscription:
-            await webio_api.status_subscription(webhook_url, False)
-        raise MissingNASwebData("Did not receive status from device")
-
-    name = webio_api.get_name()
+        name = webio_api.get_name()
+    finally:
+        nasweb_data.deinitialize(hass)
     return {"title": name}
 
 
@@ -108,8 +105,6 @@ class NASwebConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(title=info["title"], data=user_input)
-            finally:
-                deinitialize_nasweb_data_if_empty(self.hass)
 
         return self.async_show_form(
             step_id="user",
