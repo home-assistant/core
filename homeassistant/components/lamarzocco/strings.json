@@ -66,11 +66,6 @@
         "name": "Start backflush"
       }
     },
-    "calendar": {
-      "auto_on_off_schedule": {
-        "name": "Auto on/off schedule"
-      }
-    },
     "number": {
       "coffee_temp": {
         "name": "Coffee target temperature"
@@ -109,15 +104,15 @@
         "state": {
           "disabled": "Disabled",
           "prebrew": "Prebrew",
-          "preinfusion": "Preinfusion"
+          "typeb": "Preinfusion"
         }
       },
       "steam_temp_select": {
         "name": "Steam level",
         "state": {
-          "1": "1",
-          "2": "2",
-          "3": "3"
+          "126": "1",
+          "128": "2",
+          "131": "3"
         }
       }
     },
@@ -139,9 +134,6 @@
       }
     },
     "switch": {
-      "auto_on_off": {
-        "name": "Auto on/off"
-      },
       "steam_boiler": {
         "name": "Steam boiler"
       }

@@ -13,7 +13,6 @@ from .coordinator import LaMarzoccoUpdateCoordinator
 
 TO_REDACT = {
     "serial_number",
-    "machine_sn",
 }
 
 
@@ -22,22 +21,12 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     coordinator: LaMarzoccoUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    device = coordinator.device
     # collect all data sources
     data = {}
-    data["current_status"] = coordinator.lm.current_status
-    data["machine_info"] = coordinator.lm.machine_info
-    data["config"] = coordinator.lm.config
-    data["statistics"] = {"stats": coordinator.lm.statistics}  # wrap to satisfy mypy
+    data["model"] = device.model
+    data["config"] = device.config
+    data["firmware"] = device.firmware
+    data["statistics"] = device.statistics
 
-    # build a firmware section
-    data["firmware"] = {
-        "machine": {
-            "version": coordinator.lm.firmware_version,
-            "latest_version": coordinator.lm.latest_firmware_version,
-        },
-        "gateway": {
-            "version": coordinator.lm.gateway_version,
-            "latest_version": coordinator.lm.latest_gateway_version,
-        },
-    }
     return async_redact_data(data, TO_REDACT)
