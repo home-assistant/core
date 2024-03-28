@@ -2064,6 +2064,9 @@ temperusb==1.6.1
 # homeassistant.components.teslemetry
 tesla-fleet-api==0.4.9
 
+# homeassistant.components.braviatv
+tenacity==8.2.3
+
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.1
 
