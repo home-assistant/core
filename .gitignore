@@ -28,6 +28,9 @@ Icon
 .idea
 *.iml
 
+# asdf
+.tool-versions
+
 # pytest
 .pytest_cache
 .cache
