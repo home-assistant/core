@@ -105,7 +105,7 @@ def mock_envoy_fixture(
     mock_envoy.supported_features = SupportedFeatures(
         SupportedFeatures.INVERTERS
         | SupportedFeatures.PRODUCTION
-        | SupportedFeatures.PRODUCTION
+        | SupportedFeatures.NET_CONSUMPTION
         | SupportedFeatures.METERING
         | SupportedFeatures.THREEPHASE
         | SupportedFeatures.CTMETERS

@@ -6386,6 +6386,7 @@
       'supported_features': list([
         'INVERTERS',
         'METERING',
+        'NET_CONSUMPTION',
         'ENCHARGE',
         'ENPOWER',
         'PRODUCTION',
