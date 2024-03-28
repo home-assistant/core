@@ -2336,7 +2336,7 @@ pytrafikverket==0.3.10
 pytrydan==0.4.0
 
 # homeassistant.components.usb
-pyudev==0.23.2
+pyudev==0.24.1
 
 # homeassistant.components.unifiprotect
 pyunifiprotect==5.0.2
