@@ -81,12 +81,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up Arve device based on a config entry."""
     coordinator: ArveCoordinator = hass.data[DOMAIN][entry.entry_id]
-    devices = coordinator.devices.sn
 
     async_add_entities(
         ArveDevice(coordinator, description, sn)
         for description in SENSORS
-        for sn in devices
+        for sn in coordinator.devices.sn
     )
 
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from asyncarve import Arve, ArveConnectionError
+from asyncarve import Arve, ArveConnectionError, ArveCustomer
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -33,13 +33,14 @@ class ArveConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_CLIENT_SECRET],
             )
             try:
-                await arve.get_devices()
+                customer: ArveCustomer = await arve.get_customer_id()
             except ArveConnectionError:
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(
                     title="Arve",
                     data=user_input,
+                    options={"customerId": customer.customerId},
                 )
         return self.async_show_form(
             step_id="user",

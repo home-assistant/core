@@ -43,14 +43,10 @@ class ArveCoordinator(DataUpdateCoordinator[ArveSensProData]):
             session=async_get_clientsession(hass),
         )
 
-        self.first_start = True
-
     async def _async_update_data(self) -> dict[str, ArveDeviceInfo]:
         """Fetch data from API endpoint."""
         try:
-            if self.first_start:
-                self.devices = await self.arve.get_devices()
-                self.first_start = False
+            self.devices = await self.arve.get_devices()
 
             response_data = {
                 sn: ArveDeviceInfo(
