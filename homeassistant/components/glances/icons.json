@@ -45,6 +45,9 @@
       },
       "raid_used": {
         "default": "mdi:harddisk"
+      },
+      "uptime": {
+        "default": "mdi:clock-time-eight-outline"
       }
     }
   }

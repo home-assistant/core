@@ -100,6 +100,9 @@
       },
       "raid_used": {
         "name": "{sensor_label} used"
+      },
+      "uptime": {
+        "name": "Uptime"
       }
     }
   },

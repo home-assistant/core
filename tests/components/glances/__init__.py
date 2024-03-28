@@ -1,5 +1,6 @@
 """Tests for Glances."""
 
+from datetime import datetime
 from typing import Any
 
 MOCK_USER_INPUT: dict[str, Any] = {
@@ -173,6 +174,8 @@ MOCK_DATA = {
     "uptime": "3 days, 10:25:20",
 }
 
+MOCK_REFERENCE_DATE: datetime = datetime.fromisoformat("2024-02-13T14:13:12")
+
 HA_SENSOR_DATA: dict[str, Any] = {
     "fs": {
         "/ssl": {"disk_use": 30.7, "disk_use_percent": 6.7, "disk_free": 426.5},
@@ -207,4 +210,5 @@ HA_SENSOR_DATA: dict[str, Any] = {
             "config": "UU",
         },
     },
+    "uptime": "3 days, 10:25:20",
 }
