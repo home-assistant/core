@@ -483,8 +483,6 @@ filterwarnings = [
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:aiogithubapi.namespaces.events",
     # https://github.com/bachya/aiopurpleair/pull/200 - >=2023.10.0
     "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:aiopurpleair.helpers.validators",
-    # https://github.com/rossengeorgiev/aprs-python/commit/5e79c810355fc2df4348581779815f2981493e3f - >=0.7.1
-    "ignore:invalid escape sequence:SyntaxWarning:.*aprslib.parsing.weather",
     # https://github.com/tschamm/boschshcpy/pull/39 - >=0.2.89
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning:boschshcpy.api",
     # https://github.com/DataDog/datadogpy/pull/290 - >=0.23.0
