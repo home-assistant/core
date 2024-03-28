@@ -1,7 +1,10 @@
 {
   "domain": "thethingsnetwork",
   "name": "The Things Network",
-  "codeowners": ["@fabaff"],
+  "codeowners": ["@angelnu"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/thethingsnetwork",
-  "iot_class": "local_push"
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "requirements": ["ttn_client==0.0.4"]
 }
