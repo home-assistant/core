@@ -87,7 +87,7 @@ async def get_hosts_list_if_supported(
             )
 
         else:
-            raise err
+            raise
 
     return supports_hosts, fbx_devices
 

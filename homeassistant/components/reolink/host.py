@@ -351,7 +351,7 @@ class ReolinkHost:
                 await self._api.subscribe(sub_type=SubType.long_poll)
             except NotSupportedError as err:
                 if initial:
-                    raise err
+                    raise
                 # make sure the long_poll_task is always created to try again later
                 if not self._lost_subscription:
                     self._lost_subscription = True
@@ -552,7 +552,7 @@ class ReolinkHost:
                     "Unexpected exception while requesting ONVIF pull point: %s", ex
                 )
                 await self._api.unsubscribe(sub_type=SubType.long_poll)
-                raise ex
+                raise
 
             self._long_poll_error = False
 
