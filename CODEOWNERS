@@ -11,8 +11,13 @@ pyproject.toml @home-assistant/core
 /.github/ @home-assistant/core
 /.vscode/ @home-assistant/core
 /homeassistant/*.py @home-assistant/core
+/homeassistant/auth/ @home-assistant/core
+/homeassistant/backports/ @home-assistant/core
 /homeassistant/helpers/ @home-assistant/core
+/homeassistant/scripts/ @home-assistant/core
 /homeassistant/util/ @home-assistant/core
+/pylint/ @home-assistant/core
+/script/ @home-assistant/core
 
 # Home Assistant Supervisor
 build.json @home-assistant/supervisor
