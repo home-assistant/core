@@ -38,7 +38,7 @@ from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
 from homeassistant.config import async_process_component_config
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_CLOSE,
@@ -82,7 +82,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.json import JSONEncoder, _orjson_default_encoder, json_dumps
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import setup_component
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as dt_util
@@ -94,6 +94,7 @@ from homeassistant.util.json import (
     json_loads_array,
     json_loads_object,
 )
+from homeassistant.util.signal_type import SignalType
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.uuid as uuid_util
 import homeassistant.util.yaml.loader as yaml_loader
@@ -1291,11 +1292,6 @@ class MockEntity(entity.Entity):
         return self._handle("should_poll")
 
     @property
-    def state(self) -> StateType:
-        """Return the state of the entity."""
-        return self._handle("state")
-
-    @property
     def supported_features(self) -> int | None:
         """Info about supported features."""
         return self._handle("supported_features")
@@ -1465,7 +1461,10 @@ def mock_integration(
 
 
 def mock_platform(
-    hass: HomeAssistant, platform_path: str, module: Mock | MockPlatform | None = None
+    hass: HomeAssistant,
+    platform_path: str,
+    module: Mock | MockPlatform | None = None,
+    built_in=True,
 ) -> None:
     """Mock a platform.
 
@@ -1476,7 +1475,7 @@ def mock_platform(
     module_cache = hass.data[loader.DATA_COMPONENTS]
 
     if domain not in integration_cache:
-        mock_integration(hass, MockModule(domain))
+        mock_integration(hass, MockModule(domain), built_in=built_in)
 
     integration_cache[domain]._top_level_files.add(f"{platform_name}.py")
     _LOGGER.info("Adding mock integration platform: %s", platform_path)
@@ -1497,7 +1496,9 @@ def async_capture_events(hass: HomeAssistant, event_name: str) -> list[Event]:
 
 
 @callback
-def async_mock_signal(hass: HomeAssistant, signal: str) -> list[tuple[Any]]:
+def async_mock_signal(
+    hass: HomeAssistant, signal: SignalType[Any] | str
+) -> list[tuple[Any]]:
     """Catch all dispatches to a signal."""
     calls = []
 
@@ -1667,6 +1668,7 @@ def setup_test_component_platform(
     domain: str,
     entities: Sequence[Entity],
     from_config_entry: bool = False,
+    built_in: bool = True,
 ) -> MockPlatform:
     """Mock a test component platform for tests."""
 
@@ -1683,9 +1685,8 @@ def setup_test_component_platform(
         async_setup_platform=_async_setup_platform,
     )
 
-    # avoid loading config_entry if not needed
+    # avoid creating config entry setup if not needed
     if from_config_entry:
-        from homeassistant.config_entries import ConfigEntry
 
         async def _async_setup_entry(
             hass: HomeAssistant,
@@ -1698,9 +1699,5 @@ def setup_test_component_platform(
         platform.async_setup_entry = _async_setup_entry
         platform.async_setup_platform = None
 
-    mock_platform(
-        hass,
-        f"test.{domain}",
-        platform,
-    )
+    mock_platform(hass, f"test.{domain}", platform, built_in=built_in)
     return platform
