@@ -191,7 +191,7 @@ aioazuredevops==1.4.3
 aiobafi6==0.9.0
 
 # homeassistant.components.aws
-aiobotocore==2.9.1
+aiobotocore==2.12.1
 
 # homeassistant.components.comelit
 aiocomelit==0.9.0
@@ -227,7 +227,7 @@ aioesphomeapi==23.2.0
 aioflo==2021.11.0
 
 # homeassistant.components.github
-aiogithubapi==22.10.1
+aiogithubapi==23.11.0
 
 # homeassistant.components.guardian
 aioguardian==2022.07.0
@@ -511,7 +511,7 @@ bluetooth-data-tools==1.19.0
 bond-async==0.2.1
 
 # homeassistant.components.bosch_shc
-boschshcpy==0.2.82
+boschshcpy==0.2.91
 
 # homeassistant.components.bring
 bring-api==0.5.7
@@ -1545,7 +1545,7 @@ pymysensors==0.24.0
 pynetgear==0.10.10
 
 # homeassistant.components.nobo_hub
-pynobo==1.6.0
+pynobo==1.8.0
 
 # homeassistant.components.nuki
 pynuki==1.6.3
@@ -1893,7 +1893,7 @@ ring-doorbell[listen]==0.8.7
 rokuecp==0.19.2
 
 # homeassistant.components.romy
-romy==0.0.7
+romy==0.0.9
 
 # homeassistant.components.roomba
 roombapy==1.6.13
