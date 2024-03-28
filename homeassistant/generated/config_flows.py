@@ -55,6 +55,7 @@ FLOWS = {
         "aprilaire",
         "aranet",
         "arcam_fmj",
+        "arve",
         "aseko_pool_live",
         "asuswrt",
         "atag",
