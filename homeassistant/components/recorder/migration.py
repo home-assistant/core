@@ -1081,6 +1081,12 @@ def _apply_update(  # noqa: C901
         _migrate_statistics_columns_to_timestamp_removing_duplicates(
             hass, instance, session_maker, engine
         )
+    elif new_version == 43:
+        _add_columns(
+            session_maker,
+            "states",
+            [f"last_reported_ts {_column_types.timestamp_type}"],
+        )
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 

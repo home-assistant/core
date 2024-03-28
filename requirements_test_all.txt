@@ -365,7 +365,7 @@ aiotankerkoenig==0.4.1
 aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==72
+aiounifi==73
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -876,10 +876,10 @@ hole==0.8.0
 holidays==0.45
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240307.0
+home-assistant-frontend==20240327.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.3.12
+home-assistant-intents==2024.3.27
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1155,7 +1155,7 @@ ollama-hass==0.1.7
 omnilogic==0.4.5
 
 # homeassistant.components.ondilo_ico
-ondilo==0.2.0
+ondilo==0.4.0
 
 # homeassistant.components.onvif
 onvif-zeep-async==3.1.12
@@ -1298,7 +1298,7 @@ pyCEC==0.5.2
 pyControl4==1.1.0
 
 # homeassistant.components.duotecno
-pyDuotecno==2024.1.2
+pyDuotecno==2024.3.2
 
 # homeassistant.components.electrasmart
 pyElectra==1.2.0
@@ -1610,7 +1610,7 @@ pyprof2calltree==1.4.5
 pyprosegur==0.0.9
 
 # homeassistant.components.prusalink
-pyprusalink==2.0.0
+pyprusalink==2.1.1
 
 # homeassistant.components.ps4
 pyps4-2ndscreen==1.3.1
@@ -2185,7 +2185,7 @@ wallbox==0.6.0
 watchdog==2.3.1
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==0.2.13
+weatherflow4py==0.2.17
 
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.2
@@ -2266,7 +2266,7 @@ zeroconf==0.131.0
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.112
+zha-quirks==0.0.113
 
 # homeassistant.components.zha
 zigpy-deconz==0.23.1
@@ -2281,7 +2281,7 @@ zigpy-zigate==0.12.0
 zigpy-znp==0.12.1
 
 # homeassistant.components.zha
-zigpy==0.63.4
+zigpy==0.63.5
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.55.3

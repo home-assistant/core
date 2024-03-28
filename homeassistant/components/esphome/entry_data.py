@@ -47,6 +47,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
+from homeassistant.util.signal_type import SignalType
 
 from .const import DOMAIN
 from .dashboard import async_get_dashboard
@@ -147,9 +148,9 @@ class RuntimeEntryData:
         )
 
     @property
-    def signal_static_info_updated(self) -> str:
+    def signal_static_info_updated(self) -> SignalType[list[EntityInfo]]:
         """Return the signal to listen to for updates on static info."""
-        return f"esphome_{self.entry_id}_on_list"
+        return SignalType(f"esphome_{self.entry_id}_on_list")
 
     @callback
     def async_register_static_info_callback(

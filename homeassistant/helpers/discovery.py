@@ -15,11 +15,8 @@ from homeassistant import core, setup
 from homeassistant.const import Platform
 from homeassistant.loader import bind_hass
 
-from .dispatcher import (
-    SignalTypeFormat,
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
+from ..util.signal_type import SignalTypeFormat
+from .dispatcher import async_dispatcher_connect, async_dispatcher_send
 from .typing import ConfigType, DiscoveryInfoType
 
 SIGNAL_PLATFORM_DISCOVERED: SignalTypeFormat[DiscoveryDict] = SignalTypeFormat(
