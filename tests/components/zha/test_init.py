@@ -1,6 +1,7 @@
 """Tests for ZHA integration init."""
 
 import asyncio
+import pathlib
 import typing
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -17,6 +18,7 @@ from homeassistant.components.zha.core.const import (
     DOMAIN,
 )
 from homeassistant.components.zha.core.helpers import get_zha_data
+from homeassistant.components.zha.serial_port import UsbSerialPort
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     MAJOR_VERSION,
@@ -32,7 +34,7 @@ from .test_light import LIGHT_ON_OFF
 from tests.common import MockConfigEntry
 
 DATA_RADIO_TYPE = "ezsp"
-DATA_PORT_PATH = "/dev/serial/by-id/FTDI_USB__-__Serial_Cable_12345678-if00-port0"
+DATA_PORT_PATH = "/dev/serial/by-id/some-port"
 
 
 @pytest.fixture(autouse=True)
@@ -59,13 +61,28 @@ async def test_migration_from_v1_no_baudrate(
 ) -> None:
     """Test migration of config entry from v1."""
     config_entry_v1.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, config)
+
+    with patch(
+        "homeassistant.components.zha.serial_port.async_list_serial_ports",
+        return_value=[
+            UsbSerialPort(
+                device=pathlib.PurePosixPath(DATA_PORT_PATH),
+                resolved_device=pathlib.PurePosixPath("/dev/ttyUSB0"),
+                vid="AAAA",
+                pid="BBBB",
+                serial_number="1234",
+                product="zigbee radio",
+                manufacturer="test",
+            )
+        ],
+    ):
+        assert await async_setup_component(hass, DOMAIN, config)
 
     assert config_entry_v1.data[CONF_RADIO_TYPE] == DATA_RADIO_TYPE
     assert CONF_DEVICE in config_entry_v1.data
     assert config_entry_v1.data[CONF_DEVICE][CONF_DEVICE_PATH] == DATA_PORT_PATH
     assert CONF_USB_PATH not in config_entry_v1.data
-    assert config_entry_v1.version == 4
+    assert config_entry_v1.version == 5
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
@@ -74,7 +91,24 @@ async def test_migration_from_v1_with_baudrate(
 ) -> None:
     """Test migration of config entry from v1 with baudrate in config."""
     config_entry_v1.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_BAUDRATE: 115200}})
+
+    with patch(
+        "homeassistant.components.zha.serial_port.async_list_serial_ports",
+        return_value=[
+            UsbSerialPort(
+                device=pathlib.PurePosixPath(DATA_PORT_PATH),
+                resolved_device=pathlib.PurePosixPath("/dev/ttyUSB0"),
+                vid="AAAA",
+                pid="BBBB",
+                serial_number="1234",
+                product="zigbee radio",
+                manufacturer="test",
+            )
+        ],
+    ):
+        assert await async_setup_component(
+            hass, DOMAIN, {DOMAIN: {CONF_BAUDRATE: 115200}}
+        )
 
     assert config_entry_v1.data[CONF_RADIO_TYPE] == DATA_RADIO_TYPE
     assert CONF_DEVICE in config_entry_v1.data
@@ -82,7 +116,7 @@ async def test_migration_from_v1_with_baudrate(
     assert CONF_USB_PATH not in config_entry_v1.data
     assert CONF_BAUDRATE in config_entry_v1.data[CONF_DEVICE]
     assert config_entry_v1.data[CONF_DEVICE][CONF_BAUDRATE] == 115200
-    assert config_entry_v1.version == 4
+    assert config_entry_v1.version == 5
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
@@ -91,13 +125,30 @@ async def test_migration_from_v1_wrong_baudrate(
 ) -> None:
     """Test migration of config entry from v1 with wrong baudrate."""
     config_entry_v1.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_BAUDRATE: 115222}})
+
+    with patch(
+        "homeassistant.components.zha.serial_port.async_list_serial_ports",
+        return_value=[
+            UsbSerialPort(
+                device=pathlib.PurePosixPath(DATA_PORT_PATH),
+                resolved_device=pathlib.PurePosixPath("/dev/ttyUSB0"),
+                vid="AAAA",
+                pid="BBBB",
+                serial_number="1234",
+                product="zigbee radio",
+                manufacturer="test",
+            )
+        ],
+    ):
+        assert await async_setup_component(
+            hass, DOMAIN, {DOMAIN: {CONF_BAUDRATE: 115222}}
+        )
 
     assert config_entry_v1.data[CONF_RADIO_TYPE] == DATA_RADIO_TYPE
     assert CONF_DEVICE in config_entry_v1.data
     assert config_entry_v1.data[CONF_DEVICE][CONF_DEVICE_PATH] == DATA_PORT_PATH
     assert CONF_USB_PATH not in config_entry_v1.data
-    assert config_entry_v1.version == 4
+    assert config_entry_v1.version == 5
 
 
 @pytest.mark.skipif(
@@ -160,7 +211,7 @@ async def test_setup_with_v3_cleaning_uri(
                 CONF_FLOW_CONTROL: None,
             },
         },
-        version=4,
+        version=5,
     )
     config_entry_v4.add_to_hass(hass)
 
@@ -170,7 +221,7 @@ async def test_setup_with_v3_cleaning_uri(
 
     assert config_entry_v4.data[CONF_RADIO_TYPE] == DATA_RADIO_TYPE
     assert config_entry_v4.data[CONF_DEVICE][CONF_DEVICE_PATH] == cleaned_path
-    assert config_entry_v4.version == 4
+    assert config_entry_v4.version == 5
 
 
 @pytest.mark.parametrize(
@@ -210,16 +261,30 @@ async def test_migration_baudrate_and_flow_control(
             CONF_DEVICE: {
                 CONF_BAUDRATE: old_baudrate,
                 CONF_FLOW_CONTROL: old_flow_control,
-                CONF_DEVICE_PATH: "/dev/null",
+                CONF_DEVICE_PATH: DATA_PORT_PATH,
             },
         },
         version=3,
     )
 
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.zha.serial_port.async_list_serial_ports",
+        return_value=[
+            UsbSerialPort(
+                device=pathlib.PurePosixPath(DATA_PORT_PATH),
+                resolved_device=pathlib.PurePosixPath("/dev/ttyUSB0"),
+                vid="AAAA",
+                pid="BBBB",
+                serial_number="1234",
+                product="zigbee radio",
+                manufacturer="test",
+            )
+        ],
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert config_entry.version > 3
+    assert config_entry.version == 5
     assert config_entry.data[CONF_DEVICE][CONF_BAUDRATE] == new_baudrate
     assert config_entry.data[CONF_DEVICE][CONF_FLOW_CONTROL] == new_flow_control
 
