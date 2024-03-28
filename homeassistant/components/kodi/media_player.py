@@ -513,6 +513,7 @@ class KodiEntity(MediaPlayerEntity):
                     "album",
                     "season",
                     "episode",
+                    "streamdetails",
                 ],
             )
         else:
@@ -628,6 +629,23 @@ class KodiEntity(MediaPlayerEntity):
             return artists[0]
 
         return None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str | None]:
+        """Return the state attributes."""
+        state_attr: dict[str, str | None] = {}
+        if self.state == MediaPlayerState.OFF:
+            return state_attr
+
+        hdr_type = (
+            self._item.get("streamdetails", {}).get("video", [{}])[0].get("hdrtype")
+        )
+        if hdr_type == "":
+            state_attr["hdr_type"] = "sdr"
+        else:
+            state_attr["hdr_type"] = hdr_type
+
+        return state_attr
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
