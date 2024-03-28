@@ -31,6 +31,7 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
@@ -62,7 +63,8 @@ from .const import (
     DATA_KNX_CONFIG,
     DOMAIN,
     KNX_ADDRESS,
-    SUPPORTED_PLATFORMS,
+    SUPPORTED_PLATFORMS_UI,
+    SUPPORTED_PLATFORMS_YAML,
     TELEGRAM_LOG_DEFAULT,
 )
 from .device import KNXInterfaceDevice
@@ -90,6 +92,7 @@ from .schema import (
     WeatherSchema,
 )
 from .services import register_knx_services
+from .storage.config_store import KNXConfigStore
 from .telegrams import STORAGE_KEY as TELEGRAMS_STORAGE_KEY, Telegrams
 from .websocket import register_panel
 
@@ -191,13 +194,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 create_knx_exposure(hass, knx_module.xknx, expose_config)
             )
     # always forward sensor for system entities (telegram counter, etc.)
-    await hass.config_entries.async_forward_entry_setup(entry, Platform.SENSOR)
+    # forward all platforms that support UI entity management
+    await hass.config_entries.async_forward_entry_setups(
+        entry, {Platform.SENSOR} | SUPPORTED_PLATFORMS_UI
+    )
+    # forward yaml-only managed platforms on demand
     await hass.config_entries.async_forward_entry_setups(
         entry,
         [
             platform
-            for platform in SUPPORTED_PLATFORMS
-            if platform in config and platform not in (Platform.SENSOR, Platform.NOTIFY)
+            for platform in SUPPORTED_PLATFORMS_YAML
+            if platform in config
+            and platform
+            not in SUPPORTED_PLATFORMS_UI | {Platform.SENSOR, Platform.NOTIFY}
         ],
     )
 
@@ -226,15 +235,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry,
-        [
+        {
             Platform.SENSOR,  # always unload system entities (telegram counter, etc.)
-            *[
-                platform
-                for platform in SUPPORTED_PLATFORMS
-                if platform in hass.data[DATA_KNX_CONFIG]
-                and platform not in (Platform.SENSOR, Platform.NOTIFY)
-            ],
-        ],
+        }
+        | SUPPORTED_PLATFORMS_UI
+        | {
+            platform
+            for platform in SUPPORTED_PLATFORMS_YAML
+            if platform in hass.data[DATA_KNX_CONFIG] and platform != Platform.NOTIFY
+        },
     )
     if unload_ok:
         await knx_module.stop()
@@ -269,6 +278,22 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.async_add_executor_job(remove_files, storage_dir, knxkeys_filename)
 
 
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+) -> bool:
+    """Remove a config entry from a device."""
+    knx_module: KNXModule = hass.data[DOMAIN]
+    if not device_entry.identifiers.isdisjoint(
+        knx_module.interface_device.device_info["identifiers"]
+    ):
+        # can not remove interface device
+        return False
+    for entity in knx_module.config_store.get_entity_entries():
+        if entity.device_id == device_entry.id:
+            await knx_module.config_store.delete_entity(entity.entity_id)
+    return True
+
+
 class KNXModule:
     """Representation of KNX Object."""
 
@@ -284,6 +309,7 @@ class KNXModule:
         self.entry = entry
 
         self.project = KNXProject(hass=hass, entry=entry)
+        self.config_store = KNXConfigStore(hass=hass, entry=entry)
 
         self.xknx = XKNX(
             connection_config=self.connection_config(),
@@ -315,6 +341,7 @@ class KNXModule:
     async def start(self) -> None:
         """Start XKNX object. Connect to tunneling or Routing device."""
         await self.project.load_project()
+        await self.config_store.load_data()
         await self.telegrams.load_history()
         await self.xknx.start()
 

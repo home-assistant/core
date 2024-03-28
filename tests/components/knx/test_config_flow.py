@@ -76,10 +76,10 @@ def patch_file_upload(return_value=FIXTURE_KEYRING, side_effect=None):
     """Patch file upload. Yields the Keyring instance (return_value)."""
     with (
         patch(
-            "homeassistant.components.knx.helpers.keyring.process_uploaded_file"
+            "homeassistant.components.knx.storage.keyring.process_uploaded_file"
         ) as file_upload_mock,
         patch(
-            "homeassistant.components.knx.helpers.keyring.sync_load_keyring",
+            "homeassistant.components.knx.storage.keyring.sync_load_keyring",
             return_value=return_value,
             side_effect=side_effect,
         ),
