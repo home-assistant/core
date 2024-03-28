@@ -9,6 +9,7 @@ from collections.abc import Callable, Coroutine, Iterable, Mapping, MutableMappi
 import dataclasses
 from enum import Enum, IntFlag, auto
 import functools as ft
+from functools import cached_property
 import logging
 import math
 from operator import attrgetter
@@ -73,11 +74,7 @@ from .event import (
 from .typing import UNDEFINED, StateType, UndefinedType
 
 if TYPE_CHECKING:
-    from functools import cached_property
-
     from .entity_platform import EntityPlatform
-else:
-    from homeassistant.backports.functools import cached_property
 
 _T = TypeVar("_T")
 
