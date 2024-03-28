@@ -13,7 +13,6 @@ BASE = """
 
 # Home Assistant Core
 .core_files.yaml @home-assistant/core
-.coveragerc @home-assistant/core
 .git-blame-ignore-revs @home-assistant/core
 .gitattributes @home-assistant/core
 .gitignore @home-assistant/core
