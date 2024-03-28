@@ -142,11 +142,11 @@ async def test_heater_input_boolean(hass: HomeAssistant, setup_comp_1) -> None:
 
 
 async def test_heater_switch(
-    hass: HomeAssistant, setup_comp_1, mock_switch_entities: list[MockToggleEntity]
+    hass: HomeAssistant, setup_comp_1, mock_toggle_entities: list[MockToggleEntity]
 ) -> None:
     """Test heater switching test switch."""
-    setup_test_component_platform(hass, switch.DOMAIN, mock_switch_entities)
-    switch_1 = mock_switch_entities[1]
+    setup_test_component_platform(hass, switch.DOMAIN, mock_toggle_entities)
+    switch_1 = mock_toggle_entities[1]
     assert await async_setup_component(
         hass, switch.DOMAIN, {"switch": {"platform": "test"}}
     )

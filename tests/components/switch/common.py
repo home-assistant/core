@@ -42,8 +42,8 @@ async def async_turn_off(hass, entity_id=ENTITY_MATCH_ALL):
     await hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data, blocking=True)
 
 
-def get_mock_switch_entities() -> list[MockToggleEntity]:
-    """Return a list of mock switch entities."""
+def get_mock_toggle_entities() -> list[MockToggleEntity]:
+    """Return a list of mock toggle entities."""
     return [
         MockToggleEntity("AC", STATE_ON),
         MockToggleEntity("AC", STATE_OFF),

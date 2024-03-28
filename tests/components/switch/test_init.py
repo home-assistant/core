@@ -20,10 +20,10 @@ from tests.common import (
 
 
 @pytest.fixture(autouse=True)
-def entities(hass: HomeAssistant, mock_switch_entities: list[MockToggleEntity]):
+def entities(hass: HomeAssistant, mock_toggle_entities: list[MockToggleEntity]):
     """Initialize the test switch."""
-    setup_test_component_platform(hass, switch.DOMAIN, mock_switch_entities)
-    return mock_switch_entities
+    setup_test_component_platform(hass, switch.DOMAIN, mock_toggle_entities)
+    return mock_toggle_entities
 
 
 async def test_methods(

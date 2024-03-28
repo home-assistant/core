@@ -132,8 +132,8 @@ def mock_sensor_entities() -> dict[str, "MockSensor"]:
 
 
 @pytest.fixture
-def mock_switch_entities() -> list[MockToggleEntity]:
-    """Return mocked switch entities."""
-    from tests.components.switch.common import get_mock_switch_entities
+def mock_toggle_entities() -> list[MockToggleEntity]:
+    """Return mocked toggle entities."""
+    from tests.components.switch.common import get_mock_toggle_entities
 
-    return get_mock_switch_entities()
+    return get_mock_toggle_entities()
