@@ -168,15 +168,25 @@ async def test_view_empty_namespace(
     )
 
     assert (
-        'entity_available{domain="sensor",'
+        "entity_available{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.radio_energy",'
-        'friendly_name="Radio Energy"} 1.0' in body
+        'friendly_name="Radio Energy",'
+        'object_id="radio_energy"'
+        "} 1.0" in body
     )
 
     assert (
-        'last_updated_time_seconds{domain="sensor",'
+        "last_updated_time_seconds{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.radio_energy",'
-        'friendly_name="Radio Energy"} 86400.0' in body
+        'friendly_name="Radio Energy",'
+        'object_id="radio_energy'
+        "} 86400.0" in body
     )
 
 
@@ -194,9 +204,14 @@ async def test_view_default_namespace(
     )
 
     assert (
-        'homeassistant_sensor_temperature_celsius{domain="sensor",'
+        "homeassistant_sensor_temperature_celsius{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 15.6' in body
+        'friendly_name="Outside Temperature",'
+        'object_id="outside_temperature"'
+        "} 15.6" in body
     )
 
 
@@ -208,27 +223,47 @@ async def test_sensor_unit(
     body = await generate_latest_metrics(client)
 
     assert (
-        'sensor_unit_kwh{domain="sensor",'
+        "sensor_unit_kwh{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.television_energy",'
-        'friendly_name="Television Energy"} 74.0' in body
+        'friendly_name="Television Energy",'
+        'object_id="televisin_energy"'
+        "} 74.0" in body
     )
 
     assert (
-        'sensor_unit_sek_per_kwh{domain="sensor",'
+        "sensor_unit_sek_per_kwh{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.electricity_price",'
-        'friendly_name="Electricity price"} 0.123' in body
+        'friendly_name="Electricity price",'
+        'object_id="electricity_price"'
+        "} 0.123" in body
     )
 
     assert (
-        'sensor_unit_u0xb0{domain="sensor",'
+        "sensor_unit_u0xb0{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.wind_direction",'
-        'friendly_name="Wind Direction"} 25.0' in body
+        'friendly_name="Wind Direction",'
+        'object_id="wind_direction"'
+        "} 25.0" in body
     )
 
     assert (
-        'sensor_unit_u0xb5g_per_mu0xb3{domain="sensor",'
+        "sensor_unit_u0xb5g_per_mu0xb3{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.sps30_pm_1um_weight_concentration",'
-        'friendly_name="SPS30 PM <1µm Weight concentration"} 3.7069' in body
+        'friendly_name="SPS30 PM <1µm Weight concentration",'
+        'object_id="sps30_pm_1um_weight_concentration"'
+        "} 3.7069" in body
     )
 
 
@@ -240,19 +275,28 @@ async def test_sensor_without_unit(
     body = await generate_latest_metrics(client)
 
     assert (
-        'sensor_state{domain="sensor",'
+        "sensor_state{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.trend_gradient",'
         'friendly_name="Trend Gradient"} 0.002' in body
     )
 
     assert (
-        'sensor_state{domain="sensor",'
+        "sensor_state{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.text",'
         'friendly_name="Text"} 0' not in body
     )
 
     assert (
-        'sensor_unit_text{domain="sensor",'
+        "sensor_unit_text{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.text_unit",'
         'friendly_name="Text Unit"} 0' not in body
     )
@@ -266,31 +310,46 @@ async def test_sensor_device_class(
     body = await generate_latest_metrics(client)
 
     assert (
-        'sensor_temperature_celsius{domain="sensor",'
+        "sensor_temperature_celsius{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.fahrenheit",'
         'friendly_name="Fahrenheit"} 10.0' in body
     )
 
     assert (
-        'sensor_temperature_celsius{domain="sensor",'
+        "sensor_temperature_celsius{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_temperature",'
         'friendly_name="Outside Temperature"} 15.6' in body
     )
 
     assert (
-        'sensor_humidity_percent{domain="sensor",'
+        "sensor_humidity_percent{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_humidity",'
         'friendly_name="Outside Humidity"} 54.0' in body
     )
 
     assert (
-        'sensor_power_kwh{domain="sensor",'
+        "sensor_power_kwh{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.radio_energy",'
         'friendly_name="Radio Energy"} 14.0' in body
     )
 
     assert (
-        'sensor_timestamp_seconds{domain="sensor",'
+        "sensor_timestamp_seconds{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.timestamp",'
         'friendly_name="Timestamp"} 1.691445808136036e+09' in body
     )
@@ -304,19 +363,28 @@ async def test_input_number(
     body = await generate_latest_metrics(client)
 
     assert (
-        'input_number_state{domain="input_number",'
+        "input_number_state{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="input_number",'
         'entity="input_number.threshold",'
         'friendly_name="Threshold"} 5.2' in body
     )
 
     assert (
-        'input_number_state{domain="input_number",'
+        "input_number_state{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="input_number",'
         'entity="input_number.brightness",'
         'friendly_name="None"} 60.0' in body
     )
 
     assert (
-        'input_number_state_celsius{domain="input_number",'
+        "input_number_state_celsius{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="input_number",'
         'entity="input_number.target_temperature",'
         'friendly_name="Target temperature"} 22.7' in body
     )
@@ -330,19 +398,28 @@ async def test_number(
     body = await generate_latest_metrics(client)
 
     assert (
-        'number_state{domain="number",'
+        "number_state{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="number",'
         'entity="number.threshold",'
         'friendly_name="Threshold"} 5.2' in body
     )
 
     assert (
-        'number_state{domain="number",'
+        "number_state{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="number",'
         'entity="number.brightness",'
         'friendly_name="None"} 60.0' in body
     )
 
     assert (
-        'number_state_celsius{domain="number",'
+        "number_state_celsius{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="number",'
         'entity="number.target_temperature",'
         'friendly_name="Target temperature"} 22.7' in body
     )
@@ -356,7 +433,10 @@ async def test_battery(
     body = await generate_latest_metrics(client)
 
     assert (
-        'battery_level_percent{domain="sensor",'
+        "battery_level_percent{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_temperature",'
         'friendly_name="Outside Temperature"} 12.0' in body
     )
@@ -371,31 +451,46 @@ async def test_climate(
     body = await generate_latest_metrics(client)
 
     assert (
-        'climate_current_temperature_celsius{domain="climate",'
+        "climate_current_temperature_celsius{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="climate",'
         'entity="climate.heatpump",'
         'friendly_name="HeatPump"} 25.0' in body
     )
 
     assert (
-        'climate_target_temperature_celsius{domain="climate",'
+        "climate_target_temperature_celsius{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="climate",'
         'entity="climate.heatpump",'
         'friendly_name="HeatPump"} 20.0' in body
     )
 
     assert (
-        'climate_target_temperature_low_celsius{domain="climate",'
+        "climate_target_temperature_low_celsius{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="climate",'
         'entity="climate.ecobee",'
         'friendly_name="Ecobee"} 21.0' in body
     )
 
     assert (
-        'climate_target_temperature_high_celsius{domain="climate",'
+        "climate_target_temperature_high_celsius{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="climate",'
         'entity="climate.ecobee",'
         'friendly_name="Ecobee"} 24.0' in body
     )
 
     assert (
-        'climate_target_temperature_celsius{domain="climate",'
+        "climate_target_temperature_celsius{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="climate",'
         'entity="climate.fritzdect",'
         'friendly_name="Fritz!DECT"} 0.0' in body
     )
@@ -410,25 +505,37 @@ async def test_humidifier(
     body = await generate_latest_metrics(client)
 
     assert (
-        'humidifier_target_humidity_percent{domain="humidifier",'
+        "humidifier_target_humidity_percent{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="humidifier",'
         'entity="humidifier.humidifier",'
         'friendly_name="Humidifier"} 68.0' in body
     )
 
     assert (
-        'humidifier_state{domain="humidifier",'
+        "humidifier_state{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="humidifier",'
         'entity="humidifier.dehumidifier",'
         'friendly_name="Dehumidifier"} 1.0' in body
     )
 
     assert (
-        'humidifier_mode{domain="humidifier",'
+        "humidifier_mode{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="humidifier",'
         'entity="humidifier.hygrostat",'
         'friendly_name="Hygrostat",'
         'mode="home"} 1.0' in body
     )
     assert (
-        'humidifier_mode{domain="humidifier",'
+        "humidifier_mode{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="humidifier",'
         'entity="humidifier.hygrostat",'
         'friendly_name="Hygrostat",'
         'mode="eco"} 0.0' in body
@@ -444,25 +551,37 @@ async def test_attributes(
     body = await generate_latest_metrics(client)
 
     assert (
-        'switch_state{domain="switch",'
+        "switch_state{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="switch",'
         'entity="switch.boolean",'
         'friendly_name="Boolean"} 1.0' in body
     )
 
     assert (
-        'switch_attr_boolean{domain="switch",'
+        "switch_attr_boolean{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="switch",'
         'entity="switch.boolean",'
         'friendly_name="Boolean"} 1.0' in body
     )
 
     assert (
-        'switch_state{domain="switch",'
+        "switch_state{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="switch",'
         'entity="switch.number",'
         'friendly_name="Number"} 0.0' in body
     )
 
     assert (
-        'switch_attr_number{domain="switch",'
+        "switch_attr_number{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="switch",'
         'entity="switch.number",'
         'friendly_name="Number"} 10.2' in body
     )
@@ -476,13 +595,19 @@ async def test_binary_sensor(
     body = await generate_latest_metrics(client)
 
     assert (
-        'binary_sensor_state{domain="binary_sensor",'
+        "binary_sensor_state{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="binary_sensor",'
         'entity="binary_sensor.door",'
         'friendly_name="Door"} 1.0' in body
     )
 
     assert (
-        'binary_sensor_state{domain="binary_sensor",'
+        "binary_sensor_state{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="binary_sensor",'
         'entity="binary_sensor.window",'
         'friendly_name="Window"} 0.0' in body
     )
@@ -496,13 +621,19 @@ async def test_input_boolean(
     body = await generate_latest_metrics(client)
 
     assert (
-        'input_boolean_state{domain="input_boolean",'
+        "input_boolean_state{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="input_boolean",'
         'entity="input_boolean.test",'
         'friendly_name="Test"} 1.0' in body
     )
 
     assert (
-        'input_boolean_state{domain="input_boolean",'
+        "input_boolean_state{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="input_boolean",'
         'entity="input_boolean.helper",'
         'friendly_name="Helper"} 0.0' in body
     )
@@ -516,31 +647,46 @@ async def test_light(
     body = await generate_latest_metrics(client)
 
     assert (
-        'light_brightness_percent{domain="light",'
+        "light_brightness_percent{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="light",'
         'entity="light.desk",'
         'friendly_name="Desk"} 100.0' in body
     )
 
     assert (
-        'light_brightness_percent{domain="light",'
+        "light_brightness_percent{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="light",'
         'entity="light.wall",'
         'friendly_name="Wall"} 0.0' in body
     )
 
     assert (
-        'light_brightness_percent{domain="light",'
+        "light_brightness_percent{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="light",'
         'entity="light.tv",'
         'friendly_name="TV"} 100.0' in body
     )
 
     assert (
-        'light_brightness_percent{domain="light",'
+        "light_brightness_percent{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="light",'
         'entity="light.pc",'
         'friendly_name="PC"} 70.58823529411765' in body
     )
 
     assert (
-        'light_brightness_percent{domain="light",'
+        "light_brightness_percent{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="light",'
         'entity="light.hallway",'
         'friendly_name="Hallway"} 100.0' in body
     )
@@ -554,13 +700,19 @@ async def test_lock(
     body = await generate_latest_metrics(client)
 
     assert (
-        'lock_state{domain="lock",'
+        "lock_state{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="lock",'
         'entity="lock.front_door",'
         'friendly_name="Front Door"} 1.0' in body
     )
 
     assert (
-        'lock_state{domain="lock",'
+        "lock_state{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="lock",'
         'entity="lock.kitchen_door",'
         'friendly_name="Kitchen Door"} 0.0' in body
     )
@@ -577,7 +729,10 @@ async def test_cover(
     open_covers = ["cover_open", "cover_position", "cover_tilt_position"]
     for testcover in data:
         open_metric = (
-            f'cover_state{{domain="cover",'
+            f"cover_state{{"
+            'area="",'
+            'device_class="temperature",'
+            f'domain="cover",'
             f'entity="{cover_entities[testcover].entity_id}",'
             f'friendly_name="{cover_entities[testcover].original_name}",'
             f'state="open"}} {1.0 if cover_entities[testcover].unique_id in open_covers else 0.0}'
@@ -585,7 +740,10 @@ async def test_cover(
         assert open_metric in body
 
         closed_metric = (
-            f'cover_state{{domain="cover",'
+            f'cover_state{{'
+            'area="",'
+            'device_class="temperature",'
+            f'domain="cover",'
             f'entity="{cover_entities[testcover].entity_id}",'
             f'friendly_name="{cover_entities[testcover].original_name}",'
             f'state="closed"}} {1.0 if cover_entities[testcover].unique_id == "cover_closed" else 0.0}'
@@ -593,7 +751,10 @@ async def test_cover(
         assert closed_metric in body
 
         opening_metric = (
-            f'cover_state{{domain="cover",'
+            f'cover_state{{'
+            'area="",'
+            'device_class="temperature",'
+            f'domain="cover",'
             f'entity="{cover_entities[testcover].entity_id}",'
             f'friendly_name="{cover_entities[testcover].original_name}",'
             f'state="opening"}} {1.0 if cover_entities[testcover].unique_id == "cover_opening" else 0.0}'
@@ -601,7 +762,10 @@ async def test_cover(
         assert opening_metric in body
 
         closing_metric = (
-            f'cover_state{{domain="cover",'
+            f'cover_state{{'
+            'area="",'
+            'device_class="temperature",'
+            f'domain="cover",'
             f'entity="{cover_entities[testcover].entity_id}",'
             f'friendly_name="{cover_entities[testcover].original_name}",'
             f'state="closing"}} {1.0 if cover_entities[testcover].unique_id == "cover_closing" else 0.0}'
@@ -610,7 +774,10 @@ async def test_cover(
 
         if testcover == "cover_position":
             position_metric = (
-                f'cover_position{{domain="cover",'
+                f"cover_position{{"
+                'area="",'
+                'device_class="temperature",'
+                f'domain="cover",'
                 f'entity="{cover_entities[testcover].entity_id}",'
                 f'friendly_name="{cover_entities[testcover].original_name}"'
                 f"}} 50.0"
@@ -619,7 +786,10 @@ async def test_cover(
 
         if testcover == "cover_tilt_position":
             tilt_position_metric = (
-                f'cover_tilt_position{{domain="cover",'
+                f"cover_tilt_position{{"
+                'area="",'
+                'device_class="temperature",'
+                f'domain="cover",'
                 f'entity="{cover_entities[testcover].entity_id}",'
                 f'friendly_name="{cover_entities[testcover].original_name}"'
                 f"}} 50.0"
@@ -635,12 +805,18 @@ async def test_device_tracker(
     body = await generate_latest_metrics(client)
 
     assert (
-        'device_tracker_state{domain="device_tracker",'
+        "device_tracker_state{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="device_tracker",'
         'entity="device_tracker.phone",'
         'friendly_name="Phone"} 1.0' in body
     )
     assert (
-        'device_tracker_state{domain="device_tracker",'
+        "device_tracker_state{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="device_tracker",'
         'entity="device_tracker.watch",'
         'friendly_name="Watch"} 0.0' in body
     )
@@ -654,7 +830,10 @@ async def test_counter(
     body = await generate_latest_metrics(client)
 
     assert (
-        'counter_value{domain="counter",'
+        "counter_value{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="counter",'
         'entity="counter.counter",'
         'friendly_name="None"} 2.0' in body
     )
@@ -668,12 +847,18 @@ async def test_update(
     body = await generate_latest_metrics(client)
 
     assert (
-        'update_state{domain="update",'
+        "update_state{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="update",'
         'entity="update.firmware",'
         'friendly_name="Firmware"} 1.0' in body
     )
     assert (
-        'update_state{domain="update",'
+        "update_state{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="update",'
         'entity="update.addon",'
         'friendly_name="Addon"} 0.0' in body
     )
@@ -692,38 +877,56 @@ async def test_renaming_entity_name(
     body = await generate_latest_metrics(client)
 
     assert (
-        'sensor_temperature_celsius{domain="sensor",'
+        "sensor_temperature_celsius{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_temperature",'
         'friendly_name="Outside Temperature"} 15.6' in body
     )
 
     assert (
-        'entity_available{domain="sensor",'
+        "entity_available{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_temperature",'
         'friendly_name="Outside Temperature"} 1.0' in body
     )
 
     assert (
-        'sensor_humidity_percent{domain="sensor",'
+        "sensor_humidity_percent{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_humidity",'
         'friendly_name="Outside Humidity"} 54.0' in body
     )
 
     assert (
-        'entity_available{domain="sensor",'
+        "entity_available{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_humidity",'
         'friendly_name="Outside Humidity"} 1.0' in body
     )
 
     assert (
-        'climate_action{action="heating",'
+        "climate_action{"
+        'area="",'
+        'device_class="temperature",'
+        'action="heating",'
         'domain="climate",'
         'entity="climate.heatpump",'
         'friendly_name="HeatPump"} 1.0' in body
     )
 
     assert (
-        'climate_action{action="cooling",'
+        "climate_action{"
+        'area="",'
+        'device_class="temperature",'
+        'action="cooling",'
         'domain="climate",'
         'entity="climate.heatpump",'
         'friendly_name="HeatPump"} 0.0' in body
@@ -766,26 +969,38 @@ async def test_renaming_entity_name(
 
     # Check if new metrics created
     assert (
-        'sensor_temperature_celsius{domain="sensor",'
+        "sensor_temperature_celsius{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_temperature",'
         'friendly_name="Outside Temperature Renamed"} 15.6' in body
     )
 
     assert (
-        'entity_available{domain="sensor",'
+        "entity_available{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_temperature",'
         'friendly_name="Outside Temperature Renamed"} 1.0' in body
     )
 
     assert (
-        'climate_action{action="heating",'
+        "climate_action{"
+        'area="",'
+        'device_class="temperature",'
+        'action="heating",'
         'domain="climate",'
         'entity="climate.heatpump",'
         'friendly_name="HeatPump Renamed"} 1.0' in body
     )
 
     assert (
-        'climate_action{action="cooling",'
+        "climate_action{"
+        'area="",'
+        'device_class="temperature",'
+        'action="cooling",'
         'domain="climate",'
         'entity="climate.heatpump",'
         'friendly_name="HeatPump Renamed"} 0.0' in body
@@ -793,13 +1008,19 @@ async def test_renaming_entity_name(
 
     # Keep other sensors
     assert (
-        'sensor_humidity_percent{domain="sensor",'
+        "sensor_humidity_percent{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_humidity",'
         'friendly_name="Outside Humidity"} 54.0' in body
     )
 
     assert (
-        'entity_available{domain="sensor",'
+        "entity_available{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_humidity",'
         'friendly_name="Outside Humidity"} 1.0' in body
     )
@@ -818,25 +1039,37 @@ async def test_renaming_entity_id(
     body = await generate_latest_metrics(client)
 
     assert (
-        'sensor_temperature_celsius{domain="sensor",'
+        "sensor_temperature_celsius{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_temperature",'
         'friendly_name="Outside Temperature"} 15.6' in body
     )
 
     assert (
-        'entity_available{domain="sensor",'
+        "entity_available{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_temperature",'
         'friendly_name="Outside Temperature"} 1.0' in body
     )
 
     assert (
-        'sensor_humidity_percent{domain="sensor",'
+        "sensor_humidity_percent{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_humidity",'
         'friendly_name="Outside Humidity"} 54.0' in body
     )
 
     assert (
-        'entity_available{domain="sensor",'
+        "entity_available{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_humidity",'
         'friendly_name="Outside Humidity"} 1.0' in body
     )
@@ -860,26 +1093,38 @@ async def test_renaming_entity_id(
 
     # Check if new metrics created
     assert (
-        'sensor_temperature_celsius{domain="sensor",'
+        "sensor_temperature_celsius{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_temperature_renamed",'
         'friendly_name="Outside Temperature"} 15.6' in body
     )
 
     assert (
-        'entity_available{domain="sensor",'
+        "entity_available{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_temperature_renamed",'
         'friendly_name="Outside Temperature"} 1.0' in body
     )
 
     # Keep other sensors
     assert (
-        'sensor_humidity_percent{domain="sensor",'
+        "sensor_humidity_percent{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_humidity",'
         'friendly_name="Outside Humidity"} 54.0' in body
     )
 
     assert (
-        'entity_available{domain="sensor",'
+        "entity_available{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_humidity",'
         'friendly_name="Outside Humidity"} 1.0' in body
     )
@@ -898,38 +1143,56 @@ async def test_deleting_entity(
     body = await generate_latest_metrics(client)
 
     assert (
-        'sensor_temperature_celsius{domain="sensor",'
+        "sensor_temperature_celsius{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_temperature",'
         'friendly_name="Outside Temperature"} 15.6' in body
     )
 
     assert (
-        'entity_available{domain="sensor",'
+        "entity_available{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_temperature",'
         'friendly_name="Outside Temperature"} 1.0' in body
     )
 
     assert (
-        'sensor_humidity_percent{domain="sensor",'
+        "sensor_humidity_percent{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_humidity",'
         'friendly_name="Outside Humidity"} 54.0' in body
     )
 
     assert (
-        'entity_available{domain="sensor",'
+        "entity_available{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_humidity",'
         'friendly_name="Outside Humidity"} 1.0' in body
     )
 
     assert (
-        'climate_action{action="heating",'
+        "climate_action{"
+        'area="",'
+        'device_class="temperature",'
+        'action="heating",'
         'domain="climate",'
         'entity="climate.heatpump",'
         'friendly_name="HeatPump"} 1.0' in body
     )
 
     assert (
-        'climate_action{action="cooling",'
+        "climate_action{"
+        'area="",'
+        'device_class="temperature",'
+        'action="cooling",'
         'domain="climate",'
         'entity="climate.heatpump",'
         'friendly_name="HeatPump"} 0.0' in body
@@ -952,13 +1215,19 @@ async def test_deleting_entity(
 
     # Keep other sensors
     assert (
-        'sensor_humidity_percent{domain="sensor",'
+        "sensor_humidity_percent{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_humidity",'
         'friendly_name="Outside Humidity"} 54.0' in body
     )
 
     assert (
-        'entity_available{domain="sensor",'
+        "entity_available{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_humidity",'
         'friendly_name="Outside Humidity"} 1.0' in body
     )
@@ -979,45 +1248,66 @@ async def test_disabling_entity(
     body = await generate_latest_metrics(client)
 
     assert (
-        'sensor_temperature_celsius{domain="sensor",'
+        "sensor_temperature_celsius{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_temperature",'
         'friendly_name="Outside Temperature"} 15.6' in body
     )
 
     assert (
-        'state_change_total{domain="sensor",'
+        "state_change_total{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_temperature",'
         'friendly_name="Outside Temperature"} 1.0' in body
     )
 
     assert any(
-        'state_change_created{domain="sensor",'
+        "state_change_created{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_temperature",'
         'friendly_name="Outside Temperature"}' in metric
         for metric in body
     )
 
     assert (
-        'sensor_humidity_percent{domain="sensor",'
+        "sensor_humidity_percent{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_humidity",'
         'friendly_name="Outside Humidity"} 54.0' in body
     )
 
     assert (
-        'entity_available{domain="sensor",'
+        "entity_available{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_humidity",'
         'friendly_name="Outside Humidity"} 1.0' in body
     )
 
     assert (
-        'climate_action{action="heating",'
+        "climate_action{"
+        'area="",'
+        'device_class="temperature",'
+        'action="heating",'
         'domain="climate",'
         'entity="climate.heatpump",'
         'friendly_name="HeatPump"} 1.0' in body
     )
 
     assert (
-        'climate_action{action="cooling",'
+        "climate_action{"
+        'area="",'
+        'device_class="temperature",'
+        'action="cooling",'
         'domain="climate",'
         'entity="climate.heatpump",'
         'friendly_name="HeatPump"} 0.0' in body
@@ -1046,13 +1336,19 @@ async def test_disabling_entity(
 
     # Keep other sensors
     assert (
-        'sensor_humidity_percent{domain="sensor",'
+        "sensor_humidity_percent{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_humidity",'
         'friendly_name="Outside Humidity"} 54.0' in body
     )
 
     assert (
-        'entity_available{domain="sensor",'
+        "entity_available{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_humidity",'
         'friendly_name="Outside Humidity"} 1.0' in body
     )
