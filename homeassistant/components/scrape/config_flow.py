@@ -35,7 +35,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
-    UnitOfTemperature,
+    UNITS_OF_MEASUREMENT,
 )
 from homeassistant.core import async_get_hass
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -127,11 +127,10 @@ SENSOR_SETUP = {
     ),
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): SelectSelector(
         SelectSelectorConfig(
-            options=[cls.value for cls in UnitOfTemperature],
+            options=sorted(UNITS_OF_MEASUREMENT),
             custom_value=True,
             mode=SelectSelectorMode.DROPDOWN,
             translation_key="unit_of_measurement",
-            sort=True,
         )
     ),
 }

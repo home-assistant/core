@@ -48,7 +48,7 @@
           "value_template": "Defines a template to get the state of the sensor",
           "device_class": "The type/class of the sensor to set the icon in the frontend",
           "state_class": "The state_class of the sensor",
-          "unit_of_measurement": "Choose temperature measurement or create your own"
+          "unit_of_measurement": "Choose a unit of measurement or create your own"
         }
       }
     }
@@ -189,11 +189,6 @@
         "measurement": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement%]",
         "total": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total%]",
         "total_increasing": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total_increasing%]"
-      }
-    },
-    "unit_of_measurement": {
-      "options": {
-        "none": "No unit of measurement"
       }
     }
   }
