@@ -49,7 +49,7 @@ pyOpenSSL==24.1.0
 pyserial==3.5
 python-slugify==8.0.4
 PyTurboJPEG==1.7.1
-pyudev==0.23.2
+pyudev==0.24.1
 PyYAML==6.0.1
 requests==2.31.0
 SQLAlchemy==2.0.29
