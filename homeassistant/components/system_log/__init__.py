@@ -310,23 +310,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     websocket_api.async_register_command(hass, list_errors)
 
-    async def async_service_handler(service: ServiceCall) -> None:
-        """Handle logger services."""
-        if service.service == "clear":
-            handler.records.clear()
-            return
-        if service.service == "write":
-            logger = logging.getLogger(
-                service.data.get(CONF_LOGGER, f"{__name__}.external")
-            )
-            level = service.data[CONF_LEVEL]
-            getattr(logger, level)(service.data[CONF_MESSAGE])
+    @callback
+    def _async_clear_service_handler(service: ServiceCall) -> None:
+        handler.records.clear()
+
+    @callback
+    def _async_write_service_handler(service: ServiceCall) -> None:
+        name = service.data.get(CONF_LOGGER, f"{__name__}.external")
+        logger = logging.getLogger(name)
+        level = service.data[CONF_LEVEL]
+        getattr(logger, level)(service.data[CONF_MESSAGE])
 
     hass.services.async_register(
-        DOMAIN, SERVICE_CLEAR, async_service_handler, schema=SERVICE_CLEAR_SCHEMA
+        DOMAIN, SERVICE_CLEAR, _async_clear_service_handler, schema=SERVICE_CLEAR_SCHEMA
     )
     hass.services.async_register(
-        DOMAIN, SERVICE_WRITE, async_service_handler, schema=SERVICE_WRITE_SCHEMA
+        DOMAIN, SERVICE_WRITE, _async_write_service_handler, schema=SERVICE_WRITE_SCHEMA
     )
 
     return True

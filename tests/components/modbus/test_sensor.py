@@ -122,15 +122,6 @@ SLAVE_UNIQUE_ID = "ground_floor_sensor"
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
                     CONF_DATA_TYPE: DataType.INT16,
-                }
-            ]
-        },
-        {
-            CONF_SENSORS: [
-                {
-                    CONF_NAME: TEST_ENTITY_NAME,
-                    CONF_ADDRESS: 51,
-                    CONF_DATA_TYPE: DataType.INT16,
                     CONF_SWAP: CONF_SWAP_BYTE,
                 }
             ]

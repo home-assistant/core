@@ -1,8 +1,8 @@
 """The tests for Network UPS Tools (NUT) device actions."""
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock
 
-from pynut2.nut2 import PyNUTError
+from aionut import NUTError
 import pytest
 from pytest_unordered import unordered
 
@@ -99,7 +99,7 @@ async def test_list_commands_exception(
 ) -> None:
     """Test there are no actions if list_commands raises exception."""
     await async_init_integration(
-        hass, list_vars={"ups.status": "OL"}, list_commands_side_effect=PyNUTError
+        hass, list_vars={"ups.status": "OL"}, list_commands_side_effect=NUTError
     )
 
     device_entry = next(device for device in device_registry.devices.values())
@@ -137,7 +137,7 @@ async def test_action(hass: HomeAssistant, device_registry: dr.DeviceRegistry) -
         "beeper.enable": None,
         "beeper.disable": None,
     }
-    run_command = MagicMock()
+    run_command = AsyncMock()
     await async_init_integration(
         hass,
         list_ups={"someUps": "Some UPS"},
@@ -196,7 +196,7 @@ async def test_rund_command_exception(
 
     list_commands_return_value = {"beeper.enable": None}
     error_message = "Something wrong happened"
-    run_command = MagicMock(side_effect=PyNUTError(error_message))
+    run_command = AsyncMock(side_effect=NUTError(error_message))
     await async_init_integration(
         hass,
         list_vars={"ups.status": "OL"},

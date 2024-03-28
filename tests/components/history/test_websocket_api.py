@@ -1332,7 +1332,7 @@ async def test_history_stream_live_with_future_end_time(
     ) == listeners_without_writes(init_listeners)
 
 
-@pytest.mark.parametrize("include_start_time_state", (True, False))
+@pytest.mark.parametrize("include_start_time_state", [True, False])
 async def test_history_stream_before_history_starts(
     recorder_mock: Recorder,
     hass: HomeAssistant,

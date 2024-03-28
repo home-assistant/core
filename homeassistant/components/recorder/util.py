@@ -645,7 +645,7 @@ def retryable_database_job(
                 return job(instance, *args, **kwargs)
             except OperationalError as err:
                 if _is_retryable_error(instance, err):
-                    assert isinstance(err.orig, BaseException)
+                    assert isinstance(err.orig, BaseException)  # noqa: PT017
                     _LOGGER.info(
                         "%s; %s not completed, retrying", err.orig.args[1], description
                     )
@@ -691,7 +691,7 @@ def database_job_retry_wrapper(
                         instance, err
                     ):
                         raise
-                    assert isinstance(err.orig, BaseException)
+                    assert isinstance(err.orig, BaseException)  # noqa: PT017
                     _LOGGER.info(
                         "%s; %s failed, retrying", err.orig.args[1], description
                     )
