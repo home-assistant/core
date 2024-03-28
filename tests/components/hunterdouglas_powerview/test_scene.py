@@ -1,4 +1,5 @@
 """Test the Hunter Douglas Powerview scene platform."""
+
 from unittest.mock import patch
 
 import pytest

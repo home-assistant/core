@@ -1,4 +1,5 @@
 """The tests for the derivative sensor platform."""
+
 from datetime import timedelta
 from math import sin
 import random
@@ -237,11 +238,7 @@ async def test_double_signal_after_delay(hass: HomeAssistant) -> None:
     # The old algorithm would produce extreme values if, after a delay longer than the time window
     # there would be two signals, a large spike would be produced. Check explicitly for this situation
     time_window = 60
-    times = [*range(time_window * 10)]
-    times = times + [
-        time_window * 20,
-        time_window * 20 + 0.01,
-    ]
+    times = [*range(time_window * 10), time_window * 20, time_window * 20 + 0.01]
 
     # just apply sine as some sort of temperature change and make sure the change after the delay is very small
     temperature_values = [sin(x) for x in times]

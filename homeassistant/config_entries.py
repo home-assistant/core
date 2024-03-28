@@ -1,4 +1,5 @@
 """Manage config entries in Home Assistant."""
+
 from __future__ import annotations
 
 import asyncio
@@ -46,7 +47,7 @@ from .exceptions import (
 )
 from .helpers import device_registry, entity_registry, issue_registry as ir, storage
 from .helpers.debounce import Debouncer
-from .helpers.dispatcher import async_dispatcher_send
+from .helpers.dispatcher import SignalType, async_dispatcher_send
 from .helpers.event import (
     RANDOM_MICROSECOND_MAX,
     RANDOM_MICROSECOND_MIN,
@@ -56,7 +57,14 @@ from .helpers.frame import report
 from .helpers.json import json_bytes, json_fragment
 from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
 from .loader import async_suggest_report_issue
-from .setup import DATA_SETUP_DONE, async_process_deps_reqs, async_setup_component
+from .setup import (
+    DATA_SETUP_DONE,
+    SetupPhases,
+    async_pause_setup,
+    async_process_deps_reqs,
+    async_setup_component,
+    async_start_setup,
+)
 from .util import uuid as uuid_util
 from .util.async_ import create_eager_task
 from .util.decorator import Registry
@@ -87,6 +95,7 @@ SOURCE_IMPORT = "import"
 SOURCE_INTEGRATION_DISCOVERY = "integration_discovery"
 SOURCE_MQTT = "mqtt"
 SOURCE_SSDP = "ssdp"
+SOURCE_SYSTEM = "system"
 SOURCE_USB = "usb"
 SOURCE_USER = "user"
 SOURCE_ZEROCONF = "zeroconf"
@@ -103,6 +112,9 @@ SOURCE_UNIGNORE = "unignore"
 
 # This is used to signal that re-authentication is required by the user.
 SOURCE_REAUTH = "reauth"
+
+# This is used to initiate a reconfigure flow by the user.
+SOURCE_RECONFIGURE = "reconfigure"
 
 HANDLERS: Registry[str, type[ConfigFlow]] = Registry()
 
@@ -177,7 +189,9 @@ RECONFIGURE_NOTIFICATION_ID = "config_entry_reconfigure"
 
 EVENT_FLOW_DISCOVERED = "config_entry_discovered"
 
-SIGNAL_CONFIG_ENTRY_CHANGED = "config_entry_changed"
+SIGNAL_CONFIG_ENTRY_CHANGED = SignalType["ConfigEntryChange", "ConfigEntry"](
+    "config_entry_changed"
+)
 
 NO_RESET_TRIES_STATES = {
     ConfigEntryState.SETUP_RETRY,
@@ -242,7 +256,11 @@ UPDATE_ENTRY_CONFIG_ENTRY_ATTRS = {
 }
 
 
-ConfigFlowResult = FlowResult
+class ConfigFlowResult(FlowResult, total=False):
+    """Typed result dict for config flow."""
+
+    minor_version: int
+    version: int
 
 
 class ConfigEntry:
@@ -343,6 +361,9 @@ class ConfigEntry:
         # Supports options
         self._supports_options: bool | None = None
 
+        # Supports reconfigure
+        self._supports_reconfigure: bool | None = None
+
         # Listeners to call on update
         self.update_listeners: list[UpdateListenerType] = []
 
@@ -353,14 +374,16 @@ class ConfigEntry:
         self._async_cancel_retry_setup: Callable[[], Any] | None = None
 
         # Hold list for actions to call on unload.
-        self._on_unload: list[
-            Callable[[], Coroutine[Any, Any, None] | None]
-        ] | None = None
+        self._on_unload: list[Callable[[], Coroutine[Any, Any, None] | None]] | None = (
+            None
+        )
 
         # Reload lock to prevent conflicting reloads
         self.reload_lock = asyncio.Lock()
         # Reauth lock to prevent concurrent reauth flows
         self._reauth_lock = asyncio.Lock()
+        # Reconfigure lock to prevent concurrent reconfigure flows
+        self._reconfigure_lock = asyncio.Lock()
 
         self._tasks: set[asyncio.Future[Any]] = set()
         self._background_tasks: set[asyncio.Future[Any]] = set()
@@ -413,6 +436,20 @@ class ConfigEntry:
             )
         return self._supports_options or False
 
+    @property
+    def supports_reconfigure(self) -> bool:
+        """Return if entry supports config options."""
+        if self._supports_reconfigure is None and (
+            handler := HANDLERS.get(self.domain)
+        ):
+            # work out if handler has support for reconfigure step
+            object.__setattr__(
+                self,
+                "_supports_reconfigure",
+                hasattr(handler, "async_step_reconfigure"),
+            )
+        return self._supports_reconfigure or False
+
     def clear_cache(self) -> None:
         """Clear cached properties."""
         with contextlib.suppress(AttributeError):
@@ -430,6 +467,7 @@ class ConfigEntry:
             "supports_options": self.supports_options,
             "supports_remove_device": self.supports_remove_device or False,
             "supports_unload": self.supports_unload or False,
+            "supports_reconfigure": self.supports_reconfigure or False,
             "pref_disable_new_entities": self.pref_disable_new_entities,
             "pref_disable_polling": self.pref_disable_polling,
             "disabled_by": self.disabled_by,
@@ -462,9 +500,8 @@ class ConfigEntry:
             self.supports_remove_device = await support_remove_from_device(
                 hass, self.domain
             )
-
         try:
-            component = integration.get_component()
+            component = await integration.async_get_component()
         except ImportError as err:
             _LOGGER.error(
                 "Error importing integration %s to set up %s configuration entry: %s",
@@ -501,10 +538,17 @@ class ConfigEntry:
                 self._async_set_state(hass, ConfigEntryState.MIGRATION_ERROR, None)
                 return
 
+            setup_phase = SetupPhases.CONFIG_ENTRY_SETUP
+        else:
+            setup_phase = SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP
+
         error_reason = None
 
         try:
-            result = await component.async_setup_entry(hass, self)
+            with async_start_setup(
+                hass, integration=self.domain, group=self.entry_id, phase=setup_phase
+            ):
+                result = await component.async_setup_entry(hass, self)
 
             if not isinstance(result, bool):
                 _LOGGER.error(  # type: ignore[unreachable]
@@ -563,6 +607,7 @@ class ConfigEntry:
                     HassJob(
                         functools.partial(self._async_setup_again, hass),
                         job_type=HassJobType.Callback,
+                        cancel_on_shutdown=True,
                     ),
                 )
             else:
@@ -612,7 +657,11 @@ class ConfigEntry:
         # Check again when we fire in case shutdown
         # has started so we do not block shutdown
         if not hass.is_stopping:
-            hass.async_create_task(self.async_setup(hass), eager_start=True)
+            hass.async_create_task(
+                self.async_setup(hass),
+                f"config entry retry {self.domain} {self.title}",
+                eager_start=True,
+            )
 
     @callback
     def async_shutdown(self) -> None:
@@ -651,7 +700,7 @@ class ConfigEntry:
                 self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
                 return True
 
-        component = integration.get_component()
+        component = await integration.async_get_component()
 
         if integration.domain == self.domain:
             if not self.state.recoverable:
@@ -708,7 +757,7 @@ class ConfigEntry:
                 # entry.
                 return
 
-        component = integration.get_component()
+        component = await integration.async_get_component()
         if not hasattr(component, "async_remove_entry"):
             return
         try:
@@ -757,7 +806,7 @@ class ConfigEntry:
 
         if not (integration := self._integration_for_domain):
             integration = await loader.async_get_integration(hass, self.domain)
-        component = integration.get_component()
+        component = await integration.async_get_component()
         supports_migrate = hasattr(component, "async_migrate_entry")
         if not supports_migrate:
             if same_major_version:
@@ -825,7 +874,7 @@ class ConfigEntry:
         if self._on_unload is not None:
             while self._on_unload:
                 if job := self._on_unload.pop()():
-                    self.async_create_task(hass, job)
+                    self.async_create_task(hass, job, eager_start=True)
 
         if not self._tasks and not self._background_tasks:
             return
@@ -856,8 +905,8 @@ class ConfigEntry:
         """Start a reauth flow."""
         # We will check this again in the task when we hold the lock,
         # but we also check it now to try to avoid creating the task.
-        if any(self.async_get_active_flows(hass, {SOURCE_REAUTH})):
-            # Reauth flow already in progress for this entry
+        if any(self.async_get_active_flows(hass, {SOURCE_RECONFIGURE, SOURCE_REAUTH})):
+            # Reauth or Reconfigure flow already in progress for this entry
             return
         hass.async_create_task(
             self._async_init_reauth(hass, context, data),
@@ -872,8 +921,10 @@ class ConfigEntry:
     ) -> None:
         """Start a reauth flow."""
         async with self._reauth_lock:
-            if any(self.async_get_active_flows(hass, {SOURCE_REAUTH})):
-                # Reauth flow already in progress for this entry
+            if any(
+                self.async_get_active_flows(hass, {SOURCE_RECONFIGURE, SOURCE_REAUTH})
+            ):
+                # Reauth or Reconfigure flow already in progress for this entry
                 return
             result = await hass.config_entries.flow.async_init(
                 self.domain,
@@ -902,6 +953,49 @@ class ConfigEntry:
             translation_key="config_entry_reauth",
             translation_placeholders={"name": self.title},
         )
+
+    @callback
+    def async_start_reconfigure(
+        self,
+        hass: HomeAssistant,
+        context: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> None:
+        """Start a reconfigure flow."""
+        # We will check this again in the task when we hold the lock,
+        # but we also check it now to try to avoid creating the task.
+        if any(self.async_get_active_flows(hass, {SOURCE_RECONFIGURE, SOURCE_REAUTH})):
+            # Reconfigure or reauth flow already in progress for this entry
+            return
+        hass.async_create_task(
+            self._async_init_reconfigure(hass, context, data),
+            f"config entry reconfigure {self.title} {self.domain} {self.entry_id}",
+        )
+
+    async def _async_init_reconfigure(
+        self,
+        hass: HomeAssistant,
+        context: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> None:
+        """Start a reconfigure flow."""
+        async with self._reconfigure_lock:
+            if any(
+                self.async_get_active_flows(hass, {SOURCE_RECONFIGURE, SOURCE_REAUTH})
+            ):
+                # Reconfigure or reauth flow already in progress for this entry
+                return
+            await hass.config_entries.flow.async_init(
+                self.domain,
+                context={
+                    "source": SOURCE_RECONFIGURE,
+                    "entry_id": self.entry_id,
+                    "title_placeholders": {"name": self.title},
+                    "unique_id": self.unique_id,
+                }
+                | (context or {}),
+                data=self.data | (data or {}),
+            )
 
     @callback
     def async_get_active_flows(
@@ -954,7 +1048,13 @@ class ConfigEntry:
 
         Background tasks are automatically canceled when config entry is unloaded.
 
-        target: target to call.
+        A background task is different from a normal task:
+
+          - Will not block startup
+          - Will be automatically cancelled on shutdown
+          - Calls to async_block_till_done will not wait for completion
+
+        This method must be run in the event loop.
         """
         task = hass.async_create_background_task(target, name, eager_start)
         if task.done():
@@ -973,7 +1073,7 @@ class FlowCancelledError(Exception):
     """Error to indicate that a flow has been cancelled."""
 
 
-class ConfigEntriesFlowManager(data_entry_flow.BaseFlowManager[ConfigFlowResult]):
+class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult, str]):
     """Manage all the config entry flows that are in progress."""
 
     _flow_result = ConfigFlowResult
@@ -1040,9 +1140,9 @@ class ConfigEntriesFlowManager(data_entry_flow.BaseFlowManager[ConfigFlowResult]
         loop = self.hass.loop
 
         if context["source"] == SOURCE_IMPORT:
-            self._pending_import_flows.setdefault(handler, {})[
-                flow_id
-            ] = loop.create_future()
+            self._pending_import_flows.setdefault(handler, {})[flow_id] = (
+                loop.create_future()
+            )
 
         cancel_init_future = loop.create_future()
         self._initialize_futures.setdefault(handler, []).append(cancel_init_future)
@@ -1098,7 +1198,9 @@ class ConfigEntriesFlowManager(data_entry_flow.BaseFlowManager[ConfigFlowResult]
         self._discovery_debouncer.async_shutdown()
 
     async def async_finish_flow(
-        self, flow: data_entry_flow.BaseFlowHandler, result: ConfigFlowResult
+        self,
+        flow: data_entry_flow.FlowHandler[ConfigFlowResult, str],
+        result: ConfigFlowResult,
     ) -> ConfigFlowResult:
         """Finish a config flow and add an entry."""
         flow = cast(ConfigFlow, flow)
@@ -1218,7 +1320,9 @@ class ConfigEntriesFlowManager(data_entry_flow.BaseFlowManager[ConfigFlowResult]
         return flow
 
     async def async_post_init(
-        self, flow: data_entry_flow.BaseFlowHandler, result: ConfigFlowResult
+        self,
+        flow: data_entry_flow.FlowHandler[ConfigFlowResult, str],
+        result: ConfigFlowResult,
     ) -> None:
         """After a flow is initialised trigger new flow notifications."""
         source = flow.context["source"]
@@ -1392,6 +1496,11 @@ class ConfigEntries:
         return self._entries.data.get(entry_id)
 
     @callback
+    def async_entry_ids(self) -> list[str]:
+        """Return entry ids."""
+        return list(self._entries.data)
+
+    @callback
     def async_entries(
         self,
         domain: str | None = None,
@@ -1499,7 +1608,9 @@ class ConfigEntries:
             old_conf_migrate_func=_old_conf_migrator,
         )
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, self._async_shutdown, run_immediately=True
+        )
 
         if config is None:
             self._entries = ConfigEntryItems(self.hass)
@@ -1743,10 +1854,14 @@ class ConfigEntries:
         self, entry: ConfigEntry, platforms: Iterable[Platform | str]
     ) -> None:
         """Forward the setup of an entry to platforms."""
+        integration = await loader.async_get_integration(self.hass, entry.domain)
+        if not integration.platforms_are_loaded(platforms):
+            with async_pause_setup(self.hass, SetupPhases.WAIT_IMPORT_PLATFORMS):
+                await integration.async_get_platforms(platforms)
         await asyncio.gather(
             *(
                 create_eager_task(
-                    self.async_forward_entry_setup(entry, platform),
+                    self._async_forward_entry_setup(entry, platform, False),
                     name=f"config entry forward setup {entry.title} {entry.domain} {entry.entry_id} {platform}",
                 )
                 for platform in platforms
@@ -1762,15 +1877,32 @@ class ConfigEntries:
         component also has related platforms, the component will have to
         forward the entry to be setup by that component.
         """
+        return await self._async_forward_entry_setup(entry, domain, True)
+
+    async def _async_forward_entry_setup(
+        self, entry: ConfigEntry, domain: Platform | str, preload_platform: bool
+    ) -> bool:
+        """Forward the setup of an entry to a different component."""
         # Setup Component if not set up yet
         if domain not in self.hass.config.components:
-            result = await async_setup_component(self.hass, domain, self._hass_config)
+            with async_pause_setup(self.hass, SetupPhases.WAIT_BASE_PLATFORM_SETUP):
+                result = await async_setup_component(
+                    self.hass, domain, self._hass_config
+                )
 
             if not result:
                 return False
 
-        integration = await loader.async_get_integration(self.hass, domain)
+        if preload_platform:
+            # If this is a late setup, we need to make sure the platform is loaded
+            # so we do not end up waiting for when the EntityComponent calls
+            # async_prepare_setup_platform
+            integration = await loader.async_get_integration(self.hass, entry.domain)
+            if not integration.platforms_are_loaded((domain,)):
+                with async_pause_setup(self.hass, SetupPhases.WAIT_IMPORT_PLATFORMS):
+                    await integration.async_get_platform(domain)
 
+        integration = await loader.async_get_integration(self.hass, domain)
         await entry.async_setup(self.hass, integration=integration)
         return True
 
@@ -1857,7 +1989,7 @@ def _async_abort_entries_match(
             raise data_entry_flow.AbortFlow("already_configured")
 
 
-class ConfigEntryBaseFlow(data_entry_flow.BaseFlowHandler[ConfigFlowResult]):
+class ConfigEntryBaseFlow(data_entry_flow.FlowHandler[ConfigFlowResult, str]):
     """Base class for config and option flows."""
 
     _flow_result = ConfigFlowResult
@@ -2209,7 +2341,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         return self.async_abort(reason=reason)
 
 
-class OptionsFlowManager(data_entry_flow.BaseFlowManager[ConfigFlowResult]):
+class OptionsFlowManager(data_entry_flow.FlowManager[ConfigFlowResult, str]):
     """Flow to set options for a configuration entry."""
 
     _flow_result = ConfigFlowResult
@@ -2238,7 +2370,9 @@ class OptionsFlowManager(data_entry_flow.BaseFlowManager[ConfigFlowResult]):
         return handler.async_get_options_flow(entry)
 
     async def async_finish_flow(
-        self, flow: data_entry_flow.BaseFlowHandler, result: ConfigFlowResult
+        self,
+        flow: data_entry_flow.FlowHandler[ConfigFlowResult, str],
+        result: ConfigFlowResult,
     ) -> ConfigFlowResult:
         """Finish an options flow and update options for configuration entry.
 
@@ -2258,7 +2392,9 @@ class OptionsFlowManager(data_entry_flow.BaseFlowManager[ConfigFlowResult]):
         result["result"] = True
         return result
 
-    async def _async_setup_preview(self, flow: data_entry_flow.BaseFlowHandler) -> None:
+    async def _async_setup_preview(
+        self, flow: data_entry_flow.FlowHandler[ConfigFlowResult, str]
+    ) -> None:
         """Set up preview for an option flow handler."""
         entry = self._async_get_config_entry(flow.handler)
         await _load_integration(self.hass, entry.domain, {})
@@ -2400,16 +2536,16 @@ class EntityRegistryDisabledHandler:
 
 
 @callback
-def _handle_entry_updated_filter(event: Event) -> bool:
+def _handle_entry_updated_filter(event_data: Mapping[str, Any]) -> bool:
     """Handle entity registry entry update filter.
 
     Only handle changes to "disabled_by".
     If "disabled_by" was CONFIG_ENTRY, reload is not needed.
     """
     if (
-        event.data["action"] != "update"
-        or "disabled_by" not in event.data["changes"]
-        or event.data["changes"]["disabled_by"]
+        event_data["action"] != "update"
+        or "disabled_by" not in event_data["changes"]
+        or event_data["changes"]["disabled_by"]
         is entity_registry.RegistryEntryDisabler.CONFIG_ENTRY
     ):
         return False
@@ -2419,14 +2555,14 @@ def _handle_entry_updated_filter(event: Event) -> bool:
 async def support_entry_unload(hass: HomeAssistant, domain: str) -> bool:
     """Test if a domain supports entry unloading."""
     integration = await loader.async_get_integration(hass, domain)
-    component = integration.get_component()
+    component = await integration.async_get_component()
     return hasattr(component, "async_unload_entry")
 
 
 async def support_remove_from_device(hass: HomeAssistant, domain: str) -> bool:
     """Test if a domain supports being removed from a device."""
     integration = await loader.async_get_integration(hass, domain)
-    component = integration.get_component()
+    component = await integration.async_get_component()
     return hasattr(component, "async_remove_config_entry_device")
 
 

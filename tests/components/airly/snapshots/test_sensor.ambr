@@ -50,6 +50,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.home_carbon_monoxide',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '162.49',
   })
@@ -103,6 +104,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.home_common_air_quality_index',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '7.29',
   })
@@ -157,6 +159,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.home_humidity',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '68.35',
   })
@@ -213,6 +216,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.home_nitrogen_dioxide',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '16.04',
   })
@@ -269,6 +273,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.home_ozone',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '41.52',
   })
@@ -323,6 +328,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.home_pm1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2.83',
   })
@@ -379,6 +385,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.home_pm10',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '6.06',
   })
@@ -435,6 +442,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.home_pm2_5',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4.37',
   })
@@ -489,6 +497,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.home_pressure',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1019.86',
   })
@@ -545,6 +554,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.home_sulphur_dioxide',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '13.97',
   })
@@ -599,6 +609,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.home_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '14.37',
   })

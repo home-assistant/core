@@ -1,4 +1,5 @@
 """Component to integrate the Home Assistant cloud."""
+
 from __future__ import annotations
 
 import asyncio
@@ -11,7 +12,7 @@ from hass_nabucasa import Cloud
 import voluptuous as vol
 
 from homeassistant.components import alexa, google_assistant
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
 from homeassistant.const import (
     CONF_DESCRIPTION,
     CONF_MODE,
@@ -26,7 +27,6 @@ from homeassistant.helpers import config_validation as cv, entityfilter
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
-    SignalType,
     async_dispatcher_connect,
     async_dispatcher_send,
 )
@@ -34,6 +34,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+from homeassistant.util.signal_type import SignalType
 
 from . import account_link, http_api
 from .client import CloudClient
@@ -304,7 +305,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             return
         loaded = True
 
-        await hass.config_entries.flow.async_init(DOMAIN, context={"source": "system"})
+        await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_SYSTEM}
+        )
 
     async def _on_connect() -> None:
         """Handle cloud connect."""

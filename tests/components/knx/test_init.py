@@ -1,4 +1,5 @@
 """Test KNX init."""
+
 from unittest.mock import patch
 
 import pytest
@@ -276,9 +277,10 @@ async def test_async_remove_entry(
     knx.mock_config_entry = config_entry
     await knx.setup_integration({})
 
-    with patch("pathlib.Path.unlink") as unlink_mock, patch(
-        "pathlib.Path.rmdir"
-    ) as rmdir_mock:
+    with (
+        patch("pathlib.Path.unlink") as unlink_mock,
+        patch("pathlib.Path.rmdir") as rmdir_mock,
+    ):
         assert await hass.config_entries.async_remove(config_entry.entry_id)
         assert unlink_mock.call_count == 3
         rmdir_mock.assert_called_once()

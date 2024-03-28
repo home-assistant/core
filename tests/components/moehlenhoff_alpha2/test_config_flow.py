@@ -1,4 +1,5 @@
 """Test the moehlenhoff_alpha2 config flow."""
+
 from unittest.mock import patch
 
 from homeassistant import config_entries
@@ -31,10 +32,13 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert not result["errors"]
 
-    with patch("moehlenhoff_alpha2.Alpha2Base.update_data", mock_update_data), patch(
-        "homeassistant.components.moehlenhoff_alpha2.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch("moehlenhoff_alpha2.Alpha2Base.update_data", mock_update_data),
+        patch(
+            "homeassistant.components.moehlenhoff_alpha2.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             flow_id=result["flow_id"],
             user_input={"host": MOCK_BASE_HOST},

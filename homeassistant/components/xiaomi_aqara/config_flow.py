@@ -1,4 +1,5 @@
 """Config flow to configure Xiaomi Aqara."""
+
 import logging
 from socket import gaierror
 
@@ -157,9 +158,7 @@ class XiaomiAqaraFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_xiaomi_aqara")
 
         # Check if the discovered device is an xiaomi aqara gateway.
-        if not (
-            name.startswith(ZEROCONF_GATEWAY) or name.startswith(ZEROCONF_ACPARTNER)
-        ):
+        if not (name.startswith((ZEROCONF_GATEWAY, ZEROCONF_ACPARTNER))):
             _LOGGER.debug(
                 (
                     "Xiaomi device '%s' discovered with host %s, not identified as"
@@ -205,7 +204,7 @@ class XiaomiAqaraFlowHandler(ConfigFlow, domain=DOMAIN):
                 valid_key = True
 
             if valid_key:
-                # format_mac, for a gateway the sid equels the mac address
+                # format_mac, for a gateway the sid equals the mac address
                 mac_address = format_mac(self.sid)
 
                 # set unique_id

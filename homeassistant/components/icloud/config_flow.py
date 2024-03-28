@@ -1,4 +1,5 @@
 """Config flow to configure the iCloud integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -140,7 +141,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                 getattr, self.api, "devices"
             )
             if not devices:
-                raise PyiCloudNoDevicesException()
+                raise PyiCloudNoDevicesException
         except (PyiCloudServiceNotActivatedException, PyiCloudNoDevicesException):
             _LOGGER.error("No device found in the iCloud account: %s", self._username)
             self.api = None

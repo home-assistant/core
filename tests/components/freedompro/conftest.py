@@ -1,4 +1,5 @@
 """Fixtures for Freedompro integration tests."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -27,15 +28,18 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 @pytest.fixture(autouse=True)
 def mock_freedompro():
     """Mock freedompro get_list and get_states."""
-    with patch(
-        "homeassistant.components.freedompro.coordinator.get_list",
-        return_value={
-            "state": True,
-            "devices": DEVICES,
-        },
-    ), patch(
-        "homeassistant.components.freedompro.coordinator.get_states",
-        return_value=DEVICES_STATE,
+    with (
+        patch(
+            "homeassistant.components.freedompro.coordinator.get_list",
+            return_value={
+                "state": True,
+                "devices": DEVICES,
+            },
+        ),
+        patch(
+            "homeassistant.components.freedompro.coordinator.get_states",
+            return_value=DEVICES_STATE,
+        ),
     ):
         yield
 
@@ -71,15 +75,18 @@ async def init_integration_no_state(hass) -> MockConfigEntry:
         },
     )
 
-    with patch(
-        "homeassistant.components.freedompro.coordinator.get_list",
-        return_value={
-            "state": True,
-            "devices": DEVICES,
-        },
-    ), patch(
-        "homeassistant.components.freedompro.coordinator.get_states",
-        return_value=[],
+    with (
+        patch(
+            "homeassistant.components.freedompro.coordinator.get_list",
+            return_value={
+                "state": True,
+                "devices": DEVICES,
+            },
+        ),
+        patch(
+            "homeassistant.components.freedompro.coordinator.get_states",
+            return_value=[],
+        ),
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)

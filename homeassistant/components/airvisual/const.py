@@ -1,4 +1,5 @@
 """Define AirVisual constants."""
+
 import logging
 
 DOMAIN = "airvisual"

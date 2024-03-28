@@ -1,4 +1,5 @@
 """Test Airly system health."""
+
 import asyncio
 from unittest.mock import Mock
 
@@ -19,6 +20,7 @@ async def test_airly_system_health(
     aioclient_mock.get("https://airapi.airly.eu/v2/", text="")
     hass.config.components.add(DOMAIN)
     assert await async_setup_component(hass, "system_health", {})
+    await hass.async_block_till_done()
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN]["0123xyz"] = Mock(
@@ -47,6 +49,7 @@ async def test_airly_system_health_fail(
     aioclient_mock.get("https://airapi.airly.eu/v2/", exc=ClientError)
     hass.config.components.add(DOMAIN)
     assert await async_setup_component(hass, "system_health", {})
+    await hass.async_block_till_done()
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN]["0123xyz"] = Mock(

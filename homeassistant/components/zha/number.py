@@ -1,14 +1,15 @@
 """Support for ZHA AnalogOutput cluster."""
+
 from __future__ import annotations
 
 import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
 
-from zigpy.quirks.v2 import EntityMetadata, NumberMetadata
+from zigpy.quirks.v2 import NumberMetadata
 from zigpy.zcl.clusters.hvac import Thermostat
 
-from homeassistant.components.number import NumberEntity, NumberMode
+from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform, UnitOfMass, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
@@ -25,11 +26,11 @@ from .core.const import (
     CLUSTER_HANDLER_LEVEL,
     CLUSTER_HANDLER_OCCUPANCY,
     CLUSTER_HANDLER_THERMOSTAT,
-    QUIRK_METADATA,
+    ENTITY_METADATA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
-from .core.helpers import get_zha_data
+from .core.helpers import get_zha_data, validate_device_class, validate_unit
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
@@ -402,7 +403,7 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
         Return entity if it is a supported configuration, otherwise return None
         """
         cluster_handler = cluster_handlers[0]
-        if QUIRK_METADATA not in kwargs and (
+        if ENTITY_METADATA not in kwargs and (
             cls._attribute_name in cluster_handler.cluster.unsupported_attributes
             or cls._attribute_name not in cluster_handler.cluster.attributes_by_name
             or cluster_handler.cluster.get(cls._attribute_name) is None
@@ -425,26 +426,34 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
     ) -> None:
         """Init this number configuration entity."""
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
-        if QUIRK_METADATA in kwargs:
-            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA])
+        if ENTITY_METADATA in kwargs:
+            self._init_from_quirks_metadata(kwargs[ENTITY_METADATA])
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
 
-    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
+    def _init_from_quirks_metadata(self, entity_metadata: NumberMetadata) -> None:
         """Init this entity from the quirks metadata."""
         super()._init_from_quirks_metadata(entity_metadata)
-        number_metadata: NumberMetadata = entity_metadata.entity_metadata
-        self._attribute_name = number_metadata.attribute_name
+        self._attribute_name = entity_metadata.attribute_name
 
-        if number_metadata.min is not None:
-            self._attr_native_min_value = number_metadata.min
-        if number_metadata.max is not None:
-            self._attr_native_max_value = number_metadata.max
-        if number_metadata.step is not None:
-            self._attr_native_step = number_metadata.step
-        if number_metadata.unit is not None:
-            self._attr_native_unit_of_measurement = number_metadata.unit
-        if number_metadata.multiplier is not None:
-            self._attr_multiplier = number_metadata.multiplier
+        if entity_metadata.min is not None:
+            self._attr_native_min_value = entity_metadata.min
+        if entity_metadata.max is not None:
+            self._attr_native_max_value = entity_metadata.max
+        if entity_metadata.step is not None:
+            self._attr_native_step = entity_metadata.step
+        if entity_metadata.multiplier is not None:
+            self._attr_multiplier = entity_metadata.multiplier
+        if entity_metadata.device_class is not None:
+            self._attr_device_class = validate_device_class(
+                NumberDeviceClass,
+                entity_metadata.device_class,
+                Platform.NUMBER.value,
+                _LOGGER,
+            )
+        if entity_metadata.device_class is None and entity_metadata.unit is not None:
+            self._attr_native_unit_of_measurement = validate_unit(
+                entity_metadata.unit
+            ).value
 
     @property
     def native_value(self) -> float:
@@ -596,7 +605,6 @@ class TimerDurationMinutes(ZHANumberConfigurationEntity):
 
     _unique_id_suffix = "timer_duration"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[14]
     _attr_native_min_value: float = 0x00
     _attr_native_max_value: float = 0x257
     _attr_native_unit_of_measurement: str | None = UNITS[72]
@@ -611,7 +619,6 @@ class FilterLifeTime(ZHANumberConfigurationEntity):
 
     _unique_id_suffix = "filter_life_time"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[14]
     _attr_native_min_value: float = 0x00
     _attr_native_max_value: float = 0xFFFFFFFF
     _attr_native_unit_of_measurement: str | None = UNITS[72]
@@ -642,7 +649,6 @@ class InovelliRemoteDimmingUpSpeed(ZHANumberConfigurationEntity):
 
     _unique_id_suffix = "dimming_speed_up_remote"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 126
     _attribute_name = "dimming_speed_up_remote"
@@ -656,7 +662,6 @@ class InovelliButtonDelay(ZHANumberConfigurationEntity):
 
     _unique_id_suffix = "button_delay"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 9
     _attribute_name = "button_delay"
@@ -670,7 +675,6 @@ class InovelliLocalDimmingUpSpeed(ZHANumberConfigurationEntity):
 
     _unique_id_suffix = "dimming_speed_up_local"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 127
     _attribute_name = "dimming_speed_up_local"
@@ -684,7 +688,6 @@ class InovelliLocalRampRateOffToOn(ZHANumberConfigurationEntity):
 
     _unique_id_suffix = "ramp_rate_off_to_on_local"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 127
     _attribute_name = "ramp_rate_off_to_on_local"
@@ -698,7 +701,6 @@ class InovelliRemoteDimmingSpeedOffToOn(ZHANumberConfigurationEntity):
 
     _unique_id_suffix = "ramp_rate_off_to_on_remote"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 127
     _attribute_name = "ramp_rate_off_to_on_remote"
@@ -712,7 +714,6 @@ class InovelliRemoteDimmingDownSpeed(ZHANumberConfigurationEntity):
 
     _unique_id_suffix = "dimming_speed_down_remote"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 127
     _attribute_name = "dimming_speed_down_remote"
@@ -726,7 +727,6 @@ class InovelliLocalDimmingDownSpeed(ZHANumberConfigurationEntity):
 
     _unique_id_suffix = "dimming_speed_down_local"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 127
     _attribute_name = "dimming_speed_down_local"
@@ -740,7 +740,6 @@ class InovelliLocalRampRateOnToOff(ZHANumberConfigurationEntity):
 
     _unique_id_suffix = "ramp_rate_on_to_off_local"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 127
     _attribute_name = "ramp_rate_on_to_off_local"
@@ -754,7 +753,6 @@ class InovelliRemoteDimmingSpeedOnToOff(ZHANumberConfigurationEntity):
 
     _unique_id_suffix = "ramp_rate_on_to_off_remote"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 127
     _attribute_name = "ramp_rate_on_to_off_remote"
@@ -768,7 +766,6 @@ class InovelliMinimumLoadDimmingLevel(ZHANumberConfigurationEntity):
 
     _unique_id_suffix = "minimum_level"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 1
     _attr_native_max_value: float = 254
     _attribute_name = "minimum_level"
@@ -782,7 +779,6 @@ class InovelliMaximumLoadDimmingLevel(ZHANumberConfigurationEntity):
 
     _unique_id_suffix = "maximum_level"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 2
     _attr_native_max_value: float = 255
     _attribute_name = "maximum_level"
@@ -796,7 +792,6 @@ class InovelliAutoShutoffTimer(ZHANumberConfigurationEntity):
 
     _unique_id_suffix = "auto_off_timer"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[14]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 32767
     _attribute_name = "auto_off_timer"
@@ -812,7 +807,6 @@ class InovelliQuickStartTime(ZHANumberConfigurationEntity):
 
     _unique_id_suffix = "quick_start_time"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 10
     _attribute_name = "quick_start_time"
@@ -826,7 +820,6 @@ class InovelliLoadLevelIndicatorTimeout(ZHANumberConfigurationEntity):
 
     _unique_id_suffix = "load_level_indicator_timeout"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[14]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 11
     _attribute_name = "load_level_indicator_timeout"
@@ -840,7 +833,6 @@ class InovelliDefaultAllLEDOnColor(ZHANumberConfigurationEntity):
 
     _unique_id_suffix = "led_color_when_on"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[15]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 255
     _attribute_name = "led_color_when_on"
@@ -854,7 +846,6 @@ class InovelliDefaultAllLEDOffColor(ZHANumberConfigurationEntity):
 
     _unique_id_suffix = "led_color_when_off"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[15]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 255
     _attribute_name = "led_color_when_off"
@@ -868,7 +859,6 @@ class InovelliDefaultAllLEDOnIntensity(ZHANumberConfigurationEntity):
 
     _unique_id_suffix = "led_intensity_when_on"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 100
     _attribute_name = "led_intensity_when_on"
@@ -882,7 +872,6 @@ class InovelliDefaultAllLEDOffIntensity(ZHANumberConfigurationEntity):
 
     _unique_id_suffix = "led_intensity_when_off"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 100
     _attribute_name = "led_intensity_when_off"
@@ -896,7 +885,6 @@ class InovelliDoubleTapUpLevel(ZHANumberConfigurationEntity):
 
     _unique_id_suffix = "double_tap_up_level"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 2
     _attr_native_max_value: float = 254
     _attribute_name = "double_tap_up_level"
@@ -910,7 +898,6 @@ class InovelliDoubleTapDownLevel(ZHANumberConfigurationEntity):
 
     _unique_id_suffix = "double_tap_down_level"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 254
     _attribute_name = "double_tap_down_level"
@@ -932,7 +919,6 @@ class AqaraPetFeederServingSize(ZHANumberConfigurationEntity):
     _attr_translation_key: str = "serving_size"
 
     _attr_mode: NumberMode = NumberMode.BOX
-    _attr_icon: str = "mdi:counter"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -951,7 +937,6 @@ class AqaraPetFeederPortionWeight(ZHANumberConfigurationEntity):
 
     _attr_mode: NumberMode = NumberMode.BOX
     _attr_native_unit_of_measurement: str = UnitOfMass.GRAMS
-    _attr_icon: str = "mdi:weight-gram"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -971,7 +956,6 @@ class AqaraThermostatAwayTemp(ZHANumberConfigurationEntity):
 
     _attr_mode: NumberMode = NumberMode.SLIDER
     _attr_native_unit_of_measurement: str = UnitOfTemperature.CELSIUS
-    _attr_icon: str = ICONS[0]
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -992,7 +976,6 @@ class ThermostatLocalTempCalibration(ZHANumberConfigurationEntity):
 
     _attr_mode: NumberMode = NumberMode.SLIDER
     _attr_native_unit_of_measurement: str = UnitOfTemperature.CELSIUS
-    _attr_icon: str = ICONS[0]
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -1024,7 +1007,6 @@ class SonoffPresenceSenorTimeout(ZHANumberConfigurationEntity):
     _attr_translation_key: str = "presence_detection_timeout"
 
     _attr_mode: NumberMode = NumberMode.BOX
-    _attr_icon: str = "mdi:timer-edit"
 
 
 # pylint: disable-next=hass-invalid-inheritance # needs fixing

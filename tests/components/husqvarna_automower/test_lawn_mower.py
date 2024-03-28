@@ -1,4 +1,5 @@
 """Tests for lawn_mower module."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock
 

@@ -1,4 +1,5 @@
 """Manage the Silicon Labs Multiprotocol add-on."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -143,7 +144,10 @@ class MultiprotocolAddonManager(WaitingAddonManager):
     async def async_setup(self) -> None:
         """Set up the manager."""
         await async_process_integration_platforms(
-            self._hass, "silabs_multiprotocol", self._register_multipan_platform
+            self._hass,
+            "silabs_multiprotocol",
+            self._register_multipan_platform,
+            wait_for_platforms=True,
         )
         await self.async_load()
 

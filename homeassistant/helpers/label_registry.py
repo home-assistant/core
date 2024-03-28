@@ -1,4 +1,5 @@
 """Provide a way to label and group anything."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -6,7 +7,7 @@ import dataclasses
 from dataclasses import dataclass
 from typing import Literal, TypedDict, cast
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.util import slugify
 
 from .normalized_name_base_registry import (
@@ -14,14 +15,14 @@ from .normalized_name_base_registry import (
     NormalizedNameBaseRegistryItems,
     normalize_name,
 )
+from .registry import BaseRegistry
 from .storage import Store
-from .typing import UNDEFINED, EventType, UndefinedType
+from .typing import UNDEFINED, UndefinedType
 
 DATA_REGISTRY = "label_registry"
 EVENT_LABEL_REGISTRY_UPDATED = "label_registry_updated"
 STORAGE_KEY = "core.label_registry"
 STORAGE_VERSION_MAJOR = 1
-SAVE_DELAY = 10
 
 
 class EventLabelRegistryUpdatedData(TypedDict):
@@ -31,7 +32,7 @@ class EventLabelRegistryUpdatedData(TypedDict):
     label_id: str
 
 
-EventLabelRegistryUpdated = EventType[EventLabelRegistryUpdatedData]
+EventLabelRegistryUpdated = Event[EventLabelRegistryUpdatedData]
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
@@ -44,7 +45,7 @@ class LabelEntry(NormalizedNameBaseRegistryEntry):
     icon: str | None = None
 
 
-class LabelRegistry:
+class LabelRegistry(BaseRegistry):
     """Class to hold a registry of labels."""
 
     labels: NormalizedNameBaseRegistryItems[LabelEntry]
@@ -204,11 +205,6 @@ class LabelRegistry:
 
         self.labels = labels
         self._label_data = labels.data
-
-    @callback
-    def async_schedule_save(self) -> None:
-        """Schedule saving the label registry."""
-        self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
     @callback
     def _data_to_save(self) -> dict[str, list[dict[str, str | None]]]:

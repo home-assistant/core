@@ -1,4 +1,5 @@
 """Config flow for the Reolink camera component."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -192,9 +193,9 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors[CONF_HOST] = "api_error"
             except ReolinkWebhookException as err:
                 placeholders["error"] = str(err)
-                placeholders[
-                    "more_info"
-                ] = "https://www.home-assistant.io/more-info/no-url-available/#configuring-the-instance-url"
+                placeholders["more_info"] = (
+                    "https://www.home-assistant.io/more-info/no-url-available/#configuring-the-instance-url"
+                )
                 errors["base"] = "webhook_exception"
             except (ReolinkError, ReolinkException) as err:
                 placeholders["error"] = str(err)

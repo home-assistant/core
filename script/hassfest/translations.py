@@ -1,4 +1,5 @@
 """Validate integration translation files."""
+
 from __future__ import annotations
 
 from functools import partial
@@ -440,7 +441,10 @@ def gen_platform_strings_schema(config: Config, integration: Integration) -> vol
 
 
 ONBOARDING_SCHEMA = vol.Schema(
-    {vol.Required("area"): {str: translation_value_validator}}
+    {
+        vol.Required("area"): {str: translation_value_validator},
+        vol.Required("dashboard"): {str: {"title": translation_value_validator}},
+    }
 )
 
 

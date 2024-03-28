@@ -1,4 +1,5 @@
 """Plugin to enforce type hints on specific functions."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -495,11 +496,6 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             base_class="ConfigFlow",
             matches=[
                 TypeHintMatch(
-                    function_name="async_step123_*",
-                    arg_types={},
-                    return_type=["ConfigFlowResult", "FlowResult"],
-                ),
-                TypeHintMatch(
                     function_name="async_get_options_flow",
                     arg_types={
                         0: "ConfigEntry",
@@ -511,56 +507,61 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     arg_types={
                         1: "DhcpServiceInfo",
                     },
-                    return_type=["ConfigFlowResult", "FlowResult"],
+                    return_type="ConfigFlowResult",
                 ),
                 TypeHintMatch(
                     function_name="async_step_hassio",
                     arg_types={
                         1: "HassioServiceInfo",
                     },
-                    return_type=["ConfigFlowResult", "FlowResult"],
+                    return_type="ConfigFlowResult",
                 ),
                 TypeHintMatch(
                     function_name="async_step_homekit",
                     arg_types={
                         1: "ZeroconfServiceInfo",
                     },
-                    return_type=["ConfigFlowResult", "FlowResult"],
+                    return_type="ConfigFlowResult",
                 ),
                 TypeHintMatch(
                     function_name="async_step_mqtt",
                     arg_types={
                         1: "MqttServiceInfo",
                     },
-                    return_type=["ConfigFlowResult", "FlowResult"],
+                    return_type="ConfigFlowResult",
                 ),
                 TypeHintMatch(
                     function_name="async_step_reauth",
                     arg_types={
                         1: "Mapping[str, Any]",
                     },
-                    return_type=["ConfigFlowResult", "FlowResult"],
+                    return_type="ConfigFlowResult",
                 ),
                 TypeHintMatch(
                     function_name="async_step_ssdp",
                     arg_types={
                         1: "SsdpServiceInfo",
                     },
-                    return_type=["ConfigFlowResult", "FlowResult"],
+                    return_type="ConfigFlowResult",
                 ),
                 TypeHintMatch(
                     function_name="async_step_usb",
                     arg_types={
                         1: "UsbServiceInfo",
                     },
-                    return_type=["ConfigFlowResult", "FlowResult"],
+                    return_type="ConfigFlowResult",
                 ),
                 TypeHintMatch(
                     function_name="async_step_zeroconf",
                     arg_types={
                         1: "ZeroconfServiceInfo",
                     },
-                    return_type=["ConfigFlowResult", "FlowResult"],
+                    return_type="ConfigFlowResult",
+                ),
+                TypeHintMatch(
+                    function_name="async_step_*",
+                    arg_types={},
+                    return_type="ConfigFlowResult",
                 ),
             ],
         ),
@@ -570,7 +571,7 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="async_step_*",
                     arg_types={},
-                    return_type=["ConfigFlowResult", "FlowResult"],
+                    return_type="ConfigFlowResult",
                 ),
             ],
         ),
@@ -1024,11 +1025,11 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="current_humidity",
-                    return_type=["int", None],
+                    return_type=["float", None],
                 ),
                 TypeHintMatch(
                     function_name="target_humidity",
-                    return_type=["int", None],
+                    return_type=["float", None],
                 ),
                 TypeHintMatch(
                     function_name="hvac_mode",
@@ -1170,11 +1171,11 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="min_humidity",
-                    return_type="int",
+                    return_type="float",
                 ),
                 TypeHintMatch(
                     function_name="max_humidity",
-                    return_type="int",
+                    return_type="float",
                 ),
             ],
         ),
@@ -1548,11 +1549,11 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="min_humidity",
-                    return_type=["int"],
+                    return_type=["float"],
                 ),
                 TypeHintMatch(
                     function_name="max_humidity",
-                    return_type=["int"],
+                    return_type=["float"],
                 ),
                 TypeHintMatch(
                     function_name="mode",
@@ -1564,7 +1565,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="target_humidity",
-                    return_type=["int", None],
+                    return_type=["float", None],
                 ),
                 TypeHintMatch(
                     function_name="set_humidity",
@@ -2967,6 +2968,15 @@ def _is_valid_type(
     ):
         return True
 
+    # Special case for int in argument type
+    if (
+        expected_type == "int"
+        and not in_return
+        and isinstance(node, nodes.Name)
+        and node.name in ("float", "int")
+    ):
+        return True
+
     # Name occurs when a namespace is not used, eg. "HomeAssistant"
     if isinstance(node, nodes.Name) and node.name == expected_type:
         return True
@@ -3049,10 +3059,7 @@ def _get_named_annotation(
 def _has_valid_annotations(
     annotations: list[nodes.NodeNG | None],
 ) -> bool:
-    for annotation in annotations:
-        if annotation is not None:
-            return True
-    return False
+    return any(annotation is not None for annotation in annotations)
 
 
 def _get_module_platform(module_name: str) -> str | None:

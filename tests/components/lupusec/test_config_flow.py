@@ -1,4 +1,4 @@
-""""Unit tests for the Lupusec config flow."""
+"""Unit tests for the Lupusec config flow."""
 
 from json import JSONDecodeError
 from unittest.mock import patch
@@ -48,12 +48,15 @@ async def test_form_valid_input(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.lupusec.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.lupusec.config_flow.lupupy.Lupusec",
-    ) as mock_initialize_lupusec:
+    with (
+        patch(
+            "homeassistant.components.lupusec.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.lupusec.config_flow.lupupy.Lupusec",
+        ) as mock_initialize_lupusec,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             MOCK_DATA_STEP,
@@ -101,12 +104,15 @@ async def test_flow_user_init_data_error_and_recover(
     assert len(mock_initialize_lupusec.mock_calls) == 1
 
     # Recover
-    with patch(
-        "homeassistant.components.lupusec.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.lupusec.config_flow.lupupy.Lupusec",
-    ) as mock_initialize_lupusec:
+    with (
+        patch(
+            "homeassistant.components.lupusec.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.lupusec.config_flow.lupupy.Lupusec",
+        ) as mock_initialize_lupusec,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             MOCK_DATA_STEP,
@@ -160,12 +166,15 @@ async def test_flow_source_import(
     hass: HomeAssistant, mock_import_step, mock_title
 ) -> None:
     """Test configuration import from YAML."""
-    with patch(
-        "homeassistant.components.lupusec.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.lupusec.config_flow.lupupy.Lupusec",
-    ) as mock_initialize_lupusec:
+    with (
+        patch(
+            "homeassistant.components.lupusec.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.lupusec.config_flow.lupupy.Lupusec",
+        ) as mock_initialize_lupusec,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},

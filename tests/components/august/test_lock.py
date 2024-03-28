@@ -1,4 +1,5 @@
 """The lock tests for the august platform."""
+
 import datetime
 from unittest.mock import Mock
 

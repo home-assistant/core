@@ -1,4 +1,5 @@
 """Support for balance data via the Starling Bank API."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -53,18 +54,18 @@ def setup_platform(
 ) -> None:
     """Set up the Sterling Bank sensor platform."""
 
-    sensors = []
+    sensors: list[StarlingBalanceSensor] = []
     for account in config[CONF_ACCOUNTS]:
         try:
             starling_account = StarlingAccount(
                 account[CONF_ACCESS_TOKEN], sandbox=account[CONF_SANDBOX]
             )
-            for balance_type in account[CONF_BALANCE_TYPES]:
-                sensors.append(
-                    StarlingBalanceSensor(
-                        starling_account, account[CONF_NAME], balance_type
-                    )
+            sensors.extend(
+                StarlingBalanceSensor(
+                    starling_account, account[CONF_NAME], balance_type
                 )
+                for balance_type in account[CONF_BALANCE_TYPES]
+            )
         except requests.exceptions.HTTPError as error:
             _LOGGER.error(
                 "Unable to set up Starling account '%s': %s", account[CONF_NAME], error

@@ -1,4 +1,5 @@
 """Config flow to configure Blink."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping

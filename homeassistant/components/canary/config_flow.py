@@ -1,4 +1,5 @@
 """Config flow for Canary."""
+
 from __future__ import annotations
 
 import logging

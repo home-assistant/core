@@ -8,6 +8,7 @@
     'context': <ANY>,
     'entity_id': 'lock.lock_1a2b',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unlocked',
   })
@@ -84,6 +85,7 @@
     'context': <ANY>,
     'entity_id': 'lock.lock_2c3d',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unlocked',
   })

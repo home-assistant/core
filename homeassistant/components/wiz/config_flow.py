@@ -1,4 +1,5 @@
 """Config flow for WiZ Platform."""
+
 from __future__ import annotations
 
 import logging

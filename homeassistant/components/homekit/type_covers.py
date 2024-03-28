@@ -1,4 +1,5 @@
 """Class to hold all cover accessories."""
+
 import logging
 from typing import Any
 
@@ -33,12 +34,11 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
 )
-from homeassistant.core import State, callback
+from homeassistant.core import Event, State, callback
 from homeassistant.helpers.event import (
     EventStateChangedData,
     async_track_state_change_event,
 )
-from homeassistant.helpers.typing import EventType
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -146,7 +146,7 @@ class GarageDoorOpener(HomeAccessory):
 
     @callback
     def _async_update_obstruction_event(
-        self, event: EventType[EventStateChangedData]
+        self, event: Event[EventStateChangedData]
     ) -> None:
         """Handle state change event listener callback."""
         self._async_update_obstruction_state(event.data["new_state"])

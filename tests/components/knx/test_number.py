@@ -1,4 +1,5 @@
 """Test KNX number."""
+
 import pytest
 
 from homeassistant.components.knx.const import CONF_RESPOND_TO_READ, KNX_ADDRESS

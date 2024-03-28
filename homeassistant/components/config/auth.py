@@ -1,4 +1,5 @@
 """Offer API to configure Home Assistant auth."""
+
 from __future__ import annotations
 
 from typing import Any

@@ -1,4 +1,5 @@
 """Cover platform for Advantage Air integration."""
+
 from typing import Any
 
 from homeassistant.components.cover import (
