@@ -1,10 +1,6 @@
-"""Provide a mock sensor platform.
-
-Call init before using it in your tests to ensure clean test data.
-"""
+"""Common test utilities for sensor entity component tests."""
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASSES,
     RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
@@ -23,8 +19,6 @@ from homeassistant.const import (
 )
 
 from tests.common import MockEntity
-
-DEVICE_CLASSES.append("none")
 
 UNITS_OF_MEASUREMENT = {
     SensorDeviceClass.APPARENT_POWER: UnitOfApparentPower.VOLT_AMPERE,  # apparent power (VA)
@@ -55,34 +49,6 @@ UNITS_OF_MEASUREMENT = {
     SensorDeviceClass.VOLTAGE: "V",  # voltage (V)
     SensorDeviceClass.GAS: UnitOfVolume.CUBIC_METERS,  # gas (m³)
 }
-
-ENTITIES = {}
-
-
-def init(empty=False):
-    """Initialize the platform with entities."""
-    global ENTITIES
-
-    ENTITIES = (
-        {}
-        if empty
-        else {
-            device_class: MockSensor(
-                name=f"{device_class} sensor",
-                unique_id=f"unique_{device_class}",
-                device_class=device_class,
-                native_unit_of_measurement=UNITS_OF_MEASUREMENT.get(device_class),
-            )
-            for device_class in DEVICE_CLASSES
-        }
-    )
-
-
-async def async_setup_platform(
-    hass, config, async_add_entities_callback, discovery_info=None
-):
-    """Return mock entities."""
-    async_add_entities_callback(list(ENTITIES.values()))
 
 
 class MockSensor(MockEntity, SensorEntity):
@@ -141,3 +107,16 @@ class MockRestoreSensor(MockSensor, RestoreSensor):
         self._values["native_unit_of_measurement"] = (
             last_sensor_data.native_unit_of_measurement
         )
+
+
+def get_mock_sensor_entities() -> dict[str, MockSensor]:
+    """Get mock sensor entities."""
+    return {
+        device_class: MockSensor(
+            name=f"{device_class} sensor",
+            unique_id=f"unique_{device_class}",
+            device_class=device_class,
+            native_unit_of_measurement=UNITS_OF_MEASUREMENT.get(device_class),
+        )
+        for device_class in SensorDeviceClass
+    }
