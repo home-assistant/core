@@ -53,19 +53,27 @@ async def async_validate_hostname(
 ) -> dict[str, bool]:
     """Validate hostname."""
 
-    async def async_check(hostname: str, resolver: str, qtype: str) -> bool:
+    parts = resolver_ipv4.split(":")
+    resolver_ipv4 = parts[0]
+    resolver_ipv4_port = int(parts[1]) if len(parts) > 1 else 53
+
+    async def async_check(
+        hostname: str, resolver: str, qtype: str, port: int = 53
+    ) -> bool:
         """Return if able to resolve hostname."""
         result = False
         with contextlib.suppress(DNSError):
             result = bool(
-                await aiodns.DNSResolver(nameservers=[resolver]).query(hostname, qtype)
+                await aiodns.DNSResolver(
+                    nameservers=[resolver], udp_port=port, tcp_port=port
+                ).query(hostname, qtype)
             )
         return result
 
     result: dict[str, bool] = {}
 
     tasks = await asyncio.gather(
-        async_check(hostname, resolver_ipv4, "A"),
+        async_check(hostname, resolver_ipv4, "A", port=resolver_ipv4_port),
         async_check(hostname, resolver_ipv6, "AAAA"),
         async_check(hostname, resolver_ipv4, "AAAA"),
     )

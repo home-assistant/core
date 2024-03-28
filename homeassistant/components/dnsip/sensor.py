@@ -43,7 +43,10 @@ async def async_setup_entry(
     resolver_ipv6 = entry.options[CONF_RESOLVER_IPV6]
     entities = []
     if entry.data[CONF_IPV4]:
-        entities.append(WanIpSensor(name, hostname, resolver_ipv4, False))
+        parts = resolver_ipv4.split(":")
+        resolver_ipv4 = parts[0]
+        port = int(parts[1]) if len(parts) > 1 else 53
+        entities.append(WanIpSensor(name, hostname, resolver_ipv4, False, port=port))
     if entry.data[CONF_IPV6]:
         entities.append(WanIpSensor(name, hostname, resolver_ipv6, True))
 
@@ -62,12 +65,13 @@ class WanIpSensor(SensorEntity):
         hostname: str,
         resolver: str,
         ipv6: bool,
+        port: int = 53,
     ) -> None:
         """Initialize the DNS IP sensor."""
         self._attr_name = "IPv6" if ipv6 else None
         self._attr_unique_id = f"{hostname}_{ipv6}"
         self.hostname = hostname
-        self.resolver = aiodns.DNSResolver()
+        self.resolver = aiodns.DNSResolver(tcp_port=port, udp_port=port)
         self.resolver.nameservers = [resolver]
         self.querytype = "AAAA" if ipv6 else "A"
         self._retries = DEFAULT_RETRIES
