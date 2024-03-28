@@ -13,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.dt import parse_duration, utcnow
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MIN_UPTIME_VARIATION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,18 +57,11 @@ class GlancesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             up_duration = parse_duration(uptime_str)
             if up_duration:
                 uptime = utcnow() - up_duration
-                # Reject small changes to value
-                uptime = self._normalize_uptime(uptime)
-        return uptime
-
-    def _normalize_uptime(self, uptime: datetime) -> datetime:
-        """Compare uptime with previous value and reject small changes."""
-        value = uptime
-        if self.data is not None:
-            previous_value = self.data["computed"]["uptime"]
+        if uptime and self.data:
+            previous_uptime = self.data["computed"]["uptime"]
             if (
-                isinstance(previous_value, datetime)
-                and value - previous_value < DEFAULT_SCAN_INTERVAL * 10
+                isinstance(previous_uptime, datetime)
+                and uptime - previous_uptime < MIN_UPTIME_VARIATION
             ):
-                value = previous_value
-        return value
+                uptime = previous_uptime
+        return uptime
