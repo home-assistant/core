@@ -17,7 +17,7 @@ from homeassistant.const import STATE_ON
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from .conftest import FilterTest
+from . import FilterTest
 from .const import AZURE_DATA_EXPLORER_PATH, BASE_CONFIG_FULL, BASIC_OPTIONS
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -29,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 async def test_put_event_on_queue_with_managed_client(
     hass,
     entry_managed,
-    mock_ManagedStreaming,
+    mock_managed_streaming,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test listening to events from Hass. and writing to ADX with managed client."""
@@ -40,7 +40,7 @@ async def test_put_event_on_queue_with_managed_client(
 
     await hass.async_block_till_done()
 
-    assert type(mock_ManagedStreaming.call_args.args[0]) is StreamDescriptor
+    assert type(mock_managed_streaming.call_args.args[0]) is StreamDescriptor
 
 
 @pytest.mark.freeze_time("2024-01-01 00:00:00")
@@ -58,14 +58,14 @@ async def test_put_event_on_queue_with_managed_client(
 async def test_put_event_on_queue_with_managed_client_with_errors(
     hass,
     entry_managed,
-    mock_ManagedStreaming,
+    mock_managed_streaming,
     sideeffect,
     log_message,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test listening to events from Hass. and writing to ADX with managed client."""
 
-    mock_ManagedStreaming.side_effect = sideeffect
+    mock_managed_streaming.side_effect = sideeffect
 
     hass.states.async_set("sensor.test_sensor", STATE_ON)
 
@@ -79,7 +79,7 @@ async def test_put_event_on_queue_with_managed_client_with_errors(
 async def test_put_event_on_queue_with_queueing_client(
     hass,
     entry_queued,
-    mock_QueuedIngest,
+    mock_queued_ingest,
 ) -> None:
     """Test listening to events from Hass. and writing to ADX with managed client."""
 
@@ -90,8 +90,8 @@ async def test_put_event_on_queue_with_queueing_client(
     )
 
     await hass.async_block_till_done()
-    mock_QueuedIngest.assert_called_once()
-    assert type(mock_QueuedIngest.call_args.args[0]) is StreamDescriptor
+    mock_queued_ingest.assert_called_once()
+    assert type(mock_queued_ingest.call_args.args[0]) is StreamDescriptor
 
 
 async def test_import(hass) -> None:
@@ -118,7 +118,7 @@ async def test_import(hass) -> None:
 async def test_unload_entry(
     hass,
     entry_managed,
-    mock_ManagedStreaming,
+    mock_managed_streaming,
 ) -> None:
     """Test being able to unload an entry.
 
@@ -128,7 +128,7 @@ async def test_unload_entry(
     """
     assert entry_managed.state == ConfigEntryState.LOADED
     assert await hass.config_entries.async_unload(entry_managed.entry_id)
-    mock_ManagedStreaming.assert_not_called()
+    mock_managed_streaming.assert_not_called()
     assert entry_managed.state == ConfigEntryState.NOT_LOADED
 
 
@@ -136,7 +136,7 @@ async def test_unload_entry(
 async def test_late_event(
     hass,
     entry_with_one_event,
-    mock_ManagedStreaming,
+    mock_managed_streaming,
 ) -> None:
     """Test the check on late events."""
     with patch(
@@ -145,7 +145,7 @@ async def test_late_event(
     ):
         async_fire_time_changed(hass, datetime(2024, 1, 2, 00, 00, 00))
         await hass.async_block_till_done()
-        mock_ManagedStreaming.add.assert_not_called()
+        mock_managed_streaming.add.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -158,12 +158,12 @@ async def test_late_event(
                 "include_entities": ["binary_sensor.included"],
             },
             [
-                FilterTest("climate.excluded", 0),
-                FilterTest("light.included", 1),
-                FilterTest("sensor.excluded_test", 0),
-                FilterTest("sensor.included_test", 1),
-                FilterTest("binary_sensor.included", 1),
-                FilterTest("binary_sensor.excluded", 0),
+                FilterTest("climate.excluded", expect_called=False),
+                FilterTest("light.included", expect_called=True),
+                FilterTest("sensor.excluded_test", expect_called=False),
+                FilterTest("sensor.included_test", expect_called=True),
+                FilterTest("binary_sensor.included", expect_called=True),
+                FilterTest("binary_sensor.excluded", expect_called=False),
             ],
         ),
         (
@@ -173,12 +173,12 @@ async def test_late_event(
                 "exclude_entities": ["binary_sensor.excluded"],
             },
             [
-                FilterTest("climate.excluded", 0),
-                FilterTest("light.included", 1),
-                FilterTest("sensor.excluded_test", 0),
-                FilterTest("sensor.included_test", 1),
-                FilterTest("binary_sensor.included", 1),
-                FilterTest("binary_sensor.excluded", 0),
+                FilterTest("climate.excluded", expect_called=False),
+                FilterTest("light.included", expect_called=True),
+                FilterTest("sensor.excluded_test", expect_called=False),
+                FilterTest("sensor.included_test", expect_called=True),
+                FilterTest("binary_sensor.included", expect_called=True),
+                FilterTest("binary_sensor.excluded", expect_called=False),
             ],
         ),
         (
@@ -190,11 +190,11 @@ async def test_late_event(
                 "exclude_entities": ["light.excluded"],
             },
             [
-                FilterTest("light.included", 1),
-                FilterTest("light.excluded_test", 0),
-                FilterTest("light.excluded", 0),
-                FilterTest("sensor.included_test", 1),
-                FilterTest("climate.included_test", 1),
+                FilterTest("light.included", expect_called=True),
+                FilterTest("light.excluded_test", expect_called=False),
+                FilterTest("light.excluded", expect_called=False),
+                FilterTest("sensor.included_test", expect_called=True),
+                FilterTest("climate.included_test", expect_called=True),
             ],
         ),
         (
@@ -205,12 +205,12 @@ async def test_late_event(
                 "exclude_entities": ["light.excluded"],
             },
             [
-                FilterTest("climate.excluded", 0),
-                FilterTest("climate.included", 1),
-                FilterTest("switch.excluded_test", 0),
-                FilterTest("sensor.excluded_test", 1),
-                FilterTest("light.excluded", 0),
-                FilterTest("light.included", 1),
+                FilterTest("climate.excluded", expect_called=False),
+                FilterTest("climate.included", expect_called=True),
+                FilterTest("switch.excluded_test", expect_called=False),
+                FilterTest("sensor.excluded_test", expect_called=True),
+                FilterTest("light.excluded", expect_called=False),
+                FilterTest("light.included", expect_called=True),
             ],
         ),
     ],
@@ -220,25 +220,23 @@ async def test_filter(
     hass,
     entry_managed,
     tests,
-    mock_ManagedStreaming,
+    filter_schema,
+    mock_managed_streaming,
 ) -> None:
     """Test different filters.
 
     Filter_schema is also a fixture which is replaced by the filter_schema
     in the parametrize and added to the entry fixture.
     """
-    count = 0
-
     for test in tests:
-        count += test.expected_count
-
+        mock_managed_streaming.reset_mock()
         hass.states.async_set(test.entity_id, STATE_ON)
         async_fire_time_changed(
             hass,
             utcnow() + timedelta(seconds=entry_managed.options[CONF_SEND_INTERVAL]),
         )
         await hass.async_block_till_done()
-        assert len(mock_ManagedStreaming.call_args_list) == count
+        assert mock_managed_streaming.called == test.expect_called
         assert "filter" in hass.data[DOMAIN]
 
 
@@ -250,7 +248,7 @@ async def test_filter(
 async def test_event(
     hass,
     entry_managed,
-    mock_ManagedStreaming,
+    mock_managed_streaming,
     event,
 ) -> None:
     """Test listening to events from Hass. and getting an event with a newline in the state."""
@@ -262,7 +260,7 @@ async def test_event(
     )
 
     await hass.async_block_till_done()
-    mock_ManagedStreaming.add.assert_not_called()
+    mock_managed_streaming.add.assert_not_called()
 
 
 @pytest.mark.parametrize(

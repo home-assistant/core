@@ -1,6 +1,5 @@
 """Test fixtures for ADX."""
 from collections.abc import Generator
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any
@@ -29,15 +28,6 @@ from .const import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
-
-
-# fixtures for both init and config flow tests
-@dataclass
-class FilterTest:
-    """Class for capturing a filter test."""
-
-    entity_id: str
-    expected_count: int
 
 
 @pytest.fixture(name="filter_schema")
@@ -113,7 +103,7 @@ def mock_setup_entry() -> Generator[MockConfigEntry, None, None]:
 
 # Fixtures for mocking the Azure Data Explorer SDK calls.
 @pytest.fixture(autouse=True)
-def mock_ManagedStreaming() -> Generator[Any, Any, Any]:
+def mock_managed_streaming() -> Generator[Any, Any, Any]:
     """mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data."""
     with patch(
         "azure.kusto.ingest.ManagedStreamingIngestClient.ingest_from_stream",
@@ -123,7 +113,7 @@ def mock_ManagedStreaming() -> Generator[Any, Any, Any]:
 
 
 @pytest.fixture(autouse=True)
-def mock_QueuedIngest() -> Generator[Any, Any, Any]:
+def mock_queued_ingest() -> Generator[Any, Any, Any]:
     """mock_azure_data_explorer_QueuedIngestClient_ingest_data."""
     with patch(
         "azure.kusto.ingest.QueuedIngestClient.ingest_from_stream",

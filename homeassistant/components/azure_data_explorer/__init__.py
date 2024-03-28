@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime
 import json
 import logging
@@ -44,6 +45,15 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
+
+# fixtures for both init and config flow tests
+@dataclass
+class FilterTest:
+    """Class for capturing a filter test."""
+
+    entity_id: str
+    expect_called: bool
 
 
 async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
