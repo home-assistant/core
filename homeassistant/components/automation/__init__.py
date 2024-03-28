@@ -246,6 +246,18 @@ def floors_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
 
 
 @callback
+def automations_with_label(hass: HomeAssistant, label_id: str) -> list[str]:
+    """Return all automations that reference the label."""
+    return _automations_with_x(hass, label_id, "referenced_labels")
+
+
+@callback
+def labels_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return all labels in an automation."""
+    return _x_in_automation(hass, entity_id, "referenced_labels")
+
+
+@callback
 def automations_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list[str]:
     """Return all automations that reference the blueprint."""
     if DOMAIN not in hass.data:
@@ -286,8 +298,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await _async_process_config(hass, config, component)
 
     # Add some default blueprints to blueprints/automation, does nothing
-    # if blueprints/automation already exists
-    await async_get_blueprints(hass).async_populate()
+    # if blueprints/automation already exists but still has to create
+    # an executor job to check if the folder exists so we run it in a
+    # separate task to avoid waiting for it to finish setting up
+    # since a tracked task will be waited at the end of startup
+    hass.async_create_task(
+        async_get_blueprints(hass).async_populate(), eager_start=True
+    )
 
     async def trigger_service_handler(
         entity: BaseAutomationEntity, service_call: ServiceCall
@@ -355,6 +372,11 @@ class BaseAutomationEntity(ToggleEntity, ABC):
 
     @cached_property
     @abstractmethod
+    def referenced_labels(self) -> set[str]:
+        """Return a set of referenced labels."""
+
+    @cached_property
+    @abstractmethod
     def referenced_floors(self) -> set[str]:
         """Return a set of referenced floors."""
 
@@ -391,7 +413,7 @@ class BaseAutomationEntity(ToggleEntity, ABC):
 class UnavailableAutomationEntity(BaseAutomationEntity):
     """A non-functional automation entity with its state set to unavailable.
 
-    This class is instatiated when an automation fails to validate.
+    This class is instantiated when an automation fails to validate.
     """
 
     _attr_should_poll = False
@@ -412,6 +434,11 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
     def name(self) -> str:
         """Return the name of the entity."""
         return self._name
+
+    @cached_property
+    def referenced_labels(self) -> set[str]:
+        """Return a set of referenced labels."""
+        return set()
 
     @cached_property
     def referenced_floors(self) -> set[str]:
@@ -504,6 +531,11 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
     def is_on(self) -> bool:
         """Return True if entity is on."""
         return self._async_detach_triggers is not None or self._is_enabled
+
+    @property
+    def referenced_labels(self) -> set[str]:
+        """Return a set of referenced labels."""
+        return self.action_script.referenced_labels
 
     @property
     def referenced_floors(self) -> set[str]:

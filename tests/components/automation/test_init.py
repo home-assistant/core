@@ -1102,14 +1102,17 @@ async def test_reload_automation_when_blueprint_changes(
         blueprint_config["action"] = [blueprint_config["action"]]
         blueprint_config["action"].append(blueprint_config["action"][-1])
 
-        with patch(
-            "homeassistant.config.load_yaml_config_file",
-            autospec=True,
-            return_value=config,
-        ), patch(
-            "homeassistant.components.blueprint.models.yaml.load_yaml_dict",
-            autospec=True,
-            return_value=blueprint_config,
+        with (
+            patch(
+                "homeassistant.config.load_yaml_config_file",
+                autospec=True,
+                return_value=config,
+            ),
+            patch(
+                "homeassistant.components.blueprint.models.yaml.load_yaml_dict",
+                autospec=True,
+                return_value=blueprint_config,
+            ),
         ):
             await hass.services.async_call(
                 automation.DOMAIN, SERVICE_RELOAD, blocking=True
@@ -1563,6 +1566,8 @@ async def test_extraction_functions_not_setup(hass: HomeAssistant) -> None:
     assert automation.entities_in_automation(hass, "automation.test") == []
     assert automation.automations_with_floor(hass, "floor-in-both") == []
     assert automation.floors_in_automation(hass, "automation.test") == []
+    assert automation.automations_with_label(hass, "label-in-both") == []
+    assert automation.labels_in_automation(hass, "automation.test") == []
 
 
 async def test_extraction_functions_unknown_automation(hass: HomeAssistant) -> None:
@@ -1573,6 +1578,7 @@ async def test_extraction_functions_unknown_automation(hass: HomeAssistant) -> N
     assert automation.devices_in_automation(hass, "automation.unknown") == []
     assert automation.entities_in_automation(hass, "automation.unknown") == []
     assert automation.floors_in_automation(hass, "automation.unknown") == []
+    assert automation.labels_in_automation(hass, "automation.unknown") == []
 
 
 async def test_extraction_functions_unavailable_automation(hass: HomeAssistant) -> None:
@@ -1600,6 +1606,8 @@ async def test_extraction_functions_unavailable_automation(hass: HomeAssistant) 
     assert automation.entities_in_automation(hass, entity_id) == []
     assert automation.automations_with_floor(hass, "floor-in-both") == []
     assert automation.floors_in_automation(hass, entity_id) == []
+    assert automation.automations_with_label(hass, "label-in-both") == []
+    assert automation.labels_in_automation(hass, entity_id) == []
 
 
 async def test_extraction_functions(
@@ -1702,6 +1710,10 @@ async def test_extraction_functions(
                         {
                             "service": "test.test",
                             "target": {"floor_id": "floor-in-both"},
+                        },
+                        {
+                            "service": "test.test",
+                            "target": {"label_id": "label-in-both"},
                         },
                     ],
                 },
@@ -1830,6 +1842,14 @@ async def test_extraction_functions(
                             "service": "test.test",
                             "target": {"floor_id": "floor-in-last"},
                         },
+                        {
+                            "service": "test.test",
+                            "target": {"label_id": "label-in-both"},
+                        },
+                        {
+                            "service": "test.test",
+                            "target": {"label_id": "label-in-last"},
+                        },
                     ],
                 },
             ]
@@ -1879,6 +1899,14 @@ async def test_extraction_functions(
     assert set(automation.floors_in_automation(hass, "automation.test3")) == {
         "floor-in-both",
         "floor-in-last",
+    }
+    assert set(automation.automations_with_label(hass, "label-in-both")) == {
+        "automation.test1",
+        "automation.test3",
+    }
+    assert set(automation.labels_in_automation(hass, "automation.test3")) == {
+        "label-in-both",
+        "label-in-last",
     }
     assert automation.blueprint_in_automation(hass, "automation.test3") is None
 

@@ -1009,6 +1009,7 @@ async def test_shuffle_repeat_modes(
     dmr_device_mock.async_set_play_mode.reset_mock()
     dmr_device_mock.play_mode = PlayMode.RANDOM
     dmr_device_mock.valid_play_modes = {PlayMode.SHUFFLE, PlayMode.RANDOM}
+    await get_attrs(hass, mock_entity_id)
     await hass.services.async_call(
         MP_DOMAIN,
         ha_const.SERVICE_SHUFFLE_SET,
@@ -1022,6 +1023,7 @@ async def test_shuffle_repeat_modes(
     dmr_device_mock.async_set_play_mode.reset_mock()
     dmr_device_mock.play_mode = PlayMode.RANDOM
     dmr_device_mock.valid_play_modes = {PlayMode.REPEAT_ONE, PlayMode.REPEAT_ALL}
+    await get_attrs(hass, mock_entity_id)
     await hass.services.async_call(
         MP_DOMAIN,
         ha_const.SERVICE_REPEAT_SET,

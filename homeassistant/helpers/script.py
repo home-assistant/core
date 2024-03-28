@@ -27,6 +27,7 @@ from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     ATTR_FLOOR_ID,
+    ATTR_LABEL_ID,
     CONF_ALIAS,
     CONF_CHOOSE,
     CONF_CONDITION,
@@ -80,10 +81,11 @@ from homeassistant.core import (
 from homeassistant.util import slugify
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.dt import utcnow
+from homeassistant.util.signal_type import SignalType, SignalTypeFormat
 
 from . import condition, config_validation as cv, service, template
 from .condition import ConditionCheckerType, trace_condition_function
-from .dispatcher import SignalType, async_dispatcher_connect, async_dispatcher_send
+from .dispatcher import async_dispatcher_connect, async_dispatcher_send
 from .event import async_call_later, async_track_template
 from .script_variables import ScriptVariables
 from .trace import (
@@ -154,7 +156,9 @@ _SHUTDOWN_MAX_WAIT = 60
 ACTION_TRACE_NODE_MAX_LEN = 20  # Max length of a trace node for repeated actions
 
 SCRIPT_BREAKPOINT_HIT = SignalType[str, str, str]("script_breakpoint_hit")
-SCRIPT_DEBUG_CONTINUE_STOP = "script_debug_continue_stop_{}_{}"
+SCRIPT_DEBUG_CONTINUE_STOP: SignalTypeFormat[Literal["continue", "stop"]] = (
+    SignalTypeFormat("script_debug_continue_stop_{}_{}")
+)
 SCRIPT_DEBUG_CONTINUE_ALL = "script_debug_continue_all"
 
 script_stack_cv: ContextVar[list[int] | None] = ContextVar("script_stack", default=None)
@@ -215,7 +219,9 @@ async def trace_action(
             done = hass.loop.create_future()
 
             @callback
-            def async_continue_stop(command=None):
+            def async_continue_stop(
+                command: Literal["continue", "stop"] | None = None,
+            ) -> None:
                 if command == "stop":
                     _set_result_unless_done(stop)
                 _set_result_unless_done(done)
@@ -609,6 +615,11 @@ class _ScriptRun:
 
         delay = delay_delta.total_seconds()
         self._changed()
+        if not delay:
+            # Handle an empty delay
+            trace_set_result(delay=delay, done=True)
+            return
+
         trace_set_result(delay=delay, done=False)
         futures, timeout_handle, timeout_future = self._async_futures_with_timeout(
             delay
@@ -1382,6 +1393,13 @@ class Script:
         return self.script_mode in (SCRIPT_MODE_PARALLEL, SCRIPT_MODE_QUEUED)
 
     @cached_property
+    def referenced_labels(self) -> set[str]:
+        """Return a set of referenced labels."""
+        referenced_labels: set[str] = set()
+        Script._find_referenced_target(ATTR_LABEL_ID, referenced_labels, self.sequence)
+        return referenced_labels
+
+    @cached_property
     def referenced_floors(self) -> set[str]:
         """Return a set of referenced fooors."""
         referenced_floors: set[str] = set()
@@ -1397,7 +1415,7 @@ class Script:
 
     @staticmethod
     def _find_referenced_target(
-        target: Literal["area_id", "floor_id"],
+        target: Literal["area_id", "floor_id", "label_id"],
         referenced: set[str],
         sequence: Sequence[dict[str, Any]],
     ) -> None:
