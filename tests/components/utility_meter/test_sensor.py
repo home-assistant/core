@@ -610,7 +610,7 @@ async def test_device_class(
                 "utility_meter": {
                     "energy_bill": {
                         "source": "sensor.energy",
-                        "tariffs": ["onpeak", "midpeak", "offpeak", "superpeak"],
+                        "tariffs": ["tariff1", "tariff2", "tariff3", "tariff4"],
                     }
                 }
             },
@@ -626,7 +626,7 @@ async def test_device_class(
                 "offset": 0,
                 "periodically_resetting": True,
                 "source": "sensor.energy",
-                "tariffs": ["onpeak", "midpeak", "offpeak", "superpeak"],
+                "tariffs": ["tariff1", "tariff2", "tariff3", "tariff4"],
             },
         ),
     ],
@@ -638,82 +638,89 @@ async def test_restore_state(
     # Home assistant is not runnit yet
     hass.set_state(CoreState.not_running)
 
-    last_reset = "2020-12-21T00:00:00.013073+00:00"
+    last_reset_1 = "2020-12-21T00:00:00.013073+00:00"
+    last_reset_2 = "2020-12-22T00:00:00.013073+00:00"
 
     mock_restore_cache_with_extra_data(
         hass,
         [
+            # sensor.energy_bill_tariff1 is restored as expected
             (
                 State(
-                    "sensor.energy_bill_onpeak",
-                    "3",
+                    "sensor.energy_bill_tariff1",
+                    "1.1",
                     attributes={
                         ATTR_STATUS: PAUSED,
-                        ATTR_LAST_RESET: last_reset,
-                        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
+                        ATTR_LAST_RESET: last_reset_1,
+                        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.MEGA_WATT_HOUR,
                     },
                 ),
                 {
                     "native_value": {
                         "__type": "<class 'decimal.Decimal'>",
-                        "decimal_str": "3",
+                        "decimal_str": "1.2",
                     },
                     "native_unit_of_measurement": "kWh",
-                    "last_reset": last_reset,
-                    "last_period": "7",
-                    "last_valid_state": "None",
+                    "last_reset": last_reset_2,
+                    "last_period": "1.3",
+                    "last_valid_state": None,
                     "status": "paused",
                 },
             ),
+            # sensor.energy_bill_tariff2 has missing keys and falls back to
+            # saved state
             (
                 State(
-                    "sensor.energy_bill_midpeak",
-                    "5",
+                    "sensor.energy_bill_tariff2",
+                    "2.1",
                     attributes={
                         ATTR_STATUS: PAUSED,
-                        ATTR_LAST_RESET: last_reset,
+                        ATTR_LAST_RESET: last_reset_1,
                         ATTR_LAST_VALID_STATE: None,
-                        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
+                        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.MEGA_WATT_HOUR,
                     },
                 ),
                 {
                     "native_value": {
                         "__type": "<class 'decimal.Decimal'>",
-                        "decimal_str": "3",
+                        "decimal_str": "2.2",
                     },
                     "native_unit_of_measurement": "kWh",
                     "last_valid_state": "None",
                 },
             ),
+            # sensor.energy_bill_tariff3 has invalid data and falls back to
+            # saved state
             (
                 State(
-                    "sensor.energy_bill_offpeak",
-                    "6",
+                    "sensor.energy_bill_tariff3",
+                    "3.1",
                     attributes={
                         ATTR_STATUS: COLLECTING,
-                        ATTR_LAST_RESET: last_reset,
+                        ATTR_LAST_RESET: last_reset_1,
                         ATTR_LAST_VALID_STATE: None,
-                        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
+                        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.MEGA_WATT_HOUR,
                     },
                 ),
                 {
                     "native_value": {
                         "__type": "<class 'decimal.Decimal'>",
-                        "decimal_str": "3f",
+                        "decimal_str": "3f",  # Invalid
                     },
                     "native_unit_of_measurement": "kWh",
                     "last_valid_state": "None",
                 },
             ),
+            # No extra saved data, fall back to saved state
             (
                 State(
-                    "sensor.energy_bill_superpeak",
+                    "sensor.energy_bill_tariff4",
                     "error",
                     attributes={
                         ATTR_STATUS: COLLECTING,
-                        ATTR_LAST_RESET: last_reset,
+                        ATTR_LAST_RESET: last_reset_1,
                         ATTR_LAST_VALID_STATE: None,
-                        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
+                        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.MEGA_WATT_HOUR,
                     },
                 ),
                 {},
@@ -736,25 +743,28 @@ async def test_restore_state(
         await hass.async_block_till_done()
 
     # restore from cache
-    state = hass.states.get("sensor.energy_bill_onpeak")
-    assert state.state == "3"
+    state = hass.states.get("sensor.energy_bill_tariff1")
+    assert state.state == "1.2"
     assert state.attributes.get("status") == PAUSED
-    assert state.attributes.get("last_reset") == last_reset
+    assert state.attributes.get("last_reset") == last_reset_2
     assert state.attributes.get("last_valid_state") == "None"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
 
-    state = hass.states.get("sensor.energy_bill_midpeak")
-    assert state.state == "5"
+    state = hass.states.get("sensor.energy_bill_tariff2")
+    assert state.state == "2.1"
+    assert state.attributes.get("status") == PAUSED
+    assert state.attributes.get("last_reset") == last_reset_1
     assert state.attributes.get("last_valid_state") == "None"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.MEGA_WATT_HOUR
 
-    state = hass.states.get("sensor.energy_bill_offpeak")
-    assert state.state == "6"
+    state = hass.states.get("sensor.energy_bill_tariff3")
+    assert state.state == "3.1"
     assert state.attributes.get("status") == COLLECTING
-    assert state.attributes.get("last_reset") == last_reset
+    assert state.attributes.get("last_reset") == last_reset_1
     assert state.attributes.get("last_valid_state") == "None"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.MEGA_WATT_HOUR
 
-    state = hass.states.get("sensor.energy_bill_superpeak")
+    state = hass.states.get("sensor.energy_bill_tariff4")
     assert state.state == STATE_UNKNOWN
 
     # utility_meter is loaded, now set sensors according to utility_meter:
@@ -764,13 +774,18 @@ async def test_restore_state(
     await hass.async_block_till_done()
 
     state = hass.states.get("select.energy_bill")
-    assert state.state == "onpeak"
+    assert state.state == "tariff1"
 
-    state = hass.states.get("sensor.energy_bill_onpeak")
+    state = hass.states.get("sensor.energy_bill_tariff1")
     assert state.attributes.get("status") == COLLECTING
 
-    state = hass.states.get("sensor.energy_bill_offpeak")
-    assert state.attributes.get("status") == PAUSED
+    for entity_id in (
+        "sensor.energy_bill_tariff2",
+        "sensor.energy_bill_tariff3",
+        "sensor.energy_bill_tariff4",
+    ):
+        state = hass.states.get(entity_id)
+        assert state.attributes.get("status") == PAUSED
 
 
 @pytest.mark.parametrize(
