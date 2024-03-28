@@ -29,14 +29,14 @@ def async_load_history_from_system(
             not (existing_all := connectable_loaded_history.get(address))
             or history.advertisement_data.rssi > existing_all.rssi
         ):
-            connectable_loaded_history[address] = all_loaded_history[
-                address
-            ] = BluetoothServiceInfoBleak.from_device_and_advertisement_data(
-                history.device,
-                history.advertisement_data,
-                history.source,
-                now_monotonic,
-                True,
+            connectable_loaded_history[address] = all_loaded_history[address] = (
+                BluetoothServiceInfoBleak.from_device_and_advertisement_data(
+                    history.device,
+                    history.advertisement_data,
+                    history.source,
+                    now_monotonic,
+                    True,
+                )
             )
 
     # Restore remote adapters
