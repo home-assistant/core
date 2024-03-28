@@ -23,7 +23,6 @@ USER_FORM_SCHEMA = vol.Schema(
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for the initial setup of a Trello integration."""
 
-
     def __init__(self) -> None:
         """Initialize config flow."""
         self._data: dict[str, Any] = {}

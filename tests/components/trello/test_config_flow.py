@@ -47,12 +47,15 @@ async def test_flow_user(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.trello.config_flow.TrelloClient",
-        new=MockClient,
-    ), patch(
-        "homeassistant.components.trello.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.trello.config_flow.TrelloClient",
+            new=MockClient,
+        ),
+        patch(
+            "homeassistant.components.trello.async_setup_entry",
+            return_value=True,
+        ),
     ):
         creds_result = await hass.config_entries.flow.async_configure(
             init_result["flow_id"], user_input=USER_INPUT_CREDS
@@ -90,12 +93,15 @@ async def test_flow_user_unauthorized(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.trello.config_flow.TrelloClient.get_member",
-        side_effect=Unauthorized("", Mock(status=123)),
-    ), patch(
-        "homeassistant.components.trello.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.trello.config_flow.TrelloClient.get_member",
+            side_effect=Unauthorized("", Mock(status=123)),
+        ),
+        patch(
+            "homeassistant.components.trello.async_setup_entry",
+            return_value=True,
+        ),
     ):
         creds_result = await hass.config_entries.flow.async_configure(
             init_result["flow_id"],
