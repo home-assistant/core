@@ -115,5 +115,5 @@ class PowerViewSelect(ShadeEntity, SelectEntity):
         await self.entity_description.select_fn(self._shade, option)
         # force update data to ensure new info is in coordinator
         async with self.coordinator.radio_operation_lock:
-            await self._shade.refresh()
+            await self._shade.refresh(suppress_timeout=true)
         self.async_write_ha_state()
