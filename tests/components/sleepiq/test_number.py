@@ -74,14 +74,14 @@ async def test_firmness(hass: HomeAssistant, mock_asyncsleepiq) -> None:
         SERVICE_SET_VALUE,
         {
             ATTR_ENTITY_ID: f"number.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_firmness",
-            ATTR_VALUE: 42,
+            ATTR_VALUE: 45,
         },
         blocking=True,
     )
     await hass.async_block_till_done()
 
     mock_asyncsleepiq.beds[BED_ID].sleepers[0].set_sleepnumber.assert_called_once()
-    mock_asyncsleepiq.beds[BED_ID].sleepers[0].set_sleepnumber.assert_called_with(42)
+    mock_asyncsleepiq.beds[BED_ID].sleepers[0].set_sleepnumber.assert_called_with(45)
 
 
 async def test_actuators(hass: HomeAssistant, mock_asyncsleepiq) -> None:

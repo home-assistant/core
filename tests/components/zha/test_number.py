@@ -160,24 +160,24 @@ async def test_number(
         await hass.services.async_call(
             NUMBER_DOMAIN,
             "set_value",
-            {"entity_id": entity_id, "value": 30.0},
+            {"entity_id": entity_id, "value": 29.6},
             blocking=True,
         )
         assert cluster.write_attributes.mock_calls == [
-            call({"present_value": 30.0}, manufacturer=None)
+            call({"present_value": 29.6}, manufacturer=None)
         ]
-        cluster.PLUGGED_ATTR_READS["present_value"] = 30.0
+        cluster.PLUGGED_ATTR_READS["present_value"] = 29.6
 
     # test rejoin
     assert cluster.read_attributes.call_count == 6
     await async_test_rejoin(hass, zigpy_analog_output_device, [cluster], (1,))
-    assert hass.states.get(entity_id).state == "30.0"
+    assert hass.states.get(entity_id).state == "29.6"
     assert cluster.read_attributes.call_count == 9
 
     # update device value with failed attribute report
     cluster.PLUGGED_ATTR_READS["present_value"] = 40.0
     # validate the entity still contains old value
-    assert hass.states.get(entity_id).state == "30.0"
+    assert hass.states.get(entity_id).state == "29.6"
 
     await async_setup_component(hass, "homeassistant", {})
     await hass.async_block_till_done()

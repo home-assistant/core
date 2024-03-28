@@ -15,7 +15,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MODE, CONF_UNIT_OF_MEASUREMENT, UnitOfTemperature
 from homeassistant.core import HomeAssistant, ServiceCall, async_get_hass, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -30,6 +30,7 @@ from .const import (  # noqa: F401
     ATTR_MAX,
     ATTR_MIN,
     ATTR_STEP,
+    ATTR_STEP_VALIDATION,
     ATTR_VALUE,
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
@@ -99,19 +100,26 @@ async def async_set_value(entity: NumberEntity, service_call: ServiceCall) -> No
     """Service call wrapper to set a new value."""
     value = service_call.data["value"]
     if value < entity.min_value or value > entity.max_value:
-        raise ValueError(
-            f"Value {value} for {entity.entity_id} is outside valid range"
-            f" {entity.min_value} - {entity.max_value}"
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="out_of_range",
+            translation_placeholders={
+                "value": value,
+                "entity_id": entity.entity_id,
+                "min_value": str(entity.min_value),
+                "max_value": str(entity.max_value),
+            },
         )
+
     try:
         native_value = entity.convert_to_native_value(value)
         # Clamp to the native range
         native_value = min(
             max(native_value, entity.native_min_value), entity.native_max_value
         )
-        await entity.async_set_native_value(native_value)
+        await entity.async_set_native_value(entity.clamp_native_step(native_value))
     except NotImplementedError:
-        await entity.async_set_value(value)
+        await entity.async_set_value(entity.clamp_native_step(value))
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -174,7 +182,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of a Number entity."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {ATTR_MIN, ATTR_MAX, ATTR_STEP, ATTR_MODE}
+        {ATTR_MIN, ATTR_MAX, ATTR_STEP, ATTR_STEP_VALIDATION, ATTR_MODE}
     )
 
     entity_description: NumberEntityDescription
@@ -184,6 +192,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_mode: NumberMode
     _attr_state: None = None
     _attr_step: None
+    _attr_step_validation: bool = True
     _attr_unit_of_measurement: None  # Subclasses of NumberEntity should not set this
     _attr_value: None
     _attr_native_max_value: float
@@ -322,8 +331,21 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the increment/decrement step."""
         return self._calculate_step(self.min_value, self.max_value)
 
+    @property
+    @final
+    def step_validation(self) -> bool:
+        """Return if the value set need to be validated.
+
+        When step_validation is `True`, setting native_value is validated to be
+        a multiple of the native step value.
+        """
+        return bool(self.native_step and self._attr_step_validation)
+
     def _calculate_step(self, min_value: float, max_value: float) -> float:
         """Return the increment/decrement step."""
+        if self.step_validation and self.native_step is not None:
+            steps = (self.native_max_value - self.native_min_value) / self.native_step
+            return (self.max_value - self.min_value) / steps
         if (native_step := self.native_step) is not None:
             return native_step
         step = DEFAULT_STEP
@@ -332,6 +354,16 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             while value_range <= step:
                 step /= 10.0
         return step
+
+    @callback
+    @final
+    def clamp_native_step(self, native_value: float) -> float:
+        """Clamp to a native value that matches a value in the native scale."""
+        if not self.step_validation or self.native_step is None:
+            return native_value
+        step_factor_value = (native_value - self.native_min_value) / self.native_step
+        clamped_factor = float(round(step_factor_value))
+        return self.native_min_value + self.native_step * clamped_factor
 
     @cached_property
     def mode(self) -> NumberMode:

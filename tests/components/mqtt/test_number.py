@@ -254,6 +254,7 @@ async def test_restore_native_value(
                 number.DOMAIN: {
                     "command_topic": "test/number",
                     "name": "Test Number",
+                    "step": 0.1,
                 }
             }
         }
@@ -332,6 +333,7 @@ async def test_run_number_service_optimistic(
                     "command_topic": "test/number",
                     "name": "Test Number",
                     "command_template": '{"number": {{ value }} }',
+                    "step": 0.1,
                 }
             }
         }
