@@ -29,6 +29,7 @@ from tests.typing import WebSocketGenerator
     [
         ("binary_sensor", "on", "on", {}, {}, {"all": False}, {}),
         ("binary_sensor", "on", "on", {}, {"all": True}, {"all": True}, {}),
+        ("climate", "off", "off", {}, {}, {}, {}),
         ("cover", "open", "open", {}, {}, {}, {}),
         (
             "event",
@@ -135,6 +136,7 @@ async def test_config_flow(
     ("group_type", "extra_input"),
     [
         ("binary_sensor", {"all": False}),
+        ("climate", {}),
         ("cover", {}),
         ("event", {}),
         ("fan", {}),
@@ -212,6 +214,7 @@ def get_suggested(schema, key):
     ("group_type", "member_state", "extra_options", "options_options"),
     [
         ("binary_sensor", "on", {"all": False}, {}),
+        ("climate", "off", {}, {}),
         ("cover", "open", {}, {}),
         ("event", "2021-01-01T23:59:59.123+00:00", {}, {}),
         ("fan", "on", {}, {}),
@@ -396,6 +399,7 @@ async def test_all_options(
     ("group_type", "extra_input"),
     [
         ("binary_sensor", {"all": False}),
+        ("climate", {}),
         ("cover", {}),
         ("event", {}),
         ("fan", {}),
