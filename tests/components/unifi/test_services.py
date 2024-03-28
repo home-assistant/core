@@ -2,8 +2,12 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN as UNIFI_DOMAIN
 from homeassistant.components.unifi.services import (
+    SERVICE_CHANGE_WLAN_PASSWORD,
+    SERVICE_GET_WLAN_PASSWORD,
     SERVICE_RECONNECT_CLIENT,
     SERVICE_REMOVE_CLIENTS,
     SUPPORTED_SERVICES,
@@ -49,7 +53,7 @@ async def test_service_setup_and_unload_not_called_if_multiple_integrations_dete
     assert await hass.config_entries.async_unload(config_entry_2.entry_id)
     remove_service_mock.assert_not_called()
     assert await hass.config_entries.async_unload(config_entry.entry_id)
-    assert remove_service_mock.call_count == 2
+    assert remove_service_mock.call_count == 4
 
 
 async def test_reconnect_client(
@@ -319,3 +323,249 @@ async def test_remove_clients_no_call_on_empty_list(
 
     await hass.services.async_call(UNIFI_DOMAIN, SERVICE_REMOVE_CLIENTS, blocking=True)
     assert aioclient_mock.call_count == 0
+
+
+async def test_change_wlan_password_invalid_hub(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test changing WLAN password with an invalid Hub name."""
+    hub_name_invalid = "Invalid Hub Name"
+    wlan_name = "WLAN Test"
+    old_password = "old123"
+    new_password = "new456"
+
+    await setup_unifi_integration(
+        hass,
+        aioclient_mock,
+        wlans_response=[
+            {
+                "_id": "12345",
+                "name": wlan_name,
+                "security": "wpa_psk",
+                "x_passphrase": old_password,
+                "enabled": True,
+            }
+        ],
+    )
+
+    await hass.services.async_call(
+        UNIFI_DOMAIN,
+        SERVICE_CHANGE_WLAN_PASSWORD,
+        service_data={
+            "hub_name": hub_name_invalid,
+            "wlan_name": wlan_name,
+            "new_password": new_password,
+        },
+        blocking=True,
+    )
+
+    assert f"Hub '{hub_name_invalid}' not found" in caplog.text
+
+
+async def test_change_wlan_password_invalid_wlan_name(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test changing WLAN password with an invalid WLAN name."""
+    wlan_name = "WLAN Test"
+    wlan_name_invalid = "WLAN Invalid"
+    old_password = "old123"
+    new_password = "new456"
+
+    config_entry = await setup_unifi_integration(
+        hass,
+        aioclient_mock,
+        wlans_response=[
+            {
+                "_id": "12345",
+                "name": wlan_name,
+                "security": "wpa_psk",
+                "x_passphrase": old_password,
+                "enabled": True,
+            }
+        ],
+    )
+
+    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub_name = hub.config.entry.title
+
+    await hass.services.async_call(
+        UNIFI_DOMAIN,
+        SERVICE_CHANGE_WLAN_PASSWORD,
+        service_data={
+            "hub_name": hub_name,
+            "wlan_name": wlan_name_invalid,
+            "new_password": new_password,
+        },
+        blocking=True,
+    )
+
+    assert (
+        f"WLAN '{wlan_name_invalid}' not found in the Hub '{hub_name}'" in caplog.text
+    )
+
+
+async def test_change_wlan_password(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test changing WLAN password."""
+    wlan_name = "WLAN Test"
+    old_password = "old123"
+    new_password = "new456"
+
+    config_entry = await setup_unifi_integration(
+        hass,
+        aioclient_mock,
+        wlans_response=[
+            {
+                "_id": "12345",
+                "name": wlan_name,
+                "security": "wpa_psk",
+                "x_passphrase": old_password,
+                "enabled": True,
+            }
+        ],
+    )
+
+    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub_name = hub.config.entry.title
+
+    await hass.services.async_call(
+        UNIFI_DOMAIN,
+        SERVICE_CHANGE_WLAN_PASSWORD,
+        service_data={
+            "hub_name": hub_name,
+            "wlan_name": wlan_name,
+            "new_password": new_password,
+        },
+        blocking=True,
+    )
+
+    assert (
+        f"Password for WLAN Name '{wlan_name}' changed in Hub '{hub_name}' successfully"
+        in caplog.text
+    )
+
+
+async def test_get_wlan_password_invalid_hub(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test getting WLAN password with an invalid Hub name."""
+    hub_name_invalid = "Invalid Hub Name"
+    wlan_name = "WLAN Test"
+    password = "password123"
+
+    await setup_unifi_integration(
+        hass,
+        aioclient_mock,
+        wlans_response=[
+            {
+                "_id": "12345",
+                "name": wlan_name,
+                "security": "wpa_psk",
+                "x_passphrase": password,
+                "enabled": True,
+            }
+        ],
+    )
+
+    response = await hass.services.async_call(
+        UNIFI_DOMAIN,
+        SERVICE_GET_WLAN_PASSWORD,
+        service_data={"hub_name": hub_name_invalid, "wlan_name": wlan_name},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert f"Hub '{hub_name_invalid}' not found" in caplog.text
+    assert response == {}
+
+
+async def test_get_wlan_password_invalid_wlan_name(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test getting WLAN password with an invalid WLAN name."""
+    wlan_name = "WLAN Test"
+    wlan_name_invalid = "WLAN Invalid"
+    password = "password123"
+
+    config_entry = await setup_unifi_integration(
+        hass,
+        aioclient_mock,
+        wlans_response=[
+            {
+                "_id": "12345",
+                "name": wlan_name,
+                "security": "wpa_psk",
+                "x_passphrase": password,
+                "enabled": True,
+            }
+        ],
+    )
+
+    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub_name = hub.config.entry.title
+
+    response = await hass.services.async_call(
+        UNIFI_DOMAIN,
+        SERVICE_GET_WLAN_PASSWORD,
+        service_data={"hub_name": hub_name, "wlan_name": wlan_name_invalid},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert (
+        f"WLAN '{wlan_name_invalid}' not found in the Hub '{hub_name}'" in caplog.text
+    )
+    assert response == {}
+
+
+async def test_get_wlan_password(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test getting WLAN password."""
+    wlan_name = "WLAN Test"
+    password = "password123"
+    expected = {"password": password}
+
+    config_entry = await setup_unifi_integration(
+        hass,
+        aioclient_mock,
+        wlans_response=[
+            {
+                "_id": "12345",
+                "name": wlan_name,
+                "security": "wpa_psk",
+                "x_passphrase": password,
+                "enabled": True,
+            }
+        ],
+    )
+
+    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub_name = hub.config.entry.title
+
+    response = await hass.services.async_call(
+        UNIFI_DOMAIN,
+        SERVICE_GET_WLAN_PASSWORD,
+        service_data={"hub_name": hub_name, "wlan_name": wlan_name},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert (
+        f"Retrieved password for WLAN Name '{wlan_name}' in Hub '{hub_name}' successfully"
+        in caplog.text
+    )
+    assert response == expected

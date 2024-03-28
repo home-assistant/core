@@ -7,3 +7,19 @@ reconnect_client:
           integration: unifi
 
 remove_clients:
+
+change_wlan_password:
+  fields:
+    hub_name:
+      required: true
+    wlan_name:
+      required: true
+    new_password:
+      required: true
+
+get_wlan_password:
+  fields:
+    hub_name:
+      required: true
+    wlan_name:
+      required: true
