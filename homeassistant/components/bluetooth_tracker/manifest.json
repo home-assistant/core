@@ -4,6 +4,6 @@
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/bluetooth_tracker",
   "iot_class": "local_polling",
-  "loggers": ["bluetooth", "bt_proximity"],
-  "requirements": ["bt-proximity==0.2.1", "PyBluez==0.22"]
+  "loggers": ["bluetooth"],
+  "requirements": ["bluetooth_adapters"]
 }
