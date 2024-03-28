@@ -19,12 +19,17 @@ from homeassistant.helpers import entity_registry as er
 from .common import assert_entities, setup_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_locks(
     hass: HomeAssistant, snapshot: SnapshotAssertion, entity_registry: er.EntityRegistry
 ) -> None:
     """Tests that the lock entity is correct."""
 
-    entry = await setup_platform(hass, [Platform.LOCK])
+    with patch(
+        "homeassistant.components.tessie.lock.automations_with_entity",
+        return_value=["item"],
+    ):
+        entry = await setup_platform(hass, [Platform.LOCK])
 
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 

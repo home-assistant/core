@@ -12,10 +12,13 @@ from tessie_api import (
     unlock,
 )
 
+from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.lock import ATTR_CODE, LockEntity
+from homeassistant.components.script import scripts_with_entity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, TessieChargeCableLockStates
@@ -66,6 +69,7 @@ class TessieSpeedLimitEntity(TessieEntity, LockEntity):
     """Speed Limit with PIN entity for Tessie."""
 
     _attr_code_format = r"^\d\d\d\d$"
+    _attr_entity_registry_enabled_default = False
 
     def __init__(
         self,
@@ -81,6 +85,16 @@ class TessieSpeedLimitEntity(TessieEntity, LockEntity):
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Enable speed limit with pin."""
+        ir.async_create_issue(
+            self.coordinator.hass,
+            DOMAIN,
+            "deprecated_speed_limit_locked",
+            breaks_in_ha_version="2024.10.0",
+            is_fixable=False,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_speed_limit_locked",
+        )
         code: str | None = kwargs.get(ATTR_CODE)
         if code:
             await self.run(enable_speed_limit, pin=code)
@@ -88,10 +102,38 @@ class TessieSpeedLimitEntity(TessieEntity, LockEntity):
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Disable speed limit with pin."""
+        ir.async_create_issue(
+            self.coordinator.hass,
+            DOMAIN,
+            "deprecated_speed_limit_unlocked",
+            breaks_in_ha_version="2024.10.0",
+            is_fixable=False,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_speed_limit_unlocked",
+        )
         code: str | None = kwargs.get(ATTR_CODE)
         if code:
             await self.run(disable_speed_limit, pin=code)
             self.set((self.key, False))
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+        entity_automations = automations_with_entity(self.hass, self.entity_id)
+        entity_scripts = scripts_with_entity(self.hass, self.entity_id)
+        for item in entity_automations + entity_scripts:
+            ir.async_create_issue(
+                self.coordinator.hass,
+                DOMAIN,
+                "deprecated_speed_limit_entity",
+                breaks_in_ha_version="2024.10.0",
+                is_fixable=False,
+                is_persistent=True,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="deprecated_speed_limit_entity",
+                translation_placeholders={"entity": self.entity_id, "item": item},
+            )
 
 
 class TessieCableLockEntity(TessieEntity, LockEntity):
