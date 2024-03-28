@@ -104,7 +104,6 @@ async def _get_options_dict(handler: SchemaCommonFlowHandler | None) -> dict:
         vol.Optional(CONF_MAX_AGE, default=0): selector.NumberSelector(
             selector.NumberSelectorConfig(
                 min=0,
-                max=1000000000,
                 mode=selector.NumberSelectorMode.BOX,
                 unit_of_measurement="seconds",
             )
