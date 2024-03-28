@@ -63,7 +63,7 @@ def mock_yaml_devices(hass):
 def _mock_legacy_device_tracker_setup(
     hass: HomeAssistant, mock_legacy_device_scanner: MockScanner
 ) -> None:
-    """Mock device tracker config."""
+    """Mock legacy device tracker setup."""
     mock_legacy_device_tracker_setup(hass, mock_legacy_device_scanner)
 
 
