@@ -425,7 +425,7 @@ apple_weatherkit==1.1.2
 apprise==1.7.4
 
 # homeassistant.components.aprs
-aprslib==0.7.0
+aprslib==0.7.2
 
 # homeassistant.components.aranet
 aranet4==2.2.2
