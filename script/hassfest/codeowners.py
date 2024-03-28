@@ -14,6 +14,9 @@ BASE = """
 # Home Assistant Core
 setup.cfg @home-assistant/core
 pyproject.toml @home-assistant/core
+/.devcontainer/ @home-assistant/core
+/.github/ @home-assistant/core
+/.vscode/ @home-assistant/core
 /homeassistant/*.py @home-assistant/core
 /homeassistant/helpers/ @home-assistant/core
 /homeassistant/util/ @home-assistant/core
