@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
@@ -78,6 +79,7 @@ SENSOR_TYPES: tuple[AirGradientSensorEntityDescription, ...] = (
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
         value_fn=lambda status: status.signal_strength,
     ),
     AirGradientSensorEntityDescription(
@@ -91,6 +93,33 @@ SENSOR_TYPES: tuple[AirGradientSensorEntityDescription, ...] = (
         translation_key="nitrogen_index",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda status: status.nitrogen_index,
+    ),
+    AirGradientSensorEntityDescription(
+        key="co2",
+        device_class=SensorDeviceClass.CO2,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda status: status.rco2 / 1000000,
+    ),
+    AirGradientSensorEntityDescription(
+        key="pm003",
+        translation_key="pm003_count",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda status: status.pm003_count,
+    ),
+    AirGradientSensorEntityDescription(
+        key="nox_raw",
+        translation_key="raw_nitrogen",
+        native_unit_of_measurement="ticks",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda status: status.raw_nitrogen,
+    ),
+    AirGradientSensorEntityDescription(
+        key="tvoc_raw",
+        translation_key="raw_total_volatile_organic_component",
+        native_unit_of_measurement="ticks",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda status: status.raw_total_volatile_organic_component,
     ),
 )
 
