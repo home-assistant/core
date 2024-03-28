@@ -94,6 +94,31 @@ async def test_statistics_not_available(
     assert state is None
 
 
+async def test_error_sensor(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test error sensor."""
+    values = mower_list_to_dictionary_dataclass(
+        load_json_value_fixture("mower.json", DOMAIN)
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    for state, expected_state in [
+        (None, "no_error"),
+        ("can_error", "can_error"),
+    ]:
+        values[TEST_MOWER_ID].mower.error_key = state
+        mock_automower_client.get_status.return_value = values
+        freezer.tick(timedelta(minutes=5))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        state = hass.states.get("sensor.test_mower_1_error")
+        assert state.state == expected_state
+
+
 async def test_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
