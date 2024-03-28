@@ -1086,7 +1086,12 @@ def verify_domain_control(
 
 
 class ReloadServiceHelper:
-    """Helper for reload services to minimize unnecessary reloads."""
+    """Helper for reload services.
+
+    The helper has the following purposes:
+    - Make sure reloads do not happen in parallel
+    - Avoid redundant reloads of the same target
+    """
 
     def __init__(
         self,
@@ -1105,19 +1110,28 @@ class ReloadServiceHelper:
 
         If a previous reload task if currently in progress, wait for it to finish first.
         Once the previous reload task has finished, one of the waiting tasks will be
-        assigned to execute the reload, the others will wait for the reload to finish.
+        assigned to execute the reload of the targets it is assigned to reload. The
+        others tasks will wait if they should reload the same target, otherwise they
+        will wait for the next round.
         """
 
         do_reload = False
+        reload_targets = None
         async with self._service_condition:
-            reload_targets = self._reload_targets_func(service_call)
-            self._pending_reload_targets |= reload_targets
             if self._service_running:
-                # A previous reload task is already in progress, wait for it to finish
+                # A previous reload task is already in progress, wait for it to finish,
+                # because that task may be reloading a stale version of the resource.
                 await self._service_condition.wait()
 
         while True:
             async with self._service_condition:
+                # Once we've passed this point, we assume the version of the resource is
+                # the one our task was assigned to reload, or a newer one. Regardless of
+                # which, our task is happy as long as the target is reloaded at least
+                # once.
+                if reload_targets is None:
+                    reload_targets = self._reload_targets_func(service_call)
+                    self._pending_reload_targets |= reload_targets
                 if not self._service_running:
                     # This task will do a reload
                     self._service_running = True
