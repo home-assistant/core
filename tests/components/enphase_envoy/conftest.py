@@ -5,12 +5,24 @@ from unittest.mock import AsyncMock, Mock, patch
 from pyenphase import (
     Envoy,
     EnvoyData,
+    EnvoyEncharge,
+    EnvoyEnchargeAggregate,
+    EnvoyEnchargePower,
     EnvoyInverter,
     EnvoySystemConsumption,
     EnvoySystemProduction,
     EnvoyTokenAuth,
 )
 from pyenphase.const import PhaseNames, SupportedFeatures
+from pyenphase.models.dry_contacts import (
+    DryContactAction,
+    DryContactMode,
+    DryContactStatus,
+    DryContactType,
+    EnvoyDryContactSettings,
+    EnvoyDryContactStatus,
+)
+from pyenphase.models.enpower import EnvoyEnpower
 from pyenphase.models.meters import (
     CtMeterStatus,
     CtState,
@@ -19,6 +31,7 @@ from pyenphase.models.meters import (
     EnvoyMeterData,
     EnvoyPhaseMode,
 )
+from pyenphase.models.tariff import EnvoyStorageMode, EnvoyStorageSettings, EnvoyTariff
 import pytest
 
 from homeassistant.components.enphase_envoy import DOMAIN
@@ -66,7 +79,7 @@ def mock_envoy_fixture(
     mock_envoy.serial_number = serial_number
     mock_envoy.firmware = "7.1.2"
     mock_envoy.part_number = "123456789"
-    mock_envoy.envoy_model = "Envoy, phases: 3, phase mode: three, net-consumption CT, production CT, storage CT"
+    mock_envoy.envoy_model = "Envoy, phases: 3, phase mode: split, net-consumption CT, production CT, storage CT"
     mock_envoy.authenticate = mock_authenticate
     mock_envoy.setup = mock_setup
     mock_envoy.auth = mock_auth
@@ -81,7 +94,7 @@ def mock_envoy_fixture(
     mock_envoy.phase_mode = EnvoyPhaseMode.THREE
     mock_envoy.phase_count = 3
     mock_envoy.active_phase_count = 3
-    mock_envoy.ct_meter_count = 3
+    mock_envoy.ct_meter_count = 2
     mock_envoy.consumption_meter_type = CtType.NET_CONSUMPTION
     mock_envoy.production_meter_type = CtType.PRODUCTION
     mock_envoy.storage_meter_type = CtType.STORAGE
@@ -334,6 +347,160 @@ def mock_envoy_fixture(
                 last_report_watts=1,
                 max_report_watts=1,
             )
+        },
+        encharge_inventory={
+            "123456": EnvoyEncharge(
+                admin_state=6,
+                admin_state_str="ENCHG_STATE_READY",
+                bmu_firmware_version="2.1.34",
+                comm_level_2_4_ghz=4,
+                comm_level_sub_ghz=4,
+                communicating=True,
+                dc_switch_off=False,
+                encharge_capacity=3500,
+                encharge_revision=2,
+                firmware_loaded_date=1695330323,
+                firmware_version="2.6.5973_rel/22.11",
+                installed_date=1695330323,
+                last_report_date=1695769447,
+                led_status=17,
+                max_cell_temp=30,
+                operating=True,
+                part_number="830-01760-r37",
+                percent_full=15,
+                serial_number="123456",
+                temperature=29,
+                temperature_unit="C",
+                zigbee_dongle_fw_version="100F",
+            )
+        },
+        enpower=EnvoyEnpower(
+            grid_mode="multimode-ongrid",
+            admin_state=24,
+            admin_state_str="ENPWR_STATE_OPER_CLOSED",
+            comm_level_2_4_ghz=5,
+            comm_level_sub_ghz=5,
+            communicating=True,
+            firmware_loaded_date=1695330323,
+            firmware_version="1.2.2064_release/20.34",
+            installed_date=1695330323,
+            last_report_date=1695769447,
+            mains_admin_state="closed",
+            mains_oper_state="closed",
+            operating=True,
+            part_number="830-01760-r37",
+            serial_number="654321",
+            temperature=79,
+            temperature_unit="F",
+            zigbee_dongle_fw_version="1009",
+        ),
+        encharge_power={
+            "123456": EnvoyEnchargePower(apparent_power_mva=0, real_power_mw=0, soc=15)
+        },
+        encharge_aggregate=EnvoyEnchargeAggregate(
+            available_energy=525,
+            backup_reserve=526,
+            state_of_charge=15,
+            reserve_state_of_charge=15,
+            configured_reserve_state_of_charge=15,
+            max_available_capacity=3500,
+        ),
+        tariff=EnvoyTariff(
+            currency={"code": "EUR"},
+            logger="mylogger",
+            date="1695744220",
+            storage_settings=EnvoyStorageSettings(
+                mode=EnvoyStorageMode.SELF_CONSUMPTION,
+                operation_mode_sub_type="",
+                reserved_soc=15.0,
+                very_low_soc=5,
+                charge_from_grid=True,
+                date="1695598084",
+            ),
+            single_rate={"rate": 0.0, "sell": 0.0},
+            seasons=[
+                {
+                    "id": "season_1",
+                    "start": "1/1",
+                    "days": [
+                        {
+                            "id": "all_days",
+                            "days": "Mon,Tue,Wed,Thu,Fri,Sat,Sun",
+                            "must_charge_start": 444,
+                            "must_charge_duration": 35,
+                            "must_charge_mode": "CG",
+                            "enable_discharge_to_grid": True,
+                            "periods": [
+                                {"id": "period_1", "start": 480, "rate": 0.1898},
+                                {"id": "filler", "start": 1320, "rate": 0.1034},
+                            ],
+                        }
+                    ],
+                    "tiers": [],
+                }
+            ],
+            seasons_sell=[],
+        ),
+        dry_contact_status={
+            "NC1": EnvoyDryContactStatus(id="NC1", status=DryContactStatus.OPEN),
+            "NC2": EnvoyDryContactStatus(id="NC2", status=DryContactStatus.CLOSED),
+            "NC3": EnvoyDryContactStatus(id="NC3", status=DryContactStatus.OPEN),
+        },
+        dry_contact_settings={
+            "NC1": EnvoyDryContactSettings(
+                id="NC1",
+                black_start=None,
+                essential_end_time=None,
+                essential_start_time=None,
+                generator_action=DryContactAction.APPLY,
+                grid_action=DryContactAction.SHED,
+                load_name="",
+                manual_override=None,
+                micro_grid_action=DryContactAction.SCHEDULE,
+                mode=DryContactMode.STATE_OF_CHARGE,
+                override=False,
+                priority=None,
+                pv_serial_nb=[],
+                soc_high=70.0,
+                soc_low=30.0,
+                type=DryContactType.NONE,
+            ),
+            "NC2": EnvoyDryContactSettings(
+                id="NC2",
+                black_start=None,
+                essential_end_time=None,
+                essential_start_time=None,
+                generator_action=DryContactAction.SHED,
+                grid_action=DryContactAction.APPLY,
+                load_name="",
+                manual_override=None,
+                micro_grid_action=DryContactAction.NONE,
+                mode=DryContactMode.MANUAL,
+                override=False,
+                priority=None,
+                pv_serial_nb=[],
+                soc_high=70.0,
+                soc_low=30.0,
+                type=DryContactType.NONE,
+            ),
+            "NC3": EnvoyDryContactSettings(
+                id="NC3",
+                black_start=None,
+                essential_end_time=None,
+                essential_start_time=None,
+                generator_action=DryContactAction.NONE,
+                grid_action=DryContactAction.APPLY,
+                load_name="",
+                manual_override=None,
+                micro_grid_action=DryContactAction.SHED,
+                mode=DryContactMode.MANUAL,
+                override=False,
+                priority=None,
+                pv_serial_nb=[],
+                soc_high=70.0,
+                soc_low=30.0,
+                type=DryContactType.NONE,
+            ),
         },
         raw={"varies_by": "firmware_version"},
     )

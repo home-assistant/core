@@ -34,6 +34,1705 @@
           ]),
           'disabled_by': None,
           'entry_type': None,
+          'hw_version': None,
+          'identifiers': list([
+            list([
+              'enphase_envoy',
+              '<<envoyserial>>56',
+            ]),
+          ]),
+          'is_new': False,
+          'labels': list([
+          ]),
+          'manufacturer': 'Enphase',
+          'model': 'Encharge',
+          'name': 'Encharge <<envoyserial>>56',
+          'name_by_user': None,
+          'serial_number': None,
+          'suggested_area': None,
+          'sw_version': '2.6.5973_rel/22.11',
+        }),
+        'entities': list([
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'binary_sensor',
+              'entity_category': 'diagnostic',
+              'entity_id': 'binary_sensor.encharge_<<envoyserial>>56_communicating',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': 'connectivity',
+              'original_icon': None,
+              'original_name': 'Communicating',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'communicating',
+              'unique_id': '<<envoyserial>>56_communicating',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'connectivity',
+                'friendly_name': 'Encharge <<envoyserial>>56 Communicating',
+              }),
+              'entity_id': 'binary_sensor.encharge_<<envoyserial>>56_communicating',
+              'state': 'on',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'binary_sensor',
+              'entity_category': 'diagnostic',
+              'entity_id': 'binary_sensor.encharge_<<envoyserial>>56_dc_switch',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': None,
+              'original_icon': None,
+              'original_name': 'DC switch',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'dc_switch',
+              'unique_id': '<<envoyserial>>56_dc_switch',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'friendly_name': 'Encharge <<envoyserial>>56 DC switch',
+              }),
+              'entity_id': 'binary_sensor.encharge_<<envoyserial>>56_dc_switch',
+              'state': 'on',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.encharge_<<envoyserial>>56_temperature',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': 'temperature',
+              'original_icon': None,
+              'original_name': 'Temperature',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': None,
+              'unique_id': '<<envoyserial>>56_temperature',
+              'unit_of_measurement': '°C',
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'temperature',
+                'friendly_name': 'Encharge <<envoyserial>>56 Temperature',
+                'unit_of_measurement': '°C',
+              }),
+              'entity_id': 'sensor.encharge_<<envoyserial>>56_temperature',
+              'state': '29',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.encharge_<<envoyserial>>56_last_reported',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': 'timestamp',
+              'original_icon': None,
+              'original_name': 'Last reported',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'last_reported',
+              'unique_id': '<<envoyserial>>56_last_reported',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'timestamp',
+                'friendly_name': 'Encharge <<envoyserial>>56 Last reported',
+              }),
+              'entity_id': 'sensor.encharge_<<envoyserial>>56_last_reported',
+              'state': '2023-09-26T23:04:07+00:00',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.encharge_<<envoyserial>>56_battery',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': 'battery',
+              'original_icon': None,
+              'original_name': 'Battery',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': None,
+              'unique_id': '<<envoyserial>>56_soc',
+              'unit_of_measurement': '%',
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'battery',
+                'friendly_name': 'Encharge <<envoyserial>>56 Battery',
+                'unit_of_measurement': '%',
+              }),
+              'entity_id': 'sensor.encharge_<<envoyserial>>56_battery',
+              'state': '15',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.encharge_<<envoyserial>>56_apparent_power',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': 'apparent_power',
+              'original_icon': None,
+              'original_name': 'Apparent power',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': None,
+              'unique_id': '<<envoyserial>>56_apparent_power_mva',
+              'unit_of_measurement': 'VA',
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'apparent_power',
+                'friendly_name': 'Encharge <<envoyserial>>56 Apparent power',
+                'unit_of_measurement': 'VA',
+              }),
+              'entity_id': 'sensor.encharge_<<envoyserial>>56_apparent_power',
+              'state': '0.0',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.encharge_<<envoyserial>>56_power',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': 'power',
+              'original_icon': None,
+              'original_name': 'Power',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': None,
+              'unique_id': '<<envoyserial>>56_real_power_mw',
+              'unit_of_measurement': 'W',
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'power',
+                'friendly_name': 'Encharge <<envoyserial>>56 Power',
+                'unit_of_measurement': 'W',
+              }),
+              'entity_id': 'sensor.encharge_<<envoyserial>>56_power',
+              'state': '0.0',
+            }),
+          }),
+        ]),
+      }),
+      dict({
+        'device': dict({
+          'area_id': None,
+          'config_entries': list([
+            '45a36e55aaddb2007c5f6602e0c38e72',
+          ]),
+          'configuration_url': None,
+          'connections': list([
+          ]),
+          'disabled_by': None,
+          'entry_type': None,
+          'hw_version': None,
+          'identifiers': list([
+            list([
+              'enphase_envoy',
+              '654321',
+            ]),
+          ]),
+          'is_new': False,
+          'labels': list([
+          ]),
+          'manufacturer': 'Enphase',
+          'model': 'Enpower',
+          'name': 'Enpower 654321',
+          'name_by_user': None,
+          'serial_number': None,
+          'suggested_area': None,
+          'sw_version': '1.2.2064_release/20.34',
+        }),
+        'entities': list([
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'binary_sensor',
+              'entity_category': 'diagnostic',
+              'entity_id': 'binary_sensor.enpower_654321_communicating',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': 'connectivity',
+              'original_icon': None,
+              'original_name': 'Communicating',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'communicating',
+              'unique_id': '654321_communicating',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'connectivity',
+                'friendly_name': 'Enpower 654321 Communicating',
+              }),
+              'entity_id': 'binary_sensor.enpower_654321_communicating',
+              'state': 'on',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'binary_sensor',
+              'entity_category': None,
+              'entity_id': 'binary_sensor.enpower_654321_grid_status',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': None,
+              'original_icon': 'mdi:transmission-tower',
+              'original_name': 'Grid status',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'grid_status',
+              'unique_id': '654321_mains_oper_state',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'friendly_name': 'Enpower 654321 Grid status',
+                'icon': 'mdi:transmission-tower',
+              }),
+              'entity_id': 'binary_sensor.enpower_654321_grid_status',
+              'state': 'on',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.enpower_654321_temperature',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': 'temperature',
+              'original_icon': None,
+              'original_name': 'Temperature',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': None,
+              'unique_id': '654321_temperature',
+              'unit_of_measurement': '°C',
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'temperature',
+                'friendly_name': 'Enpower 654321 Temperature',
+                'unit_of_measurement': '°C',
+              }),
+              'entity_id': 'sensor.enpower_654321_temperature',
+              'state': '26',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.enpower_654321_last_reported',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': 'timestamp',
+              'original_icon': None,
+              'original_name': 'Last reported',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'last_reported',
+              'unique_id': '654321_last_reported',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'timestamp',
+                'friendly_name': 'Enpower 654321 Last reported',
+              }),
+              'entity_id': 'sensor.enpower_654321_last_reported',
+              'state': '2023-09-26T23:04:07+00:00',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'switch',
+              'entity_category': None,
+              'entity_id': 'switch.enpower_654321_grid_enabled',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': None,
+              'original_icon': None,
+              'original_name': 'Grid enabled',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'grid_enabled',
+              'unique_id': '654321_mains_admin_state',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'friendly_name': 'Enpower 654321 Grid enabled',
+              }),
+              'entity_id': 'switch.enpower_654321_grid_enabled',
+              'state': 'on',
+            }),
+          }),
+        ]),
+      }),
+      dict({
+        'device': dict({
+          'area_id': None,
+          'config_entries': list([
+            '45a36e55aaddb2007c5f6602e0c38e72',
+          ]),
+          'configuration_url': None,
+          'connections': list([
+          ]),
+          'disabled_by': None,
+          'entry_type': None,
+          'hw_version': None,
+          'identifiers': list([
+            list([
+              'enphase_envoy',
+              'NC1',
+            ]),
+          ]),
+          'is_new': False,
+          'labels': list([
+          ]),
+          'manufacturer': 'Enphase',
+          'model': 'Dry contact relay',
+          'name': '',
+          'name_by_user': None,
+          'serial_number': None,
+          'suggested_area': None,
+          'sw_version': '1.2.2064_release/20.34',
+        }),
+        'entities': list([
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'max': 100.0,
+                'min': 0.0,
+                'mode': 'auto',
+                'step': 1.0,
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'number',
+              'entity_category': 'config',
+              'entity_id': 'number.envoy_<<envoyserial>>_cutoff_battery_level',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': 'battery',
+              'original_icon': None,
+              'original_name': 'Cutoff battery level',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'cutoff_battery_level',
+              'unique_id': '654321_relay_NC1_soc_low',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'battery',
+                'friendly_name': 'Cutoff battery level',
+                'max': 100.0,
+                'min': 0.0,
+                'mode': 'auto',
+                'step': 1.0,
+              }),
+              'entity_id': 'number.envoy_<<envoyserial>>_cutoff_battery_level',
+              'state': '30.0',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'max': 100.0,
+                'min': 0.0,
+                'mode': 'auto',
+                'step': 1.0,
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'number',
+              'entity_category': 'config',
+              'entity_id': 'number.restore_battery_level',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': 'battery',
+              'original_icon': None,
+              'original_name': 'Restore battery level',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'restore_battery_level',
+              'unique_id': '654321_relay_NC1_soc_high',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'battery',
+                'friendly_name': 'Restore battery level',
+                'max': 100.0,
+                'min': 0.0,
+                'mode': 'auto',
+                'step': 1.0,
+              }),
+              'entity_id': 'number.restore_battery_level',
+              'state': '70.0',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'options': list([
+                  'standard',
+                  'battery',
+                ]),
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'select',
+              'entity_category': None,
+              'entity_id': 'select.mode',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': None,
+              'original_icon': None,
+              'original_name': 'Mode',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'relay_mode',
+              'unique_id': '654321_relay_NC1_mode',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'friendly_name': 'Mode',
+                'options': list([
+                  'standard',
+                  'battery',
+                ]),
+              }),
+              'entity_id': 'select.mode',
+              'state': 'battery',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'options': list([
+                  'powered',
+                  'not_powered',
+                  'schedule',
+                  'none',
+                ]),
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'select',
+              'entity_category': None,
+              'entity_id': 'select.grid_action',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': None,
+              'original_icon': None,
+              'original_name': 'Grid action',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'relay_grid_action',
+              'unique_id': '654321_relay_NC1_grid_action',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'friendly_name': 'Grid action',
+                'options': list([
+                  'powered',
+                  'not_powered',
+                  'schedule',
+                  'none',
+                ]),
+              }),
+              'entity_id': 'select.grid_action',
+              'state': 'not_powered',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'options': list([
+                  'powered',
+                  'not_powered',
+                  'schedule',
+                  'none',
+                ]),
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'select',
+              'entity_category': None,
+              'entity_id': 'select.microgrid_action',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': None,
+              'original_icon': None,
+              'original_name': 'Microgrid action',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'relay_microgrid_action',
+              'unique_id': '654321_relay_NC1_microgrid_action',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'friendly_name': 'Microgrid action',
+                'options': list([
+                  'powered',
+                  'not_powered',
+                  'schedule',
+                  'none',
+                ]),
+              }),
+              'entity_id': 'select.microgrid_action',
+              'state': 'schedule',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'options': list([
+                  'powered',
+                  'not_powered',
+                  'schedule',
+                  'none',
+                ]),
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'select',
+              'entity_category': None,
+              'entity_id': 'select.generator_action',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': None,
+              'original_icon': None,
+              'original_name': 'Generator action',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'relay_generator_action',
+              'unique_id': '654321_relay_NC1_generator_action',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'friendly_name': 'Generator action',
+                'options': list([
+                  'powered',
+                  'not_powered',
+                  'schedule',
+                  'none',
+                ]),
+              }),
+              'entity_id': 'select.generator_action',
+              'state': 'powered',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'switch',
+              'entity_category': None,
+              'entity_id': 'switch.enphase_envoy_654321_relay_nc1_relay_status',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': None,
+              'original_icon': None,
+              'original_name': None,
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': None,
+              'unique_id': '654321_relay_NC1_relay_status',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'friendly_name': '',
+              }),
+              'entity_id': 'switch.enphase_envoy_654321_relay_nc1_relay_status',
+              'state': 'off',
+            }),
+          }),
+        ]),
+      }),
+      dict({
+        'device': dict({
+          'area_id': None,
+          'config_entries': list([
+            '45a36e55aaddb2007c5f6602e0c38e72',
+          ]),
+          'configuration_url': None,
+          'connections': list([
+          ]),
+          'disabled_by': None,
+          'entry_type': None,
+          'hw_version': None,
+          'identifiers': list([
+            list([
+              'enphase_envoy',
+              'NC2',
+            ]),
+          ]),
+          'is_new': False,
+          'labels': list([
+          ]),
+          'manufacturer': 'Enphase',
+          'model': 'Dry contact relay',
+          'name': '',
+          'name_by_user': None,
+          'serial_number': None,
+          'suggested_area': None,
+          'sw_version': '1.2.2064_release/20.34',
+        }),
+        'entities': list([
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'max': 100.0,
+                'min': 0.0,
+                'mode': 'auto',
+                'step': 1.0,
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'number',
+              'entity_category': 'config',
+              'entity_id': 'number.envoy_<<envoyserial>>_cutoff_battery_level_2',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': 'battery',
+              'original_icon': None,
+              'original_name': 'Cutoff battery level',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'cutoff_battery_level',
+              'unique_id': '654321_relay_NC2_soc_low',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'battery',
+                'friendly_name': 'Cutoff battery level',
+                'max': 100.0,
+                'min': 0.0,
+                'mode': 'auto',
+                'step': 1.0,
+              }),
+              'entity_id': 'number.envoy_<<envoyserial>>_cutoff_battery_level_2',
+              'state': '30.0',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'max': 100.0,
+                'min': 0.0,
+                'mode': 'auto',
+                'step': 1.0,
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'number',
+              'entity_category': 'config',
+              'entity_id': 'number.restore_battery_level_2',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': 'battery',
+              'original_icon': None,
+              'original_name': 'Restore battery level',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'restore_battery_level',
+              'unique_id': '654321_relay_NC2_soc_high',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'battery',
+                'friendly_name': 'Restore battery level',
+                'max': 100.0,
+                'min': 0.0,
+                'mode': 'auto',
+                'step': 1.0,
+              }),
+              'entity_id': 'number.restore_battery_level_2',
+              'state': '70.0',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'options': list([
+                  'standard',
+                  'battery',
+                ]),
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'select',
+              'entity_category': None,
+              'entity_id': 'select.mode_2',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': None,
+              'original_icon': None,
+              'original_name': 'Mode',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'relay_mode',
+              'unique_id': '654321_relay_NC2_mode',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'friendly_name': 'Mode',
+                'options': list([
+                  'standard',
+                  'battery',
+                ]),
+              }),
+              'entity_id': 'select.mode_2',
+              'state': 'standard',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'options': list([
+                  'powered',
+                  'not_powered',
+                  'schedule',
+                  'none',
+                ]),
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'select',
+              'entity_category': None,
+              'entity_id': 'select.grid_action_2',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': None,
+              'original_icon': None,
+              'original_name': 'Grid action',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'relay_grid_action',
+              'unique_id': '654321_relay_NC2_grid_action',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'friendly_name': 'Grid action',
+                'options': list([
+                  'powered',
+                  'not_powered',
+                  'schedule',
+                  'none',
+                ]),
+              }),
+              'entity_id': 'select.grid_action_2',
+              'state': 'powered',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'options': list([
+                  'powered',
+                  'not_powered',
+                  'schedule',
+                  'none',
+                ]),
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'select',
+              'entity_category': None,
+              'entity_id': 'select.microgrid_action_2',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': None,
+              'original_icon': None,
+              'original_name': 'Microgrid action',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'relay_microgrid_action',
+              'unique_id': '654321_relay_NC2_microgrid_action',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'friendly_name': 'Microgrid action',
+                'options': list([
+                  'powered',
+                  'not_powered',
+                  'schedule',
+                  'none',
+                ]),
+              }),
+              'entity_id': 'select.microgrid_action_2',
+              'state': 'none',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'options': list([
+                  'powered',
+                  'not_powered',
+                  'schedule',
+                  'none',
+                ]),
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'select',
+              'entity_category': None,
+              'entity_id': 'select.generator_action_2',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': None,
+              'original_icon': None,
+              'original_name': 'Generator action',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'relay_generator_action',
+              'unique_id': '654321_relay_NC2_generator_action',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'friendly_name': 'Generator action',
+                'options': list([
+                  'powered',
+                  'not_powered',
+                  'schedule',
+                  'none',
+                ]),
+              }),
+              'entity_id': 'select.generator_action_2',
+              'state': 'not_powered',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'switch',
+              'entity_category': None,
+              'entity_id': 'switch.enphase_envoy_654321_relay_nc2_relay_status',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': None,
+              'original_icon': None,
+              'original_name': None,
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': None,
+              'unique_id': '654321_relay_NC2_relay_status',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'friendly_name': '',
+              }),
+              'entity_id': 'switch.enphase_envoy_654321_relay_nc2_relay_status',
+              'state': 'on',
+            }),
+          }),
+        ]),
+      }),
+      dict({
+        'device': dict({
+          'area_id': None,
+          'config_entries': list([
+            '45a36e55aaddb2007c5f6602e0c38e72',
+          ]),
+          'configuration_url': None,
+          'connections': list([
+          ]),
+          'disabled_by': None,
+          'entry_type': None,
+          'hw_version': None,
+          'identifiers': list([
+            list([
+              'enphase_envoy',
+              'NC3',
+            ]),
+          ]),
+          'is_new': False,
+          'labels': list([
+          ]),
+          'manufacturer': 'Enphase',
+          'model': 'Dry contact relay',
+          'name': '',
+          'name_by_user': None,
+          'serial_number': None,
+          'suggested_area': None,
+          'sw_version': '1.2.2064_release/20.34',
+        }),
+        'entities': list([
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'max': 100.0,
+                'min': 0.0,
+                'mode': 'auto',
+                'step': 1.0,
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'number',
+              'entity_category': 'config',
+              'entity_id': 'number.envoy_<<envoyserial>>_cutoff_battery_level_3',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': 'battery',
+              'original_icon': None,
+              'original_name': 'Cutoff battery level',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'cutoff_battery_level',
+              'unique_id': '654321_relay_NC3_soc_low',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'battery',
+                'friendly_name': 'Cutoff battery level',
+                'max': 100.0,
+                'min': 0.0,
+                'mode': 'auto',
+                'step': 1.0,
+              }),
+              'entity_id': 'number.envoy_<<envoyserial>>_cutoff_battery_level_3',
+              'state': '30.0',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'max': 100.0,
+                'min': 0.0,
+                'mode': 'auto',
+                'step': 1.0,
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'number',
+              'entity_category': 'config',
+              'entity_id': 'number.restore_battery_level_3',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': 'battery',
+              'original_icon': None,
+              'original_name': 'Restore battery level',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'restore_battery_level',
+              'unique_id': '654321_relay_NC3_soc_high',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'battery',
+                'friendly_name': 'Restore battery level',
+                'max': 100.0,
+                'min': 0.0,
+                'mode': 'auto',
+                'step': 1.0,
+              }),
+              'entity_id': 'number.restore_battery_level_3',
+              'state': '70.0',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'options': list([
+                  'standard',
+                  'battery',
+                ]),
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'select',
+              'entity_category': None,
+              'entity_id': 'select.mode_3',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': None,
+              'original_icon': None,
+              'original_name': 'Mode',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'relay_mode',
+              'unique_id': '654321_relay_NC3_mode',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'friendly_name': 'Mode',
+                'options': list([
+                  'standard',
+                  'battery',
+                ]),
+              }),
+              'entity_id': 'select.mode_3',
+              'state': 'standard',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'options': list([
+                  'powered',
+                  'not_powered',
+                  'schedule',
+                  'none',
+                ]),
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'select',
+              'entity_category': None,
+              'entity_id': 'select.grid_action_3',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': None,
+              'original_icon': None,
+              'original_name': 'Grid action',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'relay_grid_action',
+              'unique_id': '654321_relay_NC3_grid_action',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'friendly_name': 'Grid action',
+                'options': list([
+                  'powered',
+                  'not_powered',
+                  'schedule',
+                  'none',
+                ]),
+              }),
+              'entity_id': 'select.grid_action_3',
+              'state': 'powered',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'options': list([
+                  'powered',
+                  'not_powered',
+                  'schedule',
+                  'none',
+                ]),
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'select',
+              'entity_category': None,
+              'entity_id': 'select.microgrid_action_3',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': None,
+              'original_icon': None,
+              'original_name': 'Microgrid action',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'relay_microgrid_action',
+              'unique_id': '654321_relay_NC3_microgrid_action',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'friendly_name': 'Microgrid action',
+                'options': list([
+                  'powered',
+                  'not_powered',
+                  'schedule',
+                  'none',
+                ]),
+              }),
+              'entity_id': 'select.microgrid_action_3',
+              'state': 'not_powered',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'options': list([
+                  'powered',
+                  'not_powered',
+                  'schedule',
+                  'none',
+                ]),
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'select',
+              'entity_category': None,
+              'entity_id': 'select.generator_action_3',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': None,
+              'original_icon': None,
+              'original_name': 'Generator action',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'relay_generator_action',
+              'unique_id': '654321_relay_NC3_generator_action',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'friendly_name': 'Generator action',
+                'options': list([
+                  'powered',
+                  'not_powered',
+                  'schedule',
+                  'none',
+                ]),
+              }),
+              'entity_id': 'select.generator_action_3',
+              'state': 'none',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'switch',
+              'entity_category': None,
+              'entity_id': 'switch.enphase_envoy_654321_relay_nc3_relay_status',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': None,
+              'original_icon': None,
+              'original_name': None,
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': None,
+              'unique_id': '654321_relay_NC3_relay_status',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'friendly_name': '',
+              }),
+              'entity_id': 'switch.enphase_envoy_654321_relay_nc3_relay_status',
+              'state': 'off',
+            }),
+          }),
+        ]),
+      }),
+      dict({
+        'device': dict({
+          'area_id': None,
+          'config_entries': list([
+            '45a36e55aaddb2007c5f6602e0c38e72',
+          ]),
+          'configuration_url': None,
+          'connections': list([
+          ]),
+          'disabled_by': None,
+          'entry_type': None,
           'hw_version': '<<envoyserial>>56789',
           'identifiers': list([
             list([
@@ -45,7 +1744,7 @@
           'labels': list([
           ]),
           'manufacturer': 'Enphase',
-          'model': 'Envoy, phases: 3, phase mode: three, net-consumption CT, production CT, storage CT',
+          'model': 'Envoy, phases: 3, phase mode: split, net-consumption CT, production CT, storage CT',
           'name': 'Envoy <<envoyserial>>',
           'name_by_user': None,
           'serial_number': '<<envoyserial>>',
@@ -4051,6 +5750,221 @@
             }),
             'state': None,
           }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_battery',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': 'battery',
+              'original_icon': 'mdi:flash',
+              'original_name': 'Battery',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': None,
+              'unique_id': '<<envoyserial>>_battery_level',
+              'unit_of_measurement': '%',
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'battery',
+                'friendly_name': 'Envoy <<envoyserial>> Battery',
+                'icon': 'mdi:flash',
+                'unit_of_measurement': '%',
+              }),
+              'entity_id': 'sensor.envoy_<<envoyserial>>_battery',
+              'state': '15',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_reserve_battery_level',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': 'battery',
+              'original_icon': 'mdi:flash',
+              'original_name': 'Reserve battery level',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'reserve_soc',
+              'unique_id': '<<envoyserial>>_reserve_soc',
+              'unit_of_measurement': '%',
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'battery',
+                'friendly_name': 'Envoy <<envoyserial>> Reserve battery level',
+                'icon': 'mdi:flash',
+                'unit_of_measurement': '%',
+              }),
+              'entity_id': 'sensor.envoy_<<envoyserial>>_reserve_battery_level',
+              'state': '15',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_available_battery_energy',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': 'energy',
+              'original_icon': 'mdi:flash',
+              'original_name': 'Available battery energy',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'available_energy',
+              'unique_id': '<<envoyserial>>_available_energy',
+              'unit_of_measurement': 'Wh',
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'energy',
+                'friendly_name': 'Envoy <<envoyserial>> Available battery energy',
+                'icon': 'mdi:flash',
+                'unit_of_measurement': 'Wh',
+              }),
+              'entity_id': 'sensor.envoy_<<envoyserial>>_available_battery_energy',
+              'state': '525',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_reserve_battery_energy',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': 'energy',
+              'original_icon': 'mdi:flash',
+              'original_name': 'Reserve battery energy',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'reserve_energy',
+              'unique_id': '<<envoyserial>>_reserve_energy',
+              'unit_of_measurement': 'Wh',
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'energy',
+                'friendly_name': 'Envoy <<envoyserial>> Reserve battery energy',
+                'icon': 'mdi:flash',
+                'unit_of_measurement': 'Wh',
+              }),
+              'entity_id': 'sensor.envoy_<<envoyserial>>_reserve_battery_energy',
+              'state': '526',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'sensor',
+              'entity_category': None,
+              'entity_id': 'sensor.envoy_<<envoyserial>>_battery_capacity',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'options': dict({
+              }),
+              'original_device_class': 'energy',
+              'original_icon': 'mdi:flash',
+              'original_name': 'Battery capacity',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'supported_features': 0,
+              'translation_key': 'max_capacity',
+              'unique_id': '<<envoyserial>>_max_capacity',
+              'unit_of_measurement': 'Wh',
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'energy',
+                'friendly_name': 'Envoy <<envoyserial>> Battery capacity',
+                'icon': 'mdi:flash',
+                'unit_of_measurement': 'Wh',
+              }),
+              'entity_id': 'sensor.envoy_<<envoyserial>>_battery_capacity',
+              'state': '3500',
+            }),
+          }),
         ]),
       }),
       dict({
@@ -4222,13 +6136,53 @@
         }),
       }),
       'dry_contact_settings': dict({
+        'NC1': dict({
+          '__type': "<class 'pyenphase.models.dry_contacts.EnvoyDryContactSettings'>",
+          'repr': "EnvoyDryContactSettings(id='NC1', black_start=None, essential_end_time=None, essential_start_time=None, generator_action=<DryContactAction.APPLY: 'apply'>, grid_action=<DryContactAction.SHED: 'shed'>, load_name='', manual_override=None, micro_grid_action=<DryContactAction.SCHEDULE: 'schedule'>, mode=<DryContactMode.STATE_OF_CHARGE: 'soc'>, override=False, priority=None, pv_serial_nb=[], soc_high=70.0, soc_low=30.0, type=<DryContactType.NONE: 'NONE'>)",
+        }),
+        'NC2': dict({
+          '__type': "<class 'pyenphase.models.dry_contacts.EnvoyDryContactSettings'>",
+          'repr': "EnvoyDryContactSettings(id='NC2', black_start=None, essential_end_time=None, essential_start_time=None, generator_action=<DryContactAction.SHED: 'shed'>, grid_action=<DryContactAction.APPLY: 'apply'>, load_name='', manual_override=None, micro_grid_action=<DryContactAction.NONE: 'none'>, mode=<DryContactMode.MANUAL: 'manual'>, override=False, priority=None, pv_serial_nb=[], soc_high=70.0, soc_low=30.0, type=<DryContactType.NONE: 'NONE'>)",
+        }),
+        'NC3': dict({
+          '__type': "<class 'pyenphase.models.dry_contacts.EnvoyDryContactSettings'>",
+          'repr': "EnvoyDryContactSettings(id='NC3', black_start=None, essential_end_time=None, essential_start_time=None, generator_action=<DryContactAction.NONE: 'none'>, grid_action=<DryContactAction.APPLY: 'apply'>, load_name='', manual_override=None, micro_grid_action=<DryContactAction.SHED: 'shed'>, mode=<DryContactMode.MANUAL: 'manual'>, override=False, priority=None, pv_serial_nb=[], soc_high=70.0, soc_low=30.0, type=<DryContactType.NONE: 'NONE'>)",
+        }),
       }),
       'dry_contact_status': dict({
+        'NC1': dict({
+          '__type': "<class 'pyenphase.models.dry_contacts.EnvoyDryContactStatus'>",
+          'repr': "EnvoyDryContactStatus(id='NC1', status=<DryContactStatus.OPEN: 'open'>)",
+        }),
+        'NC2': dict({
+          '__type': "<class 'pyenphase.models.dry_contacts.EnvoyDryContactStatus'>",
+          'repr': "EnvoyDryContactStatus(id='NC2', status=<DryContactStatus.CLOSED: 'closed'>)",
+        }),
+        'NC3': dict({
+          '__type': "<class 'pyenphase.models.dry_contacts.EnvoyDryContactStatus'>",
+          'repr': "EnvoyDryContactStatus(id='NC3', status=<DryContactStatus.OPEN: 'open'>)",
+        }),
       }),
-      'encharge_aggregate': None,
-      'encharge_inventory': None,
-      'encharge_power': None,
-      'enpower': None,
+      'encharge_aggregate': dict({
+        '__type': "<class 'pyenphase.models.encharge.EnvoyEnchargeAggregate'>",
+        'repr': 'EnvoyEnchargeAggregate(available_energy=525, backup_reserve=526, state_of_charge=15, reserve_state_of_charge=15, configured_reserve_state_of_charge=15, max_available_capacity=3500)',
+      }),
+      'encharge_inventory': dict({
+        '123456': dict({
+          '__type': "<class 'pyenphase.models.encharge.EnvoyEncharge'>",
+          'repr': "EnvoyEncharge(admin_state=6, admin_state_str='ENCHG_STATE_READY', bmu_firmware_version='2.1.34', comm_level_2_4_ghz=4, comm_level_sub_ghz=4, communicating=True, dc_switch_off=False, encharge_capacity=3500, encharge_revision=2, firmware_loaded_date=1695330323, firmware_version='2.6.5973_rel/22.11', installed_date=1695330323, last_report_date=1695769447, led_status=17, max_cell_temp=30, operating=True, part_number='830-01760-r37', percent_full=15, serial_number='123456', temperature=29, temperature_unit='C', zigbee_dongle_fw_version='100F')",
+        }),
+      }),
+      'encharge_power': dict({
+        '123456': dict({
+          '__type': "<class 'pyenphase.models.encharge.EnvoyEnchargePower'>",
+          'repr': 'EnvoyEnchargePower(apparent_power_mva=0, real_power_mw=0, soc=15)',
+        }),
+      }),
+      'enpower': dict({
+        '__type': "<class 'pyenphase.models.enpower.EnvoyEnpower'>",
+        'repr': "EnvoyEnpower(grid_mode='multimode-ongrid', admin_state=24, admin_state_str='ENPWR_STATE_OPER_CLOSED', comm_level_2_4_ghz=5, comm_level_sub_ghz=5, communicating=True, firmware_loaded_date=1695330323, firmware_version='1.2.2064_release/20.34', installed_date=1695330323, last_report_date=1695769447, mains_admin_state='closed', mains_oper_state='closed', operating=True, part_number='830-01760-r37', serial_number='654321', temperature=79, temperature_unit='F', zigbee_dongle_fw_version='1009')",
+      }),
       'inverters': dict({
         '1': dict({
           '__type': "<class 'pyenphase.models.inverter.EnvoyInverter'>",
@@ -4271,16 +6225,19 @@
           'repr': 'EnvoySystemProduction(watt_hours_lifetime=3232, watt_hours_last_7_days=3231, watt_hours_today=3233, watts_now=3234)',
         }),
       }),
-      'tariff': None,
+      'tariff': dict({
+        '__type': "<class 'pyenphase.models.tariff.EnvoyTariff'>",
+        'repr': "EnvoyTariff(currency={'code': 'EUR'}, logger='mylogger', date='1695744220', storage_settings=EnvoyStorageSettings(mode=<EnvoyStorageMode.SELF_CONSUMPTION: 'self-consumption'>, operation_mode_sub_type='', reserved_soc=15.0, very_low_soc=5, charge_from_grid=True, date='1695598084'), single_rate={'rate': 0.0, 'sell': 0.0}, seasons=[{'id': 'season_1', 'start': '1/1', 'days': [{'id': 'all_days', 'days': 'Mon,Tue,Wed,Thu,Fri,Sat,Sun', 'must_charge_start': 444, 'must_charge_duration': 35, 'must_charge_mode': 'CG', 'enable_discharge_to_grid': True, 'periods': [{'id': 'period_1', 'start': 480, 'rate': 0.1898}, {'id': 'filler', 'start': 1320, 'rate': 0.1034}]}], 'tiers': []}], seasons_sell=[])",
+      }),
     }),
     'envoy_properties': dict({
       'active_phasecount': 3,
       'ct_consumption_meter': 'net-consumption',
-      'ct_count': 3,
+      'ct_count': 2,
       'ct_production_meter': 'production',
       'ct_storage_meter': 'storage',
       'envoy_firmware': '7.1.2',
-      'envoy_model': 'Envoy, phases: 3, phase mode: three, net-consumption CT, production CT, storage CT',
+      'envoy_model': 'Envoy, phases: 3, phase mode: split, net-consumption CT, production CT, storage CT',
       'part_number': '123456789',
       'phase_count': 3,
       'phase_mode': 'three',
