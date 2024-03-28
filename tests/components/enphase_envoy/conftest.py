@@ -5,12 +5,24 @@ from unittest.mock import AsyncMock, Mock, patch
 from pyenphase import (
     Envoy,
     EnvoyData,
+    EnvoyEncharge,
+    EnvoyEnchargeAggregate,
+    EnvoyEnchargePower,
     EnvoyInverter,
     EnvoySystemConsumption,
     EnvoySystemProduction,
     EnvoyTokenAuth,
 )
 from pyenphase.const import PhaseNames, SupportedFeatures
+from pyenphase.models.dry_contacts import (
+    DryContactAction,
+    DryContactMode,
+    DryContactStatus,
+    DryContactType,
+    EnvoyDryContactSettings,
+    EnvoyDryContactStatus,
+)
+from pyenphase.models.enpower import EnvoyEnpower
 from pyenphase.models.meters import (
     CtMeterStatus,
     CtState,
@@ -19,6 +31,7 @@ from pyenphase.models.meters import (
     EnvoyMeterData,
     EnvoyPhaseMode,
 )
+from pyenphase.models.tariff import EnvoyStorageMode, EnvoyStorageSettings, EnvoyTariff
 import pytest
 
 from homeassistant.components.enphase_envoy import DOMAIN
@@ -60,14 +73,33 @@ def mock_envoy_fixture(
     mock_authenticate,
     mock_setup,
     mock_auth,
+    mock_go_on_grid,
+    mock_go_off_grid,
+    mock_open_dry_contact,
+    mock_close_dry_contact,
+    mock_update_dry_contact,
+    mock_disable_charge_from_grid,
+    mock_enable_charge_from_grid,
+    mock_set_reserve_soc,
+    mock_set_storage_mode,
 ):
     """Define a mocked Envoy fixture."""
     mock_envoy = Mock(spec=Envoy)
     mock_envoy.serial_number = serial_number
     mock_envoy.firmware = "7.1.2"
     mock_envoy.part_number = "123456789"
-    mock_envoy.envoy_model = "Envoy, phases: 3, phase mode: three, net-consumption CT, production CT, storage CT"
+    mock_envoy.envoy_model = "Envoy, phases: 3, phase mode: split, net-consumption CT, production CT, storage CT"
     mock_envoy.authenticate = mock_authenticate
+    mock_envoy.go_off_grid = mock_go_off_grid
+    mock_envoy.go_on_grid = mock_go_on_grid
+    mock_envoy.open_dry_contact = mock_open_dry_contact
+    mock_envoy.close_dry_contact = mock_close_dry_contact
+    mock_envoy.disable_charge_from_grid = mock_disable_charge_from_grid
+    mock_envoy.enable_charge_from_grid = mock_enable_charge_from_grid
+    mock_envoy.update_dry_contact = mock_update_dry_contact
+    mock_envoy.set_reserve_soc = mock_set_reserve_soc
+    mock_envoy.set_storage_mode = mock_set_storage_mode
+
     mock_envoy.setup = mock_setup
     mock_envoy.auth = mock_auth
     mock_envoy.supported_features = SupportedFeatures(
@@ -77,11 +109,13 @@ def mock_envoy_fixture(
         | SupportedFeatures.METERING
         | SupportedFeatures.THREEPHASE
         | SupportedFeatures.CTMETERS
+        | SupportedFeatures.ENCHARGE
+        | SupportedFeatures.ENPOWER
     )
     mock_envoy.phase_mode = EnvoyPhaseMode.THREE
     mock_envoy.phase_count = 3
     mock_envoy.active_phase_count = 3
-    mock_envoy.ct_meter_count = 3
+    mock_envoy.ct_meter_count = 2
     mock_envoy.consumption_meter_type = CtType.NET_CONSUMPTION
     mock_envoy.production_meter_type = CtType.PRODUCTION
     mock_envoy.storage_meter_type = CtType.STORAGE
@@ -335,6 +369,160 @@ def mock_envoy_fixture(
                 max_report_watts=1,
             )
         },
+        encharge_inventory={
+            "123456": EnvoyEncharge(
+                admin_state=6,
+                admin_state_str="ENCHG_STATE_READY",
+                bmu_firmware_version="2.1.34",
+                comm_level_2_4_ghz=4,
+                comm_level_sub_ghz=4,
+                communicating=True,
+                dc_switch_off=False,
+                encharge_capacity=3500,
+                encharge_revision=2,
+                firmware_loaded_date=1695330323,
+                firmware_version="2.6.5973_rel/22.11",
+                installed_date=1695330323,
+                last_report_date=1695769447,
+                led_status=17,
+                max_cell_temp=30,
+                operating=True,
+                part_number="830-01760-r37",
+                percent_full=15,
+                serial_number="123456",
+                temperature=29,
+                temperature_unit="C",
+                zigbee_dongle_fw_version="100F",
+            )
+        },
+        enpower=EnvoyEnpower(
+            grid_mode="multimode-ongrid",
+            admin_state=24,
+            admin_state_str="ENPWR_STATE_OPER_CLOSED",
+            comm_level_2_4_ghz=5,
+            comm_level_sub_ghz=5,
+            communicating=True,
+            firmware_loaded_date=1695330323,
+            firmware_version="1.2.2064_release/20.34",
+            installed_date=1695330323,
+            last_report_date=1695769447,
+            mains_admin_state="closed",
+            mains_oper_state="closed",
+            operating=True,
+            part_number="830-01760-r37",
+            serial_number="654321",
+            temperature=79,
+            temperature_unit="F",
+            zigbee_dongle_fw_version="1009",
+        ),
+        encharge_power={
+            "123456": EnvoyEnchargePower(apparent_power_mva=0, real_power_mw=0, soc=15)
+        },
+        encharge_aggregate=EnvoyEnchargeAggregate(
+            available_energy=525,
+            backup_reserve=526,
+            state_of_charge=15,
+            reserve_state_of_charge=15,
+            configured_reserve_state_of_charge=15,
+            max_available_capacity=3500,
+        ),
+        tariff=EnvoyTariff(
+            currency={"code": "EUR"},
+            logger="mylogger",
+            date="1695744220",
+            storage_settings=EnvoyStorageSettings(
+                mode=EnvoyStorageMode.SELF_CONSUMPTION,
+                operation_mode_sub_type="",
+                reserved_soc=15.0,
+                very_low_soc=5,
+                charge_from_grid=True,
+                date="1695598084",
+            ),
+            single_rate={"rate": 0.0, "sell": 0.0},
+            seasons=[
+                {
+                    "id": "season_1",
+                    "start": "1/1",
+                    "days": [
+                        {
+                            "id": "all_days",
+                            "days": "Mon,Tue,Wed,Thu,Fri,Sat,Sun",
+                            "must_charge_start": 444,
+                            "must_charge_duration": 35,
+                            "must_charge_mode": "CG",
+                            "enable_discharge_to_grid": True,
+                            "periods": [
+                                {"id": "period_1", "start": 480, "rate": 0.1898},
+                                {"id": "filler", "start": 1320, "rate": 0.1034},
+                            ],
+                        }
+                    ],
+                    "tiers": [],
+                }
+            ],
+            seasons_sell=[],
+        ),
+        dry_contact_status={
+            "NC1": EnvoyDryContactStatus(id="NC1", status=DryContactStatus.OPEN),
+            "NC2": EnvoyDryContactStatus(id="NC2", status=DryContactStatus.CLOSED),
+            "NC3": EnvoyDryContactStatus(id="NC3", status=DryContactStatus.OPEN),
+        },
+        dry_contact_settings={
+            "NC1": EnvoyDryContactSettings(
+                id="NC1",
+                black_start=None,
+                essential_end_time=None,
+                essential_start_time=None,
+                generator_action=DryContactAction.APPLY,
+                grid_action=DryContactAction.SHED,
+                load_name="",
+                manual_override=None,
+                micro_grid_action=DryContactAction.SCHEDULE,
+                mode=DryContactMode.STATE_OF_CHARGE,
+                override=False,
+                priority=None,
+                pv_serial_nb=[],
+                soc_high=70.0,
+                soc_low=30.0,
+                type=DryContactType.NONE,
+            ),
+            "NC2": EnvoyDryContactSettings(
+                id="NC2",
+                black_start=None,
+                essential_end_time=None,
+                essential_start_time=None,
+                generator_action=DryContactAction.SHED,
+                grid_action=DryContactAction.APPLY,
+                load_name="",
+                manual_override=None,
+                micro_grid_action=DryContactAction.NONE,
+                mode=DryContactMode.MANUAL,
+                override=False,
+                priority=None,
+                pv_serial_nb=[],
+                soc_high=70.0,
+                soc_low=30.0,
+                type=DryContactType.NONE,
+            ),
+            "NC3": EnvoyDryContactSettings(
+                id="NC3",
+                black_start=None,
+                essential_end_time=None,
+                essential_start_time=None,
+                generator_action=DryContactAction.NONE,
+                grid_action=DryContactAction.APPLY,
+                load_name="",
+                manual_override=None,
+                micro_grid_action=DryContactAction.SHED,
+                mode=DryContactMode.MANUAL,
+                override=False,
+                priority=None,
+                pv_serial_nb=[],
+                soc_high=70.0,
+                soc_low=30.0,
+                type=DryContactType.NONE,
+            ),
+        },
         raw={"varies_by": "firmware_version"},
     )
     mock_envoy.update = AsyncMock(return_value=mock_envoy.data)
@@ -381,3 +569,57 @@ def mock_setup():
 def serial_number_fixture():
     """Define a serial number fixture."""
     return "1234"
+
+
+@pytest.fixture(name="mock_go_on_grid")
+def go_on_grid_fixture():
+    """Define a go_on_grid fixture."""
+    return AsyncMock(return_value="[]")
+
+
+@pytest.fixture(name="mock_go_off_grid")
+def go_off_grid_fixture():
+    """Define a go_off_grid fixture."""
+    return AsyncMock(return_value="[]")
+
+
+@pytest.fixture(name="mock_update_dry_contact")
+def update_dry_contact_fixture():
+    """Define a update_dry_contact fixture."""
+    return AsyncMock(return_value="[]")
+
+
+@pytest.fixture(name="mock_open_dry_contact")
+def open_dry_contact_fixture():
+    """Define a gopen dry contact fixture."""
+    return AsyncMock(return_value="[]")
+
+
+@pytest.fixture(name="mock_close_dry_contact")
+def close_dry_contact_fixture():
+    """Define a close dry contact fixture."""
+    return AsyncMock(return_value="[]")
+
+
+@pytest.fixture(name="mock_enable_charge_from_grid")
+def enable_charge_from_grid_fixture():
+    """Define a enable charge from grid fixture."""
+    return AsyncMock(return_value="[]")
+
+
+@pytest.fixture(name="mock_disable_charge_from_grid")
+def disable_charge_from_grid_fixture():
+    """Define a disable charge from grid fixture."""
+    return AsyncMock(return_value="[]")
+
+
+@pytest.fixture(name="mock_set_storage_mode")
+def set_storage_mode_fixture():
+    """Define a update_dry_contact fixture."""
+    return AsyncMock(return_value="[]")
+
+
+@pytest.fixture(name="mock_set_reserve_soc")
+def set_reserve_soc_fixture():
+    """Define a update_dry_contact fixture."""
+    return AsyncMock(return_value="[]")

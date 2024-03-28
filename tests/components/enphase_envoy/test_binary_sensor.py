@@ -1,6 +1,6 @@
-"""Test Enphase Envoy sensors."""
+"""Test Enphase Envoy binary sensors."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -11,24 +11,22 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import ConfigType, MockConfigEntry
 
 
-@pytest.fixture(name="setup_enphase_envoy_sensor")
-async def setup_enphase_envoy_sensor_fixture(hass, config, mock_envoy):
-    """Define a fixture to set up Enphase Envoy with sensor platform only."""
+@pytest.fixture(name="setup_enphase_envoy_binary_sensor")
+async def setup_enphase_envoy_binary_sensor_fixture(
+    hass: HomeAssistant, config: ConfigType, mock_envoy: AsyncMock
+):
+    """Define a fixture to set up Enphase Envoy with binary sensor platform only."""
     with (
-        patch(
-            "homeassistant.components.enphase_envoy.config_flow.Envoy",
-            return_value=mock_envoy,
-        ),
         patch(
             "homeassistant.components.enphase_envoy.Envoy",
             return_value=mock_envoy,
         ),
         patch(
             "homeassistant.components.enphase_envoy.PLATFORMS",
-            [Platform.SENSOR],
+            [Platform.BINARY_SENSOR],
         ),
     ):
         assert await async_setup_component(hass, DOMAIN, config)
@@ -36,16 +34,16 @@ async def setup_enphase_envoy_sensor_fixture(hass, config, mock_envoy):
         yield
 
 
-async def test_sensor(
+async def test_binary_sensor(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
-    setup_enphase_envoy_sensor,
+    setup_enphase_envoy_binary_sensor,
 ) -> None:
-    """Test enphase_envoy sensor entities."""
+    """Test enphase_envoy binary_sensor entities."""
 
     # number entities states should be created from test data
-    assert len(hass.states.async_all()) == 51
+    assert len(hass.states.async_all()) == 4
 
     entity_registry = er.async_get(hass)
     assert entity_registry
