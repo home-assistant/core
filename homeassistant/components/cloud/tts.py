@@ -140,7 +140,6 @@ class CloudTTSEntity(TextToSpeechEntity):
         """Return a dict include default options."""
         return {
             ATTR_AUDIO_OUTPUT: AudioOutput.MP3,
-            ATTR_VOICE: self._voice,
         }
 
     @property
@@ -178,7 +177,18 @@ class CloudTTSEntity(TextToSpeechEntity):
         gender: Gender | str | None = options.get(ATTR_GENDER)
         gender = handle_deprecated_gender(self.hass, gender)
         original_voice: str | None = options.get(ATTR_VOICE)
+        if original_voice is None and language == self._language:
+            original_voice = self._voice
         voice = handle_deprecated_voice(self.hass, original_voice)
+        if voice not in TTS_VOICES[language]:
+            default_voice = TTS_VOICES[language][0]
+            _LOGGER.debug(
+                "Unsupported voice %s detected, falling back to default %s for %s",
+                voice,
+                default_voice,
+                language,
+            )
+            voice = default_voice
         # Process TTS
         try:
             data = await self.cloud.voice.process_tts(
@@ -237,7 +247,6 @@ class CloudProvider(Provider):
         """Return a dict include default options."""
         return {
             ATTR_AUDIO_OUTPUT: AudioOutput.MP3,
-            ATTR_VOICE: self._voice,
         }
 
     async def async_get_tts_audio(
@@ -248,7 +257,18 @@ class CloudProvider(Provider):
         gender: Gender | str | None = options.get(ATTR_GENDER)
         gender = handle_deprecated_gender(self.hass, gender)
         original_voice: str | None = options.get(ATTR_VOICE)
+        if original_voice is None and language == self._language:
+            original_voice = self._voice
         voice = handle_deprecated_voice(self.hass, original_voice)
+        if voice not in TTS_VOICES[language]:
+            default_voice = TTS_VOICES[language][0]
+            _LOGGER.debug(
+                "Unsupported voice %s detected, falling back to default %s for %s",
+                voice,
+                default_voice,
+                language,
+            )
+            voice = default_voice
         # Process TTS
         try:
             data = await self.cloud.voice.process_tts(
