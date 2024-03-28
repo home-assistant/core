@@ -16,10 +16,9 @@ from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.lock import ATTR_CODE, LockEntity
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, TessieChargeCableLockStates
@@ -33,48 +32,11 @@ async def async_setup_entry(
     """Set up the Tessie sensor platform from a config entry."""
     data = hass.data[DOMAIN][entry.entry_id]
 
-    entities = [
+    async_add_entities(
         klass(vehicle.state_coordinator)
-        for klass in (TessieLockEntity, TessieCableLockEntity)
+        for klass in (TessieLockEntity, TessieCableLockEntity, TessieSpeedLimitEntity)
         for vehicle in data
-    ]
-
-    ent_reg = er.async_get(hass)
-
-    for vehicle in data:
-        entity_id = ent_reg.async_get_entity_id(
-            Platform.LOCK,
-            DOMAIN,
-            f"{vehicle.state_coordinator.vin}-vehicle_state_speed_limit_mode_active",
-        )
-        if entity_id:
-            entity_entry = ent_reg.async_get(entity_id)
-            assert entity_entry
-            if entity_entry.disabled:
-                # If the entity exists and is disabled then we want to remove
-                # the entity so that the user is using the new fan entity instead.
-                ent_reg.async_remove(entity_id)
-            else:
-                entities.append(TessieSpeedLimitEntity(vehicle.state_coordinator))
-
-                entity_automations = automations_with_entity(hass, entity_id)
-                entity_scripts = scripts_with_entity(hass, entity_id)
-                for item in entity_automations + entity_scripts:
-                    ir.async_create_issue(
-                        hass,
-                        DOMAIN,
-                        f"deprecated_speed_limit_{entity_id}_{item}",
-                        breaks_in_ha_version="2024.10.0",
-                        is_fixable=True,
-                        is_persistent=True,
-                        severity=ir.IssueSeverity.WARNING,
-                        translation_key="deprecated_speed_limit_entity",
-                        translation_placeholders={
-                            "entity": entity_id,
-                            "info": item,
-                        },
-                    )
-    async_add_entities(entities)
+    )
 
 
 class TessieLockEntity(TessieEntity, LockEntity):
@@ -154,6 +116,24 @@ class TessieSpeedLimitEntity(TessieEntity, LockEntity):
         if code:
             await self.run(disable_speed_limit, pin=code)
             self.set((self.key, False))
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+        entity_automations = automations_with_entity(self.hass, self.entity_id)
+        entity_scripts = scripts_with_entity(self.hass, self.entity_id)
+        for item in entity_automations + entity_scripts:
+            ir.async_create_issue(
+                self.coordinator.hass,
+                DOMAIN,
+                "deprecated_speed_limit_entity",
+                breaks_in_ha_version="2024.10.0",
+                is_fixable=True,
+                is_persistent=True,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="deprecated_speed_limit_entity",
+                translation_placeholders={"entity": self.entity_id, "item": item},
+            )
 
 
 class TessieCableLockEntity(TessieEntity, LockEntity):
