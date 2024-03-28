@@ -6,7 +6,9 @@
         "jammed": "mdi:lock-alert",
         "locking": "mdi:lock-clock",
         "unlocked": "mdi:lock-open",
-        "unlocking": "mdi:lock-clock"
+        "unlocking": "mdi:lock-clock",
+        "opening": "mdi:lock-clock",
+        "open": "mdi:lock-open-variant"
       }
     }
   },

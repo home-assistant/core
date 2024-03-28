@@ -6,7 +6,7 @@ from typing import Any
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
+from homeassistant.const import STATE_LOCKED, STATE_OPEN, STATE_UNLOCKED
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -79,6 +79,11 @@ class DemoLock(LockEntity):
         """Return true if lock is locked."""
         return self._state == STATE_LOCKED
 
+    @property
+    def is_open(self) -> bool:
+        """Return true if lock is open."""
+        return self._state == STATE_OPEN
+
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         self._attr_is_locking = True
@@ -97,5 +102,5 @@ class DemoLock(LockEntity):
 
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
-        self._state = STATE_UNLOCKED
+        self._state = STATE_OPEN
         self.async_write_ha_state()
