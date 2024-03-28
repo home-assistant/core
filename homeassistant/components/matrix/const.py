@@ -6,3 +6,4 @@ SERVICE_SEND_MESSAGE = "send_message"
 
 FORMAT_HTML = "html"
 FORMAT_TEXT = "text"
+FORMAT_NOTICE = "notice"
