@@ -20,6 +20,7 @@ class HDEntity(CoordinatorEntity[PowerviewShadeUpdateCoordinator]):
     """Base class for hunter douglas entities."""
 
     _attr_has_entity_name = True
+    coordinator: PowerviewShadeUpdateCoordinator
 
     def __init__(
         self,
