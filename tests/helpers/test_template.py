@@ -1782,6 +1782,81 @@ def test_render_with_possible_json_value_and_dont_parse_result(
     assert isinstance(result, str)
 
 
+def test_is_area_id(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test is_area_id method."""
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+
+    # Test entity, which has no area
+    entity_entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+    )
+    info = render_to_info(hass, f"{{{{ area_id('{entity_entry.entity_id}') }}}}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    hass.states.async_set("light.hue_5678", "on")
+    tpl = template.Template(
+        """
+{{ states.light
+    | map(attribute="entity_id")
+    | select("is_area_id", None)
+    | list
+    | count }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == 1
+
+    area_entry_hex = area_registry.async_get_or_create("123abc")
+    entity_entry = entity_registry.async_update_entity(
+        entity_entry.entity_id, area_id=area_entry_hex.id
+    )
+
+    info = render_to_info(hass, f"{{{{ area_id('{entity_entry.entity_id}') }}}}")
+    assert_result_info(info, area_entry_hex.id)
+    assert info.rate_limit is None
+
+    tpl = template.Template(
+        """
+{{ states.light
+    | map(attribute="entity_id")
+    | reject("is_area_id", None)
+    | list
+    | count }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == 1
+
+    tpl = template.Template(
+        """
+{{ states.light
+    | map(attribute="entity_id")
+    | reject("is_area_id", "123abc")
+    | list
+    | count }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == 0
+
+    tpl = template.Template(
+        """
+{% if "light.hue_5678" is is_area_id("123abc") %}yes{% else %}no{% endif %}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "yes"
+
+
 def test_if_state_exists(hass: HomeAssistant) -> None:
     """Test if state exists works."""
     hass.states.async_set("test.object", "available")
