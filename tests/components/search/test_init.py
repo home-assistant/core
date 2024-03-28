@@ -496,11 +496,14 @@ async def test_search(
         ItemType.SCRIPT: {script_scene_entity.entity_id, "script.nested"},
     }
     assert search(ItemType.AREA, living_room_area.id) == {
-        ItemType.AUTOMATION: {"automation.wled_device"},
+        ItemType.AUTOMATION: {"automation.wled_device", "automation.wled_entity"},
         ItemType.CONFIG_ENTRY: {wled_config_entry.entry_id},
         ItemType.DEVICE: {wled_device.id},
         ItemType.ENTITY: {wled_segment_1_entity.entity_id},
         ItemType.FLOOR: {first_floor.floor_id},
+        ItemType.GROUP: {"group.wled", "group.wled_hue"},
+        ItemType.SCENE: {"scene.scene_wled_seg_1", scene_wled_hue_entity.entity_id},
+        ItemType.SCRIPT: {"script.wled"},
     }
     assert search(ItemType.AREA, kitchen_area.id) == {
         ItemType.AUTOMATION: {"automation.area"},
@@ -511,7 +514,9 @@ async def test_search(
             hue_segment_2_entity.entity_id,
         },
         ItemType.FLOOR: {first_floor.floor_id},
-        ItemType.SCRIPT: {"script.area", "script.device"},
+        ItemType.GROUP: {"group.hue", "group.wled_hue"},
+        ItemType.SCENE: {"scene.scene_hue_seg_1", scene_wled_hue_entity.entity_id},
+        ItemType.SCRIPT: {"script.area", "script.device", "script.hue"},
     }
 
     assert not search(ItemType.AUTOMATION, "automation.unknown")
@@ -726,6 +731,7 @@ async def test_search(
             "automation.area",
             "automation.floor",
             "automation.wled_device",
+            "automation.wled_entity",
         },
         ItemType.CONFIG_ENTRY: {hue_config_entry.entry_id, wled_config_entry.entry_id},
         ItemType.DEVICE: {hue_device.id, wled_device.id},
@@ -734,7 +740,19 @@ async def test_search(
             hue_segment_1_entity.entity_id,
             hue_segment_2_entity.entity_id,
         },
-        ItemType.SCRIPT: {"script.device", "script.area", "script.floor"},
+        ItemType.GROUP: {"group.hue", "group.wled", "group.wled_hue"},
+        ItemType.SCENE: {
+            "scene.scene_hue_seg_1",
+            "scene.scene_wled_seg_1",
+            scene_wled_hue_entity.entity_id,
+        },
+        ItemType.SCRIPT: {
+            "script.device",
+            "script.area",
+            "script.floor",
+            "script.hue",
+            "script.wled",
+        },
     }
     assert search(ItemType.FLOOR, second_floor.floor_id) == {
         ItemType.AREA: {bedroom_area.id},

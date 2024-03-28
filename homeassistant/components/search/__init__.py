@@ -136,6 +136,9 @@ class Searcher:
         # Scripts referencing this area
         self._add(ItemType.SCRIPT, script.scripts_with_area(self.hass, area_id))
 
+        # Entity in this area, will extend this with the entities of the devices in this area
+        entity_entries = er.async_entries_for_area(self._entity_registry, area_id)
+
         # Devices in this area
         for device in dr.async_entries_for_area(self._device_registry, area_id):
             self._add(ItemType.DEVICE, device.id)
@@ -160,10 +163,10 @@ class Searcher:
                 # Skip the entity if it's in a different area
                 if entity_entry.area_id is not None:
                     continue
-                self._add(ItemType.ENTITY, entity_entry.entity_id)
+                entity_entries.append(entity_entry)
 
-        # Entities in this area
-        for entity_entry in er.async_entries_for_area(self._entity_registry, area_id):
+        # Process entities in this area
+        for entity_entry in entity_entries:
             self._add(ItemType.ENTITY, entity_entry.entity_id)
 
             # If this entity also exists as a resource, we add it.

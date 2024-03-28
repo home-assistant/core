@@ -170,7 +170,7 @@ class ESPHomeManager:
         self.entry_data = entry_data
 
     async def on_stop(self, event: Event) -> None:
-        """Cleanup the socket client on HA stop."""
+        """Cleanup the socket client on HA close."""
         await cleanup_instance(self.hass, self.entry)
 
     @property

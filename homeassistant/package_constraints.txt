@@ -30,7 +30,7 @@ habluetooth==2.4.2
 hass-nabucasa==0.79.0
 hassil==1.6.1
 home-assistant-bluetooth==1.12.0
-home-assistant-frontend==20240327.0
+home-assistant-frontend==20240328.0
 home-assistant-intents==2024.3.27
 httpx==0.27.0
 ifaddr==0.2.0
@@ -49,7 +49,7 @@ pyOpenSSL==24.1.0
 pyserial==3.5
 python-slugify==8.0.4
 PyTurboJPEG==1.7.1
-pyudev==0.23.2
+pyudev==0.24.1
 PyYAML==6.0.1
 requests==2.31.0
 SQLAlchemy==2.0.29
