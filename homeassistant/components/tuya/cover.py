@@ -30,6 +30,7 @@ class TuyaCoverEntityDescription(CoverEntityDescription):
     """Describe an Tuya cover entity."""
 
     current_state: DPCode | None = None
+    current_instruction: DPCode | None = None
     current_state_inverse: bool = False
     current_position: DPCode | tuple[DPCode, ...] | None = None
     set_position: DPCode | None = None
@@ -116,6 +117,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL,
             translation_key="curtain",
+            current_instruction=DPCode.CONTROL,
             current_position=DPCode.PERCENT_CONTROL,
             set_position=DPCode.PERCENT_CONTROL,
             device_class=CoverDeviceClass.CURTAIN,
@@ -123,6 +125,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL_2,
             translation_key="curtain_2",
+            current_instruction=DPCode.CONTROL_2,
             current_position=DPCode.PERCENT_CONTROL_2,
             set_position=DPCode.PERCENT_CONTROL_2,
             device_class=CoverDeviceClass.CURTAIN,
@@ -259,6 +262,35 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             return None
 
         return round(self._tilt.remap_value_to(angle, 0, 100))
+
+
+    @property
+    def is_opening(self) -> bool | None:
+        if (
+            self.entity_description.current_instruction is not None
+            and (
+                current_instruction := self.device.status.get(
+                    self.entity_description.current_instruction
+                )
+            )
+            is not None
+        ):
+            return current_instruction == self.entity_description.open_instruction_value
+        return super().is_opening
+
+    @property
+    def is_closing(self) -> bool | None:
+        if (
+            self.entity_description.current_instruction is not None
+            and (
+                current_instruction := self.device.status.get(
+                    self.entity_description.current_instruction
+                )
+            )
+            is not None
+        ):
+            return current_instruction == self.entity_description.close_instruction_value
+        return super().is_closing
 
     @property
     def is_closed(self) -> bool | None:
