@@ -34,13 +34,14 @@ class ArveConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
             try:
                 customer: ArveCustomer = await arve.get_customer_id()
+                await self.async_set_unique_id(customer.customerId)
+                self._abort_if_unique_id_configured()
             except ArveConnectionError:
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(
                     title="Arve",
                     data=user_input,
-                    options={"customerId": customer.customerId},
                 )
         return self.async_show_form(
             step_id="user",
