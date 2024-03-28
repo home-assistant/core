@@ -19,6 +19,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN, PRESET_MODES
 from .entity import VelbusEntity, api_call
 
+THERMOSTAT_MODE_MAP: dict[str, HVACMode] = {
+    """Set up Velbus switch based on config_entry.""" "heat": HVACMode.HEAT,
+    "cool": HVACMode.COOL,
+}
+THERMOSTAT_INV_MODE_MAP = {v: k for k, v in THERMOSTAT_MODE_MAP.items()}
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -39,8 +44,7 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_hvac_mode = HVACMode.HEAT
-    _attr_hvac_modes = [HVACMode.HEAT]
+    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.COOL]
     _attr_preset_modes = list(PRESET_MODES)
     _enable_turn_on_off_backwards_compatibility = False
 
@@ -66,6 +70,14 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
         """Return the current temperature."""
         return self._channel.get_state()
 
+    @property
+    def hvac_mode(self) -> HVACMode:
+        """Return the current hvac mode based on cool_mode message."""
+        return {
+            True: HVACMode.COOL,
+            False: HVACMode.HEAT,
+        }.get(self._channel.get_cool_mode())
+
     @api_call
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
@@ -78,4 +90,12 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the new preset mode."""
         await self._channel.set_preset(PRESET_MODES[preset_mode])
+        self.async_write_ha_state()
+
+    @api_call
+    async def async_set_hvac_mode(self, **kwargs: str) -> None:
+        """Set the new hvac mode."""
+        if (mode := kwargs.get("hvac_mode")) is None:
+            return
+        await self._channel.set_mode(mode)
         self.async_write_ha_state()
