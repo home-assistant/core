@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime as dt
-from typing import Any, Literal, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 import voluptuous as vol
 
@@ -44,7 +44,11 @@ from .statistics import (
     statistics_during_period,
     validate_statistics,
 )
-from .util import PERIOD_SCHEMA, get_instance, resolve_period
+from .util import PERIOD_SCHEMA, get_instance, resolve_period, session_scope
+
+if TYPE_CHECKING:
+    from .core import Recorder
+
 
 UNIT_SCHEMA = vol.Schema(
     {
@@ -81,6 +85,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_info)
     websocket_api.async_register_command(hass, ws_update_statistics_metadata)
     websocket_api.async_register_command(hass, ws_validate_statistics)
+    websocket_api.async_register_command(hass, ws_get_recorded_entities)
 
 
 def _ws_get_statistic_during_period(
@@ -513,3 +518,40 @@ def ws_info(
         "thread_running": is_running,
     }
     connection.send_result(msg["id"], recorder_info)
+
+
+def _get_recorded_entities(
+    hass: HomeAssistant, msg_id: int, instance: Recorder
+) -> bytes:
+    """Get the list of entities being recorded."""
+    with session_scope(hass=hass, read_only=True) as session:
+        return json_bytes(
+            messages.result_message(
+                msg_id,
+                {
+                    "entity_ids": list(
+                        instance.states_meta_manager.get_metadata_id_to_entity_id(
+                            session
+                        ).values()
+                    )
+                },
+            )
+        )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "recorder/recorded_entities",
+    }
+)
+@websocket_api.async_response
+async def ws_get_recorded_entities(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Get the list of entities being recorded."""
+    instance = get_instance(hass)
+    return connection.send_message(
+        await instance.async_add_executor_job(
+            _get_recorded_entities, hass, msg["id"], instance
+        )
+    )
