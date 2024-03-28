@@ -97,6 +97,7 @@ MARIADB_WITH_FIXED_IN_QUERIES_108 = _simple_version("10.8.4")
 MIN_VERSION_MYSQL = _simple_version("8.0.0")
 MIN_VERSION_PGSQL = _simple_version("12.0")
 MIN_VERSION_SQLITE = _simple_version("3.31.0")
+UPCOMING_MIN_VERSION_SQLITE = _simple_version("3.40.1")
 MIN_VERSION_SQLITE_MODERN_BIND_VARS = _simple_version("3.32.0")
 
 
@@ -409,6 +410,22 @@ def _fail_unsupported_version(
     raise UnsupportedDialect
 
 
+def _warn_deprecated_version(
+    server_version: str, dialect_name: str, minimum_version: str
+) -> None:
+    """Warn about upcoming unsupported database version."""
+    _LOGGER.warning(
+        (
+            "Support for version %s of %s is ending; the minimum supported version is %s. "
+            "Starting with Home Assistant 2024.2 this prevents the recorder from "
+            "starting. Please upgrade your database software"
+        ),
+        server_version,
+        dialect_name,
+        minimum_version,
+    )
+
+
 def _extract_version_from_server_response(
     server_response: str,
 ) -> AwesomeVersion | None:
@@ -516,6 +533,10 @@ def setup_connection_for_dialect(
             if not version or version < MIN_VERSION_SQLITE:
                 _fail_unsupported_version(
                     version or version_string, "SQLite", MIN_VERSION_SQLITE
+                )
+            if not version or version < UPCOMING_MIN_VERSION_SQLITE:
+                _warn_deprecated_version(
+                    version or version_string, "SQLite", UPCOMING_MIN_VERSION_SQLITE
                 )
 
             if version and version > MIN_VERSION_SQLITE_MODERN_BIND_VARS:
