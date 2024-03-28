@@ -615,6 +615,11 @@ class _ScriptRun:
 
         delay = delay_delta.total_seconds()
         self._changed()
+        if not delay:
+            # Handle an empty delay
+            trace_set_result(delay=delay, done=True)
+            return
+
         trace_set_result(delay=delay, done=False)
         futures, timeout_handle, timeout_future = self._async_futures_with_timeout(
             delay
