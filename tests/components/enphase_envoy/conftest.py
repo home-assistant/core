@@ -73,6 +73,15 @@ def mock_envoy_fixture(
     mock_authenticate,
     mock_setup,
     mock_auth,
+    mock_go_on_grid,
+    mock_go_off_grid,
+    mock_open_dry_contact,
+    mock_close_dry_contact,
+    mock_update_dry_contact,
+    mock_disable_charge_from_grid,
+    mock_enable_charge_from_grid,
+    mock_set_reserve_soc,
+    mock_set_storage_mode,
 ):
     """Define a mocked Envoy fixture."""
     mock_envoy = Mock(spec=Envoy)
@@ -81,6 +90,16 @@ def mock_envoy_fixture(
     mock_envoy.part_number = "123456789"
     mock_envoy.envoy_model = "Envoy, phases: 3, phase mode: split, net-consumption CT, production CT, storage CT"
     mock_envoy.authenticate = mock_authenticate
+    mock_envoy.go_off_grid = mock_go_off_grid
+    mock_envoy.go_on_grid = mock_go_on_grid
+    mock_envoy.open_dry_contact = mock_open_dry_contact
+    mock_envoy.close_dry_contact = mock_close_dry_contact
+    mock_envoy.disable_charge_from_grid = mock_disable_charge_from_grid
+    mock_envoy.enable_charge_from_grid = mock_enable_charge_from_grid
+    mock_envoy.update_dry_contact = mock_update_dry_contact
+    mock_envoy.set_reserve_soc = mock_set_reserve_soc
+    mock_envoy.set_storage_mode = mock_set_storage_mode
+
     mock_envoy.setup = mock_setup
     mock_envoy.auth = mock_auth
     mock_envoy.supported_features = SupportedFeatures(
@@ -90,6 +109,8 @@ def mock_envoy_fixture(
         | SupportedFeatures.METERING
         | SupportedFeatures.THREEPHASE
         | SupportedFeatures.CTMETERS
+        | SupportedFeatures.ENCHARGE
+        | SupportedFeatures.ENPOWER
     )
     mock_envoy.phase_mode = EnvoyPhaseMode.THREE
     mock_envoy.phase_count = 3
@@ -548,3 +569,57 @@ def mock_setup():
 def serial_number_fixture():
     """Define a serial number fixture."""
     return "1234"
+
+
+@pytest.fixture(name="mock_go_on_grid")
+def go_on_grid_fixture():
+    """Define a go_on_grid fixture."""
+    return AsyncMock(return_value="[]")
+
+
+@pytest.fixture(name="mock_go_off_grid")
+def go_off_grid_fixture():
+    """Define a go_off_grid fixture."""
+    return AsyncMock(return_value="[]")
+
+
+@pytest.fixture(name="mock_update_dry_contact")
+def update_dry_contact_fixture():
+    """Define a update_dry_contact fixture."""
+    return AsyncMock(return_value="[]")
+
+
+@pytest.fixture(name="mock_open_dry_contact")
+def open_dry_contact_fixture():
+    """Define a gopen dry contact fixture."""
+    return AsyncMock(return_value="[]")
+
+
+@pytest.fixture(name="mock_close_dry_contact")
+def close_dry_contact_fixture():
+    """Define a close dry contact fixture."""
+    return AsyncMock(return_value="[]")
+
+
+@pytest.fixture(name="mock_enable_charge_from_grid")
+def enable_charge_from_grid_fixture():
+    """Define a enable charge from grid fixture."""
+    return AsyncMock(return_value="[]")
+
+
+@pytest.fixture(name="mock_disable_charge_from_grid")
+def disable_charge_from_grid_fixture():
+    """Define a disable charge from grid fixture."""
+    return AsyncMock(return_value="[]")
+
+
+@pytest.fixture(name="mock_set_storage_mode")
+def set_storage_mode_fixture():
+    """Define a update_dry_contact fixture."""
+    return AsyncMock(return_value="[]")
+
+
+@pytest.fixture(name="mock_set_reserve_soc")
+def set_reserve_soc_fixture():
+    """Define a update_dry_contact fixture."""
+    return AsyncMock(return_value="[]")
