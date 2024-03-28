@@ -43,6 +43,10 @@ async def test_sensor(
     setup_enphase_envoy_sensor,
 ) -> None:
     """Test enphase_envoy sensor entities."""
+
+    # number entities states should be created from test data
+    assert len(hass.states.async_all()) == 51
+
     entity_registry = er.async_get(hass)
     assert entity_registry
 
