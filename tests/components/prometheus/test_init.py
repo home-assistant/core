@@ -143,9 +143,14 @@ async def test_setup_enumeration(
     client = await hass_client()
     body = await generate_latest_metrics(client)
     assert (
-        'homeassistant_sensor_temperature_celsius{domain="sensor",'
+        "homeassistant_sensor_temperature_celsius{"
+        'area="",'
+        'device_class="temperature",'
+        'domain="sensor",'
         'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 12.3' in body
+        'friendly_name="Outside Temperature",'
+        'object_id="outside_temperature"'
+        "} 12.3" in body
     )
 
 
