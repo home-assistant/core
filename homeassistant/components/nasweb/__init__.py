@@ -13,11 +13,6 @@ from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, MANUFACTURER, NASWEB_CONFIG_URL
 from .coordinator import NASwebCoordinator
-from .helper import (
-    deinitialize_nasweb_data_if_empty,
-    get_integration_webhook_url,
-    initialize_nasweb_data,
-)
 from .nasweb_data import NASwebData
 
 PLATFORMS: list[Platform] = [Platform.SWITCH]
@@ -28,10 +23,11 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up NASweb from a config entry."""
 
-    hass.data.setdefault(DOMAIN, NASwebData())
+    if DOMAIN not in hass.data:
+        data = NASwebData()
+        data.initialize(hass)
+        hass.data[DOMAIN] = data
     nasweb_data: NASwebData = hass.data[DOMAIN]
-    if not nasweb_data.is_initialized():
-        initialize_nasweb_data(hass)
 
     webio_api = WebioAPI(
         entry.data[CONF_HOST], entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
@@ -52,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     nasweb_data.entries_coordinators[entry.entry_id] = coordinator
     nasweb_data.notify_coordinator.add_coordinator(webio_serial, coordinator)
 
-    webhook_url = get_integration_webhook_url(hass)
+    webhook_url = nasweb_data.get_webhook_url(hass)
     if not await webio_api.status_subscription(webhook_url, True):
         _LOGGER.error("Failed to subscribe for status updates from webio")
         return False
@@ -82,11 +78,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator: NASwebCoordinator = nasweb_data.entries_coordinators.pop(
             entry.entry_id
         )
-        webhook_url = get_integration_webhook_url(hass)
+        webhook_url = nasweb_data.get_webhook_url(hass)
         await coordinator.webio_api.status_subscription(webhook_url, False)
         serial = coordinator.webio_api.get_serial_number()
         if serial is not None:
             nasweb_data.notify_coordinator.remove_coordinator(serial)
-        deinitialize_nasweb_data_if_empty(hass)
+        if nasweb_data.can_be_deinitialized():
+            nasweb_data.deinitialize(hass)
+            hass.data.pop(DOMAIN)
 
     return unload_ok
