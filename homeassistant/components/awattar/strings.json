@@ -1,0 +1,61 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Select country"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current_hour_price": {
+        "name": "Current hour"
+      },
+      "next_hour_price": {
+        "name": "Next hour"
+      },
+      "average_price": {
+        "name": "Average"
+      },
+      "max_price": {
+        "name": "Highest"
+      },
+      "min_price": {
+        "name": "Lowest"
+      },
+      "slot_2_hrs_start": {
+        "name": "Best 2hr slot"
+      },
+      "slot_3_hrs_start": {
+        "name": "Best 3hr slot"
+      },
+      "slot_4_hrs_start": {
+        "name": "Best 4hr slot"
+      },
+      "slot_5_hrs_start": {
+        "name": "Best 5hr slot"
+      },
+      "slot_6_hrs_start": {
+        "name": "Best 6hr slot"
+      },
+      "slot_2_hrs_price": {
+        "name": "Best 2hr slot price"
+      },
+      "slot_3_hrs_price": {
+        "name": "Best 3hr slot price"
+      },
+      "slot_4_hrs_price": {
+        "name": "Best 4hr slot price"
+      },
+      "slot_5_hrs_price": {
+        "name": "Best 5hr slot price"
+      },
+      "slot_6_hrs_price": {
+        "name": "Best 6hr slot price"
+      }
+    }
+  }
+}
