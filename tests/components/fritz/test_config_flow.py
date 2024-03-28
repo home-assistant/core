@@ -25,7 +25,7 @@ from homeassistant.components.fritz.const import (
 )
 from homeassistant.components.ssdp import ATTR_UPNP_UDN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_SSDP, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SSL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -69,7 +69,7 @@ async def test_user(hass: HomeAssistant, fc_class_mock, mock_get_source_ip) -> N
         mock_request_post.return_value.text = MOCK_REQUEST
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
+            DOMAIN, context={"source": SOURCE_USER, "show_advanced_options": True}
         )
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "user"
@@ -81,6 +81,7 @@ async def test_user(hass: HomeAssistant, fc_class_mock, mock_get_source_ip) -> N
         assert result["data"][CONF_HOST] == "fake_host"
         assert result["data"][CONF_PASSWORD] == "fake_pass"
         assert result["data"][CONF_USERNAME] == "fake_user"
+        assert result["data"][CONF_SSL] is False
         assert (
             result["options"][CONF_CONSIDER_HOME]
             == DEFAULT_CONSIDER_HOME.total_seconds()
@@ -125,7 +126,7 @@ async def test_user_already_configured(
         mock_request_post.return_value.text = MOCK_REQUEST
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
+            DOMAIN, context={"source": SOURCE_USER, "show_advanced_options": True}
         )
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "user"
@@ -148,7 +149,7 @@ async def test_exception_security(
     """Test starting a flow by user with invalid credentials."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER, "show_advanced_options": True}
     )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -170,7 +171,7 @@ async def test_exception_connection(hass: HomeAssistant, mock_get_source_ip) -> 
     """Test starting a flow by user with a connection error."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER, "show_advanced_options": True}
     )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -192,7 +193,7 @@ async def test_exception_unknown(hass: HomeAssistant, mock_get_source_ip) -> Non
     """Test starting a flow by user with an unknown exception."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER, "show_advanced_options": True}
     )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
