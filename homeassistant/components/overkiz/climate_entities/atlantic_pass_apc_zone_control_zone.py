@@ -449,7 +449,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
                 ),
             )
 
-        return self._attr_min_temp
+        return super().min_temp
 
     @property
     def max_temp(self) -> float:
@@ -473,4 +473,4 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
                 ),
             )
 
-        return self._attr_max_temp
+        return super().max_temp
