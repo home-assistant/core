@@ -596,7 +596,7 @@ bluetooth-data-tools==1.19.0
 bond-async==0.2.1
 
 # homeassistant.components.bosch_shc
-boschshcpy==0.2.82
+boschshcpy==0.2.91
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
