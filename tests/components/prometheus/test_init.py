@@ -94,16 +94,6 @@ class MetricsTestHelper:
         body,
         area=None,
     ):
-        # assert (
-        #         "homeassistant_sensor_temperature_celsius{"
-        #         'area="",'
-        #         'device_class="temperature",'
-        #         'domain="sensor",'
-        #         'entity="sensor.outside_temperature",'
-        #         'friendly_name="Outside Temperature",'
-        #         'object_id="outside_temperature"'
-        #         "} 12.3" in body
-        # )
         assert (
             f"{metric_name}{{"
             f'area="{area or ""}",'
@@ -143,22 +133,22 @@ class MetricsTestHelper:
     ):
         cls._perform_sensor_metric_assert(
             "homeassistant_sensor_temperature_celsius",
-            friendly_name,
-            object_id,
-            "temperature",
             metric_value,
+            friendly_name,
+            "temperature",
+            object_id,
             body,
             area=area,
         )
 
     @classmethod
-    def _perform_default_temperature_metric_assert(cls, metric_value, body):
+    def _perform_default_temperature_metric_assert(cls, metric_value, body, area=None):
         cls._perform_temperature_metric_assert(
             metric_value,
-            "sensor.outside_temperature",
             "Outside Temperature",
             "outside_temperature",
             body,
+            area=area,
         )
 
 
@@ -227,16 +217,6 @@ async def test_setup_enumeration(
     client = await hass_client()
     body = await generate_latest_metrics(client)
     MetricsTestHelper._perform_default_temperature_metric_assert(state, body)
-    # assert (
-    #     "homeassistant_sensor_temperature_celsius{"
-    #     'area="",'
-    #     'device_class="temperature",'
-    #     'domain="sensor",'
-    #     'entity="sensor.outside_temperature",'
-    #     'friendly_name="Outside Temperature",'
-    #     'object_id="outside_temperature"'
-    #     "} 12.3" in body
-    # )
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -300,16 +280,6 @@ async def test_view_default_namespace(
     )
 
     MetricsTestHelper._perform_default_temperature_metric_assert("15.6", body)
-    # assert (
-    #     "homeassistant_sensor_temperature_celsius{"
-    #     'area="",'
-    #     'device_class="temperature",'
-    #     'domain="sensor",'
-    #     'entity="sensor.outside_temperature",'
-    #     'friendly_name="Outside Temperature",'
-    #     'object_id="outside_temperature"'
-    #     "} 15.6" in body
-    # )
 
 
 @pytest.mark.parametrize("namespace", [""])
