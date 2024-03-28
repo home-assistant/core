@@ -939,7 +939,9 @@ async def test_reload_single_parallel_calls(hass: HomeAssistant, calls) -> None:
     await hass.async_block_till_done()
     assert len(calls) == 0
 
-    # Trigger multiple reload service calls
+    # Trigger multiple reload service calls, each automation is reloaded twice.
+    # This tests the logic in the `ReloadServiceHelper` which avoids redundant
+    # reloads of the same target automation.
     with patch(
         "homeassistant.config.load_yaml_config_file",
         autospec=True,
@@ -995,9 +997,10 @@ async def test_reload_single_parallel_calls(hass: HomeAssistant, calls) -> None:
                 blocking=False,
             ),
         ]
-        asyncio.gather(*tasks)
+        await asyncio.gather(*tasks)
         await hass.async_block_till_done()
 
+    # Sanity check to ensure all automations are correctly setup
     hass.bus.async_fire("test_event_sun")
     await hass.async_block_till_done()
     assert len(calls) == 1
