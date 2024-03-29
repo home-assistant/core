@@ -1,11 +1,13 @@
 """Helper functions for the ZHA integration."""
 
+import asyncio
 import collections
 from collections.abc import Callable
 import dataclasses
 import enum
 import logging
-from typing import Any
+import time
+from typing import Any, NamedTuple
 
 import voluptuous as vol
 from zha.application.const import (
@@ -20,8 +22,10 @@ from zha.application.gateway import Gateway
 from zha.application.helpers import ZHAData
 from zha.application.platforms import GroupEntity, PlatformEntity
 from zha.event import EventBase
+from zha.zigbee.cluster_handlers import ClusterHandler
 from zha.zigbee.device import Device, ZHAEvent
 import zigpy.exceptions
+from zigpy.profiles import PROFILES
 import zigpy.types
 from zigpy.types import EUI64
 import zigpy.util
@@ -29,13 +33,169 @@ import zigpy.zcl
 from zigpy.zcl.foundation import CommandSchema
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DEVICE_ID, Platform
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
-from .const import DOMAIN
+from .const import (
+    ATTR_ACTIVE_COORDINATOR,
+    ATTR_AVAILABLE,
+    ATTR_DEVICE_TYPE,
+    ATTR_ENDPOINT_NAMES,
+    ATTR_IEEE,
+    ATTR_LAST_SEEN,
+    ATTR_LQI,
+    ATTR_MANUFACTURER,
+    ATTR_MANUFACTURER_CODE,
+    ATTR_MODEL,
+    ATTR_NEIGHBORS,
+    ATTR_NWK,
+    ATTR_POWER_SOURCE,
+    ATTR_QUIRK_APPLIED,
+    ATTR_QUIRK_CLASS,
+    ATTR_QUIRK_ID,
+    ATTR_ROUTES,
+    ATTR_RSSI,
+    ATTR_SIGNATURE,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class ZHADeviceProxy(EventBase):
+    """Proxy class to interact with the ZHA device instances."""
+
+    def __init__(self, device: Device, gateway_proxy) -> None:
+        """Initialize the gateway proxy."""
+        super().__init__()
+        self.device: Device = device
+        self.gateway_proxy: ZHAGatewayProxy = gateway_proxy
+
+        device_registry = dr.async_get(gateway_proxy.hass)
+        self.ha_device_info: dr.DeviceEntry | None = device_registry.async_get_device(
+            identifiers={(DOMAIN, str(device.ieee))},
+            connections={(dr.CONNECTION_ZIGBEE, str(device.ieee))},
+        )
+
+        self._unsubs: list[Callable[[], None]] = []
+        self._unsubs.append(self.device.on_all_events(self._handle_event_protocol))
+
+    @property
+    def device_info(self) -> dict[str, Any]:
+        """Return a device description for device."""
+        ieee = str(self.ieee)
+        time_struct = time.localtime(self.last_seen)
+        update_time = time.strftime("%Y-%m-%dT%H:%M:%S", time_struct)
+        return {
+            ATTR_IEEE: ieee,
+            ATTR_NWK: self.nwk,
+            ATTR_MANUFACTURER: self.manufacturer,
+            ATTR_MODEL: self.model,
+            ATTR_NAME: self.name or ieee,
+            ATTR_QUIRK_APPLIED: self.quirk_applied,
+            ATTR_QUIRK_CLASS: self.quirk_class,
+            ATTR_QUIRK_ID: self.quirk_id,
+            ATTR_MANUFACTURER_CODE: self.manufacturer_code,
+            ATTR_POWER_SOURCE: self.power_source,
+            ATTR_LQI: self.lqi,
+            ATTR_RSSI: self.rssi,
+            ATTR_LAST_SEEN: update_time,
+            ATTR_AVAILABLE: self.available,
+            ATTR_DEVICE_TYPE: self.device_type,
+            ATTR_SIGNATURE: self.zigbee_signature,
+        }
+
+    @property
+    def zha_device_info(self) -> dict[str, Any]:
+        """Get ZHA device information."""
+        device_info: dict[str, Any] = {}
+        device_info.update(self.device_info)
+        device_info[ATTR_ACTIVE_COORDINATOR] = self.is_active_coordinator
+        device_info["entities"] = [
+            {
+                "entity_id": entity_ref.reference_id,
+                ATTR_NAME: entity_ref.device_info[ATTR_NAME],
+            }
+            for entity_ref in self.gateway.device_registry[self.ieee]
+        ]
+
+        topology = self.gateway.application_controller.topology
+        device_info[ATTR_NEIGHBORS] = [
+            {
+                "device_type": neighbor.device_type.name,
+                "rx_on_when_idle": neighbor.rx_on_when_idle.name,
+                "relationship": neighbor.relationship.name,
+                "extended_pan_id": str(neighbor.extended_pan_id),
+                "ieee": str(neighbor.ieee),
+                "nwk": str(neighbor.nwk),
+                "permit_joining": neighbor.permit_joining.name,
+                "depth": str(neighbor.depth),
+                "lqi": str(neighbor.lqi),
+            }
+            for neighbor in topology.neighbors[self.ieee]
+        ]
+
+        device_info[ATTR_ROUTES] = [
+            {
+                "dest_nwk": str(route.DstNWK),
+                "route_status": str(route.RouteStatus.name),
+                "memory_constrained": bool(route.MemoryConstrained),
+                "many_to_one": bool(route.ManyToOne),
+                "route_record_required": bool(route.RouteRecordRequired),
+                "next_hop": str(route.NextHop),
+            }
+            for route in topology.routes[self.ieee]
+        ]
+
+        # Return endpoint device type Names
+        names: list[dict[str, str]] = []
+        for endpoint in (ep for epid, ep in self.device.endpoints.items() if epid):
+            profile = PROFILES.get(endpoint.profile_id)
+            if profile and endpoint.device_type is not None:
+                # DeviceType provides undefined enums
+                names.append({ATTR_NAME: profile.DeviceType(endpoint.device_type).name})
+            else:
+                names.append(
+                    {
+                        ATTR_NAME: (
+                            f"unknown {endpoint.device_type} device_type "
+                            f"of 0x{(endpoint.profile_id or 0xFFFF):04x} profile id"
+                        )
+                    }
+                )
+        device_info[ATTR_ENDPOINT_NAMES] = names
+
+        device_registry = dr.async_get(self.hass)
+        reg_device = device_registry.async_get(self.device_id)
+        if reg_device is not None:
+            device_info["user_given_name"] = reg_device.name_by_user
+            device_info["device_reg_id"] = reg_device.id
+            device_info["area_id"] = reg_device.area_id
+        return device_info
+
+    def handle_zha_event(self, zha_event: ZHAEvent) -> None:
+        """Handle a ZHA event."""
+        if self.ha_device_info is not None:
+            self.gateway_proxy.hass.bus.async_fire(
+                ZHA_EVENT,
+                {
+                    ATTR_DEVICE_IEEE: zha_event.device_ieee,
+                    ATTR_UNIQUE_ID: zha_event.unique_id,
+                    ATTR_DEVICE_ID: self.ha_device_info.id,
+                    **zha_event.data,
+                },
+            )
+
+
+class EntityReference(NamedTuple):
+    """Describes an entity reference."""
+
+    reference_id: str
+    zha_device: ZHADeviceProxy
+    cluster_handlers: dict[str, ClusterHandler]
+    device_info: dr.DeviceInfo
+    remove_future: asyncio.Future[Any]
 
 
 class ZHAGatewayProxy(EventBase):
@@ -50,8 +210,36 @@ class ZHAGatewayProxy(EventBase):
         self.config_entry = config_entry
         self.gateway: Gateway = gateway
         self.device_proxies: dict[str, ZHADeviceProxy] = {}
+        self._device_registry: collections.defaultdict[EUI64, list[EntityReference]] = (
+            collections.defaultdict(list)
+        )
         self._unsubs: list[Callable[[], None]] = []
         self._unsubs.append(self.gateway.on_all_events(self._handle_event_protocol))
+
+    @property
+    def device_registry(self) -> collections.defaultdict[EUI64, list[EntityReference]]:
+        """Return entities by ieee."""
+        return self._device_registry
+
+    def register_entity_reference(
+        self,
+        ieee: EUI64,
+        reference_id: str,
+        zha_device: ZHADeviceProxy,
+        cluster_handlers: dict[str, ClusterHandler],
+        device_info: dr.DeviceInfo,
+        remove_future: asyncio.Future[Any],
+    ):
+        """Record the creation of a hass entity associated with ieee."""
+        self._device_registry[ieee].append(
+            EntityReference(
+                reference_id=reference_id,
+                zha_device=zha_device,
+                cluster_handlers=cluster_handlers,
+                device_info=device_info,
+                remove_future=remove_future,
+            )
+        )
 
     async def async_initialize_devices_and_entities(self) -> None:
         """Initialize devices and entities."""
@@ -83,38 +271,6 @@ class ZHAGatewayProxy(EventBase):
         for unsub in self._unsubs:
             unsub()
         await self.gateway.shutdown()
-
-
-class ZHADeviceProxy(EventBase):
-    """Proxy class to interact with the ZHA device instances."""
-
-    def __init__(self, device: Device, gateway_proxy: ZHAGatewayProxy) -> None:
-        """Initialize the gateway proxy."""
-        super().__init__()
-        self.device: Device = device
-        self.gateway_proxy: ZHAGatewayProxy = gateway_proxy
-
-        device_registry = dr.async_get(gateway_proxy.hass)
-        self.ha_device_info: dr.DeviceEntry | None = device_registry.async_get_device(
-            identifiers={(DOMAIN, str(device.ieee))},
-            connections={(dr.CONNECTION_ZIGBEE, str(device.ieee))},
-        )
-
-        self._unsubs: list[Callable[[], None]] = []
-        self._unsubs.append(self.device.on_all_events(self._handle_event_protocol))
-
-    def handle_zha_event(self, zha_event: ZHAEvent) -> None:
-        """Handle a ZHA event."""
-        if self.ha_device_info is not None:
-            self.gateway_proxy.hass.bus.async_fire(
-                ZHA_EVENT,
-                {
-                    ATTR_DEVICE_IEEE: zha_event.device_ieee,
-                    ATTR_UNIQUE_ID: zha_event.unique_id,
-                    ATTR_DEVICE_ID: self.ha_device_info.id,
-                    **zha_event.data,
-                },
-            )
 
 
 @dataclasses.dataclass(kw_only=True, slots=True)
@@ -153,20 +309,20 @@ def get_zha_gateway(hass: HomeAssistant) -> Gateway:
     return gateway_proxy.gateway
 
 
-def get_config_entry(hass: HomeAssistant) -> ConfigEntry:
-    """Get the ZHA gateway object."""
-    if (gateway_proxy := get_zha_data(hass).gateway_proxy) is None:
-        raise ValueError("No gateway object exists to retrieve the config entry from.")
-
-    return gateway_proxy.config_entry
-
-
 def get_zha_gateway_proxy(hass: HomeAssistant) -> ZHAGatewayProxy:
     """Get the ZHA gateway object."""
     if (gateway_proxy := get_zha_data(hass).gateway_proxy) is None:
         raise ValueError("No gateway object exists")
 
     return gateway_proxy
+
+
+def get_config_entry(hass: HomeAssistant) -> ConfigEntry:
+    """Get the ZHA gateway object."""
+    if (gateway_proxy := get_zha_data(hass).gateway_proxy) is None:
+        raise ValueError("No gateway object exists to retrieve the config entry from.")
+
+    return gateway_proxy.config_entry
 
 
 @callback

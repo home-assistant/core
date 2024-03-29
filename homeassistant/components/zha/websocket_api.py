@@ -65,7 +65,6 @@ from zha.application.helpers import (
     get_matched_clusters,
     qr_to_install_code,
 )
-from zha.zigbee.cluster_handlers import ClusterHandler
 from zha.zigbee.cluster_handlers.const import CLUSTER_HANDLER_IAS_WD
 from zha.zigbee.device import Device
 from zha.zigbee.group import GroupMember
@@ -82,7 +81,6 @@ from homeassistant.const import ATTR_COMMAND, ATTR_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.service import async_register_admin_service
 
@@ -93,10 +91,13 @@ from .api import (
 )
 from .const import EZSP_OVERWRITE_EUI64
 from .helpers import (
+    EntityReference,
+    ZHAGatewayProxy,
     async_cluster_exists,
     cluster_command_schema_to_vol_schema,
     get_config_entry,
     get_zha_gateway,
+    get_zha_gateway_proxy,
 )
 
 if TYPE_CHECKING:
@@ -144,16 +145,6 @@ def _ensure_list_if_present(value: _T | None) -> list[_T] | list[Any] | None:
     if value is None:
         return None
     return cast("list[_T]", value) if isinstance(value, list) else [value]
-
-
-class EntityReference(NamedTuple):
-    """Describes an entity reference."""
-
-    reference_id: str
-    zha_device: Device
-    cluster_handlers: dict[str, ClusterHandler]
-    device_info: DeviceInfo
-    remove_future: asyncio.Future[Any]
 
 
 SERVICE_PERMIT_PARAMS = {
@@ -419,8 +410,10 @@ async def websocket_get_devices(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Get ZHA devices."""
-    zha_gateway = get_zha_gateway(hass)
-    devices = [device.zha_device_info for device in zha_gateway.devices.values()]
+    zha_gateway_proxy: ZHAGatewayProxy = get_zha_gateway_proxy(hass)
+    devices = [
+        device.zha_device_info for device in zha_gateway_proxy.device_proxies.values()
+    ]
     connection.send_result(msg[ID], devices)
 
 
@@ -447,21 +440,25 @@ async def websocket_get_groupable_devices(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Get ZHA devices that can be grouped."""
-    zha_gateway = get_zha_gateway(hass)
+    zha_gateway_proxy = get_zha_gateway_proxy(hass)
 
-    devices = [device for device in zha_gateway.devices.values() if device.is_groupable]
+    devices = [
+        device
+        for device in zha_gateway_proxy.device_proxies.values()
+        if device.is_groupable
+    ]
     groupable_devices: list[dict[str, Any]] = []
 
     for device in devices:
-        entity_refs = zha_gateway.device_registry[device.ieee]
+        entity_refs = zha_gateway_proxy.device_registry[device.ieee]
         groupable_devices.extend(
             {
                 "endpoint_id": ep_id,
                 "entities": [
                     {
-                        "name": _get_entity_name(zha_gateway, entity_ref),
+                        "name": _get_entity_name(zha_gateway_proxy, entity_ref),
                         "original_name": _get_entity_original_name(
-                            zha_gateway, entity_ref
+                            zha_gateway_proxy, entity_ref
                         ),
                     }
                     for entity_ref in entity_refs
@@ -502,10 +499,10 @@ async def websocket_get_device(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Get ZHA devices."""
-    zha_gateway = get_zha_gateway(hass)
+    zha_gateway_proxy = get_zha_gateway_proxy(hass)
     ieee: EUI64 = msg[ATTR_IEEE]
 
-    if not (zha_device := zha_gateway.devices.get(ieee)):
+    if not (zha_device := zha_gateway_proxy.device_proxies.get(ieee)):
         connection.send_message(
             websocket_api.error_message(
                 msg[ID], websocket_api.const.ERR_NOT_FOUND, "ZHA Device not found"
@@ -929,13 +926,13 @@ async def websocket_get_bindable_devices(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Directly bind devices."""
-    zha_gateway = get_zha_gateway(hass)
+    zha_gateway_proxy = get_zha_gateway_proxy(hass)
     source_ieee: EUI64 = msg[ATTR_IEEE]
-    source_device = zha_gateway.get_device(source_ieee)
+    source_device = zha_gateway_proxy.device_proxies.get(source_ieee)
 
     devices = [
         device.zha_device_info
-        for device in zha_gateway.devices.values()
+        for device in zha_gateway_proxy.device_proxies.values()
         if async_is_bindable_target(source_device, device)
     ]
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 import logging
 from typing import Any
@@ -28,6 +29,7 @@ class ZHAEntity(LogMixin, entity.Entity):
 
     _attr_has_entity_name = True
     _attr_should_poll = False
+    remove_future: asyncio.Future[Any]
 
     def __init__(self, entity_data: EntityData) -> None:
         """Init ZHA entity."""
@@ -72,7 +74,7 @@ class ZHAEntity(LogMixin, entity.Entity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
-        zha_device_info = self.entity_data.device_proxy.device.device_info
+        zha_device_info = self.entity_data.device_proxy.device_info
         ieee = zha_device_info["ieee"]
         zha_gateway = self.entity_data.device_proxy.gateway_proxy.gateway
 
@@ -90,6 +92,18 @@ class ZHAEntity(LogMixin, entity.Entity):
         """Entity state changed."""
         self.debug("Handling event from entity: %s", event)
         self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Run when about to be added to hass."""
+        self.remove_future = self.hass.loop.create_future()
+        self.entity_data.device_proxy.gateway_proxy.register_entity_reference(
+            self.entity_data.device_proxy.device.ieee,
+            self.entity_id,
+            self.entity_data.device_proxy,
+            self.entity_data.entity.cluster_handlers,
+            self.device_info,
+            self.remove_future,
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect entity object when removed."""
