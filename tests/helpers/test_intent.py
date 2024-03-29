@@ -43,9 +43,15 @@ async def test_async_match_states(
     area_bedroom = area_registry.async_get_or_create("bedroom")
 
     # Kitchen is on the first floor
-    floor_1 = floor_registry.async_create("first floor")
+    floor_1 = floor_registry.async_create("first floor", aliases={"ground floor"})
     area_kitchen = area_registry.async_update(
         area_kitchen.id, floor_id=floor_1.floor_id
+    )
+
+    # Bedroom is on the second floor
+    floor_2 = floor_registry.async_create("second floor")
+    area_bedroom = area_registry.async_update(
+        area_bedroom.id, floor_id=floor_2.floor_id
     )
 
     state1 = State(
@@ -102,6 +108,13 @@ async def test_async_match_states(
         )
     )
 
+    # Invalid area
+    assert not list(
+        intent.async_match_states(
+            hass, area_name="invalid area", states=[state1, state2]
+        )
+    )
+
     # Domain + area
     assert list(
         intent.async_match_states(
@@ -125,6 +138,28 @@ async def test_async_match_states(
             hass, floor_name="first floor", states=[state1, state2]
         )
     ) == [state1]
+
+    assert list(
+        intent.async_match_states(
+            # Check alias
+            hass,
+            floor_name="ground floor",
+            states=[state1, state2],
+        )
+    ) == [state1]
+
+    assert list(
+        intent.async_match_states(
+            hass, floor_name="second floor", states=[state1, state2]
+        )
+    ) == [state2]
+
+    # Invalid floor
+    assert not list(
+        intent.async_match_states(
+            hass, floor_name="invalid floor", states=[state1, state2]
+        )
+    )
 
 
 async def test_match_device_area(
@@ -315,3 +350,27 @@ async def test_validate_then_run_in_background(hass: HomeAssistant) -> None:
 
     assert len(calls) == 1
     assert calls[0].data == {"entity_id": "light.kitchen"}
+
+
+async def test_invalid_area_floor_names(hass: HomeAssistant) -> None:
+    """Test that we throw an intent handle error with invalid area/floor names."""
+    handler = intent.ServiceIntentHandler(
+        "TestType", "light", "turn_on", "Turned {} on"
+    )
+    intent.async_register(hass, handler)
+
+    with pytest.raises(intent.IntentHandleError):
+        await intent.async_handle(
+            hass,
+            "test",
+            "TestType",
+            slots={"area": {"value": "invalid area"}},
+        )
+
+    with pytest.raises(intent.IntentHandleError):
+        await intent.async_handle(
+            hass,
+            "test",
+            "TestType",
+            slots={"floor": {"value": "invalid floor"}},
+        )

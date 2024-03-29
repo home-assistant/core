@@ -342,7 +342,9 @@ def async_match_states(
     if (floor is None) and (floor_name is not None):
         # Look up floor by name
         floor = _find_floor(floor_name, floors)
-        assert floor is not None, f"No floor named {floor_name}"
+        if floor is None:
+            _LOGGER.warning("Floor not found: %s", floor_name)
+            return []
 
     if floor is not None:
         filter_areas = [
@@ -352,7 +354,9 @@ def async_match_states(
     if (area is None) and (area_name is not None):
         # Look up area by name
         area = _find_area(area_name, areas)
-        assert area is not None, f"No area named {area_name}"
+        if area is None:
+            _LOGGER.warning("Area not found: %s", area_name)
+            return []
 
     if area is not None:
         filter_areas = [area]
