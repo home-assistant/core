@@ -170,7 +170,7 @@ class ZHADeviceProxy(EventBase):
                 )
         device_info[ATTR_ENDPOINT_NAMES] = names
 
-        device_registry = dr.async_get(self.hass)
+        device_registry = dr.async_get(self.gateway_proxy.hass)
         reg_device = device_registry.async_get(self.device_id)
         if reg_device is not None:
             device_info["user_given_name"] = reg_device.name_by_user
