@@ -130,14 +130,23 @@ class ViCareFan(ViCareEntity, FanEntity):
 
         # if fan mode is something else than *permanent*, speed is controlled by sensor/schedule
         if self._attributes["active_vicare_mode"] is not VentilationMode.PERMANENT:
+            _LOGGER.debug(
+                "percentage disabled, active vicare mode '%s' does not match '%s'",
+                self._attributes["active_vicare_mode"],
+                VentilationMode.PERMANENT,
+            )
             return None
 
-        if self._attributes["active_vicare_program"] in ORDERED_NAMED_FAN_SPEEDS:
-            return ordered_list_item_to_percentage(
-                ORDERED_NAMED_FAN_SPEEDS, self._attributes["active_vicare_program"]
+        if self._attributes["active_vicare_program"] not in ORDERED_NAMED_FAN_SPEEDS:
+            _LOGGER.debug(
+                "percentage disabled, active vicare program '%s' is no fan speed program",
+                self._attributes["active_vicare_program"],
             )
+            return None
 
-        return None
+        return ordered_list_item_to_percentage(
+            ORDERED_NAMED_FAN_SPEEDS, self._attributes["active_vicare_program"]
+        )
 
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
