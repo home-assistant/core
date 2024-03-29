@@ -29,6 +29,7 @@ jobs:
     uses: ./.github/workflows/ci.yaml
 
   prune-coveragerc-check:
+    name: Check and prune .coveragerc
     runs-on: ubuntu-22.04
     needs: [base]
     outputs:

@@ -35,12 +35,16 @@ def main():
         # Run tests in parallel for speed
         pytest.main(
             [
+                "-qq",
                 "-n",
                 "auto",
-                "tests/components/",
+                "--timeout=9",
+                "--durations=10",
+                "--dist=loadfile",
                 "--cov=homeassistant.components",
                 "--cov-report",
                 f"json:{TEMP_JSON}",
+                "tests/components/",
             ]
         )
 
