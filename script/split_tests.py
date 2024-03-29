@@ -42,21 +42,6 @@ class BucketHolder:
         self._bucket_count = bucket_count
         self._buckets: list[Bucket] = [Bucket() for _ in range(bucket_count)]
 
-    def _split_tests(self, tests: TestFolder | TestFile) -> None:
-        """Split tests into buckets."""
-        smallest_bucket = min(self._buckets, key=lambda x: x.total_tests)
-        if (
-            smallest_bucket.total_tests + tests.total_tests < self._tests_per_bucket
-        ) or isinstance(tests, TestFile):
-            smallest_bucket.add(tests)
-            return
-
-        if isinstance(tests, TestFolder):
-            for test in sorted(
-                tests.children.values(), reverse=True, key=lambda x: x.total_tests
-            ):
-                self._split_tests(test)
-
     def _flatten(self, tests: TestFolder) -> list[TestFolder | TestFile]:
         result: list[TestFolder | TestFile] = [tests]
         for child in tests.children.values():
@@ -68,10 +53,12 @@ class BucketHolder:
 
     def split_tests(self, test_folder: TestFolder) -> None:
         """Split tests into buckets."""
+        digits = len(str(test_folder.total_tests))
         sorted_tests = sorted(
             self._flatten(test_folder), reverse=True, key=lambda x: x.total_tests
         )
         for tests in sorted_tests:
+            print(f"{tests.total_tests:>{digits}} tests in {tests.path}")
             if tests.added_to_backet:
                 # Already added to bucket
                 continue
@@ -163,7 +150,7 @@ class TestFolder:
         child.add_test_file(file)
 
 
-def collect_tests(path: Path) -> tuple[TestFolder, TestFile]:
+def collect_tests(path: Path) -> TestFolder:
     """Collect all tests."""
     result = subprocess.run(
         ["pytest", "--collect-only", "-qq", "-p", "no:warnings", path],
@@ -179,7 +166,6 @@ def collect_tests(path: Path) -> tuple[TestFolder, TestFile]:
         sys.exit(1)
 
     folder = TestFolder(path)
-    file_with_most_tests = TestFile(0, Path())
 
     for line in result.stdout.splitlines():
         if not line.strip():
@@ -190,10 +176,9 @@ def collect_tests(path: Path) -> tuple[TestFolder, TestFile]:
             sys.exit(1)
 
         file = TestFile(int(total_tests), Path(file_path))
-        file_with_most_tests = max(file_with_most_tests, file)
         folder.add_test_file(file)
 
-    return (folder, file_with_most_tests)
+    return folder
 
 
 def main() -> None:
@@ -222,17 +207,16 @@ def main() -> None:
     arguments = parser.parse_args()
 
     print("Collecting tests...")
-    (tests, file_with_most_tests) = collect_tests(arguments.path)
-    print(
-        f"Maximum tests in a single file are {file_with_most_tests.total_tests} tests (in {file_with_most_tests.path})"
-    )
-    print(f"Total tests: {tests.total_tests}")
-
+    tests = collect_tests(arguments.path)
     tests_per_bucket = ceil(tests.total_tests / arguments.bucket_count)
-    print(f"Estimated tests per bucket: {tests_per_bucket}")
 
     bucket_holder = BucketHolder(tests_per_bucket, arguments.bucket_count)
+    print("Splitting tests...")
     bucket_holder.split_tests(tests)
+
+    print(f"Total tests: {tests.total_tests}")
+    print(f"Estimated tests per bucket: {tests_per_bucket}")
+
     bucket_holder.create_ouput_file()
 
 
