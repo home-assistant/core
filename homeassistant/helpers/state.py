@@ -1,4 +1,5 @@
 """Helpers that help with state related things."""
+
 from __future__ import annotations
 
 import asyncio
@@ -53,7 +54,9 @@ async def async_reproduce_state(
             return
 
         try:
-            platform: ModuleType = integration.get_platform("reproduce_state")
+            platform: ModuleType = await integration.async_get_platform(
+                "reproduce_state"
+            )
         except ImportError:
             _LOGGER.warning("Integration %s does not support reproduce state", domain)
             return

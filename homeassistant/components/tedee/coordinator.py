@@ -1,4 +1,5 @@
 """Coordinator for Tedee locks."""
+
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging

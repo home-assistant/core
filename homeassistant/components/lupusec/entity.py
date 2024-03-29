@@ -1,4 +1,5 @@
 """Provides the Lupusec entity for Home Assistant."""
+
 import lupupy
 
 from homeassistant.helpers.device_registry import DeviceInfo

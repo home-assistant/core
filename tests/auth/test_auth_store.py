@@ -1,75 +1,79 @@
 """Tests for the auth store."""
+
 import asyncio
 from datetime import timedelta
 from typing import Any
 from unittest.mock import patch
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.auth import auth_store
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
+MOCK_STORAGE_DATA = {
+    "version": 1,
+    "data": {
+        "credentials": [],
+        "users": [
+            {
+                "id": "user-id",
+                "is_active": True,
+                "is_owner": True,
+                "name": "Paulus",
+                "system_generated": False,
+            },
+            {
+                "id": "system-id",
+                "is_active": True,
+                "is_owner": True,
+                "name": "Hass.io",
+                "system_generated": True,
+            },
+        ],
+        "refresh_tokens": [
+            {
+                "access_token_expiration": 1800.0,
+                "client_id": "http://localhost:8123/",
+                "created_at": "2018-10-03T13:43:19.774637+00:00",
+                "id": "user-token-id",
+                "jwt_key": "some-key",
+                "last_used_at": "2018-10-03T13:43:19.774712+00:00",
+                "token": "some-token",
+                "user_id": "user-id",
+                "version": "1.2.3",
+            },
+            {
+                "access_token_expiration": 1800.0,
+                "client_id": None,
+                "created_at": "2018-10-03T13:43:19.774637+00:00",
+                "id": "system-token-id",
+                "jwt_key": "some-key",
+                "last_used_at": "2018-10-03T13:43:19.774712+00:00",
+                "token": "some-token",
+                "user_id": "system-id",
+            },
+            {
+                "access_token_expiration": 1800.0,
+                "client_id": "http://localhost:8123/",
+                "created_at": "2018-10-03T13:43:19.774637+00:00",
+                "id": "hidden-because-no-jwt-id",
+                "last_used_at": "2018-10-03T13:43:19.774712+00:00",
+                "token": "some-token",
+                "user_id": "user-id",
+            },
+        ],
+    },
+}
+
 
 async def test_loading_no_group_data_format(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test we correctly load old data without any groups."""
-    hass_storage[auth_store.STORAGE_KEY] = {
-        "version": 1,
-        "data": {
-            "credentials": [],
-            "users": [
-                {
-                    "id": "user-id",
-                    "is_active": True,
-                    "is_owner": True,
-                    "name": "Paulus",
-                    "system_generated": False,
-                },
-                {
-                    "id": "system-id",
-                    "is_active": True,
-                    "is_owner": True,
-                    "name": "Hass.io",
-                    "system_generated": True,
-                },
-            ],
-            "refresh_tokens": [
-                {
-                    "access_token_expiration": 1800.0,
-                    "client_id": "http://localhost:8123/",
-                    "created_at": "2018-10-03T13:43:19.774637+00:00",
-                    "id": "user-token-id",
-                    "jwt_key": "some-key",
-                    "last_used_at": "2018-10-03T13:43:19.774712+00:00",
-                    "token": "some-token",
-                    "user_id": "user-id",
-                    "version": "1.2.3",
-                },
-                {
-                    "access_token_expiration": 1800.0,
-                    "client_id": None,
-                    "created_at": "2018-10-03T13:43:19.774637+00:00",
-                    "id": "system-token-id",
-                    "jwt_key": "some-key",
-                    "last_used_at": "2018-10-03T13:43:19.774712+00:00",
-                    "token": "some-token",
-                    "user_id": "system-id",
-                },
-                {
-                    "access_token_expiration": 1800.0,
-                    "client_id": "http://localhost:8123/",
-                    "created_at": "2018-10-03T13:43:19.774637+00:00",
-                    "id": "hidden-because-no-jwt-id",
-                    "last_used_at": "2018-10-03T13:43:19.774712+00:00",
-                    "token": "some-token",
-                    "user_id": "user-id",
-                },
-            ],
-        },
-    }
+    hass_storage[auth_store.STORAGE_KEY] = MOCK_STORAGE_DATA
 
     store = auth_store.AuthStore(hass)
     await store.async_load()
@@ -112,63 +116,7 @@ async def test_loading_all_access_group_data_format(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test we correctly load old data with single group."""
-    hass_storage[auth_store.STORAGE_KEY] = {
-        "version": 1,
-        "data": {
-            "credentials": [],
-            "users": [
-                {
-                    "id": "user-id",
-                    "is_active": True,
-                    "is_owner": True,
-                    "name": "Paulus",
-                    "system_generated": False,
-                    "group_ids": ["abcd-all-access"],
-                },
-                {
-                    "id": "system-id",
-                    "is_active": True,
-                    "is_owner": True,
-                    "name": "Hass.io",
-                    "system_generated": True,
-                },
-            ],
-            "groups": [{"id": "abcd-all-access", "name": "All Access"}],
-            "refresh_tokens": [
-                {
-                    "access_token_expiration": 1800.0,
-                    "client_id": "http://localhost:8123/",
-                    "created_at": "2018-10-03T13:43:19.774637+00:00",
-                    "id": "user-token-id",
-                    "jwt_key": "some-key",
-                    "last_used_at": "2018-10-03T13:43:19.774712+00:00",
-                    "token": "some-token",
-                    "user_id": "user-id",
-                    "version": "1.2.3",
-                },
-                {
-                    "access_token_expiration": 1800.0,
-                    "client_id": None,
-                    "created_at": "2018-10-03T13:43:19.774637+00:00",
-                    "id": "system-token-id",
-                    "jwt_key": "some-key",
-                    "last_used_at": "2018-10-03T13:43:19.774712+00:00",
-                    "token": "some-token",
-                    "user_id": "system-id",
-                    "version": None,
-                },
-                {
-                    "access_token_expiration": 1800.0,
-                    "client_id": "http://localhost:8123/",
-                    "created_at": "2018-10-03T13:43:19.774637+00:00",
-                    "id": "hidden-because-no-jwt-id",
-                    "last_used_at": "2018-10-03T13:43:19.774712+00:00",
-                    "token": "some-token",
-                    "user_id": "user-id",
-                },
-            ],
-        },
-    }
+    hass_storage[auth_store.STORAGE_KEY] = MOCK_STORAGE_DATA
 
     store = auth_store.AuthStore(hass)
     await store.async_load()
@@ -253,13 +201,13 @@ async def test_system_groups_store_id_and_name(
 async def test_loading_only_once(hass: HomeAssistant) -> None:
     """Test only one storage load is allowed."""
     store = auth_store.AuthStore(hass)
-    with patch(
-        "homeassistant.helpers.entity_registry.async_get"
-    ) as mock_ent_registry, patch(
-        "homeassistant.helpers.device_registry.async_get"
-    ) as mock_dev_registry, patch(
-        "homeassistant.helpers.storage.Store.async_load", return_value=None
-    ) as mock_load:
+    with (
+        patch("homeassistant.helpers.entity_registry.async_get") as mock_ent_registry,
+        patch("homeassistant.helpers.device_registry.async_get") as mock_dev_registry,
+        patch(
+            "homeassistant.helpers.storage.Store.async_load", return_value=None
+        ) as mock_load,
+    ):
         await store.async_load()
         with pytest.raises(RuntimeError, match="Auth storage is already loaded"):
             await store.async_load()
@@ -334,3 +282,26 @@ async def test_add_expire_at_property(
     assert token1.expire_at == now.timestamp() + timedelta(days=80).total_seconds()
     assert token2.expire_at
     assert token2.expire_at == now.timestamp() + timedelta(days=90).total_seconds()
+
+
+async def test_loading_does_not_write_right_away(
+    hass: HomeAssistant, hass_storage: dict[str, Any], freezer: FrozenDateTimeFactory
+) -> None:
+    """Test after calling load we wait five minutes to write."""
+    hass_storage[auth_store.STORAGE_KEY] = MOCK_STORAGE_DATA
+
+    store = auth_store.AuthStore(hass)
+    await store.async_load()
+
+    # Wipe storage so we can verify if it was written
+    hass_storage[auth_store.STORAGE_KEY] = {}
+
+    freezer.tick(auth_store.DEFAULT_SAVE_DELAY)
+    await hass.async_block_till_done()
+    assert hass_storage[auth_store.STORAGE_KEY] == {}
+    freezer.tick(auth_store.INITIAL_LOAD_SAVE_DELAY)
+    # Once for scheduling the task
+    await hass.async_block_till_done()
+    # Once for the task
+    await hass.async_block_till_done()
+    assert hass_storage[auth_store.STORAGE_KEY] != {}

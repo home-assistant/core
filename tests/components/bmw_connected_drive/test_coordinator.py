@@ -1,4 +1,5 @@
 """Test BMW coordinator."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -44,11 +45,12 @@ async def test_update_failed(
     assert coordinator.last_update_success is True
 
     freezer.tick(timedelta(minutes=5, seconds=1))
-    async_fire_time_changed(hass)
+
     with patch(
         "bimmer_connected.account.MyBMWAccount.get_vehicles",
         side_effect=MyBMWAPIError("Test error"),
     ):
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     assert coordinator.last_update_success is False
@@ -70,22 +72,22 @@ async def test_update_reauth(
     assert coordinator.last_update_success is True
 
     freezer.tick(timedelta(minutes=5, seconds=1))
-    async_fire_time_changed(hass)
     with patch(
         "bimmer_connected.account.MyBMWAccount.get_vehicles",
         side_effect=MyBMWAuthError("Test error"),
     ):
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     assert coordinator.last_update_success is False
     assert isinstance(coordinator.last_exception, UpdateFailed) is True
 
     freezer.tick(timedelta(minutes=5, seconds=1))
-    async_fire_time_changed(hass)
     with patch(
         "bimmer_connected.account.MyBMWAccount.get_vehicles",
         side_effect=MyBMWAuthError("Test error"),
     ):
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     assert coordinator.last_update_success is False

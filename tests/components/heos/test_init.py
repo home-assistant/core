@@ -1,4 +1,5 @@
 """Tests for the init module."""
+
 import asyncio
 from unittest.mock import Mock, patch
 
@@ -79,7 +80,9 @@ async def test_async_setup_entry_loads_platforms(
 ) -> None:
     """Test load connects to heos, retrieves players, and loads platforms."""
     config_entry.add_to_hass(hass)
-    with patch.object(hass.config_entries, "async_forward_entry_setup") as forward_mock:
+    with patch.object(
+        hass.config_entries, "async_forward_entry_setups"
+    ) as forward_mock:
         assert await async_setup_entry(hass, config_entry)
         # Assert platforms loaded
         await hass.async_block_till_done()
@@ -106,7 +109,9 @@ async def test_async_setup_entry_not_signed_in_loads_platforms(
     config_entry.add_to_hass(hass)
     controller.is_signed_in = False
     controller.signed_in_username = None
-    with patch.object(hass.config_entries, "async_forward_entry_setup") as forward_mock:
+    with patch.object(
+        hass.config_entries, "async_forward_entry_setups"
+    ) as forward_mock:
         assert await async_setup_entry(hass, config_entry)
         # Assert platforms loaded
         await hass.async_block_till_done()

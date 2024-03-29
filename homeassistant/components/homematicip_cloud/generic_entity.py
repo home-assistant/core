@@ -1,4 +1,5 @@
 """Generic entity for the HomematicIP Cloud component."""
+
 from __future__ import annotations
 
 import logging

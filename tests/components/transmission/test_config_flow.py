@@ -1,4 +1,5 @@
 """Tests for Transmission config flow."""
+
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -156,10 +157,7 @@ async def test_error_on_connection_failure(
 
 async def test_reauth_success(hass: HomeAssistant) -> None:
     """Test we can reauth."""
-    entry = MockConfigEntry(
-        domain=transmission.DOMAIN,
-        data=MOCK_CONFIG_DATA,
-    )
+    entry = MockConfigEntry(domain=transmission.DOMAIN, data=MOCK_CONFIG_DATA)
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(

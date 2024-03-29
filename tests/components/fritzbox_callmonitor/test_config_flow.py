@@ -1,4 +1,5 @@
 """Tests for fritzbox_callmonitor config flow."""
+
 from __future__ import annotations
 
 from unittest.mock import PropertyMock
@@ -92,30 +93,38 @@ async def test_setup_one_phonebook(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.fritzbox_callmonitor.base.FritzPhonebook.__init__",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.fritzbox_callmonitor.base.FritzPhonebook.phonebook_ids",
-        new_callable=PropertyMock,
-        return_value=[0],
-    ), patch(
-        "homeassistant.components.fritzbox_callmonitor.base.FritzPhonebook.phonebook_info",
-        return_value=MOCK_PHONEBOOK_INFO_1,
-    ), patch(
-        "homeassistant.components.fritzbox_callmonitor.base.FritzPhonebook.modelname",
-        return_value=MOCK_PHONEBOOK_NAME_1,
-    ), patch(
-        "homeassistant.components.fritzbox_callmonitor.config_flow.FritzConnection.__init__",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.fritzbox_callmonitor.config_flow.FritzConnection.updatecheck",
-        new_callable=PropertyMock,
-        return_value=MOCK_DEVICE_INFO,
-    ), patch(
-        "homeassistant.components.fritzbox_callmonitor.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.fritzbox_callmonitor.base.FritzPhonebook.__init__",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.fritzbox_callmonitor.base.FritzPhonebook.phonebook_ids",
+            new_callable=PropertyMock,
+            return_value=[0],
+        ),
+        patch(
+            "homeassistant.components.fritzbox_callmonitor.base.FritzPhonebook.phonebook_info",
+            return_value=MOCK_PHONEBOOK_INFO_1,
+        ),
+        patch(
+            "homeassistant.components.fritzbox_callmonitor.base.FritzPhonebook.modelname",
+            return_value=MOCK_PHONEBOOK_NAME_1,
+        ),
+        patch(
+            "homeassistant.components.fritzbox_callmonitor.config_flow.FritzConnection.__init__",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.fritzbox_callmonitor.config_flow.FritzConnection.updatecheck",
+            new_callable=PropertyMock,
+            return_value=MOCK_DEVICE_INFO,
+        ),
+        patch(
+            "homeassistant.components.fritzbox_callmonitor.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_DATA
         )
@@ -135,23 +144,29 @@ async def test_setup_multiple_phonebooks(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.fritzbox_callmonitor.base.FritzPhonebook.__init__",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.fritzbox_callmonitor.base.FritzPhonebook.phonebook_ids",
-        new_callable=PropertyMock,
-        return_value=[0, 1],
-    ), patch(
-        "homeassistant.components.fritzbox_callmonitor.config_flow.FritzConnection.__init__",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.fritzbox_callmonitor.config_flow.FritzConnection.updatecheck",
-        new_callable=PropertyMock,
-        return_value=MOCK_DEVICE_INFO,
-    ), patch(
-        "homeassistant.components.fritzbox_callmonitor.base.FritzPhonebook.phonebook_info",
-        side_effect=[MOCK_PHONEBOOK_INFO_1, MOCK_PHONEBOOK_INFO_2],
+    with (
+        patch(
+            "homeassistant.components.fritzbox_callmonitor.base.FritzPhonebook.__init__",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.fritzbox_callmonitor.base.FritzPhonebook.phonebook_ids",
+            new_callable=PropertyMock,
+            return_value=[0, 1],
+        ),
+        patch(
+            "homeassistant.components.fritzbox_callmonitor.config_flow.FritzConnection.__init__",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.fritzbox_callmonitor.config_flow.FritzConnection.updatecheck",
+            new_callable=PropertyMock,
+            return_value=MOCK_DEVICE_INFO,
+        ),
+        patch(
+            "homeassistant.components.fritzbox_callmonitor.base.FritzPhonebook.phonebook_info",
+            side_effect=[MOCK_PHONEBOOK_INFO_1, MOCK_PHONEBOOK_INFO_2],
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_DATA
@@ -161,13 +176,16 @@ async def test_setup_multiple_phonebooks(hass: HomeAssistant) -> None:
     assert result["step_id"] == "phonebook"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.fritzbox_callmonitor.base.FritzPhonebook.modelname",
-        return_value=MOCK_PHONEBOOK_NAME_1,
-    ), patch(
-        "homeassistant.components.fritzbox_callmonitor.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.fritzbox_callmonitor.base.FritzPhonebook.modelname",
+            return_value=MOCK_PHONEBOOK_NAME_1,
+        ),
+        patch(
+            "homeassistant.components.fritzbox_callmonitor.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_PHONEBOOK: MOCK_PHONEBOOK_NAME_2},

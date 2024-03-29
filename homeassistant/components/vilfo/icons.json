@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "load": {
+        "default": "mdi:memory"
+      },
+      "boot_time": {
+        "default": "mdi:timer-outline"
+      }
+    }
+  }
+}

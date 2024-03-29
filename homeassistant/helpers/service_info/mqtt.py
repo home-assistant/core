@@ -1,4 +1,5 @@
 """MQTT Discovery data."""
+
 from dataclasses import dataclass
 import datetime as dt
 

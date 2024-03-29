@@ -1,4 +1,5 @@
 """Tests for the pvpc_hourly_pricing integration."""
+
 from http import HTTPStatus
 
 import pytest

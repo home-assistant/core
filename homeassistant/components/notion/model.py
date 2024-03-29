@@ -1,4 +1,5 @@
 """Define Notion model mixins."""
+
 from dataclasses import dataclass
 
 from aionotion.listener.models import ListenerKind

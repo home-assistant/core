@@ -1,4 +1,5 @@
 """Tests for the diagnostics data provided by the ESPHome integration."""
+
 from unittest.mock import patch
 
 import pytest
@@ -27,6 +28,7 @@ CONFIG_ENTRY_DIAGNOSTICS_KEYS = [
     "config_entry",
     "application_state",
     "versions",
+    "devices",
 ]
 
 
@@ -82,6 +84,21 @@ async def test_diagnostics_for_config_entry(
     assert diagnostics_data["energy_scan"] == {
         str(k): 100 * v / 255 for k, v in scan.items()
     }
+
+    assert isinstance(diagnostics_data["devices"], list)
+    assert len(diagnostics_data["devices"]) == 2
+    assert diagnostics_data["devices"] == [
+        {
+            "manufacturer": "Coordinator Manufacturer",
+            "model": "Coordinator Model",
+            "logical_type": "Coordinator",
+        },
+        {
+            "manufacturer": "FakeManufacturer",
+            "model": "FakeModel",
+            "logical_type": "EndDevice",
+        },
+    ]
 
 
 async def test_diagnostics_for_device(

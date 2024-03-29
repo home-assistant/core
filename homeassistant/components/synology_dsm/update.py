@@ -1,4 +1,5 @@
 """Support for Synology DSM update platform."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -19,7 +20,7 @@ from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
 from .models import SynologyDSMData
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class SynologyDSMUpdateEntityEntityDescription(
     UpdateEntityDescription, SynologyDSMEntityDescription
 ):

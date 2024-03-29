@@ -1,4 +1,5 @@
 """The tests for the lock component."""
+
 from __future__ import annotations
 
 import re

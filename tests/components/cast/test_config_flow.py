@@ -1,4 +1,5 @@
 """Tests for the Cast config flow."""
+
 from unittest.mock import ANY, patch
 
 import pytest
@@ -13,13 +14,15 @@ from tests.common import MockConfigEntry
 
 async def test_creating_entry_sets_up_media_player(hass: HomeAssistant) -> None:
     """Test setting up Cast loads the media player."""
-    with patch(
-        "homeassistant.components.cast.media_player.async_setup_entry",
-        return_value=True,
-    ) as mock_setup, patch(
-        "pychromecast.discovery.discover_chromecasts", return_value=(True, None)
-    ), patch(
-        "pychromecast.discovery.stop_discovery",
+    with (
+        patch(
+            "homeassistant.components.cast.media_player.async_setup_entry",
+            return_value=True,
+        ) as mock_setup,
+        patch("pychromecast.discovery.discover_chromecasts", return_value=(True, None)),
+        patch(
+            "pychromecast.discovery.stop_discovery",
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             cast.DOMAIN, context={"source": config_entries.SOURCE_USER}

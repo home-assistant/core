@@ -1,4 +1,5 @@
 """Support for Hive light devices."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -33,11 +34,9 @@ async def async_setup_entry(
 
     hive: Hive = hass.data[DOMAIN][entry.entry_id]
     devices = hive.session.deviceList.get("light")
-    entities = []
-    if devices:
-        for dev in devices:
-            entities.append(HiveDeviceLight(hive, dev))
-    async_add_entities(entities, True)
+    if not devices:
+        return
+    async_add_entities((HiveDeviceLight(hive, dev) for dev in devices), True)
 
 
 class HiveDeviceLight(HiveEntity, LightEntity):

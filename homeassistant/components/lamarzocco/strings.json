@@ -42,6 +42,16 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "title": "Update Configuration",
+          "use_bluetooth": "Use Bluetooth"
+        }
+      }
+    }
+  },
   "entity": {
     "binary_sensor": {
       "brew_active": {
@@ -54,6 +64,11 @@
     "button": {
       "start_backflush": {
         "name": "Start backflush"
+      }
+    },
+    "calendar": {
+      "auto_on_off_schedule": {
+        "name": "Auto on/off schedule"
       }
     },
     "number": {

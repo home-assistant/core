@@ -1,4 +1,5 @@
 """Test the Traccar Server config flow."""
+
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock
@@ -66,10 +67,10 @@ async def test_form(
 
 @pytest.mark.parametrize(
     ("side_effect", "error"),
-    (
+    [
         (TraccarException, "cannot_connect"),
         (Exception, "unknown"),
-    ),
+    ],
 )
 async def test_form_cannot_connect(
     hass: HomeAssistant,
@@ -153,7 +154,7 @@ async def test_options(
 
 @pytest.mark.parametrize(
     ("imported", "data", "options"),
-    (
+    [
         (
             {
                 CONF_HOST: "1.1.1.1",
@@ -222,7 +223,7 @@ async def test_options(
                 CONF_MAX_ACCURACY: 0,
             },
         ),
-    ),
+    ],
 )
 async def test_import_from_yaml(
     hass: HomeAssistant,

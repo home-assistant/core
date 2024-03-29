@@ -1,4 +1,5 @@
 """The sensor tests for the nexia platform."""
+
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 

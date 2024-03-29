@@ -1,4 +1,5 @@
 """Config flow for generic (IP Camera)."""
+
 from __future__ import annotations
 
 import asyncio
@@ -30,7 +31,12 @@ from homeassistant.components.stream import (
     SOURCE_TIMEOUT,
     create_stream,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_NAME,
@@ -41,7 +47,7 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult, UnknownFlow
+from homeassistant.data_entry_flow import UnknownFlow
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template as template_helper
 from homeassistant.helpers.httpx_client import get_async_client
@@ -177,14 +183,27 @@ async def async_test_still(
     except (
         TimeoutError,
         RequestError,
-        HTTPStatusError,
         TimeoutException,
     ) as err:
         _LOGGER.error("Error getting camera image from %s: %s", url, type(err).__name__)
         return {CONF_STILL_IMAGE_URL: "unable_still_load"}, None
+    except HTTPStatusError as err:
+        _LOGGER.error(
+            "Error getting camera image from %s: %s %s",
+            url,
+            type(err).__name__,
+            err.response.text,
+        )
+        if err.response.status_code in [401, 403]:
+            return {CONF_STILL_IMAGE_URL: "unable_still_load_auth"}, None
+        if err.response.status_code in [404]:
+            return {CONF_STILL_IMAGE_URL: "unable_still_load_not_found"}, None
+        if err.response.status_code in [500, 503]:
+            return {CONF_STILL_IMAGE_URL: "unable_still_load_server_error"}, None
+        return {CONF_STILL_IMAGE_URL: "unable_still_load"}, None
 
     if not image:
-        return {CONF_STILL_IMAGE_URL: "unable_still_load"}, None
+        return {CONF_STILL_IMAGE_URL: "unable_still_load_no_image"}, None
     fmt = get_image_type(image)
     _LOGGER.debug(
         "Still image at '%s' detected format: %s",
@@ -272,7 +291,7 @@ async def async_test_stream(
             return {CONF_STREAM_SOURCE: "stream_no_route_to_host"}
         if err.errno == EIO:  # input/output error
             return {CONF_STREAM_SOURCE: "stream_io_error"}
-        raise err
+        raise
     return {}
 
 
@@ -313,7 +332,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the start of the config flow."""
         errors = {}
         hass = self.hass
@@ -357,7 +376,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user_confirm_still(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle user clicking confirm after still preview."""
         if user_input:
             if not user_input.get(CONF_CONFIRMED_OK):
@@ -389,7 +408,7 @@ class GenericOptionsFlowHandler(OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage Generic IP Camera options."""
         errors: dict[str, str] = {}
         hass = self.hass
@@ -430,7 +449,7 @@ class GenericOptionsFlowHandler(OptionsFlow):
 
     async def async_step_confirm_still(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle user clicking confirm after still preview."""
         if user_input:
             if not user_input.get(CONF_CONFIRMED_OK):
@@ -474,12 +493,12 @@ class CameraImagePreview(HomeAssistantView):
                 flow = self.hass.config_entries.options.async_get(flow_id)
             except UnknownFlow as exc:
                 _LOGGER.warning("Unknown flow while getting image preview")
-                raise web.HTTPNotFound() from exc
+                raise web.HTTPNotFound from exc
         user_input = flow["context"]["preview_cam"]
         camera = GenericCamera(self.hass, user_input, flow_id, "preview")
         if not camera.is_on:
             _LOGGER.debug("Camera is off")
-            raise web.HTTPServiceUnavailable()
+            raise web.HTTPServiceUnavailable
         image = await _async_get_image(
             camera,
             CAMERA_IMAGE_TIMEOUT,
