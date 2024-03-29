@@ -60,6 +60,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     not_found: list[str] = []
     checking = False
 
+    previous_line = ""
     with coverage_path.open("rt") as fp:
         for line in fp:
             line = line.strip()
@@ -87,12 +88,26 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
                 not_found.append(line)
                 continue
 
-            if not line.startswith("homeassistant/components/") or len(path.parts) != 4:
+            if not line.startswith("homeassistant/components/"):
                 continue
 
             integration_path = path.parent
+            while len(integration_path.parts) > 3:
+                integration_path = integration_path.parent
 
             integration = integrations[integration_path.name]
+
+            # Ensure sorted
+            if line < previous_line:
+                integration.add_error(
+                    "coverage",
+                    f"{line} is unsorted in .coveragerc file",
+                )
+            previous_line = line
+
+            # Ignore sub-directories for further checks
+            if len(path.parts) > 4:
+                continue
 
             if (
                 path.parts[-1] == "*"
