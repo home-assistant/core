@@ -7,12 +7,15 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+import random
+import string
 from typing import Any
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.devices import Devices
 from aiounifi.interfaces.ports import Ports
+from aiounifi.interfaces.wlans import Wlans
 from aiounifi.models.api import ApiItemT
 from aiounifi.models.device import (
     Device,
@@ -20,6 +23,7 @@ from aiounifi.models.device import (
     DeviceRestartRequest,
 )
 from aiounifi.models.port import Port
+from aiounifi.models.wlan import Wlan, WlanChangePasswordRequest
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -37,6 +41,8 @@ from .entity import (
     UnifiEntityDescription,
     async_device_available_fn,
     async_device_device_info_fn,
+    async_wlan_available_fn,
+    async_wlan_device_info_fn,
 )
 from .hub import UnifiHub
 
@@ -54,6 +60,21 @@ async def async_power_cycle_port_control_fn(
     """Restart device."""
     mac, _, index = obj_id.partition("_")
     await api.request(DevicePowerCyclePortRequest.create(mac, int(index)))
+
+
+def generate_password(length=18):
+    """Generate password."""
+    characters = string.ascii_letters + string.digits + string.punctuation
+    password = "".join(random.choice(characters) for _ in range(length))
+    return password
+
+
+async def async_change_password_control_fn(
+    api: aiounifi.Controller, obj_id: str
+) -> None:
+    """Change WLAN Password."""
+    new_password = generate_password()
+    await api.request(WlanChangePasswordRequest.create(obj_id, new_password))
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -91,6 +112,19 @@ ENTITY_DESCRIPTIONS: tuple[UnifiButtonEntityDescription, ...] = (
         supported_fn=lambda hub, obj_id: bool(hub.api.ports[obj_id].port_poe),
         unique_id_fn=lambda hub, obj_id: f"power_cycle-{obj_id}",
     ),
+    UnifiButtonEntityDescription[Wlans, Wlan](
+        key="WLAN Change Password",
+        entity_category=EntityCategory.CONFIG,
+        device_class=ButtonDeviceClass.UPDATE,
+        api_handler_fn=lambda api: api.wlans,
+        available_fn=async_wlan_available_fn,
+        control_fn=async_change_password_control_fn,
+        device_info_fn=async_wlan_device_info_fn,
+        name_fn=lambda wlan: "Change Password",
+        object_fn=lambda api, obj_id: api.wlans[obj_id],
+        entity_registry_enabled_default=False,
+        unique_id_fn=lambda hub, obj_id: f"change_password-{obj_id}",
+    ),
 )
 
 
@@ -109,7 +143,7 @@ async def async_setup_entry(
 
 
 class UnifiButtonEntity(UnifiEntity[HandlerT, ApiItemT], ButtonEntity):
-    """Base representation of a UniFi image."""
+    """Base representation of a UniFi button."""
 
     entity_description: UnifiButtonEntityDescription[HandlerT, ApiItemT]
 
