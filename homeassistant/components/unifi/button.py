@@ -62,7 +62,7 @@ async def async_power_cycle_port_control_fn(
     await api.request(DevicePowerCyclePortRequest.create(mac, int(index)))
 
 
-def generate_password(length=18):
+def generate_password(length: int = 18) -> str:
     """Generate password."""
     alphabet = string.ascii_letters + string.digits
     password = "".join(secrets.choice(alphabet) for _ in range(length))
